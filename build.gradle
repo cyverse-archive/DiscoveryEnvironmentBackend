@@ -1,0 +1,163 @@
+apply plugin: 'java'
+
+ext { 
+   remoteUri = ""
+   remoteRef = ""
+   subtreePrefix = ""
+}
+
+// Services Subtrees
+project(':donkey') { 
+
+}
+
+project(':metadactyl-clj') { 
+
+}
+
+project(':dewey') { 
+
+}
+
+project(':infosquito') { 
+
+}
+
+project(':panopticon') { 
+
+}
+
+project(':osm') { 
+
+}
+
+project(':notificationAgent') { 
+
+}
+
+project(':kifshare') { 
+
+}
+
+project(':jex') { 
+
+}
+
+project(':iplant-email') { 
+
+}
+
+project(':clockwork') { 
+
+}
+
+project(':conrad') { 
+
+}
+
+// Library Subtrees
+project(':heuristomancer') { 
+
+}
+
+project(':clj-icat-direct') { 
+
+}
+
+project(':kameleon') { 
+
+}
+
+project(':clavin-java') { 
+
+}
+
+project(':mescal') { 
+
+}
+
+project(':clj-jargon') { 
+
+}
+
+project(':clj-cas') { 
+
+}
+
+project(':de-authn') { 
+
+}
+
+project(':iplant-clojure-commons') { 
+
+}
+
+project(':metadactyl') { 
+
+}
+
+project(':hibernatetoolkit') { 
+
+}
+
+project(':de-persistence') { 
+
+}
+
+// Tools Subtrees
+project(':facepalm') { 
+
+}
+
+project(':proboscis') { 
+
+}
+
+project(':filetool') { 
+
+}
+
+project(':clavin') { 
+
+}
+
+project(':dingle') { 
+
+}
+
+// Leiningen Subtrees
+project(':lein-iplant-rpm') { 
+
+}
+
+project(':lein-iplant-cmdtar') { 
+
+}
+
+project(':lein-sonatype-deploy') { 
+
+}
+
+project(':lein-deploy-more') { 
+
+}
+
+// Misc Subtrees
+project(':cas-extensions') { 
+
+}
+
+project(':de-base-services-pom') { 
+
+}
+
+// Database Subtrees
+project(':de-database-schema') { 
+
+}
+
+project(':notification-db') { 
+
+}
+
+

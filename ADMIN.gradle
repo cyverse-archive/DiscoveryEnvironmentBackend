@@ -1,0 +1,405 @@
+import org.gradle.logging.StyledTextOutput;
+import org.gradle.logging.StyledTextOutputFactory;
+import static org.gradle.logging.StyledTextOutput.Style;
+
+// Services 
+def donkeyGitUri = "https://github.com/iPlantCollaborativeOpenSource/Donkey.git"
+def metadactylCljGitUri = "https://github.com/iPlantCollaborativeOpenSource/metadactyl-clj.git"
+def deweyGitUri = "https://github.com/iPlantCollaborativeOpenSource/dewey.git"
+def infosquitoGitUri = "https://github.com/iPlantCollaborativeOpenSource/Infosquito.git"
+def panopticonGitUri = "https://github.com/iPlantCollaborativeOpenSource/Panopticon.git"
+def osmGitUri = "https://github.com/iPlantCollaborativeOpenSource/OSM.git"
+def notificationAgentGitUri = "https://github.com/iPlantCollaborativeOpenSource/NotificationAgent.git"
+def kifshareGitUri = "https://github.com/iPlantCollaborativeOpenSource/kifshare.git"
+def jexGitUri = "https://github.com/iPlantCollaborativeOpenSource/JEX.git"
+def iplantEmailGitUri = "https://github.com/iPlantCollaborativeOpenSource/iplant-email.git"
+def clockworkGitUri = "https://github.com/iPlantCollaborativeOpenSource/clockwork.git"
+def conradGitUri = "https://github.com/iPlantCollaborativeOpenSource/Conrad.git"
+
+// Library 
+def heuristomancerGitUri = "https://github.com/iPlantCollaborativeOpenSource/heuristomancer.git"
+def cljIcatDirectGitUri = "https://github.com/iPlantCollaborativeOpenSource/clj-icat-direct.git"
+def kameleonGitUri = "https://github.com/iPlantCollaborativeOpenSource/kameleon.git"
+def clavinJavaGitUri = "https://github.com/iPlantCollaborativeOpenSource/clavin-java.git"
+def mescalGitUri = "https://github.com/iPlantCollaborativeOpenSource/mescal.git"
+def cljJargonGitUri = "https://github.com/iPlantCollaborativeOpenSource/clj-jargon.git"
+def cljCasGitUri = "https://github.com/iPlantCollaborativeOpenSource/clj-cas.git"
+def deAuthnGitUri = "https://github.com/iPlantCollaborativeOpenSource/de-authn.git"
+def iplantClojureCommonsGitUri = "https://github.com/iPlantCollaborativeOpenSource/iplant-clojure-commons.git"
+def metadactylGitUri = "https://github.com/iPlantCollaborativeOpenSource/metadactyl.git"
+def hibernatetoolkitGitUri = "https://github.com/iPlantCollaborativeOpenSource/hibernatetoolkit.git"
+def dePersistenceGitUri = "https://github.com/iPlantCollaborativeOpenSource/de-persistence.git"
+
+// Tools 
+def facepalmGitUri = "https://github.com/iPlantCollaborativeOpenSource/facepalm.git"
+def proboscisGitUri = "https://github.com/iPlantCollaborativeOpenSource/proboscis.git"
+def filetoolGitUri = "https://github.com/iPlantCollaborativeOpenSource/filetool.git"
+def clavinGitUri = "https://github.com/iPlantCollaborativeOpenSource/Clavin.git"
+def dingleGitUri = "https://github.com/iPlantCollaborativeOpenSource/dingle.git"
+
+// Leiningen 
+def leinIplantRpmGitUri = "https://github.com/iPlantCollaborativeOpenSource/lein-iplant-rpm.git"
+def leinIplantCmdtarGitUri = "https://github.com/iPlantCollaborativeOpenSource/lein-iplant-cmdtar.git"
+def leinSonatypeDeployGitUri = "https://github.com/iPlantCollaborativeOpenSource/lein-sonatype-deploy.git"
+def leinDeployMoreGitUri = "https://github.com/iPlantCollaborativeOpenSource/lein-deploy-more.git"
+
+// Misc 
+def casExtensionsGitUri = "https://github.com/iPlantCollaborativeOpenSource/CAS-Extensions.git"
+def deBaseServicesPomGitUri = "https://github.com/iPlantCollaborativeOpenSource/de-base-services-pom.git"
+
+// Database 
+def deDatabaseSchemaGitUri = "https://github.com/iPlantCollaborativeOpenSource/de-database-schema.git"
+def notificationDbGitUri = "https://github.com/iPlantCollaborativeOpenSource/notification-db.git"
+
+//=========== Remote Refs ==========//
+
+// Services 
+def donkeyUpstream = "donkey"
+def metadactylCljUpstream = "metadactyl-clj"
+def deweyUpstream = "dewey"
+def infosquitoUpstream = "infosquito"
+def panopticonUpstream = "panopticon"
+def osmUpstream = "osm"
+def notificationAgentUpstream = "notificationAgent"
+def kifshareUpstream = "kifshare"
+def jexUpstream = "jex"
+def iplantEmailUpstream = "iplant-email"
+def clockworkUpstream = "clockwork"
+def conradUpstream = "conrad"
+
+// Library 
+def heuristomancerUpstream = "heuristomancer"
+def cljIcatDirectUpstream = "clj-icat-direct"
+def kameleonUpstream = "kameleon"
+def clavinJavaUpstream = "clavin-java"
+def mescalUpstream = "mescal"
+def cljJargonUpstream = "clj-jargon"
+def cljCasUpstream = "clj-cas"
+def deAuthnUpstream = "de-authn"
+def iplantClojureCommonsUpstream = "iplant-clojure-commons"
+def metadactylUpstream = "metadactyl"
+def hibernatetoolkitUpstream = "hibernatetoolkit"
+def dePersistenceUpstream = "de-persistence"
+
+// Tools 
+def facepalmUpstream = "facepalm"
+def proboscisUpstream = "proboscis"
+def filetoolUpstream = "filetool"
+def clavinUpstream = "clavin"
+def dingleUpstream = "dingle"
+
+// Leiningen 
+def leinIplantRpmUpstream = "lein-iplant-rpm"
+def leinIplantCmdtarUpstream = "lein-iplant-cmdtar"
+def leinSonatypeDeployUpstream = "lein-sonatype-deploy"
+def leinDeployMoreUpstream = "lein-deploy-more"
+
+// Misc 
+def casExtensionsUpstream = "cas-extensions"
+def deBaseServicesPomUpstream = "de-base-services-pom"
+
+// Database 
+def deDatabaseSchemaUpstream = "de-database-schema"
+def notificationDbUpstream = "notification-db"
+
+
+// Services 
+project(':donkey') { 
+   ext.remoteUri = donkeyGitUri
+   ext.remoteRef = donkeyUpstream
+   ext.subtreePrefix = donkeyPrefix
+}
+
+project(':metadactyl-clj') { 
+   ext.remoteUri = metadactylCljGitUri
+   ext.remoteRef = metadactylCljUpstream
+   ext.subtreePrefix = metadactylCljPrefix
+
+}
+
+project(':dewey') { 
+   ext.remoteUri = deweyGitUri
+   ext.remoteRef = deweyUpstream
+   ext.subtreePrefix = deweyPrefix
+
+}
+
+project(':infosquito') { 
+   ext.remoteUri = infosquitoGitUri
+   ext.remoteRef = infosquitoUpstream
+   ext.subtreePrefix = infosquitoPrefix
+
+}
+
+project(':panopticon') { 
+   ext.remoteUri = panopticonGitUri
+   ext.remoteRef = panopticonUpstream
+   ext.subtreePrefix = panopticonPrefix
+
+}
+
+project(':osm') { 
+   ext.remoteUri = osmGitUri
+   ext.remoteRef = osmUpstream
+   ext.subtreePrefix = osmPrefix
+
+}
+
+project(':notificationAgent') { 
+   ext.remoteUri = notificationAgentGitUri
+   ext.remoteRef = notificationAgentUpstream
+   ext.subtreePrefix = notificationAgentPrefix
+
+}
+
+project(':kifshare') { 
+   ext.remoteUri = kifshareGitUri
+   ext.remoteRef = kifshareUpstream
+   ext.subtreePrefix = kifsharePrefix
+
+}
+
+project(':jex') { 
+   ext.remoteUri = jexGitUri
+   ext.remoteRef = jexUpstream
+   ext.subtreePrefix = jexPrefix
+
+}
+
+project(':iplant-email') { 
+   ext.remoteUri = iplantEmailGitUri
+   ext.remoteRef = iplantEmailUpstream
+   ext.subtreePrefix = iplantEmailPrefix
+
+}
+
+project(':clockwork') { 
+   ext.remoteUri = clockworkGitUri
+   ext.remoteRef = clockworkUpstream
+   ext.subtreePrefix = clockworkPrefix
+
+}
+
+project(':conrad') { 
+   ext.remoteUri = conradGitUri
+   ext.remoteRef = conradUpstream
+   ext.subtreePrefix = conradPrefix
+
+}
+
+// Library 
+project(':heuristomancer') { 
+   ext.remoteUri = heuristomancerGitUri
+   ext.remoteRef = heuristomancerUpstream
+   ext.subtreePrefix = heuristomancerPrefix
+
+}
+
+project(':clj-icat-direct') { 
+   ext.remoteUri = cljIcatDirectGitUri
+   ext.remoteRef = cljIcatDirectUpstream
+   ext.subtreePrefix = cljIcatDirectPrefix
+
+}
+
+project(':kameleon') { 
+   ext.remoteUri = kameleonGitUri
+   ext.remoteRef = kameleonUpstream
+   ext.subtreePrefix = kameleonPrefix
+
+}
+
+project(':clavin-java') { 
+   ext.remoteUri = clavinJavaGitUri
+   ext.remoteRef = clavinJavaUpstream
+   ext.subtreePrefix = clavinJavaPrefix
+
+}
+
+project(':mescal') { 
+   ext.remoteUri = mescalGitUri
+   ext.remoteRef = mescalUpstream
+   ext.subtreePrefix = mescalPrefix
+
+}
+
+project(':clj-jargon') { 
+   ext.remoteUri = cljJargonGitUri
+   ext.remoteRef = cljJargonUpstream
+   ext.subtreePrefix = cljJargonPrefix
+
+}
+
+project(':clj-cas') { 
+   ext.remoteUri = cljCasGitUri
+   ext.remoteRef = cljCasUpstream
+   ext.subtreePrefix = cljCasPrefix
+
+}
+
+project(':de-authn') { 
+   ext.remoteUri = deAuthnGitUri
+   ext.remoteRef = deAuthnUpstream
+   ext.subtreePrefix = deAuthnPrefix
+
+}
+
+project(':iplant-clojure-commons') { 
+   ext.remoteUri = iplantClojureCommonsGitUri
+   ext.remoteRef = iplantClojureCommonsUpstream
+   ext.subtreePrefix = iplantClojureCommonsPrefix
+
+}
+
+project(':metadactyl') { 
+   ext.remoteUri = metadactylGitUri
+   ext.remoteRef = metadactylUpstream
+   ext.subtreePrefix = metadactylPrefix
+
+}
+
+project(':hibernatetoolkit') { 
+   ext.remoteUri = hibernatetoolkitGitUri
+   ext.remoteRef = hibernatetoolkitUpstream
+   ext.subtreePrefix = hibernatetoolkitPrefix
+
+}
+
+project(':de-persistence') { 
+   ext.remoteUri = dePersistenceGitUri
+   ext.remoteRef = dePersistenceUpstream
+   ext.subtreePrefix = dePersistencePrefix
+
+}
+
+// Tools 
+project(':facepalm') { 
+   ext.remoteUri = facepalmGitUri
+   ext.remoteRef = facepalmUpstream
+   ext.subtreePrefix = facepalmPrefix
+
+}
+
+project(':proboscis') { 
+   ext.remoteUri = proboscisGitUri
+   ext.remoteRef = proboscisUpstream
+   ext.subtreePrefix = proboscisPrefix
+
+}
+
+project(':filetool') { 
+   ext.remoteUri = filetoolGitUri
+   ext.remoteRef = filetoolUpstream
+   ext.subtreePrefix = filetoolPrefix
+
+}
+
+project(':clavin') { 
+   ext.remoteUri = clavinGitUri
+   ext.remoteRef = clavinUpstream
+   ext.subtreePrefix = clavinPrefix
+
+}
+
+project(':dingle') { 
+   ext.remoteUri = dingleGitUri
+   ext.remoteRef = dingleUpstream
+   ext.subtreePrefix = dinglePrefix
+
+}
+
+// Leiningen 
+project(':lein-iplant-rpm') { 
+   ext.remoteUri = leinIplantRpmGitUri
+   ext.remoteRef = leinIplantRpmUpstream
+   ext.subtreePrefix = leinIplantRpmPrefix
+
+}
+
+project(':lein-iplant-cmdtar') { 
+   ext.remoteUri = leinIplantCmdtarGitUri
+   ext.remoteRef = leinIplantCmdtarUpstream
+   ext.subtreePrefix = leinIplantCmdtarPrefix
+
+}
+
+project(':lein-sonatype-deploy') { 
+   ext.remoteUri = leinSonatypeDeployGitUri
+   ext.remoteRef = leinSonatypeDeployUpstream
+   ext.subtreePrefix = leinSonatypeDeployPrefix
+
+}
+
+project(':lein-deploy-more') { 
+   ext.remoteUri = leinDeployMoreGitUri
+   ext.remoteRef = leinDeployMoreUpstream
+   ext.subtreePrefix = leinDeployMorePrefix
+
+}
+
+// Misc 
+project(':cas-extensions') { 
+   ext.remoteUri = casExtensionsGitUri
+   ext.remoteRef = casExtensionsUpstream
+   ext.subtreePrefix = casExtensionsPrefix
+
+}
+
+project(':de-base-services-pom') { 
+   ext.remoteUri = deBaseServicesPomGitUri
+   ext.remoteRef = deBaseServicesPomUpstream
+   ext.subtreePrefix = deBaseServicesPomPrefix
+
+}
+
+// Database 
+project(':de-database-schema') { 
+   ext.remoteUri = deDatabaseSchemaGitUri
+   ext.remoteRef = deDatabaseSchemaUpstream
+   ext.subtreePrefix = deDatabaseSchemaPrefix
+
+}
+
+project(':notification-db') { 
+   ext.remoteUri = notificationDbGitUri
+   ext.remoteRef = notificationDbUpstream
+   ext.subtreePrefix = notificationDbPrefix
+
+}
+
+subprojects {
+    def out = services.get(StyledTextOutputFactory).create("org.iplantc.gradle.git.logger")
+   task initSubtreeRemote (type: Exec) {
+      group 'ADMIN'
+      description 'Adds all of the git repos associated with each subproject as a git remote.\n\tThis task should not be needed after initial setup.'
+      workingDir rootProject.projectDir
+      commandLine 'git', 'remote', 'add', '-f', project.remoteRef, project.remoteUri
+      doFirst { out.withStyle(Style.ProgressStatus).println(">> Adding remote for ${project.name}") }
+   }
+
+   task removeSubtreeRemote (type: Exec) {
+      group 'ADMIN'
+      description 'Removes the remote associated with this project'
+      workingDir rootProject.projectDir
+      commandLine 'git', 'remote', 'rm', project.remoteRef
+      doFirst { out.withStyle(Style.ProgressStatus).println(">> Removing remote for ${project.name}") }
+   }
+
+   task addSubtree (type: Exec) {
+      group 'ADMIN'
+      description 'This task adds all of the subproject repos as subtrees.\n\tThis task should not be needed after initial setup'
+      workingDir rootProject.projectDir
+      commandLine 'git', 'subtree', 'add', '--prefix', project.subtreePrefix, project.remoteRef, 'master', '--squash'
+      doFirst { out.withStyle(Style.ProgressStatus).println(">> Adding subtree for ${project.name}") } 
+   }
+
+   task pullUpstream (type: Exec) {
+      group 'ADMIN'
+      description 'Pulls upstream changes into subtree'
+      workingDir rootProject.projectDir
+      commandLine 'git', 'subtree', 'pull', '--prefix', project.subtreePrefix, project.remoteRef, 'master'
+      doFirst { out.withStyle(Style.ProgressStatus).println(">> Pulling upstream subtree changes for ${project.name}") } 
+   }
+
+}
+
