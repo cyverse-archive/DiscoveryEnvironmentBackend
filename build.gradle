@@ -157,4 +157,3 @@ project(':notification-db') {
 
 }
 
-apply from: file('ADMIN.gradle')
