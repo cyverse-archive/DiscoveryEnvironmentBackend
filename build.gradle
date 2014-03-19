@@ -68,9 +68,6 @@ project(':kameleon') {
 
 }
 
-project(':clavin-java') { 
-
-}
 
 project(':mescal') { 
 
