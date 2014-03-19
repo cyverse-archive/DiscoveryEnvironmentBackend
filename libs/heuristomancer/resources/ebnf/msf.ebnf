@@ -1,0 +1,3 @@
+S = (comment | info) #"[\s\S]*"
+comment = "//" #"[\s\S^\n]*(?:\r\n|\r|\n)"
+info = #"[\s\S^\n]*MSF:.*Type:.*Check:|Name:.*Len:[\s\S^\n]*(?:\r\n|\r|\n)"

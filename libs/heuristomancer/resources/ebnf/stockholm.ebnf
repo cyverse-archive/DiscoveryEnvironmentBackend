@@ -1,0 +1,3 @@
+S = (id-line | other) #"[\s\S]*"
+id-line = "# STOCKHOLM" #"[\s\S^(?:\r\n|\r|\n)]*(?:\r\n|\r|\n)"
+other = "#=" #"(?:GF|GS)[\s\S^(?:\r\n|\r|\n)]*(?:\r\n|\r|\n)"

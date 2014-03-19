@@ -1,0 +1,32 @@
+S = line+ #".*"
+
+line = field1 field2 field3 field4 field5 field6 field7 ?[field8] "\n"
+
+field1 = printable tab
+
+field2 = (plus|minus) tab
+
+field3 = printable tab
+
+field4 = digits tab
+
+field5 = alphas tab
+
+field6 = printable tab
+
+field7 = (digits | #"\p{Graph}")+ ?[tab]
+
+field8 = printable
+
+printable = #"\p{Graph}+"
+
+alphas = #"\p{Alpha}+"
+
+tab = "\t"
+
+plus = "+"
+
+minus = "-"
+
+digits = #"\d+"
+

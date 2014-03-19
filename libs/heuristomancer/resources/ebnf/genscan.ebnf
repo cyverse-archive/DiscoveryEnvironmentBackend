@@ -1,0 +1,1 @@
+S = #"GENSCAN\s+\d+[.]\d+\s+Date run:\s+\S+\s+Time:\s+[:\d]+[\s\S]*"

@@ -1,0 +1,1 @@
+S = #"[\s\S]*!!SEQUENCE_LIST[\s\S]+\p{Upper}*BLAST\p{Upper}*.*\[.*\][\s\S]*"

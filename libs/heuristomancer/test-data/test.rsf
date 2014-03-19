@@ -1,0 +1,88 @@
+!!RICH_SEQUENCE 1.0
+..
+{
+name  DQ160058
+descrip    Taraxacum officinale TO52-2 (To52-2) mRNA, partial cds.
+type    DNA
+longname  Taraxacum officinale
+sequence-ID  DQ160058
+checksum    4492
+creation-date 09/23/2005 09:57:02
+strand  1
+comments
+  LOCUS       DQ160058                 389 bp    mRNA    linear   HTC 21-SEP-2005
+  DEFINITION  Taraxacum officinale TO52-2 (To52-2) mRNA, partial cds.
+  ACCESSION   DQ160058
+  VERSION     DQ160058.1  GI:75755890
+  KEYWORDS    HTC.
+  SOURCE      Taraxacum officinale
+    ORGANISM  Taraxacum officinale
+              Eukaryota; Viridiplantae; Streptophyta; Embryophyta; Tracheophyta;
+              Spermatophyta; Magnoliophyta; eudicotyledons; core eudicotyledons;
+              asterids; campanulids; Asterales; Asteraceae; Cichorioideae;
+              Cichorieae; Taraxacum.
+  REFERENCE   1  (bases 1 to 389)
+    AUTHORS   Hulzink,R.J.M., van Dijk,P.J. and Biere,A.
+    TITLE     Isolation and characterization of candidate genes for pathogen and
+              herbivory defense in common dandelion (Taraxacum officinale) upon
+              salicylic acid or methyl jasmonate treatment
+    JOURNAL   Unpublished
+  REFERENCE   2  (bases 1 to 389)
+    AUTHORS   Hulzink,R.J.M., van Dijk,P.J. and Biere,A.
+    TITLE     Direct Submission
+    JOURNAL   Submitted (09-AUG-2005) Centre for Terrestrial Ecology, Netherlands
+              Institute for Ecology, Boterhoeksestraat 48, Heteren 6666 ZG, The
+              Netherlands
+  FEATURES             Location/Qualifiers
+       source          1. .389
+                       /organism="Taraxacum officinale"
+                       /mol_type="mRNA"
+                       /db_xref="taxon:50225"
+                       /dev_stage="seedling; fifth leaf stage"
+                       /note="salicylic acid or methyl jasmonate responsive
+                       genotype: triploid apomictic clone 68"
+       gene            <1. .389
+                       /locus_tag="To52-2"
+       CDS             <1. .175
+                       /locus_tag="To52-2"
+                       /note="similar to aspartyl-tRNA synthetase or
+                       aspartate--tRNA ligase; contains premature internal stop
+                       codon"
+                       /codon_start=2
+                       /product="TO52-2"
+                       /protein_id="ABA27003.1"
+                       /db_xref="GI:75755891"
+                       /translation="NTEIRKNSKENLFWKSMEPSFIFYTGTLLLSGLSTQCHVVTTSC
+                       IATHLMFSLEGRR"
+feature 1 389 -1 square solid source
+       source          1. .389
+                       /organism="Taraxacum officinale"
+                       /mol_type="mRNA"
+                       /db_xref="taxon:50225"
+                       /dev_stage="seedling; fifth leaf stage"
+                       /note="salicylic acid or methyl jasmonate responsive
+                       genotype: triploid apomictic clone 68"
+feature 1 389 6 square solid gene
+       gene            <1. .389
+                       /locus_tag="To52-2"
+feature 1 175 4 square solid CDS
+       CDS             <1. .175
+                       /locus_tag="To52-2"
+                       /note="similar to aspartyl-tRNA synthetase or
+                       aspartate--tRNA ligase; contains premature internal stop
+                       codon"
+                       /codon_start=2
+                       /product="TO52-2"
+                       /protein_id="ABA27003.1"
+                       /db_xref="GI:75755891"
+                       /translation="NTEIRKNSKENLFWKSMEPSFIFYTGTLLLSGLSTQCHVVTTSC
+                       IATHLMFSLEGRR"
+sequence
+  taatacagagatccgaaagaactctaaggaaaacttgttttggaaaagtatggaaccgag
+  ttttatattctacaccggtaccctcttgctgtccggcctttctacacaatgccatgtcgt
+  gacaacgagttgtatagcaactcatttgatgttttcattagaggggaggagataatttca
+  ggagctcaacgtgtgcacatacctgaacttttggaggcacgtgcaactgcatgtgggatt
+  gatctcaaaaccatatcatcatacattgattccttcaggtatggtgcgcctccacatggc
+  gggattggagttggattggaacgtgttgtgatgcttttttgtggccttgataacattcgt
+  aaagtctcacttttcccacgtgaccttcg
+}
