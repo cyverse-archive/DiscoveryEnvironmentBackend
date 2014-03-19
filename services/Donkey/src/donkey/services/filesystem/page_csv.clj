@@ -14,8 +14,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.services.filesystem.validators :as validators]
-            [deliminator.core :as deliminator])
+            [donkey.services.filesystem.validators :as validators])
   (:import [au.com.bytecode.opencsv CSVReader]))
 
 (def line-ending "\n")

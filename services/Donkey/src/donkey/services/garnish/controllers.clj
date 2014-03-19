@@ -5,8 +5,6 @@
         [donkey.util.validators]
         [donkey.util.transformers :only [add-current-user-to-map]])
   (:require [cheshire.core :as json]
-            [hoot.rdf :as rdf]
-            [hoot.csv :as csv]
             [heuristomancer.core :as hm]
             [clojure.core.memoize :as memo]
             [clojure.java.shell :as sh]
