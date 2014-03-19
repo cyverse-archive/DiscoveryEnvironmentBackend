@@ -1,0 +1,15 @@
+pom.xml
+*jar
+/lib/
+/classes/
+/target/
+.lein-deps-sum
+.lein-failures
+.lein-repl-history
+*~
+*.swp
+.dir-locals.el
+.nrepl-hist.eld
+/.classpath
+/.project
+/bin
