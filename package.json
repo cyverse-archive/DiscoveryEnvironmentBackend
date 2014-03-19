@@ -1,0 +1,18 @@
+{
+  "name": "kifshare",
+  "version": "0.1.0",
+  "author": "wregglej@iplantcollaborative.org",
+  "description": "Public file download application.",
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "less": "~1.4",
+    "grunt-contrib-less": "~0.6",
+    "grunt-contrib-copy": "~0.4",
+    "grunt-contrib-uglify" : "~0.2",
+    "grunt-jslint": "~0.2",
+    "grunt-shell": "~0.2",
+    "watch": "~0.5.1",
+    "grunt-contrib-uglify": "~0.2.2"
+  }
+}

@@ -1,0 +1,53 @@
+@import "elements.less";
+@import "kif-common";
+
+//Metadata table
+#irods-avus {
+    @table-border-color: darken(@bg-color, 10%);
+    @table-border: 1px solid @table-border-color;
+    @table-spacing: 5px;
+    @table-header-font: "Helvetica Neue", Arial, sans-serif;
+    @table-cell-height: 30px;
+    @table-width: 100%;
+    @table-margin-top: 5px;
+    @table-padding: 4px;
+    @table-data-width: 33%;
+    @table-padding-right: 5px;
+
+    table {
+        .bordered(
+            @table-border-color,
+            @table-border-color,
+            @table-border-color,
+            @table-border-color
+        );
+
+        width: @table-width;
+        margin-top: @table-margin-top;
+        margin-bottom: (@table-spacing * 4);
+        background: @bg-color;
+        padding: @table-padding;
+        border-collapse: collapse;
+        table-layout: fixed;
+
+        tr:hover {
+            background: darken(@bg-color, 10%);
+        }
+
+        td, th {
+            .ellipsis;
+            padding-left: @table-spacing;
+            padding-right: @table-padding-right;
+            border: @table-border;
+            text-align: center;
+            width: @table-data-width;
+            height: @table-cell-height;
+        }
+
+        th {
+            font-family: @table-header-font;
+            font-weight: bold;
+            background: darken(@bg-color, 25%);
+        }
+    }
+}

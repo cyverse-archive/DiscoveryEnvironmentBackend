@@ -1,0 +1,143 @@
+@import "elements.less";
+@import "kif-common";
+
+
+//Details section
+@header-text-color: #4199A9;
+@detail-label-width: 20%;
+@detail-content-width: (100% - @detail-label-width);
+@clippy-width: 10%;
+@command-line-width: (@detail-content-width - @clippy-width);
+@command-line-height: 30px;
+@command-line-top-margin: 3px;
+@copy-default: #EEEEEE;
+@copy-bw-start: 210;
+@copy-bw-stop: 230;
+@detail-font: "Helvetica Neue", Arial, sans-serif;
+
+#details {
+    margin-top: 75px;
+}
+
+//Provides a little extra space between sections.
+.section-spacer {
+    float: left;
+    display: block;
+    width: 100%;
+    height: 20px;
+}
+
+//Mixin that styles the Headers for the different sections.
+.header-style () {
+    margin-top: 25px;
+    border-bottom: 1px solid darken(@bg-color, 20%);
+
+    h2 {
+        font-size: 200%;
+        font-family: @detail-font;
+        color: @header-text-color;
+    }
+}
+
+.detail-style () {
+    font-size: 125%;
+    font-family: @detail-font;
+    height: 30px;
+    color: black;
+}
+
+.detail-label () {
+    float: left;
+    width: @detail-label-width;
+    h2 {
+        text-align: right;
+        padding-right: 10px;
+    }
+
+    p {
+        text-align: right;
+        padding-right: 10px;
+    }
+}
+
+.detail-content () {
+    float: left;
+    width: @detail-content-width;
+    p {
+        text-align: left;
+        padding-right: 10px;
+    }
+}
+
+//Styling for the File Details section.
+#details-header { .header-style; }
+#irods-avus-header { .header-style; }
+#alt-downloads-header { .header-style; }
+
+#lastmod-label,
+#size-label,
+#de-import-instructions-label,
+#irods-instructions-label,
+#wget-instructions-label,
+#curl-instructions-label {
+    .detail-style;
+    .detail-label;
+}
+
+#lastmod, #size {
+    .detail-style;
+    .detail-content;
+}
+
+//Styling for the command-line/URL input boxes
+#de-import-url,
+#irods-command-line,
+#wget-command-line,
+#curl-command-line {
+    .detail-style;
+    .detail-content;
+    margin-top: @command-line-top-margin;
+    width: @command-line-width;
+    height: @command-line-height;
+}
+
+//Styling for the "Copy" buttons
+#clippy-import-wrapper,
+#clippy-wget-wrapper,
+#clippy-curl-wrapper,
+#clippy-irods-wrapper {
+    .detail-style;
+    .detail-content;
+    margin-top: @command-line-top-margin;
+    width: @clippy-width;
+    background-color: @download-button-color-start;
+    color: @download-text-color;
+    text-align: center;
+
+    .bordered(
+        darken(@download-button-color-start, 33%),
+        darken(@download-button-color-start, 33%),
+        darken(@download-button-color-start, 33%),
+        darken(@download-button-color-start, 33%)
+    );
+
+    .bw-gradient(
+        @copy-default,
+        @copy-bw-start,
+        @copy-bw-stop
+    );
+
+    .border-radius(10px, 10px, 0px, 0px);
+
+    &:hover, &.hover {
+        .bw-gradient(
+            lighten(@copy-default, 10%),
+            (@copy-bw-start + (@copy-bw-start/10)),
+            (@copy-bw-stop + (@copy-bw-stop/10))
+        );
+    }
+
+    &:active, &.active {
+        .inner-shadow(2px, 4px, 6px, 0.5);
+    }
+}
