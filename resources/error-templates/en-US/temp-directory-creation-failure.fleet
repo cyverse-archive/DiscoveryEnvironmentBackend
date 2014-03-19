@@ -1,0 +1,7 @@
+
+Unable to create a temporary working directory.  Please verify that you have
+permission to write to the parent directory listed below.
+
+Parent: <(:parent data)>
+Prefix: <(:prefix data)>
+Base: <(:base data)>

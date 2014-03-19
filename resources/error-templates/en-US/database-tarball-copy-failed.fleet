@@ -1,0 +1,8 @@
+
+Unable to copy the database tarball file to the temporary directory.  Please
+ensure that the path to the file is correct and that you have permission to
+read the file.
+
+Source: <(:src data)>
+Destination: <(:dst data)>
+Reason: <(:reason data)>

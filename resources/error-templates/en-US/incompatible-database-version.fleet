@@ -1,0 +1,7 @@
+
+One of the database conversions in the database tarball is incompatible with
+this version of facepalm.  Please verify that the correct database tarball and
+facepalm versions are being used.
+
+First incompatible version: <(:requested-version data)>
+Highest compatible version: <(:compatible-version data)>

@@ -1,0 +1,7 @@
+
+Failed to execute a command as a subprocess.  Please ensure that the required
+utility is installed and that the directory containing the utility is in your
+PATH environment variable.
+
+Command: <(:cmd data)>
+Reason: <(:reason data)>

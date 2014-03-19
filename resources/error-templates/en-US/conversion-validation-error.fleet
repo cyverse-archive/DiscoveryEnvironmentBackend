@@ -1,0 +1,7 @@
+
+The conversion validation for <(:db-version data)> failed.  Please send the
+contents of this error message along with the current state of the database
+to the development team.
+
+<(for [e (filter #(not (#{:banner :type} (key %))) data)] "><(str (key e))>: <(str (val e))>
+<")>
