@@ -1,0 +1,25 @@
+{
+   "component":"componentid",
+   "type":"templatetype",
+   "groups":[
+      {
+         "type":"grouptype",
+         "properties":[
+            {
+               "type":"propertytypename",
+               "validator":{
+                  "name":"validatorname",
+                  "rules":[
+                     {
+                        "unknownruletype":[
+                           "rulearg1",
+                           "rulearg2"
+                        ]
+                     }
+                  ]
+               }
+            }
+         ]
+      }
+   ]
+}

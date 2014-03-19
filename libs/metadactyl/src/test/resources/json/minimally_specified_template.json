@@ -1,0 +1,42 @@
+{
+    "component":"componentid",
+    "type":"templatetype",
+    "groups":[
+        {
+            "type":"grouptype",
+            "properties":[
+                {
+                    "type": "Input",
+                    "data_object": {
+                        "id": "inputid",
+                        "name": "inputname",
+                        "multiplicity": "single",
+                        "type": "inputtype"
+                    }
+                },
+                {
+                    "type":"propertytypename",
+                    "validator":{
+                        "rules":[
+                            {
+                                "ruletype":[
+                                    "rulearg1",
+                                    "rulearg2"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                {
+                    "type": "Output",
+                    "data_object": {
+                        "id": "outputid",
+                        "name": "outputname",
+                        "multiplicity": "multiple",
+                        "type": "outputtype"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,168 @@
+{
+    "full_username": "bob@bob-like.net",
+    "id": "templateid",
+    "name": "templatename",
+    "label": "templatelabel",
+    "component": "componentid",
+    "type": "templatetype",
+    "groups": [
+        {
+            "id": "groupid",
+            "name": "groupname",
+            "label": "grouplabel",
+            "type": "grouptype",
+            "visible": false,
+            "properties": [
+                {
+                    "id": "propertyid",
+                    "option": " --p ",
+                    "type": "propertytypename",
+                    "label": "propertylabel",
+                    "default_value": "propertyvalue",
+                    "visible": false,
+                    "omit_if_blank": false,
+                    "validator": {
+                        "id": "validatorid",
+                        "name": "validatorname",
+                        "required": false,
+                        "rules": [
+                            {
+                                "ruletype": [
+                                    "rulearg1",
+                                    "rulearg2" 
+                                ] 
+                            } 
+                        ] 
+                    } 
+                } 
+            ] 
+        },
+        {
+            "id": "ingroupid",
+            "name": "",
+            "label": "Input",
+            "description": "",
+            "type": "",
+            "isVisible": true,
+            "groups": [],
+            "properties": [
+            {
+                "id": "inprop1",
+                "name": "",
+                "label": "input 1",
+                "description": "",
+                "type": "Input",
+                "isVisible": true,
+                "value": "",
+                "order": 0,
+                "data_object": {
+                    "id": "in1",
+                    "label": "input1",
+                    "multiplicity": "One",
+                    "cmdSwitch": "--foo",
+                    "order": 0,
+                    "file_info_type_id": "filetypeid",
+                    "file_info_type": "inputtype",
+                    "output_filename": "",
+                    "format_id": "inputformatid",
+                    "format": "inputformat",
+                    "required": true
+                }
+            },
+            {
+                "id": "inprop2",
+                "name": " --input=",
+                "label": "input2",
+                "description": "",
+                "type": "Input",
+                "isVisible": true,
+                "value": "",
+                "order": 1,
+                "data_object": {
+                    "id": "in2",
+                    "name": "input2",
+                    "label": "input2",
+                    "multiplicity": "Many",
+                    "cmdSwitch": " --input=",
+                    "order": 1,
+                    "file_info_type_id": "filetypeid",
+                    "file_info_type": "inputtype",
+                    "output_filename": "",
+                    "format_id": "inputformatid",
+                    "format": "inputformat",
+                    "required": true
+                }          
+            }
+            ]
+        },
+        {
+            "id": "outgroupid",
+            "name": "",
+            "label": "Output",
+            "type": "",
+            "isVisible": false,
+            "properties": [
+                {
+                    "id": "outprop1",
+                    "name": "--goo",
+                    "label": "out1",
+                    "description": "",
+                    "type": "Output",
+                    "isVisible": true,
+                    "value": "",
+                    "order": 0,
+                    "data_object": {
+                        "id": "output1",
+                        "name": "out1",
+                        "label": "out1",
+                        "isVisible": false,
+                        "multiplicity": "single",
+                        "cmdSwitch": "--goo",
+                        "order": 0,
+                        "file_info_type_id": "filetypeid",
+                        "file_info_type": "outputtype",
+                        "output_filename": "test.out",
+                        "format_id": "outputformatid",
+                        "format": "outputformat",
+                        "required": true
+                    }
+                },
+                {
+                    "id": "outprop2",
+                    "name": "--out",
+                    "label": "out2",
+                    "description": "",
+                    "type": "Output",
+                    "isVisible": true,
+                    "value": "",
+                    "order": 1,
+                    "data_object": {
+                        "id": "output2",
+                        "name": "out2",
+                        "label": "out2",
+                        "isVisible": false,
+                        "multiplicity": "single",
+                        "cmdSwitch": "--out",
+                        "order": 1,
+                        "file_info_type_id": "filetypeid",
+                        "file_info_type": "outputtype",
+                        "output_filename": "test.out",
+                        "format_id": "outputformatid",
+                        "format": "outputformat",
+                        "required": true
+                    }
+                } 
+            ] 
+        } 
+    ],
+    "implementation": {
+        "implementor": "bob",
+        "implementor_email": "bob@bob-like.net",
+        "links": [ "www.google.com", "www.iplantcollaborative.org"],
+        "test": {
+            "params": ["-a", "foo"],
+            "input_files": ["foo.txt"],
+            "output_files": ["rahr.data"]
+        }
+    }
+}

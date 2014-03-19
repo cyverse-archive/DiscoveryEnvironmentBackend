@@ -1,0 +1,34 @@
+{
+   "component":"componentid",
+   "type":"templatetype",
+   "input":[
+      {
+         "id":"inputid",
+         "name":"inputname",
+         "multiplicity":"inputmultiplicity",
+         "type":"inputtype",
+         "format":"idunno"
+      }
+   ],
+   "groups":[
+      {
+         "type":"grouptype",
+         "properties":[
+            {
+               "type":"propertytypename",
+               "validator":{
+                  "name":"validatorname",
+                  "rules":[
+                     {
+                        "ruletype":[
+                           "rulearg1",
+                           "rulearg2"
+                        ]
+                     }
+                  ]
+               }
+            }
+         ]
+      }
+   ]
+}

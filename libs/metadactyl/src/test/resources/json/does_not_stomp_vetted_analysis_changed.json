@@ -1,0 +1,33 @@
+{   "analysis_name": "analysisname",
+    "description": "analysisdescription",
+    "steps": [
+        {   "id": "stepid",
+            "name": "stepname",
+            "description": "stepdescription",
+            "template_id": "templateid",
+            "config": {
+                "propertyid3": "propertyvalue3",
+                "propertyid5": "propertyvalue5"
+            }
+        },
+        {   "id": "otherstepid",
+            "name": "otherstepname",
+            "description": "otherstepdescription",
+            "template_id": "othertemplateid",
+            "config": {
+                "otherid1": "othervalue1",
+                "otherid2": "othervalue2"
+            }
+        }
+    ],
+    "implementation": {
+        "implementor": "bob",
+        "implementor_email": "bob@bob-like.net",
+        "links": [ "www.google.com", "www.iplantcollaborative.org"],
+        "test": {
+            "params": ["-a", "foo"],
+            "input_files": ["foo.txt"],
+            "output_files": ["rahr.data"]
+        }
+    }
+}

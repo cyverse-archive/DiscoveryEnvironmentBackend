@@ -1,0 +1,33 @@
+{
+   "component":"componentid",
+   "type":"templatetype",
+   "groups":[
+      {
+         "type":"grouptype",
+         "properties":[
+            {
+               "type":"propertytypename",
+               "validator":{
+                  "name":"validatorname",
+                  "rules":[
+                     {
+                        "ruletype":[
+                           "rulearg1",
+                           "rulearg2"
+                        ]
+                     }
+                  ]
+               }
+            }
+         ]
+      }
+   ],
+   "output":[
+      {
+         "id":"outputid",
+         "name":"outputname",
+         "multiplicity":"Multiple",
+         "type":"outputtype"
+      }
+   ]
+}

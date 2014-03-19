@@ -1,0 +1,10 @@
+{
+    "implementor": "bob",
+    "implementor_email": "bob@bob-like.net",
+    "links": [ "www.google.com", "www.iplantcollaborative.org"],
+    "test": {
+        "params": ["-a", "foo"],
+        "input_files": ["foo.txt"],
+        "output_files": ["rahr.data"]
+    }
+}

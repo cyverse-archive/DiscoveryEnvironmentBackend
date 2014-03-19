@@ -1,0 +1,127 @@
+[
+    {
+        "id":"templateid",
+        "name":"templatename",
+        "label":"templatelabel",
+        "component":"componentid",
+        "type":"templatetype",
+        "groups":[
+            {
+                "id":"groupid",
+                "name":"groupname",
+                "label":"grouplabel",
+                "type":"grouptype",
+                "visible":false,
+                "properties":[
+                    {
+                        "id": "inprop1",
+                        "name": "--foo",
+                        "label": "inputname",
+                        "description": "",
+                        "type": "Input",
+                        "isVisible": true,
+                        "value": "",
+                        "order": 27,
+                        "data_object": {
+                            "id": "inputid",
+                            "name": "inputname",
+                            "multiplicity": "one",
+                            "cmdSwitch": "--foo",
+                            "order": 27,
+                            "file_info_type": "inputtype"
+                        }
+                    },
+                    {
+                        "id":"propertyid",
+                        "name":"propertyname",
+                        "type":"propertytypename",
+                        "label":"propertylabel",
+                        "order":57,
+                        "value":"propertyvalue",
+                        "visible":false,
+                        "validator":{
+                            "id":"validatorid",
+                            "name":"validatorname",
+                            "required":false,
+                            "rules":[
+                                {
+                                    "ruletype":[
+                                        "rulearg1",
+                                        "rulearg2"
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "outprop1",
+                        "name": "--goo",
+                        "label": "outputname",
+                        "description": "",
+                        "type": "Output",
+                        "isVisible": true,
+                        "value": "",
+                        "order": 11,
+                        "data_object": {
+                            "id": "outputid",
+                            "name": "outputname",
+                            "multiplicity": "one",
+                            "cmdSwitch": "--bar",
+                            "order": 11,
+                            "type": "outputtype"
+                        }
+                    } 
+                ]
+            }
+        ]
+    },
+    {
+        "component":"componentid",
+        "type":"templatetype",
+        "groups":[
+            {
+                "type":"grouptype",
+                "properties":[
+                    {
+                        "id": "inprop1",
+                        "label": "inputname",
+                        "type": "Input",
+                        "isVisible": true,
+                        "data_object": {
+                            "id": "inputid",
+                            "name": "inputname",
+                            "multiplicity": "many",
+                            "type": "inputtype"
+                        }
+                    },
+                    {
+                        "type":"propertytypename",
+                        "validator":{
+                            "name":"validatorname",
+                            "rules":[
+                                {
+                                    "ruletype":[
+                                        "rulearg1",
+                                        "rulearg2"
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "id": "outprop1",
+                        "label": "outputname",
+                        "type": "Output",
+                        "isVisible": true,
+                        "data_object": {
+                            "id": "outputid",
+                            "name": "outputname",
+                            "multiplicity": "many",
+                            "type": "outputtype"
+                        }
+                    } 
+                ]
+            }
+        ]
+    }
+]

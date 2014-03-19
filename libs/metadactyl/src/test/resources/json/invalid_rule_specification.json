@@ -1,0 +1,29 @@
+{
+   "component":"componentid",
+   "type":"templatetype",
+   "groups":[
+      {
+         "type":"grouptype",
+         "properties":[
+            {
+               "type":"propertytypename",
+               "validator":{
+                  "name":"validatorname",
+                  "rules":[
+                     {
+                        "ruletype":[
+                           "rulearg1",
+                           "rulearg2"
+                        ],
+                        "epytelur":[
+                           "1graelur",
+                           "2graelur"
+                        ]
+                     }
+                  ]
+               }
+            }
+         ]
+      }
+   ]
+}

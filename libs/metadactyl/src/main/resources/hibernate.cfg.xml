@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+
+<!-- Author: Juan Antonio Raygoza Garay   - Iplant Collaborative - Core Software  -->
+        
+<hibernate-configuration>
+    <session-factory>
+        
+        <!-- JNDI Settings -->
+        
+        <!--<property name="hibernate.connection.datasource">java:/comp/env/jdbc/local</property>-->
+        
+        <!-- Database connection settings -->
+        <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+        <property name="connection.url">jdbc:postgresql://localhost/de</property>
+        <property name="connection.username">de</property>
+        <property name="connection.password"></property>
+        
+        <!--<property name="hibernate.hb2ddl.auto">create-drop</property>-->
+        
+        
+        <!-- JDBC connection pool -->
+        
+        <property name="c3p0.min_size">5</property>
+        <property name="c3p0.max_size">20</property>
+        <property name="c3p0.timeout">1800</property>
+        <property name="c3p0.max_statements">0</property>
+        <property name="connection.provider_class">org.hibernate.connection.C3P0ConnectionProvider</property>
+        
+        <!-- SQL Dialect -->
+        
+        <property name="dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+        
+        <!-- Enable Hibernate's automatic session context management -->
+        <property name="current_session_context_class">thread</property>
+        
+        <property name="show_sql">true</property>
+        <property name="format_sql">true</property>
+        
+        <property name="hbm2ddl.auto">update</property>
+        
+        <!-- Disable the second level cache -->
+        
+        <property name="cache.provider_class">org.hibernate.cache.NoCacheProvider</property>
+        
+        <!-- Hibernate mapping class -->
+        <mapping resource="template-mapping.hbm.xml"/>
+        <mapping resource="workflow.hbm.xml"/>
+        <mapping resource="notifications.hbm.xml"/>
+        <mapping resource="job_information.hbm.xml"/>
+        
+        <mapping package="org.iplantc.persistence.dto.step" />
+        <mapping package="org.iplantc.persistence.dto.transformation" />
+    </session-factory>
+</hibernate-configuration>

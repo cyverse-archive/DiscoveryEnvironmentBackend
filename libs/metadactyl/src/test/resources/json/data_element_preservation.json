@@ -1,0 +1,55 @@
+{
+    "name": "bar",
+    "component_id": "componentid",
+    "type": "glarbinator",
+    "groups": [
+        {
+            "name": "dagroup",
+            "label": "Da Group",
+            "type": "step",
+            "properties": [
+                {
+                    "id": "inputprop",
+                    "label": "inputname",
+                    "type": "Input",
+                    "order": -1,
+                    "data_object": {
+                        "id": "input_fu_id",
+                        "name": "input_fu",
+                        "type": "Quux",
+                        "format": "qx/rhar",
+                        "multiplicity": "single",
+                        "order": -1,
+                        "switch": "-i"
+                    }
+                },
+                {
+                    "name": "foo_factor",
+                    "type": "Number",
+                    "label": "Foo Factor",
+                    "order": 1,
+                    "validator": {
+                        "name": "is_valid_foo_factor",
+                        "required": true,
+                        "rules": [{
+                            "IntAbove": [ 42 ]
+                        }]
+                    }
+                },
+                {
+                    "id": "outprop",
+                    "type": "Output",
+                    "order": 2,
+                    "data_object": {
+                        "id": "output_fu_id",
+                        "name": "output_fu",
+                        "type": "RaableRaable",
+                        "format": "gooberry",
+                        "multiplicity": "many",
+                        "order": "2"
+                    }
+                }
+            ]
+        }
+    ]
+}
