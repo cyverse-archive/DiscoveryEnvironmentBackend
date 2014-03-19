@@ -1,0 +1,16 @@
+pom.xml
+*jar
+lib
+classes
+*~
+bin
+.classpath
+.project
+.lein*
+\#*\#
+/target/
+.DS_Store
+.dir-locals.el
+*.eld
+.idea
+*.iml
