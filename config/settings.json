@@ -1,0 +1,27 @@
+{
+  "index": {
+    "analysis": {
+      "analyzer":  {
+        "irods_entity": {
+          "type":      "custom",
+          "tokenizer": "irods_entity",
+          "filter":    ["asciifolding", "lowercase"]
+        },
+        "irods_path":   {
+          "type": "custom",
+          "tokenizer": "irods_path"
+        }
+      },
+      "tokenizer": {
+        "irods_entity": {
+          "type":        "keyword",
+          "buffer_size": 2700
+        },
+        "irods_path":   {
+          "type":        "path_hierarchy",
+          "buffer_size": 2700
+        }
+      }
+    }
+  }
+}
