@@ -1,0 +1,15 @@
+pom.xml
+*jar
+lib
+classes
+*~
+bin
+.classpath
+.project
+.lein*
+\#*\#
+nibblonian.log
+target/
+.settings/
+.DS_Store
+.nrepl-port

@@ -1,0 +1,110 @@
+#!/bin/sh
+
+# chkconfig: 2345 20 80
+# description: kifshare
+
+. /etc/init.d/functions
+
+################################################################################
+# Specific script configuration
+# Change these as needed to run a specific nodejs program.
+################################################################################
+RUNUSER=iplant
+program=kifshare
+jarfile=kifshare-0.1.3-standalone.jar
+jar=/usr/local/lib/${program}/${jarfile}
+conf=/etc/iplant-services/:/etc/${program}/:/usr/local/lib/${program}/resources
+mainclass=kifshare.core
+
+################################################################################
+
+################################################################################
+# Generic paths
+# None of these should need to be changed to execute a nodejs script unless 
+# there is specific configuration that is needed for the script.
+################################################################################ 
+piddir=/var/run/$program
+pidfile=/var/run/$program/$program.pid
+lockfile=/var/lock/subsys/$program
+logdir=/var/log/$program
+RETVAL=0
+
+start () {
+    echo -n $"Starting $program: "
+    cmd="nohup java -cp .:${conf}:${jar} ${mainclass} < /dev/null &> ${logdir}/launch.log & echo \$! > $pidfile"
+    runuser -m -s /bin/bash $RUNUSER -c "$cmd"
+    RETVAL=$?
+
+    [ $RETVAL = 0 ] && success && touch ${lockfile}
+    [ $RETVAL -ne 0 ] && failure
+    echo
+
+    return $RETVAL
+}
+
+stop () {
+    echo -n $"Stopping $program: "
+    killproc -p ${pidfile}
+    RETVAL=$?
+    echo
+    [ $RETVAL = 0 ] && rm -rf ${lockfile} ${pidfile}
+}
+
+restart () {
+    stop
+    start
+}
+
+reload () {
+    restart 
+}
+
+force_reload () {
+    restart 
+}
+
+showstatus () {
+    status -p ${pidfile} ${program}
+}
+
+showstatus_q () {
+    showstatus >/dev/null 2>&1
+}
+
+case "$1" in
+    start)
+        start
+    ;;
+    
+    stop)
+        stop
+    ;;
+    
+    restart)
+        restart
+    ;;
+
+    reload)
+        reload
+    ;;
+
+    force-reload)
+        force_reload
+    ;;
+    
+    status)
+        showstatus
+    ;;
+
+    condrestart|try-restart)
+        showstatus_q || exit 0
+        restart
+    ;;
+    
+    *)
+        echo "Usage: $program {start|stop|restart|reload|force-reload|status|condrestart|try-restart}"
+        exit 1
+    ;;
+esac
+
+exit $RETVAL
