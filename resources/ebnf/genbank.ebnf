@@ -1,0 +1,7 @@
+S = ((data-bank|locus) | (line def) | (line line acc)) #"[\s\S]*"
+
+line = #"[\s\S^(?:\r\n|\r|\n)]*(?:\r\n|\r|\n)"
+data-bank = "GENETIC SEQUENCE DATA BANK"
+locus = "LOCUS"
+def = "DEFINITION"
+acc = "ACCESSION"

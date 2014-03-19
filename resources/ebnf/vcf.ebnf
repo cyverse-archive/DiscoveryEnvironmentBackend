@@ -1,0 +1,4 @@
+S = (format-line | (line date-line)) #"[\s\S]*"
+format-line = #"##fileformat=VCFv[\s\S^(?:\r\n|\r|\n)]*(?:\r\n|\r|\n)"
+date-line = #"##fileDate=[\s\S^(?:\r\n|\r|\n)]*(?:\r\n|\r|\n)"
+line = #"[\s\S^(?:\r\n|\r|\n)]*(?:\r\n|\r|\n)"

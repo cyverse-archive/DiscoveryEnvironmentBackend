@@ -1,0 +1,12 @@
+Category,Notations,Example
+Rule,: := ::= =,S = A
+End of rule,: . (optional),S = A;
+Alternation,|,A | B
+Concatenation,"whitespace or ,",A B
+Grouping,(),(A | B) C
+Optional,? [],A? [A]
+One or more,+,A+
+Zero or more,* {},A* {A}
+String terminal,"#"""" #''","#'a' #""a"""
+Epsilon,Epsilon epsilon EPSELON eps,S = 'a' S | Epsilon
+Comment,(* *),(* This is a comment *)

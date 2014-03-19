@@ -1,0 +1,43 @@
+S = (score-line | comment-line)+ partial-score-line?
+
+comment-line = #"\s*" comment EOL
+
+score-line = (
+    seqname #"\t" source #"\t" feature #"\t" start #"\t" end #"\t" score #"\t" strand #"\t"
+    frame (#"\t" attributes)? (#"\t" comment)? EOL
+)
+
+partial-score-line = (
+    seqname?
+    (#"\t" source?
+     (#"\t" feature?
+      (#"\t" start?
+       (#"\t" end?
+        (#"\t" score?
+         (#"\t" strand?
+          (#"\t" frame?)?)?)?)?)?)?)?
+    (#"\t" attributes?)?
+    (#"\t" comment?)?
+)
+
+comment = #"#[^\r\n]*"
+
+seqname = #"[^\t\r\n]+"
+
+source = #"[^\t\r\n]+"
+
+feature = #"[^\t\r\n]+"
+
+start = #"\d+"
+
+end = #"\d+"
+
+score = #"[\d.]+"
+
+strand = #"[+-.]"
+
+frame = #"[012.]"
+
+attributes = #"[^#\t\r\n]+"
+
+EOL = #"(?:\r\n|\r|\n)"

@@ -1,0 +1,19 @@
+S = seq-group+ partial-seq-group?
+
+seq-group = seq-info seq-desc seq
+
+partial-seq-group = partial-seq-info (seq-desc seq?)?
+
+seq-info = #">" seq-type #";\s*" seq-id #"[^\r\n]*" EOL
+
+seq-desc = #"[^\r\n]+" EOL
+
+seq = #"[-\sA-IK-NP-Z*]+"
+
+partial-seq-info = #">.*"
+
+seq-type = #"P1|F1|DL|DC|RL|RC|N3|N1|XX"
+
+seq-id = #"[^\s]+"
+
+EOL = #"(?:\r\n|\r|\n)"

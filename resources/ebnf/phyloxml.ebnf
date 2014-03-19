@@ -1,0 +1,1 @@
+S = #"[\s\S]*<phyloxml[\s\S]+xsi\:schemaLocation\=[\s\S]+phyloxml.xsd[\s\S]*"

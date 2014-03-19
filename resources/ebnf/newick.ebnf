@@ -1,0 +1,29 @@
+(* This grammar may be too lenient. *)
+
+S = (tree #"[;\s]*")+
+
+tree = internal (":" length?)?
+
+subtree = name | internal
+
+internal = (
+    #"\s*" comment?
+    #"\s*" "("
+    #"\s*" comment?
+    #"\s*" branch-set
+    #"\s*" comment?
+    #"\s*" #"(?:\)|$)"
+    #"\s*" comment?
+    #"\s*" name
+    #"\s*" comment?
+)
+
+branch-set = branch | branch-set #"\s*,\s*" branch
+
+branch = subtree (":" length?)? #"\s*" comment?
+
+name = #"[^\s,():;]*"
+
+length = #"\d+(?:\.\d*)?|\.\d*"
+
+comment = #"\[[^\]]*(?:\]|$)"

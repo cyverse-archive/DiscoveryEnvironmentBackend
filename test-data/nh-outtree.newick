@@ -1,0 +1,3 @@
+((((echinoderm,ciliate),mold),(invertebra,yeast)),vertebral)[0.3333];
+(((invertebra,((echinoderm,ciliate),mold)),yeast),vertebral)[0.3333];
+((invertebra,(((echinoderm,ciliate),mold),yeast)),vertebral)[0.3333];

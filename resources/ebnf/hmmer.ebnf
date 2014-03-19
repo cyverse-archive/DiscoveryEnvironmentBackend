@@ -1,0 +1,4 @@
+S = ((hmmer) | (line hmmer) | (line line school)) #"[\s\S]*"
+line = #"[^\r\n]*(?:\r\n|\r|\n)"
+hmmer = #"HMMER.*(?:\r\n|\r|\n)"
+school = #"Washington University of Medicine.*(?:\r\n|\r|\n)"

@@ -1,0 +1,4 @@
+S = (rich | alt1 | alt2) #"[\s\S]*"
+rich = "!!RICH_SEQUENCE" #"[\s\S^(?:\r\n|\r|\n)]*(?:\r\n|\r|\n)"
+alt1 = #"[{}]"
+alt2 = #"(?:name|type|longname|checksum|creation-date|strand|sequence)"

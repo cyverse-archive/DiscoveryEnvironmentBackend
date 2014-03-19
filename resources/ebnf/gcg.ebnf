@@ -1,0 +1,1 @@
+S = #"[\s\S]*Length:" #"[\s\S]*Type:" #"[\s\S]*Check:[\s\S]*\.\.[\s\S]*"

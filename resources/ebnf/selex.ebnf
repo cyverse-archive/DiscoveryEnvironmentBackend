@@ -1,0 +1,5 @@
+S = (id | (line ac) | sq) #"[\s\S]*"
+id = #"#=ID[\s\S^\n]*(?:\r\n|\r|\n)"
+ac = #"#=AC[\s\S^\n]*(?:\r\n|\r|\n)"
+sq = #"#=SQ[\s\S^\n]*(?:\r\n|\r|\n)"
+line = #"[\s\S^\n]*(?:\r\n|\r|\n)"

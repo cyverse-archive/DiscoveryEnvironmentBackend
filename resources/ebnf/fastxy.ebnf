@@ -1,0 +1,9 @@
+S = FORMAT_LINE VERSION_LINE ARBITRARY_DATA
+
+FORMAT_LINE = #"^ FAST(?:XY|A).*" EOL
+
+VERSION_LINE = #"^ version \d+"
+
+ARBITRARY_DATA = #"[\s\S]*"
+
+EOL = #"(?:\r\n|\r|\n)"

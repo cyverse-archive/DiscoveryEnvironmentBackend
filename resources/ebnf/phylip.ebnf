@@ -1,0 +1,5 @@
+S = (wat|(line wat2)|(line line wat3)) #"[\s\S]*"
+line = #"[\s\S^\n]*(?:\r\n|\r|\n)"
+wat = #"\s*\d+\s\d+(?:\r\n|\r|\n)"
+wat2 = #"\w\s+[A-IK-NP-Z\s]+(?:\r\n|\r|\n)"
+wat3 = #"(?:^\w\s+[A-IK-NP-Z\s]+|\s+[A-IK-NP-Z\s]+)"

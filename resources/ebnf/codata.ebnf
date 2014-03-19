@@ -1,0 +1,7 @@
+S = header else
+header = line1 line2
+line1 = "ENTRY" (space|tab)* #"\p{Graph}*" #"(?:\r\n|\r|\n)"
+line2 = "SEQUENCE" (space|tab)* #"(?:\r\n|\r|\n)"
+else = #"[\s\S]+"
+space = " "
+tab = "\t"

@@ -1,0 +1,4 @@
+S = (first else) | else
+line = #"[\s\S^\n]*(?:\r\n|\r|\n)"
+first = #";;[\s\S^\n]*(?:\r\n|\r|\n)"
+else = #";[^;]?[\s\S]*"
