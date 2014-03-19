@@ -1,0 +1,293 @@
+{
+    "id": "templateid",
+    "name": "templatename",
+    "label": "templatelabel",
+    "component": "componentid",
+    "type": "templatetype",
+    "groups": [
+        {
+            "id": "group1",
+            "name": "grpBASIL",
+            "label": "BASIL",
+            "type": "grouptype",
+            "visible": true,
+            "properties": [
+                {
+                    "id": "prop0",
+                    "option": " --p ",
+                    "type": "propertytypename",
+                    "label": "propertylabel",
+                    "default_value": "650",
+                    "visible": false,
+                    "validator": {
+                        "id": "validatorid",
+                        "name": "validatorname",
+                        "required": false,
+                        "rules": [
+                            {
+                                "ruletype": [
+                                    "rulearg1",
+                                    "rulearg2" 
+                                ] 
+                            } 
+                        ] 
+                    } 
+                },
+				{
+                    "id": "prop1",
+                    "option": " --q ",
+                    "type": "propertytypename",
+                    "label": "propertylabel",
+                    "defaultvalue": "651",
+                    "visible": true,
+                    "validator": {
+                        "id": "validatorid",
+                        "name": "validatorname",
+                        "required": false,
+                        "rules": [
+                            {
+                                "ruletype": [
+                                    "rulearg1",
+                                    "rulearg2" 
+                                ] 
+                            } 
+                        ] 
+                    } 
+                },
+				{
+                    "id": "prop2",
+                    "option": " --r ",
+                    "type": "propertytypename",
+                    "label": "propertylabel",
+                    "value": "652",
+                    "visible": false,
+                    "validator": {
+                        "id": "validatorid",
+                        "name": "validatorname",
+                        "required": false,
+                        "rules": [
+                            {
+                                "ruletype": [
+                                    "rulearg1",
+                                    "rulearg2" 
+                                ] 
+                            } 
+                        ] 
+                    } 
+                }                                 
+            ] 
+        },
+        {
+            "id": "group2",
+            "name": "grpRAHR",
+            "label": "RAHR",
+            "type": "grouptype",
+            "visible": true,
+            "properties": [
+                {
+                    "id": "prop0",
+                    "option": " --p ",
+                    "type": "propertytypename",
+                    "label": "propertylabel",
+                    "default_value": "650",
+                    "visible": false,
+                    "validator": {
+                        "id": "validatorid",
+                        "name": "validatorname",
+                        "required": false,
+                        "rules": [
+                            {
+                                "ruletype": [
+                                    "rulearg1",
+                                    "rulearg2" 
+                                ] 
+                            } 
+                        ] 
+                    } 
+                },
+				{
+                    "id": "prop1",
+                    "option": " --q ",
+                    "type": "propertytypename",
+                    "label": "propertylabel",
+                    "defaultvalue": "651",
+                    "visible": true,
+                    "order": 99,
+                    "validator": {
+                        "id": "validatorid",
+                        "name": "validatorname",
+                        "required": false,
+                        "rules": [
+                            {
+                                "ruletype": [
+                                    "rulearg1",
+                                    "rulearg2" 
+                                ] 
+                            } 
+                        ] 
+                    } 
+                },
+				{
+                    "id": "prop2",
+                    "option": " --r ",
+                    "type": "propertytypename",
+                    "label": "propertylabel",
+                    "value": "652",
+                    "visible": false,
+                    "validator": {
+                        "id": "validatorid",
+                        "name": "validatorname",
+                        "required": false,
+                        "rules": [
+                            {
+                                "ruletype": [
+                                    "rulearg1",
+                                    "rulearg2" 
+                                ] 
+                            } 
+                        ] 
+                    } 
+                },
+				{
+                    "id": "prop3",
+                    "option": " --r ",
+                    "type": "propertytypename",
+                    "label": "propertylabel",
+                    "value": "653",
+                    "visible": false,
+                    "order": 187,
+                    "validator": {
+                        "id": "validatorid",
+                        "name": "validatorname",
+                        "required": false,
+                        "rules": [
+                            {
+                                "ruletype": [
+                                    "rulearg1",
+                                    "rulearg2" 
+                                ] 
+                            } 
+                        ] 
+                    } 
+                }                                  
+            ] 
+        },
+        {
+            "id": "ingroupid",
+            "name": "",
+            "label": "Input",
+            "description": "",
+            "type": "",
+            "isVisible": true,
+            "groups": [],
+            "properties": [
+            {
+                "id": "inprop1",
+                "name": "",
+                "label": "input 1",
+                "description": "",
+                "type": "Input",
+                "isVisible": true,
+                "value": "",
+                "order": 0,
+                "data_object": {
+                    "id": "in1",
+                    "label": "input1",
+                    "multiplicity": "many",
+                    "cmdSwitch": "--foo",
+                    "order": 0,
+                    "file_info_type_id": "filetypeid",
+                    "file_info_type": "inputtype",
+                    "output_filename": "",
+                    "format_id": "inputformatid",
+                    "format": "inputformat",
+                    "required": true
+                }
+            },
+            {
+                "id": "inprop2",
+                "name": " --input=",
+                "label": "input2",
+                "description": "",
+                "type": "Input",
+                "isVisible": true,
+                "value": "",
+                "order": 1,
+                "data_object": {
+                    "id": "in2",
+                    "name": "input2",
+                    "label": "input2",
+                    "multiplicity": "many",
+                    "cmdSwitch": " --input=",
+                    "order": 1,
+                    "file_info_type_id": "filetypeid",
+                    "file_info_type": "inputtype",
+                    "output_filename": "",
+                    "format_id": "inputformatid",
+                    "format": "inputformat",
+                    "required": true
+                }          
+            }
+            ]
+        },
+        {
+            "id": "outgroupid",
+            "name": "",
+            "label": "Output",
+            "type": "",
+            "isVisible": false,
+            "properties": [
+                {
+                    "id": "outprop1",
+                    "name": "--goo",
+                    "label": "out1",
+                    "description": "",
+                    "type": "Output",
+                    "isVisible": true,
+                    "value": "",
+                    "order": 0,
+                    "data_object": {
+                        "id": "output1",
+                        "name": "out1",
+                        "label": "out1",
+                        "isVisible": false,
+                        "multiplicity": "single",
+                        "cmdSwitch": "--goo",
+                        "order": 0,
+                        "file_info_type_id": "filetypeid",
+                        "file_info_type": "outputtype",
+                        "output_filename": "test.out",
+                        "format_id": "outputformatid",
+                        "format": "outputformat",
+                        "required": true
+                    }
+                },
+                {
+                    "id": "outprop2",
+                    "name": "--out",
+                    "label": "out2",
+                    "description": "",
+                    "type": "Output",
+                    "isVisible": true,
+                    "value": "",
+                    "order": 1,
+                    "data_object": {
+                        "id": "output2",
+                        "name": "out2",
+                        "label": "out2",
+                        "isVisible": false,
+                        "multiplicity": "single",
+                        "cmdSwitch": "--out",
+                        "order": 1,
+                        "file_info_type_id": "filetypeid",
+                        "file_info_type": "outputtype",
+                        "output_filename": "test.out",
+                        "format_id": "outputformatid",
+                        "format": "outputformat",
+                        "required": true
+                    }
+                } 
+            ] 
+        } 
+    ]
+}

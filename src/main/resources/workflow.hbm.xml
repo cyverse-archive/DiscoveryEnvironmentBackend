@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.iplantc.workflow.core"
+                   default-lazy="false" default-cascade="all">
+    <class name="TransformationActivity" table="transformation_activity">
+        <id name="hid" column="hid">
+            <generator class="native" >
+                <param name="sequence">transformation_activity_id_seq</param>
+            </generator>
+        </id>
+
+        <property name="name" column="name" />
+        <property name="id" column="id" index="TT_ID" not-null="true" />
+        <property name="description" column="description" />
+        <property name="workspaceId" column="workspace_id" index="TT_WID"
+                  not-null="true" />
+        <property name="type" column="type" />
+        <property name="deleted" column="deleted" />
+        <property name="disabled" column="disabled" />
+        <property name="wikiurl" column="wikiurl" />
+        <property name="integrationDate" column="integration_date" not-null="false" />
+        <property name="editedDate" column="edited_date" not-null="false" />
+
+        <list name="mappings" table="transformation_activity_mappings"
+              cascade="all-delete-orphan">
+            <key column="transformation_activity_id" />
+            <list-index column="hid" />
+            <many-to-many column="mapping_id"
+                          class="org.iplantc.workflow.data.InputOutputMap" />
+        </list>
+
+        <list name="steps" table="transformation_task_steps" cascade="all-delete-orphan">
+            <key column="transformation_task_id" />
+            <list-index column="hid" />
+            <many-to-many class="org.iplantc.persistence.dto.step.TransformationStep" column="transformation_step_id" />
+        </list>
+
+        <many-to-one name="integrationDatum"
+                     column="integration_data_id"
+                     cascade="save-update"
+                     class="org.iplantc.persistence.dto.data.IntegrationDatum"
+                     not-null="true" />
+
+        <set name="ratings" table="ratings" cascade="all-delete-orphan">
+            <key column="transformation_activity_id" not-null="true" />
+            <one-to-many class="Rating" />
+        </set>
+
+        <set name="references" table="tranformation_activity_references" cascade="all-delete-orphan">
+            <key column="transformation_activity_id" not-null='true' />
+            <one-to-many class='TransformationActivityReference' />
+        </set>
+
+        <set name='suggestedGroups' table='suggested_groups' cascade='all'>
+            <key column='transformation_activity_id' not-null='true' />
+            <many-to-many class='org.iplantc.workflow.template.groups.TemplateGroup' unique="true" column="template_group_id" />
+        </set>
+
+        <set name="jobTypeNames" table="analysis_job_types" inverse="true">
+            <key column="analysis_id" not-null="true" />
+            <element column="job_type" type="string" />
+        </set>
+    </class>
+
+    <class name="org.iplantc.workflow.data.InputOutputMap" table="input_output_mapping">
+        <id name="hid" column="hid">
+            <generator class="native" >
+                <param name="sequence">input_output_mapping_id_seq</param>
+            </generator>
+        </id>
+
+        <many-to-one name="source" class="org.iplantc.persistence.dto.step.TransformationStep" not-null="true" cascade="none" />
+        <many-to-one name="target" class="org.iplantc.persistence.dto.step.TransformationStep" not-null="true" cascade="none" />
+
+        <map name="input_output_relation" table="dataobject_mapping">
+            <key column="mapping_id" not-null="true" />
+            <map-key column="output" type="string" />
+            <element column="input" type="string" not-null="true" />
+        </map>
+    </class>
+</hibernate-mapping>
+

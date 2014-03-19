@@ -1,0 +1,42 @@
+{
+   "groups": {
+       "id": "--root-PropertyGroupContainer--",
+       "name": "",
+       "label": "test",
+       "desc": "",
+       "type": "",
+       "isVisible": true,
+       "groups": [
+           {
+               "id": "",
+               "name": "",
+               "label": "Group 1",
+               "desc": "",
+               "type": "",
+               "isVisible": true,
+               "groups": [],
+               "properties": [
+                   {
+                       "id": "3E10A867-7B10-596B-2B35-7659F2F76E80",
+                       "name": "",
+                       "label": "this is a static test",
+                       "desc": "",
+                       "type": "Info",
+                       "isVisible": true,
+                       "value": "",
+                       "order": 0
+                   }
+               ]
+           }
+       ]
+   },
+   "input": [],
+   "output": [],
+   "id": "",
+   "name": "test",
+   "desc": "",
+   "component_id": "componentid",
+   "component": "componentid",
+   "TYPE": "",
+   "tito": ""
+}

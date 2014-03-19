@@ -1,0 +1,70 @@
+{   "components": [
+        {   "name": "foo",
+            "location": "usr/local2/bin",
+            "type": "executable",
+            "description": "description of foo",
+            "version": "version of foo",
+            "attribution": "brought to you by Blrfl, the makers of Glarbicle"
+        }
+    ],
+    "templates": [
+        {   "name": "bar",
+            "component_ref": "foo",
+            "type": "glarbinator",
+            "input": [
+                {   "id": "input_fu_id",
+                    "name": "input_fu",
+                    "type": "Quux",
+                    "format": "qx/rhar",
+                    "multiplicity": "single",
+                    "order": -1,
+                    "switch": "-i"
+                }
+            ],
+            "groups": [
+                {   "name": "dagroup",
+                    "label": "Da Group",
+                    "type": "step",
+                    "properties": [
+                        {   "name": "foo_factor",
+                            "type": "Number",
+                            "label": "Foo Factor",
+                            "order": 1,
+                            "validator": {
+                                "name": "is_valid_foo_factor",
+                                "required": true,
+                                "rules": [
+                                    {   "IntAbove": [ 42 ]
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ],
+            "output": [
+                {    "id": "output_fu_id",
+                     "name": "output_fu",
+                     "type": "RaableRaable",
+                     "format": "gooberry",
+                     "multiplicity": "many",
+                     "order": "2"
+                }
+            ]
+        }
+    ],
+    "analyses": [
+        {   "analysis_name": "baz",
+            "description": "description of baz",
+            "steps": [
+                {   "name": "bar_step",
+                    "template_ref": "bar",
+                    "description": "description of bar_step",
+                    "config": {
+                        "foo_factor": "27"
+                    }
+                }
+            ]
+        }
+    ]
+}

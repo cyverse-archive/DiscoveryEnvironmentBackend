@@ -1,0 +1,165 @@
+{
+    "id": "templateid",
+    "name": "templatename",
+    "label": "templatelabel",
+    "component": "componentid",
+    "type": "templatetype",
+    "groups": [
+        {
+            "id": "groupid",
+            "name": "groupname",
+            "label": "grouplabel",
+            "type": "grouptype",
+            "visible": false,
+            "properties": [
+                {
+                    "id": "propertyid",
+                    "name": "propertyname",
+                    "type": "propertytypename",
+                    "label": "propertylabel",
+                    "order": 57,
+                    "value": "propertyvalue",
+                    "visible": false,
+                    "omit_if_blank": true,
+                    "validator": {
+                        "id": "validatorid",
+                        "name": "validatorname",
+                        "required": false,
+                        "rules": [
+                            {
+                                "ruletype": [
+                                    "rulearg1",
+                                    "rulearg2" 
+                                ] 
+                            } 
+                        ] 
+                    } 
+                } 
+            ] 
+        },
+        {
+            "id": "ingroupid",
+            "name": "",
+            "label": "Input",
+            "description": "",
+            "type": "",
+            "isVisible": true,
+            "groups": [],
+            "properties": [
+                {
+                    "id": "inprop1",
+                    "name": "",
+                    "label": "inputname",
+                    "description": "",
+                    "type": "Input",
+                    "isVisible": true,
+                    "omit_if_blank": true,
+                    "value": "",
+                    "order": 27,
+                    "data_object": {
+                        "id": "inputid",
+                        "name": "inputname",
+                        "label": "inputname",
+                        "multiplicity": "Single",
+                        "cmdSwitch": "--foo",
+                        "order": 27,
+                        "file_info_type_id": "filetypeid",
+                        "file_info_type": "inputtype",
+                        "output_filename": "",
+                        "format_id": "inputformatid",
+                        "format": "inputformat",
+                        "required": true
+                    }
+                },
+                {
+                    "id": "inprop2",
+                    "name": "--bar",
+                    "label": "otherinputname",
+                    "description": "",
+                     "type": "Input",
+                    "isVisible": true,
+                    "omit_if_blank": false,
+                    "value": "",
+                    "order": 57,
+                    "data_object": {
+                        "id": "otherinputid",
+                        "name": "otherinputname",
+                        "label": "otherinputname",
+                        "multiplicity": "Single",
+                        "cmdSwitch": "--bar",
+                        "order": 57,
+                        "file_info_type_id": "filetypeid",
+                        "file_info_type": "inputtype",
+                        "output_filename": "",
+                        "format_id": "inputformatid",
+                        "format": "inputformat",
+                        "required": false
+                    }
+                }
+            ]
+        },
+        {
+            "id": "outgroupid",
+            "name": "",
+            "label": "Output",
+            "type": "",
+            "isVisible": false,
+            "properties": [
+                {
+                    "id": "outprop1",
+                    "name": "--goo",
+                    "label": "outputname",
+                    "description": "",
+                    "type": "Output",
+                    "isVisible": true,
+                    "omit_if_blank": true,
+                    "value": "",
+                    "order": 11,
+                    "data_object": {
+                        "id": "outputid",
+                        "name": "outputname",
+                        "label": "outputname",
+                        "isVisible": false,
+                        "multiplicity": "Single",
+                        "cmdSwitch": "--bar",
+                        "order": 11,
+                        "file_info_type_id": "filetypeid",
+                        "file_info_type": "outputtype",
+                        "data_source": "stdout",
+                        "output_filename": "test.out",
+                        "format_id": "outputformatid",
+                        "format": "outputformat",
+                        "required": true
+                    }
+                }, 
+                {
+                    "id": "outprop2",
+                    "name": "--hoo",
+                    "label": "outputname",
+                    "description": "",
+                    "type": "Output",
+                    "isVisible": true,
+                    "omit_if_blank": true,
+                    "value": "",
+                    "order": 11,
+                    "data_object": {
+                        "id": "outputid",
+                        "name": "outputname",
+                        "label": "outputname",
+                        "isVisible": false,
+                        "multiplicity": "Single",
+                        "cmdSwitch": "--bar",
+                        "order": 11,
+                        "file_info_type_id": "filetypeid",
+                        "file_info_type": "outputtype",
+                        "data_source": "stdout",
+                        "output_filename": "test.out",
+                        "format_id": "outputformatid",
+                        "format": "outputformat",
+                        "required": true
+                    }
+                } 
+            ] 
+        } 
+    ]
+}

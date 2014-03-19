@@ -1,0 +1,20 @@
+{
+   "component":"componentid",
+   "type":"templatetype",
+   "input":[
+      {
+         "id":"inputid",
+         "name":"inputname",
+         "multiplicity":"Many",
+         "type":"inputtype"
+      }
+   ],
+   "output":[
+      {
+         "id":"outputid",
+         "name":"outputname",
+         "multiplicity":"Many",
+         "type":"outputtype"
+      }
+   ]
+}
