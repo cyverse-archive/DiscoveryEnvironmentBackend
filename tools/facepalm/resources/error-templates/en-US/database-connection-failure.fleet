@@ -1,0 +1,8 @@
+
+A connection to the database could not be established.  Please verify that the
+connection settings and credentials are correct.
+
+Host: <(:host data)>
+Port: <(:port data)>
+Database: <(:database data)>
+User: <(:user data)>
