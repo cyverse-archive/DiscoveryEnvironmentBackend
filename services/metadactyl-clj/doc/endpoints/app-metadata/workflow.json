@@ -1,0 +1,201 @@
+{
+    "analyses": [
+        {
+            "analysis_id": "auto-gen",
+            "analysis_name": "Find Unique Values",
+            "deleted": false,
+            "description": "GNU uniq: Discard all but one of successive identical lines from a sorted INPUT file, writing to an OUTPUT file",
+            "implementation": {
+                "implementor": "Nobody",
+                "implementor_email": "nobody@iplantcollaborative.org"
+            },
+            "ratings": [
+                {
+                    "rating": 4,
+                    "username": "nobody@iplantcollaborative.org"
+                }
+            ],
+            "references": [],
+            "steps": [
+                {
+                    "config": {},
+                    "description": "GNU uniq: Discard all but one of successive identical lines from INPUT, writing to OUTPUT",
+                    "name": "Find or count unique values",
+                    "template_ref": "Find or count unique values"
+                }
+            ],
+            "suggested_groups": [],
+            "type": "",
+            "wiki_url": "https://pods.iplantcollaborative.org/wiki/display/DEapps/Find+Unique+Values"
+        }
+    ],
+    "components": [
+        {
+            "attribution": "Nobody",
+            "description": "Scan for unique values",
+            "id": "c4e6f548cc0ee431da7f2ddfdf3ace761",
+            "implementation": {
+                "implementor": "Nobody",
+                "implementor_email": "nobody@iplantcollaborative.org",
+                "test": {
+                    "input_files": [],
+                    "output_files": []
+                }
+            },
+            "location": "/usr/bin/",
+            "name": "uniq",
+            "type": "executable",
+            "version": "1.00"
+        }
+    ],
+    "templates": [
+        {
+            "component_ref": "uniq",
+            "description": "",
+            "edited_date": "",
+            "groups": {
+                "description": "",
+                "groups": [
+                    {
+                        "description": "",
+                        "isVisible": true,
+                        "label": "Inputs",
+                        "name": "",
+                        "properties": [
+                            {
+                                "data_object": {
+                                    "cmdSwitch": "",
+                                    "data_source": "file",
+                                    "description": "",
+                                    "file_info_type": "PlainText",
+                                    "format": "Unspecified",
+                                    "is_implicit": false,
+                                    "multiplicity": "One",
+                                    "name": "Select an input file",
+                                    "order": 7,
+                                    "required": false,
+                                    "retain": false
+                                },
+                                "description": "",
+                                "isVisible": true,
+                                "label": "Select an input file",
+                                "name": "",
+                                "omit_if_blank": true,
+                                "order": 7,
+                                "type": "Input",
+                                "validator": {
+                                    "name": "",
+                                    "required": true,
+                                    "rules": []
+                                },
+                                "value": ""
+                            }
+                        ],
+                        "type": ""
+                    },
+                    {
+                        "description": "",
+                        "isVisible": true,
+                        "label": "Options",
+                        "name": "",
+                        "properties": [
+                            {
+                                "description": "",
+                                "isVisible": true,
+                                "label": "Ignore case while doing comparisons",
+                                "name": "--ignore-case",
+                                "omit_if_blank": false,
+                                "order": 2,
+                                "type": "Flag",
+                                "value": "false"
+                            },
+                            {
+                                "description": "",
+                                "isVisible": true,
+                                "label": "Prefix unique lines by the number of occurrences",
+                                "name": "--count",
+                                "omit_if_blank": false,
+                                "order": 1,
+                                "type": "Flag",
+                                "value": "false"
+                            },
+                            {
+                                "description": "",
+                                "isVisible": true,
+                                "label": "Only print duplicate lines",
+                                "name": "--repeated",
+                                "omit_if_blank": false,
+                                "order": 3,
+                                "type": "Flag",
+                                "value": "false"
+                            },
+                            {
+                                "description": "",
+                                "isVisible": true,
+                                "label": "Only print unique lines",
+                                "name": "--unique",
+                                "omit_if_blank": false,
+                                "order": 6,
+                                "type": "Flag",
+                                "value": "false"
+                            },
+                            {
+                                "description": "A field is a run of whitespace, then non-whitespace characters.",
+                                "isVisible": true,
+                                "label": "Avoid comparing the first N fields",
+                                "name": "--skip-fields",
+                                "omit_if_blank": true,
+                                "order": 5,
+                                "type": "Double",
+                                "value": ""
+                            },
+                            {
+                                "description": "Fields are skipped before chars.",
+                                "isVisible": true,
+                                "label": "Avoid comparing the first N characters",
+                                "name": "--skip-chars",
+                                "omit_if_blank": true,
+                                "order": 4,
+                                "type": "Double",
+                                "value": ""
+                            },
+                            {
+                                "data_object": {
+                                    "cmdSwitch": "",
+                                    "data_source": "file",
+                                    "description": "",
+                                    "file_info_type": "PlainText",
+                                    "format": "Unspecified",
+                                    "is_implicit": false,
+                                    "multiplicity": "One",
+                                    "order": 8,
+                                    "output_filename": "uniq_output.txt",
+                                    "required": true,
+                                    "retain": true
+                                },
+                                "description": "",
+                                "isVisible": false,
+                                "label": "uniq_output.txt",
+                                "name": "",
+                                "omit_if_blank": true,
+                                "order": 8,
+                                "type": "Output",
+                                "value": ""
+                            }
+                        ],
+                        "type": ""
+                    }
+                ],
+                "id": "--root-PropertyGroupContainer--",
+                "isVisible": true,
+                "label": "",
+                "name": ""
+            },
+            "id": "auto-gen",
+            "label": "Find or count unique values",
+            "name": "Find or count unique values",
+            "published_date": "",
+            "type": ""
+        }
+    ]
+}

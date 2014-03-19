@@ -1,0 +1,68 @@
+{
+    "component": "",
+    "description": "Testing new /*-app endpoints.",
+    "edited_date": "",
+    "groups": [
+        {
+            "description": "",
+            "isVisible": true,
+            "label": "Grp1",
+            "name": "",
+            "properties": [
+                {
+                    "arguments": [],
+                    "data_object": {
+                        "data_source": "file",
+                        "file_info_type": "File",
+                        "format": "Unspecified",
+                        "is_implicit": false,
+                        "retain": false
+                    },
+                    "defaultValue": "",
+                    "description": "File input tool tip",
+                    "isVisible": true,
+                    "label": "Input File",
+                    "name": "-f",
+                    "omit_if_blank": true,
+                    "order": 1,
+                    "required": true,
+                    "type": "FileInput",
+                    "validators": []
+                },
+                {
+                    "arguments": [],
+                    "defaultValue": "",
+                    "description": "TextBox tool tip",
+                    "isVisible": true,
+                    "label": "TextBox",
+                    "name": "-b",
+                    "omit_if_blank": true,
+                    "order": 2,
+                    "required": false,
+                    "type": "Text",
+                    "validators": []
+                },
+                {
+                    "arguments": [],
+                    "defaultValue": "",
+                    "description": "checkbox tool tip",
+                    "isVisible": true,
+                    "label": "Checkbox",
+                    "name": "-c",
+                    "omit_if_blank": true,
+                    "order": 3,
+                    "required": false,
+                    "type": "Flag",
+                    "validators": []
+                }
+            ],
+            "type": ""
+        }
+    ],
+    "id": "auto-gen",
+    "label": "App Endpoint Test",
+    "name": "App Endpoint Test",
+    "published_date": "",
+    "references": [],
+    "type": ""
+}
