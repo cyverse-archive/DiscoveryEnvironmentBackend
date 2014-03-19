@@ -1,0 +1,53 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.iplantc.core</groupId>
+    <artifactId>persistence</artifactId>
+    <version>1.8.4</version>
+    <packaging>jar</packaging>
+    <name>persistence</name>
+    <url>http://www.iplantcollaborative.org</url>
+
+    <description>
+        The persistence layer for the Discovery Environment app metadata database.
+    </description>
+
+    <parent>
+        <groupId>org.iplantc.core</groupId>
+        <artifactId>base-pom</artifactId>
+        <version>1.8.4</version>
+    </parent>
+
+    <licenses>
+        <license>
+            <name>Standard BSD</name>
+            <url>http://www.iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <properties>
+        <scm.repo>metadactyl.git</scm.repo>
+    </properties>
+
+    <scm>
+        <connection>scm:git:${scm.base}/${scm.repo}</connection>
+        <developerConnection>scm:git:${scm.base}/${scm.repo}</developerConnection>
+        <url>${scm.base}/${scm.repo}</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <url>https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs</url>
+        </developer>
+    </developers>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.iplantc.core</groupId>
+            <artifactId>hibernatetoolkit</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>
