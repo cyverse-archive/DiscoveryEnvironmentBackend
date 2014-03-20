@@ -10,8 +10,6 @@
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as json]
-            [hoot.rdf :as rdf]
-            [hoot.csv :as csv]
             [heuristomancer.core :as hm]
             [clojure.java.shell :as sh]
             [clojure.java.io :as io]
