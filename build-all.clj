@@ -46,7 +46,8 @@
 
 ;;; Order that the libs should be built in.
 (def libs-build-order
-  ["hibernatetoolkit"
+  ["de-base-services-pom"
+   "hibernatetoolkit"
    "de-authn"
    "de-persistence"
    "metadactyl"
@@ -221,17 +222,16 @@
 
 
 (defn uberjar-func
-  [d]
-  (let [project-path (path-join "services" (str d))]
-    (cond
-      (clojure-project? project-path)
-      (build-clojure-project project-path)
+  [project-path]
+  (cond
+    (clojure-project? project-path)
+    (build-clojure-project project-path)
 
-      (java-project? project-path)
-      (build-java-project project-path)
+    (java-project? project-path)
+    (build-java-project project-path)
 
-      :else (println ">> Don't know how to build this."))
-      (println "")))
+    :else (println ">> Don't know how to build this."))
+    (println ""))
 
 
 (defn uberjar-services
@@ -239,7 +239,7 @@
   []
   (let [dirs (fs/list-dir "services")]
     (println "> Uberjar'ing the services")
-    (doseq [d dirs] (uberjar-func d))))
+    (doseq [d dirs] (uberjar-func (path-join "services" (str d))))))
 
 
 (defn uberjar-tools
@@ -247,7 +247,7 @@
   []
   (let [dirs (fs/list-dir "tools")]
     (println "> Uberjar'ing the tools")
-    (doseq [d dirs] (uberjar-func d))))
+    (doseq [d dirs] (uberjar-func (path-join "tools" (str d))))))
 
 
 (doseq [proj clojure-project-dirs]
