@@ -49,6 +49,8 @@ include(':hibernatetoolkit')
 project(':hibernatetoolkit').projectDir = new File( rootProject.projectDir, hibernatetoolkitPrefix )
 include(':de-persistence')
 project(':de-persistence').projectDir = new File( rootProject.projectDir, dePersistencePrefix )
+include(':de-base-services-pom')
+project(':de-base-services-pom').projectDir = new File( rootProject.projectDir, deBaseServicesPomPrefix )
 
 // Tools Subtrees
 include(':facepalm')
