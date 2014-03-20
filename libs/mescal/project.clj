@@ -14,7 +14,9 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [cheshire "5.3.1"]
                  [clj-http "0.9.1"]
-                 [com.cemerick/url "0.1.1"]]
+                 [com.cemerick/url "0.1.1"]
+                 [org.iplantc/clojure-commons "1.4.9-SNAPSHOT"]
+                 [slingshot "0.10.3"]]
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
   :deploy-repositories [["sonatype-nexus-staging"

@@ -12,4 +12,5 @@ pom.xml
 .nrepl-hist.eld
 /.classpath
 /.project
+/.gradle
 /bin
