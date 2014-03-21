@@ -1,4 +1,4 @@
-(defproject org.iplantc/clj-jargon "0.4.2"
+(defproject org.iplantc/clj-jargon "0.4.3-SNAPSHOT"
   :description "Clojure API on top of iRODS's jargon-core."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
