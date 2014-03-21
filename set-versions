@@ -2,6 +2,17 @@
 
 set -e
 
+function perl_substitution () {
+    local new_version="$1"
+    cat <<EOF
+    s{
+        (\[org\.iplantc[^"]*)   # capture the group and artifact IDs
+        "[^"]*"                 # ignore the version and surrounding quotes
+    }
+    {\1"${new_version}"}gxms
+EOF
+}
+
 if [ $# -eq 0 ]; then
   echo "USAGE: ./set-versions.sh <version>"
   exit 1
@@ -25,7 +36,8 @@ for project in $(find . -name project.clj -exec dirname '{}' \;); do
   fi
 
   echo ">>> $cljproj: Setting versions of all iPlant deps to $1"
-  sed -i '' "s/\(\[org\.iplantc[^\"]*\"\)[^\"]*\"/\1$1\"/g" project.clj
+  #sed -i '' "s/\(\[org\.iplantc[^\"]*\"\)[^\"]*\"/\1$1\"/g" project.clj
+  perl -pi -e "$(perl_substitution $1)" project.clj
   echo " "
 
   popd 2>&1 > /dev/null
