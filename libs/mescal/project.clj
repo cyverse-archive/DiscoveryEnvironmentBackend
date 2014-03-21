@@ -1,4 +1,4 @@
-(defproject org.iplantc/mescal "0.1.1"
+(defproject org.iplantc/mescal "0.1.1-SNAPSHOT"
   :description "A Clojure client library for the Agave API."
   :url "https://github.com/iPlantCollaborativeOpenSource/mescal"
   :license {:name "BSD Standard License"
