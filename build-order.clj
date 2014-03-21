@@ -75,8 +75,9 @@
 
 (defn get-lein-deps
   [path]
-  (let [[_ proj ver & rest] (read-string (slurp path))]
-    [proj (fs/parent path) ver (:dependencies (apply hash-map rest))]))
+  (let [[_ proj ver & more] (read-string (slurp path))
+        props               (apply hash-map more)]
+    [proj (fs/parent path) ver (apply concat ((juxt :dependencies :plugins) props))]))
 
 (defn get-sh-deps
   [path]
