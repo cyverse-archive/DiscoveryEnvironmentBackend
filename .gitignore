@@ -14,3 +14,14 @@ pom.xml
 /.project
 /.gradle
 /bin
+builds/
+checkouts/
+libs/clj-cas/clj-cas
+libs/clj-icat-direct/clj-icat-direct
+libs/clj-jargon/clj-jargon
+libs/heuristomancer/heuristomancer
+libs/iplant-clojure-commons/iplant-clojure-commons
+libs/kameleon/kameleon
+libs/mescal/mescal
+libs/metadactyl/metadactyl
+
