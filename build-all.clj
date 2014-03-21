@@ -1,7 +1,9 @@
 (use '[leiningen.exec :only (deps)]
      '[leiningen.core.project :only (defproject)])
 (deps '[[cheshire "5.3.1"]
-        [me.raynes/fs "1.4.4"]])
+        [me.raynes/fs "1.4.4"]
+        [org.clojure/tools.cli "0.3.1"]
+        [org.clojure/clojure "1.5.1"]])
 
 (require '[clojure.java.shell :as sh]
          '[cheshire.core :as json]
@@ -285,14 +287,50 @@
       (move-database (path-join "databases" (str proj))))))
 
 
-(doseq [proj clojure-project-dirs]
-  (println "> Handling " proj)
-  (create-checkout-symlinks proj)
-  (println ""))
-(install-lein-plugins)
-(install-libs)
-(uberjar-services)
-(uberjar-tools)
-(build-databases)
-(archive-builds)
+(defn do-symlinks
+  []
+  (doseq [proj clojure-project-dirs]
+    (println "> Handling " proj)
+    (create-checkout-symlinks proj)
+    (println "")))
 
+(defn do-everything
+  []
+  (do-symlinks)
+  (install-lein-plugins)
+  (install-libs)
+  (uberjar-services)
+  (uberjar-tools)
+  (build-databases))
+
+(defn main-func
+  []
+  (let [args *command-line-args*
+        opts ["help"
+              "symlinks"
+              "lein-plugins"
+              "libs"
+              "services"
+              "tools"
+              "databases"]
+        usage (str "These are the options: " opts)]
+    (when (> (count args) 2)
+      (println "Too many args!")
+      (println usage))
+    (when-not (contains? (set opts) (second args))
+      (println "lol nope")
+      (println usage))
+    (case (second args)
+      "help"         (println usage)
+      "symlinks"     (do-symlinks)
+      "lein-plugins" (install-lein-plugins)
+      "libs"         (install-libs)
+      "services"     (uberjar-services)
+      "tools"        (uberjar-tools)
+      "databases"    (build-databases)
+      (do-everything))
+    (when-not (= (second args) "symlinks")
+      (archive-builds))))
+
+
+(main-func)
