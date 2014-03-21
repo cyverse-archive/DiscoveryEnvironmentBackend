@@ -119,8 +119,8 @@
             :filter           (should-filter? user path)
             :permission       (permission-for cm user path)
             :hasSubDirs       true
-            :date-created     (:created stat)
-            :date-modified    (:modified stat)
+            :date-created     (:date-created stat)
+            :date-modified    (:date-modified stat)
             :file-size        0)
           (icat/number-of-items-in-folder user zone path)
           (icat/number-of-filtered-items-in-folder user zone path
@@ -149,8 +149,8 @@
             :filter        (should-filter? user path)
             :permisssion   (permission-for cm user path)
             :hasSubDirs    true
-            :date-created  (:created stat)
-            :date-modified (:modified stat)
+            :date-created  (:date-created stat)
+            :date-modified (:date-modified stat)
             :file-size     0)
           (dissoc (page->map user (icat/list-folders-in-folder user zone path)) :files))))))
 
