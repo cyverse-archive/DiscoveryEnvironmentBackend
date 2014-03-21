@@ -250,6 +250,41 @@
     (doseq [d dirs] (uberjar-func (path-join "tools" (str d))))))
 
 
+(defn move-builds
+  [path-to-project]
+  (let [target-path (path-join path-to-project "target")]
+    (when (fs/exists? target-path)
+      (println ">> Copying builds from " target-path " to builds directory." )
+      (print-shell-result (sh/sh "bash" "-c" (str "cp " target-path "/*.jar " "builds")))
+    (println ""))))
+
+
+(defn move-database
+  [path-to-project]
+  (when (fs/exists? path-to-project)
+    (println ">> Copying builds from " path-to-project " to builds directory.")
+    (print-shell-result (sh/sh "bash" "-c" (str "cp " path-to-project "/*.tar.gz " "builds")))
+  (println "")))
+
+
+(defn archive-builds
+  []
+  (println "> Moving builds to builds directory.")
+  (when (fs/exists? "builds")
+    (println ">> Cleaning out builds directory")
+    (print-shell-result (sh/sh "rm" "-r" "builds")))
+  (println ">> Creating builds directory")
+  (print-shell-result (sh/sh "mkdir" "builds"))
+  (let [move-it #(doseq [proj (fs/list-dir %1)]
+                   (move-builds (path-join %1 (str proj))))]
+    (move-it "lein-plugins")
+    (move-it "libs")
+    (move-it "services")
+    (move-it "tools")
+    (doseq [proj (fs/list-dir "databases")]
+      (move-database (path-join "databases" (str proj))))))
+
+
 (doseq [proj clojure-project-dirs]
   (println "> Handling " proj)
   (create-checkout-symlinks proj)
@@ -259,4 +294,5 @@
 (uberjar-services)
 (uberjar-tools)
 (build-databases)
+(archive-builds)
 
