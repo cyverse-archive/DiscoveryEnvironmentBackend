@@ -54,6 +54,12 @@
         version    (:version dep-props)]
     [dep-sym version]))
 
+(defn add-parent-pom-dep
+  [deps props pom]
+  (if-let [parent-pom (first (find-tags pom :parent))]
+    (conj deps (build-dependency props parent-pom))
+    deps))
+
 (defn get-mvn-deps
   [path]
   (let [pom         (xml/parse path)
@@ -63,7 +69,8 @@
         version     (:project.version props)
         artifact    (symbol (str group-id "/" artifact-id))
         dep-tags    (get-tag-content pom :dependencies)
-        deps        (mapv (partial build-dependency props) dep-tags)]
+        deps        (mapv (partial build-dependency props) dep-tags)
+        deps        (add-parent-pom-dep deps props pom)]
     [artifact (fs/parent path) version deps]))
 
 (defn get-lein-deps
