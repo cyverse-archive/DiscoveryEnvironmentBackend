@@ -14,3 +14,4 @@ pom.xml
 /.project
 /.gradle
 /bin
+/builds
