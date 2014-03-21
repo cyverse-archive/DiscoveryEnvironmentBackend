@@ -175,13 +175,21 @@
     (println "")))
 
 
+(def cmdtar-projects
+  #{"clavin"
+    "facepalm"
+    "proboscis"})
+
+
 (defn build-clojure-project
   "Builds a clojure project"
   [path-to-project]
   (sh/with-sh-dir path-to-project
     (println ">> Building " path-to-project)
     (print-shell-result (sh/sh "lein" "clean"))
-    (print-shell-result (sh/sh "lein" "uberjar"))))
+    (print-shell-result (sh/sh "lein" "uberjar"))
+    (if (contains? cmdtar-projects (fs/base-name path-to-project))
+      (print-shell-result (sh/sh "lein" "iplant-cmdtar")))))
 
 
 (defn build-java-project
@@ -286,15 +294,22 @@
         (rpm-func (path-join "tools" (str d)) bnum)))))
 
 
+(defn bash-cmd
+  [str-to-run]
+  (sh/sh "bash" "-c" str-to-run))
+
 (defn move-builds
   [path-to-project]
   (let [target-path (path-join path-to-project "target")]
     (when (fs/exists? target-path)
       (println ">> Copying builds from " target-path " to builds directory.")
-      (print-shell-result (sh/sh "bash" "-c" (str "mv " target-path "/*.jar " "builds"))))
+      (print-shell-result (bash-cmd (str "mv " target-path "/*.jar " "builds"))))
     (when (System/getenv "BUILD_RPMS")
       (println ">> Copying any RPMs from " path-to-project " to builds directory.")
-      (print-shell-result (sh/sh "bash" "-c" (str "mv " path-to-project "/*.rpm " "builds"))))
+      (print-shell-result (bash-cmd (str "mv " path-to-project "/*.rpm " "builds"))))
+    (when (contains? cmdtar-projects (fs/base-name path-to-project))
+      (println ">> Copying any cmdtars from " path-to-project " to builds directory.")
+      (print-shell-result (bash-cmd (str "mv " target-path "/*.tar.gz " "builds"))))
     (println "")))
 
 
