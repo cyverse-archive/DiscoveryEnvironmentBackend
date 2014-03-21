@@ -64,16 +64,16 @@
         artifact    (symbol (str group-id "/" artifact-id))
         dep-tags    (get-tag-content pom :dependencies)
         deps        (mapv (partial build-dependency props) dep-tags)]
-    [artifact version deps]))
+    [artifact (fs/parent path) version deps]))
 
 (defn get-lein-deps
   [path]
   (let [[_ proj ver & rest] (read-string (slurp path))]
-    [proj ver (:dependencies (apply hash-map rest))]))
+    [proj (fs/parent path) ver (:dependencies (apply hash-map rest))]))
 
 (defn get-sh-deps
   [path]
-  [(symbol (str "org.iplantc/" (fs/base-name path))) "" []])
+  [(symbol (str "org.iplantc/" (fs/base-name path))) path "" []])
 
 (defn unknown-project-type
   [project-dir]
@@ -96,4 +96,27 @@
   (let [list-subdirs (fn [dir] (map (partial fs/file dir) (fs/list-dir dir)))]
     (mapv get-deps (mapcat list-subdirs project-dirs))))
 
-(pprint (get-all-deps))
+(defn map-elements
+  [key-index value-index s]
+  (into {} (map #(vector (nth % key-index) (nth % value-index)) s)))
+
+(defn eligible-for-build?
+  [our-projects selected-projects [proj deps]]
+  (let [selected? (partial contains? selected-projects)
+        not-ours? (complement (partial contains? our-projects))]
+    (and (not (selected? proj))
+         (empty? (remove (comp (some-fn selected? not-ours?) first) deps)))))
+
+(defn get-build-order
+  [all-deps]
+  (let [deps-of      (map-elements 0 3 all-deps)
+        our-projects (set (map first all-deps))]
+    (loop [selected #{} build-order []]
+      (let [eligible? (partial eligible-for-build? our-projects selected)]
+        (if-not (= (count selected) (count our-projects))
+         (let [eligible-projects (mapv first (filter eligible? deps-of))]
+           (recur (apply conj selected eligible-projects)
+                  (conj build-order eligible-projects)))
+         build-order)))))
+
+(pprint (get-build-order (get-all-deps)))
