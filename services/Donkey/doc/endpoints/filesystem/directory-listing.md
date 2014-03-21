@@ -34,11 +34,7 @@ __Response Body__:
             "id": "/iplant/home/wregglej/acsxfdqswfrdafds",
             "path": "/iplant/home/wregglej/acsxfdqswfrdafds",
             "label": "acsxfdqswfrdafds",
-            "permissions": {
-                "own": true,
-                "read": true,
-                "write": true
-            }
+            "permission": "own"
         },
         {
             "date-created": 1371157127000,
@@ -49,11 +45,7 @@ __Response Body__:
             "id": "/iplant/home/wregglej/analyses",
             "path": "/iplant/home/wregglej/analyses",
             "label": "analyses",
-            "permissions": {
-                "own": true,
-                "read": true,
-                "write": true
-            }
+            "permission": "own"
         },
         {
             "date-created": 1380814985000,
@@ -64,11 +56,7 @@ __Response Body__:
             "id": "/iplant/home/wregglej/analyses3",
             "path": "/iplant/home/wregglej/analyses3",
             "label": "analyses3",
-            "permissions": {
-                "own": true,
-                "read": true,
-                "write": true
-            }
+            "permission": "own"
         },
 
     ],
@@ -76,12 +64,8 @@ __Response Body__:
     "id": "/iplant/home/wregglej",
     "path": "/iplant/home/wregglej",
     "label": "wregglej",
-    "filter": false,
-    "permissions": {
-        "own": true,
-        "read": true,
-        "write": true
-    },
+    "filter": true,
+    "permission": "own"
     "success": true
     }
 
@@ -132,11 +116,7 @@ __Response Body__:
                 "id": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
                 "path": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
                 "label": "centos-5.8-x86-64-minimal.box",
-                "permissions": {
-                    "own": true,
-                    "read": true,
-                    "write": true
-                }
+                "permission": "own"
             }
         ],
         "folders": [
@@ -148,11 +128,7 @@ __Response Body__:
                 "id": "/iplant/home/wregglej/asdfafa",
                 "path": "/iplant/home/wregglej/asdfafa",
                 "label": "asdfafa",
-                "permissions": {
-                    "own": true,
-                    "read": true,
-                    "write": true
-                }
+                "permission": "own"
             },
             {
                 "date-created": 1377814242000,
@@ -162,11 +138,7 @@ __Response Body__:
                 "id": "/iplant/home/wregglej/asdf bar",
                 "path": "/iplant/home/wregglej/asdf bar",
                 "label": "asdf bar",
-                "permissions": {
-                    "own": true,
-                    "read": true,
-                    "write": true
-                }
+                "permission": "own"
             },
             {
                 "date-created": 1373397344000,
@@ -176,11 +148,7 @@ __Response Body__:
                 "id": "/iplant/home/wregglej/Find_Unique_Values_analysis1-2013-07-09-12-15-37.024",
                 "path": "/iplant/home/wregglej/Find_Unique_Values_analysis1-2013-07-09-12-15-37.024",
                 "label": "Find_Unique_Values_analysis1-2013-07-09-12-15-37.024",
-                "permissions": {
-                    "own": true,
-                    "read": true,
-                    "write": true
-                }
+                "permission": "own"
             },
             {
                 "date-created": 1374080529000,
@@ -190,22 +158,14 @@ __Response Body__:
                 "id": "/iplant/home/wregglej/zaaaaaaaa",
                 "path": "/iplant/home/wregglej/zaaaaaaaa",
                 "label": "zaaaaaaaa",
-                "permissions": {
-                    "own": true,
-                    "read": true,
-                    "write": true
-                }
+                "permission": "own"
             }
         ],
         "hasSubDirs": true,
         "id": "/iplant/home/wregglej",
         "path": "/iplant/home/wregglej",
         "label": "wregglej",
-        "permissions": {
-            "own": true,
-            "read": true,
-            "write": true
-        },
+        "permission": "own",
         "success": true,
         "total" : 218
     }
