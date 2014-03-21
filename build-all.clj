@@ -1,7 +1,9 @@
 (use '[leiningen.exec :only (deps)]
      '[leiningen.core.project :only (defproject)])
 (deps '[[cheshire "5.3.1"]
-        [me.raynes/fs "1.4.4"]])
+        [me.raynes/fs "1.4.4"]
+        [org.clojure/tools.cli "0.3.1"]
+        [org.clojure/clojure "1.5.1"]])
 
 (require '[clojure.java.shell :as sh]
          '[cheshire.core :as json]
@@ -173,13 +175,21 @@
     (println "")))
 
 
+(def cmdtar-projects
+  #{"clavin"
+    "facepalm"
+    "proboscis"})
+
+
 (defn build-clojure-project
   "Builds a clojure project"
   [path-to-project]
   (sh/with-sh-dir path-to-project
     (println ">> Building " path-to-project)
     (print-shell-result (sh/sh "lein" "clean"))
-    (print-shell-result (sh/sh "lein" "uberjar"))))
+    (print-shell-result (sh/sh "lein" "uberjar"))
+    (if (contains? cmdtar-projects (fs/base-name path-to-project))
+      (print-shell-result (sh/sh "lein" "iplant-cmdtar")))))
 
 
 (defn build-java-project
@@ -234,36 +244,80 @@
     (println ""))
 
 
+(defn rpm-func
+  [project-path build-num]
+  (if (fs/exists? (path-join project-path "project.clj"))
+    (println ">> Generating RPM for " project-path " with a build number of " build-num)
+      (sh/with-sh-dir project-path
+        (print-shell-result
+          (sh/sh "lein" "iplant-rpm" build-num)))))
+
+
 (defn uberjar-services
   "Uberjars up the services"
   []
-  (let [dirs (fs/list-dir "services")]
+  (let [dirs  (fs/list-dir "services")
+        rpms? (System/getenv "BUILD_RPMS")
+        bnum  (System/getenv "BUILD_NUMBER")]
     (println "> Uberjar'ing the services")
-    (doseq [d dirs] (uberjar-func (path-join "services" (str d))))))
+    (doseq [d dirs]
+      (uberjar-func (path-join "services" (str d)))
+      (when rpms?
+        (when-not bnum
+          (println "ERROR: BUILD_RPMS environment variable is set, but the BUILD_NUMBER is missing.")
+          (System/exit 1))
+        (rpm-func (path-join "services" (str d)) bnum)))))
+
+
+(defn rpm-func
+  [project-path]
+  (if (fs/exists? (path-join project-path "project.clj"))
+    (println ">> Generating RPM for " project-path)
+    (sh/with-sh-dir project-path
+      (print-shell-result
+       (sh/sh "lein" "iplant-rpm" (System/getenv "BUILD_NUMBER"))))))
 
 
 (defn uberjar-tools
   "Uberjars up the tools"
   []
-  (let [dirs (fs/list-dir "tools")]
+  (let [dirs  (fs/list-dir "tools")
+        rpms? (System/getenv "BUILD_RPMS")
+        bnum  (System/getenv "BUILD_NUMBER")]
     (println "> Uberjar'ing the tools")
-    (doseq [d dirs] (uberjar-func (path-join "tools" (str d))))))
+    (doseq [d dirs]
+      (uberjar-func (path-join "tools" (str d)))
+      (when rpms?
+        (when-not bnum
+          (println "ERROR: BUILD_RPMS environment variable is set, but the BUILD_NUMBER is missing.")
+          (System/exit 1))
+        (rpm-func (path-join "tools" (str d)) bnum)))))
 
+
+(defn bash-cmd
+  [str-to-run]
+  (sh/sh "bash" "-c" str-to-run))
 
 (defn move-builds
   [path-to-project]
   (let [target-path (path-join path-to-project "target")]
     (when (fs/exists? target-path)
-      (println ">> Copying builds from " target-path " to builds directory." )
-      (print-shell-result (sh/sh "bash" "-c" (str "cp " target-path "/*.jar " "builds")))
-    (println ""))))
+      (println ">> Copying builds from " target-path " to builds directory.")
+      (print-shell-result (bash-cmd (str "mv " target-path "/*.jar " "builds"))))
+    (when (System/getenv "BUILD_RPMS")
+      (println ">> Copying any RPMs from " path-to-project " to builds directory.")
+      (print-shell-result (bash-cmd (str "mv " path-to-project "/*.rpm " "builds"))))
+    (when (contains? cmdtar-projects (fs/base-name path-to-project))
+      (println ">> Copying any cmdtars from " path-to-project " to builds directory.")
+      (print-shell-result (bash-cmd (str "mv " target-path "/*.tar.gz " "builds"))))
+    (println "")))
 
 
 (defn move-database
   [path-to-project]
   (when (fs/exists? path-to-project)
     (println ">> Copying builds from " path-to-project " to builds directory.")
-    (print-shell-result (sh/sh "bash" "-c" (str "cp " path-to-project "/*.tar.gz " "builds")))
+    (print-shell-result (sh/sh "bash" "-c" (str "mv " path-to-project "/*.tar.gz " "builds")))
   (println "")))
 
 
@@ -285,14 +339,50 @@
       (move-database (path-join "databases" (str proj))))))
 
 
-(doseq [proj clojure-project-dirs]
-  (println "> Handling " proj)
-  (create-checkout-symlinks proj)
-  (println ""))
-(install-lein-plugins)
-(install-libs)
-(uberjar-services)
-(uberjar-tools)
-(build-databases)
-(archive-builds)
+(defn do-symlinks
+  []
+  (doseq [proj clojure-project-dirs]
+    (println "> Handling " proj)
+    (create-checkout-symlinks proj)
+    (println "")))
 
+(defn do-everything
+  []
+  (do-symlinks)
+  (install-lein-plugins)
+  (install-libs)
+  (uberjar-services)
+  (uberjar-tools)
+  (build-databases))
+
+(defn main-func
+  []
+  (let [args *command-line-args*
+        opts ["help"
+              "symlinks"
+              "lein-plugins"
+              "libs"
+              "services"
+              "tools"
+              "databases"]
+        usage (str "These are the options: " opts)]
+    (when (> (count args) 2)
+      (println "Too many args!")
+      (println usage))
+    (when-not (contains? (set opts) (second args))
+      (println "lol nope")
+      (println usage))
+    (case (second args)
+      "help"         (println usage)
+      "symlinks"     (do-symlinks)
+      "lein-plugins" (install-lein-plugins)
+      "libs"         (install-libs)
+      "services"     (uberjar-services)
+      "tools"        (uberjar-tools)
+      "databases"    (build-databases)
+      (do-everything))
+    (when-not (= (second args) "symlinks")
+      (archive-builds))))
+
+
+(main-func)
