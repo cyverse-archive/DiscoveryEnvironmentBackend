@@ -236,36 +236,73 @@
     (println ""))
 
 
+(defn rpm-func
+  [project-path build-num]
+  (if (fs/exists? (path-join project-path "project.clj"))
+    (println ">> Generating RPM for " project-path " with a build number of " build-num)
+      (sh/with-sh-dir project-path
+        (print-shell-result
+          (sh/sh "lein" "iplant-rpm" build-num)))))
+
+
 (defn uberjar-services
   "Uberjars up the services"
   []
-  (let [dirs (fs/list-dir "services")]
+  (let [dirs  (fs/list-dir "services")
+        rpms? (System/getenv "BUILD_RPMS")
+        bnum  (System/getenv "BUILD_NUMBER")]
     (println "> Uberjar'ing the services")
-    (doseq [d dirs] (uberjar-func (path-join "services" (str d))))))
+    (doseq [d dirs]
+      (uberjar-func (path-join "services" (str d)))
+      (when rpms?
+        (when-not bnum
+          (println "ERROR: BUILD_RPMS environment variable is set, but the BUILD_NUMBER is missing.")
+          (System/exit 1))
+        (rpm-func (path-join "services" (str d)) bnum)))))
+
+
+(defn rpm-func
+  [project-path]
+  (if (fs/exists? (path-join project-path "project.clj"))
+    (println ">> Generating RPM for " project-path)
+    (sh/with-sh-dir project-path
+      (print-shell-result
+       (sh/sh "lein" "iplant-rpm" (System/getenv "BUILD_NUMBER"))))))
 
 
 (defn uberjar-tools
   "Uberjars up the tools"
   []
-  (let [dirs (fs/list-dir "tools")]
+  (let [dirs  (fs/list-dir "tools")
+        rpms? (System/getenv "BUILD_RPMS")
+        bnum  (System/getenv "BUILD_NUMBER")]
     (println "> Uberjar'ing the tools")
-    (doseq [d dirs] (uberjar-func (path-join "tools" (str d))))))
+    (doseq [d dirs]
+      (uberjar-func (path-join "tools" (str d)))
+      (when rpms?
+        (when-not bnum
+          (println "ERROR: BUILD_RPMS environment variable is set, but the BUILD_NUMBER is missing.")
+          (System/exit 1))
+        (rpm-func (path-join "tools" (str d)) bnum)))))
 
 
 (defn move-builds
   [path-to-project]
   (let [target-path (path-join path-to-project "target")]
     (when (fs/exists? target-path)
-      (println ">> Copying builds from " target-path " to builds directory." )
-      (print-shell-result (sh/sh "bash" "-c" (str "cp " target-path "/*.jar " "builds")))
-    (println ""))))
+      (println ">> Copying builds from " target-path " to builds directory.")
+      (print-shell-result (sh/sh "bash" "-c" (str "mv " target-path "/*.jar " "builds"))))
+    (when (System/getenv "BUILD_RPMS")
+      (println ">> Copying any RPMs from " path-to-project " to builds directory.")
+      (print-shell-result (sh/sh "bash" "-c" (str "mv " path-to-project "/*.rpm " "builds"))))
+    (println "")))
 
 
 (defn move-database
   [path-to-project]
   (when (fs/exists? path-to-project)
     (println ">> Copying builds from " path-to-project " to builds directory.")
-    (print-shell-result (sh/sh "bash" "-c" (str "cp " path-to-project "/*.tar.gz " "builds")))
+    (print-shell-result (sh/sh "bash" "-c" (str "mv " path-to-project "/*.tar.gz " "builds")))
   (println "")))
 
 
