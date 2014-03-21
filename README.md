@@ -40,6 +40,10 @@ The rest:
 
 When the builds are done, they're moved into the top level builds directory.
 
+To create RPMs of the services, you'll need a CentOS 5 system with rpm-build, leiningen, and lein-iplant-rpm installed. The build-all.clj script looks for two environment variables when building RPMS: BUILD_RPMS and BUILD_NUMBER. BUILD_NUMBER is used as the release in the RPM.
+
+RPMs aren't necessary for most builds and are likely to be deprecated in the future.
+
 ## Building a specific project
 
 For the Leiningen projects, you'll want to create the checkouts symlinks first. They help make sure that you're developing against the latest version of our libraries.
