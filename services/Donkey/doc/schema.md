@@ -58,6 +58,7 @@ Here are the fields that describe a filesystem entry.
 {
     "id"              : "/iplant/home/tedgin/an-entry",
     "path"            : "/iplant/home/tedgin/an-entry",
+    "permission"      : "own",
     "userPermissions" : [
         {
             "permission" : "own",
@@ -92,6 +93,7 @@ describe a file.
 {
     "id"              : "/iplant/home/tedgin/a.file",
     "path"            : "/iplant/home/tedgin/an.file",
+    "permission"      : "own",
     "userPermissions" : [
         {
             "permission" : "own",
@@ -139,6 +141,7 @@ describe a folder.
 {
     "id"              : "/iplant/home/tedgin/a-folder",
     "path"            : "/iplant/home/tedgin/a-folder",
+    "permission"      : "own",
     "userPermissions" : [
         {
             "permission" : "own",
