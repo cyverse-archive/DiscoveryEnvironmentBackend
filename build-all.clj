@@ -305,7 +305,7 @@
     (when (fs/exists? target-path)
       (println ">> Copying builds from " target-path " to builds directory.")
       (print-shell-result (bash-cmd (str "mv " target-path "/*.jar " "builds"))))
-    (when (System/getenv "BUILD_RPMS")
+    (when (and (System/getenv "BUILD_RPMS") (= (fs/parent path-to-project) "services"))
       (println ">> Copying any RPMs from " path-to-project " to builds directory.")
       (print-shell-result (bash-cmd (str "mv " path-to-project "/*.rpm " "builds"))))
     (when (contains? cmdtar-projects (fs/base-name path-to-project))
