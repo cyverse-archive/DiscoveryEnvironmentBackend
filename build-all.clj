@@ -260,6 +260,8 @@
   (let [dirs  (fs/list-dir "services")
         rpms? (System/getenv "BUILD_RPMS")
         bnum  (System/getenv "BUILD_NUMBER")]
+    (println "BUILD_RPMS " rpms?)
+    (println "BUILD_NUMBER " bnum)
     (println "> Uberjar'ing the services")
     (doseq [d dirs]
       (uberjar-func (path-join "services" (str d)))
@@ -277,6 +279,8 @@
   (let [dirs  (fs/list-dir "tools")
         rpms? (System/getenv "BUILD_RPMS")
         bnum  (System/getenv "BUILD_NUMBER")]
+    (println "BUILD_RPMS " rpms?)
+    (println "BUILD_NUMBER " bnum)
     (println "> Uberjar'ing the tools")
     (doseq [d dirs]
       (uberjar-func (path-join "tools" (str d)))
