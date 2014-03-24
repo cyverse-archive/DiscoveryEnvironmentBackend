@@ -34,7 +34,6 @@
                                [org.slf4j/slf4j-log4j12]]]
                  [slingshot "0.10.3"]
                  [org.clojure/tools.logging "0.2.6"]]
-  :profiles {:dev {:dependencies [[org.iplantc/boxy "0.1.2"]]}}
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]
                  ["renci.repository.releases"
