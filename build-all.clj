@@ -301,13 +301,18 @@
 
 (defn move-builds
   [path-to-project]
-  (let [target-path (path-join path-to-project "target")]
-    (when (fs/exists? target-path)
+  (let [target-path (path-join path-to-project "target")
+        parent-dir  (-> path-to-project fs/parent fs/base-name str)]
+    (when (and (fs/exists? target-path)
+               (not= parent-dir "lein-plugins"))
       (println ">> Copying builds from " target-path " to builds directory.")
       (print-shell-result (bash-cmd (str "mv " target-path "/*.jar " "builds"))))
-    (when (and (System/getenv "BUILD_RPMS") (= (fs/parent path-to-project) "services"))
+
+    (when (and (System/getenv "BUILD_RPMS")
+               (or (= parent-dir "services") (= parent-dir "tools")))
       (println ">> Copying any RPMs from " path-to-project " to builds directory.")
       (print-shell-result (bash-cmd (str "mv " path-to-project "/*.rpm " "builds"))))
+
     (when (contains? cmdtar-projects (fs/base-name path-to-project))
       (println ">> Copying any cmdtars from " path-to-project " to builds directory.")
       (print-shell-result (bash-cmd (str "mv " target-path "/*.tar.gz " "builds"))))
