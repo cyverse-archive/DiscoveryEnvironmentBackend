@@ -253,7 +253,7 @@
       (sh/with-sh-dir project-path
                       (print-shell-result
                        (sh/sh "lein" "iplant-rpm" build-num))))
-    (when-not (fs/exists clj-path)
+    (when-not (fs/exists? clj-path)
       (println ">> RPM generation error! Path " clj-path " does not exist!")
       (System/exit 1))))
 
