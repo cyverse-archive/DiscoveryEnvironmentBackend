@@ -247,11 +247,15 @@
 
 (defn rpm-func
   [project-path build-num]
-  (if (fs/exists? (path-join project-path "project.clj"))
-    (println ">> Generating RPM for " project-path " with a build number of " build-num)
+  (let [clj-path (path-join project-path "project.clj")]
+    (when (fs/exists? clj-path)
+      (println ">> Generating RPM for " project-path " with a build number of " build-num)
       (sh/with-sh-dir project-path
-        (print-shell-result
-          (sh/sh "lein" "iplant-rpm" build-num)))))
+                      (print-shell-result
+                       (sh/sh "lein" "iplant-rpm" build-num))))
+    (when-not (fs/exists clj-path)
+      (println ">> RPM generation error! Path " clj-path " does not exist!")
+      (System/exit 1))))
 
 
 (defn uberjar-services
