@@ -58,6 +58,7 @@
    "clj-cas"
    "clj-jargon"
    "clj-icat-direct"
+   "mescal"
    "heuristomancer"])
 
 
