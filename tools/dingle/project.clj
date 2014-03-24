@@ -1,4 +1,4 @@
-(defproject org.iplantc/dingle "0.1.0-SNAPSHOT"
+(defproject org.iplantc/dingle "3.0.0"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -8,7 +8,7 @@
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.cli "0.3.1"]
-                 [org.iplantc/clojure-commons "1.4.8-SNAPSHOT"]
+                 [org.iplantc/clojure-commons "3.0.0"]
                  [org.cloudhoist/stevedore "0.8.0-alpha.1"]
                  [clj-ssh "0.5.7"]
                  [slingshot "0.10.3"]
