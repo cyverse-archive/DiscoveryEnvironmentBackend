@@ -270,14 +270,6 @@
         (rpm-func (path-join "services" (str d)) bnum)))))
 
 
-(defn rpm-func
-  [project-path]
-  (if (fs/exists? (path-join project-path "project.clj"))
-    (println ">> Generating RPM for " project-path)
-    (sh/with-sh-dir project-path
-      (print-shell-result
-       (sh/sh "lein" "iplant-rpm" (System/getenv "BUILD_NUMBER"))))))
-
 
 (defn uberjar-tools
   "Uberjars up the tools"
