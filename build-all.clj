@@ -305,7 +305,7 @@
     (println "> Uberjar'ing the tools")
     (doseq [d dirs]
       (uberjar-func (path-join "tools" (str d)))
-      (when rpms?
+      (when (and rpms? (contains? rpm-projects (str d)))
         (when-not bnum
           (println "ERROR: BUILD_RPMS environment variable is set, but the BUILD_NUMBER is missing.")
           (System/exit 1))
