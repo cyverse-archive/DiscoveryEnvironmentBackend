@@ -24,11 +24,19 @@ $ curl -sd '
             "paths": [
                 {
                     "path": "/path/to/shared/file",
-                    "permission": "write"
+                    "permissions": {
+                        "read": true,
+                        "write": true,
+                        "own": false
+                    }
                 },
                 {
                     "path": "/path/to/shared/folder",
-                    "permission": "read"
+                    "permissions": {
+                        "read": true,
+                        "write": false,
+                        "own": false
+                    }
                 }
             ]
         },
@@ -37,11 +45,19 @@ $ curl -sd '
             "paths": [
                 {
                     "path": "/path/to/shared/file",
-                    "permission": "own"
+                    "permissions": {
+                        "read": true,
+                        "write": true,
+                        "own": true
+                    }
                 },
                 {
                     "path": "/path/to/shared/folder",
-                    "permission": "own"
+                    "permissions": {
+                        "read": true,
+                        "write": true,
+                        "own": true
+                    }
                 }
             ]
         }
@@ -61,7 +77,11 @@ The service will respond with a success or failure message per user and resource
                 {
                     "success": true,
                     "path": "/path/to/shared/file",
-                    "permission": "write"
+                    "permissions": {
+                        "read": true,
+                        "write": true,
+                        "own": false
+                    }
                 },
                 {
                     "success": false,
@@ -74,7 +94,11 @@ The service will respond with a success or failure message per user and resource
                         ]
                     },
                     "path": "/path/to/shared/folder",
-                    "permission": "read"
+                    "permissions": {
+                        "read": true,
+                        "write": false,
+                        "own": false
+                    }
                 }
             ]
         },
@@ -84,7 +108,11 @@ The service will respond with a success or failure message per user and resource
                 {
                     "success": true,
                     "path": "/path/to/shared/file",
-                    "permission": "own"
+                    "permissions": {
+                        "read": true,
+                        "write": true,
+                        "own": true
+                    }
                 },
                 {
                     "success": false,
@@ -97,7 +125,11 @@ The service will respond with a success or failure message per user and resource
                         ]
                     },
                     "path": "/path/to/shared/folder",
-                    "permission": "own"
+                    "permissions": {
+                        "read": true,
+                        "write": true,
+                        "own": true
+                    }
                 }
             ]
         }

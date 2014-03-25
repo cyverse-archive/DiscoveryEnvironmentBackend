@@ -50,10 +50,10 @@
   (let [paths       [(:path share)]
         sharer      (:shortUsername current-user)
         share-withs [user]
-        perm        (keyword (:permission share))]
+        perms       (:permissions share)]
     (try+
       (log/warn "share" paths "with" share-withs "by" sharer)
-      (sh/share sharer share-withs paths perm)
+      (sh/share sharer share-withs paths perms)
       (merge {:success true} share)
       (catch map? e
         (log/error "nibblonian error: " e)
