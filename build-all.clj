@@ -376,7 +376,8 @@
   (install-libs)
   (uberjar-services)
   (uberjar-tools)
-  (build-databases))
+  (build-databases)
+  (archive-builds))
 
 (defn main-func
   []
