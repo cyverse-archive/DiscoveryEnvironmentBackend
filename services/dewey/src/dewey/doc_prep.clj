@@ -12,8 +12,13 @@
 
 (defn- format-acl-entry
   [acl-entry]
-  {:permission (irods/fmt-perm (.getFilePermissionEnum acl-entry))
-   :user       (format-user (.getUserName acl-entry) (.getUserZone acl-entry))})
+  (letfn [(fmt-perm [perm] (condp = perm
+                             irods/own-perm   :own
+                             irods/write-perm :write
+                             irods/read-perm  :read
+                             nil))]
+    {:permission (fmt-perm (.getFilePermissionEnum acl-entry))
+     :user       (format-user (.getUserName acl-entry) (.getUserZone acl-entry))}))
 
 
 (defn format-acl
