@@ -13,7 +13,6 @@
             [donkey.services.filesystem.validators :as validators]
             [clj-icat-direct.icat :as icat]))
 
-
 (defn get-paths-in-folder
   ([user folder]
     (get-paths-in-folder user folder (fs-max-paths-in-request)))
@@ -48,7 +47,7 @@
                   :file-size     data_size
                   :date-created  (* (Integer/parseInt create_ts) 1000)
                   :date-modified (* (Integer/parseInt modify_ts) 1000)
-                  :permission    (fmt-perm access_type_id)}]
+                  :permissions   (perm-map-for (str access_type_id))}]
     (if (= type "dataobject")
       base-map
       (merge base-map {:hasSubDirs true
@@ -117,7 +116,7 @@
             :path             path
             :label            (id->label cm user path)
             :filter           (should-filter? user path)
-            :permission       (permission-for cm user path)
+            :permissions      (collection-perm-map cm user path)
             :hasSubDirs       true
             :date-created     (:date-created stat)
             :date-modified    (:date-modified stat)
@@ -147,7 +146,7 @@
             :path          path
             :label         (id->label cm user path)
             :filter        (should-filter? user path)
-            :permisssion   (permission-for cm user path)
+            :permissions   (collection-perm-map cm user path)
             :hasSubDirs    true
             :date-created  (:date-created stat)
             :date-modified (:date-modified stat)
