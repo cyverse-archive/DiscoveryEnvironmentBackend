@@ -27,25 +27,20 @@
      (contains? perms read-perm)  read-perm
      :else                        none-perm))
 
-(defmulti fmt-perm
+(defn fmt-perm
   "Translates a jargonesque permission to a keyword permission.
 
-   Parameter:
-     jargon-perm - the jargon permission
+  Parameter:
+    jargon-perm - the jargon permission
 
-   Returns:
-     The keyword representation, :own, :write, :read or nil."
-  type)
-(defmethod fmt-perm FilePermissionEnum
+  Returns:
+    The keyword representation, :own, :write, :read or nil."
   [jargon-perm]
   (condp = jargon-perm
     own-perm   :own
     write-perm :write
     read-perm  :read
                nil))
-(defmethod fmt-perm Long
-  [access-type-id]
-  (fmt-perm (FilePermissionEnum/valueOf access-type-id)))
 
 (defn- log-last
   [item]
