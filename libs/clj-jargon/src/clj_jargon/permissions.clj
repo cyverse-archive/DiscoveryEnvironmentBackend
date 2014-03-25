@@ -255,6 +255,16 @@
       (is-dir? cm fpath)
       (set-coll-perms cm user fpath read? write? own? recursive?))))
 
+(defn set-permission
+  ([cm user fpath permission]
+     (set-permissions cm user fpath permission false))
+  ([cm user fpath permission recursive?]
+     (validate-path-lengths fpath)
+     (let [own?    (= :own permission)
+           write?  (or own? (= :write permission))
+           read?   (or write? (= :read permission))]
+      (set-permissions cm user fpath read? write? own? recursive?))))
+
 (defn one-user-to-rule-them-all?
   [cm user]
   (let [lister      (:lister cm)
