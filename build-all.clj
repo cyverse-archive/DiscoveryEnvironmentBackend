@@ -403,9 +403,7 @@
       "services"     (uberjar-services)
       "tools"        (uberjar-tools)
       "databases"    (build-databases)
-      (do-everything))
-    (when-not (= (second args) "symlinks")
-      (archive-builds))))
+      (do-everything))))
 
 
 (main-func)
