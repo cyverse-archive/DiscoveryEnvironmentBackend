@@ -61,6 +61,23 @@
    "mescal"
    "heuristomancer"])
 
+(def rpm-projects
+  #{"clockwork"
+    "Conrad"
+    "dewey"
+    "Donkey"
+    "Infosquito"
+    "iplant-email"
+    "JEX"
+    "kifshare"
+    "metadactyl-clj"
+    "NotificationAgent"
+    "OSM"
+    "Panopticon"
+    "clavin"
+    "facepalm"
+    "filetool"})
+
 
 (defn project-deps
   "Returns a vector containing a projects dependencies"
@@ -309,7 +326,7 @@
       (print-shell-result (bash-cmd (str "mv " target-path "/*.jar " "builds"))))
 
     (when (and (System/getenv "BUILD_RPMS")
-               (or (= parent-dir "services") (= parent-dir "tools")))
+               (contains? rpm-projects (str (fs/base-name path-to-project))))
       (println ">> Copying any RPMs from " path-to-project " to builds directory.")
       (print-shell-result (bash-cmd (str "mv " path-to-project "/*.rpm " "builds"))))
 
