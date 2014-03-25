@@ -18,30 +18,6 @@
 (def own-perm FilePermissionEnum/OWN)
 (def none-perm FilePermissionEnum/NONE)
 
-(defn- max-perm
-  "It determines the highest permission in a set of permissions."
-  [perms]
-  (cond
-     (contains? perms own-perm)   own-perm
-     (contains? perms write-perm) write-perm
-     (contains? perms read-perm)  read-perm
-     :else                        none-perm))
-
-(defn fmt-perm
-  "Translates a jargonesque permission to a keyword permission.
-
-  Parameter:
-    jargon-perm - the jargon permission
-
-  Returns:
-    The keyword representation, :own, :write, :read or nil."
-  [jargon-perm]
-  (condp = jargon-perm
-    own-perm   :own
-    write-perm :write
-    read-perm  :read
-               nil))
-
 (defn- log-last
   [item]
   (log/warn "process-perms: " item)
@@ -496,23 +472,6 @@
     {:read false
      :write false
      :own false}))
-
-(defn permission-for
-  "Determines a given user's permission for a given collection or data object.
-
-   Parameters:
-     cm - The context for an open connection to iRODS.
-     user - the user name
-     fpath - the logical path of the collection or data object.
-
-   Returns:
-     It returns the aggregated permission."
-  [cm user fpath]
-  (-> (cond
-        (is-dir? cm fpath)  (user-collection-perms cm user fpath)
-        (is-file? cm fpath) (user-dataobject-perms cm user fpath))
-    max-perm
-    fmt-perm))
 
 (defn remove-permissions
   [cm user fpath]
