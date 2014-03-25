@@ -97,7 +97,6 @@ $ curl \
                 "label": "read1_10k.fq",
                 "fileType": null,
                 "metadata": [],
-                "permission" : "own",
                 "userPermissions": [
                     {
                         "permission": "read",
@@ -128,7 +127,6 @@ $ curl \
                         "value": "red"
                     }
                 ],
-                "permission": "write",
                 "userPermissions": [
                     {
                         "permission": "read",
@@ -247,7 +245,6 @@ $ curl \
                 "id": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
                 "label": "read1_10k.fq",
                 "metadata": [],
-                "permission": "own",
                 "userPermissions": [
                     {
                         "permission": "read",
@@ -278,7 +275,6 @@ $ curl \
                         "value": "red"
                     }
                 ],
-                "permission": "write",
                 "userPermissions": [
                     {
                         "permission": "read",
