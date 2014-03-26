@@ -10,6 +10,7 @@
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :main porklock.core
+  :aot [porklock.core]
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
