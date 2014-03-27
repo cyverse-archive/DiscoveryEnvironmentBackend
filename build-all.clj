@@ -583,11 +583,12 @@
     (sh/with-sh-dir
      path-to-project
      (println ">> Building" path-to-project)
+     (print-shell-result (sh/sh "lein" "clean"))
+     (print-shell-result (sh/sh "lein" "uberjar"))
      (print-shell-result (sh/sh "grunt" "--version"))
      (print-shell-result (sh/sh "npm" "--version"))
      (print-shell-result (sh/sh "npm" "install"))
-     (print-shell-result (sh/sh "grunt" "clean-all"))
-     (print-shell-result (sh/sh "./build.sh")))))
+     (print-shell-result (sh/sh "grunt" "clean-all")))))
 
 
 (defmethod build :cmdtar
@@ -633,7 +634,9 @@
       (sh/with-sh-dir
        path-to-project
        (println ">> Generating RPM for" path-to-project)
-       (print-shell-result (sh/sh "lein" "iplant-rpm" (:build-number opts)))))))
+       (if (= path-to-project "services/kifshare") ;;;Icky, kifshare. Icky.
+         (print-shell-result (sh/sh "./build.sh"))
+         (print-shell-result (sh/sh "lein" "iplant-rpm" (:build-number opts))))))))
 
 
 (defn install-libs
