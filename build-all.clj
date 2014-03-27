@@ -583,12 +583,11 @@
     (sh/with-sh-dir
      path-to-project
      (println ">> Building" path-to-project)
-     (print-shell-result (sh/sh "lein" "clean"))
-     (print-shell-result (sh/sh "lein" "uberjar"))
      (print-shell-result (sh/sh "grunt" "--version"))
      (print-shell-result (sh/sh "npm" "--version"))
      (print-shell-result (sh/sh "npm" "install"))
-     (print-shell-result (sh/sh "grunt" "clean-all")))))
+     (print-shell-result (sh/sh "grunt" "clean-all"))
+     (print-shell-result (sh/sh "lein" "uberjar")))))
 
 
 (defmethod build :cmdtar
