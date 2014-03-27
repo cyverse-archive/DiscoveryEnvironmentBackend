@@ -466,12 +466,15 @@
   [dep-list]
   (filter #(.startsWith (str (first %1)) "org.iplantc") dep-list))
 
+
 (defn- extract-project-name
+  "Given a dependency tuple, returns the name of the project."
   [tuple]
   (let [prj-name (name (first tuple))]
     (if (= prj-name "clojure-commons")
       "iplant-clojure-commons"
       prj-name)))
+
 
 (defn project-dirs-from-dep
   "Returns the project directory associated with the provided dep"
