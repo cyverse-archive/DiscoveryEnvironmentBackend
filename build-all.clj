@@ -823,8 +823,11 @@
 (defn do-services
   [opts]
   (build-services)
-  (if (:rpm opts)
+  (when (:rpm opts)
+    (println (:rpm opts))
     (doseq [[svc-name svc-map] services]
+      (println svc-name)
+      (println svc-map)
       (build-rpm opts svc-map)))
   (if (:archive opts)
     (archive-services opts)))
@@ -833,8 +836,11 @@
 (defn do-tools
   [opts]
   (build-tools)
-  (if (:rpm opts)
+  (when (:rpm opts)
+    (println (:rpm opts))
     (doseq [[tool-name tool-map] tools]
+      (println tool-name)
+      (pprint/pprint tool-map)
       (build-rpm opts tool-map)))
   (if (:archive opts)
     (archive-tools opts)))
