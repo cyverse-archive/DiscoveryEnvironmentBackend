@@ -21,11 +21,7 @@ __Request Body__:
     {
         "paths" : ["/path/to/shared/file"],
         "users" : ["shared-with-user"],
-        "permissions" : {
-            "read" : true,
-            "write" : true,
-            "own" : false
-        }
+        "permission": "write"
     }
 
 __Response Body__:
@@ -34,11 +30,7 @@ __Response Body__:
         "status" : "success",
         "user" : ["users shared with"],
         "path" : ["the paths that were shared"],
-        "permissions" : {
-            "read" : true,
-            "write" : true,
-            "own" : false
-        },
+        "permission": "write",
         "skipped" : [
             {
                 "path" : "/path/to/shared/file",
@@ -50,7 +42,7 @@ __Response Body__:
 
 __Curl Command__:
 
-    curl -H "Content-Type:application/json" -d '{"paths" : ["/path/to/shared/file"], "users" : ["shared-with-user1", "fileowner"], "permissions" : {"read" : true, "write" : true, "own" : false}}' http://nibblonian.yourhostname.org/secured/filesystem/share?proxyToken=notReal
+    curl -H "Content-Type:application/json" -d '{"paths" : ["/path/to/shared/file"], "users" : ["shared-with-user1", "fileowner"], "permission": "write"}' http://nibblonian.yourhostname.org/secured/filesystem/share?proxyToken=notReal
 
 
 
