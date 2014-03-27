@@ -853,9 +853,7 @@
   (do-libs opts)
   (do-services opts)
   (do-tools opts)
-  (do-databases opts)
-  (if (:archive opts)
-    (archive-builds opts)))
+  (do-databases opts))
 
 
 (defn parse-args
