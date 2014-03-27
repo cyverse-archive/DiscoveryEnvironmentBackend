@@ -443,7 +443,7 @@
 (defn print-shell-result
   [result]
   (when-not (zero? (:exit result))
-    (println "exit: " (:exit result)))
+    (println "exit:" (:exit result)))
   (when-not (string/blank? (:out result))
     (println "stdout:")
     (println (:out result)))
@@ -526,7 +526,7 @@
           (doseq [symlink symlinks]
             (let [target-path (str "../../../" symlink)
                   link-path   (fs/base-name target-path)]
-              (println ">> Setting symlink " (path-join checkout-dir link-path) " to " target-path)
+              (println ">> Setting symlink" (path-join checkout-dir link-path) "to" target-path)
               (sh/with-sh-dir (path-join project-path checkout-dir)
                               (print-shell-result (sh/sh "ln" "-sf" target-path link-path)))))))))
 
@@ -542,7 +542,7 @@
   [project-map]
   (let [path-to-project (:path project-map)]
     (sh/with-sh-dir path-to-project
-      (println ">> Installing " path-to-project)
+      (println ">> Installing" path-to-project)
       (print-shell-result (sh/sh "lein" "clean"))
       (print-shell-result (sh/sh "lein" "install")))))
 
@@ -551,14 +551,14 @@
   [project-map]
   (let [path-to-project (:path project-map)]
     (sh/with-sh-dir path-to-project
-      (println ">> Installing " path-to-project)
+      (println ">> Installing" path-to-project)
       (print-shell-result (sh/sh "mvn" "clean"))
       (print-shell-result (sh/sh "mvn" "install")))))
 
 
 (defmethod install :default
   [project-map]
-  (println ">> Don't know how to install " (:path project-map)))
+  (println ">> Don't know how to install" (:path project-map)))
 
 
 ;;; Multi-methods for builds
@@ -572,7 +572,7 @@
   [project-map]
   (let [path-to-project (:path project-map)]
     (sh/with-sh-dir path-to-project
-      (println ">> Building " path-to-project)
+      (println ">> Building" path-to-project)
       (print-shell-result (sh/sh "lein" "clean"))
       (print-shell-result (sh/sh "lein" "uberjar")))))
 
@@ -581,7 +581,7 @@
   [project-map]
   (let [path-to-project (:path project-map)]
     (sh/with-sh-dir path-to-project
-      (println ">> Building iplant-cmdtar project " path-to-project)
+      (println ">> Building iplant-cmdtar project" path-to-project)
       (print-shell-result (sh/sh "lein" "clean"))
       (print-shell-result (sh/sh "lein" "uberjar"))
       (print-shell-result (sh/sh "lein" "iplant-cmdtar")))))
@@ -591,7 +591,7 @@
   [project-map]
   (let [path-to-project (:path project-map)]
     (sh/with-sh-dir path-to-project
-      (println ">> Building Java project " path-to-project)
+      (println ">> Building Java project" path-to-project)
       (print-shell-result (sh/sh "mvn" "clean"))
       (print-shell-result (sh/sh "mvn" "build")))))
 
@@ -600,13 +600,13 @@
   [project-map]
   (let [path-to-project (:path project-map)]
     (sh/with-sh-dir path-to-project
-      (println ">> Building shell project " path-to-project)
+      (println ">> Building shell project" path-to-project)
       (print-shell-result (sh/sh "./build.sh")))))
 
 
 (defmethod build :default
   [project-map]
-  (println ">> Don't know how to build " (:path project-map)))
+  (println ">> Don't know how to build" (:path project-map)))
 
 
 ;;; RPM building is a special case.
@@ -619,7 +619,7 @@
     (let [path-to-project (:path project-map)]
       (sh/with-sh-dir
        path-to-project
-       (println ">> Generating RPM for " path-to-project)
+       (println ">> Generating RPM for" path-to-project)
        (print-shell-result (sh/sh "lein" "iplant-rpm" (:build-number opts)))))))
 
 
@@ -683,7 +683,7 @@
    intentional. We don't want any false positive builds."
   [project-map]
   (let [target-path (path-join (:path project-map) "target")]
-    (println ">> Copying builds from " target-path " to builds directory.")
+    (println ">> Copying builds from" target-path "to builds directory.")
     (print-shell-result (bash-cmd (str "mv " target-path "/*.jar " "builds")))))
 
 
@@ -692,7 +692,7 @@
    of the (move-*) functions, it'll fail if no .rpms exist."
   [project-map]
   (let [path-to-project (:path project-map)]
-    (println ">> Copying any RPMs from " path-to-project " to builds directory.")
+    (println ">> Copying any RPMs from" path-to-project "to builds directory.")
     (print-shell-result (bash-cmd (str "mv " path-to-project "/*.rpm " "builds")))))
 
 
@@ -701,7 +701,7 @@
   [project-map]
   (let [path-to-project (:path project-map)
         target-path     (path-join path-to-project "target")]
-    (println ">> Copying any cmdtars from " path-to-project " to builds directory.")
+    (println ">> Copying any cmdtars from" path-to-project "to builds directory.")
     (print-shell-result (bash-cmd (str "mv " target-path "/*.tar.gz " "builds")))))
 
 
@@ -709,7 +709,7 @@
   "Moves all .tar.gz files found in the project's root directory."
   [project-map]
   (let [path-to-project (:path project-map)]
-    (println ">> Copying builds from " path-to-project " to builds directory.")
+    (println ">> Copying builds from" path-to-project "to builds directory.")
     (print-shell-result (sh/sh "bash" "-c" (str "mv " path-to-project "/*.tar.gz " "builds")))))
 
 
@@ -800,7 +800,7 @@
   [opts]
   (println "> Creating the checkouts symlinks for Clojure projects...")
   (doseq [[proj-name proj] clojure-projects]
-    (println ">> Handling " (:path proj))
+    (println ">> Handling" (:path proj))
     (create-checkout-symlinks proj)
     (println "")))
 
@@ -885,9 +885,9 @@
   [cmds]
   (let [invalid-cmds (filter #(not (contains? valid-cmds %)) cmds)]
     (when (pos? (count invalid-cmds))
-      (println "The following are invalid commands: ")
+      (println "The following are invalid commands:")
       (doseq [cmd invalid-cmds]
-        (println "* " cmd))
+        (println "*" cmd))
       (System/exit 1))))
 
 (defn main-func
@@ -901,7 +901,7 @@
       (doseq [cmd cmds]
         (case cmd
           "help"         (do (println help-str)
-                           (println "Commands are:" (string/join " "(seq valid-cmds)))
+                           (println "Commands are:" (string/join " " (seq valid-cmds)))
                            (System/exit 0))
           "symlinks"     (do-symlinks opts)
           "lein-plugins" (do-lein-plugins opts)
