@@ -522,13 +522,13 @@
       (let [project-clj (path-join project-path "project.clj")
             symlinks    (-> project-clj project-deps iplant-deps project-dirs-from-dep)]
         (if-not (fs/exists? checkout-dir)
-                (fs/mkdir checkout-dir))
-          (doseq [symlink symlinks]
-            (let [target-path (str "../../../" symlink)
-                  link-path   (fs/base-name target-path)]
-              (println ">> Setting symlink" (path-join checkout-dir link-path) "to" target-path)
-              (sh/with-sh-dir (path-join project-path checkout-dir)
-                              (print-shell-result (sh/sh "ln" "-sf" target-path link-path)))))))))
+          (fs/mkdir checkout-dir))
+        (doseq [symlink symlinks]
+          (let [target-path (str "../../../" symlink)
+                link-path   (fs/base-name target-path)]
+            (println ">> Setting symlink" (path-join checkout-dir link-path) "to" target-path)
+            (sh/with-sh-dir (path-join project-path checkout-dir)
+              (print-shell-result (sh/sh "ln" "-sf" target-path link-path)))))))))
 
 
 ;;; Multi-methods for installations
