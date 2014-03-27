@@ -792,23 +792,11 @@
   "Deletes and recreates the top-level builds/ directory, as
    necessary."
   []
-  (println "> Moving builds to builds directory.")
   (when (fs/exists? "builds")
     (println ">> Cleaning out builds directory")
     (print-shell-result (sh/sh "rm" "-r" "builds")))
-  (println ">> Creating builds directory"))
-
-
-(defn archive-builds
-  "Called at the end of a execution that builds everything. It will
-   archive all of the projects as appropriate."
-  [opts]
-  (prep-builds-dir)
-  (print-shell-result (sh/sh "mkdir" "builds"))
-  (archive-lein-plugins opts)
-  (archive-libs opts)
-  (archive-services opts)
-  (archive-tools opts))
+  (println ">> Creating builds directory")
+  (print-shell-result (sh/sh "mkdir" "builds")))
 
 
 (defn do-symlinks
@@ -912,6 +900,9 @@
         cmds        (drop 1 cmds)
         _           (validate-opts opts)
         _           (validate-cmds cmds)]
+    (when (:archive opts)
+      (prep-builds-dir))
+
     (when (pos? (count cmds))
       (doseq [cmd cmds]
         (case cmd
@@ -925,6 +916,7 @@
           "tools"        (do-tools opts)
           "databases"    (do-databases opts)
           (println "Not a valid command:" cmd))))
+
     (when-not (pos? (count cmds))
       (do-everything opts))))
 
