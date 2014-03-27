@@ -3,16 +3,425 @@
 (deps '[[cheshire "5.3.1"]
         [me.raynes/fs "1.4.4"]
         [org.clojure/tools.cli "0.3.1"]
-        [org.clojure/clojure "1.5.1"]])
+        [org.clojure/clojure "1.5.1"]
+        [medley "0.1.5"]
+        [org.clojure/tools.cli "0.2.1"]])
 
 (require '[clojure.java.shell :as sh]
          '[cheshire.core :as json]
          '[clojure.java.io :as io]
          '[clojure.pprint]
          '[me.raynes.fs :as fs]
-         '[clojure.string :as string])
+         '[clojure.string :as string]
+         '[clojure.pprint :as pprint]
+         '[clojure.tools.cli :as cli])
+
+(use '[medley.core])
 
 (import '[java.nio.file Files])
+
+
+(def projects
+  {"lein-iplant-cmdtar"
+   {:type     :lein-plugin
+    :path     "lein-plugins/lein-iplant-cmdtar"
+    :build    :lein
+    :install  :lein
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :clojure
+    :archive? false}
+
+   "lein-iplant-rpm"
+   {:type     :lein-plugin
+    :path     "lein-plugins/lein-iplant-rpm"
+    :build    :lein
+    :install  :lein
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :clojure
+    :archive? false}
+
+   "clj-cas"
+   {:type     :library
+    :type-num 7
+    :path     "libs/clj-cas"
+    :build    :lein
+    :install  :lein
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :clojure
+    :archive? false}
+
+   "clj-icat-direct"
+   {:type     :library
+    :type-num 9
+    :path     "libs/clj-icat-direct"
+    :build    :lein
+    :install  :lein
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :clojure
+    :archive? false}
+
+   "clj-jargon"
+   {:type     :library
+    :type-num 8
+    :path     "libs/clj-jargon"
+    :build    :lein
+    :install  :lein
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :clojure
+    :archive? false}
+
+   "de-authn"
+   {:type     :library
+    :type-num 2
+    :path     "libs/de-authn"
+    :build    :mvn
+    :install  :mvn
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :java
+    :archive? false}
+
+   "de-base-services-pom"
+   {:type     :library
+    :type-num 0
+    :path     "libs/de-base-services-pom"
+    :build    :mvn
+    :install  :mvn
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :java
+    :archive? false}
+
+   "de-persistence"
+   {:type     :library
+    :type-num 3
+    :path     "libs/de-persistence"
+    :build    :mvn
+    :install  :mvn
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :java
+    :archive? false}
+
+   "heuristomancer"
+   {:type     :library
+    :type-num 11
+    :path     "libs/heuristomancer"
+    :build    :lein
+    :install  :lein
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :clojure
+    :archive? false}
+
+   "hibernatetoolkit"
+   {:type     :library
+    :type-num 1
+    :path     "libs/hibernatetoolkit"
+    :build    :mvn
+    :install  :mvn
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :java
+    :archive? false}
+
+   "iplant-clojure-commons"
+   {:type     :library
+    :type-num 5
+    :path     "libs/iplant-clojure-commons"
+    :build    :lein
+    :install  :lein
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :clojure
+    :archive? false}
+
+   "kameleon"
+   {:type     :library
+    :type-num 6
+    :path     "libs/kameleon"
+    :build    :lein
+    :install  :lein
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :clojure
+    :archive? false}
+
+   "mescal"
+   {:type     :library
+    :type-num 10
+    :path     "libs/mescal"
+    :build    :lein
+    :install  :lein
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :clojure
+    :archive? false}
+
+   "metadactyl"
+   {:type     :library
+    :type-num 4
+    :path     "libs/metadactyl"
+    :build    :mvn
+    :install  :mvn
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? true
+    :language :java
+    :archive? false}
+
+   "clockwork"
+   {:type     :service
+    :path     "services/clockwork"
+    :build    :lein
+    :rpm?     true
+    :tarball? false
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "Conrad"
+   {:type     :service
+    :path     "services/Conrad"
+    :build    :lein
+    :rpm?     true
+    :tarball? false
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "dewey"
+   {:type     :service
+    :path     "services/dewey"
+    :build    :lein
+    :rpm?     true
+    :tarball? false
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "Donkey"
+   {:type     :service
+    :path     "services/Donkey"
+    :build    :lein
+    :rpm?     true
+    :tarball? false
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "Infosquito"
+   {:type     :service
+    :path     "services/Infosquito"
+    :build    :lein
+    :rpm?     true
+    :tarball? false
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "iplant-email"
+   {:type     :service
+    :path     "services/iplant-email"
+    :build    :lein
+    :rpm?     true
+    :tarball? false
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "JEX"
+   {:type     :service
+    :path     "services/JEX"
+    :build    :lein
+    :rpm?     true
+    :tarball? false
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "kifshare"
+   {:type     :service
+    :path     "services/kifshare"
+    :build    :lein
+    :rpm?     true
+    :tarball? false
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "metadactyl-clj"
+   {:type     :service
+    :path     "services/metadactyl-clj"
+    :build    :lein
+    :rpm?     true
+    :tarball? false
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "NotificationAgent"
+   {:type     :service
+    :path     "services/NotificationAgent"
+    :build    :lein
+    :rpm?     true
+    :tarball? false
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "OSM"
+   {:type     :service
+    :path     "services/OSM"
+    :build    :lein
+    :rpm?     true
+    :tarball? false
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "Panopticon"
+   {:type     :tool
+    :path     "services/Panopticon"
+    :build    :lein
+    :rpm?     true
+    :tarball? false
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "clavin"
+   {:type     :tool
+    :path     "tools/clavin"
+    :build    :cmdtar
+    :rpm?     true
+    :tarball? true
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "facepalm"
+   {:type     :tool
+    :path     "tools/facepalm"
+    :build    :cmdtar
+    :rpm?     true
+    :tarball? true
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "filetool"
+   {:type     :tool
+    :path     "tools/filetool"
+    :build    :lein
+    :rpm?     true
+    :tarball? false
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "proboscis"
+   {:type     :tool
+    :path     "tools/proboscis"
+    :build    :cmdtar
+    :rpm?     false
+    :tarball? true
+    :uberjar? true
+    :install? false
+    :language :clojure
+    :archive? true}
+
+   "de-database-schema"
+   {:type     :database
+    :path     "databases/de-database-schema"
+    :build    :shell
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? false
+    :language :sql
+    :archive? true}
+
+   "notification-db"
+   {:type     :database
+    :path     "databases/notification-db"
+    :build    :shell
+    :rpm?     false
+    :tarball? false
+    :uberjar? false
+    :install? false
+    :language :sql
+    :archive? true}})
+
+
+; Categorized by type
+(def lein-plugins (filter-vals #(= (:type %) :lein-plugin) projects))
+(def tools        (filter-vals #(= (:type %) :tool) projects))
+(def services     (filter-vals #(= (:type %) :service) projects))
+(def libs         (filter-vals #(= (:type %) :library) projects))
+(def dbs          (filter-vals #(= (:type %) :database) projects))
+
+
+; Categorized by programming language
+(def clojure-projects (filter-vals #(= (:language %) :clojure) projects))
+(def java-projects    (filter-vals #(= (:lanugage %) :java) projects))
+
+
+; libraries are the only thing that have to be built in a certain order.
+(def libs-build-order (sort-by #(:type-num (get libs %)) (keys libs)))
+
+
+; cmdtar projects are an exceptional case
+(def cmdtar           (filter-vals :tarball? projects))
+(def uberjar-projects (filter-vals :uberjar? projects))
+(def rpm-projects     (filter-vals :rpm? projects))
 
 
 (defn path-join
@@ -31,52 +440,19 @@
       (str (apply io/file paths')))))
 
 
-;;; Maps the internal dependencies to their directory in the checkout.
-(def lib-dep-dir-map
-  {"clj-cas"          "libs/clj-cas"
-   "clj-icat-direct"  "libs/clj-icat-direct"
-   "clj-jargon"       "libs/clj-jargon"
-   "de-authn"         "libs/de-authn"
-   "de-persistence"   "libs/de-persistence"
-   "heuristomancer"   "libs/heuristomancer"
-   "hibernatetoolkit" "libs/hibernatetoolkit"
-   "clojure-commons"  "libs/iplant-clojure-commons"
-   "kameleon"         "libs/kameleon"
-   "mescal"           "libs/mescal"
-   "metadactyl"       "libs/metadactyl"})
-
-
-;;; Order that the libs should be built in.
-(def libs-build-order
-  ["de-base-services-pom"
-   "hibernatetoolkit"
-   "de-authn"
-   "de-persistence"
-   "metadactyl"
-   "iplant-clojure-commons"
-   "kameleon"
-   "clj-cas"
-   "clj-jargon"
-   "clj-icat-direct"
-   "mescal"
-   "heuristomancer"])
-
-(def rpm-projects
-  #{"clockwork"
-    "Conrad"
-    "dewey"
-    "Donkey"
-    "Infosquito"
-    "iplant-email"
-    "JEX"
-    "kifshare"
-    "metadactyl-clj"
-    "NotificationAgent"
-    "OSM"
-    "Panopticon"
-    "clavin"
-    "facepalm"
-    "filetool"})
+(defn print-shell-result
+  [result]
+  (when-not (zero? (:exit result))
+    (println "exit: " (:exit result)))
+  (when-not (string/blank? (:out result))
+    (println "stdout:")
+    (println (:out result)))
+  (when-not (string/blank? (:err result))
+    (println "error:")
+    (println (:err result)))
+  (when-not (zero? (:exit result))
+    (println "ERROR ENCOUNTERED, EXITING!!!")
+    (System/exit 1)))
 
 
 (defn project-deps
@@ -90,12 +466,20 @@
   [dep-list]
   (filter #(.startsWith (str (first %1)) "org.iplantc") dep-list))
 
+(defn- extract-project-name
+  [tuple]
+  (let [prj-name (name (first tuple))]
+    (if (= prj-name "clojure-commons")
+      "iplant-clojure-commons"
+      prj-name)))
 
 (defn project-dirs-from-dep
   "Returns the project directory associated with the provided dep"
   [dep-list]
-  (map #(get lib-dep-dir-map (name (first %1))) dep-list))
+  (map #(:path (get projects (extract-project-name %))) dep-list))
 
+
+(def checkout-dir "checkouts")
 
 (defn- find-folders
   [filename]
@@ -103,11 +487,6 @@
        (filter #(not (.contains (str %1) "checkouts/"))
                (filter #(.endsWith (str %1) filename)
                        (file-seq (io/file "."))))))
-
-
-(def clojure-project-dirs (find-folders "/project.clj"))
-(def java-project-dirs (find-folders "/pom.xml"))
-(def checkout-dir "checkouts")
 
 
 (defn delete-checkout-dirs
@@ -127,284 +506,384 @@
         (fs/mkdir checkout-dir)))))
 
 
-(defn print-shell-result
-  [result]
-  (when-not (zero? (:exit result))
-    (println "exit: " (:exit result)))
-  (when-not (string/blank? (:out result))
-    (println "stdout:")
-    (println (:out result)))
-  (when-not (string/blank? (:err result))
-    (println "error:")
-    (println (:err result)))
-  (when-not (zero? (:exit result))
-    (println "ERROR ENCOUNTERED, EXITING!!!")
-    (System/exit 1)))
-
-
 (defn create-checkout-symlinks
-  [project-path]
-  (fs/with-cwd project-path
-    (let [project-clj (path-join project-path "project.clj")
-          symlinks    (-> project-clj project-deps iplant-deps project-dirs-from-dep)]
-      (if-not (fs/exists? checkout-dir)
-        (fs/mkdir checkout-dir))
-      (doseq [symlink symlinks]
-        (let [target-path (str "../../../" symlink)
-              link-path   (fs/base-name target-path)]
-          (println ">> Setting symlink " (path-join checkout-dir link-path) " to " target-path)
-          (sh/with-sh-dir (path-join project-path checkout-dir)
-            (print-shell-result (sh/sh "ln" "-sf" target-path link-path))))))))
+  [project-map]
+  (let [project-path (:path project-map)]
+    (fs/with-cwd project-path
+      (let [project-clj (path-join project-path "project.clj")
+            symlinks    (-> project-clj project-deps iplant-deps project-dirs-from-dep)]
+        (if-not (fs/exists? checkout-dir)
+                (fs/mkdir checkout-dir))
+          (doseq [symlink symlinks]
+            (let [target-path (str "../../../" symlink)
+                  link-path   (fs/base-name target-path)]
+              (println ">> Setting symlink " (path-join checkout-dir link-path) " to " target-path)
+              (sh/with-sh-dir (path-join project-path checkout-dir)
+                              (print-shell-result (sh/sh "ln" "-sf" target-path link-path)))))))))
 
 
-(defn clojure-project?
-  [path-to-project]
-  (fs/exists? (path-join (str path-to-project) "project.clj")))
+(defmulti install
+  (fn [project-map]
+    (:install project-map)))
+
+(defmethod install :lein
+  [project-map]
+  (let [path-to-project (:path project-map)]
+    (sh/with-sh-dir path-to-project
+      (println ">> Installing " path-to-project)
+      (print-shell-result (sh/sh "lein" "clean"))
+      (print-shell-result (sh/sh "lein" "install")))))
 
 
-(defn java-project?
-  [path-to-project]
-  (fs/exists? (path-join (str path-to-project) "pom.xml")))
+(defmethod install :mvn
+  [project-map]
+  (let [path-to-project (:path project-map)]
+    (sh/with-sh-dir path-to-project
+      (println ">> Installing " path-to-project)
+      (print-shell-result (sh/sh "mvn" "clean"))
+      (print-shell-result (sh/sh "mvn" "install")))))
 
 
-(defn install-clojure-project
-  [path-to-project]
-  (sh/with-sh-dir path-to-project
-    (println ">> Installing " path-to-project)
-    (print-shell-result (sh/sh "lein" "clean"))
-    (print-shell-result (sh/sh "lein" "install"))))
+(defmethod install :default
+  [project-map]
+  (println ">> Don't know how to install " (:path project-map)))
 
 
-(defn install-java-project
-  [path-to-project]
-  (sh/with-sh-dir path-to-project
-    (println ">> Installing " path-to-project)
-    (print-shell-result (sh/sh "mvn" "clean"))
-    (print-shell-result (sh/sh "mvn" "install"))))
+(defmulti build
+  (fn [project-map]
+    (:build project-map)))
+
+(defmethod build :lein
+  [project-map]
+  (let [path-to-project (:path project-map)]
+    (sh/with-sh-dir path-to-project
+      (println ">> Building " path-to-project)
+      (print-shell-result (sh/sh "lein" "clean"))
+      (print-shell-result (sh/sh "lein" "uberjar")))))
 
 
-(defn install-lein-plugins
-  "Installs the lein plugins from the lein-plugins directory."
-  []
-  (let [dirs (fs/list-dir "lein-plugins")]
-    (println "> Installing lein plugins")
-    (doseq [d dirs]
-      (install-clojure-project (path-join "lein-plugins" (str d))))
-    (println "")))
-
-
-(def cmdtar-projects
-  #{"clavin"
-    "facepalm"
-    "proboscis"})
-
-
-(defn build-clojure-project
-  "Builds a clojure project"
-  [path-to-project]
-  (sh/with-sh-dir path-to-project
-    (println ">> Building " path-to-project)
-    (print-shell-result (sh/sh "lein" "clean"))
-    (print-shell-result (sh/sh "lein" "uberjar"))
-    (if (contains? cmdtar-projects (fs/base-name path-to-project))
+(defmethod build :cmdtar
+  [project-map]
+  (let [path-to-project (:path project-map)]
+    (sh/with-sh-dir path-to-project
+      (println ">> Building iplant-cmdtar project " path-to-project)
+      (print-shell-result (sh/sh "lein" "clean"))
+      (print-shell-result (sh/sh "lein" "uberjar"))
       (print-shell-result (sh/sh "lein" "iplant-cmdtar")))))
 
 
-(defn build-java-project
-  [path-to-project]
-  (sh/with-sh-dir path-to-project
-    (println ">> Installing " path-to-project)
-    (print-shell-result (sh/sh "mvn" "clean"))
-    (print-shell-result (sh/sh "mvn" "build"))))
+(defmethod build :mvn
+  [project-map]
+  (let [path-to-project (:path project-map)]
+    (sh/with-sh-dir path-to-project
+      (println ">> Building Java project " path-to-project)
+      (print-shell-result (sh/sh "mvn" "clean"))
+      (print-shell-result (sh/sh "mvn" "build")))))
+
+
+(defmethod build :shell
+  [project-map]
+  (let [path-to-project (:path project-map)]
+    (sh/with-sh-dir path-to-project
+      (println ">> Building shell project " path-to-project)
+      (print-shell-result (sh/sh "./build.sh")))))
+
+
+(defmethod build :default
+  [project-map]
+  (println ">> Don't know how to build " (:path project-map)))
+
+
+(defn build-rpm
+  [opts project-map]
+  (if (:rpm? project-map)
+    (let [path-to-project (:path project-map)]
+      (sh/with-sh-dir
+       path-to-project
+       (println ">> Generating RPM for " path-to-project)
+       (print-shell-result (sh/sh "lein" "clean"))
+       (print-shell-result (sh/sh "lein" "iplant-rpm" (:build-number opts)))))))
 
 
 (defn install-libs
   "Installs the libs"
   []
   (println "> Installing libs")
-  (doseq [d libs-build-order]
-    (let [project-path (path-join "libs" (str d))]
-      (cond
-       (clojure-project? project-path)
-       (install-clojure-project project-path)
-
-       (java-project? project-path)
-       (install-java-project project-path)
-
-       :else (println ">> Don't know how to build this."))
-      (println ""))))
+  (doseq [prj-name libs-build-order]
+    (install (get projects prj-name))
+    (println "")))
 
 
-(defn build-database-func
-  [path-to-project]
-  (sh/with-sh-dir path-to-project
-    (println ">> Building database " path-to-project)
-    (print-shell-result (sh/sh "./build.sh"))))
+(defn install-lein-plugins
+  "Installs the lein-plugins"
+  []
+  (println "> Installing the lein-plugins")
+  (doseq [[prj-name prj-map] (seq lein-plugins)]
+    (install prj-map)))
+
+
+(defn- build-projects
+  [projects]
+  (doseq [k (keys projects)]
+    (build (get projects k)))
+  (println ""))
 
 
 (defn build-databases
   []
-  (let [dirs (fs/list-dir "databases")]
-    (println "> Building the databases")
-    (doseq [d dirs] (build-database-func (path-join "databases" (str d))))))
+  (println "> Building the databases")
+  (build-projects dbs))
 
 
-(defn uberjar-func
-  [project-path]
-  (cond
-    (clojure-project? project-path)
-    (build-clojure-project project-path)
-
-    (java-project? project-path)
-    (build-java-project project-path)
-
-    :else (println ">> Don't know how to build this."))
-    (println ""))
-
-
-(defn rpm-func
-  [project-path build-num]
-  (let [clj-path (path-join project-path "project.clj")]
-    (when (fs/exists? clj-path)
-      (println ">> Generating RPM for " project-path " with a build number of " build-num)
-      (sh/with-sh-dir project-path
-                      (print-shell-result
-                       (sh/sh "lein" "iplant-rpm" build-num))))
-    (when-not (fs/exists? clj-path)
-      (println ">> RPM generation error! Path " clj-path " does not exist!")
-      (System/exit 1))))
-
-
-(defn uberjar-services
-  "Uberjars up the services"
+(defn build-services
   []
-  (let [dirs  (fs/list-dir "services")
-        rpms? (System/getenv "BUILD_RPMS")
-        bnum  (System/getenv "BUILD_NUMBER")]
-    (println "BUILD_RPMS " rpms?)
-    (println "BUILD_NUMBER " bnum)
-    (println "> Uberjar'ing the services")
-    (doseq [d dirs]
-      (uberjar-func (path-join "services" (str d)))
-      (when rpms?
-        (when-not bnum
-          (println "ERROR: BUILD_RPMS environment variable is set, but the BUILD_NUMBER is missing.")
-          (System/exit 1))
-        (rpm-func (path-join "services" (str d)) bnum)))))
+  (println "> Building the services")
+  (build-projects services))
 
 
-
-(defn uberjar-tools
-  "Uberjars up the tools"
+(defn build-tools
   []
-  (let [dirs  (fs/list-dir "tools")
-        rpms? (System/getenv "BUILD_RPMS")
-        bnum  (System/getenv "BUILD_NUMBER")]
-    (println "BUILD_RPMS " rpms?)
-    (println "BUILD_NUMBER " bnum)
-    (println "> Uberjar'ing the tools")
-    (doseq [d dirs]
-      (uberjar-func (path-join "tools" (str d)))
-      (when (and rpms? (contains? rpm-projects (str d)))
-        (when-not bnum
-          (println "ERROR: BUILD_RPMS environment variable is set, but the BUILD_NUMBER is missing.")
-          (System/exit 1))
-        (rpm-func (path-join "tools" (str d)) bnum)))))
+  (println "> Building tools")
+  (build-projects tools))
+
+
+(defn build-libs
+  []
+  (println "> Building libraries")
+  (doseq [prj (mapv #(get libs %) libs-build-order)]
+    (build-projects prj)))
 
 
 (defn bash-cmd
   [str-to-run]
   (sh/sh "bash" "-c" str-to-run))
 
-(defn move-builds
-  [path-to-project]
-  (let [target-path (path-join path-to-project "target")
-        parent-dir  (-> path-to-project fs/parent fs/base-name str)]
-    (when (and (fs/exists? target-path)
-               (not= parent-dir "lein-plugins"))
-      (println ">> Copying builds from " target-path " to builds directory.")
-      (print-shell-result (bash-cmd (str "mv " target-path "/*.jar " "builds"))))
 
-    (when (and (System/getenv "BUILD_RPMS")
-               (contains? rpm-projects (str (fs/base-name path-to-project))))
-      (println ">> Copying any RPMs from " path-to-project " to builds directory.")
-      (print-shell-result (bash-cmd (str "mv " path-to-project "/*.rpm " "builds"))))
-
-    (when (contains? cmdtar-projects (fs/base-name path-to-project))
-      (println ">> Copying any cmdtars from " path-to-project " to builds directory.")
-      (print-shell-result (bash-cmd (str "mv " target-path "/*.tar.gz " "builds"))))
-    (println "")))
+(defn move-uberjar-build
+  [project-map]
+  (let [target-path (path-join (:path project-map) "target")]
+    (println ">> Copying builds from " target-path " to builds directory.")
+    (print-shell-result (bash-cmd (str "mv " target-path "/*.jar " "builds")))))
 
 
-(defn move-database
-  [path-to-project]
-  (when (fs/exists? path-to-project)
+(defn move-rpm-build
+  [project-map]
+  (let [path-to-project (:path project-map)]
+    (println ">> Copying any RPMs from " path-to-project " to builds directory.")
+    (print-shell-result (bash-cmd (str "mv " path-to-project "/*.rpm " "builds")))))
+
+
+(defn move-cmdtar-build
+  [project-map]
+  (let [path-to-project (:path project-map)
+        target-path     (path-join path-to-project "target")]
+    (println ">> Copying any cmdtars from " path-to-project " to builds directory.")
+    (print-shell-result (bash-cmd (str "mv " target-path "/*.tar.gz " "builds")))))
+
+
+(defn move-database-build
+  [project-map]
+  (let [path-to-project (:path project-map)]
     (println ">> Copying builds from " path-to-project " to builds directory.")
-    (print-shell-result (sh/sh "bash" "-c" (str "mv " path-to-project "/*.tar.gz " "builds")))
-  (println "")))
+    (print-shell-result (sh/sh "bash" "-c" (str "mv " path-to-project "/*.tar.gz " "builds")))))
 
 
-(defn archive-builds
+(defn- archive-project
+  [opts project-map]
+  (when (:archive? project-map)
+    (if (:rpm opts)
+      (when (:rpm? project-map)
+        (move-rpm-build project-map)))
+
+    (when (:tarball? project-map)
+      (move-cmdtar-build project-map))
+
+    (when (:uberjar? project-map)
+      (move-uberjar-build project-map))
+
+    (when (= (:type project-map) :database)
+      (move-database-build project-map))))
+
+
+(defn- archive-all
+  [opts projects-map]
+  (doseq [[project-name project-map] (seq projects-map)]
+    (archive-project opts project-map)))
+
+
+(defn archive-services
+  [opts]
+  (println "> Moving services builds")
+  (archive-all opts services)
+  (println ""))
+
+
+(defn archive-lein-plugins
+  [opts]
+  (println "> Moving lein-plugins builds")
+  (archive-all opts lein-plugins)
+  (println ""))
+
+
+(defn archive-libs
+  [opts]
+  (println "> Moving library builds")
+  (archive-all opts libs)
+  (println ""))
+
+
+(defn archive-databases
+  [opts]
+  (println "> Moving database builds")
+  (archive-all opts dbs)
+  (println ""))
+
+
+(defn archive-tools
+  [opts]
+  (println "> Moving tool builds")
+  (archive-all opts tools)
+  (println ""))
+
+
+(defn prep-builds-dir
   []
   (println "> Moving builds to builds directory.")
   (when (fs/exists? "builds")
     (println ">> Cleaning out builds directory")
     (print-shell-result (sh/sh "rm" "-r" "builds")))
-  (println ">> Creating builds directory")
+  (println ">> Creating builds directory"))
+
+
+(defn archive-builds
+  [opts]
+  (prep-builds-dir)
   (print-shell-result (sh/sh "mkdir" "builds"))
-  (let [move-it #(doseq [proj (fs/list-dir %1)]
-                   (move-builds (path-join %1 (str proj))))]
-    (move-it "lein-plugins")
-    (move-it "libs")
-    (move-it "services")
-    (move-it "tools")
-    (doseq [proj (fs/list-dir "databases")]
-      (move-database (path-join "databases" (str proj))))))
+  (archive-lein-plugins opts)
+  (archive-libs opts)
+  (archive-services opts)
+  (archive-tools opts))
 
 
 (defn do-symlinks
-  []
-  (doseq [proj clojure-project-dirs]
-    (println "> Handling " proj)
+  [opts]
+  (println "> Creating the checkouts symlinks for Clojure projects...")
+  (doseq [[proj-name proj] clojure-projects]
+    (println ">> Handling " (:path proj))
     (create-checkout-symlinks proj)
     (println "")))
 
-(defn do-everything
-  []
-  (do-symlinks)
-  (install-lein-plugins)
+
+(defn do-libs
+  [opts]
   (install-libs)
-  (uberjar-services)
-  (uberjar-tools)
+  (if (:archive opts)
+    (archive-libs opts)))
+
+
+(defn do-lein-plugins
+  [opts]
+  (install-lein-plugins)
+  (if (:archive opts)
+    (archive-lein-plugins opts)))
+
+
+(defn do-services
+  [opts]
+  (build-services)
+  (if (:rpm opts)
+    (doseq [[svc-name svc-map] services]
+      (build-rpm opts svc-map)))
+  (if (:archive opts)
+    (archive-services opts)))
+
+
+(defn do-tools
+  [opts]
+  (build-tools)
+  (if (:rpm opts)
+    (doseq [[tool-name tool-map] tools]
+      (build-rpm opts tool-map)))
+  (if (:archive opts)
+    (archive-tools opts)))
+
+
+(defn do-databases
+  [opts]
   (build-databases)
-  (archive-builds))
+  (if (:archive opts)
+    (archive-databases opts)))
+
+
+(defn do-everything
+  [opts]
+  (-> opts
+      do-symlinks
+      do-lein-plugins
+      do-libs
+      do-services
+      do-tools
+      do-databases)
+  (if (:archive opts)
+    (archive-builds opts)))
+
+
+(defn parse-args
+  [args]
+  (cli/cli
+   args
+   ["-h" "--help" "Show help." :default false :flag true]
+   ["-r" "--rpm" "Build RPM?" :default false :flag true]
+   ["-b" "--build-number" "Assigns a build number" :default nil]
+   ["-a" "--archive" "Archive builds?" :default false :flag true]))
+
+
+(defn validate-opts
+  [opts]
+  (when (and (:rpm opts) (nil? (:build-number opts)))
+    (println "You must specify --rpm and --build-number together")
+    (System/exit 1)))
+
+(def valid-cmds
+  #{"help"
+    "symlinks"
+    "lein-plugins"
+    "libs"
+    "services"
+    "tools"
+    "databases"})
+
+(defn validate-cmds
+  [cmds]
+  (let [invalid-cmds (filter #(not (contains? valid-cmds %)) cmds)]
+    (when (pos? (count invalid-cmds))
+      (println "The following are invalid commands: ")
+      (doseq [cmd invalid-cmds]
+        (println "* " cmd))
+      (System/exit 1))))
 
 (defn main-func
   []
   (let [args *command-line-args*
-        opts ["help"
-              "symlinks"
-              "lein-plugins"
-              "libs"
-              "services"
-              "tools"
-              "databases"]
-        usage (str "These are the options: " opts)]
-    (when (> (count args) 2)
-      (println "Too many args!")
-      (println usage))
-    (when-not (contains? (set opts) (second args))
-      (println "lol nope")
-      (println usage))
-    (case (second args)
-      "help"         (println usage)
-      "symlinks"     (do-symlinks)
-      "lein-plugins" (install-lein-plugins)
-      "libs"         (install-libs)
-      "services"     (uberjar-services)
-      "tools"        (uberjar-tools)
-      "databases"    (build-databases)
-      (do-everything))))
+        [opts cmds help-str] (parse-args args)
+        cmds        (drop 1 cmds)
+        _           (validate-opts opts)
+        _           (validate-cmds cmds)]
+    (when (pos? (count cmds))
+      (doseq [cmd cmds]
+        (case cmd
+          "help"         (do (println help-str)
+                           (println "Commands are:" (string/join " "(seq valid-cmds)))
+                           (System/exit 0))
+          "symlinks"     (do-symlinks opts)
+          "lein-plugins" (do-lein-plugins opts)
+          "libs"         (do-libs opts)
+          "services"     (do-services opts)
+          "tools"        (do-tools opts)
+          "databases"    (do-databases opts)
+          (println "Not a valid command:" cmd))))
+    (when-not (pos? (count cmds))
+      (do-everything opts))))
 
 
 (main-func)
