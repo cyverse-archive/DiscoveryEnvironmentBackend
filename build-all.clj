@@ -485,6 +485,8 @@
 (def checkout-dir "checkouts")
 
 (defn- find-folders
+  "Returns the folder the given filename resides in, ignoring any
+   results from the checkouts directories."
   [filename]
   (map #(str (.getParentFile %1))
        (filter #(not (.contains (str %1) "checkouts/"))
@@ -493,6 +495,7 @@
 
 
 (defn delete-checkout-dirs
+  "Deletes the checkouts directory from the given directory paths."
   [paths]
   (doseq [pdir paths]
     (fs/with-cwd pdir
@@ -502,6 +505,7 @@
 
 
 (defn create-checkout-dirs
+  "Creates the checkouts directory in the given directory paths."
   [paths]
   (doseq [pdir paths]
     (fs/with-cwd pdir
@@ -510,6 +514,8 @@
 
 
 (defn create-checkout-symlinks
+  "Creates the checkouts directory for the given project and
+   populates it with the appropriate links."
   [project-map]
   (let [project-path (:path project-map)]
     (fs/with-cwd project-path
@@ -525,6 +531,9 @@
                               (print-shell-result (sh/sh "ln" "-sf" target-path link-path)))))))))
 
 
+;;; Multi-methods for installations
+;;; The dispatch function extracts the :install field from the
+;;; project map.
 (defmulti install
   (fn [project-map]
     (:install project-map)))
@@ -552,6 +561,9 @@
   (println ">> Don't know how to install " (:path project-map)))
 
 
+;;; Multi-methods for builds
+;;; The dispatch function extracts the :build field from the
+;;; project map.
 (defmulti build
   (fn [project-map]
     (:build project-map)))
@@ -597,7 +609,11 @@
   (println ">> Don't know how to build " (:path project-map)))
 
 
+;;; RPM building is a special case.
 (defn build-rpm
+  "Builds a RPM for the given project. Obeys the --rpm option.
+   uses the value passed in with --build-number. Uses the
+   lein-iplant-rpm project under the hood."
   [opts project-map]
   (if (:rpm? project-map)
     (let [path-to-project (:path project-map)]
@@ -609,7 +625,7 @@
 
 
 (defn install-libs
-  "Installs the libs"
+  "Installs the libraries in the correct order."
   []
   (println "> Installing libs")
   (doseq [prj-name libs-build-order]
@@ -618,7 +634,6 @@
 
 
 (defn install-lein-plugins
-  "Installs the lein-plugins"
   []
   (println "> Installing the lein-plugins")
   (doseq [[prj-name prj-map] (seq lein-plugins)]
@@ -658,11 +673,15 @@
 
 
 (defn bash-cmd
+  "A utility function for execing a script with bash."
   [str-to-run]
   (sh/sh "bash" "-c" str-to-run))
 
 
 (defn move-uberjar-build
+  "Moves all .jar files from the target/ directory of the given
+   project. Yeah, it'll blow up if it's not there, but that's
+   intentional. We don't want any false positive builds."
   [project-map]
   (let [target-path (path-join (:path project-map) "target")]
     (println ">> Copying builds from " target-path " to builds directory.")
@@ -670,6 +689,8 @@
 
 
 (defn move-rpm-build
+  "Moves all .rpm files from the project's root directory. Like all
+   of the (move-*) functions, it'll fail if no .rpms exist."
   [project-map]
   (let [path-to-project (:path project-map)]
     (println ">> Copying any RPMs from " path-to-project " to builds directory.")
@@ -677,6 +698,7 @@
 
 
 (defn move-cmdtar-build
+  "Moves all .tar.gz files found in the project's target directory."
   [project-map]
   (let [path-to-project (:path project-map)
         target-path     (path-join path-to-project "target")]
@@ -685,6 +707,7 @@
 
 
 (defn move-database-build
+  "Moves all .tar.gz files found in the project's root directory."
   [project-map]
   (let [path-to-project (:path project-map)]
     (println ">> Copying builds from " path-to-project " to builds directory.")
@@ -709,6 +732,8 @@
 
 
 (defn- archive-all
+  "Iterates over all of the projects defined in the given map
+   and passes the project map to the (archive-project) function."
   [opts projects-map]
   (doseq [[project-name project-map] (seq projects-map)]
     (archive-project opts project-map)))
@@ -750,6 +775,8 @@
 
 
 (defn prep-builds-dir
+  "Deletes and recreates the top-level builds/ directory, as
+   necessary."
   []
   (println "> Moving builds to builds directory.")
   (when (fs/exists? "builds")
@@ -759,6 +786,8 @@
 
 
 (defn archive-builds
+  "Called at the end of a execution that builds everything. It will
+   archive all of the projects as appropriate."
   [opts]
   (prep-builds-dir)
   (print-shell-result (sh/sh "mkdir" "builds"))
