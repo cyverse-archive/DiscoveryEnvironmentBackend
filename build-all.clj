@@ -620,7 +620,6 @@
       (sh/with-sh-dir
        path-to-project
        (println ">> Generating RPM for " path-to-project)
-       (print-shell-result (sh/sh "lein" "clean"))
        (print-shell-result (sh/sh "lein" "iplant-rpm" (:build-number opts)))))))
 
 
@@ -823,12 +822,8 @@
 (defn do-services
   [opts]
   (build-services)
-  (println opts)
   (when (:rpm opts)
-    (println (:rpm opts))
     (doseq [[svc-name svc-map] services]
-      (println svc-name)
-      (println svc-map)
       (build-rpm opts svc-map)))
   (if (:archive opts)
     (archive-services opts)))
@@ -837,12 +832,8 @@
 (defn do-tools
   [opts]
   (build-tools)
-  (println "OPTS AFTER BUILD" opts)
   (when (:rpm opts)
-    (println (:rpm opts))
     (doseq [[tool-name tool-map] tools]
-      (println tool-name)
-      (pprint/pprint tool-map)
       (build-rpm opts tool-map)))
   (if (:archive opts)
     (archive-tools opts)))
@@ -857,13 +848,13 @@
 
 (defn do-everything
   [opts]
-  #_(do-symlinks opts)
-  #_(do-lein-plugins opts)
-  #_(do-libs opts)
-  #_(do-services opts)
+  (do-symlinks opts)
+  (do-lein-plugins opts)
+  (do-libs opts)
+  (do-services opts)
   (do-tools opts)
-  #_(do-databases opts)
-  #_(if (:archive opts)
+  (do-databases opts)
+  (if (:archive opts)
     (archive-builds opts)))
 
 
