@@ -823,6 +823,7 @@
 (defn do-services
   [opts]
   (build-services)
+  (println opts)
   (when (:rpm opts)
     (println (:rpm opts))
     (doseq [[svc-name svc-map] services]
@@ -836,6 +837,7 @@
 (defn do-tools
   [opts]
   (build-tools)
+  (println "OPTS AFTER BUILD" opts)
   (when (:rpm opts)
     (println (:rpm opts))
     (doseq [[tool-name tool-map] tools]
@@ -855,14 +857,13 @@
 
 (defn do-everything
   [opts]
-  (-> opts
-      do-symlinks
-      do-lein-plugins
-      do-libs
-      do-services
-      do-tools
-      do-databases)
-  (if (:archive opts)
+  #_(do-symlinks opts)
+  #_(do-lein-plugins opts)
+  #_(do-libs opts)
+  #_(do-services opts)
+  (do-tools opts)
+  #_(do-databases opts)
+  #_(if (:archive opts)
     (archive-builds opts)))
 
 
