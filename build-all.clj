@@ -282,7 +282,7 @@
    "kifshare"
    {:type     :service
     :path     "services/kifshare"
-    :build    :lein
+    :build    :kifshare
     :rpm?     true
     :tarball? false
     :uberjar? true
@@ -575,6 +575,19 @@
       (println ">> Building" path-to-project)
       (print-shell-result (sh/sh "lein" "clean"))
       (print-shell-result (sh/sh "lein" "uberjar")))))
+
+
+(defmethod build :kifshare
+  [project-map]
+  (let [path-to-project (:path project-map)]
+    (sh/with-sh-dir
+     path-to-project
+     (println ">> Building" path-to-project)
+     (print-shell-result (sh/sh "grunt" "--version"))
+     (print-shell-result (sh/sh "npm" "--version"))
+     (print-shell-result (sh/sh "npm" "install"))
+     (print-shell-result (sh/sh "grunt" "clean-all"))
+     (print-shell-result (sh/sh "./build.sh")))))
 
 
 (defmethod build :cmdtar
