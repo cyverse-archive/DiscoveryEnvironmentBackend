@@ -27,11 +27,7 @@ __Response Body__:
         "paths": {
             "/iplant/home/dennis/foo": {
                 "share-count" : 0,
-                "permissions" : {
-                    "read" : true,
-                    "write" : true,
-                    "own" : true
-                },
+                "permission" : "own",
                 "dir-count" : 3,
                 "file-count" : 4,
                 "created": "1339001248000",
@@ -41,11 +37,7 @@ __Response Body__:
             "/iplant/home/dennis/foo.bar": null,
             "/iplant/home/dennis/foo.txt": {
                 "share-count" : 0,
-                "permissions" : {
-                    "read" : true,
-                    "write" : true,
-                    "own" : true
-                },
+                "permission" : "own",
                 "created": "1335289356000",
                 "modified": "1335289356000",
                 "size": 4,
