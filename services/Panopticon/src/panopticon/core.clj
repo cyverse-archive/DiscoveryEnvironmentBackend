@@ -167,8 +167,7 @@
    (classad-maps)."
   [uuids]
   (log/warn "[panopticon]" (count uuids))
-  (vec (flatten (map run-history (full-partition uuids (part-size)))))
-  #_(vec (flatten (map run-history uuids))))
+  (vec (flatten (map run-history (full-partition uuids (part-size))))))
 
 (defn- run-queue
   "Runs condor_q looking for a single uuid, parses the output,
@@ -188,8 +187,7 @@
    (classad-maps)."
   [uuids]
   (log/warn "[panopticon]" (count uuids))
-  (vec (flatten (map run-queue (full-partition uuids (part-size)))))
-  #_(vec (flatten (map run-queue uuids))))
+  (vec (flatten (map run-queue (full-partition uuids (part-size))))))
 
 (defn condor-rm
   "Calls condor_rm on a dag."
