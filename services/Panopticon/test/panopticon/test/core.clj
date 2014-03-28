@@ -1,6 +1,8 @@
 (ns panopticon.test.core
-  (:use [panopticon.core])
-  (:use [clojure.test]))
+  (:use [panopticon.core] :reload)
+  (:use [midje.sweet]))
 
-(deftest replace-me ;; FIXME: write
-  (is false "No tests have been written."))
+(fact
+ (boolize "true") => true)
+
+
