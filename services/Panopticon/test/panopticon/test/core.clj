@@ -1,6 +1,8 @@
 (ns panopticon.test.core
   (:use [panopticon.core] :reload)
-  (:use [midje.sweet]))
+  (:use [midje.sweet])
+  (:require [clojure-commons.osm :as osm]
+            [cheshire.core :as json]))
 
 (fact
  (boolize "true") => true
@@ -23,5 +25,16 @@
  (condor-history) => "condor-history"
  (num-instances) => 1
  (part-size) => 10)
+
+(def janky-classad
+  {"JobStatus" "1"})
+
+(fact
+ (job-status janky-classad) => "Idle")
+
+(with-redefs
+  [osm/query (fn [cl query] (json/encode {:objects [{:state.status "Idle"}]}))]
+  (fact
+   (running-jobs) => [{:state.status "Idle"}]))
 
 
