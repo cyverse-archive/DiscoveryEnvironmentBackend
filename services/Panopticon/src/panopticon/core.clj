@@ -65,7 +65,9 @@
     10))
 
 ;Converts a string to a boolean.
-(def boolize #(boolean (Boolean. %)))
+(defn boolize
+  [bool-string]
+  (boolean (Boolean. bool-string)))
 
 ;Kinda like (every?)
 (defn any? [pred coll] ((comp not not-any?) pred coll))
@@ -217,7 +219,7 @@
       (apply sh/sh (flatten args))
       (string/join " " (flatten args)))))
 
-(def put-env 
+(def put-env
   {"PATH" (str "/usr/local/bin:/usr/local2/bin:/usr/local3/bin:" (System/getenv "PATH"))})
 
 
@@ -228,14 +230,14 @@
     (let [exect      "/usr/local/bin/porklock"
           skip-pmeta (if skip-parent-meta? " --skip-parent-meta " "")
           meta-args  (file-metadata-arg meta-maps)
-          all-args   [exect 
+          all-args   [exect
                       "put"
-                      "--user" user 
-                      "--source" source-dir 
+                      "--user" user
+                      "--source" source-dir
                       "--destination" output-dir
                       skip-pmeta
                       meta-args
-                      "--config" config-path 
+                      "--config" config-path
                       :dir source-dir
                       :env put-env]
           results    (panop-exec all-args)]

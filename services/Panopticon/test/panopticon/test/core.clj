@@ -3,6 +3,7 @@
   (:use [midje.sweet]))
 
 (fact
- (boolize "true") => true)
+ (boolize "true") => true
+ (boolize "false") => false)
 
 
