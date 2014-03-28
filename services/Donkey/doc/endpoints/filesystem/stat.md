@@ -13,41 +13,45 @@ __Request Query Parameters__:
 
 __Request Body__:
 
-    {
-        "paths" : [
-            "/iplant/home/dennis/foo",
-            "/iplant/home/dennis/foo.txt",
-            "/iplant/home/dennis/foo.bar"
-        ]
-    }
+```json
+{
+    "paths": [
+        "/iplant/home/dennis/foo",
+        "/iplant/home/dennis/foo.txt",
+        "/iplant/home/dennis/foo.bar"
+    ]
+}
+```
 
 __Response Body__:
 
-    {
-        "paths": {
-            "/iplant/home/dennis/foo": {
-                "share-count" : 0,
-                "permission" : "own",
-                "dir-count" : 3,
-                "file-count" : 4,
-                "created": "1339001248000",
-                "modified": "1339001248000",
-                "type": "dir"
-            },
-            "/iplant/home/dennis/foo.bar": null,
-            "/iplant/home/dennis/foo.txt": {
-                "share-count" : 0,
-                "permission" : "own",
-                "created": "1335289356000",
-                "modified": "1335289356000",
-                "size": 4,
-                "type": "file",
-                "info-type" : "<an info type or empty string>"
-                "mime-type" : "<a valid filetype>"
-            }
+```json
+{
+    "paths": {
+        "/iplant/home/dennis/foo": {
+            "share-count": 0,
+            "permission": "own",
+            "dir-count": 3,
+            "file-count": 4,
+            "created": "1339001248000",
+            "modified": "1339001248000",
+            "type": "dir"
         },
-        "status": "success"
-    }
+        "/iplant/home/dennis/foo.bar": null,
+        "/iplant/home/dennis/foo.txt": {
+            "share-count": 0,
+            "permission": "own",
+            "created": "1335289356000",
+            "modified": "1335289356000",
+            "size": 4,
+            "type": "file",
+            "info-type": "<an info type or empty string>",
+            "mime-type": "<a valid filetype>"
+        }
+    },
+    "status": "success"
+}
+```
 
 Note that entries in the "paths" map that are directories will include "file-count" and "dir-count" fields, while file entries will not.
 

@@ -15,39 +15,42 @@ __Request Query Parameters__:
 
 __Request Body__:
 
-  {
-    "paths" : [
-      "/iplant/home/testuser/testfile",
-      "/iplant/home/testuser/testfile2"
+```json
+{
+    "paths": [
+        "/iplant/home/testuser/testfile",
+        "/iplant/home/testuser/testfile2"
     ]
-  }
+}
+```
 
 __Response Body__:
 
-  {
-        "status" : "success",
-        "paths" : [
-            {
-               "path" : "/iplant/home/testuser/testfile",
-               "user-permissions" : [
-                   {
-                       "user" : "user1",
-                       "permission" : "read"
-                   }
-               ]
-            },
-            {
-                "path" : "/iplant/home/testuser/testfile2",
-                "user-permissions" : [
-                    {
-                        "user" : "user2",
-                        "permission" : "read"
-                    }
-                ]
-            }
-        ]
-    }
-
+```json
+{
+    "status": "success",
+    "paths": [
+        {
+            "path": "/iplant/home/testuser/testfile",
+            "user-permissions": [
+                {
+                    "user": "user1",
+                    "permission": "read"
+                }
+            ]
+        },
+        {
+            "path": "/iplant/home/testuser/testfile2",
+            "user-permissions": [
+                {
+                    "user": "user2",
+                    "permission": "read"
+                }
+            ]
+        }
+    ]
+}
+```
 
 __Curl Command__:
 
