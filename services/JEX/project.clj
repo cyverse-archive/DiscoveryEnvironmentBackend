@@ -19,7 +19,8 @@
                  [ring/ring-jetty-adapter "1.0.1"]
                  [org.iplantc/clojure-commons "3.0.0"]
                  [slingshot "0.10.3"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.0.0"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.0.0"]
+            [lein-midje "3.1.1"]]
   :iplant-rpm {:summary "jex",
                :runuser "condor"
                :dependencies ["iplant-service-config >= 0.1.0-5"
@@ -27,8 +28,7 @@
                               "java-1.7.0-openjdk"],
                :config-files ["log4j.properties"],
                :config-path "conf"}
-  :profiles {:dev {:dependencies [[midje "1.6.0"]
-                                  [lein-midje "3.1.1"]]}}
+  :profiles {:dev {:dependencies [[midje "1.6.0"]]}}
   :aot [jex.core]
   :main jex.core
   :min-lein-version "2.0.0"
