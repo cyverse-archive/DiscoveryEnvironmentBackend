@@ -9,10 +9,12 @@ If you try to hit an endpoint that doesn't exist, you'll get a 404.
 
 For all other errors, you should receive a 500 HTTP status code and a JSON body in the following format:
 
+```json
     {
         "error_code" : "<Scruffian error code>",
         "status" : "failure"
     }
+```
 
 Most errors will return other contextual fields, but they will vary from error to error. For programmatic usage, only depend on the three fields listed above.
 
@@ -69,20 +71,20 @@ __Response Body__:
 
 A success will return JSON like this:
 
-    {
-        "action" : "file-upload",
-        "status" : "success",
-        "file" : {
-            "id" : "<path to the file>",
-            "label" : "<basename of the file path>",
-            "permissions" : {
-                "read" : true|false,
-                "write" : true|false
-            },
-        "date-created" : <seconds since the epoch>,
-        "date-modified" : <seconds since the epoch>,
-        "file-size" : <size in bytes>
+```json
+{
+    "success": true,
+    "file": {
+        "id": "<path to the file>",
+        "path": "<path to the file>",
+        "label": "<basename of the file path>",
+        "permission": "own",
+        "date-created": <seconds since the epoch>,
+        "date-modified": <seconds since the epoch>,
+        "file-size": <size in bytes>
     }
+}
+```
 
 __Curl Command__:
 
@@ -181,27 +183,29 @@ __Error Codes__:
 
 __Request Body__:
 
+```json
     {
         "content" : "This is the content for the file.",
         "dest" : "/iplant/home/testuser/savedfile.txt"
     }
+```
 
 __Response Body__:
 
-    {
-        "success" : true,
-        "file" : {
-            "id" : "<path to the file>",
-            "label" : "<basename of the file path>",
-            "permissions" : {
-                "read" : true,
-                "write" : true,
-                "own" : true|false
-            },
-        "date-created" : <seconds since the epoch>,
-        "date-modified" : <seconds since the epoch>,
-        "file-size" : <size in bytes>
+```json
+{
+    "success": true,
+    "file": {
+        "id": "<path to the file>",
+        "path": "<path to the file>",
+        "label": "<basename of the file path>",
+        "permission": "own",
+        "date-created": <seconds since the epoch>,
+        "date-modified": <seconds since the epoch>,
+        "file-size": <size in bytes>
     }
+}
+```
 
 __Curl Command__:
 
@@ -225,27 +229,29 @@ __Error Codes__:
 
 __Request Body__:
 
+```json
     {
         "content" : "This is the content for the file.",
         "dest" : "/iplant/home/testuser/savedfile.txt"
     }
+```
 
 __Response Body__:
 
-    {
-        "success" : true,
-        "file" : {
-            "id" : "<path to the file>",
-            "label" : "<basename of the file path>",
-            "permissions" : {
-                "read" : true,
-                "write" : true,
-                "own" : true
-            },
-        "date-created" : <seconds since the epoch>,
-        "date-modified" : <seconds since the epoch>,
-        "file-size" : <size in bytes>
+```json
+{
+    "success": true,
+    "file": {
+        "id": "<path to the file>",
+        "path": "<path to the file>",
+        "label": "<basename of the file path>",
+        "permission": "own",
+        "date-created": <seconds since the epoch>,
+        "date-modified": <seconds since the epoch>,
+        "file-size": <size in bytes>
     }
+}
+```
 
 __Curl Command__:
 
