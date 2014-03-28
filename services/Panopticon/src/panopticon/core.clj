@@ -69,9 +69,6 @@
   [bool-string]
   (boolean (Boolean. bool-string)))
 
-;Kinda like (every?)
-(defn any? [pred coll] ((comp not not-any?) pred coll))
-
 (defn osm-client [] (osm/create (osm-url) (osm-coll)))
 (defn job-status [classad-map] (get JOBSTATUS (get classad-map "JobStatus")))
 
