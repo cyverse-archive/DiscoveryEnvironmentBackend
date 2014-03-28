@@ -32,11 +32,7 @@ __Response Body__:
                "user-permissions" : [
                    {
                        "user" : "user1",
-                       "permissions" : {
-                           "read" : true,
-                           "write" : false,
-                           "own" : false
-                       }
+                       "permission" : "read"
                    }
                ]
             },
@@ -45,11 +41,7 @@ __Response Body__:
                 "user-permissions" : [
                     {
                         "user" : "user2",
-                        "permissions" : {
-                            "read" : true,
-                            "write" : false,
-                            "own" : false
-                        }
+                        "permission" : "read"
                     }
                 ]
             }
