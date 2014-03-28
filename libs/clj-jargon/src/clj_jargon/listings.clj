@@ -39,7 +39,7 @@
    :hasSubDirs    true
    :id            path
    :label         (ft/basename path)
-   :permission    (fmt-perm (Long/parseLong perms))})
+   :permission    (fmt-perm perms)})
 
 (defn list-subdirs
   [cm user coll-path]

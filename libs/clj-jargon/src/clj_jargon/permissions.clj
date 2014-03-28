@@ -46,6 +46,9 @@
 (defmethod fmt-perm Long
   [access-type-id]
   (fmt-perm (FilePermissionEnum/valueOf access-type-id)))
+(defmethod fmt-perm String
+  [access-type-id]
+  (fmt-perm (Long/parseLong access-type-id)))
 
 (defn- log-last
   [item]
