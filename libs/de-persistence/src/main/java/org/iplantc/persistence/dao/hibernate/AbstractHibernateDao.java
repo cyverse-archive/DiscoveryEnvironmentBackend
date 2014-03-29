@@ -8,7 +8,7 @@ import org.iplantc.persistence.dao.GenericDao;
 
 /**
  *
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public abstract class AbstractHibernateDao<T> implements GenericDao<T> {
 

@@ -46,7 +46,6 @@ public class DataFormat implements RepresentableAsJson {
      * @param guid the data format identifier.
      * @param name the data format name.
      * @param label the data format label.
-     * @param description the data format description.
      */
     public DataFormat(String guid, String name, String label) {
         this.guid = guid;
