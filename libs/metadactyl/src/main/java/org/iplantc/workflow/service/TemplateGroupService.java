@@ -28,7 +28,7 @@ import org.json.JSONObject;
 
 /**
  *
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public class TemplateGroupService {
     public static final String BETA_TEMPLATE_GROUP_ID = "g5401bd146c144470aedd57b47ea1b979";
@@ -177,6 +177,10 @@ public class TemplateGroupService {
 
     /**
      * Service endpoint to add an Analysis to a Template Group.
+     *
+     * @param jsonInput the JSON representing the analysis to add to the template group.
+     * @return an empty JSON object.
+     * @throws Exception if an error occurs.
      */
     public String addAnalysisToTemplateGroup(String jsonInput) throws Exception {
         final JSONObject input = new JSONObject(jsonInput);

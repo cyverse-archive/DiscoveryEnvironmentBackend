@@ -16,7 +16,7 @@ import org.json.JSONObject;
 
 /**
  *
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public class CategoryService {
     private SessionFactory sessionFactory;

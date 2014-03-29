@@ -68,6 +68,7 @@ public class FapiJobRequestFormatter implements JobRequestFormatter {
      * @param userDetails the details of the user who submitted the job.
      * @param experiment the configuration of the experiment.
      * @param jobNameUniquenessEnsurer used to ensure that jobs are uniquely named.
+     * @param irodsHome the path to the home directory in iRODS.
      */
     public FapiJobRequestFormatter(DaoFactory daoFactory, UserDetails userDetails, JSONObject experiment,
         JobNameUniquenessEnsurer jobNameUniquenessEnsurer, String irodsHome)

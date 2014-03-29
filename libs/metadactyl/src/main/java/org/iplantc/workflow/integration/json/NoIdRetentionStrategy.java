@@ -5,7 +5,7 @@ import org.iplantc.workflow.integration.util.ImportUtils;
 /**
  * An identifier retention strategy that never retains identifiers.
  * 
- * @author 
+ * @author Dennis Roberts
  */
 public class NoIdRetentionStrategy implements IdRetentionStrategy {
 

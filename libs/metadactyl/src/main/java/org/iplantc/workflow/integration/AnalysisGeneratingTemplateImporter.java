@@ -43,6 +43,8 @@ public class AnalysisGeneratingTemplateImporter extends TemplateImporter {
     /**
      * @param daoFactory the factory used to generate data access objects.
      * @param templateGroupImporter used to add analyses to template groups.
+     * @param workspaceInitializer used to initialize workspaces that don't exist yet.
+     * @param templateValidator used to validate templates that are being imported.
      */
     public AnalysisGeneratingTemplateImporter(DaoFactory daoFactory, TemplateGroupImporter templateGroupImporter,
             WorkspaceInitializer workspaceInitializer, TemplateValidator templateValidator) {

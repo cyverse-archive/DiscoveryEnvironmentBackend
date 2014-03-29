@@ -24,7 +24,8 @@ public class PipelineAnalysisValidator {
     /**
      * Validates analyses that may be selected in a pipeline.
      * 
-     * @param analysis the analysis to validate.
+     * @param analysisId the identifier of the analysis to validate.
+     * @param daoFactory used to obtain data access objects.
      */
     public static void validateAnalysis(String analysisId, DaoFactory daoFactory) {
         TransformationActivity analysis = daoFactory.getTransformationActivityDao().findById(analysisId);

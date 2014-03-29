@@ -44,7 +44,7 @@ public class PropertyValueService {
      * Gets the property values for a previously submitted job.
      * 
      * @param jobUuid the job identifier.
-     * @return 
+     * @return the property values.
      */
     public String getPropertyValues(final String jobUuid) {
         return new SessionTaskWrapper(sessionFactory).performTask(new SessionTask<String>() {

@@ -14,7 +14,7 @@ import org.json.JSONObject;
  *  Type of object which holds a data file for the object being unmarshalled
  *  by the inheriting class.
  * 
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public abstract class AbstractTitoDataFileUnmarshaller<T> {   
     /**
@@ -25,7 +25,8 @@ public abstract class AbstractTitoDataFileUnmarshaller<T> {
      *  Are these files input files(true) or output files(false)?
      * @param files
      *  Set of files to add to when adding new files.
-     * @throws JSONException 
+     * @throws JSONException
+     *  if a JSON error occurs.
      */
     protected abstract void unmarshallDataFileList(JSONArray jsonFiles, boolean input, Set<T> files) throws JSONException;
 
@@ -36,7 +37,8 @@ public abstract class AbstractTitoDataFileUnmarshaller<T> {
      *  Json to unmarhsall
      * @return
      *  Set of data files.
-     * @throws JSONException 
+     * @throws JSONException
+     *  if a JSON error occurs.
      */
     public Set<T> unmarshallDataFiles(JSONObject json) throws JSONException {
         Set<T> files = new HashSet<T>();

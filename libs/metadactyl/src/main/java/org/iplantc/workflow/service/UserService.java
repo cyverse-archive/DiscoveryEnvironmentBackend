@@ -117,7 +117,7 @@ public class UserService {
      * workspace yet.  If the user does have a workspace and the required components of the workspace haven't been
      * created yet, then the components will be created.
      *
-     * @param DaoFactory used to obtain data access objects.
+     * @param daoFactory used to obtain data access objects.
      * @param username the user's e-mail address.
      * @return the workspace ID.
      */
@@ -139,7 +139,7 @@ public class UserService {
      * Gets the user's workspace or creates a new workspace if the user doesn't have one yet.  If the user's workspace
      * doesn't have a root analysis category associated with it then the default analysis categories will be created.
      *
-     * @note If a user doesn't exist for the currently logged in user a new user will be created as well.
+     * Note: if a user doesn't exist for the currently logged in user a new user will be created as well.
      *
      * @param daoFactory used to obtain data access objects.
      * @return the workspace.
@@ -153,7 +153,7 @@ public class UserService {
      * Gets the user's workspace or creates a new workspace if the user doesn't have one yet.  If the user's workspace
      * doesn't have a root analysis category associated with it then the default analysis categories will be created.
      *
-     * @note If a user doesn't exist for the given username a new user will be created as well.
+     * Note: if a user doesn't exist for the given username a new user will be created as well.
      *
      * @param daoFactory used to obtain data access objects.
      * @param username Username of the user we are creating a new workspace for.

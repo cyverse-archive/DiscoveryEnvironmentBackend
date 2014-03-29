@@ -13,9 +13,9 @@ import org.iplantc.workflow.util.SfJsonUtils;
  * will take the passed in objects and transfer values form them to the
  * actual underlying Job object.
  *
- * @see Job
+ * @see JobDto
  *
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public class JobConstructor {
   private JobDto job;
@@ -36,7 +36,7 @@ public class JobConstructor {
   /**
    * Sets the experiment json info on the internal Job.
    *
-   * @param experimentJson
+   * @param experimentJson the JSON to generate the job DTO from.
    */
   public void setExperimentJson(JSONObject experimentJson) {
     job.setName(experimentJson.getString("name"));
@@ -63,7 +63,7 @@ public class JobConstructor {
   /**
    * Fills out the Job with the username.
    *
-   * @param userName
+   * @param username
    *  Username to place in the job.
    */
   public void setUsername(String username) {

@@ -37,6 +37,7 @@ public class OsmClient extends AbstractHttpClient {
      * 
      * @param queryObject the object representing the query.
      * @throws WorkflowException if an error occurs.
+     * @return the query results.
      */
     public JSONObject query(JSONObject queryObject) {
         return query(queryObject, null);
@@ -48,6 +49,7 @@ public class OsmClient extends AbstractHttpClient {
      * @param queryObject the object representing the query.
      * @param options the query options.
      * @throws WorkflowException if an error occurs.
+     * @return the query results.
      */
     public JSONObject query(JSONObject queryObject, Map<String, String> options) {
         return postWithJsonResponse(createRequestUrl("query", options), queryObject);

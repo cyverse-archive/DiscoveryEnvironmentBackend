@@ -87,7 +87,7 @@ public class DeployedComponentImporter implements ObjectImporter {
     /**
      * Initializes the properties of a new deployed component importer instance.
      *
-     * @param componentDao the deployed component DAO.
+     * @param daoFactory used to obtain new data access objects.
      */
     public DeployedComponentImporter(DaoFactory daoFactory) {
 		this.daoFactory = daoFactory;

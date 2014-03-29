@@ -9,7 +9,7 @@ import org.iplantc.workflow.core.Rating;
 
 /**
  *
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public interface RatingDao extends GenericDao<Rating> {
     /**

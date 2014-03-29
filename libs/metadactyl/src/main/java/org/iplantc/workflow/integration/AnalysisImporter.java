@@ -143,8 +143,8 @@ public class AnalysisImporter implements ObjectImporter, ObjectVetter<Transforma
      * Initializes a new analysis importer instance.
      *
      * @param daoFactory the factory used to create data access objects.
-     * @param TemplateGroupImporter used to import template groups.
-     * @param WorkspaceInitializer used to initialize user's workspaces.
+     * @param templateGroupImporter used to import template groups.
+     * @param workspaceInitializer used to initialize user's workspaces.
      */
     public AnalysisImporter(DaoFactory daoFactory, TemplateGroupImporter templateGroupImporter,
             WorkspaceInitializer workspaceInitializer) {
@@ -155,8 +155,8 @@ public class AnalysisImporter implements ObjectImporter, ObjectVetter<Transforma
      * Initializes a new analysis importer instance.
      *
      * @param daoFactory the factory used to create data access objects.
-     * @param TemplateGroupImporter used to import template groups.
-     * @param WorkspaceInitializer used to initialize user's workspaces.
+     * @param templateGroupImporter used to import template groups.
+     * @param workspaceInitializer used to initialize user's workspaces.
      * @param updateVetted true if we should allow vetted analyses to be replaced.
      */
     public AnalysisImporter(DaoFactory daoFactory, TemplateGroupImporter templateGroupImporter,
@@ -179,7 +179,7 @@ public class AnalysisImporter implements ObjectImporter, ObjectVetter<Transforma
     /**
      * Sets the current session.
      * 
-     * @param session
+     * @param session the database session.
      */
     public void setSession(Session session) {
         this.session = session;

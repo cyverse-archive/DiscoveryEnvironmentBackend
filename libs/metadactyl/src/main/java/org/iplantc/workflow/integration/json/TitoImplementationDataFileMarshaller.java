@@ -11,10 +11,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * Translates any object implementing the ImplemtationDataFile interface into
+ * Translates any object implementing the ImplementationDataFile interface into
  * json.
  * 
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public class TitoImplementationDataFileMarshaller {   
     /**

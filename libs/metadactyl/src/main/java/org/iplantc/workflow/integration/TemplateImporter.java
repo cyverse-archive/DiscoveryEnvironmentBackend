@@ -183,7 +183,7 @@ public class TemplateImporter implements ObjectImporter, ObjectVetter<Template> 
     }
 
     /**
-     * @param DaoFactory the factory used to generate data access objects.
+     * @param daoFactory the factory used to generate data access objects.
      */
     public TemplateImporter(DaoFactory daoFactory) {
         this(daoFactory, false, TemplateValidatorFactory.createDefaultTemplateValidator());
@@ -192,6 +192,7 @@ public class TemplateImporter implements ObjectImporter, ObjectVetter<Template> 
     /**
      * @param daoFactory the factory used to generate data access objects.
      * @param updateVetted true if we should allow vetted analyses to be updated.
+     * @param templateValidator used to validate templates that are being imported.
      */
     public TemplateImporter(DaoFactory daoFactory, boolean updateVetted, TemplateValidator templateValidator) {
         this.daoFactory = daoFactory;
@@ -395,7 +396,7 @@ public class TemplateImporter implements ObjectImporter, ObjectVetter<Template> 
     /**
      * Used for testing.
      *
-     * @param analysisVetter
+     * @param analysisVetter used to vet the analysis for validity.
      */
     public void setAnalysisVetter(ObjectVetter<TransformationActivity> analysisVetter) {
         this.analysisVetter = analysisVetter;

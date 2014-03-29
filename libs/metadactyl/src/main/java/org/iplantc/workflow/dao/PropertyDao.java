@@ -12,7 +12,8 @@ public interface PropertyDao extends GenericObjectDao<Property> {
 
     /**
      * Finds the property that references the data object if one exists.
-     * 
+     *
+     * @param dataObject the data object to get the property for.
      * @return the property or null if no property references the data object.
      */
     public Property getPropertyForDataObject(DataObject dataObject);
