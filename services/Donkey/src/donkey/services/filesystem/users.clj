@@ -6,7 +6,7 @@
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [quota]]
-        [clj-jargon.permissions :only [list-user-perms]]
+        [clj-jargon.permissions :only [list-user-perm]]
         [clj-jargon.users]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
@@ -27,7 +27,7 @@
   (let [filtered-users (set (conj (fs-perms-filter) user (irods-user)))]
     (filter
      #(not (contains? filtered-users (:user %1)))
-     (list-user-perms cm abspath))))
+     (list-user-perm cm abspath))))
 
 (defn- list-perm
   [cm user abspath]

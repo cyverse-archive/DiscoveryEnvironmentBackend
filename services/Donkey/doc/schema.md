@@ -2,13 +2,21 @@ Here are the definitions of the data records used to communicate through the end
 
 # Table of Contents
 
+* [Permission](#permission)
 * [AVU Record](#avu-record)
 * [Filesystem Entry Record](#filesystem-entry-record)
     * [File Record](#file-record)
     * [Folder Record](#folder-record)
 * [Permission Record](#permission-record)
-* [User Identity Record](#user-identity-record)
-    * [User Details Record](#user-details-record)
+* [User Details Record](#user-details-record)
+
+# Permission
+\* The `read` access level means the user can download a file or folder, read it, and read its
+metadata. The `modify` access level gives the user `read` access level plus the ability to create,
+modify and delete file or folder metadata. For a file, this access level also gives the user the
+ability to modify the file. For a folder, this access level gives the ability to upload files and
+folders into the folder. The `own` access level gives the user complete control over the file or
+folder.
 
 # AVU Record
 
@@ -38,6 +46,7 @@ Here are the fields that describe a filesystem entry.
 | --------------- | ------ | ----------- |
 | id              | string | the logical path to the entry |
 | path            | string | the logical path to the entry |
+| permission      | string | the aggregated [access level](#permission) of the client |
 | userPermissions | array  | an array of [permission records](#permission-record) identifying the permissions users have on this entry |
 | dateCreated     | number | the time when the file was created in milliseconds since the POSIX epoch |
 | dateModified    | number | the time when the file was last modified in milliseconds since the POSIX epoch |
@@ -49,6 +58,7 @@ Here are the fields that describe a filesystem entry.
 {
     "id"              : "/iplant/home/tedgin/an-entry",
     "path"            : "/iplant/home/tedgin/an-entry",
+    "permission"      : "own",
     "userPermissions" : [
         {
             "permission" : "own",
@@ -83,6 +93,7 @@ describe a file.
 {
     "id"              : "/iplant/home/tedgin/a.file",
     "path"            : "/iplant/home/tedgin/an.file",
+    "permission"      : "own",
     "userPermissions" : [
         {
             "permission" : "own",
@@ -130,6 +141,7 @@ describe a folder.
 {
     "id"              : "/iplant/home/tedgin/a-folder",
     "path"            : "/iplant/home/tedgin/a-folder",
+    "permission"      : "own",
     "userPermissions" : [
         {
             "permission" : "own",
@@ -165,15 +177,9 @@ Here are the fields that describe a permission.
 
 | Field      | Type   | Description |
 | ---------- | ------ | ----------- |
-| permission | string | the access level, `read`, `modify` or `own`\* |
+| permission | string | the [access level](#permission) |
 | user       | string | the identity of the user having the given permission in name#zone format |
 
-\* The `read` access level means the user can download a file or folder, read it, and read its
-metadata. The `modify` access level gives the user `read` access level plus the ability to create,
-modify and delete file or folder metadata. For a file, this access level also gives the user the
-ability to modify the file. For a folder, this access level gives the ability to upload files and
-folders into the folder. The `own` access level gives the user complete control over the file or
-folder.
 
 **Example**
 
@@ -184,7 +190,7 @@ folder.
 }
 ```
 
-## User Details Record
+# User Details Record
 
 Here are the fields that describe a user's details.
 

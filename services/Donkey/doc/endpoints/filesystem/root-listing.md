@@ -14,38 +14,32 @@ __Request Query Parameters__:
 
 __Response Body__:
 
-    {
-       "action":"root",
-       "status":"success",
-       "roots":[
-          {
-             "date-modified":"1340918988000",
-             "hasSubDirs":true,
-             "permissions":{
-                "read":true,
-                "write":true,
-                "own":true
-             },
-             "date-created":"1335217160000",
-             "label":"wregglej",
-             "id":"\/root\/iplant\/home\/wregglej",
-             "path":"\/iplant\/home\/wregglej"
-          },
-          {
-             "date-modified":"1335476028000",
-             "hasSubDirs":true,
-             "permissions":{
-                "read":true,
-                "write":true,
-                "own":false
-             },
-             "date-created":"1335217387000",
-             "label":"Community Data",
-             "id":"\/root\/iplant\/home\/shared",
-             "path":"\/iplant\/home\/shared"
-          }
-       ]
-    }
+```json
+{
+    "action": "root",
+    "status": "success",
+    "roots": [
+        {
+            "date-modified": "1340918988000",
+            "hasSubDirs": true,
+            "permission": "own",
+            "date-created": "1335217160000",
+            "label": "wregglej",
+            "id": "/root/iplant/home/wregglej",
+            "path": "/iplant/home/wregglej"
+        },
+        {
+            "date-modified": "1335476028000",
+            "hasSubDirs": true,
+            "permission": "write",
+            "date-created": "1335217387000",
+            "label": "Community Data",
+            "id": "/root/iplant/home/shared",
+            "path": "/iplant/home/shared"
+        }
+    ]
+}
+```
 
 __Curl Command__:
 

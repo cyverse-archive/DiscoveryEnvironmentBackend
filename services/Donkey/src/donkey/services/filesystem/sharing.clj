@@ -40,9 +40,9 @@
 (defn- shared?
   ([cm share-with fpath]
      (:read (permissions cm share-with fpath)))
-  ([cm share-with fpath desired-perms]
+  ([cm share-with fpath desired-perm]
      (let [curr-perms (permissions cm share-with fpath)]
-       (and (:read curr-perms) (= curr-perms desired-perms)))))
+       (and (:read curr-perms) (desired-perm curr-perms)))))
 
 (defn- skip-share
   [user path reason]
@@ -68,7 +68,7 @@
 
        3. The permissions are set on the item being shared. This is done recursively in case the
           item being shared is a directory."
-  [cm user share-with {read-perm :read write-perm :write own-perm :own :as perms} fpath]
+  [cm user share-with perm fpath]
   (let [hdir      (share-path-home fpath)
         trash-dir (trash-base-dir cm user)
         base-dirs #{hdir trash-dir}]
@@ -80,30 +80,24 @@
       (.setAccessPermissionInherit (:collectionAO cm) (:zone cm) fpath true))
 
     (log/warn share-with "is being given read permissions on" hdir "by" user)
-    (set-permissions cm share-with hdir true false false false)
+    (set-permission cm share-with hdir :read false)
 
-    (set-permissions cm share-with fpath read-perm write-perm own-perm true)
-    (log/warn
-      share-with
-      "is being given recursive permissions ("
-      "read:" read-perm
-      "write:" write-perm
-      "own:" own-perm ")"
-      "on" fpath)
+    (log/warn share-with "is being given recursive permissions (" perm ") on" fpath)
+    (set-permission cm share-with fpath perm true)
 
     {:user share-with :path fpath}))
 
 (defn- share-paths
-  [cm user share-withs fpaths perms]
+  [cm user share-withs fpaths perm]
   (for [share-with share-withs
         fpath      fpaths]
     (cond (= user share-with)                 (skip-share share-with fpath :share-with-self)
           (in-trash? cm user fpath)           (skip-share share-with fpath :share-from-trash)
-          (shared? cm share-with fpath perms) (skip-share share-with fpath :already-shared)
-          :else                               (share-path cm user share-with perms fpath))))
+          (shared? cm share-with fpath perm)  (skip-share share-with fpath :already-shared)
+          :else                               (share-path cm user share-with perm fpath))))
 
 (defn share
-  [user share-withs fpaths perms]
+  [user share-withs fpaths perm]
   (with-jargon (jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-users-exist cm share-withs)
@@ -111,14 +105,14 @@
     (validators/user-owns-paths cm user fpaths)
 
     (let [keyfn      #(if (:skipped %) :skipped :succeeded)
-          share-recs (group-by keyfn (share-paths cm user share-withs fpaths perms))
+          share-recs (group-by keyfn (share-paths cm user share-withs fpaths perm))
           sharees    (map :user (:succeeded share-recs))
           home-dir   (user-home-dir user)]
       (dorun (map (partial add-user-shared-with cm (user-home-dir user)) sharees))
       {:user        sharees
        :path        fpaths
        :skipped     (map #(dissoc % :skipped) (:skipped share-recs))
-       :permissions perms})))
+       :permission  perm})))
 
 (defn- contains-subdir?
   [cm dpath]
