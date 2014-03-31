@@ -24,4 +24,5 @@ libs/iplant-clojure-commons/iplant-clojure-commons
 libs/kameleon/kameleon
 libs/mescal/mescal
 libs/metadactyl/metadactyl
+node_modules/
 
