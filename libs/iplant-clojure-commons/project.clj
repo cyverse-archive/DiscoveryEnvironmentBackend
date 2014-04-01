@@ -1,4 +1,4 @@
-(defproject org.iplantc/clojure-commons "3.0.0"
+(defproject org.iplantc/clojure-commons "3.0.1"
   :description "Common Utilities for Clojure Projects"
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"

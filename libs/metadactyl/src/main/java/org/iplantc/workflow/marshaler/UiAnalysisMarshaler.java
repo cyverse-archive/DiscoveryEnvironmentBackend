@@ -246,7 +246,7 @@ public class UiAnalysisMarshaler {
                 }
                 return json;
             }
-            catch (JSONException _) {
+            catch (JSONException ignore) {
                 return null;
             }
         }

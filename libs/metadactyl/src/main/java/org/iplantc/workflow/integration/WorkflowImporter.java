@@ -88,7 +88,7 @@ public class WorkflowImporter {
      * Imports a workflow.
      * 
      * @param json the JSON object representing the workflow.
-     * @return
+     * @return the string representation of the imported workflow.
      * @throws JSONException if the JSON object doesn't meet the expectations of this class.
      * @throws WorkflowException if an unrecognized top-level key is received.
      */

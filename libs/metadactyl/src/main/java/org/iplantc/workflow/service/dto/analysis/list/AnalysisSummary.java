@@ -194,7 +194,6 @@ public class AnalysisSummary extends AbstractDto {
     /**
      * @param analysis the analysis represented by this DTO.
      * @param favorites the analysis group containing the user's favorites.
-     * @param userRatings the user's analysis ratings.
      */
     public AnalysisSummary(AnalysisListing analysis, Set<AnalysisListing> favorites) {
         initializeCommonFields(analysis);

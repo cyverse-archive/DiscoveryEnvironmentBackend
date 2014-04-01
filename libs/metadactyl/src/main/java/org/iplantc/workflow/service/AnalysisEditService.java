@@ -8,11 +8,7 @@ import org.hibernate.SessionFactory;
 import org.iplantc.hibernate.util.SessionTask;
 import org.iplantc.hibernate.util.SessionTaskWrapper;
 import org.iplantc.persistence.dto.data.IntegrationDatum;
-import org.iplantc.workflow.AnalysisNotFoundException;
-import org.iplantc.workflow.AnalysisOwnershipException;
-import org.iplantc.workflow.AnalysisStepCountException;
-import org.iplantc.workflow.TemplateNotFoundException;
-import org.iplantc.workflow.WorkflowException;
+import org.iplantc.workflow.*;
 import org.iplantc.workflow.core.TransformationActivity;
 import org.iplantc.workflow.dao.DaoFactory;
 import org.iplantc.workflow.dao.hibernate.HibernateDaoFactory;
@@ -163,7 +159,7 @@ public class AnalysisEditService {
      * @param daoFactory used to obtain data access objects.
      * @param analysis the analysis.
      * @return the template.
-     * @throws templateNotFoundException if the template can't be found.
+     * @throws TemplateNotFoundException if the template can't be found.
      */
     private Template getFirstTemplate(DaoFactory daoFactory, TransformationActivity analysis) {
         String templateId = analysis.step(0).getTemplateId();
@@ -285,7 +281,7 @@ public class AnalysisEditService {
         try {
             analysis.put("id", newId);
             analysis.put("tito", newId);
-            analysis.put("name", "Copy of " + analysis.getString("name"));
+            analysis.put("name", determineCopyName(analysis.getString("name")));
             analysis.put("implementation", marshaller.toJson(createIntegrationDatum(userDetails)));
             analysis.put("user", userDetails.getShortUsername());
             analysis.put("full_username", userDetails.getUsername());
@@ -294,6 +290,22 @@ public class AnalysisEditService {
             throw new WorkflowException("unable to convert analysis", e);
         }
         return analysis;
+    }
+
+    /**
+     * Determines the name of an analysis copy.
+     *
+     * @param originalName the name of the original analysis.
+     */
+    private String determineCopyName(String originalName) {
+        String prefix = "Copy of ";
+        int maxLength = Limits.MAX_ANALYSIS_NAME_LENGTH - prefix.length();
+        if (!originalName.startsWith(prefix) && originalName.length() <= maxLength) {
+            return prefix + originalName;
+        }
+        else {
+            return originalName;
+        }
     }
 
     /**

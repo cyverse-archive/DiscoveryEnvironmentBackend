@@ -37,6 +37,7 @@ public class DeployedComponentRetrievalService extends BaseWorkflowElementRetrie
      * This is the service entry point. This method deals with all of the database details of retrieving
      * the list of filtered components and marshalling them into a JSONObject.
      *
+     * @param searchTerm the term to search for in the deployed component list.
      * @return the marshalled list of filtered deployed components.
      */
     public JSONObject searchComponents(String searchTerm) {

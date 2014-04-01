@@ -17,6 +17,20 @@ You will need the following tools and plugins to develop for the DE backend.
 * __lein-set-version__: A plugin for setting the version of a Clojure project. See https://github.com/pallet/lein-set-version.
 * __lein-midje__: A Clojure test framework. See https://github.com/marick/Midje.
 
+For kifshare development, you will also need the following tools:
+
+* __node.js__: A javascript runtime environment.
+* __npm__: The node.js package manager
+* __grunt__: A build tool for javascript projects.
+
+The easiest way to get the above on OS X is with homebrew:
+
+    brew install npm
+    npm install -g grunt-cli
+    npm install -g grunt
+
+If you intend to build the services with the build-all.clj script, you __will__ need those tools installed.
+
 ## Building everything
 
 We've provided a Clojure script that will go through all of the projects, build them, and move the builds to a builds/ directory. You run it like this from the top level of this project:
@@ -38,11 +52,17 @@ The rest:
     lein exec build-all.clj libs
     lein exec build-all.clj databases
 
-When the builds are done, they're moved into the top level builds directory.
+To archive the builds into the builds/ directory, add the --archive option to the above commands.
 
-To create RPMs of the services, you'll need a CentOS 5 system with rpm-build, leiningen, and lein-iplant-rpm installed. The build-all.clj script looks for two environment variables when building RPMS: BUILD_RPMS and BUILD_NUMBER. BUILD_NUMBER is used as the release in the RPM.
+    lein exec build-all.clj tools --archive
 
-RPMs aren't necessary for most builds and are likely to be deprecated in the future.
+To build RPMs, you will need to run the build-all.clj script on a CentOS 5 box with rpm-build, leiningen, and lein-iplant-rpm installed (along with rest of the development environment requirements). Then you can do the following:
+
+    lein exec build-all.clj tools --rpm --build-number 1 --archive
+
+The --build-number option is required if you use the --rpm option. It should be passed an integer, but will probably accept other values fine. Don't do that, though.
+
+RPMs aren't necessary for most builds during development and are likely to be deprecated in the future.
 
 ## Building a specific project
 

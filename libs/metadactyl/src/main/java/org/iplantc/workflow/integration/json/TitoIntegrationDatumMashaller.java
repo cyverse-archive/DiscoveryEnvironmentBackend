@@ -7,7 +7,7 @@ import org.json.JSONObject;
 
 /**
  *
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public class TitoIntegrationDatumMashaller implements TitoUnmarshaller<IntegrationDatum>, TitoMarshaller<IntegrationDatum> {
     public static final String IMPLEMENTOR = "implementor";
@@ -23,9 +23,9 @@ public class TitoIntegrationDatumMashaller implements TitoUnmarshaller<Integrati
      * }
      * </code>
      * 
-     * @param json
-     * @return
-     * @throws JSONException 
+     * @param json the JSON object representing the integration datum.
+     * @return the integration datum.
+     * @throws JSONException if one of the required fields is missing.
      */
     @Override
     public IntegrationDatum fromJson(JSONObject json) throws JSONException {

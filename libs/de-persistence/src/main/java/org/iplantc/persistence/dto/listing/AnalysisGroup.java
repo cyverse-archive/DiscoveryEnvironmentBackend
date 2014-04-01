@@ -94,13 +94,13 @@ public class AnalysisGroup implements Serializable {
     private List<AnalysisListing> analyses;
 
     /**
-     * The analyses contained in this analysis group and all descendents.
+     * The analyses contained in this analysis group and all descendants.
      */
     @Transient
     private List<AnalysisListing> allAnalyses;
 
     /**
-     * The analyses that are contained in this analysis group and all of its descendents and are not marked as deleted.
+     * The analyses that are contained in this analysis group and all of its descendants and are not marked as deleted.
      */
     @Transient
     private List<AnalysisListing> allActiveAnalyses;
@@ -180,7 +180,7 @@ public class AnalysisGroup implements Serializable {
     }
 
     /**
-     * @return the list of all analyses in this analysis group and all of its descendents.
+     * @return the list of all analyses in this analysis group and all of its descendants.
      */
     public List<AnalysisListing> getAllAnalyses() {
         if (allAnalyses == null) {
@@ -190,7 +190,7 @@ public class AnalysisGroup implements Serializable {
     }
 
     /**
-     * Loads the list of all analyses in this analysis group and all of its descendents.
+     * Loads the list of all analyses in this analysis group and all of its descendants.
      */
     private void loadAllAnalyses() {
         List<AnalysisListing> result = new ArrayList<AnalysisListing>();
@@ -202,7 +202,7 @@ public class AnalysisGroup implements Serializable {
     }
 
     /**
-     * @return the list of non-deleted analyses in this analysis group and all of its descendents.
+     * @return the list of non-deleted analyses in this analysis group and all of its descendants.
      */
     public List<AnalysisListing> getAllActiveAnalyses() {
         if (allActiveAnalyses == null) {
@@ -212,7 +212,7 @@ public class AnalysisGroup implements Serializable {
     }
 
     /**
-     * Loads the list of all non-deleted analyses in this analysis group and all of its descendents.
+     * Loads the list of all non-deleted analyses in this analysis group and all of its descendants.
      */
     private void loadAllActiveAnalyses() {
         List<AnalysisListing> result = new ArrayList<AnalysisListing>();
@@ -229,6 +229,8 @@ public class AnalysisGroup implements Serializable {
      * descriptions that match the given search string.
      *
      * @return The filtered list of AnalysisListing models.
+     * @param session the database session.
+     * @param search the string to search for.
      */
     public List<AnalysisListing> filterAnalysesByNameOrDesc(Session session, String search) {
         String searchClause = "lower(%1$s) like '%%' || lower(:search) || '%%'";

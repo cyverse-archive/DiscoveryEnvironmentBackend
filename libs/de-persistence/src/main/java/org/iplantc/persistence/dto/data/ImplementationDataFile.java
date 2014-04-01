@@ -5,7 +5,7 @@ package org.iplantc.persistence.dto.data;
  * file.  These files are used to test inputs and outputs of Analyses and 
  * Deployed Components.
  * 
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public interface ImplementationDataFile {
 	/**

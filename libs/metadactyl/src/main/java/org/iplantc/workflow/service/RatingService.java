@@ -24,7 +24,7 @@ import org.json.JSONObject;
 
 /**
  *
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public class RatingService {
     private SessionFactory sessionFactory;
@@ -48,6 +48,7 @@ public class RatingService {
 
     /**
      * @see RatingService#getUserRatings(java.lang.String)
+     * @return the user's ratings.
      */
     public Map<String, Rating> getUserRatings() {
         return getUserRatings(userSessionService.getUser().getUsername());
@@ -62,7 +63,6 @@ public class RatingService {
      *  Username of the user to get the ratings for.
      * @return
      *  Map of user ratings.
-     * @throws Exception
      */
     public Map<String, Rating> getUserRatings(String username) {
         Map<String, Rating> result = new HashMap<String, Rating>();
@@ -199,9 +199,9 @@ public class RatingService {
 
     /**
      * Deletes a vote for the current user and returns the new average rating.
-     * @param jsonString
+     * @param jsonString the string representation of the rating.
      * @return a JSON string containing the new average under the key "avg"
-     * @throws Exception
+     * @throws Exception if an error occurs.
      */
     public String deleteRating(String jsonString) throws Exception {
         Session session = sessionFactory.openSession();

@@ -106,10 +106,16 @@
  (script test-analysis) =>
  (str
   "#!/bin/bash\n"
+  "readonly IPLANT_USER=testuser\n"
+  "export IPLANT_USER\n"
   "cd ~\n"
+  "if [ ! \"$?\" -eq \"0\" ]; then\n\tEXITSTATUS=1\n\texit $EXITSTATUS\nfi\n"
   "mkdir -p iplant-de-jobs/testuser/testuuid\n"
+  "if [ ! \"$?\" -eq \"0\" ]; then\n\tEXITSTATUS=1\n\texit $EXITSTATUS\nfi\n"
   "pushd iplant-de-jobs/testuser/testuuid\n"
+  "if [ ! \"$?\" -eq \"0\" ]; then\n\tEXITSTATUS=1\n\texit $EXITSTATUS\nfi\n"
   "mkdir -p logs\n"
+  "if [ ! \"$?\" -eq \"0\" ]; then\n\tEXITSTATUS=1\n\texit $EXITSTATUS\nfi\n"
   "EXITSTATUS=0\n"
   "input-1-env input-1-exec input-1-args 1> input-1-stdout 2> input-1-stderr\n"
   "if [ ! \"$?\" -eq \"0\" ]; then\n"
@@ -230,17 +236,23 @@
 (fact
  (.exists (java.io.File. "test/scratch/logs/iplant.cmd")) => true?
  (.exists (java.io.File. "test/scratch/logs/iplant.sh")) => true?
- 
+
  (slurp "test/scratch/logs/iplant.cmd") =>
  "universe = vanilla\nexecutable = /bin/bash\narguments = \"test/scratch/logs/iplant.sh\"\noutput = test/scratch/logs/script-output.log\nerror = test/scratch/logs/script-error.log\nlog = test/scratch/logs/script-condor-log\n+IpcUuid = \"testuuid\"\n+IpcJobId = \"generated_script\"\n+IpcUsername = \"testuser\"\n+IpcExe = \"step-1-exec\"\n+IpcExePath = \"\"\nshould_transfer_files = NO\nnotification = NEVER\nqueue\n"
 
  (slurp "test/scratch/logs/iplant.sh") =>
  (str
   "#!/bin/bash\n"
+  "readonly IPLANT_USER=testuser\n"
+  "export IPLANT_USER\n"
   "cd ~\n"
+  "if [ ! \"$?\" -eq \"0\" ]; then\n\tEXITSTATUS=1\n\texit $EXITSTATUS\nfi\n"
   "mkdir -p iplant-de-jobs/testuser/testuuid\n"
+  "if [ ! \"$?\" -eq \"0\" ]; then\n\tEXITSTATUS=1\n\texit $EXITSTATUS\nfi\n"
   "pushd iplant-de-jobs/testuser/testuuid\n"
+  "if [ ! \"$?\" -eq \"0\" ]; then\n\tEXITSTATUS=1\n\texit $EXITSTATUS\nfi\n"
   "mkdir -p logs\n"
+  "if [ ! \"$?\" -eq \"0\" ]; then\n\tEXITSTATUS=1\n\texit $EXITSTATUS\nfi\n"
   "EXITSTATUS=0\n"
   "input-1-env input-1-exec input-1-args 1> input-1-stdout 2> input-1-stderr\n"
   "if [ ! \"$?\" -eq \"0\" ]; then\n"

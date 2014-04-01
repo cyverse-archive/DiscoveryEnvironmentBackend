@@ -9,9 +9,9 @@ import org.json.JSONObject;
  * Represents the type of a property in a workflow. A workflow property is a value that can change, and the user is
  * typically prompted for the value of each property. The property type determines the general type of information
  * that the property may hold and how the user is prompted for property values. Some examples of basic property types
- * are <code>text</code> and <code>boolean</code>. A <code>text</code> property would normally be represented by a
- * textbox in a form and could contain any arbitrary text. A <code>boolean<code> property, on the other hand, would
- * normally be represented by a checkbox in a form and may contain only true and false values.
+ * are {@code text} and {@code boolean}. A {@code text} property would normally be represented by a textbox in a form
+ * and could contain any arbitrary text. A {@code boolean} property, on the other hand, would normally be represented
+ * by a checkbox in a form and may contain only true and false values.
  *
  * @author Dennis Roberts
  */

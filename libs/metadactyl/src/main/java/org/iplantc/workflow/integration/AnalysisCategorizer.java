@@ -51,6 +51,7 @@ public class AnalysisCategorizer {
      * @param daoFactory used to obtain data access objects.
      * @param devAnalysisGroupIndex the index of the development analysis group.
      * @param favoritesAnalysisGroupIndex the index of the favorites analysis group.
+     * @param workspaceInitializer used to initialize workspaces that don't exist yet.
      */
     public AnalysisCategorizer(DaoFactory daoFactory, int devAnalysisGroupIndex, int favoritesAnalysisGroupIndex,
             WorkspaceInitializer workspaceInitializer) {
@@ -95,6 +96,7 @@ public class AnalysisCategorizer {
      * Categorize a list of analyses.
      * 
      * @param categories the list of categorized analyses.
+     * @return the list of categorizations that couldn't be completed.
      */
     public FailedCategorizationList categorizeAnalyses(AnalysisCategoryList categories) {
         FailedCategorizationList failures = new FailedCategorizationList();

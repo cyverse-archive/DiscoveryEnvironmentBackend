@@ -329,18 +329,18 @@ path. Please see the metadactyl documentation for more information.
 
 ## Permanently Deleting an Analysis
 
-Unsecured Endpoint: POST /permanently-delete-workflow
+Secured Endpoint: POST /secured/permanently-delete-workflow
 
-Delegates to metadactyl: POST /permanently-delete-workflow
+Delegates to metadactyl: POST /secured/permanently-delete-workflow
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Logically Deleting an Analysis
 
-Unsecured Endpoint: POST /delete-workflow
+Secured Endpoint: POST /secured/delete-workflow
 
-Delegates to metadactyl: POST /delete-workflow
+Delegates to metadactyl: POST /secured/delete-workflow
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.

@@ -100,6 +100,12 @@
    (GET "/is-publishable/:app-id" [app-id]
         (trap #(app-publishable? app-id)))
 
+   (POST "/permanently-delete-workflow" [:as req]
+         (trap #(permanently-delete-workflow req)))
+
+   (POST "/delete-workflow" [:as req]
+         (trap #(delete-workflow req)))
+
    (GET "/default-output-dir" []
         (trap #(get-default-output-dir)))
 
@@ -176,12 +182,6 @@
 
    (POST "/export-deployed-components" [:as req]
          (trap #(export-deployed-components req)))
-
-   (POST "/permanently-delete-workflow" [:as req]
-         (trap #(permanently-delete-workflow req)))
-
-   (POST "/delete-workflow" [:as req]
-         (trap #(delete-workflow req)))
 
    (POST "/preview-template" [:as req]
          (trap #(preview-template req)))

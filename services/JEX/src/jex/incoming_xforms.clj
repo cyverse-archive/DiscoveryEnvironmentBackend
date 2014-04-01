@@ -9,22 +9,22 @@
   #(.replaceAll (re-matcher %1 %3) %2))
 
 (def replace-at
-  "Replaces @ sign in a string. [replace-str str-to-modify" 
+  "Replaces @ sign in a string. [replace-str str-to-modify"
    (partial replacer #"@"))
 
-(def at-underscore 
+(def at-underscore
   "Replaces @ sign with _. [str-to-modify]"
   (partial replace-at "_"))
 
-(def replace-space 
-  "Replaces space. [replace-str str-to-modify]" 
+(def replace-space
+  "Replaces space. [replace-str str-to-modify]"
    (partial replacer #"\s"))
 
-(def space-underscore 
-  "Replaces spaces with underscores. [str-to-modify]" 
+(def space-underscore
+  "Replaces spaces with underscores. [str-to-modify]"
    (partial replace-space "_"))
 
-(def now-fmt 
+(def now-fmt
   "Date format used in directory and file names."
    "yyyy-MM-dd-HH-mm-ss.SSS")
 
@@ -35,12 +35,12 @@
 
 (defn date
   "Returns the current date as a java.util.Date instance."
-  [] 
+  []
   (java.util.Date.))
 
 (defn filetool-env
   "Creates the filetool environment variables."
-  [] 
+  []
   (str "PATH=" (cfg/icommands-path)))
 
 (defn analysis-dirname
@@ -96,33 +96,33 @@
         analysis-dir  (analysis-dirname
                        (pathize (:name condor-map))
                        (:now_date condor-map))]
-    (cond      
+    (cond
      (or (nil? output-dir)
          (nil? create-subdir))
      (ut/rm-last-slash
       (ut/path-join irods-base username "analyses" analysis-dir))
-      
+
      (and
       (string/blank? output-dir)
       create-subdir)
      (ut/rm-last-slash
       (ut/path-join irods-base username "analyses" analysis-dir))
-      
+
      (and
       (string/blank? output-dir)
       (false? create-subdir))
      (ut/rm-last-slash
       (ut/path-join irods-base username "analyses" analysis-dir))
-      
+
      (and
       (not (string/blank? output-dir))
       create-subdir)
      (ut/rm-last-slash
       (ut/path-join output-dir analysis-dir))
-      
+
       (and (not (string/blank? output-dir)) (false? create-subdir))
       (ut/rm-last-slash output-dir)
-      
+
       :else
       (ut/rm-last-slash
        (ut/path-join irods-base username "analyses" analysis-dir)))))
@@ -151,7 +151,7 @@
         output-dir   (output-directory condor-map)
         working-dir  (ut/add-trailing-slash
                       (ut/path-join nfs-base username analysis-dir))]
-    (assoc condor-map 
+    (assoc condor-map
            :output_dir output-dir
            :working_dir working-dir
            :condor-log-dir log-dir)))
@@ -185,18 +185,18 @@
   "Escapes the spaces in the params list."
   [params]
   (string/join " "
-    (flatten 
-      (map 
-        #(vector (:name %1) (quote-value (:value %1))) 
+    (flatten
+      (map
+        #(vector (:name %1) (quote-value (:value %1)))
         (sort-by :order params)))))
 
 (defn format-env-variables
   "Formats and escapes environment variables that are passed to it."
   [env-map]
-  (string/join 
-    " " 
-    (mapv 
-      #(str (name (first %1)) "=" (str "\"" (last %1) "\"")) 
+  (string/join
+    " "
+    (mapv
+      #(str (name (first %1)) "=" (str "\"" (last %1) "\""))
       (seq env-map))))
 
 (defn executable
@@ -274,7 +274,7 @@
    of transformed step maps."
   [condor-map]
   (for [[step-idx step] (step-iterator-vec condor-map)]
-    (assoc step 
+    (assoc step
       :id (str "condor-" step-idx)
       :type "condor"
       :submission_date (:submission_date condor-map)
@@ -332,7 +332,7 @@
 (defn input-arguments
   "Formats the arguments to porklock for an input job."
   [condor-map source input-map]
-  (let [file-metadata (or (:file-metadata condor-map) [])] 
+  (let [file-metadata (or (:file-metadata condor-map) [])]
     (str "get --user " (:username condor-map)
          " --source " (quote-value
                         (handle-source-path source (:multiplicity input-map)))
@@ -470,7 +470,7 @@
   (assoc condor-map
     :all-input-jobs (apply concat (map :input-jobs (:steps condor-map)))))
 
-(defn all-output-jobs 
+(defn all-output-jobs
   "Adds the :all-output-jobs key to condor-map. It's a list of all of the output
    jobs in the submission, extracted from the :steps list."
   [condor-map]
@@ -497,8 +497,8 @@
   "Examines an output job definition and returns the path to the file or
    directory."
   [jdef]
-  (if (= (:multi jdef) "collection") 
-    (make-abs-output (ut/add-trailing-slash (:source jdef))) 
+  (if (= (:multi jdef) "collection")
+    (make-abs-output (ut/add-trailing-slash (:source jdef)))
     (:source jdef)))
 
 (defn exclude-arg
@@ -513,8 +513,8 @@
         output-paths (map output-coll (filter not-retain outputs))
         all-paths    (flatten
                       (conj input-paths output-paths (cfg/filter-files)))]
-    (if (pos? (count all-paths)) 
-      (str "--exclude " (string/join "," all-paths)) 
+    (if (pos? (count all-paths))
+      (str "--exclude " (string/join "," all-paths))
       "")))
 
 (defn imkdir-job-map
@@ -534,8 +534,8 @@
 (defn meta-analysis-id
   [{analysis-id :analysis_id :as condor-map}]
   (if-not (nil? analysis-id)
-    (assoc condor-map :file-metadata 
-           (conj (:file-metadata condor-map) 
+    (assoc condor-map :file-metadata
+           (conj (:file-metadata condor-map)
                  {:attr  "ipc-analysis-id"
                   :value analysis-id
                   :unit  "UUID"}))
@@ -558,7 +558,7 @@
 (defn shotgun-job-map
   "Formats a job definition for the output job that transfers
    all of the files back into iRODS after the analysis is complete."
-  [{output-dir    :output_dir 
+  [{output-dir    :output_dir
     condor-log    :condor-log-dir
     cinput-jobs   :all-input-jobs
     coutput-jobs  :all-output-jobs
@@ -574,22 +574,22 @@
    :stderr      "logs/output-last-stderr"
    :stdout      "logs/output-last-stdout"
    :log-file    (ut/path-join condor-log "logs" "output-last-log")
-   :arguments   (str "put --user " username 
+   :arguments   (str "put --user " username
                      " --config " (irods-config condor-map)
                      " --destination " (quote-value output-dir)
                      (if (:skip-parent-meta condor-map) " --skip-parent-meta" "")
                      (file-metadata-arg file-metadata)
-                     " " 
+                     " "
                      (exclude-arg cinput-jobs coutput-jobs))})
 
 (defn extra-jobs
   "Associates the :final-output-job and :imkdir-job definitions
    with condor-map. Returns a new version of condor-map."
   [condor-map]
-  (assoc condor-map 
+  (assoc condor-map
     :final-output-job
     (shotgun-job-map condor-map)
-    
+
     :imkdir-job
     (imkdir-job-map
      (:output_dir condor-map)

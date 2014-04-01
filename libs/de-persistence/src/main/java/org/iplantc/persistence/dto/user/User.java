@@ -13,7 +13,7 @@ import javax.persistence.Table;
 /**
  * Represents a User within the data store.
  * 
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 @Entity
 @Table(name = "users")

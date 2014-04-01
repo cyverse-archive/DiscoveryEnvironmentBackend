@@ -43,13 +43,33 @@
         (throw+ {:type :invalid-query})))))
 
 
+(defn- format-entity
+  "Formats an entity for the response"
+  [es-form memberships]
+  (let [filter-members (fn [perm-map] (select-keys perm-map memberships))
+        max-perm       (fn [perms] (cond
+                                     (contains? perms :own)   :own
+                                     (contains? perms :write) :write
+                                     (contains? perms :read)  :read))
+        agg-perm       (->> (:userPermissions es-form)
+                         (map #(vector (:user %) (:permission %)))
+                         flatten
+                         (apply hash-map)
+                         filter-members
+                         vals
+                         (map keyword)
+                         set
+                         max-perm)]
+    (assoc es-form :permission agg-perm)))
+
+
 (defn- extract-result
   "Extracts the result of the Donkey search services from the results returned to us by
    ElasticSearch."
-  [resp offset]
+  [resp offset memberships]
   (letfn [(format-match [match] {:score  (:_score match)
                                  :type   (:_type match)
-                                 :entity (:_source match)})]
+                                 :entity (format-entity (:_source match) memberships)})]
     {:total   (or (es-resp/total-hits resp) 0)
      :offset  offset
      :matches (map format-match (es-resp/hits-from resp))}))
@@ -57,10 +77,9 @@
 
 (defn- mk-query
   "Builds a query."
-  [query user user-groups]
-  (let [memberships (conj user-groups user)
-        filter      (es-query/nested :path   "userPermissions"
-                                     :filter (es-query/term "userPermissions.user" memberships))]
+  [query memberships]
+  (let [filter (es-query/nested :path   "userPermissions"
+                                :filter (es-query/term "userPermissions.user" memberships))]
     (es-query/filtered :query query :filter filter)))
 
 
@@ -189,15 +208,16 @@
   "Performs a search on the Elastic Search repository."
   [user query opts]
   (try+
-    (let [start     (l/local-now)
-          type      (extract-type opts :any)
-          offset    (extract-uint opts :offset 0)
-          limit     (extract-uint opts :limit (cfg/default-search-result-limit))
-          sort      (extract-sort opts [[:score] :desc])
-          query-req (mk-query query user (list-user-groups user))
-          sort-req  (mk-sort sort)]
+    (let [start       (l/local-now)
+          type        (extract-type opts :any)
+          offset      (extract-uint opts :offset 0)
+          limit       (extract-uint opts :limit (cfg/default-search-result-limit))
+          sort        (extract-sort opts [[:score] :desc])
+          memberships (conj (list-user-groups user) user)
+          query-req   (mk-query query memberships)
+          sort-req    (mk-sort sort)]
       (-> (send-request type query-req offset limit sort-req)
-        (extract-result offset)
+        (extract-result offset memberships)
         (add-timing start)
         svc/success-response))
     (catch [:type :invalid-argument] {:keys [arg val reason]}

@@ -9,8 +9,8 @@ public interface IdRetentionStrategy {
 
     /**
      * Gets the identifier to use in the exported JSON.
-     * @param originalId
-     * @return 
+     * @param originalId the original identifier.
+     * @return the new identifier.
      */
     public String getId(String originalId);
 }

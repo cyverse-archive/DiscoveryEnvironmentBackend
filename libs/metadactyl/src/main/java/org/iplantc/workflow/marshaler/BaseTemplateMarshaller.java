@@ -25,6 +25,7 @@ public interface BaseTemplateMarshaller {
     /**
      * Gets the marshalled workflow.
      *
+     * @return a string representing the workflow.
      * @throws WorkflowException if an error occurs.
      */
     public String getMarshalledWorkflow() throws WorkflowException;

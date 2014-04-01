@@ -5,7 +5,7 @@
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
         [clj-jargon.item-ops :only [mkdir]]
-        [clj-jargon.permissions :only [set-permissions owns?]]
+        [clj-jargon.permissions :only [set-permission owns?]]
         [clj-jargon.listings :only [list-dir]])
   (:require [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
@@ -31,14 +31,14 @@
           (log/warn "[root-listing] Creating" root-path "for" user)
           (mkdir cm root-path)
           (log/warn "[root-listing] Setting own perms on" root-path "for" user)
-          (set-permissions cm user root-path false false true))
+          (set-permission cm user root-path :own))
 
         (validators/path-exists cm root-path)
 
         (when (and set-own? (not (owns? cm user root-path)))
           (log/warn "[root-listing] set-own? is true and" root-path "is not owned by" user)
           (log/warn "[root-listing] Setting own perms on" root-path "for" user)
-          (set-permissions cm user root-path false false true))
+          (set-permission cm user root-path :own))
 
         (when-let [res (list-dir cm user root-path :include-subdirs false)]
           (assoc res

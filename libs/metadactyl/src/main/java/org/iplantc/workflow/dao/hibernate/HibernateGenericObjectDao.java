@@ -16,7 +16,7 @@ import org.iplantc.workflow.dao.GenericObjectDao;
  * 
  * @author Dennis Roberts
  * 
- * @param <T extends > the type of object to save.
+ * @param <T> the type of object to save.
  */
 public abstract class HibernateGenericObjectDao<T extends NamedAndUnique> implements GenericObjectDao<T> {
 
