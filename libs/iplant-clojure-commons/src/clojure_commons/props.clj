@@ -1,5 +1,5 @@
 (ns clojure-commons.props
-  (:use [clojure.java.io :only (file)])
+  (:use [clojure.java.io :only (file input-stream)])
   (:import [java.net URLDecoder]
            [org.apache.commons.configuration PropertiesConfiguration]))
 
