@@ -138,19 +138,25 @@
   (when-not (cc/validate-config configs config-valid)
     (throw+ {:error_code ce/ERR_CONFIG_INVALID})))
 
-(defn load-config-from-file
-  "Loads the configuration settings from a file."
+(defn- setup-config
   []
-  (cc/load-config-from-file (System/getenv "IPLANT_CONF_DIR") "clockwork.properties" props)
   (cc/log-config props)
   (validate-config))
+
+(defn load-config-from-file
+  "Loads the configuration settings from a file."
+  ([cfg-path]
+   (cc/load-config-from-file cfg-path props)
+   (setup-config))
+  ([]
+   (cc/load-config-from-file (System/getenv "IPLANT_CONF_DIR") "clockwork.properties" props)
+   (setup-config)))
 
 (defn load-config-from-zookeeper
   "Loads the configuration settings from Zookeeper."
   []
   (cc/load-config-from-zookeeper props "clockwork")
-  (cc/log-config props)
-  (validate-config))
+  (setup-config))
 
 (defn jargon-config
   "Obtains a Jargon configuration map."
