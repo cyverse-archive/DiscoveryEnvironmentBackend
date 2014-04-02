@@ -623,21 +623,27 @@
   []
   (filter #(not (nil? %)) [(icat-password) (icat-user) (irods-pass) (irods-user) (agave-pass)]))
 
-(defn load-config-from-file
-  "Loads the configuration settings from a file."
+(defn- setup-config
+  "Logs, validates, and registers filters"
   []
-  (cc/load-config-from-file (System/getenv "IPLANT_CONF_DIR") "donkey.properties" props)
   (cc/log-config props :filters [#"irods\.user" #"icat\.user" #"oauth\.pem"])
   (validate-config)
   (ce/register-filters (exception-filters)))
+
+(defn load-config-from-file
+  "Loads the configuration settings from a file."
+  ([cfg-path]
+   (cc/load-config-from-file cfg-path props)
+   (setup-config))
+  ([]
+   (cc/load-config-from-file (System/getenv "IPLANT_CONF_DIR") "donkey.properties" props)
+   (setup-config)))
 
 (defn load-config-from-zookeeper
   "Loads the configuration settings from Zookeeper."
   []
   (cc/load-config-from-zookeeper props "donkey")
-  (cc/log-config props :filters [#"irods\.user" #"icat\.user" #"oauth\.pem"])
-  (validate-config)
-  (ce/register-filters (exception-filters)))
+  (setup-config))
 
 (defn load-config-from-file?
   "Returns true if Donkey should read the config from a file."
