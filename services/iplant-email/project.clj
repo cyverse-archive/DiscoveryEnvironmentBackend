@@ -19,8 +19,9 @@
                  [org.bituf/clj-stringtemplate "0.2"]
                  [compojure "1.0.1"]
                  [ring/ring-jetty-adapter "1.0.1"]
-                 [log4j/log4j "1.2.16"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.0.2"]]
+                 [log4j/log4j "1.2.16"]
+                 [org.clojure/tools.cli "0.3.1"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.0.1"]]
   :iplant-rpm {:summary "iplant-email"
                :dependencies ["iplant-service-config >= 0.1.0-5"
                               "iplant-clavin"
