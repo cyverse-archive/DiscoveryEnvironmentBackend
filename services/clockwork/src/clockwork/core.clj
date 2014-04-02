@@ -1,8 +1,8 @@
 (ns clockwork.core
   (:gen-class)
-  (:use [clojure.tools.cli :only [cli]]
-        [slingshot.slingshot :only [try+]])
+  (:use [slingshot.slingshot :only [try+]])
   (:require [clojure.tools.logging :as log]
+            [clojure.tools.cli :as cli]
             [clojure.string :as string]
             [clojure-commons.error-codes :as ce]
             [clockwork.config :as config]
@@ -100,22 +100,52 @@
   (when (config/notification-cleanup-enabled)
     (schedule-notification-cleanup-job)))
 
-(defn- parse-args
-  "Parses the command-line arguments."
-  [args]
-  (cli args
-       ["-l" "--local-config" "use a local configuraiton file" :default false :flag true]
-       ["-h" "--help" "display the help message" :default false :flag true]))
+(def cli-options
+  [["-l" "--local-config" "use a local configuraiton file"]
+   ["-h" "--help" "display the help message"]
+   ["-c" "--config PATH" "Path to the config file"]])
+
+(defn usage
+  [summary]
+  (->> ["Scheduled jobs for the iPlant Discovery Environment."
+        ""
+        "Usage: clockwork [options]"
+        ""
+        "Options:"
+        summary]
+       (string/join \newline)))
+
+(defn error-msg
+  [errors]
+  (str "Errors:\n\n" (string/join \newline errors)))
+
+(defn exit
+  [status message]
+  (println message)
+  (System/exit status))
+
+(defn configurate
+  [options]
+  (cond
+   (:config options)
+   (config/load-config-from-file (:config options))
+
+   (:local-config options)
+   (config/load-config-from-file)
+
+   :else
+   (config/load-config-from-zookeeper)))
 
 (defn -main
   "Initializes the Quartzite scheduler and schedules jobs."
   [& args]
-  (let [[opts args banner] (parse-args args)]
-    (when (:help opts)
-      (println banner)
-      (System/exit 0))
+  (let [{:keys [options arguments errors summary]} (cli/parse-opts args cli-options)]
+    (cond
+     (:help options)
+     (exit 0 (usage summary))
+
+     errors
+     (exit 1 (error-msg errors)))
+    (configurate options)
     (log/info "clockwork startup")
-    (if (:local-config opts)
-      (config/load-config-from-file)
-      (config/load-config-from-zookeeper))
     (init-scheduler)))
