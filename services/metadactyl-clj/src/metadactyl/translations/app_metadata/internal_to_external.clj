@@ -40,7 +40,7 @@
   [property-value]
   (let [non-empty-string? (fn [s] (and (string? s) (not (string/blank? s))))]
     (cond (map? property-value)              property-value
-          (non-empty-string? property-value) (first get-reference-genomes uuid)
+          (non-empty-string? property-value) (first (get-reference-genomes property-value))
           :else                              "")))
 
 (defn get-default-value
