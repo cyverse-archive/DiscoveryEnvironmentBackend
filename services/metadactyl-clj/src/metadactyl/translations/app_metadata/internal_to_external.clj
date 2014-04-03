@@ -36,11 +36,12 @@
   (first (filter #(Boolean/parseBoolean (str (:isDefault %))) args)))
 
 (defn- ref-gen-info
-  "Obtains information about the reference genome with the given UUID."
-  [uuid]
-  (if (string/blank? uuid)
-    ""
-    (first (get-reference-genomes uuid))))
+  "Obtains information about a reference genome."
+  [property-value]
+  (let [non-empty-string? (fn [s] (and (string? s) (not (string/blank? s))))]
+    (cond (map? property-value)              property-value
+          (non-empty-string? property-value) (first get-reference-genomes uuid)
+          :else                              "")))
 
 (defn get-default-value
   "Gets the default value for a property and a set of list of selectable arguments."

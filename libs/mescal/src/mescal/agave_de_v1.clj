@@ -142,7 +142,7 @@
 (defn- find-matching-apps
   [agave jobs-enabled? search-term]
   (filter (partial app-matches? search-term)
-          (:templates (list-public-apps agave jobs-enabled?))))
+          (:templates (list-public-apps agave jobs-enabled? {}))))
 
 (defn search-public-apps
   [agave jobs-enabled? search-term]
