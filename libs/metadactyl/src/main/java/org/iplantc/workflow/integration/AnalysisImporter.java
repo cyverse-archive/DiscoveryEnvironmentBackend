@@ -2,11 +2,6 @@ package org.iplantc.workflow.integration;
 
 import static org.iplantc.workflow.integration.util.AnalysisImportUtils.findExistingAnalysis;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
-import org.hibernate.Session;
 import org.iplantc.persistence.dto.user.User;
 import org.iplantc.persistence.dto.workspace.Workspace;
 import org.iplantc.workflow.WorkflowException;
@@ -22,9 +17,15 @@ import org.iplantc.workflow.service.WorkspaceInitializer;
 import org.iplantc.workflow.template.groups.TemplateGroup;
 import org.iplantc.workflow.util.ListUtils;
 import org.iplantc.workflow.util.Predicate;
+
+import org.apache.commons.lang.StringUtils;
+import org.hibernate.Session;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Used to import analyses from JSON objects. Each analysis consists of an ID, name and description along with a list
@@ -225,6 +226,11 @@ public class AnalysisImporter implements ObjectImporter, ObjectVetter<Transforma
         TransformationActivity existingAnalysis = findExistingAnalysis(analysisDao, analysisId, analysisName);
 
         String username = getUsername(json, analysis);
+
+        // CORE-4017 published date is only set when an App is initially made public.
+        if (!updateVetted || existingAnalysis == null) {
+            analysis.setIntegrationDate(null);
+        }
 
         if (existingAnalysis == null) {
             initializeWorkspace(username);
