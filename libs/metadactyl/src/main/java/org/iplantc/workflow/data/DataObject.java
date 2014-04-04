@@ -183,7 +183,7 @@ public class DataObject implements NamedAndUnique {
     }
 
     /**
-     * Gets the name of the data source.
+     * @return the name of the data source.
      */
     public String getDataSourceName() {
         return dataSource == null ? "" : dataSource.getName();

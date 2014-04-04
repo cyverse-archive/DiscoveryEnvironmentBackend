@@ -75,6 +75,7 @@ public class FapiStepFormatter {
      * @param analysis the analysis that is currently being formatted.
      * @param step the step that is currently being formatted.
      * @param propertyValues a map of property names to property values.
+     * @param irodsHome the path to the home directory in iRODS.
      */
     public FapiStepFormatter(DaoFactory daoFactory, String stepType, String username, JSONObject experiment,
         TransformationActivity analysis, TransformationStep step, Map<String, List<String>> propertyValues,

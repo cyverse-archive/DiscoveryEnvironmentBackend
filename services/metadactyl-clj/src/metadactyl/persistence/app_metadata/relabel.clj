@@ -178,7 +178,6 @@
            (remove-nil-vals
             {:name             (:name req)
              :description      (:description req)
-             :edited_date      (long->timestamp (:edited_date req))
-             :integration_date (long->timestamp (:published_date req))}))
+             :edited_date      (long->timestamp (:edited_date req))}))
           (where {:hid app-hid}))
   (update-template-labels req (:hid (get-single-template-for-app app-hid))))

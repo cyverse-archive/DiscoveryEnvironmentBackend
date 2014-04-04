@@ -34,7 +34,7 @@ public class AnalysisGroupList extends AbstractDto {
     }
 
     /**
-     * @param templateGroups the list of template groups being marshaled.
+     * @param analysisGroups the list of template groups being marshaled.
      */
     public AnalysisGroupList(List<AnalysisGroup> analysisGroups) {
         this(analysisGroups, new HashSet<AnalysisListing>(), new HashMap<Long, UserRating>());

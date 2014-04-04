@@ -59,6 +59,7 @@ public class Template extends WorkflowElement {
     /**
      * Adds a property group to the list of property groups.
      *
+     * @param index the index of the property group to add.
      * @param propertyGroup the property group to add.
      */
     public void addPropertyGroup(int index, PropertyGroup propertyGroup) {
@@ -96,6 +97,8 @@ public class Template extends WorkflowElement {
 
     /**
      * Gets the type for this template
+     *
+     * @return the type of the template.
      */
     public String getTemplateType() {
         return templateType;

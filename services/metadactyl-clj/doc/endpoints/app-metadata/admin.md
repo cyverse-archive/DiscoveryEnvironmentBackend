@@ -3100,7 +3100,7 @@ $ curl -sd '
 
 ## Permanently Deleting an Analysis
 
-*Unsecured Endpoint:* POST /permanently-delete-workflow
+*Secured Endpoint:* POST /secured/permanently-delete-workflow
 
 This service physically removes an analysis from the database, which allows
 administrators to completely remove analyses that are causing problems. As far
@@ -3110,8 +3110,7 @@ following format for the deletion of one or more private analyses:
 
 ```json
 {
-    "analysis_ids": ["some-analysis-id", "another-analysis-id", ...],
-    "full_username": "somebody@example.org"
+    "analysis_ids": ["some-analysis-id", "another-analysis-id", ...]
 }
 ```
 
@@ -3132,7 +3131,7 @@ flag and a brief message indicating the reason for the failure.
 
 ## Logically Deleting an Analysis
 
-*Unsecured Endpoint:* POST /delete-workflow
+*Secured Endpoint:* POST /secured/delete-workflow
 
 An app can be marked as deleted in the DE without being completely removed from
 the database using this service. To mark one or more private apps as deleted
@@ -3140,8 +3139,7 @@ using the app identifiers, the request body should be in the following format:
 
 ```json
 {
-    "analysis_ids": ["some-analysis-id", "another-analysis-id", ...],
-    "full_username": "somebody@example.org"
+    "analysis_ids": ["some-analysis-id", "another-analysis-id", ...]
 }
 ```
 

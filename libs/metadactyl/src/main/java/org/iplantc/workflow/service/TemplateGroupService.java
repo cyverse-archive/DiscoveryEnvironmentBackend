@@ -1,10 +1,5 @@
 package org.iplantc.workflow.service;
 
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.iplantc.authn.service.UserSessionService;
 import org.iplantc.authn.user.User;
 import org.iplantc.hibernate.util.SessionTask;
@@ -12,7 +7,6 @@ import org.iplantc.hibernate.util.SessionTaskWrapper;
 import org.iplantc.persistence.dao.data.IntegrationDatumDao;
 import org.iplantc.persistence.dto.data.IntegrationDatum;
 import org.iplantc.persistence.dto.listing.AnalysisListing;
-import org.iplantc.workflow.AnalysisPublicException;
 import org.iplantc.workflow.core.TransformationActivity;
 import org.iplantc.workflow.core.TransformationActivityReference;
 import org.iplantc.workflow.dao.DaoFactory;
@@ -21,14 +15,20 @@ import org.iplantc.workflow.dao.hibernate.HibernateDaoFactory;
 import org.iplantc.workflow.integration.validation.TemplateValidator;
 import org.iplantc.workflow.model.Template;
 import org.iplantc.workflow.template.groups.TemplateGroup;
-import org.iplantc.workflow.user.UserInfo;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  *
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public class TemplateGroupService {
     public static final String BETA_TEMPLATE_GROUP_ID = "g5401bd146c144470aedd57b47ea1b979";
@@ -96,9 +96,8 @@ public class TemplateGroupService {
                     transformationActivity.setName(input.optString("name", transformationActivity.getName()));
                     transformationActivity.setWikiurl(input.getString("wiki_url"));
 
-                    if (transformationActivity.getIntegrationDate() == null) {
-                        transformationActivity.setIntegrationDate(new Date());
-                    }
+                    // CORE-4017 published date is only set when an App is initially made public.
+                    transformationActivity.setIntegrationDate(new Date());
 
                     // Remove Analysis from it's current groups
                     List<TemplateGroup> currentGroups = templateGroupDao.findTemplateGroupsContainingAnalysis(transformationActivity);
@@ -177,6 +176,10 @@ public class TemplateGroupService {
 
     /**
      * Service endpoint to add an Analysis to a Template Group.
+     *
+     * @param jsonInput the JSON representing the analysis to add to the template group.
+     * @return an empty JSON object.
+     * @throws Exception if an error occurs.
      */
     public String addAnalysisToTemplateGroup(String jsonInput) throws Exception {
         final JSONObject input = new JSONObject(jsonInput);

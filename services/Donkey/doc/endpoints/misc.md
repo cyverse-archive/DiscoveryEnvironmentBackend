@@ -16,6 +16,8 @@
     * [Resetting a user's default output directory.](#resetting-a-users-default-output-directory.)
     * [Obtaining Identifiers](#obtaining-identifiers)
     * [Submitting User Feedback](#submitting-user-feedback)
+    * [Adding data to a user's bucket](#adding-data-to-a-users-bucket)
+    * [Getting data from a user's bucket](#getting-data-from-a-users-bucket)
 
 # Miscellaneous Donkey Endpoints
 
@@ -352,8 +354,22 @@ $ curl -XPUT -s "http://by-tor:8888/secured/feedback?proxyToken=$(cas-ticket)" -
 }
 ```
 
+## Buckets
 
-## Adding data to a user's bucket
+The buckets endpoint is a generic endpoint for storing/accessing data in a
+key-value store.
+
+The Discovery Environment uses a bucket for storing data on the user's behalf,
+which is named _reserved_.
+
+Below is the list of keys used by the Discovery Environment in the
+_:username/reserved_ bucket:
+
+| Reserved Key | Description |
+| ------------ | ----------- |
+| queryTemplates | Store a representation of a user's saved searches |
+
+### Adding data to a user's bucket
 
 Secured Endpoint: POST /secured/buckets/:username/:bucket/:key
 
@@ -381,7 +397,7 @@ Errors will return either a ERR_REQUESTED_FAILED or an ERR_UNCHECKED_EXCEPTION
 error code with a 500 status code.
 
 
-## Getting data from a user's bucket
+### Getting data from a user's bucket
 
 Secured Endpoint: GET /secured/buckets/:username/:bucket/:key
 

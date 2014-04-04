@@ -221,13 +221,13 @@
 (defn delete-workflow
   "This service will logically remove a workflow from the DE."
   [req]
-  (let [url (build-metadactyl-unprotected-url req "delete-workflow")]
+  (let [url (build-metadactyl-secured-url req "delete-workflow")]
     (forward-post url req)))
 
 (defn permanently-delete-workflow
   "This service will physically remove a workflow from the DE."
   [req]
-  (let [url (build-metadactyl-unprotected-url req "permanently-delete-workflow")]
+  (let [url (build-metadactyl-secured-url req "permanently-delete-workflow")]
     (forward-post url req)))
 
 (defn bootstrap

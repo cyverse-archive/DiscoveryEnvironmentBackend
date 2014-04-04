@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  *
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org*gt;
  */
 public interface GenericDao<T> {
 

@@ -65,10 +65,9 @@
     10))
 
 ;Converts a string to a boolean.
-(def boolize #(boolean (Boolean. %)))
-
-;Kinda like (every?)
-(defn any? [pred coll] ((comp not not-any?) pred coll))
+(defn boolize
+  [bool-string]
+  (boolean (Boolean. bool-string)))
 
 (defn osm-client [] (osm/create (osm-url) (osm-coll)))
 (defn job-status [classad-map] (get JOBSTATUS (get classad-map "JobStatus")))
@@ -168,8 +167,7 @@
    (classad-maps)."
   [uuids]
   (log/warn "[panopticon]" (count uuids))
-  (vec (flatten (map run-history (full-partition uuids (part-size)))))
-  #_(vec (flatten (map run-history uuids))))
+  (vec (flatten (map run-history (full-partition uuids (part-size))))))
 
 (defn- run-queue
   "Runs condor_q looking for a single uuid, parses the output,
@@ -189,8 +187,7 @@
    (classad-maps)."
   [uuids]
   (log/warn "[panopticon]" (count uuids))
-  (vec (flatten (map run-queue (full-partition uuids (part-size)))))
-  #_(vec (flatten (map run-queue uuids))))
+  (vec (flatten (map run-queue (full-partition uuids (part-size))))))
 
 (defn condor-rm
   "Calls condor_rm on a dag."
@@ -217,7 +214,7 @@
       (apply sh/sh (flatten args))
       (string/join " " (flatten args)))))
 
-(def put-env 
+(def put-env
   {"PATH" (str "/usr/local/bin:/usr/local2/bin:/usr/local3/bin:" (System/getenv "PATH"))})
 
 
@@ -228,14 +225,14 @@
     (let [exect      "/usr/local/bin/porklock"
           skip-pmeta (if skip-parent-meta? " --skip-parent-meta " "")
           meta-args  (file-metadata-arg meta-maps)
-          all-args   [exect 
+          all-args   [exect
                       "put"
-                      "--user" user 
-                      "--source" source-dir 
+                      "--user" user
+                      "--source" source-dir
                       "--destination" output-dir
                       skip-pmeta
                       meta-args
-                      "--config" config-path 
+                      "--config" config-path
                       :dir source-dir
                       :env put-env]
           results    (panop-exec all-args)]

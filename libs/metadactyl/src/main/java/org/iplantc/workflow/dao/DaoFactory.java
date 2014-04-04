@@ -131,13 +131,15 @@ public interface DaoFactory {
 
     /**
      * Gets the UserDao.
+     *
+     * @return the new data access object.
      */
     public UserDao getUserDao();
 
     /**
      * Gets the current RatingDao implementation.
      *
-     * @return
+     * @return the new data access object.
      */
     public RatingDao getRatingDao();
 

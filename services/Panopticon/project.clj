@@ -1,4 +1,4 @@
-(defproject org.iplantc/panopticon "1.0.2"
+(defproject org.iplantc/panopticon "3.0.1"
   :description "A background service for monitoring the statuses of Condor jobs."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -13,11 +13,12 @@
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.3"]
-                 [org.iplantc/clojure-commons "1.4.8"]
+                 [org.iplantc/clojure-commons "3.0.1"]
                  [cheshire "5.0.1"]
                  [clj-time "0.4.4"]
                  [slingshot "0.10.3"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "1.4.3"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.0.1"]
+            [lein-midje "3.1.1"]]
   :iplant-rpm {:summary "panopticon"
                :runuser "condor"
                :dependencies ["iplant-service-config >= 0.1.0-5"
@@ -25,6 +26,7 @@
                               "java-1.7.0-openjdk"]
                :config-files ["log4j.properties"]
                :config-path "conf"}
+  :profiles {:dev {:dependencies [[midje "1.6.0"]]}}
   :aot [panopticon.core]
   :main panopticon.core
   :repositories [["sonatype-nexus-snapshots"

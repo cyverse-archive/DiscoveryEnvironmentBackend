@@ -215,6 +215,7 @@ public class WorkflowImportService {
      * Imports a workflow.
      *
      * @param jsonString the string representing the JSON object to import.
+     * @return the service response body.
      * @throws JSONException if the JSON string is invalid or doesn't meet the expectations of the workflow importer.
      */
     public String importWorkflow(String jsonString) throws JSONException {
@@ -225,6 +226,7 @@ public class WorkflowImportService {
      * Updates a workflow.
      *
      * @param jsonString the string representing the JSON object to update.
+     * @return the service response body.
      * @throws JSONException if the JSON string is invalid or doesn't meet the expectations of the workflow importer.
      */
     public String updateWorkflow(String jsonString) throws JSONException {
@@ -236,6 +238,7 @@ public class WorkflowImportService {
      *
      * @param jsonString the string representing the JSON object to update.
      * @param updateModeName the name of the update mode to use.
+     * @return the service response body.
      * @throws JSONException if the JSON string is invalid or doesn't meet the expectations of the workflow importer.
      */
     public String forceUpdateWorkflow(String jsonString, String updateModeName) throws JSONException {

@@ -13,7 +13,7 @@ import org.iplantc.workflow.dao.RatingDao;
 
 /**
  *
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public class HibernateRatingDao extends AbstractHibernateDao<Rating> implements RatingDao {
     public HibernateRatingDao(Session session) {

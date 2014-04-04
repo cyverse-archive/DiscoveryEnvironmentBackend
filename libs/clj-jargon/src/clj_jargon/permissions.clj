@@ -46,6 +46,9 @@
 (defmethod fmt-perm Long
   [access-type-id]
   (fmt-perm (FilePermissionEnum/valueOf access-type-id)))
+(defmethod fmt-perm String
+  [access-type-id]
+  (fmt-perm (Long/parseLong access-type-id)))
 
 (defn- log-last
   [item]
@@ -211,6 +214,11 @@
                    :write (or (= enum-val write-perm) (= enum-val own-perm))
                    :own   (= enum-val own-perm)}}))
 
+(defn perm-user->map
+  [[perm-id username]]
+  {:user       username
+   :permission (fmt-perm perm-id)})
+
 (defn list-user-perms
   [cm abs-path]
   (let [path' (ft/rm-last-slash abs-path)]
@@ -218,6 +226,14 @@
     (if (is-file? cm path')
       (mapv perm-map (ll/user-dataobject-perms cm path'))
       (mapv perm-map (ll/user-collection-perms cm path')))))
+
+(defn list-user-perm
+  [cm abs-path]
+  (let [path' (ft/rm-last-slash abs-path)]
+    (validate-path-lengths path')
+    (if (is-file? cm path')
+      (mapv perm-user->map (ll/user-dataobject-perms cm path'))
+      (mapv perm-user->map (ll/user-collection-perms cm path')))))
 
 (defn set-dataobj-perms
   [cm user fpath read? write? own?]
@@ -254,6 +270,16 @@
 
       (is-dir? cm fpath)
       (set-coll-perms cm user fpath read? write? own? recursive?))))
+
+(defn set-permission
+  ([cm user fpath permission]
+     (set-permissions cm user fpath permission false))
+  ([cm user fpath permission recursive?]
+     (validate-path-lengths fpath)
+     (let [own?    (= :own permission)
+           write?  (or own? (= :write permission))
+           read?   (or write? (= :read permission))]
+      (set-permissions cm user fpath read? write? own? recursive?))))
 
 (defn one-user-to-rule-them-all?
   [cm user]

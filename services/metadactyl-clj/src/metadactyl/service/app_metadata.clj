@@ -2,6 +2,7 @@
   "DE app metadata services."
   (:use [clojure.java.io :only [reader]]
         [clojure-commons.validators]
+        [metadactyl.user :only [current-user]]
         [metadactyl.util.service :only [build-url success-response parse-json]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [try+ throw+]])
@@ -40,12 +41,12 @@
   (when (empty? (:analysis_ids req))
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "no analysis identifiers provided"}))
-  (when (and (nil? (:full_username req)) (not (:root_deletion_request req)))
+  (when (and (nil? (.getUsername current-user)) (not (:root_deletion_request req)))
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "no username provided for non-root deletion request"}))
   (dorun (map validate-app-existence (:analysis_ids req)))
   (when-not (:root_deletion_request req)
-    (dorun (map (partial validate-app-ownership (:full_username req)) (:analysis_ids req)))))
+    (dorun (map (partial validate-app-ownership (.getUsername current-user)) (:analysis_ids req)))))
 
 (defn permanently-delete-apps
   "This service removes apps from the database rather than merely marking them as deleted."

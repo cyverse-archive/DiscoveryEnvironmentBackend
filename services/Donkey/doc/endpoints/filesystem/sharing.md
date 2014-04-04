@@ -18,39 +18,35 @@ __Request Query Parameters__:
 
 __Request Body__:
 
-    {
-        "paths" : ["/path/to/shared/file"],
-        "users" : ["shared-with-user"],
-        "permissions" : {
-            "read" : true,
-            "write" : true,
-            "own" : false
-        }
-    }
+```json
+{
+    "paths" : ["/path/to/shared/file"],
+    "users" : ["shared-with-user"],
+    "permission": "write"
+}
+```
 
 __Response Body__:
 
-    {
-        "status" : "success",
-        "user" : ["users shared with"],
-        "path" : ["the paths that were shared"],
-        "permissions" : {
-            "read" : true,
-            "write" : true,
-            "own" : false
-        },
-        "skipped" : [
-            {
-                "path" : "/path/to/shared/file",
-                "reason" : "share-with-self",
-                "user" : "fileowner"
-            }
-        ]
-    }
+```json
+{
+    "status": "success",
+    "user": ["users shared with"],
+    "path": ["the paths that were shared"],
+    "permission": "write",
+    "skipped": [
+        {
+            "path": "/path/to/shared/file",
+            "reason": "share-with-self",
+            "user": "fileowner"
+        }
+    ]
+}
+```
 
 __Curl Command__:
 
-    curl -H "Content-Type:application/json" -d '{"paths" : ["/path/to/shared/file"], "users" : ["shared-with-user1", "fileowner"], "permissions" : {"read" : true, "write" : true, "own" : false}}' http://nibblonian.yourhostname.org/secured/filesystem/share?proxyToken=notReal
+    curl -H "Content-Type:application/json" -d '{"paths" : ["/path/to/shared/file"], "users" : ["shared-with-user1", "fileowner"], "permission": "write"}' http://nibblonian.yourhostname.org/secured/filesystem/share?proxyToken=notReal
 
 
 
@@ -70,10 +66,12 @@ __Error Codes__: ERR_NOT_A_USER, ERR_BAD_OR_MISSING_FIELD, ERR_DOES_NOT_EXIST, E
 
 __Request Body__:
 
-    {
-        "paths" : ["/path/to/shared/file"],
-        "users" : ["shared-with-user"]
-    }
+```json
+{
+    "paths" : ["/path/to/shared/file"],
+    "users" : ["shared-with-user"]
+}
+```
 
 __Curl Command__:
 
@@ -81,15 +79,17 @@ __Curl Command__:
 
 __Response Body__:
 
-    {
-        ":status" : "success",
-        "path : ["/path/to/shared/file"],
-        "user" : ["shared-with-user"],
-        "skipped" : [
-            {
-                "path" : "/path/to/shared/file",
-                "reason" : "unshare-with-self",
-                "user" : "fileowner"
-            }
-        ]
-    }
+```json
+{
+    "status": "success",
+    "path": ["/path/to/shared/file"],
+    "user": ["shared-with-user"],
+    "skipped": [
+        {
+            "path": "/path/to/shared/file",
+            "reason": "unshare-with-self",
+            "user": "fileowner"
+        }
+    ]
+}
+```

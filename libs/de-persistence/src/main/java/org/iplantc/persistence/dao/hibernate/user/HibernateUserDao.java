@@ -8,7 +8,7 @@ import org.iplantc.persistence.dto.user.User;
 
 /**
  *
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public class HibernateUserDao extends AbstractHibernateDao<User> implements UserDao {
 	public HibernateUserDao(Session session) {

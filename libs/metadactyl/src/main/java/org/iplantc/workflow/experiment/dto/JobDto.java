@@ -7,7 +7,7 @@ import net.sf.json.JsonConfig;
 /**
  * Java bean representing a Job.
  *
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public class JobDto {
   private String uuid;

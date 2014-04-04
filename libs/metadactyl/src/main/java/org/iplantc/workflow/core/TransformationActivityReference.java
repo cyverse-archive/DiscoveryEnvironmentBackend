@@ -12,7 +12,7 @@ import javax.persistence.Table;
 
 /**
  *
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 @Entity
 @Table(name = "transformation_activity_references")

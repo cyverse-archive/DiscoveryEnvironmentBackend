@@ -126,6 +126,10 @@
         (porkprint (ft/dirname dest-dir) "is not writeable.")
         (System/exit 1))
 
+      (when-not (jg-info/exists? cm dest-dir)
+        (porkprint "Path " dest-dir " does not exist. Creating it.")
+        (jg-ops/mkdirs cm dest-dir))
+
       (when-not (jg-perms/owns? cm (:user options) dest-dir)
         (porkprint "Setting the owner of " dest-dir " to " (:user options))
         (jg-perms/set-owner cm dest-dir (:user options)))

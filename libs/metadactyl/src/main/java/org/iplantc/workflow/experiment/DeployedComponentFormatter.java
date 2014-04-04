@@ -30,18 +30,18 @@ public class DeployedComponentFormatter {
     /**
      * Creates a new deployed component formatter.
      * 
-     * @param componentId
-     * @return
+     * @param componentId the deployed component identifier.
+     * @return the formatted deployed component.
      */
     public JSONObject formatComponent(String componentId) {
         return marshallDeployedComponent(loadDeployedComponent(componentId));
     }
 
     /**
-     * Marshalls the deployed component to a JSON object.
+     * Marshals the deployed component to a JSON object.
      * 
      * @param component the deployed component to marshall.
-     * @return the marshalled deployed component.
+     * @return the marshaled deployed component.
      */
     private JSONObject marshallDeployedComponent(DeployedComponent component) {
         JSONObject json = new JSONObject();

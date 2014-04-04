@@ -34,6 +34,8 @@ public class TemplateGroupImporter {
      * Initializes a new instance of this class.
      * 
      * @param daoFactory used to generate the template group data access object.
+     * @param devAnalysisGroupIndex the index of the development analysis group in the user's workspace.
+     * @param favoritesAnalysisGroupIndex the index of the favorites group in the user's workspace.
      */
     public TemplateGroupImporter(DaoFactory daoFactory, int devAnalysisGroupIndex, int favoritesAnalysisGroupIndex) {
         this.daoFactory = daoFactory;

@@ -105,6 +105,7 @@ public class AnalysisDto extends AbstractDto {
      * 
      * @param analysisId the analysis identifier.
      * @param daoFactory used to obtain data access objects.
+     * @return the new analysis DTO.
      */
     public static AnalysisDto forAnalysisId(String analysisId, DaoFactory daoFactory) {
         TransformationActivity analysis = daoFactory.getTransformationActivityDao().findById(analysisId);

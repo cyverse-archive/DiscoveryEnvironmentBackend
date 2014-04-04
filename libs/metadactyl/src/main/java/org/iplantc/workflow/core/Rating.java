@@ -18,7 +18,7 @@ import org.iplantc.persistence.dto.user.User;
 /**
  * Represents a Vote within the system.
  * 
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 @Entity
 @Table(name = "ratings")

@@ -8,7 +8,6 @@ node --version
 grunt --version
 npm --version
 npm install
-grunt clean-all
 grunt build-resources
 
 echo "Remove old build dir"

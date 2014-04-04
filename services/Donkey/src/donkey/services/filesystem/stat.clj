@@ -7,7 +7,7 @@
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [is-dir? stat]]
         [clj-jargon.item-ops :only [input-stream]]
-        [clj-jargon.permissions :only [list-user-perms permissions owns?]]
+        [clj-jargon.permissions :only [list-user-perms permission-for owns?]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
@@ -63,7 +63,7 @@
       (validators/path-exists cm path)
       (-> (stat cm path)
         (assoc :label (id->label cm user path))
-        (merge {:permissions (permissions cm user path)})
+        (merge {:permission (permission-for cm user path)})
         (merge-type-info cm user path)
         (merge-shares cm user path)
         (merge-counts cm user path)))))

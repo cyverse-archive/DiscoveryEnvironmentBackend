@@ -12,7 +12,7 @@ public interface WorkspaceDao extends GenericDao<Workspace> {
     /**
      * Deletes a user's workspace.
      * 
-     * @param username the user ID.
+     * @param user the user whose workspace should be deleted.
      */
     public void deleteByUser(User user);
 

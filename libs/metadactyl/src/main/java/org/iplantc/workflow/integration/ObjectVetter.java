@@ -3,7 +3,7 @@ package org.iplantc.workflow.integration;
 /**
  * Outlines functionality used when importing objects that replace other objects.
  * 
- * @author Kris Healy <healyk@iplantcollaborative.org>
+ * @author Kris Healy &lt;healyk@iplantcollaborative.org&gt;
  */
 public interface ObjectVetter<T> {
     /**
