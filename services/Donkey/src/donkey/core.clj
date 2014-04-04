@@ -36,7 +36,8 @@
             [donkey.util.icat :as icat]
             [clojure.tools.nrepl.server :as nrepl]
             [clojure.tools.cli :as cli]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure-commons.props :as props]))
 
 (defn delayed-handler
   [routes-fn]
@@ -139,6 +140,7 @@
     :parse-fn #(Integer/parseInt %)
     :validate [#(< 0 % 0x10000) "Ports must be 0-65536"]]
    ["-c" "--config PATH" "Path to the config file"]
+   ["-v" "--version" "Print out the version number."]
    ["-h" "--help"]])
 
 (defn usage
@@ -185,6 +187,9 @@
     (cond
      (:help options)
      (exit 0 (usage summary))
+
+     (:version options)
+     (exit 0 (props/version-info "org.iplantc" "donkey"))
 
      errors
      (exit 1 (error-msg errors)))
