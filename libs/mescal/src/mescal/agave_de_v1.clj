@@ -119,7 +119,8 @@
 (defn- apply-params
   [results params]
   (-> results
-      (sort-results (:sortField params) (:sortDir params))
+      (sort-results (or (:sortField params) (:sortfield params))
+                    (or (:sortDir params) (:sortdir params)))
       (apply-offset (:offset params))
       (apply-limit (:limit params))))
 
