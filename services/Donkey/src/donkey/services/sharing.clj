@@ -58,7 +58,7 @@
       (catch map? e
         (log/error "nibblonian error: " e)
         (merge {:success false,
-                :error (cheshire/decode (:body e) true)}
+                :error e}
                share)))))
 
 (defn- forward-nibblonian-unshare
@@ -74,7 +74,7 @@
       (catch map? e
         (log/error "nibblonian error: " e)
         {:success false,
-         :error (cheshire/decode (:body e) true)
+         :error e
          :path path}))))
 
 (defn- send-sharing-notification
