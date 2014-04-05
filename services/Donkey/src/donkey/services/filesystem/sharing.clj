@@ -41,8 +41,8 @@
   ([cm share-with fpath]
      (:read (permissions cm share-with fpath)))
   ([cm share-with fpath desired-perm]
-     (let [curr-perms (permissions cm share-with fpath)]
-       (and (:read curr-perms) (desired-perm curr-perms)))))
+     (let [curr-perm (permission-for cm share-with fpath)]
+       (= curr-perm desired-perm))))
 
 (defn- skip-share
   [user path reason]
