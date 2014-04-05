@@ -1,5 +1,6 @@
 (ns donkey.clients.notifications
-  (:use [donkey.util.config :only
+  (:use [donkey.persistence.tool-requests :only [email-template-for]]
+        [donkey.util.config :only
          [notificationagent-base-url metadactyl-unprotected-base-url]]
         [donkey.util.service :only [build-url build-url-with-query decode-stream]]
         [donkey.util.transformers :only [add-current-user-to-map]])
@@ -114,11 +115,12 @@
                           :user           (:username user-details)
                           :subject        subject
                           :email          true
-                          :email_template (str "tool_request_" (string/lower-case status))
+                          :email_template (email-template-for status)
                           :payload        (assoc tool-req
                                             :email_address (:email user-details)
                                             :toolname      (:name tool-req)
-                                            :comments      comments)})
+                                            :comments      comments
+                                            :status        status)})
       (catch Exception e
         (log/warn e "unable to send tool request update notification for" tool-req)))))
 
