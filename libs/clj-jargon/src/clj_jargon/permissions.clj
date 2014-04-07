@@ -273,7 +273,7 @@
 
 (defn set-permission
   ([cm user fpath permission]
-     (set-permissions cm user fpath permission false))
+     (set-permission cm user fpath permission false))
   ([cm user fpath permission recursive?]
      (validate-path-lengths fpath)
      (let [own?    (= :own permission)
