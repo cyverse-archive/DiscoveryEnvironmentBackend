@@ -3,4 +3,4 @@
   :url "http://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend/"
   :license {:name "BSD"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [tools.cli "0.3.1"]])
+                 [org.clojure/tools.cli "0.3.1"]])
