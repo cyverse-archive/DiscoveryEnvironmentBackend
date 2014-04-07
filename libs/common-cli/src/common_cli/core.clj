@@ -46,6 +46,7 @@
        args         The unparsed args
        cli-options  Function that returns the CLI definition}
    All of them are strings except for cli-options and args.
+   The return value of (cli-options) must include definitions of --help and --version.
    Returns the map parsed out by tools.cli/parse-opts"
   ([settings args]
    (handle-args settings args cli-options))
