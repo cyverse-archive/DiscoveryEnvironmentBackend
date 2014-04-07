@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/osm "3.0.2"
+(defproject org.iplantc/osm "4.0.0"
   :description "An object state management system."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -28,12 +28,12 @@
                  [compojure "1.1.5"]
                  [ring/ring-jetty-adapter "1.1.0"]
                  [swank-clojure "1.4.3"]
-                 [org.iplantc/clojure-commons "3.0.2"]
+                 [org.iplantc/clojure-commons "4.0.0"]
                  [org.apache.httpcomponents/httpcore "4.2.3"]
                  [org.apache.httpcomponents/httpclient "4.2.3"]
                  [log4j/log4j "1.2.17"]
                  [slingshot "0.10.3"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.0.2"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "4.0.0"]]
   :iplant-rpm {:summary "osm"
                :dependencies ["iplant-service-config >= 0.1.0-5"
                               "iplant-clavin"

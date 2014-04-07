@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/kifshare "3.0.2"
+(defproject org.iplantc/kifshare "4.0.0"
   :description "iPlant Quickshare for iRODS"
   :url "http://www.iplantcollaborative.org"
 
@@ -31,8 +31,8 @@
                  [org.clojure/tools.cli "0.2.1"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/core.memoize "0.5.3"]
-                 [org.iplantc/clj-jargon "3.0.2"]
-                 [org.iplantc/clojure-commons "3.0.2"]
+                 [org.iplantc/clj-jargon "4.0.0"]
+                 [org.iplantc/clojure-commons "4.0.0"]
                  [cheshire "5.0.1"]
                  [slingshot "0.10.1"]
                  [compojure "1.1.3"]
@@ -58,7 +58,7 @@
                :config-path "conf"}
 
   :plugins [[lein-ring "0.7.5"]
-            [org.iplantc/lein-iplant-rpm "3.0.2"]]
+            [org.iplantc/lein-iplant-rpm "4.0.0"]]
 
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]

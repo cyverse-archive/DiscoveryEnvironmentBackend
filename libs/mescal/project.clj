@@ -1,4 +1,4 @@
-(defproject org.iplantc/mescal "3.0.2"
+(defproject org.iplantc/mescal "4.0.0"
   :description "A Clojure client library for the Agave API."
   :url "https://github.com/iPlantCollaborativeOpenSource/mescal"
   :license {:name "BSD Standard License"
@@ -15,7 +15,7 @@
                  [cheshire "5.3.1"]
                  [clj-http "0.9.1"]
                  [com.cemerick/url "0.1.1"]
-                 [org.iplantc/clojure-commons "3.0.2"]
+                 [org.iplantc/clojure-commons "4.0.0"]
                  [slingshot "0.10.3"]]
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]

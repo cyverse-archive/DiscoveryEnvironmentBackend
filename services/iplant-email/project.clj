@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/iplant-email "3.0.2"
+(defproject org.iplantc/iplant-email "4.0.0"
   :description "iPlant Email Service"
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -22,7 +22,7 @@
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.iplantc/clojure-commons "3.0.2"]
+                 [org.iplantc/clojure-commons "4.0.0"]
                  [org.clojure/tools.logging "0.2.3"]
                  [cheshire "5.0.1"]
                  [javax.mail/mail "1.4"]
@@ -31,7 +31,7 @@
                  [ring/ring-jetty-adapter "1.0.1"]
                  [log4j/log4j "1.2.16"]
                  [org.clojure/tools.cli "0.3.1"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.0.1"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "4.0.0"]]
   :iplant-rpm {:summary "iplant-email"
                :dependencies ["iplant-service-config >= 0.1.0-5"
                               "iplant-clavin"

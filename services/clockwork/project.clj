@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/clockwork "3.0.2"
+(defproject org.iplantc/clockwork "4.0.0"
   :description "Scheduled jobs for the iPlant Discovery Environment"
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -32,14 +32,14 @@
                  [com.cemerick/url "0.0.7"]
                  [korma "0.3.0-RC2"]
                  [log4j "1.2.17"]
-                 [org.iplantc/clj-jargon "3.0.2"
+                 [org.iplantc/clj-jargon "4.0.0"
                   :exclusions [[org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
-                 [org.iplantc/clojure-commons "3.0.2"]
-                 [org.iplantc/kameleon "3.0.2"]
+                 [org.iplantc/clojure-commons "4.0.0"]
+                 [org.iplantc/kameleon "4.0.0"]
                  [org.slf4j/slf4j-api "1.7.2"]
                  [org.slf4j/slf4j-log4j12 "1.6.6"]
                  [slingshot "0.10.3"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.0.2"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "4.0.0"]]
   :profiles {:dev {:resource-paths ["resources/test"]}}
   :aot [clockwork.core]
   :main clockwork.core
