@@ -13,6 +13,17 @@ function perl_substitution () {
 EOF
 }
 
+function project_substitution () {
+	local new_version="$1"
+	cat <<EOF
+	s{
+		(\(defproject[^"]*)
+		"[^"]*"
+	}
+	{\1"${new_version}"}gxms
+EOF
+}
+
 if [ $# -eq 0 ]; then
   echo "USAGE: ./set-versions.sh <version>"
   exit 1
@@ -29,10 +40,10 @@ for project in $(find . -name project.clj -exec dirname '{}' \;); do
 
   if [ "$cljproj" == "Donkey" ]; then
     echo ">>> $cljproj: Setting version to $1-SNAPSHOT"
-    lein set-version $1-SNAPSHOT
+	perl -pi -e "$(project_substitution $1-SNAPSHOT)" project.clj
   else
     echo ">>> $cljproj: Setting version to $1"
-    lein set-version $1
+	perl -pi -e "$(project_substitution $1)" project.clj
   fi
 
   echo ">>> $cljproj: Setting versions of all iPlant deps to $1"
