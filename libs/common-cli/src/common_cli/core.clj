@@ -1,5 +1,7 @@
 (ns common-cli.core
-  (:requires [clojure.tools.cli :as cli]))
+  (:require [clojure.tools.cli :as cli]
+            [clojure.string :as string]
+            [clojure-commons.props :as props]))
 
 (defn cli-options
   []
@@ -14,10 +16,10 @@
   "Returns a usage string. desc is the description of the app, util-name is the
    name of the utility, and summary should be the command-line summary returned
    by tools.cli/parse-opts."
-  [desc util-name summary]
+  [desc app-name summary]
   (->> [desc
         ""
-        (str "Usage:" util-name "[options]")
+        (str "Usage:" app-name "[options]")
         ""
         "Options:"
         summary]
@@ -38,24 +40,26 @@
   "Parses the arguments passed in and handles common functionality like --help
    and --version. Takes a map in the following format:
       {:desc        Utility description
-       :util-name   The name of the Utility
+       :app-name    The name of the Utility
        :group-id    The maven/leiningen group ID
-       :art-id      The maven/leiningen artifact ID
-       :args        The unparsed args
-       :cli-options Function that returns the CLI definition}
+       :art-id      The maven/leiningen artifact ID}
+       args         The unparsed args
+       cli-options  Function that returns the CLI definition}
    All of them are strings except for cli-options and args.
    Returns the map parsed out by tools.cli/parse-opts"
-  [{:keys [desc util-name group-id art-id args cli-options]}]
-  (let [{:keys [options arguments errors summary] :as s} (cli/parse-opts args (cli-options))]
-    (cond
-     (:help options)
-     (exit 0 (usage desc util-name summary))
+  ([settings args]
+   (handle-args settings args cli-options))
+  ([{:keys [desc app-name group-id art-id] :as settings} args cli-opts]
+   (let [{:keys [options arguments errors summary] :as s} (cli/parse-opts args (cli-opts))]
+     (cond
+      (:help options)
+      (exit 0 (usage desc app-name summary))
 
-     (:version options)
-     (exit 0 (props/version-info  group-id art-id))
+      (:version options)
+      (exit 0 (props/version-info group-id art-id))
 
-     errors
-     (exit 1 (error-msg errors)))
-    s))
+      errors
+      (exit 1 (error-msg errors)))
+     s)))
 
 
