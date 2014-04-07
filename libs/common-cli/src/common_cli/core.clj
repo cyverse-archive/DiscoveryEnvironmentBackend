@@ -19,7 +19,7 @@
   [desc app-name summary]
   (->> [desc
         ""
-        (str "Usage:" app-name "[options]")
+        (str "Usage: " app-name " [options]")
         ""
         "Options:"
         summary]
