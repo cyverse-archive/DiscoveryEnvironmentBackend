@@ -29,6 +29,7 @@
                  [org.iplantc/clojure-commons "3.0.2"]
                  [org.iplantc/mescal "3.0.2"]
                  [org.iplantc/kameleon "3.0.2"]
+                 [org.iplantc/common-cli "3.0.2"]
                  [org/forester "1.005" ]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]

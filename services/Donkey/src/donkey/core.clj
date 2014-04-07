@@ -37,7 +37,8 @@
             [clojure.tools.nrepl.server :as nrepl]
             [clojure.tools.cli :as cli]
             [clojure.string :as string]
-            [clojure-commons.props :as props]))
+            [clojure-commons.props :as props]
+            [common-cli.core :as ccli]))
 
 (defn delayed-handler
   [routes-fn]
@@ -135,33 +136,6 @@
 (def app
   (site-handler donkey-routes))
 
-(def cli-options
-  [["-p" "--port PORT" "Port number"
-    :parse-fn #(Integer/parseInt %)
-    :validate [#(< 0 % 0x10000) "Ports must be 0-65536"]]
-   ["-c" "--config PATH" "Path to the config file"]
-   ["-v" "--version" "Print out the version number."]
-   ["-h" "--help"]])
-
-(defn usage
-  [summary]
-  (->> ["The backend service facade for the Discovery Environment."
-        ""
-        "Usage: donkey [options]"
-        ""
-        "Options:"
-        summary]
-       (string/join \newline)))
-
-(defn error-msg
-  [errors]
-  (str "Errors:\n\n" (string/join \newline errors)))
-
-(defn exit
-  [status message]
-  (println message)
-  (System/exit status))
-
 (defn configurate
   [options]
   (cond
@@ -181,21 +155,16 @@
        (:port options)
        (config/listen-port)))))
 
+(def svc-info
+  {:desc "The backend service facade for the Discovery Environment."
+   :app-name "donkey"
+   :group-id "org.iplantc"
+   :art-id "donkey"})
+
 (defn -main
   [& args]
-  (let [{:keys [options arguments errors summary]} (cli/parse-opts args cli-options)]
-    (cond
-     (:help options)
-     (exit 0 (usage summary))
-
-     (:version options)
-     (exit 0 (props/version-info "org.iplantc" "donkey"))
-
-     errors
-     (exit 1 (error-msg errors)))
-
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args)]
     (configurate options)
-
     (log/warn "Listening on" (port-number options))
     (start-nrepl)
     (messages/messaging-initialization)
