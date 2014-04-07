@@ -51,8 +51,6 @@
                  [com.novemberain/langohr "2.2.1"]
                  [org.iplantc/clj-icat-direct "4.0.0"]
                  [de.ubercode.clostache/clostache "1.3.1"]
-                 [org.clojure/tools.cli "0.3.1"]
-                 [trptcolin/versioneer "0.1.0"]
                  [dire "0.5.2"]]
   :plugins [[org.iplantc/lein-iplant-rpm "4.0.0"]
             [lein-ring "0.8.8"]
