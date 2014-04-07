@@ -36,6 +36,7 @@
                   :exclusions [[org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
                  [org.iplantc/clojure-commons "4.0.0"]
                  [org.iplantc/kameleon "4.0.0"]
+                 [org.iplantc/common-cli "4.0.0"]
                  [org.slf4j/slf4j-api "1.7.2"]
                  [org.slf4j/slf4j-log4j12 "1.6.6"]
                  [slingshot "0.10.3"]]

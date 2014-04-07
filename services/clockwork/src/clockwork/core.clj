@@ -12,7 +12,8 @@
             [clojurewerkz.quartzite.schedule.cron :as qsc]
             [clojurewerkz.quartzite.schedule.simple :as qss]
             [clojurewerkz.quartzite.scheduler :as qs]
-            [clojurewerkz.quartzite.triggers :as qt]))
+            [clojurewerkz.quartzite.triggers :as qt]
+            [common-cli.core :as ccli]))
 
 (defn- split-timestamp
   "Splits a timestamp into its components.  The timestamp should be in the format, HH:MM.  If
@@ -100,29 +101,12 @@
   (when (config/notification-cleanup-enabled)
     (schedule-notification-cleanup-job)))
 
-(def cli-options
+(defn cli-options
+  []
   [["-l" "--local-config" "use a local configuraiton file"]
    ["-h" "--help" "display the help message"]
-   ["-c" "--config PATH" "Path to the config file"]])
-
-(defn usage
-  [summary]
-  (->> ["Scheduled jobs for the iPlant Discovery Environment."
-        ""
-        "Usage: clockwork [options]"
-        ""
-        "Options:"
-        summary]
-       (string/join \newline)))
-
-(defn error-msg
-  [errors]
-  (str "Errors:\n\n" (string/join \newline errors)))
-
-(defn exit
-  [status message]
-  (println message)
-  (System/exit status))
+   ["-c" "--config PATH" "Path to the config file"]
+   ["-v" "--version" "Print out version information"]])
 
 (defn configurate
   [options]
@@ -136,16 +120,16 @@
    :else
    (config/load-config-from-zookeeper)))
 
+(def svc-info
+  {:desc "Scheduled jobs for the iPlant Discovery Environment."
+   :app-name "clockwork"
+   :group-id "org.iplantc"
+   :art-id "clockwork"})
+
 (defn -main
   "Initializes the Quartzite scheduler and schedules jobs."
   [& args]
-  (let [{:keys [options arguments errors summary]} (cli/parse-opts args cli-options)]
-    (cond
-     (:help options)
-     (exit 0 (usage summary))
-
-     errors
-     (exit 1 (error-msg errors)))
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (configurate options)
     (log/info "clockwork startup")
     (init-scheduler)))
