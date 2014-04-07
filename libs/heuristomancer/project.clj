@@ -1,4 +1,4 @@
-(defproject org.iplantc/heuristomancer "3.0.1"
+(defproject org.iplantc/heuristomancer "3.0.2"
   :description "Clojure library for attempting to guess file types."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD Standard License"
@@ -16,7 +16,7 @@
                  [org.clojure/tools.cli "0.2.2"]
                  [org.clojure/tools.logging "0.2.6"]
                  [instaparse "1.2.1"]]
-  :plugins [[org.iplantc/lein-iplant-cmdtar "3.0.1"]]
+  :plugins [[org.iplantc/lein-iplant-cmdtar "3.0.2"]]
   :aot [heuristomancer.core]
   :main heuristomancer.core
   :repositories [["sonatype-nexus-snapshots"
