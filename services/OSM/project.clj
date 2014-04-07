@@ -1,3 +1,12 @@
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
 (defproject org.iplantc/osm "3.0.2"
   :description "An object state management system."
   :url "http://www.iplantcollaborative.org"
@@ -6,6 +15,7 @@
   :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/OSM.git"
         :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/OSM.git"
         :url "git@github.com:iPlantCollaborativeOpenSource/OSM.git"}
+  :manifest {"Git-Ref" ~(git-ref)}
   :pom-addition [:developers
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]

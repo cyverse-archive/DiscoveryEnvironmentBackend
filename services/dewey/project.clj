@@ -1,3 +1,12 @@
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
 (defproject org.iplantc/dewey "3.0.2"
   :description "This is a RabbitMQ client responsible for keeping an elasticsearch index
                 synchronized with an iRODS repository using messages produced by iRODS."
@@ -7,6 +16,7 @@
   :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/dewey.git"
         :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/dewey.git"
         :url "git@github.com:iPlantCollaborativeOpenSource/dewey.git"}
+  :manifest {"Git-Ref" ~(git-ref)}
   :pom-addition [:developers
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]

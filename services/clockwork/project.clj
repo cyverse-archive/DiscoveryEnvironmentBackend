@@ -1,3 +1,12 @@
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
 (defproject org.iplantc/clockwork "3.0.2"
   :description "Scheduled jobs for the iPlant Discovery Environment"
   :url "http://www.iplantcollaborative.org"
@@ -6,6 +15,7 @@
   :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/clockwork.git"
         :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/clockwork.git"
         :url "git@github.com:iPlantCollaborativeOpenSource/clockwork.git"}
+  :manifest {"Git-Ref" ~(git-ref)}
   :pom-addition [:developers
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
@@ -13,7 +23,7 @@
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/java.jdbc "0.2.3"]
-                 [org.clojure/tools.cli "0.2.2"]
+                 [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/tools.logging "0.2.3"]
                  [cheshire "5.0.2"]
                  [clj-http "0.6.5"]

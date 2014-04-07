@@ -2,6 +2,15 @@
 ;; Because the release number is not recorded anywhere in the tarball, minor
 ;; changes need to be recorded in the version number.  Please increment the
 ;; minor version number rather than the release number for minor changes.
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
 
 (defproject org.iplantc/facepalm "3.0.2"
   :description "Command-line utility for DE database managment."
@@ -11,6 +20,7 @@
   :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/facepalm.git"
         :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/facepalm.git"
         :url "git@github.com:iPlantCollaborativeOpenSource/facepalm.git"}
+  :manifest {"Git-Ref" ~(git-ref)}
   :pom-addition [:developers
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]

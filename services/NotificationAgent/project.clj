@@ -1,3 +1,12 @@
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
 (defproject org.iplantc/notificationagent "3.0.2"
   :description "A web service for storing and forwarding notifications."
   :url "http://www.iplantcollaborative.org"
@@ -6,6 +15,7 @@
   :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/NotificationAgent.git"
         :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/NotificationAgent.git"
         :url "git@github.com:iPlantCollaborativeOpenSource/NotificationAgent.git"}
+  :manifest {"Git-Ref" ~(git-ref)}
   :pom-addition [:developers
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]

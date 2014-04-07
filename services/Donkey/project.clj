@@ -1,3 +1,12 @@
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
 (defproject org.iplantc/donkey "3.0.2-SNAPSHOT"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
   :url "https://github.com/iPlantCollaborativeOpenSource/Donkey"
@@ -6,11 +15,7 @@
   :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/Donkey.git"
         :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/Donkey.git"
         :url "git@github.com:iPlantCollaborativeOpenSource/Donkey.git"}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
+  :manifest {"Git-Ref" ~(git-ref)}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/tools.logging "0.2.6"]
@@ -45,6 +50,8 @@
                  [com.novemberain/langohr "2.2.1"]
                  [org.iplantc/clj-icat-direct "3.0.2"]
                  [de.ubercode.clostache/clostache "1.3.1"]
+                 [org.clojure/tools.cli "0.3.1"]
+                 [trptcolin/versioneer "0.1.0"]
                  [dire "0.5.2"]]
   :plugins [[org.iplantc/lein-iplant-rpm "3.0.2"]
             [lein-ring "0.8.8"]

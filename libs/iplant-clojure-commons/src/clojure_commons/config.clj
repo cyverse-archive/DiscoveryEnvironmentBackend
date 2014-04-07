@@ -25,16 +25,23 @@
       nil)))
 
 (defn load-config-from-file
-  "Loads the configuration properties from a file.
+  "A multi-arity function that loads the configuration properties from a file.
 
    Parameters:
        conf-dir - the path to the configuration directory.
        filename - the name of the configuration file.
+       props    - the reference to the properties.
+
+   or:
+       filepath - the path to the configuration file.
        props    - the reference to the properties."
-  [conf-dir filename props]
-  (if (nil? conf-dir)
-    (dosync (ref-set props (cp/read-properties (file filename))))
-    (dosync (ref-set props (cp/read-properties (file conf-dir filename))))))
+  ([filepath props]
+   (dosync (ref-set props (cp/read-properties (file filepath)))))
+
+  ([conf-dir filename props]
+   (if (nil? conf-dir)
+     (dosync (ref-set props (cp/read-properties (file filename))))
+     (dosync (ref-set props (cp/read-properties (file conf-dir filename)))))))
 
 (defn load-config-from-zookeeper
   "Loads the configuration properties from Zookeeper.  If the Zookeeper connection information

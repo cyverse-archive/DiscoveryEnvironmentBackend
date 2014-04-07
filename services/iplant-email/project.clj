@@ -1,3 +1,12 @@
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
 (defproject org.iplantc/iplant-email "3.0.2"
   :description "iPlant Email Service"
   :url "http://www.iplantcollaborative.org"
@@ -6,6 +15,7 @@
   :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/iplant-email.git"
         :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/iplant-email.git"
         :url "git@github.com:iPlantCollaborativeOpenSource/iplant-email.git"}
+  :manifest {"Git-Ref" ~(git-ref)}
   :pom-addition [:developers
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
@@ -19,8 +29,9 @@
                  [org.bituf/clj-stringtemplate "0.2"]
                  [compojure "1.0.1"]
                  [ring/ring-jetty-adapter "1.0.1"]
-                 [log4j/log4j "1.2.16"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.0.2"]]
+                 [log4j/log4j "1.2.16"]
+                 [org.clojure/tools.cli "0.3.1"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.0.1"]]
   :iplant-rpm {:summary "iplant-email"
                :dependencies ["iplant-service-config >= 0.1.0-5"
                               "iplant-clavin"
