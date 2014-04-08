@@ -33,7 +33,8 @@
                  [clojurewerkz/elastisch "1.4.0"]
                  [com.novemberain/langohr "2.3.2"]
                  [slingshot "0.10.3"]
-                 [org.iplantc/clojure-commons "4.0.0"]]
+                 [org.iplantc/clojure-commons "4.0.0"]
+                 [org.iplantc/common-cli "4.0.0"]]
   :profiles {:dev {:resource-paths ["dev-resources"]}}
   :plugins [[org.iplantc/lein-iplant-rpm "4.0.0"]]
   :iplant-rpm {:summary      "infosquito"

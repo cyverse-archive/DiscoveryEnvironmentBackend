@@ -23,6 +23,7 @@
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.iplantc/clojure-commons "4.0.0"]
+                 [org.iplantc/common-cli "4.0.0"]
                  [org.clojure/tools.logging "0.2.3"]
                  [cheshire "5.0.1"]
                  [javax.mail/mail "1.4"]
