@@ -33,11 +33,15 @@
   [opts]
   (update-database opts))
 
-(def ^:private jenkins-base
+(def ^:private default-jenkins-base
   "The base URL used to connect to Jenkins."
   "http://watson.iplantcollaborative.org/hudson")
 
-(def ^:private qa-drop-base
+(def ^:private default-jenkins-artifact-path
+  "The relative path to use when retrieving build artifacts from Jenkins."
+  "/lastSuccessfulBuild/artifact/builds/")
+
+(def ^:private default-qa-drop-base
   "The base URL for the QA drops."
   "http://katic.iplantcollaborative.org/qa-drops")
 
@@ -86,6 +90,12 @@
        ["-f" "--filename" "An explicit path to the database tarball."
         :default "database.tar.gz"]
        ["-v" "--version" "The destination database version"]
+       ["--jenkins-base" "The base URL used to connect to Jenkins."
+        :default default-jenkins-base]
+       ["--jenkins-artifact-path" "The relative path to build artifacts in jenkins."
+        :default default-jenkins-artifact-path]
+       ["--qa-drop-base" "The base URL to use for the QA drops."
+        :default default-qa-drop-base]
        ["--debug" "Enable debugging." :default false :flag true]))
 
 (defn- pump
@@ -179,20 +189,20 @@
 
 (defn- jenkins-build-artifact-url
   "Returns the URL used to obtain the build artifact from Jenkins."
-  [job-name filename]
-  (str jenkins-base "/job/" job-name "/lastSuccessfulBuild/artifact/" filename))
+  [{:keys [jenkins-base jenkins-artifact-path job filename]}]
+  (str jenkins-base "/job/" job jenkins-artifact-path filename))
 
 (defn- qa-drop-build-artifact-url
   "Returns the URL used to obtain the build artifact from a QA drop."
-  [drop-date filename]
-  (str qa-drop-base "/" drop-date "/" filename))
+  [{:keys [qa-drop-base qa-drop filename]}]
+  (str qa-drop-base "/" qa-drop "/" filename))
 
 (defn- build-artifact-url
   "Builds and returns the URL used to obtain the build artifact."
-  [{:keys [qa-drop filename job]}]
-  (cond (not (string/blank? qa-drop)) (qa-drop-build-artifact-url qa-drop filename)
-        (not (string/blank? job))     (jenkins-build-artifact-url job filename)
-        :else                         (options-missing :job :qa-drop :file)))
+  [{:keys [qa-drop job] :as opts}]
+  (cond (not (string/blank? qa-drop)) (qa-drop-build-artifact-url opts)
+        (not (string/blank? job))     (jenkins-build-artifact-url opts)
+        :else                         (options-missing :job :qa-drop)))
 
 (defn- get-remote-resource
   "Gets a remote resource using a URL."

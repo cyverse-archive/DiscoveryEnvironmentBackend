@@ -1,9 +1,5 @@
 package org.iplantc.workflow.integration;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
 import org.iplantc.persistence.dto.components.DeployedComponent;
 import org.iplantc.workflow.WorkflowException;
 import org.iplantc.workflow.core.TransformationActivity;
@@ -15,9 +11,14 @@ import org.iplantc.workflow.integration.util.NullHeterogeneousRegistry;
 import org.iplantc.workflow.integration.validation.TemplateValidator;
 import org.iplantc.workflow.integration.validation.TemplateValidatorFactory;
 import org.iplantc.workflow.model.Template;
+
+import org.apache.commons.lang.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Used to import templates from JSON objects. Templates are the the most complex objects that are currently supported
@@ -100,7 +101,7 @@ public class TemplateImporter implements ObjectImporter, ObjectVetter<Template> 
     /**
      * The factory used to generate data access objects.
      */
-    private DaoFactory daoFactory;
+    private final DaoFactory daoFactory;
 
     /**
      * The registry of named workflow elements.
@@ -115,7 +116,7 @@ public class TemplateImporter implements ObjectImporter, ObjectVetter<Template> 
     /**
      * True if we should allow vetted templates to be updated.
      */
-    private boolean updateVetted;
+    private final boolean updateVetted;
 
     /**
      * Used when vetting the template.
@@ -125,7 +126,7 @@ public class TemplateImporter implements ObjectImporter, ObjectVetter<Template> 
     /**
      * Used to validate templates that are being imported.
      */
-    private TemplateValidator templateValidator;
+    private final TemplateValidator templateValidator;
 
     /**
      * @return the DAO factory.
@@ -257,6 +258,12 @@ public class TemplateImporter implements ObjectImporter, ObjectVetter<Template> 
         else {
             existingTemplate = findExistingTemplate(template);
         }
+
+        // CORE-4017 published date is only set when an App is initially made public.
+        if (!updateVetted || existingTemplate == null) {
+            template.setIntegrationDate(null);
+        }
+
         if (existingTemplate == null) {
             saveNewTemplate(template, json);
         }

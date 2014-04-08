@@ -39,9 +39,18 @@
    Otherwise, a new directory is created and the path is returned."
   [path]
   (log/debug "getting or creating dir: path =" path)
-  (cond (st/path-is-dir? path) path
-        (e/path-exists? path) nil
-        :else                  (create path)))
+  (cond
+   (not (e/path-exists? path))
+   (create path)
+
+   (and (e/path-exists? path) (st/path-is-dir? path))
+   path
+
+   (and (e/path-exists? path) (not (st/path-is-dir? path)))
+   nil
+
+   :else
+   nil))
 
 (defn gen-output-dir
   "Either obtains or creates a default output directory using a specified base name."

@@ -119,7 +119,8 @@
 (defn- apply-params
   [results params]
   (-> results
-      (sort-results (:sortField params) (:sortDir params))
+      (sort-results (or (:sortField params) (:sortfield params))
+                    (or (:sortDir params) (:sortdir params)))
       (apply-offset (:offset params))
       (apply-limit (:limit params))))
 
@@ -142,7 +143,7 @@
 (defn- find-matching-apps
   [agave jobs-enabled? search-term]
   (filter (partial app-matches? search-term)
-          (:templates (list-public-apps agave jobs-enabled?))))
+          (:templates (list-public-apps agave jobs-enabled? {}))))
 
 (defn search-public-apps
   [agave jobs-enabled? search-term]

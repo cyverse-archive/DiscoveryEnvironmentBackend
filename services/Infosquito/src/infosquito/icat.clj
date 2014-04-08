@@ -52,17 +52,20 @@
 
 (defn- mk-data-objs-query
   [coll-base]
-  (str "SELECT DISTINCT d.data_id                           \"db-id\",
-                        (c.coll_name || '/' || d.data_name) \"id\",
-                        d.data_name                         \"label\",
-                        d.data_owner_name                   \"creator-name\",
-                        d.data_owner_zone                   \"creator-zone\",
-                        CAST(d.create_ts AS bigint)         \"date-created\",
-                        CAST(d.modify_ts AS bigint)         \"date-modified\",
-                        d.data_size                         \"file-size\",
-                        d.data_type_name                    \"info-type\"
-          FROM r_data_main AS d LEFT JOIN r_coll_main AS c ON d.coll_id = c.coll_id
-          WHERE c.coll_name LIKE '" coll-base "/%'"))
+  (str "SELECT d1.data_id                           \"db-id\",
+               (c.coll_name || '/' || d1.data_name) \"id\",
+               d1.data_name                         \"label\",
+               d1.data_owner_name                   \"creator-name\",
+               d1.data_owner_zone                   \"creator-zone\",
+               CAST(d1.create_ts AS bigint)         \"date-created\",
+               CAST(d1.modify_ts AS bigint)         \"date-modified\",
+               d1.data_size                         \"file-size\",
+               d1.data_type_name                    \"info-type\"
+          FROM r_data_main AS d1 LEFT JOIN r_coll_main AS c ON d1.coll_id = c.coll_id
+          WHERE c.coll_name LIKE '" coll-base "/%'
+            AND d1.data_repl_num = (SELECT MIN(d2.data_repl_num)
+                                      FROM r_data_main AS d2
+                                      WHERE d2.data_id = d1.data_id)"))
 
 
 (defn- mk-meta-query
@@ -290,7 +293,7 @@
 
 
 (def ^:private count-data-objects-query
-  "SELECT count(d.*) \"count\"
+  "SELECT count(DISTINCT d.data_id) \"count\"
      FROM r_data_main d
      JOIN r_coll_main c ON d.coll_id = c.coll_id
     WHERE c.coll_name like ?")
