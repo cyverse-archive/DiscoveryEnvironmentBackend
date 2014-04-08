@@ -36,7 +36,8 @@
                  [ring/ring-jetty-adapter "1.2.1"]
                  [slingshot "0.10.3"]
                  [org.iplantc/clj-jargon "4.0.0"]
-                 [org.iplantc/clojure-commons "4.0.0"]]
+                 [org.iplantc/clojure-commons "4.0.0"]
+                 [org.iplantc/common-cli "4.0.0"]]
   :resource-paths []
   :profiles {:dev {:dependencies   [[midje "1.6.2"]]
                    :resource-paths ["dev-resource"]}}

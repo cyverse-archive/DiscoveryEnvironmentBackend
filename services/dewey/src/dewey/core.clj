@@ -6,6 +6,7 @@
             [clojurewerkz.elastisch.rest :as es]
             [clj-jargon.init :as irods]
             [clojure-commons.config :as config]
+            [common-cli.core :as ccli]
             [dewey.amq :as amq]
             [dewey.curation :as curation]
             [dewey.status :as status])
@@ -93,21 +94,34 @@
    (listen props (init-irods props))))
 
 
-(defn- parse-args
-  [args]
-  (cli/cli args
-    ["-c" "--config" "sets the local configuration file to be read, bypassing Zookeeper"]
-    ["-h" "--help"   "show help and exit" :flag true]))
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
+
+
+(def svc-info
+  {:desc "A DE service that indexes files when they change in iRODS."
+   :app-name "dewey"
+   :group-id "org.iplantc"
+   :art-id "dewey"})
+
+
+(defn generate-props-loader
+  [options]
+  (cond
+   (:config options)
+   (partial config/load-config-from-file (:config options))
+
+   :else
+   #(config/load-config-from-zookeeper % "dewey")))
 
 
 (defn -main
   [& args]
   (try+
-    (let [[opts _ help-str] (parse-args args)]
-      (if (:help opts)
-        (println help-str)
-        (run (if-let [cfg-file (:config opts)]
-               (partial config/load-config-from-file nil cfg-file)
-               #(config/load-config-from-zookeeper % "dewey")))))
+   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+     (run (generate-props-loader options)))
     (catch Object _
       (log/error (:throwable &throw-context) "UNEXPECTED ERROR - EXITING"))))
