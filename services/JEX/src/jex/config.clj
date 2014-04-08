@@ -128,16 +128,22 @@
   []
   (ce/register-filters (exception-filters)))
 
-(defn load-config-from-file
-  "Loads the configuration settings from a file."
+(defn setup-config
   []
-  (cc/load-config-from-file (System/getenv "IPLANT_CONF_DIR") "jex.properties" props)
   (cc/log-config props :filters [#"irods\-user"])
   (validate-config))
+
+(defn load-config-from-file
+  "Loads the configuration settings from a file."
+  ([]
+   (cc/load-config-from-file (System/getenv "IPLANT_CONF_DIR") "jex.properties" props)
+   (setup-config))
+  ([config-path]
+   (cc/load-config-from-file config-path props)
+   (setup-config)))
 
 (defn load-config-from-zookeeper
   "Loads the configuration settings from Zookeeper."
   []
   (cc/load-config-from-zookeeper props "jex")
-  (cc/log-config props :filters [#"irods\-user"])
-  (validate-config))
+  (setup-config))

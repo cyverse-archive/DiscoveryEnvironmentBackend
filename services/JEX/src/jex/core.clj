@@ -20,7 +20,8 @@
             [jex.json-body :as jb]
             [clojure.java.io :as ds]
             [clojure.tools.logging :as log]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [common-cli.core :as ccli]))
 
 (defn do-submission
   "Handles a request on /. "
@@ -29,13 +30,13 @@
     (let [body (:body request)]
       (log/warn "Received job request:")
       (log/warn (cheshire/encode body))
-      
+
       (if (jp/validate-submission body)
         (let [[exit-code dag-id doc-id] (jp/submit body)]
           (cond
             (not= exit-code 0)
             (throw+ {:error_code "ERR_FAILED_NON_ZERO"})
-            
+
             :else
             {:sub_id dag-id
              :osm_id doc-id}))
@@ -60,7 +61,30 @@
     jb/parse-json-body
     wrap-errors))
 
+(defn configurate
+  [options]
+  (cond
+   (:config options)
+   (load-config-from-file (:config options))
+
+   :else
+   (load-config-from-zookeeper)))
+
+(def port-number
+  (memoize
+   (fn [options]
+     (if (:port options)
+       (:port options)
+       (listen-port)))))
+
+(def svc-info
+  {:desc "Handles Condor job submission for the DE."
+   :app-name "jex"
+   :group-id "org.iplantc"
+   :art-id "jex"})
+
 (defn -main
   [& args]
-  (load-config-from-zookeeper)
-  (jetty/run-jetty (site-handler jex-routes) {:port (listen-port)}))
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args)]
+    (configurate options)
+    (jetty/run-jetty (site-handler jex-routes) {:port (port-number options)})))

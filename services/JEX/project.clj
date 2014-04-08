@@ -28,7 +28,8 @@
                  [compojure "1.0.1"]
                  [ring/ring-jetty-adapter "1.0.1"]
                  [org.iplantc/clojure-commons "4.0.0"]
-                 [slingshot "0.10.3"]]
+                 [slingshot "0.10.3"]
+                 [org.iplantc/common-cli "4.0.0"]]
   :plugins [[org.iplantc/lein-iplant-rpm "4.0.0"]
             [lein-midje "3.1.1"]]
   :iplant-rpm {:summary "jex",
