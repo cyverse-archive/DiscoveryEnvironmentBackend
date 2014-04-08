@@ -27,6 +27,7 @@
                  [org.iplantc/clj-cas "4.0.0"]
                  [org.iplantc/kameleon "4.0.0"]
                  [org.iplantc/clojure-commons "4.0.0"]
+                 [org.iplantc/common-cli "4.0.0"]
                  [cheshire "5.0.2"]
                  [compojure "1.1.5"]
                  [swank-clojure "1.4.3"]

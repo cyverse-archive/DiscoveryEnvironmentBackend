@@ -17,6 +17,8 @@
             [compojure.handler :as handler]
             [clojure-commons.clavin-client :as cl]
             [clojure-commons.props :as cp]
+            [clojure-commons.config :as config]
+            [common-cli.core :as ccli]
             [clojure.tools.logging :as log]
             [ring.adapter.jetty :as jetty])
   (:import [java.sql SQLException]))
@@ -152,8 +154,37 @@
 (def app
   (site-handler conrad-routes))
 
+(defn configurate
+  [options]
+  (cond
+   (:config options)
+   (do (reset! props (cp/read-properties (file (:config options))))
+     (init-service))
+
+   (System/getenv "IPLANT_CONF_DIR")
+   (do (reset! props (cp/read-properties
+                     (file (System/getenv "IPLANT_CONF_DIR") "conrad.properties")))
+     (init-service))
+
+   :else
+   (load-configuration-from-zookeeper)))
+
+(def port-number
+  (memoize
+   (fn [options]
+     (if (:port options)
+       (:port options)
+       (listen-port)))))
+
+(def svc-info
+  {:desc "The backend facade for the Belphegor UI."
+   :app-name "conrad"
+   :group-id "org.iplantc"
+   :art-id "conrad"})
+
 (defn -main
   [& args]
-  (load-configuration-from-zookeeper)
-  (log/warn "Listening on" (listen-port))
-  (jetty/run-jetty app {:port (listen-port)}))
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args)]
+    (configurate options)
+    (log/warn "Listening on" (port-number options))
+    (jetty/run-jetty app {:port (port-number options)})))
