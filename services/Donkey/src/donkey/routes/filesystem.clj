@@ -22,6 +22,7 @@
         [donkey.services.filesystem.copy]
         [donkey.services.filesystem.page-file]
         [donkey.services.filesystem.page-csv]
+        [donkey.services.filesystem.anonymous]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]
@@ -115,6 +116,9 @@
 
     (POST "/filesystem/unshare" [:as req]
           (controller req do-unshare :params :body))
+
+    (POST "/filesystem/anonymize" [:as req]
+          (controller req do-share-with-anon :params :body))
 
     (POST "/filesystem/user-permissions" [:as req]
           (controller req do-user-permissions :params :body))
