@@ -9,8 +9,6 @@
   :pom-addition [:developers
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/tools.logging "0.2.6"]
@@ -71,6 +69,4 @@
                  ["nexml"
                   {:url "http://nexml-dev.nescent.org/.m2/repository"
                    :checksum :ignore
-                   :update :daily}]]
-  :deploy-repositories [["sonatype-nexus-staging"
-                         {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]])
+                   :update :daily}]])
