@@ -117,9 +117,6 @@
     (POST "/filesystem/unshare" [:as req]
           (controller req do-unshare :params :body))
 
-    (POST "/filesystem/anonymize" [:as req]
-          (controller req do-share-with-anon :params :body))
-
     (POST "/filesystem/user-permissions" [:as req]
           (controller req do-user-permissions :params :body))
 
