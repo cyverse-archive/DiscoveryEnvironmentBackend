@@ -173,6 +173,27 @@
       (assoc :mappings mappings)
       (assoc :templates template-ids))))
 
+(def ^:private copy-prefix "Copy of ")
+
+(def ^:private max-analysis-name-len 255)
+
+(defn- name-too-long?
+  "Determines if a name is too long to be extended for a copy name."
+  [original-name]
+  (> (+ (count copy-prefix) (count original-name)) max-analysis-name-len))
+
+(defn- already-copy-name?
+  "Determines if the name of an analysis is already a copy name."
+  [original-name]
+  (.startsWith original-name copy-prefix))
+
+(defn- analysis-copy-name
+  "Determines the name of a copy of an analysis."
+  [original-name]
+  (cond (name-too-long? original-name)     original-name
+        (already-copy-name? original-name) original-name
+        :else                              (str copy-prefix original-name)))
+
 (defn- convert-analysis-to-copy
   "Adds copies of the steps and mappings fields to the analysis, and formats
    appropriate analysis fields to prepare it for saving as a copy."
@@ -183,7 +204,7 @@
     (-> analysis
       (dissoc :integration_data_id)
       (assoc :analysis_id "auto-gen")
-      (assoc :analysis_name (str "Copy of " (:analysis_name analysis)))
+      (assoc :analysis_name (analysis-copy-name (:analysis_name analysis)))
       (assoc :implementation (get-implementor-details))
       (assoc :full_username (.getUsername current-user))
       (assoc :steps steps)
