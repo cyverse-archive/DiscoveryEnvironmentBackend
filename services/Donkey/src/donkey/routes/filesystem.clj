@@ -22,7 +22,6 @@
         [donkey.services.filesystem.copy]
         [donkey.services.filesystem.page-file]
         [donkey.services.filesystem.page-csv]
-        [donkey.services.filesystem.anonymous]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]
