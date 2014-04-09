@@ -83,7 +83,7 @@
     (set-permission cm share-with hdir :read false)
 
     (log/warn share-with "is being given recursive permissions (" perm ") on" fpath)
-    (set-permission cm share-with fpath perm true)
+    (set-permission cm share-with fpath (keyword perm) true)
 
     {:user share-with :path fpath}))
 
@@ -216,10 +216,10 @@
   (or (true? flag) (false? flag)))
 
 (defn do-share
-  [{user :user} {users :users paths :paths permissions :permissions}]
+  [{user :user} {users :users paths :paths permission :permission}]
   (let [user        (fix-username user)
         share-withs (map fix-username users)]
-    (share user share-withs paths permissions)))
+    (share user share-withs paths permission)))
 
 (with-post-hook! #'do-share (log-func "do-share"))
 
@@ -227,8 +227,7 @@
   (fn [params body]
     (log-call "do-share" params body)
     (validate-map params {:user string?})
-    (validate-map body {:paths sequential? :users sequential? :permissions map?})
-    (validate-map (:permissions body) {:read boolean? :write boolean? :own boolean?})
+    (validate-map body {:paths sequential? :users sequential? :permission string?})
     (validate-num-paths (:paths body))))
 
 (defn do-unshare

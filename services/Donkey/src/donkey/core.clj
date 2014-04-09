@@ -34,11 +34,11 @@
             [donkey.services.fileio.controllers :as fileio]
             [donkey.util.messaging :as messages]
             [donkey.util.icat :as icat]
-            [clojure.tools.nrepl.server :as nrepl]
-            [clojure.tools.cli :as cli]
             [clojure.string :as string]
             [clojure-commons.props :as props]
-            [common-cli.core :as ccli]))
+            [common-cli.core :as ccli]
+            [donkey.util.anon :as anon]
+            [clojure.tools.nrepl.server :as nrepl]))
 
 (defn delayed-handler
   [routes-fn]
@@ -169,5 +169,6 @@
     (start-nrepl)
     (messages/messaging-initialization)
     (icat/configure-icat)
+    (anon/create-anon-user)
     (future (apps/sync-job-statuses))
     (jetty/run-jetty app {:port (port-number options)})))
