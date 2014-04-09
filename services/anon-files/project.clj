@@ -19,4 +19,5 @@
                  [org.iplantc/clojure-commons "3.0.2"]
                  [org.iplantc/common-cli "3.0.2"]
                  [compojure "1.1.6"]
-                 [ring "1.2.1"]])
+                 [ring "1.2.1"]]
+  :plugins [[lein-ring "0.8.10"]])
