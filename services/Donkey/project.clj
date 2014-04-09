@@ -45,6 +45,7 @@
                  [com.novemberain/langohr "2.2.1"]
                  [org.iplantc/clj-icat-direct "3.0.2"]
                  [de.ubercode.clostache/clostache "1.3.1"]
+                 [me.raynes/fs "1.4.4"]
                  [dire "0.5.2"]]
   :plugins [[org.iplantc/lein-iplant-rpm "3.0.2"]
             [lein-ring "0.8.8"]
