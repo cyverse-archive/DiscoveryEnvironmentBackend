@@ -190,11 +190,11 @@ ALTER TABLE ONLY template_group_group
     PRIMARY KEY (parent_group_id, hid);
 
 --
--- Name: template_group_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
+-- Name: app_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
-ALTER TABLE ONLY template_group
-    ADD CONSTRAINT template_group_pkey
+ALTER TABLE ONLY app_categories
+    ADD CONSTRAINT app_categories_pkey
     PRIMARY KEY (hid);
 
 --
@@ -551,7 +551,7 @@ ALTER TABLE ONLY rule_type_value_type
 ALTER TABLE ONLY suggested_groups
     ADD CONSTRAINT suggested_groups_template_group_id_fkey
     FOREIGN KEY (template_group_id)
-    REFERENCES template_group(hid);
+    REFERENCES app_categories(hid);
 
 --
 -- Name: suggested_groups_transformation_activity_id_fkey; Type: FK
@@ -569,7 +569,7 @@ ALTER TABLE ONLY suggested_groups
 ALTER TABLE ONLY template_group_group
     ADD CONSTRAINT template_group_group_parent_group_id_fkey
     FOREIGN KEY (parent_group_id)
-    REFERENCES template_group(hid);
+    REFERENCES app_categories(hid);
 
 --
 -- Name: template_group_group_subgroup_id_fkey; Type: FK CONSTRAINT; Schema:
@@ -578,7 +578,7 @@ ALTER TABLE ONLY template_group_group
 ALTER TABLE ONLY template_group_group
     ADD CONSTRAINT template_group_group_subgroup_id_fkey
     FOREIGN KEY (subgroup_id)
-    REFERENCES template_group(hid);
+    REFERENCES app_categories(hid);
 
 --
 -- Name: template_group_template_template_group_id_fkey; Type: FK CONSTRAINT;
@@ -587,7 +587,7 @@ ALTER TABLE ONLY template_group_group
 ALTER TABLE ONLY template_group_template
     ADD CONSTRAINT template_group_template_template_group_id_fkey
     FOREIGN KEY (template_group_id)
-    REFERENCES template_group(hid);
+    REFERENCES app_categories(hid);
 
 --
 -- Name: template_group_template_template_id_fkey; Type: FK CONSTRAINT;
@@ -749,7 +749,7 @@ ALTER TABLE ONLY validator_rule
 ALTER TABLE ONLY workspace
     ADD CONSTRAINT workspace_root_analysis_group_id_fkey
     FOREIGN KEY (root_analysis_group_id)
-    REFERENCES template_group(hid);
+    REFERENCES app_categories(hid);
 
 --
 -- Name: workspace_users_fk; Type: FK CONSTRAINT; Schema: public; Owner: de
