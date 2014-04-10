@@ -1,79 +1,89 @@
 (ns anon-files.config
-  (:use [slingshot.slingshot :only [try+ throw+]])
-  (:require [clojure-commons.config :as cc]
-            [clojure-commons.error-codes :as ce]))
+  (:use [slingshot.slingshot :only [try+ throw+]]
+        [medley.core])
+  (:require [clojure.edn :as edn]
+            [bouncer [core :as b] [validators :as v]]
+            [taoensso.timbre :as timbre]
+            [taoensso.timbre.appenders.rotor :as rotor]))
 
+(timbre/refer-timbre)
 
-(def ^:private props
+(def props
   "A ref for storing the configuration properties."
   (ref nil))
 
-(def ^:private config-valid
-  "A ref for storing a configuration validity flag."
-  (ref true))
+(def filters
+  [[:irods-user]
+   [:irods-password]])
 
-(def ^:private configs
-  "A ref for storing the symbols used to get configuration settings."
-  (ref []))
+(defn pprint-to-string
+  [m]
+  (let [sw (java.io.StringWriter.)]
+    (binding [*out* sw]
+      (clojure.pprint/pprint m))
+    (str sw)))
 
-(cc/defprop-str irods-user
-  "The irods user"
-  [props config-valid configs]
-  "anon-files.irods-user")
+(v/defvalidator stringv
+  {:default-message-format "%s must be a string", :optional true}
+  [s]
+  (string? s))
 
-(cc/defprop-str irods-pass
-  "The irods password"
-  [props config-valid configs]
-  "anon-files.irods-password")
+(v/defvalidator keywordv
+  {:default-message-format "%s must be a keyword", :optional true}
+  [k]
+  (keyword? k))
 
-(cc/defprop-str irods-host
-  "The irods hostname"
-  [props config-valid configs]
-  "anon-files.irods-host")
+(def cfgv
+  {:port           [v/required v/number]
+   :irods-host     [v/required stringv]
+   :irods-port     [v/required stringv]
+   :irods-zone     [v/required stringv]
+   :irods-home     [v/required stringv]
+   :irods-user     [v/required stringv]
+   :irods-password [v/required stringv]
+   :anon-user      [v/required stringv]
+   :log-file       stringv
+   :log-size       v/number
+   :log-backlog    v/number
+   :log-level      keywordv})
 
-(cc/defprop-str irods-port
-  "The irods port"
-  [props config-valid configs]
-  "anon-files.irods-port")
+(def defaults
+  {:log-level   :warn
+   :log-size    (* 100 1024 1024)
+   :log-backlog 10})
 
-(cc/defprop-str irods-zone
-  "The irods zone"
-  [props config-valid configs]
-  "anon-files.irods-zone")
+(defn valid-config?
+  [cfg]
+  (let [errs (first (b/validate cfg cfgv))]
+    (when errs
+      (error (pprint-to-string errs)))
+    (not errs)))
 
-(cc/defprop-str irods-home
-  "The irods home directory"
-  [props config-valid configs]
-  "anon-files.irods-home")
-
-(cc/defprop-str anon-user
-  "The username of the anonymous user."
-  [props config-valid configs]
-  "anon-files.anon-user")
-
-(cc/defprop-int listen-port
-  "The port to listen on"
-  [props config-valid configs]
-  "anon-files.listen-port")
-
-(defn- validate-config
-  "Validates the configuration settings after they've been loaded."
-  []
-  (when-not (cc/validate-config configs config-valid)
-    (throw+ {:error_code ce/ERR_CONFIG_INVALID})))
-
-(defn- exception-filters
-  []
-  (mapv #(re-pattern (str %))
-        [(irods-user) (irods-pass)]))
-
-(defn register-exception-filters
-  []
-  (ce/register-filters (exception-filters)))
+(defn configure-logging
+  [options]
+  (when (:log-level @props)
+    (timbre/set-level! (:log-level @props)))
+  (when (:log-file @props)
+    (timbre/set-config! [:appenders :rotor]
+                        {:enabled? true
+                         :async? false
+                         :max-messages-per-msecs nil
+                         :fn rotor/appender-fn})
+    (timbre/set-config! [:shared-appender-config :rotor]
+                        {:path     (:log-file @props)
+                         :max-size (:log-size @props)
+                         :backlog  (:log-backlog @props)})))
 
 (defn load-config-from-file
   "Loads the configuration settings from a file."
-  [filepath]
-  (cc/load-config-from-file filepath props)
-  (cc/log-config props :filters [#"irods\-user"])
-  (validate-config))
+  [options]
+  (let [contents (slurp (:config options))
+        _   (println contents)
+        cfg (edn/read-string (slurp (:config options)))]
+    (when-not (valid-config? cfg)
+      (error "Config file has errors, exiting.")
+      (System/exit 1))
+    (info "Config file settings:\n" (pprint-to-string cfg))
+    (info "Command-line settings:\n" (pprint-to-string options))
+    (dosync (ref-set props (merge defaults cfg options)))
+    (info "Combined settings:\n" (pprint-to-string @props))))

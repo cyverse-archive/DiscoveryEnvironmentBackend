@@ -16,8 +16,11 @@
   :main anon-files.core
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.iplantc/clj-jargon "3.0.2"]
-                 [org.iplantc/clojure-commons "3.0.2"]
                  [org.iplantc/common-cli "3.0.2"]
+                 [com.taoensso/timbre "3.1.6"]
+                 [bouncer "0.3.1-beta1"]
+                 [medley "0.1.5"]
+                 [me.raynes/fs "1.4.4"]
                  [compojure "1.1.6"]
                  [ring "1.2.1"]]
   :plugins [[lein-ring "0.8.10"]])

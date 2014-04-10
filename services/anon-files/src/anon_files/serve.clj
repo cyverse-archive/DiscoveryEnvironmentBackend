@@ -5,17 +5,20 @@
             [clj-jargon.item-ops :as ops]
             [clj-jargon.item-info :as info]
             [clj-jargon.permissions :as perms]
-            [clj-jargon.paging :as paging]))
+            [clj-jargon.paging :as paging]
+            [taoensso.timbre :as timbre]))
+
+(timbre/refer-timbre)
 
 (defn jargon-cfg
   []
   (init/init
-  (irods-host)
-  (irods-port)
-  (irods-user)
-  (irods-pass)
-  (irods-home)
-  (irods-zone)
+  (:irods-host @props)
+  (:irods-port @props)
+  (:irods-user @props)
+  (:irods-password @props)
+  (:irods-home @props)
+  (:irods-zone @props)
   ""))
 
 (defn range-request?
@@ -47,7 +50,7 @@
      (do (println "[anon-files]" filepath "is not a file.")
        (-> (response "Not a file.") (status 403)))
 
-     (not (perms/is-readable? cm (anon-user) filepath))
+     (not (perms/is-readable? cm (:anon-user @props) filepath))
      (do (println "[anon-files]" filepath "is not readable.")
        (-> (response "Insufficient privileges.") (status 403)))
 
@@ -66,7 +69,7 @@
      (do (println "[anon-files]" filepath "is not a file.")
        (-> (response "Not a file.") (status 403)))
 
-     (not (perms/is-readable? cm (anon-user) filepath))
+     (not (perms/is-readable? cm (:anon-user @props) filepath))
      (do (println "[anon-files]" filepath "is not readable.")
        (-> (response "Insufficient privileges.") (status 403)))
 
@@ -84,12 +87,16 @@
 
 (defn handle-request
   [req]
-  (cond
-   (and (range-request? req) (valid-range? req))
-   (serve-range (:uri req) (extract-range req))
+  (debug req)
+  (try
+   (cond
+    (and (range-request? req) (valid-range? req))
+    (serve-range (:uri req) (extract-range req))
 
-   (and (range-request? req) (not (valid-range? req)))
-   (-> (response "Invalid range request.") (status 500))
+    (and (range-request? req) (not (valid-range? req)))
+    (-> (response "Invalid range request.") (status 500))
 
-   :else
-   (serve (:uri req))))
+    :else
+    (serve (:uri req)))
+    (catch Exception e
+      (warn e))))
