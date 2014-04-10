@@ -17,7 +17,7 @@ CREATE SEQUENCE workspace_id_seq
 CREATE TABLE workspace (
     id bigint DEFAULT nextval('workspace_id_seq'::regclass) NOT NULL,
     home_folder bigint,
-    root_analysis_group_id bigint,
+    root_category_id character varying(255),
     is_public boolean DEFAULT false,
     user_id bigint
 );

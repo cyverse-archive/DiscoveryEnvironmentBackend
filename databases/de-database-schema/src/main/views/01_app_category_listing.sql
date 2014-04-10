@@ -6,7 +6,6 @@ SET search_path = public, pg_catalog;
 --
 CREATE VIEW app_category_listing AS
     SELECT
-        c.hid,
         c.id,
         c."name",
         c.description,

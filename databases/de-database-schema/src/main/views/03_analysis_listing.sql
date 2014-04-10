@@ -21,8 +21,8 @@ CREATE VIEW analysis_listing AS
            EXISTS (
                SELECT *
                FROM template_group_template tgt
-               JOIN app_categories tg ON tgt.template_group_id = tg.hid
-               JOIN workspace w ON tg.workspace_id = w.id
+               JOIN app_categories ac ON tgt.app_category_id = ac.id
+               JOIN workspace w ON ac.workspace_id = w.id
                WHERE analysis.hid = tgt.template_id
                AND w.is_public IS TRUE
            ) AS is_public,

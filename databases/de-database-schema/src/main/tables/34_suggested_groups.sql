@@ -6,5 +6,5 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE suggested_groups (
     transformation_activity_id bigint NOT NULL,
-    template_group_id bigint NOT NULL
+    app_category_id character varying(255) NOT NULL
 );
