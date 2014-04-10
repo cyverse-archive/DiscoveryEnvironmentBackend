@@ -46,6 +46,11 @@
   [props config-valid configs]
   "anon-files.irods-home")
 
+(cc/defprop-str anon-user
+  "The username of the anonymous user."
+  [props config-valid configs]
+  "anon-files.anon-user")
+
 (cc/defprop-int listen-port
   "The port to listen on"
   [props config-valid configs]

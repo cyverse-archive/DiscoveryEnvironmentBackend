@@ -9,7 +9,7 @@
             [anon-files.config :as cfg]))
 
 (defroutes app
-  (GET "/*" [:as req] (serve (:uri req))))
+  (GET "/*" [:as req] (handle-request req)))
 
 (def svc-info
   {:desc "A service that serves up files shared with the iRODS anonymous user."
