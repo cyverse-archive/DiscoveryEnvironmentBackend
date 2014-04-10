@@ -1,9 +1,9 @@
 SET search_path = public, pg_catalog;
 
 --
--- ID sequence for the transformation_activity.
+-- ID sequence for the apps.
 --
-CREATE SEQUENCE transformation_activity_id_seq
+CREATE SEQUENCE apps_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MAXVALUE
@@ -11,10 +11,10 @@ CREATE SEQUENCE transformation_activity_id_seq
     CACHE 1;
 
 --
--- transformation_activity table
+-- apps table
 --
-CREATE TABLE transformation_activity (
-    hid bigint DEFAULT nextval('transformation_activity_id_seq'::regclass) NOT NULL,
+CREATE TABLE apps (
+    hid bigint DEFAULT nextval('apps_id_seq'::regclass) NOT NULL,
     name character varying(255),
     id character varying(255) NOT NULL,
     description character varying(255),

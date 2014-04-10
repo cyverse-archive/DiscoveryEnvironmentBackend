@@ -12,4 +12,4 @@ CREATE VIEW rating_listing AS
            ur.rating AS user_rating
     FROM ratings ur
     JOIN users u ON ur.user_id = u.id
-    JOIN transformation_activity a ON a.hid = ur.transformation_activity_id;
+    JOIN apps a ON a.hid = ur.transformation_activity_id;

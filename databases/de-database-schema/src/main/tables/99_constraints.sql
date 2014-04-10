@@ -246,11 +246,11 @@ ALTER TABLE ONLY transformation_activity_mappings
     PRIMARY KEY (transformation_activity_id, hid);
 
 --
--- Name: transformation_activity_pkey; Type: CONSTRAINT; Schema: public;
+-- Name: apps_pkey; Type: CONSTRAINT; Schema: public;
 -- Owner: de; Tablespace:
 --
-ALTER TABLE ONLY transformation_activity
-    ADD CONSTRAINT transformation_activity_pkey
+ALTER TABLE ONLY apps
+    ADD CONSTRAINT apps_pkey
     PRIMARY KEY (hid);
 
 --
@@ -499,7 +499,7 @@ ALTER TABLE ONLY property
 ALTER TABLE ONLY ratings
     ADD CONSTRAINT ratings_transformation_activity_id_fkey
     FOREIGN KEY (transformation_activity_id)
-    REFERENCES transformation_activity(hid);
+    REFERENCES apps(hid);
 
 --
 -- Name: ratings_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: de
@@ -560,7 +560,7 @@ ALTER TABLE ONLY suggested_groups
 ALTER TABLE ONLY suggested_groups
     ADD CONSTRAINT suggested_groups_transformation_activity_id_fkey
     FOREIGN KEY (transformation_activity_id)
-    REFERENCES transformation_activity(hid);
+    REFERENCES apps(hid);
 
 --
 -- Name: app_category_group_parent_category_id_fkey; Type: FK CONSTRAINT;
@@ -596,7 +596,7 @@ ALTER TABLE ONLY template_group_template
 ALTER TABLE ONLY template_group_template
     ADD CONSTRAINT template_group_template_template_id_fkey
     FOREIGN KEY (template_id)
-    REFERENCES transformation_activity(hid);
+    REFERENCES apps(hid);
 
 --
 -- Name: template_input_input_id_fkey; Type: FK CONSTRAINT; Schema: public;
@@ -653,11 +653,11 @@ ALTER TABLE ONLY template_property_group
     REFERENCES template(hid);
 
 --
--- Name: trans_act_integration_data_id_fk; Type: FK CONSTRAINT; Schema:
+-- Name: app_integration_data_id_fk; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --
-ALTER TABLE ONLY transformation_activity
-    ADD CONSTRAINT trans_act_integration_data_id_fk
+ALTER TABLE ONLY apps
+    ADD CONSTRAINT app_integration_data_id_fk
     FOREIGN KEY (integration_data_id)
     REFERENCES integration_data(id);
 
@@ -668,7 +668,7 @@ ALTER TABLE ONLY transformation_activity
 ALTER TABLE ONLY transformation_activity_mappings
     ADD CONSTRAINT transformation_activity_mapping_transformation_activity_id_fkey
     FOREIGN KEY (transformation_activity_id)
-    REFERENCES transformation_activity(hid);
+    REFERENCES apps(hid);
 
 --
 -- Name: transformation_activity_mappings_mapping_id_fkey; Type: FK
@@ -686,7 +686,7 @@ ALTER TABLE ONLY transformation_activity_mappings
 ALTER TABLE ONLY transformation_activity_references
     ADD CONSTRAINT transformation_activity_referen_transformation_activity_id_fkey
     FOREIGN KEY (transformation_activity_id)
-    REFERENCES transformation_activity(hid);
+    REFERENCES apps(hid);
 
 --
 -- Name: transformation_step_transformation_id_fkey; Type: FK CONSTRAINT;
@@ -713,7 +713,7 @@ ALTER TABLE ONLY transformation_task_steps
 ALTER TABLE ONLY transformation_task_steps
     ADD CONSTRAINT transformation_task_steps_transformation_task_id_fkey
     FOREIGN KEY (transformation_task_id)
-    REFERENCES transformation_activity(hid);
+    REFERENCES apps(hid);
 
 --
 -- Name: transformation_value_transformation_id_fkey; Type: FK CONSTRAINT;
