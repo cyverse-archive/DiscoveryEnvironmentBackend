@@ -278,11 +278,11 @@ ALTER TABLE ONLY transformation_steps
     PRIMARY KEY (id);
 
 --
--- Name: transformation_task_steps_pkey; Type: CONSTRAINT; Schema: public;
+-- Name: app_steps_pkey; Type: CONSTRAINT; Schema: public;
 -- Owner: de; Tablespace:
 --
-ALTER TABLE ONLY transformation_task_steps
-    ADD CONSTRAINT transformation_task_steps_pkey
+ALTER TABLE ONLY app_steps
+    ADD CONSTRAINT app_steps_pkey
     PRIMARY KEY (app_id, hid);
 
 --
@@ -698,20 +698,20 @@ ALTER TABLE ONLY transformation_steps
     REFERENCES transformations(id);
 
 --
--- Name: transformation_task_steps_transformation_step_id_fkey; Type: FK
+-- Name: app_steps_transformation_step_id_fkey; Type: FK
 -- CONSTRAINT; Schema: public; Owner: de
 --
-ALTER TABLE ONLY transformation_task_steps
-    ADD CONSTRAINT transformation_task_steps_transformation_step_id_fkey
+ALTER TABLE ONLY app_steps
+    ADD CONSTRAINT app_steps_transformation_step_id_fkey
     FOREIGN KEY (transformation_step_id)
     REFERENCES transformation_steps(id);
 
 --
--- Name: transformation_task_steps_app_id_fkey; Type: FK
+-- Name: app_steps_app_id_fkey; Type: FK
 -- CONSTRAINT; Schema: public; Owner: de
 --
-ALTER TABLE ONLY transformation_task_steps
-    ADD CONSTRAINT transformation_task_steps_app_id_fkey
+ALTER TABLE ONLY app_steps
+    ADD CONSTRAINT app_steps_app_id_fkey
     FOREIGN KEY (app_id)
     REFERENCES apps(id);
 

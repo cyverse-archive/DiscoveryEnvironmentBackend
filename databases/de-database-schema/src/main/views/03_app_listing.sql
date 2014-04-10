@@ -25,7 +25,7 @@ CREATE VIEW app_listing AS
                WHERE apps.id = aca.app_id
                AND w.is_public IS TRUE
            ) AS is_public,
-           COUNT(tts.*) AS step_count,
+           COUNT(steps.*) AS step_count,
            COUNT(t.component_id) AS component_count,
            apps.deleted,
            apps.disabled,
@@ -35,8 +35,8 @@ CREATE VIEW app_listing AS
            END AS overall_job_type
     FROM apps
          LEFT JOIN integration_data integration ON apps.integration_data_id = integration.id
-         LEFT JOIN transformation_task_steps tts ON apps.id = tts.app_id
-         LEFT JOIN transformation_steps ts ON tts.transformation_step_id = ts.id
+         LEFT JOIN app_steps steps ON apps.id = steps.app_id
+         LEFT JOIN transformation_steps ts ON steps.transformation_step_id = ts.id
          LEFT JOIN transformations tx ON ts.transformation_id = tx.id
          LEFT JOIN template t ON tx.template_id = t.id
          LEFT JOIN deployed_components dc ON t.component_id = dc.id
