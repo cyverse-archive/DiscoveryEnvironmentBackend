@@ -254,11 +254,11 @@ ALTER TABLE ONLY apps
     PRIMARY KEY (id);
 
 --
--- Name: transformation_activity_references_pkey; Type: CONSTRAINT; Schema:
+-- Name: app_references_pkey; Type: CONSTRAINT; Schema:
 -- public; Owner: de; Tablespace:
 --
-ALTER TABLE ONLY transformation_activity_references
-    ADD CONSTRAINT transformation_activity_references_pkey
+ALTER TABLE ONLY app_references
+    ADD CONSTRAINT app_references_pkey
     PRIMARY KEY (id);
 
 --
@@ -680,11 +680,11 @@ ALTER TABLE ONLY transformation_activity_mappings
     REFERENCES input_output_mapping(hid);
 
 --
--- Name: transformation_activity_referen_app_id_fkey;
+-- Name: app_references_app_id_fkey;
 -- Type: FK CONSTRAINT; Schema: public; Owner: de
 --
-ALTER TABLE ONLY transformation_activity_references
-    ADD CONSTRAINT transformation_activity_referen_app_id_fkey
+ALTER TABLE ONLY app_references
+    ADD CONSTRAINT app_references_app_id_fkey
     FOREIGN KEY (app_id)
     REFERENCES apps(id);
 
