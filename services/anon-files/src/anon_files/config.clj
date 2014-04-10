@@ -31,7 +31,7 @@
   [props config-valid configs]
   "anon-files.irods-host")
 
-(cc/defprop-int irods-port
+(cc/defprop-str irods-port
   "The irods port"
   [props config-valid configs]
   "anon-files.irods-port")

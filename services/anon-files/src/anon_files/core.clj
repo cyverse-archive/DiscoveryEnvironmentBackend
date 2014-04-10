@@ -1,6 +1,7 @@
 (ns anon-files.core
   (:gen-class)
-  (:use [compojure.core])
+  (:use [compojure.core]
+        [anon-files.serve])
   (:require [compojure.route :as route]
             [clojure-commons.config :as cc]
             [common-cli.core :as ccli]
@@ -8,8 +9,7 @@
             [anon-files.config :as cfg]))
 
 (defroutes app
-  (GET "/*" [:as req] (str req))
-  (route/not-found "Don't do that, it hurts.\n"))
+  (GET "/*" [:as req] (serve (:uri req))))
 
 (def svc-info
   {:desc "A service that serves up files shared with the iRODS anonymous user."
@@ -30,5 +30,4 @@
     (when-not (:config options)
       (ccli/exit 1 "The --config option is required."))
     (cfg/load-config-from-file (:config options))
-    (println (port-number options))
     (jetty/run-jetty app {:port (port-number options)})))
