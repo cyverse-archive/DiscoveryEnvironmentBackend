@@ -16,7 +16,7 @@ CREATE SEQUENCE ratings_id_seq
 CREATE TABLE ratings (
     id bigint DEFAULT nextval('ratings_id_seq'::regclass) NOT NULL,
     user_id bigint,
-    transformation_activity_id bigint,
+    app_id character varying(255),
     rating integer NOT NULL,
     comment_id bigint
 );

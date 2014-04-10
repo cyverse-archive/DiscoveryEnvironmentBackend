@@ -5,5 +5,5 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE template_group_template (
     app_category_id character varying(255) NOT NULL,
-    template_id bigint NOT NULL
+    app_id character varying(255) NOT NULL
 );

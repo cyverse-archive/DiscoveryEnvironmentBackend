@@ -15,6 +15,6 @@ CREATE SEQUENCE transformation_activity_references_id_seq
 --
 CREATE TABLE transformation_activity_references (
     id bigint DEFAULT nextval('transformation_activity_references_id_seq'::regclass) NOT NULL,
-    transformation_activity_id bigint NOT NULL,
+    app_id character varying(255) NOT NULL,
     reference_text text NOT NULL
 );

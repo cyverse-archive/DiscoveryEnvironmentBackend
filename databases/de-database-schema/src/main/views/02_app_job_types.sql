@@ -5,10 +5,10 @@ SET search_path = public, pg_catalog;
 --
 CREATE VIEW app_job_types AS
     SELECT
-        a.hid AS analysis_id,
+        a.id AS app_id,
         tt.name AS job_type
     FROM apps a
-        JOIN transformation_task_steps tts ON a.hid = tts.transformation_task_id
+        JOIN transformation_task_steps tts ON a.id = tts.app_id
         JOIN transformation_steps ts ON tts.transformation_step_id = ts.id
         JOIN transformations tx ON ts.transformation_id = tx.id
         JOIN template t ON tx.template_id::text = t.id::text
