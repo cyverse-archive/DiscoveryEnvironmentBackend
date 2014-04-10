@@ -182,11 +182,11 @@ ALTER TABLE ONLY suggested_groups
     PRIMARY KEY (transformation_activity_id, app_category_id);
 
 --
--- Name: template_group_group_pkey; Type: CONSTRAINT; Schema: public; Owner:
+-- Name: app_category_group_pkey; Type: CONSTRAINT; Schema: public; Owner:
 -- de; Tablespace:
 --
-ALTER TABLE ONLY template_group_group
-    ADD CONSTRAINT template_group_group_pkey
+ALTER TABLE ONLY app_category_group
+    ADD CONSTRAINT app_category_group_pkey
     PRIMARY KEY (parent_category_id, child_category_id);
 
 --
@@ -563,20 +563,20 @@ ALTER TABLE ONLY suggested_groups
     REFERENCES transformation_activity(hid);
 
 --
--- Name: template_group_group_parent_category_id_fkey; Type: FK CONSTRAINT;
+-- Name: app_category_group_parent_category_id_fkey; Type: FK CONSTRAINT;
 -- Schema: public; Owner: de
 --
-ALTER TABLE ONLY template_group_group
-    ADD CONSTRAINT template_group_group_parent_category_id_fkey
+ALTER TABLE ONLY app_category_group
+    ADD CONSTRAINT app_category_group_parent_category_id_fkey
     FOREIGN KEY (parent_category_id)
     REFERENCES app_categories(id);
 
 --
--- Name: template_group_group_child_category_id_fkey; Type: FK CONSTRAINT; Schema:
+-- Name: app_category_group_child_category_id_fkey; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --
-ALTER TABLE ONLY template_group_group
-    ADD CONSTRAINT template_group_group_child_category_id_fkey
+ALTER TABLE ONLY app_category_group
+    ADD CONSTRAINT app_category_group_child_category_id_fkey
     FOREIGN KEY (child_category_id)
     REFERENCES app_categories(id);
 
