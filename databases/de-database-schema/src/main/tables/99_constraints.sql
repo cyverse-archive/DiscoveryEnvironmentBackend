@@ -198,11 +198,11 @@ ALTER TABLE ONLY app_categories
     PRIMARY KEY (id);
 
 --
--- Name: template_group_template_pkey; Type: CONSTRAINT; Schema: public;
+-- Name: app_category_app_pkey; Type: CONSTRAINT; Schema: public;
 -- Owner: de; Tablespace:
 --
-ALTER TABLE ONLY template_group_template
-    ADD CONSTRAINT template_group_template_pkey
+ALTER TABLE ONLY app_category_app
+    ADD CONSTRAINT app_category_app_pkey
     PRIMARY KEY (app_category_id, app_id);
 
 --
@@ -581,20 +581,20 @@ ALTER TABLE ONLY app_category_group
     REFERENCES app_categories(id);
 
 --
--- Name: template_group_template_app_category_id_fkey; Type: FK CONSTRAINT;
+-- Name: app_category_app_app_category_id_fkey; Type: FK CONSTRAINT;
 -- Schema: public; Owner: de
 --
-ALTER TABLE ONLY template_group_template
-    ADD CONSTRAINT template_group_template_app_category_id_fkey
+ALTER TABLE ONLY app_category_app
+    ADD CONSTRAINT app_category_app_app_category_id_fkey
     FOREIGN KEY (app_category_id)
     REFERENCES app_categories(id);
 
 --
--- Name: template_group_template_app_id_fkey; Type: FK CONSTRAINT;
+-- Name: app_category_app_app_id_fkey; Type: FK CONSTRAINT;
 -- Schema: public; Owner: de
 --
-ALTER TABLE ONLY template_group_template
-    ADD CONSTRAINT template_group_template_app_id_fkey
+ALTER TABLE ONLY app_category_app
+    ADD CONSTRAINT app_category_app_app_id_fkey
     FOREIGN KEY (app_id)
     REFERENCES apps(id);
 

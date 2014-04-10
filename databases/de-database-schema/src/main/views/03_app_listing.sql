@@ -19,10 +19,10 @@ CREATE VIEW app_listing AS
            ) AS average_rating,
            EXISTS (
                SELECT *
-               FROM template_group_template tgt
-               JOIN app_categories ac ON tgt.app_category_id = ac.id
+               FROM app_category_app aca
+               JOIN app_categories ac ON aca.app_category_id = ac.id
                JOIN workspace w ON ac.workspace_id = w.id
-               WHERE apps.id = tgt.app_id
+               WHERE apps.id = aca.app_id
                AND w.is_public IS TRUE
            ) AS is_public,
            COUNT(tts.*) AS step_count,

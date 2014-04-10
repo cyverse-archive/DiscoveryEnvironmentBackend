@@ -6,7 +6,7 @@ SET search_path = public, pg_catalog;
 --
 CREATE FUNCTION app_count(character varying(255)) RETURNS bigint AS $$
     SELECT COUNT(DISTINCT a.id) FROM apps a
-    JOIN template_group_template tgt on a.id = tgt.app_id
+    JOIN app_category_app aca on a.id = aca.app_id
     WHERE NOT a.deleted
-    AND tgt.app_category_id in (SELECT * FROM app_category_hierarchy_ids($1))
+    AND aca.app_category_id in (SELECT * FROM app_category_hierarchy_ids($1))
 $$ LANGUAGE SQL;

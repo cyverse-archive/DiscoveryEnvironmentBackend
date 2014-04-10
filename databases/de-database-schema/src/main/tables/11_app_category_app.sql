@@ -1,9 +1,9 @@
 SET search_path = public, pg_catalog;
 
 --
--- template_group_template table
+-- app_category_app table
 --
-CREATE TABLE template_group_template (
+CREATE TABLE app_category_app (
     app_category_id character varying(255) NOT NULL,
     app_id character varying(255) NOT NULL
 );
