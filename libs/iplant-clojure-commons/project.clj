@@ -22,6 +22,7 @@
                  [org.mongodb/mongo-java-driver "2.10.1"]
                  [org.apache.httpcomponents/httpclient "4.2.3"]
                  [commons-configuration/commons-configuration "1.8"]
+                 [trptcolin/versioneer "0.1.0"]
                  [cheshire "5.0.2"]]
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
