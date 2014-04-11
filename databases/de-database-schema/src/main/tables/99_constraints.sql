@@ -12,7 +12,10 @@ ALTER TABLE ONLY data_formats
 --
 ALTER TABLE ONLY workflow_io_maps
     ADD CONSTRAINT workflow_io_maps_pkey
-    PRIMARY KEY (mapping_id, output);
+    PRIMARY KEY (source_step, output, target_step, input);
+CREATE INDEX workflow_io_maps_app_id_idx ON workflow_io_maps(app_id);
+CREATE INDEX workflow_io_maps_source_idx ON workflow_io_maps(source_step);
+CREATE INDEX workflow_io_maps_target_idx ON workflow_io_maps(target_step);
 
 --
 -- Name: dataobjects_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
@@ -44,14 +47,6 @@ ALTER TABLE ONLY deployed_components
 --
 ALTER TABLE ONLY info_type
     ADD CONSTRAINT info_type_pkey
-    PRIMARY KEY (hid);
-
---
--- Name: input_output_mapping_pkey; Type: CONSTRAINT; Schema: public; Owner:
--- de; Tablespace:
---
-ALTER TABLE ONLY input_output_mapping
-    ADD CONSTRAINT input_output_mapping_pkey
     PRIMARY KEY (hid);
 
 --
@@ -238,14 +233,6 @@ ALTER TABLE ONLY template_property_group
     PRIMARY KEY (task_id, hid);
 
 --
--- Name: transformation_activity_mappings_pkey; Type: CONSTRAINT; Schema:
--- public; Owner: de; Tablespace:
---
-ALTER TABLE ONLY transformation_activity_mappings
-    ADD CONSTRAINT transformation_activity_mappings_pkey
-    PRIMARY KEY (app_id, hid);
-
---
 -- Name: apps_pkey; Type: CONSTRAINT; Schema: public;
 -- Owner: de; Tablespace:
 --
@@ -262,44 +249,12 @@ ALTER TABLE ONLY app_references
     PRIMARY KEY (id);
 
 --
--- Name: transformation_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
--- Tablespace:
---
-ALTER TABLE ONLY transformations
-    ADD CONSTRAINT transformation_pkey
-    PRIMARY KEY (id);
-
---
--- Name: transformation_step_pkey; Type: CONSTRAINT; Schema: public; Owner:
--- de; Tablespace:
---
-ALTER TABLE ONLY transformation_steps
-    ADD CONSTRAINT transformation_step_pkey
-    PRIMARY KEY (id);
-
---
 -- Name: app_steps_pkey; Type: CONSTRAINT; Schema: public;
 -- Owner: de; Tablespace:
 --
 ALTER TABLE ONLY app_steps
     ADD CONSTRAINT app_steps_pkey
-    PRIMARY KEY (app_id, step);
-
---
--- Name: transformation_values_pkey; Type: CONSTRAINT; Schema: public; Owner:
--- de; Tablespace:
---
-ALTER TABLE ONLY transformation_values
-    ADD CONSTRAINT transformation_values_pkey
     PRIMARY KEY (id);
-
---
--- Name: transformation_values_unique; Type: CONSTRAINT; Schema: public;
--- Owner: de; Tablespace:
---
-ALTER TABLE ONLY transformation_values
-    ADD CONSTRAINT transformation_values_unique
-    UNIQUE (transformation_id, property);
 
 --
 -- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: de; Tablespace:
@@ -349,15 +304,6 @@ ALTER TABLE ONLY workspace
     PRIMARY KEY (id);
 
 --
--- Name: workflow_io_maps_mapping_id_fkey; Type: FK CONSTRAINT; Schema:
--- public; Owner: de
---
-ALTER TABLE ONLY workflow_io_maps
-    ADD CONSTRAINT workflow_io_maps_mapping_id_fkey
-    FOREIGN KEY (mapping_id)
-    REFERENCES input_output_mapping(hid);
-
---
 -- Name: dataobjects_data_format_fkey; Type: FK CONSTRAINT; Schema: public;
 -- Owner: de
 --
@@ -403,22 +349,22 @@ ALTER TABLE ONLY deployed_component_data_files
     REFERENCES deployed_components(hid);
 
 --
--- Name: input_output_mapping_source_fkey; Type: FK CONSTRAINT; Schema:
+-- Name: workflow_io_maps_source_fkey; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --
-ALTER TABLE ONLY input_output_mapping
-    ADD CONSTRAINT input_output_mapping_source_fkey
-    FOREIGN KEY (source)
-    REFERENCES transformation_steps(id);
+ALTER TABLE ONLY workflow_io_maps
+    ADD CONSTRAINT workflow_io_maps_source_fkey
+    FOREIGN KEY (source_step)
+    REFERENCES app_steps(id);
 
 --
--- Name: input_output_mapping_target_fkey; Type: FK CONSTRAINT; Schema:
+-- Name: workflow_io_maps_target_fkey; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --
-ALTER TABLE ONLY input_output_mapping
-    ADD CONSTRAINT input_output_mapping_target_fkey
-    FOREIGN KEY (target)
-    REFERENCES transformation_steps(id);
+ALTER TABLE ONLY workflow_io_maps
+    ADD CONSTRAINT workflow_io_maps_target_fkey
+    FOREIGN KEY (target_step)
+    REFERENCES app_steps(id);
 
 --
 -- Name: notification_set_notification_notification_id_fkey; Type: FK
@@ -662,22 +608,13 @@ ALTER TABLE ONLY apps
     REFERENCES integration_data(id);
 
 --
--- Name: transformation_activity_mapping_app_id_fkey;
+-- Name: workflow_io_maps_app_id_fkey;
 -- Type: FK CONSTRAINT; Schema: public; Owner: de
 --
-ALTER TABLE ONLY transformation_activity_mappings
-    ADD CONSTRAINT transformation_activity_mapping_app_id_fkey
+ALTER TABLE ONLY workflow_io_maps
+    ADD CONSTRAINT workflow_io_maps_app_id_fkey
     FOREIGN KEY (app_id)
     REFERENCES apps(id);
-
---
--- Name: transformation_activity_mappings_mapping_id_fkey; Type: FK
--- CONSTRAINT; Schema: public; Owner: de
---
-ALTER TABLE ONLY transformation_activity_mappings
-    ADD CONSTRAINT transformation_activity_mappings_mapping_id_fkey
-    FOREIGN KEY (mapping_id)
-    REFERENCES input_output_mapping(hid);
 
 --
 -- Name: app_references_app_id_fkey;
@@ -689,22 +626,13 @@ ALTER TABLE ONLY app_references
     REFERENCES apps(id);
 
 --
--- Name: transformation_step_transformation_id_fkey; Type: FK CONSTRAINT;
--- Schema: public; Owner: de
---
-ALTER TABLE ONLY transformation_steps
-    ADD CONSTRAINT transformation_step_transformation_id_fkey
-    FOREIGN KEY (transformation_id)
-    REFERENCES transformations(id);
-
---
--- Name: app_steps_transformation_step_id_fkey; Type: FK
+-- Name: app_steps_task_id_fkey; Type: FK
 -- CONSTRAINT; Schema: public; Owner: de
 --
 ALTER TABLE ONLY app_steps
-    ADD CONSTRAINT app_steps_transformation_step_id_fkey
-    FOREIGN KEY (transformation_step_id)
-    REFERENCES transformation_steps(id);
+    ADD CONSTRAINT app_steps_task_id_fkey
+    FOREIGN KEY (task_id)
+    REFERENCES tasks(id);
 
 --
 -- Name: app_steps_app_id_fkey; Type: FK
@@ -714,15 +642,6 @@ ALTER TABLE ONLY app_steps
     ADD CONSTRAINT app_steps_app_id_fkey
     FOREIGN KEY (app_id)
     REFERENCES apps(id);
-
---
--- Name: transformation_value_transformation_id_fkey; Type: FK CONSTRAINT;
--- Schema: public; Owner: de
---
-ALTER TABLE ONLY transformation_values
-    ADD CONSTRAINT transformation_value_transformation_id_fkey
-    FOREIGN KEY (transformation_id)
-    REFERENCES transformations(id);
 
 --
 -- Name: validator_rule_rule_id_fkey; Type: FK CONSTRAINT; Schema: public;
