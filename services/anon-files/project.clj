@@ -23,4 +23,10 @@
                  [me.raynes/fs "1.4.4"]
                  [compojure "1.1.6"]
                  [ring "1.2.1"]]
-  :plugins [[lein-ring "0.8.10"]])
+  :iplant-rpm {:summary "Serves up files and directories that are shared with the anonymous user in iRODS."
+               :provides "anon-files"
+               :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
+               :config-files ["log4j.properties"]
+               :config-path "resources/main"}
+  :plugins [[lein-ring "0.8.10"]
+            [org.iplantc/lein-iplant-rpm "3.0.2"]])
