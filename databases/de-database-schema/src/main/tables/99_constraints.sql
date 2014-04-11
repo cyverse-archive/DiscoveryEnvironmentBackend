@@ -7,11 +7,11 @@ ALTER TABLE ONLY data_formats
     PRIMARY KEY (id);
 
 --
--- Name: dataobject_mapping_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
+-- Name: workflow_io_maps_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
-ALTER TABLE ONLY dataobject_mapping
-    ADD CONSTRAINT dataobject_mapping_pkey
+ALTER TABLE ONLY workflow_io_maps
+    ADD CONSTRAINT workflow_io_maps_pkey
     PRIMARY KEY (mapping_id, output);
 
 --
@@ -349,11 +349,11 @@ ALTER TABLE ONLY workspace
     PRIMARY KEY (id);
 
 --
--- Name: dataobject_mapping_mapping_id_fkey; Type: FK CONSTRAINT; Schema:
+-- Name: workflow_io_maps_mapping_id_fkey; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --
-ALTER TABLE ONLY dataobject_mapping
-    ADD CONSTRAINT dataobject_mapping_mapping_id_fkey
+ALTER TABLE ONLY workflow_io_maps
+    ADD CONSTRAINT workflow_io_maps_mapping_id_fkey
     FOREIGN KEY (mapping_id)
     REFERENCES input_output_mapping(hid);
 
