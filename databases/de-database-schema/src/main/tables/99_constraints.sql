@@ -222,11 +222,11 @@ ALTER TABLE ONLY template_output
     PRIMARY KEY (template_id, hid);
 
 --
--- Name: template_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
+-- Name: tasks_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
-ALTER TABLE ONLY template
-    ADD CONSTRAINT template_pkey
+ALTER TABLE ONLY tasks
+    ADD CONSTRAINT tasks_pkey
     PRIMARY KEY (hid);
 
 --
@@ -614,7 +614,7 @@ ALTER TABLE ONLY template_input
 ALTER TABLE ONLY template_input
     ADD CONSTRAINT template_input_template_id_fkey
     FOREIGN KEY (template_id)
-    REFERENCES template(hid);
+    REFERENCES tasks(hid);
 
 --
 -- Name: template_output_output_id_fkey; Type: FK CONSTRAINT; Schema: public;
@@ -632,7 +632,7 @@ ALTER TABLE ONLY template_output
 ALTER TABLE ONLY template_output
     ADD CONSTRAINT template_output_template_id_fkey
     FOREIGN KEY (template_id)
-    REFERENCES template(hid);
+    REFERENCES tasks(hid);
 
 --
 -- Name: template_property_group_property_group_id_fkey; Type: FK CONSTRAINT;
@@ -650,7 +650,7 @@ ALTER TABLE ONLY template_property_group
 ALTER TABLE ONLY template_property_group
     ADD CONSTRAINT template_property_group_template_id_fkey
     FOREIGN KEY (template_id)
-    REFERENCES template(hid);
+    REFERENCES tasks(hid);
 
 --
 -- Name: app_integration_data_id_fk; Type: FK CONSTRAINT; Schema:
