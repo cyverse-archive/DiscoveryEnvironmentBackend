@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/anon-files "3.0.2"
+(defproject org.iplantc/anon-files "3.1.0"
   :description "Serves up files and directories that are shared with the anonymous user in iRODS."
   :url "http://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend/"
   :license {:name "BSD"}
@@ -15,8 +15,8 @@
   :aot [anon-files.core]
   :main anon-files.core
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.iplantc/clj-jargon "3.0.2"]
-                 [org.iplantc/common-cli "3.0.2"]
+                 [org.iplantc/clj-jargon "3.1.0"]
+                 [org.iplantc/common-cli "3.1.0"]
                  [com.taoensso/timbre "3.1.6"]
                  [bouncer "0.3.1-beta1"]
                  [medley "0.1.5"]
@@ -29,4 +29,4 @@
                :config-files ["log4j.properties"]
                :config-path "resources/main"}
   :plugins [[lein-ring "0.8.10"]
-            [org.iplantc/lein-iplant-rpm "3.0.2"]])
+            [org.iplantc/lein-iplant-rpm "3.1.0"]])
