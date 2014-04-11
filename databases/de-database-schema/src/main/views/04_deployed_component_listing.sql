@@ -5,9 +5,9 @@ SET search_path = public, pg_catalog;
 -- listing service.
 --
 CREATE VIEW deployed_component_listing AS
-    SELECT row_number() OVER (ORDER BY apps.id, steps.hid) AS id,
+    SELECT row_number() OVER (ORDER BY apps.id, steps.step) AS id,
            apps.id AS app_id,
-           steps.hid AS execution_order,
+           steps.step AS execution_order,
            dc.hid AS deployed_component_hid,
            dc.id AS deployed_component_id,
            dc."name",

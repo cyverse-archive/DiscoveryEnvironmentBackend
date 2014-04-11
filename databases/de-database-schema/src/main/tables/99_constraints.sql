@@ -283,7 +283,7 @@ ALTER TABLE ONLY transformation_steps
 --
 ALTER TABLE ONLY app_steps
     ADD CONSTRAINT app_steps_pkey
-    PRIMARY KEY (app_id, hid);
+    PRIMARY KEY (app_id, step);
 
 --
 -- Name: transformation_values_pkey; Type: CONSTRAINT; Schema: public; Owner:
