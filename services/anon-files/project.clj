@@ -14,6 +14,7 @@
   :manifest {"Git-Ref" ~(git-ref)}
   :aot [anon-files.core]
   :main anon-files.core
+  :uberjar-name "anon-files-standalone.jar"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.iplantc/clj-jargon "3.1.0"]
                  [org.iplantc/common-cli "3.1.0"]
