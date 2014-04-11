@@ -201,36 +201,12 @@ ALTER TABLE ONLY app_category_app
     PRIMARY KEY (app_category_id, app_id);
 
 --
--- Name: template_input_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
--- Tablespace:
---
-ALTER TABLE ONLY template_input
-    ADD CONSTRAINT template_input_pkey
-    PRIMARY KEY (task_id, hid);
-
---
--- Name: template_output_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
--- Tablespace:
---
-ALTER TABLE ONLY template_output
-    ADD CONSTRAINT template_output_pkey
-    PRIMARY KEY (task_id, hid);
-
---
 -- Name: tasks_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
 ALTER TABLE ONLY tasks
     ADD CONSTRAINT tasks_pkey
     PRIMARY KEY (id);
-
---
--- Name: template_property_group_pkey; Type: CONSTRAINT; Schema: public;
--- Owner: de; Tablespace:
---
-ALTER TABLE ONLY template_property_group
-    ADD CONSTRAINT template_property_group_pkey
-    PRIMARY KEY (task_id, hid);
 
 --
 -- Name: apps_pkey; Type: CONSTRAINT; Schema: public;
@@ -545,56 +521,11 @@ ALTER TABLE ONLY app_category_app
     REFERENCES apps(id);
 
 --
--- Name: template_input_input_id_fkey; Type: FK CONSTRAINT; Schema: public;
--- Owner: de
---
-ALTER TABLE ONLY template_input
-    ADD CONSTRAINT template_input_input_id_fkey
-    FOREIGN KEY (input_id)
-    REFERENCES dataobjects(hid);
-
---
--- Name: template_input_task_id_fkey; Type: FK CONSTRAINT; Schema: public;
--- Owner: de
---
-ALTER TABLE ONLY template_input
-    ADD CONSTRAINT template_input_task_id_fkey
-    FOREIGN KEY (task_id)
-    REFERENCES tasks(id);
-
---
--- Name: template_output_output_id_fkey; Type: FK CONSTRAINT; Schema: public;
--- Owner: de
---
-ALTER TABLE ONLY template_output
-    ADD CONSTRAINT template_output_output_id_fkey
-    FOREIGN KEY (output_id)
-    REFERENCES dataobjects(hid);
-
---
--- Name: template_output_task_id_fkey; Type: FK CONSTRAINT; Schema:
--- public; Owner: de
---
-ALTER TABLE ONLY template_output
-    ADD CONSTRAINT template_output_task_id_fkey
-    FOREIGN KEY (task_id)
-    REFERENCES tasks(id);
-
---
--- Name: template_property_group_property_group_id_fkey; Type: FK CONSTRAINT;
+-- Name: property_group_task_id_fkey; Type: FK CONSTRAINT;
 -- Schema: public; Owner: de
 --
-ALTER TABLE ONLY template_property_group
-    ADD CONSTRAINT template_property_group_property_group_id_fkey
-    FOREIGN KEY (property_group_id)
-    REFERENCES property_group(hid);
-
---
--- Name: template_property_group_task_id_fkey; Type: FK CONSTRAINT;
--- Schema: public; Owner: de
---
-ALTER TABLE ONLY template_property_group
-    ADD CONSTRAINT template_property_group_task_id_fkey
+ALTER TABLE ONLY property_group
+    ADD CONSTRAINT property_group_task_id_fkey
     FOREIGN KEY (task_id)
     REFERENCES tasks(id);
 
