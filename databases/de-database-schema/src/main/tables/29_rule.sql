@@ -16,8 +16,6 @@ CREATE SEQUENCE rule_id_seq
 CREATE TABLE rule (
     hid bigint DEFAULT nextval('rule_id_seq'::regclass) NOT NULL,
     id character varying(255) NOT NULL,
-    name character varying(255) NOT NULL,
-    description character varying(255),
-    label character varying(255),
+    property_id bigint NOT NULL,
     rule_type bigint
 );

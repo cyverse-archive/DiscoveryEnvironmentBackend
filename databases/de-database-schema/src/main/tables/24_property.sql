@@ -16,6 +16,7 @@ CREATE SEQUENCE property_id_seq
 CREATE TABLE property (
     hid bigint DEFAULT nextval('property_id_seq'::regclass) NOT NULL,
     id character varying(255) NOT NULL,
+    property_group_id bigint NOT NULL,
     name character varying(255) NOT NULL,
     description character varying(255),
     label text,
@@ -23,7 +24,7 @@ CREATE TABLE property (
     is_visible boolean,
     ordering integer,
     property_type bigint,
-    validator bigint,
+    required boolean DEFAULT false,
     dataobject_id bigint,
     omit_if_blank boolean DEFAULT true
 );

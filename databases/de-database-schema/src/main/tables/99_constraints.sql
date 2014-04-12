@@ -106,14 +106,6 @@ ALTER TABLE ONLY property_group
     PRIMARY KEY (hid);
 
 --
--- Name: property_group_property_pkey; Type: CONSTRAINT; Schema: public;
--- Owner: de; Tablespace:
---
-ALTER TABLE ONLY property_group_property
-    ADD CONSTRAINT property_group_property_pkey
-    PRIMARY KEY (property_group_id, hid);
-
---
 -- Name: property_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
@@ -240,22 +232,6 @@ ALTER TABLE ONLY users
     PRIMARY KEY (id);
 
 --
--- Name: validator_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
--- Tablespace:
---
-ALTER TABLE ONLY validator
-    ADD CONSTRAINT validator_pkey
-    PRIMARY KEY (hid);
-
---
--- Name: validator_rule_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
--- Tablespace:
---
-ALTER TABLE ONLY validator_rule
-    ADD CONSTRAINT validator_rule_pkey
-    PRIMARY KEY (validator_id, id);
-
---
 -- Name: value_type_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
@@ -379,22 +355,13 @@ ALTER TABLE ONLY property
     REFERENCES dataobjects(hid);
 
 --
--- Name: property_group_property_property_group_id_fkey; Type: FK CONSTRAINT;
+-- Name: property_property_group_id_fkey; Type: FK CONSTRAINT;
 -- Schema: public; Owner: de
 --
-ALTER TABLE ONLY property_group_property
-    ADD CONSTRAINT property_group_property_property_group_id_fkey
+ALTER TABLE ONLY property
+    ADD CONSTRAINT property_property_group_id_fkey
     FOREIGN KEY (property_group_id)
     REFERENCES property_group(hid);
-
---
--- Name: property_group_property_property_id_fkey; Type: FK CONSTRAINT;
--- Schema: public; Owner: de
---
-ALTER TABLE ONLY property_group_property
-    ADD CONSTRAINT property_group_property_property_id_fkey
-    FOREIGN KEY (property_id)
-    REFERENCES property(hid);
 
 --
 -- Name: property_property_type_fkey; Type: FK CONSTRAINT; Schema: public;
@@ -404,15 +371,6 @@ ALTER TABLE ONLY property
     ADD CONSTRAINT property_property_type_fkey
     FOREIGN KEY (property_type)
     REFERENCES property_type(hid);
-
---
--- Name: property_validator_fkey; Type: FK CONSTRAINT; Schema: public; Owner:
--- de
---
-ALTER TABLE ONLY property
-    ADD CONSTRAINT property_validator_fkey
-    FOREIGN KEY (validator)
-    REFERENCES validator(hid);
 
 --
 -- Name: ratings_app_id_fkey; Type: FK CONSTRAINT; Schema:
@@ -575,22 +533,14 @@ ALTER TABLE ONLY app_steps
     REFERENCES apps(id);
 
 --
--- Name: validator_rule_rule_id_fkey; Type: FK CONSTRAINT; Schema: public;
--- Owner: de
---
-ALTER TABLE ONLY validator_rule
-    ADD CONSTRAINT validator_rule_rule_id_fkey
-    FOREIGN KEY (rule_id)
-    REFERENCES rule(hid);
-
---
--- Name: validator_rule_validator_id_fkey; Type: FK CONSTRAINT; Schema:
+-- Name: rule_property_id_fkey; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --
-ALTER TABLE ONLY validator_rule
-    ADD CONSTRAINT validator_rule_validator_id_fkey
-    FOREIGN KEY (validator_id)
-    REFERENCES validator(hid);
+ALTER TABLE ONLY rule
+    ADD CONSTRAINT rule_property_id_fkey
+    FOREIGN KEY (property_id)
+    REFERENCES property(hid);
+CREATE INDEX rule_property_id_idx ON rule(property_id);
 
 --
 -- Name: workspace_root_category_id_fkey; Type: FK CONSTRAINT; Schema:
