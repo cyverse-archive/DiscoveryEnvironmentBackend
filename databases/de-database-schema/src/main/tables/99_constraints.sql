@@ -119,7 +119,7 @@ ALTER TABLE ONLY parameters
 --
 ALTER TABLE ONLY parameter_types
     ADD CONSTRAINT parameter_types_pkey
-    PRIMARY KEY (hid);
+    PRIMARY KEY (id);
 
 --
 -- Name: ratings_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
@@ -369,8 +369,8 @@ ALTER TABLE ONLY parameters
 --
 ALTER TABLE ONLY parameters
     ADD CONSTRAINT parameters_parameter_types_fkey
-    FOREIGN KEY (property_type)
-    REFERENCES parameter_types(hid);
+    FOREIGN KEY (parameter_type)
+    REFERENCES parameter_types(id);
 
 --
 -- Name: ratings_app_id_fkey; Type: FK CONSTRAINT; Schema:
@@ -654,13 +654,13 @@ ALTER TABLE ONLY tool_type_parameter_type
     REFERENCES tool_types(id);
 
 --
--- Foreign key constraint for the property_type_id field of the
+-- Foreign key constraint for the parameter_type_id field of the
 -- tool_type_parameter_type table.
 --
 ALTER TABLE ONLY tool_type_parameter_type
     ADD CONSTRAINT tool_type_parameter_type_parameter_types_fkey
-    FOREIGN KEY (property_type_id)
-    REFERENCES parameter_types(hid);
+    FOREIGN KEY (parameter_type_id)
+    REFERENCES parameter_types(id);
 
 --
 -- Foreign key constraint for the requestor_id field of the

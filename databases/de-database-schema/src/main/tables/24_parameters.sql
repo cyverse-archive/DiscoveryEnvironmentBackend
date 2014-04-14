@@ -12,7 +12,7 @@ CREATE TABLE parameters (
     defalut_value character varying(255),
     is_visible boolean,
     ordering integer,
-    property_type bigint,
+    parameter_type character varying(255),
     required boolean DEFAULT false,
     dataobject_id bigint,
     omit_if_blank boolean DEFAULT true
