@@ -106,11 +106,11 @@ ALTER TABLE ONLY parameter_groups
     PRIMARY KEY (id);
 
 --
--- Name: property_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
+-- Name: parameters_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
-ALTER TABLE ONLY property
-    ADD CONSTRAINT property_pkey
+ALTER TABLE ONLY parameters
+    ADD CONSTRAINT parameters_pkey
     PRIMARY KEY (hid);
 
 --
@@ -346,29 +346,29 @@ ALTER TABLE ONLY notifications_receivers
     REFERENCES notification(hid);
 
 --
--- Name: property_dataobject_id_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Name: parameters_dataobject_id_fkey; Type: FK CONSTRAINT; Schema: public;
 -- Owner: de
 --
-ALTER TABLE ONLY property
-    ADD CONSTRAINT property_dataobject_id_fkey
+ALTER TABLE ONLY parameters
+    ADD CONSTRAINT parameters_dataobject_id_fkey
     FOREIGN KEY (dataobject_id)
     REFERENCES dataobjects(hid);
 
 --
--- Name: property_parameter_groups_id_fkey; Type: FK CONSTRAINT;
+-- Name: parameters_parameter_groups_id_fkey; Type: FK CONSTRAINT;
 -- Schema: public; Owner: de
 --
-ALTER TABLE ONLY property
-    ADD CONSTRAINT property_parameter_groups_id_fkey
+ALTER TABLE ONLY parameters
+    ADD CONSTRAINT parameters_parameter_groups_id_fkey
     FOREIGN KEY (parameter_group_id)
     REFERENCES parameter_groups(id);
 
 --
--- Name: property_property_type_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Name: parameters_property_type_fkey; Type: FK CONSTRAINT; Schema: public;
 -- Owner: de
 --
-ALTER TABLE ONLY property
-    ADD CONSTRAINT property_property_type_fkey
+ALTER TABLE ONLY parameters
+    ADD CONSTRAINT parameters_property_type_fkey
     FOREIGN KEY (property_type)
     REFERENCES property_type(hid);
 
@@ -533,14 +533,14 @@ ALTER TABLE ONLY app_steps
     REFERENCES apps(id);
 
 --
--- Name: rule_property_id_fkey; Type: FK CONSTRAINT; Schema:
+-- Name: rule_parameters_id_fkey; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --
 ALTER TABLE ONLY rule
-    ADD CONSTRAINT rule_property_id_fkey
+    ADD CONSTRAINT rule_parameters_id_fkey
     FOREIGN KEY (property_id)
-    REFERENCES property(hid);
-CREATE INDEX rule_property_id_idx ON rule(property_id);
+    REFERENCES parameters(hid);
+CREATE INDEX rule_parameters_id_idx ON rule(property_id);
 
 --
 -- Name: workspace_root_category_id_fkey; Type: FK CONSTRAINT; Schema:
