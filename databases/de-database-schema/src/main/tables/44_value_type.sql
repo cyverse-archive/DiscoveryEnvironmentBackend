@@ -11,7 +11,7 @@ CREATE SEQUENCE value_type_id_seq
     CACHE 1;
 
 --
--- A table to store value types associated with various property types.
+-- A table to store value types associated with various parameter types.
 --
 CREATE TABLE value_type (
     hid bigint DEFAULT nextval('value_type_id_seq'::regclass) NOT NULL,
