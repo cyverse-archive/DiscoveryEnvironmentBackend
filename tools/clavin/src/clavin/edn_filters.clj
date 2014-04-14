@@ -3,7 +3,8 @@
         [clojure.set]
         [clojure.java.io :only [file]])
   (:require [clojure.edn :as edn]
-            [me.raynes.fs :as fs]))
+            [me.raynes.fs :as fs]
+            [clojure.string :as string]))
 
 (defn load-filter
   "Loads an EDN filter from disk. EDN filters must be valid EDN files."
@@ -47,3 +48,19 @@
         map-keys (first filter-file)
         xforms   (if (second filter-file) (second filter-file) {})]
     (apply-xforms (filter-keys #(contains? (set map-keys) %) dep-map) xforms)))
+
+(defn pprint-to-string
+  [m]
+  (let [sw (java.io.StringWriter.)]
+    (binding [*out* sw]
+      (clojure.pprint/pprint m))
+    (str sw)))
+
+(defn spit-edn-files
+  [dep-tuple envs-path filter-dir dest-dir]
+  (let [envs    (read-environments envs-path)
+        filters (list-filters filter-dir)]
+    (doseq [f filters]
+      (spit
+       (file dest-dir (fs/base-name f))
+       (pprint-to-string (generate-map dep-tuple envs (load-filter f))) ))))
