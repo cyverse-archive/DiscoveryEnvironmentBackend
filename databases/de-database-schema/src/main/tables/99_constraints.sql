@@ -135,7 +135,8 @@ ALTER TABLE ONLY ratings
 --
 ALTER TABLE ONLY validation_rule_arguments
     ADD CONSTRAINT validation_rule_arguments_pkey
-    PRIMARY KEY (rule_id, hid);
+    PRIMARY KEY (id);
+CREATE INDEX validation_rule_arguments_rule_id_idx ON validation_rule_arguments(rule_id);
 
 --
 -- Name: validation_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: de; Tablespace:
