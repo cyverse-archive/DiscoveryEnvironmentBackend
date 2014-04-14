@@ -26,11 +26,11 @@ ALTER TABLE ONLY file_parameters
     PRIMARY KEY (id);
 
 --
--- Name: deployed_component_data_files_pkey; Type: CONSTRAINT; Schema: public;
+-- Name: tool_test_data_files_pkey; Type: CONSTRAINT; Schema: public;
 -- Owner: de; Tablespace:
 --
-ALTER TABLE ONLY deployed_component_data_files
-    ADD CONSTRAINT deployed_component_data_files_pkey
+ALTER TABLE ONLY tool_test_data_files
+    ADD CONSTRAINT tool_test_data_files_pkey
     PRIMARY KEY (id);
 
 --
@@ -293,11 +293,11 @@ ALTER TABLE ONLY deployed_components
     REFERENCES integration_data(id);
 
 --
--- Name: deployed_component_data_files_deployed_component_id_fkey; Type: FK
+-- Name: tool_test_data_files_deployed_component_id_fkey; Type: FK
 -- CONSTRAINT; Schema: public; Owner: de
 --
-ALTER TABLE ONLY deployed_component_data_files
-    ADD CONSTRAINT deployed_component_data_files_deployed_component_id_fkey
+ALTER TABLE ONLY tool_test_data_files
+    ADD CONSTRAINT tool_test_data_files_deployed_component_id_fkey
     FOREIGN KEY (deployed_component_id)
     REFERENCES deployed_components(hid);
 
