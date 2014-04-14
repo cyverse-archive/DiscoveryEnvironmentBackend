@@ -130,11 +130,11 @@ ALTER TABLE ONLY ratings
     PRIMARY KEY (id);
 
 --
--- Name: rule_argument_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
+-- Name: validation_rule_arguments_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
-ALTER TABLE ONLY rule_argument
-    ADD CONSTRAINT rule_argument_pkey
+ALTER TABLE ONLY validation_rule_arguments
+    ADD CONSTRAINT validation_rule_arguments_pkey
     PRIMARY KEY (rule_id, hid);
 
 --
@@ -390,11 +390,11 @@ ALTER TABLE ONLY ratings
     REFERENCES users(id);
 
 --
--- Name: rule_argument_validation_rules_id_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Name: validation_rule_arguments_validation_rules_id_fkey; Type: FK CONSTRAINT; Schema: public;
 -- Owner: de
 --
-ALTER TABLE ONLY rule_argument
-    ADD CONSTRAINT rule_argument_validation_rules_id_fkey
+ALTER TABLE ONLY validation_rule_arguments
+    ADD CONSTRAINT validation_rule_arguments_validation_rules_id_fkey
     FOREIGN KEY (rule_id)
     REFERENCES validation_rules(id);
 
