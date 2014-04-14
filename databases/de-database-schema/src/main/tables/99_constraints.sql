@@ -114,11 +114,11 @@ ALTER TABLE ONLY parameters
     PRIMARY KEY (id);
 
 --
--- Name: property_type_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
+-- Name: parameter_types_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
-ALTER TABLE ONLY property_type
-    ADD CONSTRAINT property_type_pkey
+ALTER TABLE ONLY parameter_types
+    ADD CONSTRAINT parameter_types_pkey
     PRIMARY KEY (hid);
 
 --
@@ -364,13 +364,13 @@ ALTER TABLE ONLY parameters
     REFERENCES parameter_groups(id);
 
 --
--- Name: parameters_property_type_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Name: parameters_parameter_types_fkey; Type: FK CONSTRAINT; Schema: public;
 -- Owner: de
 --
 ALTER TABLE ONLY parameters
-    ADD CONSTRAINT parameters_property_type_fkey
+    ADD CONSTRAINT parameters_parameter_types_fkey
     FOREIGN KEY (property_type)
-    REFERENCES property_type(hid);
+    REFERENCES parameter_types(hid);
 
 --
 -- Name: ratings_app_id_fkey; Type: FK CONSTRAINT; Schema:
@@ -658,9 +658,9 @@ ALTER TABLE ONLY tool_type_property_type
 -- tool_type_property_type table.
 --
 ALTER TABLE ONLY tool_type_property_type
-    ADD CONSTRAINT tool_type_property_type_property_type_fkey
+    ADD CONSTRAINT tool_type_property_type_parameter_types_fkey
     FOREIGN KEY (property_type_id)
-    REFERENCES property_type(hid);
+    REFERENCES parameter_types(hid);
 
 --
 -- Foreign key constraint for the requestor_id field of the
