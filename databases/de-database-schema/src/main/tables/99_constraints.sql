@@ -646,19 +646,19 @@ ALTER TABLE ONLY deployed_components
 
 --
 -- Foreign key constraint for the tool_type_id field of the
--- tool_type_property_type table.
+-- tool_type_parameter_type table.
 --
-ALTER TABLE ONLY tool_type_property_type
-    ADD CONSTRAINT tool_type_property_type_tool_type_id_fkey
+ALTER TABLE ONLY tool_type_parameter_type
+    ADD CONSTRAINT tool_type_parameter_type_tool_type_id_fkey
     FOREIGN KEY (tool_type_id)
     REFERENCES tool_types(id);
 
 --
 -- Foreign key constraint for the property_type_id field of the
--- tool_type_property_type table.
+-- tool_type_parameter_type table.
 --
-ALTER TABLE ONLY tool_type_property_type
-    ADD CONSTRAINT tool_type_property_type_parameter_types_fkey
+ALTER TABLE ONLY tool_type_parameter_type
+    ADD CONSTRAINT tool_type_parameter_type_parameter_types_fkey
     FOREIGN KEY (property_type_id)
     REFERENCES parameter_types(hid);
 
