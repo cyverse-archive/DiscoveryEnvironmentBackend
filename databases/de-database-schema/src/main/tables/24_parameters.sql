@@ -14,6 +14,6 @@ CREATE TABLE parameters (
     ordering integer,
     parameter_type character varying(255),
     required boolean DEFAULT false,
-    dataobject_id bigint,
+    file_parameter_id character varying(255),
     omit_if_blank boolean DEFAULT true
 );

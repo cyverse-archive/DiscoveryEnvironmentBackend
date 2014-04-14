@@ -23,7 +23,7 @@ CREATE INDEX workflow_io_maps_target_idx ON workflow_io_maps(target_step);
 --
 ALTER TABLE ONLY file_parameters
     ADD CONSTRAINT file_parameters_pkey
-    PRIMARY KEY (hid);
+    PRIMARY KEY (id);
 
 --
 -- Name: deployed_component_data_files_pkey; Type: CONSTRAINT; Schema: public;
@@ -346,13 +346,13 @@ ALTER TABLE ONLY notifications_receivers
     REFERENCES notification(hid);
 
 --
--- Name: parameters_dataobject_id_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Name: parameters_file_parameter_id_fkey; Type: FK CONSTRAINT; Schema: public;
 -- Owner: de
 --
 ALTER TABLE ONLY parameters
-    ADD CONSTRAINT parameters_dataobject_id_fkey
-    FOREIGN KEY (dataobject_id)
-    REFERENCES file_parameters(hid);
+    ADD CONSTRAINT parameters_file_parameter_id_fkey
+    FOREIGN KEY (file_parameter_id)
+    REFERENCES file_parameters(id);
 
 --
 -- Name: parameters_parameter_groups_id_fkey; Type: FK CONSTRAINT;
