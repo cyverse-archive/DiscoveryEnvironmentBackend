@@ -38,52 +38,46 @@
         range-matches (re-matches range-regex range-header)]
     [(Long/parseLong (nth range-matches 2)) (Long/parseLong (nth range-matches 3))]))
 
-(defn serve
-  [filepath]
-  (init/with-jargon (jargon-cfg) [cm]
-    (cond
-     (not (info/exists? cm filepath))
-     (do (println "[anon-files]" filepath "does not exist.")
+(defmacro validated
+  [cm filepath & body]
+  `(cond
+     (not (info/exists? ~cm ~filepath))
+     (do (println "[anon-files]" ~filepath "does not exist.")
        (not-found "Not found."))
 
-     (not (info/is-file? cm filepath))
-     (do (println "[anon-files]" filepath "is not a file.")
+     (not (info/is-file? ~cm ~filepath))
+     (do (println "[anon-files]" ~filepath "is not a file.")
        (-> (response "Not a file.") (status 403)))
 
-     (not (perms/is-readable? cm (:anon-user @props) filepath))
-     (do (println "[anon-files]" filepath "is not readable.")
+     (not (perms/is-readable? ~cm (:anon-user @props) ~filepath))
+     (do (println "[anon-files]" ~filepath "is not readable.")
        (-> (response "Insufficient privileges.") (status 403)))
 
      :else
-     (ops/input-stream cm filepath))))
+     ~@body))
+
+(defn serve
+  [filepath]
+  (init/with-jargon (jargon-cfg) [cm]
+    (validated cm filepath (ops/input-stream cm filepath))))
+
+(defn- range-body
+  [cm filepath start-byte end-byte]
+  (java.io.ByteArrayInputStream.
+   (paging/read-at-position cm filepath start-byte (- end-byte start-byte) false)))
+
+(defn- range-header
+  [start-byte end-byte]
+  {"Content-Range" (str "bytes " start-byte "-" end-byte)
+   "Accept-Ranges" "bytes"})
 
 (defn serve-range
   [filepath [start-byte end-byte]]
   (init/with-jargon (jargon-cfg) [cm]
-    (cond
-     (not (info/exists? cm filepath))
-     (do (println "[anon-files]" filepath "does not exist.")
-       (not-found "Not found."))
-
-     (not (info/is-file? cm filepath))
-     (do (println "[anon-files]" filepath "is not a file.")
-       (-> (response "Not a file.") (status 403)))
-
-     (not (perms/is-readable? cm (:anon-user @props) filepath))
-     (do (println "[anon-files]" filepath "is not readable.")
-       (-> (response "Insufficient privileges.") (status 403)))
-
-     :else
-     {:status 206
-      :body
-      (java.io.ByteArrayInputStream.
-       (paging/read-at-position cm filepath start-byte (- end-byte start-byte) false))
-      :headers
-      {"Content-Range"
-       (str "bytes " start-byte "-" end-byte)
-
-       "Accept-Ranges"
-       "bytes"}})))
+    (validated cm filepath
+      {:status   206
+       :body    (range-body cm filepath start-byte end-byte)
+       :headers (range-header start-byte end-byte)})))
 
 (defn handle-request
   [req]
