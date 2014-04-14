@@ -138,10 +138,10 @@ ALTER TABLE ONLY rule_argument
     PRIMARY KEY (rule_id, hid);
 
 --
--- Name: rule_pkey; Type: CONSTRAINT; Schema: public; Owner: de; Tablespace:
+-- Name: validation_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: de; Tablespace:
 --
-ALTER TABLE ONLY rule
-    ADD CONSTRAINT rule_pkey
+ALTER TABLE ONLY validation_rules
+    ADD CONSTRAINT validation_rules_pkey
     PRIMARY KEY (hid);
 
 --
@@ -390,19 +390,19 @@ ALTER TABLE ONLY ratings
     REFERENCES users(id);
 
 --
--- Name: rule_argument_rule_id_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Name: rule_argument_validation_rules_id_fkey; Type: FK CONSTRAINT; Schema: public;
 -- Owner: de
 --
 ALTER TABLE ONLY rule_argument
-    ADD CONSTRAINT rule_argument_rule_id_fkey
+    ADD CONSTRAINT rule_argument_validation_rules_id_fkey
     FOREIGN KEY (rule_id)
-    REFERENCES rule(hid);
+    REFERENCES validation_rules(hid);
 
 --
--- Name: rule_rule_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: de
+-- Name: validation_rules_rule_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: de
 --
-ALTER TABLE ONLY rule
-    ADD CONSTRAINT rule_rule_type_fkey
+ALTER TABLE ONLY validation_rules
+    ADD CONSTRAINT validation_rules_rule_type_fkey
     FOREIGN KEY (rule_type)
     REFERENCES rule_type(hid);
 
@@ -533,14 +533,14 @@ ALTER TABLE ONLY app_steps
     REFERENCES apps(id);
 
 --
--- Name: rule_parameters_id_fkey; Type: FK CONSTRAINT; Schema:
+-- Name: validation_rules_parameters_id_fkey; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --
-ALTER TABLE ONLY rule
-    ADD CONSTRAINT rule_parameters_id_fkey
+ALTER TABLE ONLY validation_rules
+    ADD CONSTRAINT validation_rules_parameters_id_fkey
     FOREIGN KEY (parameter_id)
     REFERENCES parameters(id);
-CREATE INDEX rule_parameters_id_idx ON rule(parameter_id);
+CREATE INDEX validation_rules_parameters_id_idx ON validation_rules(parameter_id);
 
 --
 -- Name: workspace_root_category_id_fkey; Type: FK CONSTRAINT; Schema:
