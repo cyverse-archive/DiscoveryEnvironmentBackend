@@ -111,7 +111,7 @@ ALTER TABLE ONLY parameter_groups
 --
 ALTER TABLE ONLY parameters
     ADD CONSTRAINT parameters_pkey
-    PRIMARY KEY (hid);
+    PRIMARY KEY (id);
 
 --
 -- Name: property_type_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
@@ -538,9 +538,9 @@ ALTER TABLE ONLY app_steps
 --
 ALTER TABLE ONLY rule
     ADD CONSTRAINT rule_parameters_id_fkey
-    FOREIGN KEY (property_id)
-    REFERENCES parameters(hid);
-CREATE INDEX rule_parameters_id_idx ON rule(property_id);
+    FOREIGN KEY (parameter_id)
+    REFERENCES parameters(id);
+CREATE INDEX rule_parameters_id_idx ON rule(parameter_id);
 
 --
 -- Name: workspace_root_category_id_fkey; Type: FK CONSTRAINT; Schema:
