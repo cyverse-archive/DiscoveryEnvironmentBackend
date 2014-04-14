@@ -1,9 +1,9 @@
 SET search_path = public, pg_catalog;
 
 --
--- ID sequence for the property_group table.
+-- ID sequence for the parameter_groups table.
 --
-CREATE SEQUENCE property_group_id_seq
+CREATE SEQUENCE parameter_groups_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MAXVALUE
@@ -11,10 +11,10 @@ CREATE SEQUENCE property_group_id_seq
     CACHE 1;
 
 --
--- property_group table
+-- parameter_groups table
 --
-CREATE TABLE property_group (
-    hid bigint DEFAULT nextval('property_group_id_seq'::regclass) NOT NULL,
+CREATE TABLE parameter_groups (
+    hid bigint DEFAULT nextval('parameter_groups_id_seq'::regclass) NOT NULL,
     id character varying(255) NOT NULL,
     task_id character varying(255) NOT NULL,
     name character varying(255) NOT NULL,

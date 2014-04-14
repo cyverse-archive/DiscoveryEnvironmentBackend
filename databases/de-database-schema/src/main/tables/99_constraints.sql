@@ -98,11 +98,11 @@ ALTER TABLE ONLY notifications_receivers
     PRIMARY KEY (notification_id, hid);
 
 --
--- Name: property_group_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
+-- Name: parameter_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
-ALTER TABLE ONLY property_group
-    ADD CONSTRAINT property_group_pkey
+ALTER TABLE ONLY parameter_groups
+    ADD CONSTRAINT parameter_groups_pkey
     PRIMARY KEY (hid);
 
 --
@@ -355,13 +355,13 @@ ALTER TABLE ONLY property
     REFERENCES dataobjects(hid);
 
 --
--- Name: property_property_group_id_fkey; Type: FK CONSTRAINT;
+-- Name: property_parameter_groups_id_fkey; Type: FK CONSTRAINT;
 -- Schema: public; Owner: de
 --
 ALTER TABLE ONLY property
-    ADD CONSTRAINT property_property_group_id_fkey
+    ADD CONSTRAINT property_parameter_groups_id_fkey
     FOREIGN KEY (property_group_id)
-    REFERENCES property_group(hid);
+    REFERENCES parameter_groups(hid);
 
 --
 -- Name: property_property_type_fkey; Type: FK CONSTRAINT; Schema: public;
@@ -479,11 +479,11 @@ ALTER TABLE ONLY app_category_app
     REFERENCES apps(id);
 
 --
--- Name: property_group_task_id_fkey; Type: FK CONSTRAINT;
+-- Name: parameter_groups_task_id_fkey; Type: FK CONSTRAINT;
 -- Schema: public; Owner: de
 --
-ALTER TABLE ONLY property_group
-    ADD CONSTRAINT property_group_task_id_fkey
+ALTER TABLE ONLY parameter_groups
+    ADD CONSTRAINT parameter_groups_task_id_fkey
     FOREIGN KEY (task_id)
     REFERENCES tasks(id);
 
