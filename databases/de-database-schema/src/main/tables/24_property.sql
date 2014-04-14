@@ -16,7 +16,7 @@ CREATE SEQUENCE property_id_seq
 CREATE TABLE property (
     hid bigint DEFAULT nextval('property_id_seq'::regclass) NOT NULL,
     id character varying(255) NOT NULL,
-    property_group_id bigint NOT NULL,
+    parameter_group_id character varying(255) NOT NULL,
     name character varying(255) NOT NULL,
     description character varying(255),
     label text,

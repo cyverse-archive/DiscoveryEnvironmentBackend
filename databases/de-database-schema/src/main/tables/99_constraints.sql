@@ -103,7 +103,7 @@ ALTER TABLE ONLY notifications_receivers
 --
 ALTER TABLE ONLY parameter_groups
     ADD CONSTRAINT parameter_groups_pkey
-    PRIMARY KEY (hid);
+    PRIMARY KEY (id);
 
 --
 -- Name: property_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
@@ -360,8 +360,8 @@ ALTER TABLE ONLY property
 --
 ALTER TABLE ONLY property
     ADD CONSTRAINT property_parameter_groups_id_fkey
-    FOREIGN KEY (property_group_id)
-    REFERENCES parameter_groups(hid);
+    FOREIGN KEY (parameter_group_id)
+    REFERENCES parameter_groups(id);
 
 --
 -- Name: property_property_type_fkey; Type: FK CONSTRAINT; Schema: public;
