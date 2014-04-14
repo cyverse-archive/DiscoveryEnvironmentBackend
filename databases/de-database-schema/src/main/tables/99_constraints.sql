@@ -34,11 +34,11 @@ ALTER TABLE ONLY tool_test_data_files
     PRIMARY KEY (id);
 
 --
--- Name: deployed_components_pkey; Type: CONSTRAINT; Schema: public; Owner:
+-- Name: tools_pkey; Type: CONSTRAINT; Schema: public; Owner:
 -- de; Tablespace:
 --
-ALTER TABLE ONLY deployed_components
-    ADD CONSTRAINT deployed_components_pkey
+ALTER TABLE ONLY tools
+    ADD CONSTRAINT tools_pkey
     PRIMARY KEY (hid);
 
 --
@@ -263,7 +263,7 @@ ALTER TABLE ONLY file_parameters
 -- Name: deployed_comp_integration_data_id_fk; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --
-ALTER TABLE ONLY deployed_components
+ALTER TABLE ONLY tools
     ADD CONSTRAINT deployed_comp_integration_data_id_fk
     FOREIGN KEY (integration_data_id)
     REFERENCES integration_data(id);
@@ -275,7 +275,7 @@ ALTER TABLE ONLY deployed_components
 ALTER TABLE ONLY tool_test_data_files
     ADD CONSTRAINT tool_test_data_files_deployed_component_id_fkey
     FOREIGN KEY (deployed_component_id)
-    REFERENCES deployed_components(hid);
+    REFERENCES tools(hid);
 
 --
 -- Name: workflow_io_maps_source_fkey; Type: FK CONSTRAINT; Schema:
@@ -606,11 +606,11 @@ ALTER TABLE ONLY file_parameters
     REFERENCES data_source(id);
 
 --
--- Foreign key constraint for the tool_type_id field of the deployed_components
+-- Foreign key constraint for the tool_type_id field of the tools
 -- table.
 --
-ALTER TABLE ONLY deployed_components
-    ADD CONSTRAINT deployed_components_tool_type_id_fkey
+ALTER TABLE ONLY tools
+    ADD CONSTRAINT tools_tool_type_id_fkey
     FOREIGN KEY (tool_type_id)
     REFERENCES tool_types(id);
 
@@ -648,7 +648,7 @@ ALTER TABLE ONLY tool_requests
 ALTER TABLE ONLY tool_requests
     ADD CONSTRAINT tool_requests_deployed_component_id_fkey
     FOREIGN KEY (deployed_component_id)
-    REFERENCES deployed_components(hid);
+    REFERENCES tools(hid);
 
 --
 -- Foreign key constraint for the updater_id field of the tool_request_statuses

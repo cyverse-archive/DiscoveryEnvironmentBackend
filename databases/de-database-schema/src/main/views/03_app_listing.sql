@@ -37,8 +37,8 @@ CREATE VIEW app_listing AS
          LEFT JOIN integration_data integration ON apps.integration_data_id = integration.id
          LEFT JOIN app_steps steps ON apps.id = steps.app_id
          LEFT JOIN tasks t ON steps.task_id = t.id
-         LEFT JOIN deployed_components dc ON t.component_id = dc.id
-         LEFT JOIN tool_types tt ON dc.tool_type_id = tt.id
+         LEFT JOIN tools tool ON t.component_id = tool.id
+         LEFT JOIN tool_types tt ON tool.tool_type_id = tt.id
     GROUP BY apps.id,
              apps."name",
              apps.description,
