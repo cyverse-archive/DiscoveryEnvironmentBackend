@@ -142,7 +142,7 @@ ALTER TABLE ONLY rule_argument
 --
 ALTER TABLE ONLY validation_rules
     ADD CONSTRAINT validation_rules_pkey
-    PRIMARY KEY (hid);
+    PRIMARY KEY (id);
 
 --
 -- Name: rule_subtype_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
@@ -396,7 +396,7 @@ ALTER TABLE ONLY ratings
 ALTER TABLE ONLY rule_argument
     ADD CONSTRAINT rule_argument_validation_rules_id_fkey
     FOREIGN KEY (rule_id)
-    REFERENCES validation_rules(hid);
+    REFERENCES validation_rules(id);
 
 --
 -- Name: validation_rules_rule_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: de
