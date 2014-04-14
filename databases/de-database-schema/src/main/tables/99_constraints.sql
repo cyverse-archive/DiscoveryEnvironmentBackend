@@ -39,7 +39,7 @@ ALTER TABLE ONLY tool_test_data_files
 --
 ALTER TABLE ONLY tools
     ADD CONSTRAINT tools_pkey
-    PRIMARY KEY (hid);
+    PRIMARY KEY (id);
 
 --
 -- Name: info_type_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
@@ -274,8 +274,8 @@ ALTER TABLE ONLY tools
 --
 ALTER TABLE ONLY tool_test_data_files
     ADD CONSTRAINT tool_test_data_files_deployed_component_id_fkey
-    FOREIGN KEY (deployed_component_id)
-    REFERENCES tools(hid);
+    FOREIGN KEY (tool_id)
+    REFERENCES tools(id);
 
 --
 -- Name: workflow_io_maps_source_fkey; Type: FK CONSTRAINT; Schema:
@@ -647,8 +647,8 @@ ALTER TABLE ONLY tool_requests
 --
 ALTER TABLE ONLY tool_requests
     ADD CONSTRAINT tool_requests_deployed_component_id_fkey
-    FOREIGN KEY (deployed_component_id)
-    REFERENCES tools(hid);
+    FOREIGN KEY (tool_id)
+    REFERENCES tools(id);
 
 --
 -- Foreign key constraint for the updater_id field of the tool_request_statuses

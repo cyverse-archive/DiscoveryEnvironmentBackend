@@ -17,5 +17,5 @@ CREATE TABLE tool_test_data_files (
     id bigint DEFAULT nextval('tool_test_data_files_id_seq'::regclass) NOT NULL,
     filename character varying(1024) NOT NULL,
     input_file boolean DEFAULT true,
-    deployed_component_id bigint
+    tool_id character varying(255)
 );

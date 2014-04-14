@@ -30,6 +30,6 @@ CREATE TABLE tool_requests (
     instructions TEXT NOT NULL,
     additional_info TEXT,
     additional_data_file TEXT,
-    deployed_component_id BIGINT,
+    tool_id VARCHAR(255),
     PRIMARY KEY(id)
 );

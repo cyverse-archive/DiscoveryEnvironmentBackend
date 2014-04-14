@@ -7,7 +7,6 @@ CREATE VIEW tool_listing AS
     SELECT row_number() OVER (ORDER BY apps.id, steps.step) AS id,
            apps.id AS app_id,
            steps.step AS execution_order,
-           tool.hid AS tool_hid,
            tool.id AS tool_id,
            tool."name",
            tool.description,
