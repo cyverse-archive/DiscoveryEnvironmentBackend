@@ -66,38 +66,6 @@ ALTER TABLE ONLY multiplicity
     PRIMARY KEY (hid);
 
 --
--- Name: notification_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
--- Tablespace:
---
-ALTER TABLE ONLY notification
-    ADD CONSTRAINT notification_pkey
-    PRIMARY KEY (hid);
-
---
--- Name: notification_set_notification_pkey; Type: CONSTRAINT; Schema: public;
--- Owner: de; Tablespace:
---
-ALTER TABLE ONLY notification_set_notification
-    ADD CONSTRAINT notification_set_notification_pkey
-    PRIMARY KEY (notification_set_id, hid);
-
---
--- Name: notification_set_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
--- Tablespace:
---
-ALTER TABLE ONLY notification_set
-    ADD CONSTRAINT notification_set_pkey
-    PRIMARY KEY (hid);
-
---
--- Name: notifications_receivers_pkey; Type: CONSTRAINT; Schema: public;
--- Owner: de; Tablespace:
---
-ALTER TABLE ONLY notifications_receivers
-    ADD CONSTRAINT notifications_receivers_pkey
-    PRIMARY KEY (notification_id, hid);
-
---
 -- Name: parameter_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
@@ -318,33 +286,6 @@ ALTER TABLE ONLY workflow_io_maps
     ADD CONSTRAINT workflow_io_maps_target_fkey
     FOREIGN KEY (target_step)
     REFERENCES app_steps(id);
-
---
--- Name: notification_set_notification_notification_id_fkey; Type: FK
--- CONSTRAINT; Schema: public; Owner: de
---
-ALTER TABLE ONLY notification_set_notification
-    ADD CONSTRAINT notification_set_notification_notification_id_fkey
-    FOREIGN KEY (notification_id)
-    REFERENCES notification(hid);
-
---
--- Name: notification_set_notification_notification_set_id_fkey; Type: FK
--- CONSTRAINT; Schema: public; Owner: de
---
-ALTER TABLE ONLY notification_set_notification
-    ADD CONSTRAINT notification_set_notification_notification_set_id_fkey
-    FOREIGN KEY (notification_set_id)
-    REFERENCES notification_set(hid);
-
---
--- Name: notifications_receivers_notification_id_fkey; Type: FK CONSTRAINT;
--- Schema: public; Owner: de
---
-ALTER TABLE ONLY notifications_receivers
-    ADD CONSTRAINT notifications_receivers_notification_id_fkey
-    FOREIGN KEY (notification_id)
-    REFERENCES notification(hid);
 
 --
 -- Name: parameters_file_parameter_id_fkey; Type: FK CONSTRAINT; Schema: public;
