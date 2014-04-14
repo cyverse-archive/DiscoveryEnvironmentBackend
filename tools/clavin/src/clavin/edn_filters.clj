@@ -63,4 +63,5 @@
     (doseq [f filters]
       (spit
        (file dest-dir (fs/base-name f))
-       (pprint-to-string (generate-map dep-tuple envs (load-filter f))) ))))
+       (pprint-to-string (generate-map dep-tuple envs (load-filter f))))
+      (println "Wrote out" (str (file dest-dir (fs/base-name f)))))))
