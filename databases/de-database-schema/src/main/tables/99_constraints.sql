@@ -82,6 +82,14 @@ ALTER TABLE ONLY parameters
     PRIMARY KEY (id);
 
 --
+-- Name: parameter_values_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
+-- Tablespace:
+--
+ALTER TABLE ONLY parameter_values
+    ADD CONSTRAINT parameter_values_pkey
+    PRIMARY KEY (id);
+
+--
 -- Name: parameter_types_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
@@ -313,6 +321,26 @@ ALTER TABLE ONLY parameters
     ADD CONSTRAINT parameters_parameter_types_fkey
     FOREIGN KEY (parameter_type)
     REFERENCES parameter_types(id);
+
+--
+-- Name: parameter_values_parameter_id_fkey; Type: FK CONSTRAINT; Schema:
+-- public; Owner: de
+--
+ALTER TABLE ONLY parameter_values
+    ADD CONSTRAINT parameter_values_parameter_id_fkey
+    FOREIGN KEY (parameter_id)
+    REFERENCES parameters(id);
+CREATE INDEX parameter_values_parameter_id_idx ON parameter_values(parameter_id);
+
+--
+-- Name: parameter_values_parent_id_fkey; Type: FK CONSTRAINT; Schema:
+-- public; Owner: de
+--
+ALTER TABLE ONLY parameter_values
+    ADD CONSTRAINT parameter_values_parent_id_fkey
+    FOREIGN KEY (parent_id)
+    REFERENCES parameter_values(id);
+CREATE INDEX parameter_values_parent_id_idx ON parameter_values(parent_id);
 
 --
 -- Name: ratings_app_id_fkey; Type: FK CONSTRAINT; Schema:
