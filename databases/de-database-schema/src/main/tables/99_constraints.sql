@@ -18,11 +18,11 @@ CREATE INDEX workflow_io_maps_source_idx ON workflow_io_maps(source_step);
 CREATE INDEX workflow_io_maps_target_idx ON workflow_io_maps(target_step);
 
 --
--- Name: dataobjects_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
+-- Name: file_parameters_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
-ALTER TABLE ONLY dataobjects
-    ADD CONSTRAINT dataobjects_pkey
+ALTER TABLE ONLY file_parameters
+    ADD CONSTRAINT file_parameters_pkey
     PRIMARY KEY (hid);
 
 --
@@ -256,29 +256,29 @@ ALTER TABLE ONLY workspace
     PRIMARY KEY (id);
 
 --
--- Name: dataobjects_data_format_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Name: file_parameters_data_format_fkey; Type: FK CONSTRAINT; Schema: public;
 -- Owner: de
 --
-ALTER TABLE ONLY dataobjects
-    ADD CONSTRAINT dataobjects_data_format_fkey
+ALTER TABLE ONLY file_parameters
+    ADD CONSTRAINT file_parameters_data_format_fkey
     FOREIGN KEY (data_format)
     REFERENCES data_formats(id);
 
 --
--- Name: dataobjects_info_type_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Name: file_parameters_info_type_fkey; Type: FK CONSTRAINT; Schema: public;
 -- Owner: de
 --
-ALTER TABLE ONLY dataobjects
-    ADD CONSTRAINT dataobjects_info_type_fkey
+ALTER TABLE ONLY file_parameters
+    ADD CONSTRAINT file_parameters_info_type_fkey
     FOREIGN KEY (info_type)
     REFERENCES info_type(hid);
 
 --
--- Name: dataobjects_multiplicity_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Name: file_parameters_multiplicity_fkey; Type: FK CONSTRAINT; Schema: public;
 -- Owner: de
 --
-ALTER TABLE ONLY dataobjects
-    ADD CONSTRAINT dataobjects_multiplicity_fkey
+ALTER TABLE ONLY file_parameters
+    ADD CONSTRAINT file_parameters_multiplicity_fkey
     FOREIGN KEY (multiplicity)
     REFERENCES multiplicity(hid);
 
@@ -352,7 +352,7 @@ ALTER TABLE ONLY notifications_receivers
 ALTER TABLE ONLY parameters
     ADD CONSTRAINT parameters_dataobject_id_fkey
     FOREIGN KEY (dataobject_id)
-    REFERENCES dataobjects(hid);
+    REFERENCES file_parameters(hid);
 
 --
 -- Name: parameters_parameter_groups_id_fkey; Type: FK CONSTRAINT;
@@ -628,10 +628,10 @@ ALTER TABLE ONLY data_source
     UNIQUE (name);
 
 --
--- Foreign key constraint for the data_source field of the dataobjects table.
+-- Foreign key constraint for the data_source field of the file_parameters table.
 --
-ALTER TABLE ONLY dataobjects
-    ADD CONSTRAINT dataobjects_data_source_id_fkey
+ALTER TABLE ONLY file_parameters
+    ADD CONSTRAINT file_parameters_data_source_id_fkey
     FOREIGN KEY (data_source_id)
     REFERENCES data_source(id);
 
