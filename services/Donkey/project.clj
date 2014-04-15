@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 (use '[clojure.java.shell :only (sh)])
 (require '[clojure.string :as string])
 
@@ -77,6 +78,4 @@
                  ["nexml"
                   {:url "http://nexml-dev.nescent.org/.m2/repository"
                    :checksum :ignore
-                   :update :daily}]]
-  :deploy-repositories [["sonatype-nexus-staging"
-                         {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]])
+                   :update :daily}]])

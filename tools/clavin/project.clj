@@ -24,6 +24,8 @@
   :dependencies [[org.antlr/stringtemplate "4.0.2"]
                  [org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.cli "0.2.1"]
+                 [medley "0.1.5"]
+                 [me.raynes/fs "1.4.4"]
                  [org.iplantc/clojure-commons "4.0.0"]
                  [zookeeper-clj "0.9.1"]]
   :plugins [[org.iplantc/lein-iplant-cmdtar "4.0.0"]

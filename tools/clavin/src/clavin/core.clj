@@ -8,6 +8,7 @@
             [clavin.loader :as loader]
             [clavin.templates :as ct]
             [clavin.zk :as zk]
+            [clavin.edn-filters :as ednf]
             [clojure-commons.file-utils :as ft]
             [clojure.string :as string]
             [clojure-commons.props :as ccprops]))
@@ -84,6 +85,23 @@
 
 (def ^:private required-files-args
   [:envs-file :template-dir :deployment :dest])
+
+(defn parse-edn-args
+  "Parses the arguments for the 'edn' subcommand."
+  [args]
+  (cli/cli
+   args
+   ["-h" "--help" "Show help." :defaul false :flag true]
+   ["-f" "--envs-file" "The file containing the environment definitions"
+    :default nil]
+   ["-t" "--filter-dir" "The directory containing the edn filters."]
+   ["-e" "--env" "The environment that the options are for." :default nil]
+   ["-d" "--deployment" "The deployment that the options are for."
+    :default nil]
+   ["--dest" "The destination directory for the files." :default nil]))
+
+(def ^:private required-edn-args
+  [:envs-file :filter-dir :deployment :dest])
 
 (defn parse-hosts-args
   "Parses the arguments for the 'hosts' subcommand."
@@ -270,6 +288,39 @@
 
       (gen/generate-all-files env template-dir templates dest))))
 
+(defn handle-edn
+  "Performs tasks for the end subcommand."
+  [args]
+  (let [[opts args help-str] (parse-edn-args args)]
+    (validate-opts opts help-str required-edn-args)
+
+    (cond
+     (not (ft/exists? (:envs-file opts)))
+     (do (println (:envs-file opts) "does not exist.")
+       (System/exit 1))
+
+     (not (ft/exists? (:dest opts)))
+     (do (println (:dest opts) "does not exist.")
+       (System/exit 1))
+
+     (not (ft/dir? (:dest opts)))
+     (do (println (:dest opts) "is not a directory.")
+       (System/exit 1))
+
+     (not (ft/exists? (:filter-dir opts)))
+     (do (println (:filter-dir opts) "does not exist.")
+       (System/exit 1))
+
+     (not (ft/dir? (:filter-dir opts)))
+     (do (println (:filter-dir opts) "is not a directory.")
+       (System/exit 1)))
+
+    (let [env (or (:env opts)
+                  (env/env-for-dep (env/load-envs (:envs-file opts)) (:deployment opts)))
+          dep (:deployment opts)
+          dep-tuple [(keyword env) (keyword dep)]]
+      (ednf/spit-edn-files dep-tuple (:envs-file opts) (:filter-dir opts) (:dest opts)))))
+
 (defn handle-properties
   "Performs tasks for the props subcommand."
   [args-vec]
@@ -378,6 +429,7 @@
 (def ^:private subcommand-fns
   {"help"      (fn [args] (main-help args) (System/exit 0))
    "files"     handle-files
+   "edn"       handle-edn
    "props"     handle-properties
    "get-props" handle-get-props
    "hosts"     handle-hosts

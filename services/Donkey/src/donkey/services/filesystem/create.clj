@@ -13,6 +13,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.services.filesystem.stat :as stat]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn create
@@ -30,7 +31,7 @@
       (validators/path-not-exists cm fixed-path)
       (mkdir cm fixed-path)
       (set-owner cm fixed-path user)
-      {:path fixed-path :permissions (collection-perm-map cm user fixed-path)})))
+      (stat/path-stat user fixed-path))))
 
 (defn do-create
   "Entrypoint for the API that calls (create)."

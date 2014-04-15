@@ -152,6 +152,19 @@
   :language :clojure
   :archive? false}
 
+ "common-cli"
+ {:type     :library
+  :type-num 12
+  :path     "libs/common-cli"
+  :build    :lein
+  :install  :lein
+  :rpm?     false
+  :tarball? false
+  :uberjar? false
+  :install? true
+  :language :clojure
+  :archive? false}
+
  "kameleon"
  {:type     :library
   :type-num 6
@@ -306,6 +319,17 @@
   :path     "services/OSM"
   :build    :lein
   :rpm?     true
+  :tarball? false
+  :uberjar? true
+  :install? false
+  :language :clojure
+  :archive? true}
+
+ "anon-files"
+ {:type     :service
+  :path     "services/anon-files"
+  :build    :lein
+  :rpm?     :true
   :tarball? false
   :uberjar? true
   :install? false
