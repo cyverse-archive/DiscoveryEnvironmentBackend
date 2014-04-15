@@ -4,14 +4,14 @@ SET search_path = public, pg_catalog;
 -- A function that returns all of the app categories underneath the one
 -- with the given identifier.
 --
-CREATE FUNCTION app_category_hierarchy(varchar(255))
+CREATE FUNCTION app_category_hierarchy(uuid)
 RETURNS
 TABLE(
-    parent_id varchar(255),
-    id varchar(255),
+    parent_id uuid,
+    id uuid,
     name varchar(255),
     description varchar(255),
-    workspace_id bigint,
+    workspace_id uuid,
     is_public boolean,
     app_count bigint
 ) AS $$

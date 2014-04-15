@@ -5,6 +5,6 @@ SET search_path = public, pg_catalog;
 -- be categorized in by the admins.
 --
 CREATE TABLE suggested_groups (
-    app_id character varying(255) NOT NULL,
-    app_category_id character varying(255) NOT NULL
+    app_id uuid NOT NULL,
+    app_category_id uuid NOT NULL
 );

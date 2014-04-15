@@ -5,6 +5,6 @@ SET search_path = public, pg_catalog;
 -- components.
 --
 CREATE TABLE tool_type_parameter_type (
-   tool_type_id character varying(255) NOT NULL,
-   parameter_type_id character varying(255) NOT NULL
+   tool_type_id uuid NOT NULL,
+   parameter_type_id uuid NOT NULL
 );

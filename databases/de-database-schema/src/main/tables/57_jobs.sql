@@ -12,7 +12,7 @@ CREATE TABLE jobs (
     end_date timestamp,
     status character varying(64) NOT NULL,
     deleted boolean DEFAULT FALSE NOT NULL,
-    job_type_id bigint REFERENCES job_types(id) NOT NULL,
-    user_id bigint NOT NULL,
+    job_type_id uuid REFERENCES job_types(id) NOT NULL,
+    user_id uuid NOT NULL,
     PRIMARY KEY (id)
 );

@@ -1,9 +1,9 @@
 --
--- Name: data_format_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
+-- Name: data_formats_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
 ALTER TABLE ONLY data_formats
-    ADD CONSTRAINT data_format_pkey
+    ADD CONSTRAINT data_formats_pkey
     PRIMARY KEY (id);
 
 --
@@ -47,7 +47,7 @@ ALTER TABLE ONLY tools
 --
 ALTER TABLE ONLY info_type
     ADD CONSTRAINT info_type_pkey
-    PRIMARY KEY (hid);
+    PRIMARY KEY (id);
 
 --
 -- Name: integration_data_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
@@ -63,7 +63,7 @@ ALTER TABLE ONLY integration_data
 --
 ALTER TABLE ONLY multiplicity
     ADD CONSTRAINT multiplicity_pkey
-    PRIMARY KEY (hid);
+    PRIMARY KEY (id);
 
 --
 -- Name: parameter_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
@@ -127,7 +127,7 @@ ALTER TABLE ONLY validation_rules
 --
 ALTER TABLE ONLY rule_subtype
     ADD CONSTRAINT rule_subtype_pkey
-    PRIMARY KEY (hid);
+    PRIMARY KEY (id);
 
 --
 -- Name: rule_type_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
@@ -135,7 +135,7 @@ ALTER TABLE ONLY rule_subtype
 --
 ALTER TABLE ONLY rule_type
     ADD CONSTRAINT rule_type_pkey
-    PRIMARY KEY (hid);
+    PRIMARY KEY (id);
 
 --
 -- Name: suggested_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
@@ -214,7 +214,7 @@ ALTER TABLE ONLY users
 --
 ALTER TABLE ONLY value_type
     ADD CONSTRAINT value_type_pkey
-    PRIMARY KEY (hid);
+    PRIMARY KEY (id);
 
 --
 -- Name: votes_unique; Type: CONSTRAINT; Schema: public; Owner: de;
@@ -248,7 +248,7 @@ ALTER TABLE ONLY file_parameters
 ALTER TABLE ONLY file_parameters
     ADD CONSTRAINT file_parameters_info_type_fkey
     FOREIGN KEY (info_type)
-    REFERENCES info_type(hid);
+    REFERENCES info_type(id);
 
 --
 -- Name: file_parameters_multiplicity_fkey; Type: FK CONSTRAINT; Schema: public;
@@ -257,7 +257,7 @@ ALTER TABLE ONLY file_parameters
 ALTER TABLE ONLY file_parameters
     ADD CONSTRAINT file_parameters_multiplicity_fkey
     FOREIGN KEY (multiplicity)
-    REFERENCES multiplicity(hid);
+    REFERENCES multiplicity(id);
 
 --
 -- Name: deployed_comp_integration_data_id_fk; Type: FK CONSTRAINT; Schema:
@@ -343,6 +343,15 @@ ALTER TABLE ONLY parameter_values
 CREATE INDEX parameter_values_parent_id_idx ON parameter_values(parent_id);
 
 --
+-- Name: parameter_types_value_type_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Owner: de
+--
+ALTER TABLE ONLY parameter_types
+    ADD CONSTRAINT parameter_types_value_type_fkey
+    FOREIGN KEY (value_type_id)
+    REFERENCES value_type(id);
+
+--
 -- Name: ratings_app_id_fkey; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --
@@ -374,7 +383,16 @@ ALTER TABLE ONLY validation_rule_arguments
 ALTER TABLE ONLY validation_rules
     ADD CONSTRAINT validation_rules_rule_type_fkey
     FOREIGN KEY (rule_type)
-    REFERENCES rule_type(hid);
+    REFERENCES rule_type(id);
+
+--
+-- Name: rule_type_rule_subtype_id_fkey; Type: FK CONSTRAINT; Schema:
+-- public; Owner: de
+--
+ALTER TABLE ONLY rule_type
+    ADD CONSTRAINT rule_type_rule_subtype_id_fkey
+    FOREIGN KEY (rule_subtype_id)
+    REFERENCES rule_subtype(id);
 
 --
 -- Name: rule_type_value_type_rule_type_id_fkey; Type: FK CONSTRAINT; Schema:
@@ -383,7 +401,7 @@ ALTER TABLE ONLY validation_rules
 ALTER TABLE ONLY rule_type_value_type
     ADD CONSTRAINT rule_type_value_type_rule_type_id_fkey
     FOREIGN KEY (rule_type_id)
-    REFERENCES rule_type(hid);
+    REFERENCES rule_type(id);
 
 --
 -- Name: rule_type_value_type_value_type_id_fkey; Type: FK CONSTRAINT; Schema:
@@ -392,7 +410,7 @@ ALTER TABLE ONLY rule_type_value_type
 ALTER TABLE ONLY rule_type_value_type
     ADD CONSTRAINT rule_type_value_type_value_type_id_fkey
     FOREIGN KEY (value_type_id)
-    REFERENCES value_type(hid);
+    REFERENCES value_type(id);
 
 --
 -- Name: suggested_groups_app_category_id_fkey; Type: FK CONSTRAINT; Schema:
@@ -544,6 +562,7 @@ ALTER TABLE ONLY genome_reference
     ADD CONSTRAINT genome_reference_created_by_fkey
     FOREIGN KEY (created_by)
     REFERENCES users(id);
+
 --
 -- Name: genome_reference_last_modified_by_fkey; Type: CONSTRAINT; Schema:
 -- public; Owner: de;
@@ -558,7 +577,7 @@ ALTER TABLE ONLY genome_reference
 --
 ALTER TABLE ONLY collaborators
     ADD CONSTRAINT collaborators_pkey
-    PRIMARY KEY (id);
+    PRIMARY KEY (user_id, collaborator_id);
 
 --
 -- Foreign key constraints for the user field of the collaborators table.
@@ -604,6 +623,14 @@ ALTER TABLE ONLY file_parameters
     ADD CONSTRAINT file_parameters_data_source_id_fkey
     FOREIGN KEY (data_source_id)
     REFERENCES data_source(id);
+
+--
+-- Name: tasks_component_id_fk; Type: CONSTRAINT; Schema: public; Owner: de;
+--
+ALTER TABLE ONLY tasks
+    ADD CONSTRAINT tasks_component_id_fk
+    FOREIGN KEY (component_id)
+    REFERENCES tools(id);
 
 --
 -- Foreign key constraint for the tool_type_id field of the tools

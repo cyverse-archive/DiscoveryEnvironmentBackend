@@ -4,12 +4,12 @@ SET search_path = public, pg_catalog;
 -- tools table
 --
 CREATE TABLE tools (
-    id character varying(255) NOT NULL,
+    id uuid NOT NULL,
     name character varying(255) NOT NULL,
     location character varying(255),
-    tool_type_id character varying(255) NOT NULL,
+    tool_type_id uuid NOT NULL,
     description text,
     version character varying(255),
     attribution text,
-    integration_data_id bigint NOT NULL
+    integration_data_id uuid NOT NULL
 );

@@ -4,7 +4,7 @@ SET search_path = public, pg_catalog;
 -- A function that obtains the internal app category identifiers for the
 -- app category hierarchy rooted at the category with the given identifier.
 --
-CREATE FUNCTION app_category_hierarchy_ids(character varying(255)) RETURNS TABLE(id character varying(255)) AS $$
+CREATE FUNCTION app_category_hierarchy_ids(uuid) RETURNS TABLE(id uuid) AS $$
     WITH RECURSIVE subcategories(parent_id) AS
     (
             SELECT acg.parent_category_id AS parent_id, ac.id
