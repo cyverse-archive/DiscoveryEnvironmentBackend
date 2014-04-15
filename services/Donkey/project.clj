@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 (use '[clojure.java.shell :only (sh)])
 (require '[clojure.string :as string])
 
