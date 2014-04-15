@@ -22,6 +22,7 @@
     :validate [#(< 0 % 0x10000) "Ports must be 0-65536"]]
 
    ["-c" "--config PATH" "Path to the config file"
+    :default "/etc/anon-files/anon-files.edn"
     :validate [#(fs/exists? %) "Config file must exist."
                #(fs/readable? %) "Config file must be readable."]]
 
@@ -61,8 +62,8 @@
 (defn -main
   [& args]
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
-    (when-not (:config options)
-      (ccli/exit 1 "The --config option is required."))
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 (str "The default --config file " (:config options) " does not exist.")))
     (when (:disable-log4j options)
       (.removeAllAppenders (Logger/getRootLogger)))
     (cfg/load-config-from-file options)
