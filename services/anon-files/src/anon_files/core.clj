@@ -4,7 +4,6 @@
         [anon-files.serve])
   (:require [compojure.route :as route]
             [clojure.string :as string]
-            [clojure-commons.config :as cc]
             [common-cli.core :as ccli]
             [ring.adapter.jetty :as jetty]
             [anon-files.config :as cfg]
@@ -15,7 +14,6 @@
 (timbre/refer-timbre)
 
 (def log-levels (mapv name timbre/levels-ordered))
-(println (string/join " " log-levels))
 
 (defn cli-options
   []

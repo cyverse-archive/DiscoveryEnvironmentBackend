@@ -42,16 +42,16 @@
   [cm filepath & body]
   `(cond
      (not (info/exists? ~cm ~filepath))
-     (do (println "[anon-files]" ~filepath "does not exist.")
+     (do (warn "[anon-files]" ~filepath "does not exist.")
        (not-found "Not found."))
 
      (not (info/is-file? ~cm ~filepath))
-     (do (println "[anon-files]" ~filepath "is not a file.")
+     (do (warn "[anon-files]" ~filepath "is not a file.")
        (-> (response "Not a file.") (status 403)))
 
      (not (perms/is-readable? ~cm (:anon-user @props) ~filepath))
-     (do (println "[anon-files]" ~filepath "is not readable.")
-       (-> (response "Insufficient privileges.") (status 403)))
+     (do (warn "[anon-files]" ~filepath "is not readable.")
+       (-> (response "Not allowed.") (status 403)))
 
      :else
      ~@body))
@@ -81,7 +81,7 @@
 
 (defn handle-request
   [req]
-  (debug req)
+  (info "\n" (pprint-to-string req))
   (try
    (cond
     (and (range-request? req) (valid-range? req))
