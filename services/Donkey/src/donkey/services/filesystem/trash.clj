@@ -176,7 +176,7 @@
     (let [trash-dir  (user-trash-path cm user)
           trash-list (mapv #(.getAbsolutePath %) (list-in-dir cm (ft/rm-last-slash trash-dir)))]
       (doseq [trash-path trash-list]
-        (delete cm trash-path))
+        (delete cm trash-path true))
       {:trash trash-dir
        :paths trash-list})))
 
