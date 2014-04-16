@@ -18,6 +18,7 @@
                  [org.iplantc/clj-jargon "3.1.0"]
                  [org.iplantc/common-cli "3.1.0"]
                  [com.taoensso/timbre "3.1.6"]
+                 [filevents "0.1.0"]
                  [bouncer "0.3.1-beta1"]
                  [medley "0.1.5"]
                  [me.raynes/fs "1.4.4"]

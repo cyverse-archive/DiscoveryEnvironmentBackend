@@ -66,7 +66,6 @@
       (ccli/exit 1 (str "The default --config file " (:config options) " does not exist.")))
     (when (:disable-log4j options)
       (.removeAllAppenders (Logger/getRootLogger)))
-    (cfg/load-config-from-file options)
-    (cfg/configure-logging options)
+    (cfg/load-config options)
     (info "Started listening on" (:port @cfg/props))
     (jetty/run-jetty app {:port (:port @cfg/props)})))
