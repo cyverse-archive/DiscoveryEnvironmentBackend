@@ -14,7 +14,6 @@ You will need the following tools and plugins to develop for the DE backend.
 * __Leiningen__: Clojure multi-tool. See http://leiningen.org/.
 * __Maven 3__: Unfortunately not all of the backend code is in Clojure.
 * __lein-exec__: A plugin for running stand-alone Clojure scripts. See https://github.com/kumarshantanu/lein-exec.
-* __lein-set-version__: A plugin for setting the version of a Clojure project. See https://github.com/pallet/lein-set-version.
 * __lein-midje__: A Clojure test framework. See https://github.com/marick/Midje.
 
 For kifshare development, you will also need the following tools:
