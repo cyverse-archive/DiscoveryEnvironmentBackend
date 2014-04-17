@@ -42,7 +42,7 @@
 (defn apply-metadata
   [cm destination meta]
   (let [tuples (map fix-meta meta)
-        dest   (if (jg-info/is-dir? cm destination) (ft/rm-last-slash destination) destination)]
+        dest   (ft/rm-last-slash destination)]
     (porkprint "Metadata tuples for " destination " are  " tuples)
     (when (pos? (count tuples))
       (doseq [tuple tuples]
@@ -205,5 +205,5 @@
         args      (iget-args source dest ic-env)
         metadata  (:meta options)]
     (jg/with-jargon irods-cfg [cm]
-      (apply-input-metadata cm (:user options) source metadata)
+      (apply-input-metadata cm (:user options) srcdir metadata)
       (shell-out args))))

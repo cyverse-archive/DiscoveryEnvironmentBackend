@@ -4,12 +4,18 @@
   (:require [clojure.edn :as edn]
             [bouncer [core :as b] [validators :as v]]
             [taoensso.timbre :as timbre]
-            [taoensso.timbre.appenders.rotor :as rotor]))
+            [taoensso.timbre.appenders.rotor :as rotor]
+            [filevents.core :refer [watch]]
+            [me.raynes.fs :as fs]))
 
 (timbre/refer-timbre)
 
 (def props
-  "A ref for storing the configuration properties."
+  "A ref for storing the combined configuration properties."
+  (ref nil))
+
+(def cmd-line-props
+  "A ref for storing the props passed in on the command-line."
   (ref nil))
 
 (def filters
@@ -48,7 +54,7 @@
    :log-level      keywordv})
 
 (def defaults
-  {:log-level   :warn
+  {:log-level   :info
    :log-size    (* 100 1024 1024)
    :log-backlog 10})
 
@@ -60,7 +66,7 @@
     (not errs)))
 
 (defn configure-logging
-  [options]
+  []
   (when (:log-level @props)
     (timbre/set-level! (:log-level @props)))
   (when (:log-file @props)
@@ -74,16 +80,45 @@
                          :max-size (:log-size @props)
                          :backlog  (:log-backlog @props)})))
 
+
 (defn load-config-from-file
   "Loads the configuration settings from a file."
-  [options]
-  (let [contents (slurp (:config options))
-        _   (println contents)
-        cfg (edn/read-string (slurp (:config options)))]
+  []
+  (let [cfg (edn/read-string (slurp (:config @cmd-line-props)))]
     (when-not (valid-config? cfg)
       (error "Config file has errors, exiting.")
       (System/exit 1))
+    (dosync (ref-set props (merge defaults cfg @cmd-line-props)))
     (info "Config file settings:\n" (pprint-to-string cfg))
-    (info "Command-line settings:\n" (pprint-to-string options))
-    (dosync (ref-set props (merge defaults cfg options)))
-    (info "Combined settings:\n" (pprint-to-string @props))))
+    (info "Command-line settings:\n" (pprint-to-string @cmd-line-props))
+    (info "Combined settings:\n" (pprint-to-string @props))
+    (configure-logging)))
+
+(defmulti watch-handler
+  (fn [event path] event))
+
+(defmethod watch-handler :created
+  [event path]
+  (warn path "was created. Attempting to load as config.")
+  (load-config-from-file))
+
+(defmethod watch-handler :deleted
+  [event path]
+  (warn path "was deleted! Bad things may happen!"))
+
+(defmethod watch-handler :modified
+  [event path]
+  (info path "was modified, reloading config.")
+  (load-config-from-file))
+
+(defn watch-config
+  []
+  (watch watch-handler (:config @cmd-line-props)))
+
+(defn load-config
+  [options]
+  (dosync (ref-set cmd-line-props options))
+  (load-config-from-file)
+  (watch-config))
+
+

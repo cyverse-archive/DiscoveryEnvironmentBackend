@@ -12,14 +12,15 @@
 
 (defn jargon-cfg
   []
-  (init/init
-  (:irods-host @props)
-  (:irods-port @props)
-  (:irods-user @props)
-  (:irods-password @props)
-  (:irods-home @props)
-  (:irods-zone @props)
-  ""))
+  (dosync
+   (init/init
+    (:irods-host @props)
+    (:irods-port @props)
+    (:irods-user @props)
+    (:irods-password @props)
+    (:irods-home @props)
+    (:irods-zone @props)
+    "")))
 
 (defn range-request?
   [req]
