@@ -267,10 +267,14 @@
     (share user [(fs-anon-user)] paths :read)
     {:user user :paths (anon-files-urls paths)}))
 
+(defn fix-broken-paths
+  [paths]
+  (mapv #(string/replace % #"\/$" "") paths))
+
 (defn do-anon-files
   [params body]
   (log-call "do-anon-files" params body)
   (validate-map params {:user string?})
   (validate-map body {:paths sequential?})
   (validate-num-paths (:paths body))
-  (anon-files (:user params) (:paths body)))
+  (anon-files (:user params) (fix-broken-paths (:paths body))))
