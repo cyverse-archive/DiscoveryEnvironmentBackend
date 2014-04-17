@@ -107,6 +107,12 @@
     (throw+ {:error_code ERR_NOT_A_FILE
              :path path})))
 
+(defn paths-are-files
+  [cm paths]
+  (when-not (every? #(is-file? cm %) paths)
+    (throw+ {:error_code ERR_NOT_A_FILE
+             :path (filterv #(not (is-file? cm %)) paths)})))
+
 (defn path-satisfies-predicate
   [cm path pred-func? pred-err]
   (when-not (pred-func? cm  path)

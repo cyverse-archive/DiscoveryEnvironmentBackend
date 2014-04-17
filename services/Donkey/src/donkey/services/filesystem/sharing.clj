@@ -261,6 +261,7 @@
   (with-jargon (jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-paths-exist cm paths)
+    (validators/paths-are-files cm paths)
     (validators/user-owns-paths cm user paths)
     (log/warn "Giving read access to" (fs-anon-user) "on:" (string/join " " paths))
     (share user [(fs-anon-user)] paths :read)
