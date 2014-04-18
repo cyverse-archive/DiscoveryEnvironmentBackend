@@ -51,7 +51,8 @@
    ["-h" "--help"]])
 
 (defroutes app
-  (GET "/*" [:as req] (handle-request req)))
+  (HEAD "/*" [:as req] (spy (handle-head-request req)))
+  (GET "/*" [:as req] (spy (handle-request req))))
 
 (def svc-info
   {:desc "A service that serves up files shared with the iRODS anonymous user."

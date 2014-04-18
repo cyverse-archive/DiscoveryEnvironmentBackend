@@ -28,16 +28,41 @@
        (contains? (:headers req) "range")))
 
 (def range-regex #"\s*(bytes)\s*=\s*([0-9]+)\s*\-\s*([0-9]+)\s*")
+(def unbound-range-regex #"\s*(bytes)\s*=\s*([0-9]+)\s*\-\s*")
 
 (defn valid-range?
   [req]
-  (re-seq range-regex (get-in req [:headers "range"])))
+  (let [range-header (get-in req [:headers "range"])]
+    (or (re-seq range-regex range-header)
+        (re-seq unbound-range-regex range-header))))
+
+(defn bound-range?
+  [range-header]
+  (re-seq range-regex range-header))
+
+(defn unbound-range?
+  [range-header]
+  (re-seq unbound-range-regex range-header))
+
+(defn- extract-bound-range
+  [range-header]
+  (let [range-matches (re-matches range-regex range-header)]
+    [(Long/parseLong (nth range-matches 2)) (Long/parseLong (nth range-matches 3))]))
+
+(defn- extract-unbound-range
+  [range-header]
+  (let [range-matches (re-matches unbound-range-regex range-header)]
+    [(Long/parseLong (nth range-matches 2))]))
 
 (defn extract-range
   [req]
-  (let [range-header  (get-in req [:headers "range"])
-        range-matches (re-matches range-regex range-header)]
-    [(Long/parseLong (nth range-matches 2)) (Long/parseLong (nth range-matches 3))]))
+  (let [range-header (get-in req [:headers "range"])]
+    (cond
+     (unbound-range? range-header)
+     (extract-unbound-range range-header)
+
+     (bound-range? range-header)
+     (extract-bound-range range-header))))
 
 (defmacro validated
   [cm filepath & body]
@@ -64,29 +89,44 @@
 
 (defn- range-body
   [cm filepath start-byte end-byte]
-  (java.io.ByteArrayInputStream.
-   (paging/read-at-position cm filepath start-byte (- end-byte start-byte) false)))
+  (if (pos? (- end-byte start-byte))
+    (java.io.ByteArrayInputStream.
+     (paging/read-at-position cm filepath start-byte (- end-byte start-byte) false))))
+
+(defn- file-header
+  [cm filepath]
+  {"Accept-Ranges" "bytes"
+   "Content-Length" (str (info/file-size cm filepath))})
 
 (defn- range-header
-  [start-byte end-byte]
-  {"Content-Range" (str "bytes " start-byte "-" end-byte)
-   "Accept-Ranges" "bytes"})
+  [cm filepath start-byte end-byte]
+  (file-header cm filepath)
+  #_(merge {"Content-Range" (str "bytes " start-byte "-" end-byte)}
+         (file-header cm filepath)))
+
+(defn range-response
+  [cm filepath start-byte end-byte]
+  {:status   200
+   :body    (range-body cm filepath start-byte end-byte)
+   :headers (range-header cm filepath start-byte end-byte)})
 
 (defn serve-range
   [filepath [start-byte end-byte]]
   (init/with-jargon (jargon-cfg) [cm]
     (validated cm filepath
-      {:status   206
-       :body    (range-body cm filepath start-byte end-byte)
-       :headers (range-header start-byte end-byte)})))
+      (if (nil? end-byte)
+       (range-response cm filepath start-byte (- (info/file-size cm filepath) 1))
+       (range-response cm filepath start-byte end-byte)))))
 
 (defn handle-request
   [req]
+  (info "Handling GET request for" (:uri req))
   (info "\n" (pprint-to-string req))
   (try
    (cond
     (and (range-request? req) (valid-range? req))
-    (serve-range (:uri req) (extract-range req))
+    (do (debug "extracted range:" (extract-range req))
+      (serve-range (:uri req) (extract-range req)))
 
     (and (range-request? req) (not (valid-range? req)))
     (-> (response "Invalid range request.") (status 500))
@@ -95,3 +135,13 @@
     (serve (:uri req)))
     (catch Exception e
       (warn e))))
+
+(defn handle-head-request
+  [req]
+  (info "Handling head request for" (:uri req))
+  (info "\n" (pprint-to-string req))
+  (init/with-jargon (jargon-cfg) [cm]
+    (validated cm (:uri req)
+      {:status 200
+       :body ""
+       :headers (file-header cm (:uri req))})))
