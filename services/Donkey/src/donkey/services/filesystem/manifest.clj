@@ -4,6 +4,7 @@
         [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
+        [donkey.services.filesystem.sharing :only [anon-file-url anon-readable?]]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [input-stream]]
         [clj-jargon.metadata :only [get-attribute attribute?]]
@@ -51,6 +52,15 @@
   [cm fpath]
   (into [] (concat (extract-tree-urls cm fpath) (extract-coge-view cm fpath))))
 
+(defn- manifest-map
+  [cm user path]
+  {:action       "manifest"
+   :content-type (content-type cm path)
+   :urls         (extract-urls cm path)
+   :info-type    (filetypes/get-types cm user path)
+   :mime-type    (.detect (Tika.) (input-stream cm path))
+   :preview      (preview-url user path)})
+
 (defn- manifest
   [user path data-threshold]
   (let [path (ft/rm-last-slash path)]
@@ -60,12 +70,10 @@
       (validators/path-is-file cm path)
       (validators/path-readable cm user path)
 
-      {:action       "manifest"
-       :content-type (content-type cm path)
-       :urls         (extract-urls cm path)
-       :info-type    (filetypes/get-types cm user path)
-       :mime-type    (.detect (Tika.) (input-stream cm path))
-       :preview      (preview-url user path)})))
+      (if (anon-readable? cm path)
+        (merge {:anon-url (anon-file-url path)}
+               (manifest-map cm user path))
+        (manifest-map cm user path)))))
 
 (defn do-manifest
   [{user :user path :path}]
