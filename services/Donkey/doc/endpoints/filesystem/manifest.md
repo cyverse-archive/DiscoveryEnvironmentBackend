@@ -23,6 +23,18 @@ __Response Body__:
         "mime-type" : "<a valid filetype>"
     }
 
+Or, if the path is readable by the anonymous user:
+
+    {
+        "status" : "success",
+        "anon-url" : "http://de-2.iplantcollaborative.org/anon/iplant/home/johnw/LICENSE.txt",
+        "content-type" : "text/plain",
+        "preview":"file\/preview?user=johnw&path=\/iplant\/home\/johnw\/LICENSE.txt",
+        "tree-urls" : [],
+        "info-type" : "<an info type or empty string>"
+        "mime-type" : "<a valid filetype>"
+    }
+
 __Curl Command__:
 
     curl http://127.0.0.1:3000/secured/filesystem/file/manifest?proxyToken=notReal&path=/iplant/home/johnw/LICENSE.txt
