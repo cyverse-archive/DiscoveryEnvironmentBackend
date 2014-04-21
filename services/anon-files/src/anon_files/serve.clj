@@ -27,8 +27,8 @@
   (and (contains? req :headers)
        (contains? (:headers req) "range")))
 
-(def range-regex #"\s*(bytes)\s*=\s*([0-9]+)\s*\-\s*([0-9]+)\s*")
-(def unbound-range-regex #"\s*(bytes)\s*=\s*([0-9]+)\s*\-\s*")
+(def range-regex #"\s*(bytes)\s*=\s*([0-9]+)\s*\-\s*([0-9]+)\s*$")
+(def unbound-range-regex #"\s*(bytes)\s*=\s*([0-9]+)\s*\-\s*$")
 
 (defn valid-range?
   [req]
@@ -58,11 +58,13 @@
   [req]
   (let [range-header (get-in req [:headers "range"])]
     (cond
-     (unbound-range? range-header)
-     (extract-unbound-range range-header)
-
      (bound-range? range-header)
-     (extract-bound-range range-header))))
+     (do (debug "detected bounded range")
+       (extract-bound-range range-header))
+
+     (unbound-range? range-header)
+     (do (debug "detected unbounded range")
+       (extract-unbound-range range-header)))))
 
 (defmacro validated
   [cm filepath & body]
@@ -82,10 +84,21 @@
      :else
      ~@body))
 
+(defn- file-header
+  ([cm filepath start-byte end-byte]
+   {"Accept-Ranges" "bytes"
+    "Content-Length" (str (- end-byte start-byte))})
+  ([cm filepath]
+   {"Accept-Ranges" "bytes"
+    "Content-Length" (str (info/file-size cm filepath))}))
+
 (defn serve
   [filepath]
   (init/with-jargon (jargon-cfg) [cm]
-    (validated cm filepath (ops/input-stream cm filepath))))
+    (validated cm filepath
+      {:status  200
+       :body    (ops/input-stream cm filepath)
+       :headers (file-header cm filepath)})))
 
 (defn- range-body
   [cm filepath start-byte end-byte]
@@ -93,29 +106,18 @@
     (java.io.ByteArrayInputStream.
      (paging/read-at-position cm filepath start-byte (- end-byte start-byte) false))))
 
-(defn- file-header
-  [cm filepath]
-  {"Accept-Ranges" "bytes"
-   "Content-Length" (str (info/file-size cm filepath))})
-
-(defn- range-header
-  [cm filepath start-byte end-byte]
-  (file-header cm filepath)
-  #_(merge {"Content-Range" (str "bytes " start-byte "-" end-byte)}
-         (file-header cm filepath)))
-
 (defn range-response
   [cm filepath start-byte end-byte]
   {:status   200
    :body    (range-body cm filepath start-byte end-byte)
-   :headers (range-header cm filepath start-byte end-byte)})
+   :headers (file-header cm filepath start-byte end-byte)})
 
 (defn serve-range
   [filepath [start-byte end-byte]]
   (init/with-jargon (jargon-cfg) [cm]
     (validated cm filepath
       (if (nil? end-byte)
-       (range-response cm filepath start-byte (- (info/file-size cm filepath) 1))
+       (range-response cm filepath start-byte (info/file-size cm filepath))
        (range-response cm filepath start-byte end-byte)))))
 
 (defn handle-request
