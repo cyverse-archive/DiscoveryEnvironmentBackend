@@ -66,6 +66,8 @@ Here is a config file with all of the available settings:
  :log-size 1024}
 ```
 
+Anon-files listens on port 31302 by default.
+
 ## Running it
 
 For local development:
@@ -77,6 +79,10 @@ From an uberjar:
     java -jar anon-files-3.1.0-standalone.jar --config /path/to/config
 
 For the uberjar, make sure the log4j settings are in the classpath. A log4j config is located in (conf/log4j.properties)[conf/log4j.properties].
+
+If you installed anon-files through an RPM, make sure the config file is at /etc/iplant/de/ (make the directory if necessary). Then run the following:
+
+    sudo /sbin/service anon-files start
 
 
 ## License
