@@ -247,6 +247,10 @@
 
 (with-post-hook! #'do-unshare (log-func "do-unshare"))
 
+(defn anon-readable?
+  [cm p]
+  (is-readable? cm (fs-anon-user) p))
+
 (defn anon-file-url
   [p]
   (let [aurl (url/url (anon-files-base-url))]
