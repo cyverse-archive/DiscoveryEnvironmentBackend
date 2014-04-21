@@ -6,7 +6,7 @@ SET search_path = public, pg_catalog;
 CREATE TABLE user_saved_searches (
     id UUID UNIQUE NOT NULL,
     user_id BIGINT UNIQUE NOT NULL REFERENCES users(id),
-    saved_searches JSON NOT NULL,
+    saved_searches TEXT NOT NULL,
     PRIMARY KEY (id)
 );
 

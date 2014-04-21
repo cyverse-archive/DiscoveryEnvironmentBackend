@@ -13,7 +13,8 @@
    "CREATE TABLE user_preferences (
         id UUID UNIQUE NOT NULL,
         user_id BIGINT UNIQUE NOT NULL REFERENCES users(id),
-        preferences JSON NOT NULL
+        preferences TEXT NOT NULL,
+        PRIMARY KEY (id)
     )")
   (exec-raw
    "CREATE INDEX user_preferences_id
@@ -28,8 +29,9 @@
   (exec-raw
    "CREATE TABLE user_sessions (
         id UUID UNIQUE NOT NULL,
-        user_id BIGINT UNIQUE NOT NULL REFERENCES users(id);
-        session JSON NOT NULL,
+        user_id BIGINT UNIQUE NOT NULL REFERENCES users(id),
+        session TEXT NOT NULL,
+        PRIMARY KEY (id)
     )")
   (exec-raw
    "CREATE INDEX user_sessions_id
@@ -45,7 +47,8 @@
    "CREATE TABLE user_saved_searches (
         id UUID UNIQUE NOT NULL,
         user_id BIGINT UNIQUE NOT NULL REFERENCES users(id),
-        saved_searches JSON NOT NULL
+        saved_searches TEXT NOT NULL,
+        PRIMARY KEY (id)
     )")
   (exec-raw
    "CREATE INDEX user_saved_searches_id
@@ -60,7 +63,8 @@
   (exec-raw
    "CREATE TABLE tree_urls (
         id UUID UNIQUE NOT NULL,
-        tree_urls JSON NOT NULL
+        tree_urls TEXT NOT NULL,
+        PRIMARY KEY (id)
     )")
   (exec-raw
    "CREATE INDEX tree_urls_id
