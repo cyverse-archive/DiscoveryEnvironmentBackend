@@ -6,7 +6,8 @@ SET search_path = public, pg_catalog;
 CREATE TABLE user_preferences (
   id UUID UNIQUE NOT NULL,
   user_id BIGINT UNIQUE NOT NULL REFERENCES users(id),
-  preferences JSON NOT NULL
+  preferences JSON NOT NULL,
+  PRIMARY KEY (id)
 );
 
 ---
@@ -14,7 +15,6 @@ CREATE TABLE user_preferences (
 ---
 CREATE INDEX user_preferences_id
 ON user_preferences(id);
-
 
 ---
 --- Creates an index on the user_id column.

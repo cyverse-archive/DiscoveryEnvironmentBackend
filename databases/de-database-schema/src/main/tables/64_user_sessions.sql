@@ -5,8 +5,9 @@ SET search_path = public, pg_catalog;
 ---
 CREATE TABLE user_sessions (
     id UUID UNIQUE NOT NULL,
-    user_id BIGINT UNIQUE NOT NULL REFERENCES users(id);
+    user_id BIGINT UNIQUE NOT NULL REFERENCES users(id),
     session JSON NOT NULL,
+    PRIMARY KEY (id)
 );
 
 ---
