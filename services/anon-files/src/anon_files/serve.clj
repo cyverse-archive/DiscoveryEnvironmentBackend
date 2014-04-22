@@ -96,9 +96,7 @@
   [filepath]
   (init/with-jargon (jargon-cfg) [cm]
     (validated cm filepath
-      {:status  200
-       :body    (ops/input-stream cm filepath)
-       :headers (file-header cm filepath)})))
+      (ops/input-stream cm filepath))))
 
 (defn- range-body
   [cm filepath start-byte end-byte]
