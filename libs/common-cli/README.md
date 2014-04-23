@@ -1,14 +1,7 @@
 # common-cli
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure library providing a base for service command-line settings.
 
-## Usage
+# License
 
-FIXME
-
-## License
-
-Copyright © 2014 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+See [LICENSE](LICENSE)
