@@ -50,7 +50,10 @@
 
 (defn- extract-urls
   [cm fpath]
-  (into [] (concat (extract-tree-urls cm fpath) (extract-coge-view cm fpath))))
+  (let [urls (concat (extract-tree-urls cm fpath) (extract-coge-view cm fpath))]
+    (into [] (if (anon-readable? cm fpath)
+               (conj urls (anon-file-url fpath))
+               urls))))
 
 (defn- manifest-map
   [cm user path]
@@ -69,11 +72,7 @@
       (validators/path-exists cm path)
       (validators/path-is-file cm path)
       (validators/path-readable cm user path)
-
-      (if (anon-readable? cm path)
-        (merge {:anon-url (anon-file-url path)}
-               (manifest-map cm user path))
-        (manifest-map cm user path)))))
+      (manifest-map cm user path))))
 
 (defn do-manifest
   [{user :user path :path}]

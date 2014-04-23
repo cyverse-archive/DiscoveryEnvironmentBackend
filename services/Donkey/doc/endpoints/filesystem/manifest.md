@@ -18,22 +18,16 @@ __Response Body__:
         "status" : "success",
         "content-type" : "text/plain",
         "preview":"file\/preview?user=johnw&path=\/iplant\/home\/johnw\/LICENSE.txt",
-        "tree-urls" : [],
+        "urls" : [],
         "info-type" : "<an info type or empty string>"
         "mime-type" : "<a valid filetype>"
     }
 
-Or, if the path is readable by the anonymous user:
+The urls field will contain some or none of the following:
 
-    {
-        "status" : "success",
-        "anon-url" : "http://de-2.iplantcollaborative.org/anon/iplant/home/johnw/LICENSE.txt",
-        "content-type" : "text/plain",
-        "preview":"file\/preview?user=johnw&path=\/iplant\/home\/johnw\/LICENSE.txt",
-        "tree-urls" : [],
-        "info-type" : "<an info type or empty string>"
-        "mime-type" : "<a valid filetype>"
-    }
+* CoGe URLs
+* Tree URLS
+* anon-files URLs
 
 __Curl Command__:
 
