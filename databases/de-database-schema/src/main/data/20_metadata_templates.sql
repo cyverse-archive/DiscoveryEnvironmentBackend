@@ -180,7 +180,12 @@ insert into metadata_attributes
      'finishing strategy - number of contigs',
      '',
      FALSE,
-     'C6CB42CD-7C47-47A1-8704-F6582B510ACF');
+     'C6CB42CD-7C47-47A1-8704-F6582B510ACF'),
+    ('A378D704-A979-448A-A1A9-52B94B2592F5',
+     'Metadata complete'
+     'Check this only when you have entered all required fields.'
+     FALSE,
+     '8130EC25-2452-4FF0-B66A-D9D3A6350816');
 INSERT INTO metadata_template_attrs(template_id, attribute_id, display_order) VALUES
     ('59bd3d26-34d5-4e75-99f5-840a20089caf', '33e3e3d8-cd48-4572-8b16-89207b1609ec', 0),
     ('59bd3d26-34d5-4e75-99f5-840a20089caf', '8e98fdc8-3e07-413e-91d4-f31631fa232d', 1),
@@ -216,7 +221,8 @@ INSERT INTO metadata_template_attrs(template_id, attribute_id, display_order) VA
     ('59bd3d26-34d5-4e75-99f5-840a20089caf', '6fbd6a0f-36ed-4b68-bd51-cc96dce8e285', 31),
     ('59bd3d26-34d5-4e75-99f5-840a20089caf', '2906c6dc-a1da-4610-8d61-baf773aab4d7', 32),
     ('59bd3d26-34d5-4e75-99f5-840a20089caf', '5cd49a1c-3787-4d14-985f-59e7e49249d9', 33),
-    ('59bd3d26-34d5-4e75-99f5-840a20089caf', '54f6f54a-8e99-4615-8525-5bd986a11137', 34);
+    ('59bd3d26-34d5-4e75-99f5-840a20089caf', '54f6f54a-8e99-4615-8525-5bd986a11137', 34),
+    ('59bd3d26-34d5-4e75-99f5-840a20089caf', 'A378D704-A979-448A-A1A9-52B94B2592F5', 35);
 
 -- Minimum Information for a Eukaryotic Genome Sequence (MIGS)
 INSERT INTO metadata_templates(id, name) VALUES
@@ -475,7 +481,8 @@ INSERT INTO metadata_template_attrs(template_id, attribute_id, display_order) VA
     ('40ac191f-bb36-4f4e-85fb-8b50abec8e10', '4d515487-a822-47cf-8fcb-0d9bb3f400b7', 38),
     ('40ac191f-bb36-4f4e-85fb-8b50abec8e10', 'b1feee7f-77a8-4d51-a431-2a26a4c0040c', 39),
     ('40ac191f-bb36-4f4e-85fb-8b50abec8e10', 'd381df9d-302e-4ebe-af81-921caab7ef4d', 40),
-    ('40ac191f-bb36-4f4e-85fb-8b50abec8e10', '84d4abd8-b763-478a-9b43-7e9f73b216b1', 41);
+    ('40ac191f-bb36-4f4e-85fb-8b50abec8e10', '84d4abd8-b763-478a-9b43-7e9f73b216b1', 41),
+    ('40ac191f-bb36-4f4e-85fb-8b50abec8e10', 'A378D704-A979-448A-A1A9-52B94B2592F5', 42);
 
 -- Minimum Information for a Metagenomic Sequence (MIMS)
 INSERT INTO metadata_templates(id, name) VALUES
@@ -728,4 +735,5 @@ INSERT INTO metadata_template_attrs(template_id, attribute_id, display_order) VA
     ('f52a4d57-00af-43ec-97d5-1c7e7779f6c3', '4a75f06b-11c5-4600-b839-6b15a97215a8', 37),
     ('f52a4d57-00af-43ec-97d5-1c7e7779f6c3', '5ff51a2e-e2b6-45c8-9bc2-1fc43a1c397c', 38),
     ('f52a4d57-00af-43ec-97d5-1c7e7779f6c3', '0dd91563-faf5-408a-8a8a-9e04cf8d2e14', 39),
-    ('f52a4d57-00af-43ec-97d5-1c7e7779f6c3', 'efb23bce-3f89-4edc-91bc-81cf8e3ff920', 40);
+    ('f52a4d57-00af-43ec-97d5-1c7e7779f6c3', 'efb23bce-3f89-4edc-91bc-81cf8e3ff920', 40),
+    ('f52a4d57-00af-43ec-97d5-1c7e7779f6c3', 'A378D704-A979-448A-A1A9-52B94B2592F5', 41);
