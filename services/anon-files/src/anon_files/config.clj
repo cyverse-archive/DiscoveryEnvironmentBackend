@@ -65,6 +65,12 @@
       (error (pprint-to-string errs)))
     (not errs)))
 
+(defn loggable-config
+  [cfg]
+  (let [bad-keys #{:irods-password}]
+    (pprint-to-string
+     (filter-keys #(not (contains? bad-keys %)) cfg))))
+
 (defn configure-logging
   []
   (when (:log-level @props)
@@ -89,10 +95,10 @@
       (error "Config file has errors, exiting.")
       (System/exit 1))
     (dosync (ref-set props (merge defaults cfg @cmd-line-props)))
-    (info "Config file settings:\n" (pprint-to-string cfg))
-    (info "Command-line settings:\n" (pprint-to-string @cmd-line-props))
-    (info "Combined settings:\n" (pprint-to-string @props))
-    (configure-logging)))
+    (configure-logging)
+    (info "Config file settings:\n" (loggable-config cfg))
+    (info "Command-line settings:\n" (loggable-config @cmd-line-props))
+    (info "Combined settings:\n" (loggable-config @props))))
 
 (defmulti watch-handler
   (fn [event path] event))
