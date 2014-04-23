@@ -1,12 +1,13 @@
 (ns anon-files.core
   (:gen-class)
   (:use [compojure.core]
-        [anon-files.serve])
+        [anon-files.serve]
+        [anon-files.config])
   (:require [compojure.route :as route]
             [clojure.string :as string]
             [common-cli.core :as ccli]
             [ring.adapter.jetty :as jetty]
-            [anon-files.config :as cfg]
+            [common-cfg.cfg :as cfg]
             [taoensso.timbre :as timbre]
             [me.raynes.fs :as fs])
   (:import [org.apache.log4j Logger]))
@@ -68,5 +69,5 @@
     (when (:disable-log4j options)
       (.removeAllAppenders (Logger/getRootLogger)))
     (cfg/load-config options)
-    (info "Started listening on" (:port @cfg/props))
-    (jetty/run-jetty app {:port (:port @cfg/props)})))
+    (info "Started listening on" (:port @cfg/cfg))
+    (jetty/run-jetty app {:port (:port @cfg/cfg)})))

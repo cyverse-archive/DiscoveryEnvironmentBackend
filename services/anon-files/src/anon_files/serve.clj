@@ -1,12 +1,12 @@
 (ns anon-files.serve
-  (:use [ring.util.response]
-        [anon-files.config])
+  (:use [ring.util.response])
   (:require [clj-jargon.init :as init]
             [clj-jargon.item-ops :as ops]
             [clj-jargon.item-info :as info]
             [clj-jargon.permissions :as perms]
             [clj-jargon.paging :as paging]
-            [taoensso.timbre :as timbre]))
+            [taoensso.timbre :as timbre]
+            [common-cfg.cfg :as cfg]))
 
 (timbre/refer-timbre)
 
@@ -14,12 +14,12 @@
   []
   (dosync
    (init/init
-    (:irods-host @props)
-    (:irods-port @props)
-    (:irods-user @props)
-    (:irods-password @props)
-    (:irods-home @props)
-    (:irods-zone @props)
+    (:irods-host @cfg/cfg)
+    (:irods-port @cfg/cfg)
+    (:irods-user @cfg/cfg)
+    (:irods-password @cfg/cfg)
+    (:irods-home @cfg/cfg)
+    (:irods-zone @cfg/cfg)
     "")))
 
 (defn range-request?
@@ -77,7 +77,7 @@
      (do (warn "[anon-files]" ~filepath "is not a file.")
        (-> (response "Not a file.") (status 403)))
 
-     (not (perms/is-readable? ~cm (:anon-user @props) ~filepath))
+     (not (perms/is-readable? ~cm (:anon-user @cfg/cfg) ~filepath))
      (do (warn "[anon-files]" ~filepath "is not readable.")
        (-> (response "Not allowed.") (status 403)))
 
@@ -121,7 +121,7 @@
 (defn handle-request
   [req]
   (info "Handling GET request for" (:uri req))
-  (info "\n" (pprint-to-string req))
+  (info "\n" (cfg/pprint-to-string req))
   (try
    (cond
     (and (range-request? req) (valid-range? req))
@@ -139,7 +139,7 @@
 (defn handle-head-request
   [req]
   (info "Handling head request for" (:uri req))
-  (info "\n" (pprint-to-string req))
+  (info "\n" (cfg/pprint-to-string req))
   (init/with-jargon (jargon-cfg) [cm]
     (validated cm (:uri req)
       {:status 200
