@@ -3,7 +3,9 @@
   (:use [compojure.core]
         [user-sessions.serve]
         [user-sessions.config]
-        [ring.middleware.json :only [wrap-json-response wrap-json-body]])
+        [ring.middleware.json :only [wrap-json-response wrap-json-body]]
+        [io.aviso.exception :only [format-exception]]
+        [ring.util.response :only [response status]])
   (:require [compojure.route :as route]
             [clojure.string :as string]
             [common-cli.core :as ccli]
@@ -51,15 +53,40 @@
    ["-h" "--help"]])
 
 (defroutes session-routes
-  (GET "/:username" [username :as req] (spy (get-req username req)))
-  (PUT "/:username" [username :as req] (spy (put-req username req)))
-  (POST "/:username" [username :as req] (spy (post-req username req)))
-  (DELETE "/:username" [username :as req] (spy (delete-req username))))
+  (GET "/:username" [username :as req]
+       (get-req username req))
+
+  (PUT "/:username" [username :as req]
+       (put-req username req))
+
+  (POST "/:username" [username :as req]
+        (post-req username req))
+
+  (DELETE "/:username" [username :as req]
+          (delete-req username)))
+
+(defn wrap-logging [handler]
+  (fn [request]
+    (info request)
+    (let [resp (handler request)]
+      (info resp)
+      resp)))
+
+(defn wrap-exception [handler]
+  (fn [request]
+    (try
+      (handler request)
+      (catch Exception e
+        (let [formatted-exception (format-exception e)]
+          (error formatted-exception)
+          (-> (response formatted-exception) (status 500)))))))
 
 (def app
   (-> session-routes
+      (wrap-logging)
       (wrap-json-body)
-      (wrap-json-response)))
+      (wrap-json-response)
+      (wrap-exception)))
 
 (def svc-info
   {:desc "DE API for managing user sessions."
