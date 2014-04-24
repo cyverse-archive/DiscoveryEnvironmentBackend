@@ -18,6 +18,10 @@
         filtered))
     {}))
 
+(defn invalid-uuid
+  [uuid]
+  {:status 400 :body {:uuid uuid}})
+
 (defn not-a-uuid
   [uuid]
   {:status 404 :body {:uuid uuid}})
@@ -26,11 +30,19 @@
   [content-type]
   {:status 415 :body {:content-type content-type}})
 
+(defn uuid?
+  [uuid-str]
+  (try
+    (java.util.UUID/fromString uuid-str)
+    true
+    (catch Exception e
+      false)))
+
 (defmacro validate
   [[uuid req content-type?] & body]
   `(cond
-    (not (tree-urls? ~uuid))
-    (not-a-uuid ~uuid)
+    (not (uuid? ~uuid))
+    (invalid-uuid ~uuid)
 
     (and ~content-type? (not= (:content-type ~req) "application/json"))
     (invalid-content (:content-type ~req))
@@ -42,7 +54,9 @@
   [uuid req]
   (validate
    [uuid req false]
-   (response (sanitize (json/parse-string (tree-urls uuid) true)))))
+   (if-not (tree-urls? uuid)
+     (not-a-uuid uuid)
+     (response (sanitize (json/parse-string (tree-urls uuid) true))))))
 
 (defn post-req
   [uuid req]
