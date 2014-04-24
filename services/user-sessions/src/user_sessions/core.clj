@@ -51,7 +51,6 @@
    ["-h" "--help"]])
 
 (defroutes session-routes
-  (HEAD "/:username" [username :as req] (spy (head-req username req)))
   (GET "/:username" [username :as req] (spy (get-req username req)))
   (PUT "/:username" [username :as req] (spy (put-req username req)))
   (POST "/:username" [username :as req] (spy (post-req username req)))

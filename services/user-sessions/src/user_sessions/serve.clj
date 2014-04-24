@@ -2,26 +2,34 @@
   (:use [kameleon.user-session-queries]
         [kameleon.misc-queries]
         [compojure.response]
-        [ring.util.response]))
+        [ring.util.response])
+  (:require [cheshire.core :as json]
+            [taoensso.timbre :as timbre]))
 
-(defn head-req
-  [username req]
-  {:msg "lol"})
+(timbre/refer-timbre)
 
 (defn get-req
   [username req]
+  (info req)
   (if-not (user? username)
     (not-found {:user username})
     (response (user-session username))))
 
 (defn post-req
   [username req]
-  {:msg "post lol"})
+  (info req)
+  (if-not (user? username)
+    {:status 404 :body {:user username}}
+    (response (save-user-session username (json/encode (:body req))))))
 
 (defn delete-req
   [username]
-  {:msg "delete lol"})
+  (info "delete" username)
+  (if-not (user? username)
+    {:status 404 :body {:user username}})
+    (response (delete-user-session username)))
 
 (defn put-req
   [username req]
-  {:msg "put lol"})
+  (info req)
+  (post-req username req))

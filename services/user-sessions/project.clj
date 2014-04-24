@@ -19,6 +19,7 @@
                  [org.iplantc/common-cfg "3.1.0"]
                  [org.iplantc/kameleon "3.1.0"]
                  [me.raynes/fs "1.4.4"]
+                 [cheshire "5.3.1"]
                  [compojure "1.1.6"]
                  [ring "1.2.1"]
                  [ring/ring-json "0.3.1"]]
