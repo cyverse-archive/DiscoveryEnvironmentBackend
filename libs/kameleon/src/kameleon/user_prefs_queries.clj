@@ -39,7 +39,7 @@
   "Upserts user preferences into the database. Does not validate that the
    user exists."
   [username prefs-str]
-  (if-not (user-preferences? username)
+  (if-not (user-prefs? username)
     (insert-user-prefs username prefs-str)
     (update user-preferences
             (set-fields {:preferences prefs-str})
