@@ -63,7 +63,7 @@
         (post-req username req))
 
   (DELETE "/:username" [username :as req]
-          (delete-req username)))
+          (delete-req username req)))
 
 (defn wrap-logging [handler]
   (fn [request]
