@@ -3,7 +3,7 @@
  :db-password "testpassword"
  :db-host "databasehost"
  :db-port "5432"
- :port 31304
+ :port 31305
  :log-file "/var/log/user-preferences/user-preferences.log"
  
  ;one of :trace :debug :info :warn :error :fatal :report
