@@ -329,7 +329,7 @@
  {:type     :service
   :path     "services/anon-files"
   :build    :lein
-  :rpm?     :true
+  :rpm?     true
   :tarball? false
   :uberjar? true
   :install? false
@@ -340,7 +340,7 @@
  {:type     :service
   :path     "services/user-sessions"
   :build    :lein
-  :rpm?     :true
+  :rpm?     true
   :tarball? false
   :uberjar  true
   :install? false
@@ -351,7 +351,7 @@
  {:type     :service
   :path     "services/user-preferences"
   :build    :lein
-  :rpm?     :true
+  :rpm?     true
   :tarball? false
   :uberjar  true
   :install? false
