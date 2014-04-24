@@ -7,9 +7,9 @@
   (:require [cheshire.core :as json]))
 
 (defn sanitize
-  [session-str]
-  (if session-str
-    (filter-keys #(not= :id %) (json/parse-string session-str))
+  [session]
+  (if session
+    (filter-keys #(not= :id %) session)
     {}))
 
 (defn not-a-user
@@ -20,7 +20,7 @@
   [username req]
   (if-not (user? username)
     (not-a-user username)
-    (response (sanitize (user-session username)))))
+    (response (sanitize (json/parse-string (user-session username))))))
 
 (defn post-req
   [username req]

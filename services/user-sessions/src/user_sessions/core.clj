@@ -67,9 +67,9 @@
 
 (defn wrap-logging [handler]
   (fn [request]
-    (info request)
+    (info (cfg/pprint-to-string request))
     (let [resp (handler request)]
-      (info resp)
+      (info (cfg/pprint-to-string resp))
       resp)))
 
 (defn wrap-exception [handler]
@@ -78,7 +78,7 @@
       (handler request)
       (catch Exception e
         (let [formatted-exception (format-exception e)]
-          (error formatted-exception)
+          (error (cfg/pprint-to-string request) "\n" formatted-exception)
           (-> (response formatted-exception) (status 500)))))))
 
 (def app
