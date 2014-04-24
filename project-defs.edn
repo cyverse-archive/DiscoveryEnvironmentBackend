@@ -358,6 +358,17 @@
   :language :clojure
   :archive? true}
 
+ "saved-searches"
+ {:type     :service
+  :path     "services/saved-searches"
+  :build    :lein
+  :rpm?     true
+  :tarball? false
+  :uberjar  true
+  :install? false
+  :language :clojure
+  :archive? true}
+
  "Panopticon"
  {:type     :tool
   :path     "services/Panopticon"
