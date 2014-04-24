@@ -14,7 +14,7 @@
       (if session?
         (-> filtered
             (dissoc :session)
-            (assoc :session (json/parse-string (:session session))))
+            (assoc :session (json/parse-string (:session session) true)))
         filtered))
     {}))
 
@@ -42,9 +42,7 @@
   [username req]
   (validate
    [username req false]
-   (if-not (user? username)
-     (not-a-user username)
-     (response (sanitize (json/parse-string (user-session username)))))))
+   (response (sanitize (json/parse-string (user-session username) true)))))
 
 (defn post-req
   [username req]
