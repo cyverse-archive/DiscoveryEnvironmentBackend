@@ -12,8 +12,7 @@
             [ring.adapter.jetty :as jetty]
             [common-cfg.cfg :as cfg]
             [taoensso.timbre :as timbre]
-            [me.raynes.fs :as fs])
-  (:import [org.apache.log4j Logger]))
+            [me.raynes.fs :as fs]))
 
 (timbre/refer-timbre)
 
