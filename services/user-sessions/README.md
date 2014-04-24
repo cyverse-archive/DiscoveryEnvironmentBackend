@@ -2,7 +2,75 @@
 
 A service for managing user sessions in the DE.
 
-# LICENSE 
+## Build
+
+    lein uberjar
+
+## Configuration
+
+user-sessions accepts configuration files in the EDN format. See [conf/user-sessions.edn](conf/user-sessions.edn) for an example. If a config file is not given on the command-line, user-sessions will look for one at __/etc/user-sessions/user-sessions.edn__.
+
+user-sessions is able to reconfigure itself at run-time with changes contained in the config. It is recommended that you use this feature sparingly, because an invalid config may cause issues that require a restart anyway. When in doubt, restart.
+
+To force a reconfiguration at run-time, touch the config file. Avoid editing the file in-place. Instead, copy the existing config, make the changes in the copy, and move the new config into place.
+
+Forcing reconfiguration does not work for the port or database settings since reconfiguring those at run-time would result in failed requests.
+
+Many of the command-line options accepted by user-sessions have a corresponding config file setting. The command-line setting __always__ overrides the config file setting, even if you reload the config file as described above.
+
+Here are the command-line options:
+
+    DE API for managing user sessions.
+
+    Usage: user-sessions [options]
+
+    Options:
+      -p, --port PORT                                          Port number
+      -c, --config PATH      /etc/iplant/de/user-sessions.edn  Path to the config file
+      -v, --version                                            Print out the version number.
+      -f, --log-file PATH                                      Path to the log file.
+      -s, --log-size SIZE                                      Max Size of the logs in MB.
+      -b, --log-backlog MAX                                    Max number of rotated logs to retain.
+      -l, --log-level LEVEL                                    One of: trace debug info warn error fatal report
+      -h, --help
+
+Here is a config file with all of the available settings:
+```clojure
+{:db-name "test"
+ :db-user "test"
+ :db-password "testpassword"
+ :db-host "databasehost"
+ :db-port "5432"
+ :port 31304
+ :log-file "/var/log/user-sessions/user-sessions.log"
+
+ ;one of :trace :debug :info :warn :error :fatal :report
+ :log-level :info
+
+ ;Max number of rotated logs to retain
+ :log-backlog 5
+
+ ;Max size of an individual log
+ :log-size 1024}
+```
+
+user-sessions listens on port 31304 by default.
+
+## Running it
+
+For local development:
+
+    lein run -- --config /path/to/config
+
+From an uberjar:
+
+    java -jar user-sessions-3.1.0-standalone.jar --config /path/to/config
+
+If you installed user-sessions through an RPM, make sure the config file is at /etc/iplant/de/ (make the directory if necessary). Then run the following:
+
+    sudo /sbin/service user-sessions start
+
+# LICENSE
 
 See [LICENSE](LICENSE)
 
