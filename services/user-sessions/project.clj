@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject user-sessions "3.1.0"
+(defproject org.iplantc/user-sessions "3.1.0"
   :description "DE API for managing user sessions."
   :url "https://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend"
   :license {:name "BSD"}
