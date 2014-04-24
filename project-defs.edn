@@ -336,6 +336,17 @@
   :language :clojure
   :archive? true}
 
+ "user-sessions"
+ {:type     :service
+  :path     "services/user-sessions"
+  :build    :lein
+  :rpm?     :true
+  :tarball? false
+  :uberjar  true
+  :install? false
+  :language :clojure
+  :archive? true}
+
  "Panopticon"
  {:type     :tool
   :path     "services/Panopticon"
