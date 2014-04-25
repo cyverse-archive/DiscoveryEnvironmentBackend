@@ -70,6 +70,62 @@ If you installed saved-searches through an RPM, make sure the config file is at 
 
     sudo /sbin/service saved-searches start
 
+
+## API
+
+### Getting saved searches for a user
+
+    GET /<username>
+
+Returns the JSON containing the saved searches for the user. Sample curl command:
+
+    curl http://localhost:31306/ipctest@iplantcollaborative.org
+
+
+### Updating/creating saved searches for a user
+
+    POST /<username>
+
+Or,
+
+    PUT /<username>
+
+The body of the request should be JSON containing all of the saved searches for the user. The format of the body is not enforced. Any JSON should work.
+
+The Content-Type for the request must be "application/json".
+
+Sample Curl command:
+
+    curl -H "Content-Type: application/json" -d '{"foo" : "bar"}' http://localhost:31306/ipctest@iplantcollaborative.org
+
+
+### Deleting saved searches for a user
+
+    DELETE /<username>
+
+Sample curl command:
+
+    curl -X DELETE http://localhost:31306/ipctest@iplantcollaborative.org
+
+This destroys ALL saved searches for the user. To remove a single saved search, get the saved searches, update the JSON to remove the unwanted saved search, and POST the new JSON.
+
+### Error reporting
+
+If the user doesn't exist, you will receive a 404 status and a message similar to the following:
+
+    {"user" : "ipctest"}
+
+JSON parsing and error reporting is handled by [ring-json](https://github.com/ring-clojure/ring-json). If you post malformed JSON, you will receive a 400 status and a message like this will be returned to the client:
+
+    Malformed JSON in request body.
+
+If you attempt to POST a request with the wrong content-type (as in, not "application/json"), you will receive a response with a status of 415 and the body of the response will be something like this:
+
+    {"content-type":"application/js"}
+
+If a server-side error occurs while handling a request, the request will fail with a 500 status and a stacktrace as plain text. The stack trace will contain ANSI font coloring.
+
+
 # LICENSE
 
 See [LICENSE](LICENSE)
