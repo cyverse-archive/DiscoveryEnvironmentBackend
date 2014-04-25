@@ -54,7 +54,7 @@ Here is a config file with all of the available settings:
  :log-size 1024}
 ```
 
-tree-urls listens on port 31304 by default.
+tree-urls listens on port 31307 by default.
 
 ## Running it
 
