@@ -1,0 +1,21 @@
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
+(defproject org.iplantc/riak-migrator "3.1.0"
+  :description "DE tool for migrating data from Riak to PostgreSQL."
+  :url "https://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend"
+  :license {:name "BSD"}
+  :manifest {"Git-Ref" ~(git-ref)}
+  :aot [riak-migrator.core]
+  :main riak-migrator.core
+  :dependencies [[org.clojure/clojure "1.5.1"]
+                 [clj-http "0.9.1"]
+                 [org.clojure/tools.cli "0.3.1"]
+                 [org.iplantc/common-cli "3.1.0"]
+                 [com.cemerick/url "0.1.1"]])
