@@ -54,7 +54,7 @@ Here is a config file with all of the available settings:
  :log-size 1024}
 ```
 
-saved-searches listens on port 31304 by default.
+saved-searches listens on port 31306 by default.
 
 ## Running it
 
