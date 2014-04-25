@@ -342,7 +342,7 @@
   :build    :lein
   :rpm?     true
   :tarball? false
-  :uberjar  true
+  :uberjar? true
   :install? false
   :language :clojure
   :archive? true}
@@ -353,7 +353,7 @@
   :build    :lein
   :rpm?     true
   :tarball? false
-  :uberjar  true
+  :uberjar? true
   :install? false
   :language :clojure
   :archive? true}
@@ -364,7 +364,7 @@
   :build    :lein
   :rpm?     true
   :tarball? false
-  :uberjar  true
+  :uberjar? true
   :install? false
   :language :clojure
   :archive? true}
@@ -375,7 +375,7 @@
   :build    :lein
   :rpm?     true
   :tarball? false
-  :uberjar  true
+  :uberjar? true
   :install? false
   :language :clojure
   :archive? true}
