@@ -54,7 +54,7 @@ Here is a config file with all of the available settings:
  :log-size 1024}
 ```
 
-user-preferences listens on port 31304 by default.
+user-preferences listens on port 31305 by default.
 
 ## Running it
 
