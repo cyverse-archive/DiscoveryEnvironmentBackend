@@ -8,7 +8,7 @@
 
 (fact "santize works"
       (sanitize {:foo "bar"}) => {:foo "bar"}
-      (sanitize nil) => {}
+      (sanitize nil) => nil
       (sanitize {:saved_searches "{\"foo\":\"bar\"}"}) => {:saved_searches {:foo "bar"}}
       (sanitize {:saved_searches "{\"foo\":\"bar\"}" :id "foo" :user_id "bar"}) => {:saved_searches {:foo "bar"}})
 

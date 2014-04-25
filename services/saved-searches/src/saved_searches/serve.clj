@@ -9,6 +9,20 @@
 
 (timbre/refer-timbre)
 
+(defn parse-saved-searches
+  [saved-searches]
+  (if (contains? saved-searches :saved_searches)
+    (let [parsed (json/parse-string (:saved_searches saved-searches) true)]
+      (assoc saved-searches :saved_searches parsed))
+    saved-searches))
+
+(defn sanitize
+  [saved-searches]
+  (if saved-searches
+    (-> saved-searches
+        (dissoc :user_id :id)
+        (parse-saved-searches))))
+
 (defn not-a-user
   [username]
   {:status 404 :body {:user username}})
@@ -39,13 +53,13 @@
   [username req]
   (validate
    [username req true]
-   (response (save-saved-searches username (json/encode (:body req))))))
+   (response (sanitize (save-saved-searches username (json/encode (:body req)))))))
 
 (defn delete-req
   [username req]
   (validate
    [username req false]
-   (response (delete-saved-searches username))))
+   (response (sanitize (delete-saved-searches username)))))
 
 (defn put-req
   [username req]
