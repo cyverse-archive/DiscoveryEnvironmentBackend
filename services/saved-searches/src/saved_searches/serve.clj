@@ -47,7 +47,7 @@
   [username req]
   (validate
    [username req false]
-   (response (json/parse-string (saved-searches username) true))))
+   (response (saved-searches username))))
 
 (defn post-req
   [username req]
