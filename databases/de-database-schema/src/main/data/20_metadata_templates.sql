@@ -182,8 +182,8 @@ insert into metadata_attributes
      FALSE,
      'C6CB42CD-7C47-47A1-8704-F6582B510ACF'),
     ('A378D704-A979-448A-A1A9-52B94B2592F5',
-     'Metadata complete'
-     'Check this only when you have entered all required fields.'
+     'Metadata complete',
+     'Check this only when you have entered all required fields.',
      FALSE,
      '8130EC25-2452-4FF0-B66A-D9D3A6350816');
 INSERT INTO metadata_template_attrs(template_id, attribute_id, display_order) VALUES
