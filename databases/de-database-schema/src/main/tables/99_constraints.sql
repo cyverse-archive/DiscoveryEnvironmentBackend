@@ -904,3 +904,51 @@ ALTER TABLE ONLY jobs
     ADD CONSTRAINT jobs_user_id_fkey
     FOREIGN KEY (user_id)
     REFERENCES users(id);
+
+--
+-- The primary key for the user_preferences table.
+--
+ALTER TABLE ONLY user_preferences
+    ADD CONSTRAINT user_preferences_pkey
+    PRIMARY KEY (id);
+
+--
+-- Foreign key constraint for the user_id field of the user_preferences table.
+--
+ALTER TABLE ONLY user_preferences
+    ADD CONSTRAINT user_preferences_user_id_fkey
+    FOREIGN KEY (user_id)
+    REFERENCES users(id);
+CREATE INDEX user_preferences_user_id_idx ON user_preferences(user_id);
+
+--
+-- The primary key for the user_sessions table.
+--
+ALTER TABLE ONLY user_sessions
+    ADD CONSTRAINT user_sessions_pkey
+    PRIMARY KEY (id);
+
+--
+-- Foreign key constraint for the user_id field of the user_sessions table.
+--
+ALTER TABLE ONLY user_sessions
+    ADD CONSTRAINT user_sessions_user_id_fkey
+    FOREIGN KEY (user_id)
+    REFERENCES users(id);
+CREATE INDEX user_sessions_user_id_idx ON user_sessions(user_id);
+
+--
+-- The primary key for the user_saved_searches table.
+--
+ALTER TABLE ONLY user_saved_searches
+    ADD CONSTRAINT user_saved_searches_pkey
+    PRIMARY KEY (id);
+
+--
+-- Foreign key constraint for the user_id field of the user_saved_searches table.
+--
+ALTER TABLE ONLY user_saved_searches
+    ADD CONSTRAINT user_saved_searches_user_id_fkey
+    FOREIGN KEY (user_id)
+    REFERENCES users(id);
+CREATE INDEX user_saved_searches_user_id_idx ON user_sessions(user_id);
