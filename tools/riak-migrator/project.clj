@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/riak-migrator "3.1.0"
+(defproject org.iplantc/riak-migrator "3.1.1"
   :description "DE tool for migrating data from Riak to PostgreSQL."
   :url "https://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend"
   :license {:name "BSD"}
@@ -17,5 +17,5 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [clj-http "0.9.1"]
                  [org.clojure/tools.cli "0.3.1"]
-                 [org.iplantc/common-cli "3.1.0"]
+                 [org.iplantc/common-cli "3.1.1"]
                  [com.cemerick/url "0.1.1"]])
