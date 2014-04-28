@@ -19,7 +19,7 @@
 
  (ref-set
   cfg/defaults
-  {:log-level   :info
+  {:log-level   :warn
    :log-size    (* 100 1024 1024)
    :log-backlog 10})
 

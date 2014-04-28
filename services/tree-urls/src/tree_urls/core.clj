@@ -68,8 +68,8 @@
   (fn [request]
     (info (cfg/pprint-to-string request))
     (let [resp (handler request)]
-      (info (cfg/pprint-to-string resp))
-      resp)))
+      (info (cfg/pprint-to-string (dissoc resp :body))
+      resp))))
 
 (defn wrap-exception [handler]
   (fn [request]
