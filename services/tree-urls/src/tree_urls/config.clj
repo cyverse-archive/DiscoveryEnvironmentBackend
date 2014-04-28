@@ -25,14 +25,14 @@
 
  (ref-set
   cfg/filters
-  #{:db-password :db-user})
+  #{:db-password :db-user}))
 
- (defn subname
+(defn subname
   []
   (let [db-host (:db-host @cfg/cfg)
         db-port (:db-port @cfg/cfg)
         db-name (:db-name @cfg/cfg)]
-    (str "//" db-host ":" db-port "/" db-name))))
+    (str "//" db-host ":" db-port "/" db-name)))
 
 (defn db-spec
   []
