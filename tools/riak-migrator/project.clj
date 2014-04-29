@@ -16,6 +16,9 @@
   :main riak-migrator.core
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [clj-http "0.9.1"]
+                 [cheshire "5.3.1"]
                  [org.clojure/tools.cli "0.3.1"]
-                 [org.iplantc/common-cli "3.1.1"]
-                 [com.cemerick/url "0.1.1"]])
+                 [org.iplantc/common-cli "3.1.0"]
+                 [org.iplantc/kameleon "3.1.0"]
+                 [com.cemerick/url "0.1.1"]
+                 [me.raynes/fs "1.4.4"]])

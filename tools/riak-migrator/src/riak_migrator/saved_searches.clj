@@ -36,9 +36,9 @@
 
 (defn post-searches
   [svc rb username bucket]
-  (let [resp (http/post
-              (str (url svc (url-encode username)))
-              {:body (key-value rb bucket key-name) :body-encode "UTF-8"
+  (let [resp (http/post (str (url svc (url-encode username)))
+              {:body (key-value rb bucket key-name)
+               :body-encode "UTF-8"
                :content-type "application/json"})]
     (when-not (= 200 (:status resp))
       (println "WARNING, REQUEST FAILED:\n" (:body resp))
@@ -53,7 +53,6 @@
     (println "Migrating saved searches")
     (println "\t* -- Riak host: " rb)
     (println "\t* -- Service host: " svc)
-
     (doseq [bucket (saved-searches-buckets (buckets rb))]
       (let [username (username-from-bucket bucket)]
         (if-not (user-exists? svc username)

@@ -1,24 +1,27 @@
 (ns riak-migrator.riak
   (:require [clj-http.client :as http]
+            [cheshire.core :as json]
             [cemerick.url :refer [url url-encode]]))
 
 (defn riak-base
   [riak-host riak-port]
   (str "http://" riak-host ":" riak-port))
 
-(defn- bucket-url
+(defn bucket-url
   [rb]
   (-> (url rb "buckets")
       (assoc :query {:buckets "true"})
       str))
 
-(defn- all-keys-url
-  [rb bucket]
-  (-> (url rb "buckets" bucket "keys")
-      (assoc :query {:keys "true"})
-      str))
+(defn all-keys-url
+  ([rb bucket]
+   (all-keys-url rb bucket "true"))
+  ([rb bucket key-type]
+   (-> (url rb "buckets" bucket "keys")
+       (assoc :query {:keys key-type})
+       str)))
 
-(defn- key-url
+(defn key-url
   [rb bucket key-name]
   (str (url rb "riak" bucket key-name)))
 
@@ -29,8 +32,8 @@
 
 (defn keys-in-bucket
   [rb bucket]
-  (get-in (http/get (all-keys-url rb bucket) {:as :json}) [:body :keys]))
+  (http/get (all-keys-url rb bucket) {:as :json}))
 
 (defn key-value
   [rb bucket key-name]
-  (get-in (http/get (key-url rb bucket key-name)) [:body]))
+  (:body (http/get (key-url rb bucket key-name))))
