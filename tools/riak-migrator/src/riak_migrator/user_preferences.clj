@@ -32,8 +32,6 @@
     (when (<= 200 status 299)
       (println "\t* -- Stored preferences for" username))))
 
-
-
 (defn user-preferences
   [options]
   (connect-db options)
