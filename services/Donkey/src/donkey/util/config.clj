@@ -623,6 +623,11 @@
   [props config-valid configs]
   "donkey.job-exec.default-output-folder")
 
+(cc/defprop-str prefs-base-url
+  "The hostname of the user-preferences service"
+  [props config-valid configs]
+  "donkey.preferences.host")
+
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []
