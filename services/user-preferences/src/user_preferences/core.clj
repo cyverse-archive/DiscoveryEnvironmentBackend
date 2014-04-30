@@ -52,6 +52,8 @@
    ["-h" "--help"]])
 
 (defroutes session-routes
+  (GET "/" [] "Hello from session-routes.")
+  
   (GET "/:username" [username :as req]
        (get-req username req))
 
