@@ -52,6 +52,8 @@
    ["-h" "--help"]])
 
 (defroutes app-routes
+  (GET "/" [] "Hello from saved-searches.")
+  
   (GET "/:username" [username :as req]
        (get-req username req))
 
@@ -68,7 +70,7 @@
   (fn [request]
     (info (cfg/pprint-to-string request))
     (let [resp (handler request)]
-      (info (cfg/pprint-to-string resp))
+      (info (cfg/pprint-to-string (dissoc resp :body)))
       resp)))
 
 (defn wrap-exception [handler]

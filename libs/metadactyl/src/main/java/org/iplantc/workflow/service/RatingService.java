@@ -1,12 +1,5 @@
 package org.iplantc.workflow.service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.iplantc.authn.service.UserSessionService;
 import org.iplantc.hibernate.util.SessionTask;
 import org.iplantc.hibernate.util.SessionTaskWrapper;
@@ -19,8 +12,16 @@ import org.iplantc.workflow.dao.DaoFactory;
 import org.iplantc.workflow.dao.RatingDao;
 import org.iplantc.workflow.dao.TransformationActivityDao;
 import org.iplantc.workflow.dao.hibernate.HibernateDaoFactory;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -116,11 +117,15 @@ public class RatingService {
         JSONObject result = new JSONObject();
 
         if (user == null) {
-            throw new RuntimeException("No user found for user id " + userId); //$NON-NLS-1$
+            throw new RuntimeException("No user found for user id " + userId);
         } else if (transformationActivity == null) {
-            throw new RuntimeException("No analysis found for analysis id " + analysisId); //$NON-NLS-1$
+            throw new RuntimeException("No analysis found for analysis id " + analysisId);
         } else if (commentId == null) {
-            throw new RuntimeException("No comment ID found for analysis id " + analysisId); //$NON-NLS-1$
+            throw new RuntimeException("No comment ID found for analysis id " + analysisId);
+        } else if (numericRating < 1 || 5 < numericRating) {
+            throw new RuntimeException(
+                    "Rating must be an integer between 1 and 5 inclusive. Invalid rating ("
+                            + numericRating + ") for analysis id " + analysisId);
         } else {
             Rating rating = ratingDao.findByUserAndTransformationActivity(user, transformationActivity);
 
@@ -129,9 +134,9 @@ public class RatingService {
 
                 rating.setUser(user);
                 rating.setTransformationActivity(transformationActivity);
-                rating.setCommentId(commentId);
             }
 
+            rating.setCommentId(commentId);
             rating.setRaiting(numericRating);
 
             transformationActivity.getRatings().add(rating);

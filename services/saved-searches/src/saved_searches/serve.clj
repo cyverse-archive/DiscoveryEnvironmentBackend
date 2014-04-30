@@ -4,19 +4,24 @@
         [compojure.response]
         [ring.util.response]
         [medley.core])
-  (:require [cheshire.core :as json]))
+  (:require [cheshire.core :as json]
+            [taoensso.timbre :as timbre]))
+
+(timbre/refer-timbre)
+
+(defn parse-saved-searches
+  [saved-searches]
+  (if (contains? saved-searches :saved_searches)
+    (let [parsed (json/parse-string (:saved_searches saved-searches) true)]
+      (assoc saved-searches :saved_searches parsed))
+    saved-searches))
 
 (defn sanitize
-  [prefs]
-  (if prefs
-    (let [prefs? (contains? prefs :saved_searches)
-          filtered  (filter-keys #(not (contains? #{:id :user_id} %)) prefs)]
-      (if prefs?
-        (-> filtered
-            (dissoc :saved_searches)
-            (assoc :saved_searches (json/parse-string (:saved_searches prefs) true)))
-        filtered))
-    {}))
+  [saved-searches]
+  (if saved-searches
+    (-> saved-searches
+        (dissoc :user_id :id)
+        (parse-saved-searches))))
 
 (defn not-a-user
   [username]
@@ -42,7 +47,7 @@
   [username req]
   (validate
    [username req false]
-   (response (sanitize (json/parse-string (saved-searches username) true)))))
+   (response (saved-searches username))))
 
 (defn post-req
   [username req]
@@ -52,9 +57,11 @@
 
 (defn delete-req
   [username req]
-  (validate
-   [username req false]
-   (response (sanitize (delete-saved-searches username)))))
+  (if-not (user? username)
+    ""
+    (do
+      (delete-saved-searches username)
+      "")))
 
 (defn put-req
   [username req]

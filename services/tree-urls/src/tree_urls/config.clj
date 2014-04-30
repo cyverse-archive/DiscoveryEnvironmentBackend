@@ -19,20 +19,20 @@
 
  (ref-set
   cfg/defaults
-  {:log-level   :info
+  {:log-level   :warn
    :log-size    (* 100 1024 1024)
    :log-backlog 10})
 
  (ref-set
   cfg/filters
-  #{:db-password :db-user})
+  #{:db-password :db-user}))
 
- (defn subname
+(defn subname
   []
   (let [db-host (:db-host @cfg/cfg)
         db-port (:db-port @cfg/cfg)
         db-name (:db-name @cfg/cfg)]
-    (str "//" db-host ":" db-port "/" db-name))))
+    (str "//" db-host ":" db-port "/" db-name)))
 
 (defn db-spec
   []

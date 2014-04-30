@@ -6,40 +6,40 @@
   (:require [kameleon.entities :as e]))
 
 (defn tree-urls-seq
-  "Returns all of the tree-url records associated with the given UUID."
-  [uuid]
+  "Returns all of the tree-url records associated with the given SHA1."
+  [sha1]
   (select e/tree-urls
-          (where {:id (uuidify uuid)})))
+          (where {:sha1 sha1})))
 
 (defn tree-urls?
-  "Returns true if the UUID has tree-urls associated with it in the
+  "Returns true if the SHA1 has tree-urls associated with it in the
    database."
-  [uuid]
-  (pos? (count (tree-urls-seq uuid))))
+  [sha1]
+  (pos? (count (tree-urls-seq sha1))))
 
 (defn tree-urls
-  "Returns the tree-urls (as a string) associated with the UUID."
-  [uuid]
-  (-> (tree-urls-seq uuid) first :tree_urls))
+  "Returns the tree-urls (as a string) associated with the SHA1."
+  [sha1]
+  (-> (tree-urls-seq sha1) first :tree_urls))
 
 (defn insert-tree-urls
   "Inserts tree urls into the database without checking to see if
-   the UUID already exists. Use (save-tree-urls) instead."
-  [uuid tree-urls-str]
+   the SHA1 already exists. Use (save-tree-urls) instead."
+  [sha1 tree-urls-str]
   (insert e/tree-urls
-          (values {:id (uuidify uuid) :tree_urls tree-urls-str})))
+          (values {:id (uuid) :sha1 sha1 :tree_urls tree-urls-str})))
 
 (defn save-tree-urls
   "Upserts tree-urls into the database."
-  [uuid tree-urls-str]
-  (if-not (tree-urls? uuid)
-    (insert-tree-urls uuid tree-urls-str)
+  [sha1 tree-urls-str]
+  (if-not (tree-urls? sha1)
+    (insert-tree-urls sha1 tree-urls-str)
     (update e/tree-urls
             (set-fields {:tree_urls tree-urls-str})
-            (where {:id (uuidify uuid)}))))
+            (where {:sha1 sha1}))))
 
 (defn delete-tree-urls
   "Does a hard delete of the tree-urls associated with UUID."
-  [uuid]
+  [sha1]
   (delete e/tree-urls
-          (where {:id (uuidify uuid)})))
+          (where {:sha1 sha1})))
