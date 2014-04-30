@@ -57,9 +57,11 @@
 
 (defn delete-req
   [username req]
-  (validate
-   [username req false]
-   (response (sanitize (delete-saved-searches username)))))
+  (if-not (user? username)
+    ""
+    (do
+      (delete-saved-searches username)
+      "")))
 
 (defn put-req
   [username req]
