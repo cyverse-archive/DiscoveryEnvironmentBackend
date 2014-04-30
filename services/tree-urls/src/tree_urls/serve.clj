@@ -21,10 +21,10 @@
 (defn sha1-format?
   [sha1]
   (cond
-   (not= (count sha1) 40)
+   (> (count sha1) 40)
    false
 
-   (not (re-find #"^[a-fA-F0-9]+$" sha1))
+   (nil? (re-find #"^[a-fA-F0-9]+$" sha1))
    false
 
    :else

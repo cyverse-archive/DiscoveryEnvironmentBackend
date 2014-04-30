@@ -40,59 +40,52 @@
      from r_meta_main
     where meta_attr_name = 'tree-urls';")
 
-(defn hyphenate
-  "Adapted from http://stackoverflow.com/a/18992809"
-  [unhyphenated]
-  (clojure.string/replace unhyphenated #"(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})" "$1-$2-$3-$4-$5"))
-
 (defn get-riak-paths
-  []
+  [bucket]
   (->> (k/exec-raw icat [tree-urls-query] :results)
        (map :meta_attr_value)
-       (filter #(.startsWith % "/riak/tree-urls/"))
+       (filter #(.startsWith % (str "/riak/" bucket "/")))
        (map base-name)))
 
-(def failed-uuids (atom #{}))
+(def failed-sha1s (atom #{}))
 
-(defn add-failed-uuids [uuid]
-  (reset! failed-uuids (conj @failed-uuids uuid)))
-
-(def tree-urls-bucket "tree-urls")
+(defn add-failed-sha1 [sha1]
+  (reset! failed-sha1s (conj @failed-sha1s sha1)))
 
 (defn tree-urls-url [host port]
   (str "http://" host ":" port))
 
 (defn get-trees-from-riak
-  [rb bucket uuid]
-  (json/encode (:tree-urls (json/decode (key-value rb bucket uuid) true))))
+  [rb bucket sha1]
+  (json/encode (:tree-urls (json/decode (key-value rb bucket sha1) true))))
 
 (defn post-tree-urls
-  [svc rb uuid bucket]
-  (let [_        (println "\t* -- Getting key from" (key-url rb bucket uuid))
-        svc-url  (str (url svc (hyphenate uuid)))
+  [svc rb sha1 bucket]
+  (let [_        (println "\t* -- Getting key from" (key-url rb bucket sha1))
+        svc-url  (str (url svc sha1))
         _        (println "\t* -- Posting to" svc-url)
-        svc-body (get-trees-from-riak rb bucket uuid)
-        _        (println "\t* -- Body of request\n" svc-body)
-        svc-opts {:body svc-body
+        svc-body (get-trees-from-riak rb bucket sha1)
+        svc-opts { :body svc-body
                   :body-encode "UTF-8"
                   :content-type "application/json"
-                  :throw-exceptions true}
+                  :throw-exceptions false}
         resp     (http/post svc-url svc-opts)]
     (when-not (= 200 (:status resp))
       (println "WARNING, REQUEST FAILED:\n" (:body resp))
-      (add-failed-uuids uuid))
+      (add-failed-sha1 sha1))
     (when (= 200 (:status resp))
-      (println "\t* -- Successfully migrated data for" uuid))))
+      (println "\t* -- Successfully migrated data for" sha1))))
 
 (defn tree-urls
   [options]
   (connect-icat options)
-  (let [rb  (riak-base (:riak-host options) (:riak-port options))
+  (let [rb (riak-base (:riak-host options) (:riak-port options))
+        tree-urls-bucket (:riak-bucket options)
         svc (tree-urls-url (:service-host options) (:service-port options))]
     (println "Migrating tree URLS")
     (println "\t* -- Riak host: " rb)
     (println "\t* -- Service host: " svc)
 
-    (doseq [uuid (get-riak-paths)]
-      (println uuid)
-      (post-tree-urls svc rb uuid tree-urls-bucket))))
+    (doseq [sha1 (get-riak-paths tree-urls-bucket)]
+      (post-tree-urls svc rb sha1 tree-urls-bucket)
+      (println ""))))

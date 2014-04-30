@@ -21,6 +21,8 @@
    ["-o" "--riak-port PORT" "The Riak port to use"
     :default "31301"]
 
+   ["-e" "--riak-bucket BUCKET" "The Riak bucket to use."]
+
    ["-d" "--db-host HOST" "The hostname for the DE database"]
 
    ["-b" "--db-port PORT" "The port for the DE database"
