@@ -10,7 +10,7 @@
   []
   (println "\t* adding the sha1 column to the tree_urls table")
   (exec-raw
-   "ALTER TABLE tree_urls ADD COLUMN sha1 VARCHAR[40] UNIQUE NOT NULL")
+   "ALTER TABLE tree_urls ADD COLUMN sha1 VARCHAR(40) UNIQUE NOT NULL")
   (exec-raw
    "CREATE INDEX tree_urls_sha1
     ON tree_urls(sha1)"))

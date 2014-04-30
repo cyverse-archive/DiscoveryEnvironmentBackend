@@ -5,7 +5,7 @@ SET search_path = public, pg_catalog;
 ---
 CREATE TABLE tree_urls (
     id UUID UNIQUE NOT NULL,
-    sha1 VARCHAR[40] UNIQUE NOT NULL,
+    sha1 VARCHAR(40) UNIQUE NOT NULL,
     tree_urls TEXT NOT NULL,
     PRIMARY KEY (id)
 );
