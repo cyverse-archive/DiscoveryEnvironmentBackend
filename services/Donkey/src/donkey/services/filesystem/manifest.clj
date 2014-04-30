@@ -48,11 +48,15 @@
           (get-attribute cm fpath coge-attr) (range))
     []))
 
+(defn- format-anon-files-url
+  [fpath]
+  {:label "anonymous" :url (anon-file-url fpath)})
+
 (defn- extract-urls
   [cm fpath]
   (let [urls (concat (extract-tree-urls cm fpath) (extract-coge-view cm fpath))]
     (into [] (if (anon-readable? cm fpath)
-               (conj urls (anon-file-url fpath))
+               (conj urls (format-anon-files-url fpath))
                urls))))
 
 (defn- manifest-map
