@@ -52,24 +52,26 @@
    ["-h" "--help"]])
 
 (defroutes app-routes
-  (GET "/:uuid" [uuid :as req]
-       (get-req uuid req))
+  (GET "/" [] "Hello from tree-urls.")
 
-  (PUT "/:uuid" [uuid :as req]
-       (put-req uuid req))
+  (GET "/:sha1" [sha1 :as req]
+       (get-req sha1 req))
 
-  (POST "/:uuid" [uuid :as req]
-        (post-req uuid req))
+  (PUT "/:sha1" [sha1 :as req]
+       (put-req sha1 req))
 
-  (DELETE "/:uuid" [uuid :as req]
-          (delete-req uuid req)))
+  (POST "/:sha1" [sha1 :as req]
+        (post-req sha1 req))
+
+  (DELETE "/:sha1" [sha1 :as req]
+          (delete-req sha1 req)))
 
 (defn wrap-logging [handler]
   (fn [request]
     (info (cfg/pprint-to-string request))
     (let [resp (handler request)]
-      (info (cfg/pprint-to-string (dissoc resp :body))
-      resp))))
+      (info (cfg/pprint-to-string (dissoc resp :body)))
+      resp)))
 
 (defn wrap-exception [handler]
   (fn [request]
