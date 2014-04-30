@@ -52,6 +52,8 @@
    ["-h" "--help"]])
 
 (defroutes app-routes
+  (GET "/" [] "Hello from saved-searches.")
+  
   (GET "/:username" [username :as req]
        (get-req username req))
 
