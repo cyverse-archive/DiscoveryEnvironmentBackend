@@ -14,6 +14,7 @@
   :manifest {"Git-Ref" ~(git-ref)}
   :aot [riak-migrator.core]
   :main riak-migrator.core
+  :uberjar-name "riak-migrator.jar"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [clj-http "0.9.1"]
                  [cheshire "5.3.1"]

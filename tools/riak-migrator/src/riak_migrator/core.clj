@@ -13,7 +13,9 @@
   #{"saved-searches"
      "tree-urls"
      "user-preferences"
-     "user-sessions"})
+     "user-sessions"
+     "--help"
+     "--version"})
 
 (def riak-options
   [["-r" "--riak-host HOST" "The Riak hostname to connect to."]
@@ -110,29 +112,42 @@
    :group-id "org.iplantc"
    :art-id "riak-migrator"})
 
+(defn print-base-help
+  []
+  (println "Command must be one of: " commands)
+  (println "Each command has its own --help option."))
+
 (defn -main
   [& args]
   (when-not (contains? commands (first args))
-    (println "Command must be one of: " commands)
-    (println "Each command has its own --help option.")
+    (print-base-help)
     (System/exit 1))
+  
   (let [cmd      (first args)
         cmd-args (rest args)
         {:keys [desc app-name group-id art-id]}    app-info
         {:keys [options arguments errors summary]} (cli/parse-opts cmd-args (command-options cmd))]
-     (cond
-      (:help options)
-      (ccli/exit 0 (ccli/usage desc app-name summary))
-
-      (:version options)
-      (ccli/exit 0 (version/version-info group-id art-id))
-
-      errors
-      (ccli/exit 1 (ccli/error-msg errors))
-
-      (not (:riak-host options))
-      (ccli/exit 1 "You must specify a --riak-host.")
-
-      (when-not (:riak-port options))
-      (ccli/exit 1 "You must specify a --riak-port"))
+    (cond
+     (= cmd "--help")
+     (do
+       (print-base-help)
+       (System/exit 0))
+     
+     (= cmd "--version")
+     (ccli/exit 0 (version/version-info group-id art-id))
+     
+     (:help options)
+     (ccli/exit 0 (ccli/usage desc app-name summary))
+     
+     (:version options)
+     (ccli/exit 0 (version/version-info group-id art-id))
+     
+     errors
+     (ccli/exit 1 (ccli/error-msg errors))
+     
+     (not (:riak-host options))
+     (ccli/exit 1 "You must specify a --riak-host.")
+     
+     (when-not (:riak-port options))
+     (ccli/exit 1 "You must specify a --riak-port"))
     (command cmd options)))
