@@ -295,7 +295,7 @@
   (let [request (service/decode-json body)]
     (.rateApp (get-app-lister)
               (service/required-field request :analysis_id)
-              (service/required-field request :comment_id)
+              (service/required-field request :rating)
               (service/required-field request :comment_id))))
 
 (defn delete-rating
