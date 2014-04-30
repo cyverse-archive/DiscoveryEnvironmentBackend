@@ -1,4 +1,4 @@
-(defproject org.iplantc/common-cfg "3.1.1"
+(defproject org.iplantc/common-cfg "4.0.0"
   :description "DE services code for managing configurations."
   :url "http://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend/"
   :license {:name "BSD"}
