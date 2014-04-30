@@ -52,9 +52,11 @@
 
 (defn delete-req
   [username req]
-  (validate
-   [username req false]
-   (response (sanitize (delete-user-session username)))))
+  (if-not (user? username)
+    ""
+    (do
+      (delete-user-session username)
+      "")))
 
 (defn put-req
   [username req]
