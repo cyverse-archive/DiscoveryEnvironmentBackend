@@ -12,9 +12,9 @@
   (reset! prefs-failed-users (conj @prefs-failed-users username)))
 
 (defn prefs-from-riak
-  [rb username]
-  (println "\t* -- GET" (str (url rb "riak" "preferences" (url-encode username))))
-  (let [rsp (http/get (str (url rb "riak" "preferences" (url-encode username))) {:throw-exceptions false})]
+  [rb bucket username]
+  (println "\t* -- GET" (str (url rb "riak" bucket (url-encode username))))
+  (let [rsp (http/get (str (url rb "riak" bucket (url-encode username))) {:throw-exceptions false})]
     (if-not (<= 200 (:status rsp) 299)
       (do (add-failed-prefs-users username)
         (println "\t* -- Preferences not found for user" username "; status=" (:status rsp)))
@@ -36,14 +36,15 @@
   [options]
   (connect-db options)
   (let [rb  (riak-base (:riak-host options) (:riak-port options))
+        bk  (:riak-bucket options)
         svc (str "http://" (:service-host options) ":" (:service-port options))]
     (println "Migrating saved searches")
     (println "\t* -- Riak host: " rb)
 
     (doseq [username (all-users)]
-      (when-let [prefs (prefs-from-riak rb username)]
-        #_(save-user-prefs username prefs)
-        (store-user-prefs svc username prefs)))
+      (when-let [prefs (prefs-from-riak rb bk username)]
+        (store-user-prefs svc username prefs)
+        (println "")))
 
     (println "Session migration failed for the following users:")
     (doseq [user (seq @prefs-failed-users)]

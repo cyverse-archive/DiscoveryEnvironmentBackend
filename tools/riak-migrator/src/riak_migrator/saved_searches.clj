@@ -57,4 +57,8 @@
       (let [username (username-from-bucket bucket)]
         (if-not (user-exists? svc username)
           (add-non-existant-users username)
-          (post-searches svc rb username bucket))))))
+          (post-searches svc rb username bucket))))
+
+    (println "Saved search  migration failed for the following users:")
+    (doseq [user (seq @failed-users)]
+      (println "*" user))))

@@ -88,4 +88,8 @@
 
     (doseq [sha1 (get-riak-paths tree-urls-bucket)]
       (post-tree-urls svc rb sha1 tree-urls-bucket)
-      (println ""))))
+      (println ""))
+
+    (println "Tree URL migration failed for the following SHA1s:")
+    (doseq [sha1 (seq @failed-sha1s)]
+      (println "*" sha1))))

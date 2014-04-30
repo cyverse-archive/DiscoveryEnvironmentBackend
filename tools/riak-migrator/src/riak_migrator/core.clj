@@ -15,15 +15,17 @@
      "user-preferences"
      "user-sessions"})
 
-(def base-options
+(def riak-options
   [["-r" "--riak-host HOST" "The Riak hostname to connect to."]
 
    ["-o" "--riak-port PORT" "The Riak port to use"
-    :default "31301"]
+    :default "31301"]])
 
-   ["-e" "--riak-bucket BUCKET" "The Riak bucket to use."]
+(def riak-bucket-options
+  [["-e" "--riak-bucket BUCKET" "The Riak bucket to use."]])
 
-   ["-d" "--db-host HOST" "The hostname for the DE database"]
+(def db-options
+  [["-d" "--db-host HOST" "The hostname for the DE database"]
 
    ["-b" "--db-port PORT" "The port for the DE database"
     :default "5432"]
@@ -32,9 +34,10 @@
     :default "de"]
 
    ["-n" "--db-name DB" "The name of the DE database"
-    :default "de"]
+    :default "de"]])
 
-   ["-i" "--icat-host HOST" "The hostname for the ICAT database"]
+(def icat-options
+  [["-i" "--icat-host HOST" "The hostname for the ICAT database"]
 
    ["-c" "--icat-port PORT" "The port for the ICAT database"
     :default "5432"]
@@ -42,15 +45,54 @@
    ["-a" "--icat-user USER" "The username for the ICAT database"]
 
    ["-t" "--icat-name DB" "The name of the ICAT database"
-    :default "ICAT"]
+    :default "ICAT"]])
 
-   ["-s" "--service-host HOST" "The hostname of the saved-search service"]
+(def base-options
+  (concat
+   [["-v" "--version"]
+    ["-h" "--help"]]
+   riak-options))
 
-   ["-p" "--service-port PORT" "The port for the saved-search service"]
+(def tree-urls-options
+  (concat
+   base-options
+   riak-bucket-options
+   icat-options
+   [["-s" "--service-host HOST" "The hostname of the tree-urls service"]
+    ["-p" "--service-port PORT" "The port for the tree-urls service"
+     :default "31307"]]))
 
-   ["-v" "--version"]
+(def saved-searches-options
+  (concat
+   base-options
+   db-options
+   [["-s" "--service-host HOST" "The hostname of the saved-searches service"]
+    ["-p" "--service-port PORT" "The port for the saved-searches service"
+     :default "31306"]]))
 
-   ["-h" "--help"]])
+(def user-sessions-options
+  (concat
+   base-options
+   riak-bucket-options
+   db-options
+   [["-s" "--service-host HOST" "The hostname of the user-sessions service"]
+    ["-p" "--service-port PORT" "The port for the user-sessions service"
+     :default "31304"]]))
+
+(def user-preferences-options
+  (concat
+   base-options
+   riak-bucket-options
+   db-options
+   [["-s" "--service-host HOST" "The hostname of the user-preferences service"]
+    ["-p" "--service-port PORT" "The port for the user-preferences service"
+     :default "31305"]]))
+
+(def command-options
+  {"saved-searches"   saved-searches-options
+   "tree-urls"        tree-urls-options
+   "user-sessions"    user-sessions-options
+   "user-preferences" user-preferences-options})
 
 (defn command
   [cmd options]
@@ -77,7 +119,7 @@
   (let [cmd      (first args)
         cmd-args (rest args)
         {:keys [desc app-name group-id art-id]}    app-info
-        {:keys [options arguments errors summary]} (cli/parse-opts cmd-args base-options)]
+        {:keys [options arguments errors summary]} (cli/parse-opts cmd-args (command-options cmd))]
      (cond
       (:help options)
       (ccli/exit 0 (ccli/usage desc app-name summary))
