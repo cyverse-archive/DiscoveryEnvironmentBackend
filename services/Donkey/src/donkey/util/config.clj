@@ -527,6 +527,16 @@
   "The number of paths that are allowable in an API request."
   [props config-valid configs filesystem-routes-enabled]
   "donkey.fs.max-paths-in-request")
+
+(cc/defprop-str fs-anon-user
+  "The name of the anonymous user."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.anon-user")
+
+(cc/defprop-str anon-files-base-url
+  "The base url for the anon-files server."
+  [props config-valid configs filesystem-routes-enabled]
+  "donkey.fs.anon-files-base-url")
 ;;; End Filesystem configuration
 
 (cc/defprop-int default-user-search-result-limit

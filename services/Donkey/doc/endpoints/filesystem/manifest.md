@@ -18,10 +18,16 @@ __Response Body__:
         "status" : "success",
         "content-type" : "text/plain",
         "preview":"file\/preview?user=johnw&path=\/iplant\/home\/johnw\/LICENSE.txt",
-        "tree-urls" : [],
+        "urls" : [],
         "info-type" : "<an info type or empty string>"
         "mime-type" : "<a valid filetype>"
     }
+
+The urls field will contain some or none of the following:
+
+* CoGe URLs
+* Tree URLS
+* anon-files URLs
 
 __Curl Command__:
 

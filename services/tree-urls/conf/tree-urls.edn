@@ -1,0 +1,16 @@
+{:db-name "test"
+ :db-user "test"
+ :db-password "testpassword"
+ :db-host "databasehost"
+ :db-port "5432"
+ :port 31307
+ :log-file "/var/log/anon-files/anon-files.log"
+ 
+ ;one of :trace :debug :info :warn :error :fatal :report
+ :log-level :info
+   
+ ;Max number of rotated logs to retain
+ :log-backlog 5
+	 
+ ;Max size of an individual log
+ :log-size 1024}

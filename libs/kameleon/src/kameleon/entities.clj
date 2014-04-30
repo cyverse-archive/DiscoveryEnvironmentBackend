@@ -382,3 +382,22 @@
   (belongs-to tool_requests {:fk :tool_request_id})
   (belongs-to tool_request_status_codes {:fk :tool_request_status_code_id})
   (belongs-to updater {:fk :updater_id}))
+
+(defentity user-preferences
+  (table :user_preferences)
+  (entity-fields :id :preferences)
+  (belongs-to users {:fk :user_id}))
+
+(defentity tree-urls
+  (table :tree_urls)
+  (entity-fields :id :tree-urls))
+
+(defentity user-sessions
+  (table :user_sessions)
+  (entity-fields :id :session)
+  (belongs-to users {:fk :user_id}))
+
+(defentity user-saved-searches
+  (table :user_saved_searches)
+  (entity-fields :id :saved_searches)
+  (belongs-to users {:fk :user_id}))

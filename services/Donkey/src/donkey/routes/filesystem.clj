@@ -159,4 +159,7 @@
           (controller req do-overwrite-chunk :params :body))
 
     (POST "/filesystem/read-csv-chunk" [:as req]
-          (controller req do-read-csv-chunk :params :body))))
+          (controller req do-read-csv-chunk :params :body))
+
+    (POST "/filesystem/anon-files" [:as req]
+          (controller req do-anon-files :params :body))))

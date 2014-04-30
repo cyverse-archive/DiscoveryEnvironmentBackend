@@ -1,7 +1,7 @@
 (ns common-cli.core
   (:require [clojure.tools.cli :as cli]
             [clojure.string :as string]
-            [clojure-commons.props :as props]))
+            [common-cli.version :as version]))
 
 (defn cli-options
   []
@@ -57,7 +57,7 @@
       (exit 0 (usage desc app-name summary))
 
       (:version options)
-      (exit 0 (props/version-info group-id art-id))
+      (exit 0 (version/version-info group-id art-id))
 
       errors
       (exit 1 (error-msg errors)))

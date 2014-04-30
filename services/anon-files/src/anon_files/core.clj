@@ -1,12 +1,13 @@
 (ns anon-files.core
   (:gen-class)
   (:use [compojure.core]
-        [anon-files.serve])
+        [anon-files.serve]
+        [anon-files.config])
   (:require [compojure.route :as route]
             [clojure.string :as string]
             [common-cli.core :as ccli]
             [ring.adapter.jetty :as jetty]
-            [anon-files.config :as cfg]
+            [common-cfg.cfg :as cfg]
             [taoensso.timbre :as timbre]
             [me.raynes.fs :as fs])
   (:import [org.apache.log4j Logger]))
@@ -22,7 +23,7 @@
     :validate [#(< 0 % 0x10000) "Ports must be 0-65536"]]
 
    ["-c" "--config PATH" "Path to the config file"
-    :default "/etc/anon-files/anon-files.edn"
+    :default "/etc/iplant/de/anon-files.edn"
     :validate [#(fs/exists? %) "Config file must exist."
                #(fs/readable? %) "Config file must be readable."]]
 
@@ -51,7 +52,8 @@
    ["-h" "--help"]])
 
 (defroutes app
-  (GET "/*" [:as req] (handle-request req)))
+  (HEAD "/*" [:as req] (spy (handle-head-request req)))
+  (GET "/*" [:as req] (spy (handle-request req))))
 
 (def svc-info
   {:desc "A service that serves up files shared with the iRODS anonymous user."
@@ -67,5 +69,5 @@
     (when (:disable-log4j options)
       (.removeAllAppenders (Logger/getRootLogger)))
     (cfg/load-config options)
-    (info "Started listening on" (:port @cfg/props))
-    (jetty/run-jetty app {:port (:port @cfg/props)})))
+    (info "Started listening on" (:port @cfg/cfg))
+    (jetty/run-jetty app {:port (:port @cfg/cfg)})))

@@ -15,6 +15,7 @@
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
+            [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]))
 
@@ -245,3 +246,39 @@
     (validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-unshare (log-func "do-unshare"))
+
+(defn anon-readable?
+  [cm p]
+  (is-readable? cm (fs-anon-user) p))
+
+(defn anon-file-url
+  [p]
+  (let [aurl (url/url (anon-files-base-url))]
+    (str (-> aurl (assoc :path (ft/path-join (:path aurl) (string/replace p #"^\/" "")))))))
+
+(defn anon-files-urls
+  [paths]
+  (into {} (map #(vector %1 (anon-file-url %1)) paths)))
+
+(defn anon-files
+  [user paths]
+  (with-jargon (jargon-cfg) [cm]
+    (validators/user-exists cm user)
+    (validators/all-paths-exist cm paths)
+    (validators/paths-are-files cm paths)
+    (validators/user-owns-paths cm user paths)
+    (log/warn "Giving read access to" (fs-anon-user) "on:" (string/join " " paths))
+    (share user [(fs-anon-user)] paths :read)
+    {:user user :paths (anon-files-urls paths)}))
+
+(defn fix-broken-paths
+  [paths]
+  (mapv #(string/replace % #"\/$" "") paths))
+
+(defn do-anon-files
+  [params body]
+  (log-call "do-anon-files" params body)
+  (validate-map params {:user string?})
+  (validate-map body {:paths sequential?})
+  (validate-num-paths (:paths body))
+  (anon-files (:user params) (fix-broken-paths (:paths body))))
