@@ -21,7 +21,8 @@
   (if saved-searches
     (-> saved-searches
         (dissoc :user_id :id)
-        (parse-saved-searches))))
+        (parse-saved-searches))
+    {}))
 
 (defn not-a-user
   [username]
@@ -47,7 +48,10 @@
   [username req]
   (validate
    [username req false]
-   (response (saved-searches username))))
+   (let [searches (saved-searches username)]
+     (if searches
+       (response searches)
+       (response {})))))
 
 (defn post-req
   [username req]
