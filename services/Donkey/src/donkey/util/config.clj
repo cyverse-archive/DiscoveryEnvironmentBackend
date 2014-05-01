@@ -628,6 +628,12 @@
   [props config-valid configs]
   "donkey.preferences.host")
 
+(cc/defprop-str sessions-base-url
+  "The hostname of the user-sessions service"
+  [props config-valid configs]
+  "donkey.sessions.host")
+
+
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []
