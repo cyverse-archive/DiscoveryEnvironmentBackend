@@ -29,7 +29,7 @@
      :else
      (json/parse-string (:body resp) true))))
 
-(defn post-prefs
+(defn set-prefs
   [username prefs-map]
   (let [json-prefs  (json/encode prefs-map)
         req-options {:body json-prefs

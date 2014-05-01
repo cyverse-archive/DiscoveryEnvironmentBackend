@@ -10,19 +10,19 @@
    [config/pref-routes-enabled]
 
    (GET "/preferences" []
-        (trap user-prefs))
+        (trap do-get-prefs))
 
    (POST "/preferences" [:as {body :body}]
-         (trap #(user-prefs (slurp body))))
+         (trap #(do-post-prefs (slurp body))))
 
    (DELETE "/preferences" []
            (trap remove-prefs))
 
-   (GET "/search-history" []
+   #_(GET "/search-history" []
         (trap search-history))
 
-   (POST "/search-history" [:as {body :body}]
+   #_(POST "/search-history" [:as {body :body}]
          (trap #(search-history (slurp body))))
 
-   (DELETE "/search-history" []
+   #_(DELETE "/search-history" []
            (trap clear-search-history))))
