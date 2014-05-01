@@ -48,4 +48,6 @@
           (trap #(saved/set-saved-searches (:username current-user) (:body req))))
 
     (DELETE "/saved-searches" []
-            (trap #(saved/delete-saved-searches (:username current-user))))))
+            (trap (fn []
+                    (saved/delete-saved-searches (:username current-user))
+                    {})))))
