@@ -37,7 +37,8 @@
         first
         :value
         ft/basename
-        get-tree-urls)
+        get-tree-urls
+        :tree-urls)
     []))
 
 (defn- extract-coge-view

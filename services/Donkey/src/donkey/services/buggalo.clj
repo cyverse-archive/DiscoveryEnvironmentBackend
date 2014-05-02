@@ -162,7 +162,7 @@
 (defn tree-urls-response
   "Formats the response for one of the tree viewer URL services."
   [resp]
-  (success-response {:urls resp}))
+  (success-response {:urls (:tree-urls resp)}))
 
 (defn tree-viewer-urls-for
   "Obtains the tree viewer URLs for a request body."
