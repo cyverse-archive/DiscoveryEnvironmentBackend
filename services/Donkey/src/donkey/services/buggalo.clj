@@ -2,8 +2,7 @@
   (:use [clojure.java.io :only [copy file]]
         [clojure-commons.file-utils :only [with-temp-dir-in]]
         [donkey.util.config
-         :only [tree-parser-url scruffian-base-url nibblonian-base-url riak-base-url
-                tree-url-bucket]]
+         :only [tree-parser-url scruffian-base-url nibblonian-base-url]]
         [donkey.services.buggalo.nexml :only [is-nexml? extract-trees-from-nexml]]
         [donkey.util.service :only [success-response]]
         [donkey.auth.user-attributes :only [current-user]]
@@ -24,10 +23,10 @@
            [org.forester.phylogeny PhylogenyMethods]))
 
 (defn- metaurl-for
-  "Builds the meta-URL for to use when saving tree files in Riak.  The SHA1 hash
-   of the contents of the tree file is used as the key in Riak."
+  "Builds the meta-URL for to use when saving tree files the database.  The SHA1 hash
+   of the contents of the tree file is used as the key in the database."
   [sha1]
-  (->> [(tree-url-bucket) sha1]
+  (->> ["/riak/tree-urls" sha1]
        (map #(string/replace % #"^/|/$" ""))
        (string/join "/")))
 
@@ -86,12 +85,6 @@
                (cheshire/generate-string (cheshire/parse-string body) {:pretty true})))
    (catch Exception e
      (log/warn e "unable to save the tree metaurl for" path))))
-
-(defn- urlize
-  [url-path]
-  (if-not (or (.startsWith url-path "http") (.startsWith url-path "https"))
-    (str (curl/url (riak-base-url) :path url-path))
-    url-path))
 
 (defn- get-existing-tree-urls
   "Obtains existing tree URLs for either a file stored in the iPlant data store
@@ -153,8 +146,8 @@
   (assoc (nibblonian/format-tree-urls urls) :action "tree_manifest"))
 
 (defn- get-and-save-tree-viewer-urls
-  "Gets the tree-viewer URLs for a file and stores them in Riak.  If the username and path to the
-   file are also provided then the Riak URL will also be storeed in the AVUs for the file."
+  "Gets the tree-viewer URLs for a file and stores them via the tree-urls service.  If the username and path to the
+   file are also provided then a path containing the SHA1 will also be storeed in the AVUs for the file."
   ([dir infile sha1]
      (let [urls    (build-response-map (get-tree-viewer-urls dir infile))]
        (set-tree-urls sha1 urls)

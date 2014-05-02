@@ -20,14 +20,6 @@
       (config/filesystem-routes-enabled)
       (config/fileio-routes-enabled)))
 
-(defn check-riak?
-  "Returns true if the Riak settings should be checked."
-  []
-  (or (config/session-routes-enabled)
-      (config/filesystem-routes-enabled)
-      (config/pref-routes-enabled)
-      (config/tree-viewer-routes-enabled)))
-
 (defn check-jex?
   "Returns true if the JEX settings should be checked."
   []
@@ -55,17 +47,6 @@
     (catch Exception e
       (log/error "Error performing iRODS status check:")
       (log/error (ce/format-exception e)) 
-      false)))
-
-(defn perform-riak-check
-  []
-  (try
-    (let [s (:status (client/get (config/riak-base-url)))]
-      (log/info "HTTP Status from Riak: " s)
-      (<= 200 s 299))
-    (catch Exception e
-      (log/error "Error performing Riak status check:")
-      (log/error (ce/format-exception e))
       false)))
 
 (defn perform-jex-check
@@ -109,12 +90,6 @@
     (merge status {:iRODS (perform-irods-check)})
     status))
 
-(defn status-riak
-  [status]
-  (if (check-riak?)
-    (merge status {:riak (perform-riak-check)})
-    status))
-
 (defn status-jex
   [status]
   (if (check-jex?)
@@ -138,7 +113,6 @@
   [request]
   (-> {}
     (status-irods)
-    (status-riak)
     (status-jex)
     (status-metadactyl)
     (status-notificationagent)))

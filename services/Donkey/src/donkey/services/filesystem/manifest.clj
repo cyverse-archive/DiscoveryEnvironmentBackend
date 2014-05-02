@@ -8,14 +8,14 @@
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [input-stream]]
         [clj-jargon.metadata :only [get-attribute attribute?]]
-        [slingshot.slingshot :only [try+ throw+]])
+        [slingshot.slingshot :only [try+ throw+]]
+        [donkey.clients.tree-urls])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]
-            [donkey.services.filesystem.riak :as riak]
             [donkey.services.garnish.irods :as filetypes]
             [ring.util.codec :as cdc])
   (:import [org.apache.tika Tika]))
@@ -36,9 +36,8 @@
     (-> (get-attribute cm fpath "tree-urls")
         first
         :value
-        riak/get-tree-urls
-        (json/decode true)
-        :tree-urls)
+        ft/basename
+        get-tree-urls)
     []))
 
 (defn- extract-coge-view

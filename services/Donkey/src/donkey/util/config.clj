@@ -183,33 +183,6 @@
   [props config-valid configs notification-routes-enabled]
   "donkey.notificationagent.base-url")
 
-(cc/defprop-str riak-base-url
-  "The base URL for the Riak HTTP API. Used for user sessions."
-  [props config-valid configs pref-routes-enabled session-routes-enabled
-   tree-viewer-routes-enabled]
-  "donkey.sessions.base-url")
-
-(cc/defprop-str riak-sessions-bucket
-  "The bucket in Riak to retrieve user sessions from."
-  [props config-valid configs session-routes-enabled]
-  "donkey.sessions.bucket")
-
-(cc/defprop-str riak-prefs-bucket
-  "The bucket in Riak to retrieve user preferences from."
-  [props config-valid configs pref-routes-enabled]
-  "donkey.preferences.bucket")
-
-(cc/defprop-int riak-prefs-dw
-  "The durable write quorum for Riak that should be used when writing
-   storing preferences."
-  [props config-valid configs pref-routes-enabled]
-  "donkey.preferences.dw")
-
-(cc/defprop-str riak-search-hist-bucket
-  "The bucket in Riak to use for the storage of user search history."
-  [props config-valid configs pref-routes-enabled]
-  "donkey.search-history.bucket")
-
 (cc/defprop-str userinfo-base-url
   "The base URL for the user info API."
   [props config-valid configs user-info-routes-enabled]
@@ -508,16 +481,6 @@
   [props config-valid configs filesystem-routes-enabled]
   "donkey.fs.copy-key")
 
-(cc/defprop-str fs-riak-url
-  "The base URL to Riak."
-  [props config-valid configs filesystem-routes-enabled]
-  "donkey.fs.riak-base-url")
-
-(cc/defprop-str fs-tree-bucket
-  "The Riak bucket containing tree URLs."
-  [props config-valid configs filesystem-routes-enabled]
-  "donkey.fs.riak-trees-bucket")
-
 (cc/defprop-str fs-filter-chars
   "The characters that are considered invalid in iRODS dir- and filenames."
   [props config-valid configs filesystem-routes-enabled]
@@ -567,11 +530,6 @@
   "The URL for the tree parser service."
   [props config-valid configs tree-viewer-routes-enabled]
   "donkey.tree-viewer.base-url")
-
-(cc/defprop-str tree-url-bucket
-  "The bucket in Riak to use for the storage of tree viewer URLs."
-  [props config-valid configs tree-viewer-routes-enabled]
-  "donkey.tree-viewer.bucket")
 
 (cc/defprop-str es-url
   "The URL for Elastic Search"
