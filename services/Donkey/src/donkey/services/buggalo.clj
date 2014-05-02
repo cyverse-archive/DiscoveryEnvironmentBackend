@@ -7,6 +7,7 @@
         [donkey.services.buggalo.nexml :only [is-nexml? extract-trees-from-nexml]]
         [donkey.util.service :only [success-response]]
         [donkey.auth.user-attributes :only [current-user]]
+        [donkey.clients.tree-urls]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
@@ -26,7 +27,7 @@
   "Builds the meta-URL for to use when saving tree files in Riak.  The SHA1 hash
    of the contents of the tree file is used as the key in Riak."
   [sha1]
-  (->> [(riak-base-url) (tree-url-bucket) sha1]
+  (->> [(tree-url-bucket) sha1]
        (map #(string/replace % #"^/|/$" ""))
        (string/join "/")))
 
@@ -75,35 +76,16 @@
     (copy (DigestInputStream. contents digest) infile)
     (apply str (map hex-byte (seq (.digest digest))))))
 
-(defn- retrieve-tree-urls-from
-  "Retrieves tree URLs from their external storage."
-  [url]
-  (log/debug "retrieving tree URLs from" url)
-  (let [res (client/get url {:throw-exceptions false})]
-    (when (<= 200 (:status res) 299)
-      (cheshire/parse-string (:body res) true))))
-
-(defn- save-tree-urls
-  "Saves the tree URLs for a file."
-  [tree-urls metaurl]
-  (let [res (client/post metaurl
-                         {:body         (cheshire/generate-string tree-urls)
-                          :content-type :json}
-                         {:throw-exceptions false})]
-    (when-not (<= 200 (:status res) 299)
-      (log/warn "unable to save tree URLs -" (:body res)))))
-
 (defn- save-tree-metaurl
   "Saves the URL used to obtain the tree URLs in the AVUs for the file."
   [path metaurl]
-  (let [urlpath (:path (curl/url metaurl))]
-    (try+
-      (nibblonian/save-tree-metaurl path urlpath)
-      (catch [:error_code ce/ERR_REQUEST_FAILED] {:keys [body]}
-        (log/warn "unable to save the tree metaurl for" path "-"
-                  (cheshire/generate-string (cheshire/parse-string body) {:pretty true})))
-      (catch Exception e
-        (log/warn e "unable to save the tree metaurl for" path)))))
+  (try+
+   (nibblonian/save-tree-metaurl path metaurl)
+   (catch [:error_code ce/ERR_REQUEST_FAILED] {:keys [body]}
+     (log/warn "unable to save the tree metaurl for" path "-"
+               (cheshire/generate-string (cheshire/parse-string body) {:pretty true})))
+   (catch Exception e
+     (log/warn e "unable to save the tree metaurl for" path))))
 
 (defn- urlize
   [url-path]
@@ -116,15 +98,16 @@
    or a SHA1 hash obtained from the contents of a file."
   ([sha1]
      (log/debug "searching for existing tree URLs for SHA1 hash" sha1)
-     (retrieve-tree-urls-from (metaurl-for sha1)))
+     (get-tree-urls sha1))
   ([user path]
      (log/debug "searching for existing tree URLs for user" user "and path" path)
      (when-let [metaurl (nibblonian/get-tree-metaurl user path)]
-       (retrieve-tree-urls-from (urlize metaurl))))
+       (log/debug "metaurl for path" path "is" metaurl)
+       (get-tree-urls (ft/basename metaurl))))
   ([sha1 user path]
      (log/debug "searching for existing tree URLs for SHA1 hash" sha1)
      (let [metaurl (metaurl-for sha1)]
-       (when-let [urls (retrieve-tree-urls-from metaurl)]
+       (when-let [urls (get-tree-urls sha1)]
          (save-tree-metaurl path metaurl)
          urls))))
 
@@ -173,21 +156,20 @@
   "Gets the tree-viewer URLs for a file and stores them in Riak.  If the username and path to the
    file are also provided then the Riak URL will also be storeed in the AVUs for the file."
   ([dir infile sha1]
-     (let [urls    (build-response-map (get-tree-viewer-urls dir infile))
-           metaurl (metaurl-for sha1)]
-       (save-tree-urls urls metaurl)
+     (let [urls    (build-response-map (get-tree-viewer-urls dir infile))]
+       (set-tree-urls sha1 urls)
        urls))
   ([path user dir infile sha1]
      (let [urls    (build-response-map (get-tree-viewer-urls dir infile))
            metaurl (metaurl-for sha1)]
-       (save-tree-urls urls metaurl)
+       (set-tree-urls sha1 urls)
        (save-tree-metaurl path metaurl)
        urls)))
 
 (defn tree-urls-response
   "Formats the response for one of the tree viewer URL services."
   [resp]
-  (success-response {:urls (:tree-urls resp)}))
+  (success-response {:urls resp}))
 
 (defn tree-viewer-urls-for
   "Obtains the tree viewer URLs for a request body."

@@ -638,6 +638,11 @@
   [props config-valid configs]
   "donkey.saved-searches.host")
 
+(cc/defprop-str tree-urls-base-url
+  "The base URL of the tree-urls service"
+  [props config-valid configs]
+  "donkey.tree-urls.host")
+
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
