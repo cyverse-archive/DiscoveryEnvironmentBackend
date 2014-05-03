@@ -494,7 +494,7 @@
   (exec-sql-statement "ALTER TABLE ONLY jobs RENAME COLUMN user_id TO user_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY jobs ADD COLUMN user_id TYPE UUID"))
 
-(defn convert
+(defn ^{:requires-sql-dir true} convert
   "Performs the database conversion."
   [unpacked-dir]
   (println "Performing the conversion for" version)

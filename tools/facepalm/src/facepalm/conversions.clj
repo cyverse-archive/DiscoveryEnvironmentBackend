@@ -66,14 +66,13 @@
   [ns-str]
   (str ns-str "/convert"))
 
-(defn- fname->cv-ref
+(defn- fname->cv-symbol
   [fname]
   (-> fname
       fu/basename
       fname->ns-str
       ns-str->cv-str
-      symbol
-      eval))
+      symbol))
 
 (defn- list-conversions
   [dir]
@@ -105,6 +104,9 @@
 (defn conversion-map
   [dir]
   (load-dependencies dir)
-  (let [conversions (list-conversions dir)]
+  (let [conversions (list-conversions dir)
+        cv-symbols  (into {} (map #(vector (fname->db-version %) (fname->cv-symbol %))
+                                  conversions))]
     (load-conversions conversions)
-    (into {} (map #(vector (fname->db-version %) (fname->cv-ref %)) conversions))))
+    [(into {} (map #(vector % (eval (cv-symbols %))) (keys cv-symbols)))
+     cv-symbols]))
