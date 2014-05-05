@@ -147,6 +147,7 @@
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
     (config/load-config-from-file (:config options))
+    (db/define-database)
     (start-nrepl)
     (messages/messaging-initialization)
     (icat/configure-icat)
