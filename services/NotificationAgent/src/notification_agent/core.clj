@@ -216,11 +216,6 @@
   (config/load-config-from-file cfg-path)
   (init-service))
 
-(defn load-config-from-zookeeper
-  []
-  (config/load-config-from-zookeeper)
-  (init-service))
-
 (def svc-info
   {:desc "A web service for storing and forwarding notifications."
    :app-name "notificationagent"
