@@ -20,7 +20,7 @@
 
 (def props
   "The properites that have been loaded from Zookeeper."
-  (atom nil))
+  (ref nil))
 
 (def required-props
   "The list of required properties."

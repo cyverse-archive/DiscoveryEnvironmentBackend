@@ -17,7 +17,10 @@
             [compojure.handler :as handler]
             [clojure-commons.clavin-client :as cl]
             [clojure-commons.props :as cp]
+            [clojure-commons.config :as cfg]
+            [common-cli.core :as ccli]
             [clojure.tools.logging :as log]
+            [me.raynes.fs :as fs]
             [ring.adapter.jetty :as jetty])
   (:import [java.sql SQLException]))
 
@@ -152,8 +155,23 @@
 (def app
   (site-handler conrad-routes))
 
+(def svc-info
+  {:desc "Backend service for the DE's admin console."
+   :app-name "clavin"
+   :group-id "org.iplantc"
+   :art-id "clavin"})
+
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
+
 (defn -main
   [& args]
-  (load-configuration-from-zookeeper)
-  (log/warn "Listening on" (listen-port))
-  (jetty/run-jetty app {:port (listen-port)}))
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 (str "The config file does not exist.")))
+    (cfg/load-config-from-file (:config options) props)
+    (log/warn "Listening on" (listen-port))
+    (jetty/run-jetty app {:port (listen-port)})))
