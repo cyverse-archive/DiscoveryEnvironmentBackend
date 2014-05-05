@@ -15,7 +15,9 @@
             [clojure.tools.logging :as log]
             [notification-agent.config :as config]
             [notification-agent.db :as db]
-            [ring.adapter.jetty :as jetty]))
+            [ring.adapter.jetty :as jetty]
+            [common-cli.core :as ccli]
+            [me.raynes.fs :as fs]))
 
 (defn- job-status
   "Handles a job status update request."
@@ -210,8 +212,8 @@
   (db/define-database))
 
 (defn load-config-from-file
-  []
-  (config/load-config-from-file)
+  [cfg-path]
+  (config/load-config-from-file cfg-path)
   (init-service))
 
 (defn load-config-from-zookeeper
@@ -219,9 +221,25 @@
   (config/load-config-from-zookeeper)
   (init-service))
 
+(def svc-info
+  {:desc "A web service for storing and forwarding notifications."
+   :app-name "notificationagent"
+   :group-id "org.iplantc"
+   :art-id "notificationagent"})
+
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
+
 (defn -main
-  [& _]
-  (load-config-from-zookeeper)
-  (future (initialize-job-status-service))
-  (log/warn "Listening on" (config/listen-port))
-  (jetty/run-jetty (site-handler notificationagent-routes) {:port (config/listen-port)}))
+  [& args]
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 "The config file does not exist."))
+    (load-config-from-file (:config options))
+    (future (initialize-job-status-service))
+    (log/warn "Listening on" (config/listen-port))
+    (jetty/run-jetty (site-handler notificationagent-routes) {:port (config/listen-port)})))
+
