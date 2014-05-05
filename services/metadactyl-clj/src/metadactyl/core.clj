@@ -18,7 +18,6 @@
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
             [clojure.tools.logging :as log]
-            [clojure-commons.clavin-client :as cl]
             [clojure-commons.error-codes :as ce]
             [metadactyl.service.app-metadata :as app-metadata]
             [metadactyl.util.config :as config]
@@ -254,12 +253,6 @@
   "Loads the configuration settings from a properties file."
   [cfg-path]
   (config/load-config-from-file cfg-path)
-  (init-service))
-
-(defn load-config-from-zookeeper
-  "Loads the configuration settings from zookeeper."
-  []
-  (config/load-config-from-zookeeper)
   (init-service))
 
 (defn site-handler [routes]

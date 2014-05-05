@@ -154,13 +154,6 @@
   (cc/log-config props)
   (validate-config))
 
-(defn load-config-from-zookeeper
-  "Loads the configuration settings from Zookeeper."
-  []
-  (cc/load-config-from-zookeeper props "metadactyl")
-  (cc/log-config props)
-  (validate-config))
-
 (def get-default-app-groups
   (memoize
   (fn []
