@@ -23,6 +23,13 @@
   (with-open [rdr (reader sql-file)]
     (dorun (map exec-sql-statement (sql-statements rdr)))))
 
+(defn- alter-id-column-to-uuid
+  [table]
+  (exec-sql-statement (str "ALTER TABLE ONLY "
+                           table
+                           " ALTER COLUMN id TYPE UUID USING"
+                           " CASE WHEN CHAR_LENGTH(id) < 36 THEN (uuid_generate_v4())"
+                           " ELSE CAST(id AS UUID) END")))
 
 ;; Drop constraints
 ;; "SELECT 'ALTER TABLE &quot;'||nspname||'&quot;.&quot;'||relname||'&quot; DROP CONSTRAINT &quot;'||conname||'&quot;;'
@@ -128,7 +135,7 @@
   []
   (println "\t* updating the deployed_components table to tools")
   (exec-sql-statement "ALTER TABLE deployed_components RENAME TO tools")
-  (exec-sql-statement "ALTER TABLE ONLY tools ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)")
+  (alter-id-column-to-uuid "tools")
   (exec-sql-statement "ALTER TABLE ONLY tools RENAME COLUMN tool_type_id TO tool_type_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY tools ADD COLUMN tool_type_id UUID")
   (exec-sql-statement "ALTER TABLE ONLY tools RENAME COLUMN integration_data_id TO integration_data_id_v187")
@@ -140,7 +147,7 @@
   []
   (println "\t* updating the template table to tasks")
   (exec-sql-statement "ALTER TABLE template RENAME TO tasks")
-  (exec-sql-statement "ALTER TABLE ONLY tasks ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)")
+  (alter-id-column-to-uuid "tasks")
   (exec-sql-statement "ALTER TABLE ONLY tasks RENAME COLUMN component_id TO component_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY tasks ADD COLUMN component_id UUID"))
 
@@ -150,7 +157,7 @@
   []
   (println "\t* updating the transformation_activity table to apps")
   (exec-sql-statement "ALTER TABLE transformation_activity RENAME TO apps")
-  (exec-sql-statement "ALTER TABLE ONLY apps ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)")
+  (alter-id-column-to-uuid "apps")
   (exec-sql-statement "ALTER TABLE ONLY apps RENAME COLUMN workspace_id TO workspace_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY apps ADD COLUMN workspace_id UUID")
   (exec-sql-statement "ALTER TABLE ONLY apps RENAME COLUMN integration_data_id TO integration_data_id_v187")
@@ -219,6 +226,12 @@
   (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN app_id UUID")
   (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN target_step UUID")
   (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN source_step UUID")
+  (exec-sql-statement (str "DELETE FROM workflow_io_maps WHERE input IN"
+                           " (SELECT input FROM workflow_io_maps"
+                             " LEFT JOIN dataobjects ON id = input WHERE id IS NULL)"))
+  (exec-sql-statement (str "DELETE FROM workflow_io_maps WHERE output IN"
+                           " (SELECT output FROM workflow_io_maps"
+                             " LEFT JOIN dataobjects ON id = output WHERE id IS NULL)"))
   (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ALTER COLUMN input TYPE UUID USING CAST(input AS UUID)")
   (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ALTER COLUMN output TYPE UUID USING CAST(output AS UUID)"))
 
@@ -229,7 +242,7 @@
   []
   (println "\t* updating the dataobjects table to file_parameters")
   (exec-sql-statement "ALTER TABLE dataobjects RENAME TO file_parameters")
-  (exec-sql-statement "ALTER TABLE ONLY file_parameters ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)")
+  (alter-id-column-to-uuid "file_parameters")
   (exec-sql-statement "ALTER TABLE ONLY file_parameters RENAME COLUMN info_type TO info_type_v187")
   (exec-sql-statement "ALTER TABLE ONLY file_parameters ADD COLUMN info_type UUID")
   (exec-sql-statement "ALTER TABLE ONLY file_parameters RENAME COLUMN data_format TO data_format_v187")
@@ -269,7 +282,7 @@
   []
   (println "\t* updating the property table to parameters")
   (exec-sql-statement "ALTER TABLE property RENAME TO parameters")
-  (exec-sql-statement "ALTER TABLE ONLY parameters ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)")
+  (alter-id-column-to-uuid "parameters")
   (exec-sql-statement "ALTER TABLE ONLY parameters ADD COLUMN parameter_group_id UUID")
   (exec-sql-statement "ALTER TABLE ONLY parameters ADD COLUMN parameter_type UUID")
   (exec-sql-statement "ALTER TABLE ONLY parameters ADD COLUMN required TYPE boolean DEFAULT false")
@@ -281,7 +294,7 @@
   []
   (println "\t* updating the property_group table to parameter_groups")
   (exec-sql-statement "ALTER TABLE property_group RENAME TO parameter_groups")
-  (exec-sql-statement "ALTER TABLE ONLY parameter_groups ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)")
+  (alter-id-column-to-uuid "parameter_groups")
   (exec-sql-statement "ALTER TABLE ONLY parameter_groups ADD COLUMN task_id UUID"))
 
 (defn- add-parameter-values-table
@@ -296,7 +309,8 @@
   []
   (println "\t* updating the property_type table to parameter_types")
   (exec-sql-statement "ALTER TABLE property_type RENAME TO parameter_types")
-  (exec-sql-statement "ALTER TABLE ONLY parameter_types ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)")
+  (exec-sql-statement (str "ALTER TABLE ONLY parameter_types ALTER COLUMN id TYPE UUID USING"
+                           " CAST(regexp_replace(id, 'pt(.*)', '\\1') AS UUID)"))
   (exec-sql-statement "ALTER TABLE ONLY parameter_types RENAME COLUMN value_type_id TO value_type_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY parameter_types ADD COLUMN value_type_id UUID"))
 
@@ -314,7 +328,7 @@
   []
   (println "\t* updating the rule table to validation_rules")
   (exec-sql-statement "ALTER TABLE rule RENAME TO validation_rules")
-  (exec-sql-statement "ALTER TABLE ONLY validation_rules ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)")
+  (alter-id-column-to-uuid "validation_rules")
   (exec-sql-statement "ALTER TABLE ONLY validation_rules ADD COLUMN parameter_id UUID")
   (exec-sql-statement "ALTER TABLE ONLY validation_rules RENAME COLUMN rule_type TO rule_type_v187")
   (exec-sql-statement "ALTER TABLE ONLY validation_rules ADD COLUMN rule_type UUID"))
@@ -341,7 +355,8 @@
   "Updates columns in the existing rule_type table."
   []
   (println "\t* updating the rule_type table")
-  (exec-sql-statement "ALTER TABLE ONLY rule_type ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)")
+  (exec-sql-statement (str "ALTER TABLE ONLY rule_type ALTER COLUMN id TYPE UUID USING"
+                           " CAST(regexp_replace(id, 'rt(.*)', '\\1') AS UUID)"))
   (exec-sql-statement "ALTER TABLE ONLY rule_type RENAME COLUMN rule_subtype_id TO rule_subtype_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY rule_type ADD COLUMN rule_subtype_id UUID"))
 
