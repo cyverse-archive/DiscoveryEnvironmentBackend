@@ -15,7 +15,6 @@
         [clojure.java.io :only (file)])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
-            [clojure-commons.clavin-client :as cl]
             [clojure-commons.props :as cp]
             [clojure-commons.config :as cfg]
             [common-cli.core :as ccli]
@@ -132,18 +131,6 @@
     (if (nil? conf-dir)
       (reset! props (cp/read-properties (file filename)))
       (reset! props (cp/read-properties (file conf-dir filename)))))
-  (init-service))
-
-(defn load-configuration-from-zookeeper
-  "Loads the configuration properties from Zookeeper."
-  []
-  (cl/with-zk
-    (zk-url)
-    (when (not (cl/can-run?))
-      (log/warn "THIS APPLICATION CANNOT RUN ON THIS MACHINE. SO SAYETH ZOOKEEPER.")
-      (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")
-      (System/exit 1))
-    (reset! props (cl/properties "conrad")))
   (init-service))
 
 (defn site-handler [routes]

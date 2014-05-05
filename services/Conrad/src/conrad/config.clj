@@ -3,23 +3,8 @@
   (:require [clojure-commons.props :as cc-props]
             [clojure.tools.logging :as log]))
 
-(defn prop-file
-  "The name of the properties file."
-  []
-  "zkhosts.properties")
-
-(defn zk-props
-  "The properties loaded from the properties file."
-  []
-  (cc-props/parse-properties (prop-file)))
-
-(defn zk-url
-  "The URL used to connect to zookeeper."
-  []
-  (get (zk-props) "zookeeper"))
-
 (def props
-  "The properites that have been loaded from Zookeeper."
+  "The properites that have been loaded."
   (ref nil))
 
 (def required-props
@@ -50,8 +35,7 @@
   (reset! configuration-is-valid false))
 
 (defn- get-str
-  "Gets a string property from the properties that were loaded from
-   Zookeeper."
+  "Gets a string property from the properties that were loaded."
   [prop-name]
   (let [value (get @props prop-name)]
     (log/trace prop-name "=" value)
@@ -60,8 +44,7 @@
     value))
 
 (defn- get-int
-  "Gets an integer property from the properties that were loaded from
-   Zookeeper."
+  "Gets an integer property from the properties that were loaded."
   [prop-name]
   (try
     (Integer/valueOf (get-str prop-name))
@@ -125,8 +108,7 @@
       res)))
 
 (defn- get-vector
-  "Gets a vector property from the properties that were loaded from
-   Zookeeper."
+  "Gets a vector property from the properties that were loaded."
   [prop-name]
   (parse-comma-delimited-list (get-str prop-name)))
 
