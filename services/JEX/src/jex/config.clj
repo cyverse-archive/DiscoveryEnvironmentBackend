@@ -1,8 +1,7 @@
 (ns jex.config
   (:use [clojure-commons.props]
         [slingshot.slingshot :only [try+ throw+]])
-  (:require [clojure-commons.clavin-client :as cl]
-            [clojure-commons.config :as cc]
+  (:require [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]
             [clojure.tools.logging :as log]))
 
@@ -132,12 +131,5 @@
   "Loads the configuration settings from a file."
   [cfg-path]
   (cc/load-config-from-file cfg-path props)
-  (cc/log-config props :filters [#"irods\-user"])
-  (validate-config))
-
-(defn load-config-from-zookeeper
-  "Loads the configuration settings from Zookeeper."
-  []
-  (cc/load-config-from-zookeeper props "jex")
   (cc/log-config props :filters [#"irods\-user"])
   (validate-config))
