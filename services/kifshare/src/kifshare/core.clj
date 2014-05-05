@@ -14,7 +14,6 @@
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.cli :as cli]
             [clojure.java.io :as io]
-            [clojure-commons.clavin-client :as cl]
             [clojure-commons.props :as prps]
             [clojure-commons.file-utils :as ft]
             [clojure.tools.logging :as log]
@@ -103,20 +102,6 @@
       wrap-nested-params
       wrap-params
       wrap-stacktrace))
-
-(defn parse-args
-  [args]
-  (log/debug "entered kifshare.core/parse-args")
-
-  (cli/cli
-   args
-    ["-c" "--config"
-     "Set the local config file to read from. Bypasses Zookeeper"
-     :default nil]
-    ["-h" "--help"
-     "Show help."
-     :default false
-     :flag true]))
 
 (def app
   (site-handler kifshare-routes))
