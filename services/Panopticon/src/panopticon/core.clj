@@ -410,7 +410,8 @@
 
 (defn cli-options
   []
-  [["-c" "--config PATH" "Path to the config file"]
+  [["-c" "--config PATH" "Path to the config file"
+    :default "/etc/iplant/de/panopticon.properties"]
    ["-v" "--version" "Print out the version number."]
    ["-h" "--help"]])
 
@@ -421,6 +422,8 @@
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The config file does not exist.")))
+    (when-not (fs/readable? (:config options))
+      (ccli/exit 1 "The config file is not readable."))
     (log/info "Starting up. Reading configuration from" (:config options))
     (cfg/load-config-from-file (:config options) props)
 

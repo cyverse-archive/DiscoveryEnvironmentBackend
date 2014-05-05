@@ -69,7 +69,8 @@
 
 (defn cli-options
   []
-  [["-c" "--config PATH" "sets the local configuration file to be read, bypassing Zookeeper"]
+  [["-c" "--config PATH" "sets the local configuration file to be read, bypassing Zookeeper"
+    :default "/etc/iplant/de/infosquito.properties"]
    ["-r" "--reindex" "reindex the iPlant Data Store and exit"]
    ["-h" "--help" "show help and exit"]])
 
@@ -93,6 +94,8 @@
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 "The config file does not exist."))
+    (when-not (fs/readable? (:config options))
+      (ccli/exit 1 "The config file is not readable."))
     (let [props (load-config-from-file (:config options))]
       (if (:reindex options)
         (actions/reindex props)

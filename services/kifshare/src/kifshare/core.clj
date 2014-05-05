@@ -129,7 +129,8 @@
 
 (defn cli-options
   []
-  [["-c" "--config PATH" "Path to the config file"]
+  [["-c" "--config PATH" "Path to the config file"
+    :default "/etc/iplant/de/kifshare.properties"]
    ["-v" "--version" "Print out the version number."]
    ["-h" "--help"]])
 
@@ -143,6 +144,8 @@
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The config file does not exist.")))
+    (when-not (fs/readable? (:config options))
+      (ccli/exit 1 "The config file is not readable."))
     (cfg/local-init (:config options))
     (cfg/jargon-init)
     (with-redefs [clojure.java.io/buffer-size override-buffer-size]

@@ -104,7 +104,8 @@
 
 (defn cli-options
   []
-  [["-c" "--config PATH" "Path to the config file"]
+  [["-c" "--config PATH" "Path to the config file"
+    :default "/etc/iplant/de/dewey.properties"]
    ["-v" "--version" "Print out the version number."]
    ["-h" "--help"]])
 
