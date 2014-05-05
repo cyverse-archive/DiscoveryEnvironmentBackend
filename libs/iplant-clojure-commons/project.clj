@@ -13,7 +13,6 @@
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.6"]
-                 [zookeeper-clj "0.9.1"]
                  [clj-http "0.6.5"]
                  [clj-http-fake "0.4.1"]
                  [com.cemerick/url "0.0.7"]
