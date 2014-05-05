@@ -23,11 +23,6 @@
   (with-open [rdr (reader sql-file)]
     (dorun (map exec-sql-statement (sql-statements rdr)))))
 
-(defn- add-uuid-extension
-  "Adds the uuid-ossp extension required to access the uuid_generate_v4() postgres function."
-  []
-  (println "\t* adding the uuid-ossp extension...")
-  (exec-sql-statement "CREATE EXTENSION \"uuid-ossp\""))
 
 ;; Drop constraints
 ;; "SELECT 'ALTER TABLE &quot;'||nspname||'&quot;.&quot;'||relname||'&quot; DROP CONSTRAINT &quot;'||conname||'&quot;;'
@@ -535,7 +530,6 @@
   "Performs the database conversion."
   [unpacked-dir]
   (println "Performing the conversion for" version)
-  (add-uuid-extension)
   (drop-views)
   (add-app-categories-table)
   (alter-workspace-table)
