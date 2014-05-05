@@ -35,7 +35,9 @@
             [donkey.util.messaging :as messages]
             [donkey.util.icat :as icat]
             [donkey.util.anon :as anon]
-            [clojure.tools.nrepl.server :as nrepl]))
+            [clojure.tools.nrepl.server :as nrepl]
+            [me.raynes.fs :as fs]
+            [common-cli.core :as ccli]))
 
 (defn delayed-handler
   [routes-fn]
@@ -130,15 +132,27 @@
 (def app
   (site-handler donkey-routes))
 
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
+
+(def svc-info
+  {:desc "DE service for business logic"
+   :app-name "donkey"
+   :group-id "org.iplantc"
+   :art-id "donkey"})
+
 (defn -main
-  [& _]
-  (if (config/load-config-from-file?)
-    (load-configuration-from-file)
-    (load-configuration-from-zookeeper))
-  (log/warn "Listening on" (config/listen-port))
-  (start-nrepl)
-  (messages/messaging-initialization)
-  (icat/configure-icat)
-  (anon/create-anon-user)
-  (future (apps/sync-job-statuses))
-  (jetty/run-jetty app {:port (config/listen-port)}))
+  [& args]
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 (str "The config file does not exist.")))
+    (config/load-config-from-file (:config options))
+    (start-nrepl)
+    (messages/messaging-initialization)
+    (icat/configure-icat)
+    (anon/create-anon-user)
+    (future (apps/sync-job-statuses))
+    (jetty/run-jetty app {:port (config/listen-port)})))
