@@ -113,12 +113,6 @@
   (load-configuration-from-file)
   (icat/configure-icat))
 
-(defn load-configuration-from-zookeeper
-  "Loads the configuration properties from Zookeeper."
-  []
-  (config/load-config-from-zookeeper)
-  (db/define-database))
-
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler routes-fn)
