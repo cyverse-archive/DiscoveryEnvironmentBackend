@@ -1,26 +1,33 @@
 (ns iplant-email.core
   (:gen-class)
   (:use compojure.core)
-  (:use [cheshire.core :as cheshire]
-        [compojure.route :as route]
-        [compojure.handler :as handler]
-        [clojure.tools.logging :as log]
-        [clojure-commons.props :as props]
-        [clojure-commons.clavin-client :as cl]
-        [iplant-email.send-mail :as sm]
-        [iplant-email.json-body :as jb]
-        [ring.adapter.jetty :as jetty]
-        [iplant-email.json-validator :as jv]
-        [iplant-email.templatize :as tmpl]))
+  (:require [cheshire.core :as cheshire]
+            [compojure.route :as route]
+            [compojure.handler :as handler]
+            [clojure.tools.logging :as log]
+            [clojure-commons.config :as cfg]
+            [clojure-commons.clavin-client :as cl]
+            [iplant-email.send-mail :as sm]
+            [iplant-email.json-body :as jb]
+            [ring.adapter.jetty :as jetty]
+            [iplant-email.json-validator :as jv]
+            [iplant-email.templatize :as tmpl]
+            [common-cli.core :as ccli]
+            [me.raynes.fs :as fs]))
 
-(def config (atom nil))
+(def config (ref nil))
 
 (defn listen-port
   []
   (Integer/parseInt (get @config "iplant-email.app.listen-port")))
 
-(defn smtp-host [] (get @config "iplant-email.smtp.host"))
-(defn smtp-from-addr [] (get @config "iplant-email.smtp.from-address"))
+(defn smtp-host
+  []
+  (get @config "iplant-email.smtp.host"))
+
+(defn smtp-from-addr
+  []
+  (get @config "iplant-email.smtp.from-address"))
 
 (defn format-exception
   "Formats a raised exception as a JSON object. Returns a response map."
@@ -72,17 +79,22 @@
   (-> routes
     jb/parse-json-body))
 
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
+
+(def svc-info
+  {:desc "Sends out emails for the DE."
+   :app-name "iplant-email"
+   :group-id "org.iplantc"
+   :art-id "iplant-email"})
+
 (defn -main
   [& args]
-  (def zkprops (props/parse-properties "zkhosts.properties"))
-  (def zkurl (get zkprops "zookeeper"))
-
-  (cl/with-zk
-    zkurl
-    (when (not (cl/can-run?))
-      (log/warn "THIS APPLICATION CANNOT RUN ON THIS MACHINE. SO SAYETH ZOOKEEPER.")
-      (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY."))
-
-    (reset! config (cl/properties "iplant-email")))
-
-  (jetty/run-jetty (site-handler email-routes) {:port (listen-port)}))
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 (str "The config file does not exist.")))
+    (cfg/load-config-from-file (:config options) config)
+    (jetty/run-jetty (site-handler email-routes) {:port (listen-port)})))

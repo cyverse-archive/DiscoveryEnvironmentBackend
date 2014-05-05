@@ -9,8 +9,6 @@
   :pom-addition [:developers
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.iplantc/clojure-commons "3.1.1"]
                  [org.clojure/tools.logging "0.2.3"]
@@ -19,7 +17,9 @@
                  [org.bituf/clj-stringtemplate "0.2"]
                  [compojure "1.0.1"]
                  [ring/ring-jetty-adapter "1.0.1"]
-                 [log4j/log4j "1.2.16"]]
+                 [log4j/log4j "1.2.16"]
+                 [org.iplantc/common-cli "3.1.1"]
+                 [me.raynes/fs "1.4.4"]]
   :plugins [[org.iplantc/lein-iplant-rpm "3.1.1"]]
   :iplant-rpm {:summary "iplant-email"
                :dependencies ["iplant-service-config >= 0.1.0-5"
