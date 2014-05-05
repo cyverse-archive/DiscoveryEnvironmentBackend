@@ -34,14 +34,6 @@
     @p))
 
 
-(defn- load-config-from-zookeeper
-  []
-  (let [p (ref nil)]
-    (config/load-config-from-zookeeper p "infosquito")
-    (validate-props @p)
-    @p))
-
-
 (defn- exit
   [msg]
   (log/fatal msg)
@@ -69,19 +61,11 @@
 
 (defn cli-options
   []
-  [["-c" "--config PATH" "sets the local configuration file to be read, bypassing Zookeeper"
+  [["-c" "--config PATH" "sets the local configuration file to be read."
     :default "/etc/iplant/de/infosquito.properties"]
    ["-r" "--reindex" "reindex the iPlant Data Store and exit"]
    ["-h" "--help" "show help and exit"]])
 
-
-(defn- get-props
-  [opts]
-  (let [props-ref (ref (if (:config opts)
-                         (load-config-from-file (:config opts))
-                         (load-config-from-zookeeper)))]
-    (config/log-config props-ref)
-    @props-ref))
 
 (def svc-info
   {:desc "An ICAT database crawler used to index the contents of iRODS."
