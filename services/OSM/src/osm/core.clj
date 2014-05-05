@@ -7,7 +7,6 @@
             [clojure-commons.json :as cc-json]
             [clojure-commons.props :as cc-props]
             [clojure-commons.config :as cfg]
-            [clojure-commons.clavin-client :as cl]
             [ring.adapter.jetty :as jetty]
             [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
