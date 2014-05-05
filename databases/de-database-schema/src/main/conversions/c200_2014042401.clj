@@ -285,7 +285,7 @@
   (alter-id-column-to-uuid "parameters")
   (exec-sql-statement "ALTER TABLE ONLY parameters ADD COLUMN parameter_group_id UUID")
   (exec-sql-statement "ALTER TABLE ONLY parameters ADD COLUMN parameter_type UUID")
-  (exec-sql-statement "ALTER TABLE ONLY parameters ADD COLUMN required TYPE boolean DEFAULT false")
+  (exec-sql-statement "ALTER TABLE ONLY parameters ADD COLUMN required boolean DEFAULT false")
   (exec-sql-statement "ALTER TABLE ONLY parameters ADD COLUMN file_parameter_id UUID"))
 
 ;; cols to drop: hid, group_type?
@@ -412,17 +412,17 @@
   (exec-sql-statement "ALTER TABLE ONLY version ADD PRIMARY KEY (version)"))
 
 ;; cols to drop: id_v187, created_by_v187, last_modified_by_v187
-(defn- alter-genome-ref-table
-  "Updates columns in the existing genome_ref table."
+(defn- alter-genome-reference-table
+  "Updates columns in the existing genome_reference table."
   []
-  (println "\t* updating the genome_ref table")
-  (exec-sql-statement "ALTER TABLE ONLY genome_ref RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY genome_ref RENAME COLUMN uuid TO id")
-  (exec-sql-statement "ALTER TABLE ONLY genome_ref ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)")
-  (exec-sql-statement "ALTER TABLE ONLY genome_ref RENAME COLUMN created_by TO created_by_v187")
-  (exec-sql-statement "ALTER TABLE ONLY genome_ref ADD COLUMN created_by UUID")
-  (exec-sql-statement "ALTER TABLE ONLY genome_ref RENAME COLUMN last_modified_by TO last_modified_by_v187")
-  (exec-sql-statement "ALTER TABLE ONLY genome_ref ADD COLUMN last_modified_by UUID"))
+  (println "\t* updating the genome_reference table")
+  (exec-sql-statement "ALTER TABLE ONLY genome_reference RENAME COLUMN id TO id_v187")
+  (exec-sql-statement "ALTER TABLE ONLY genome_reference RENAME COLUMN uuid TO id")
+  (exec-sql-statement "ALTER TABLE ONLY genome_reference ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)")
+  (exec-sql-statement "ALTER TABLE ONLY genome_reference RENAME COLUMN created_by TO created_by_v187")
+  (exec-sql-statement "ALTER TABLE ONLY genome_reference ADD COLUMN created_by UUID")
+  (exec-sql-statement "ALTER TABLE ONLY genome_reference RENAME COLUMN last_modified_by TO last_modified_by_v187")
+  (exec-sql-statement "ALTER TABLE ONLY genome_reference ADD COLUMN last_modified_by UUID"))
 
 ;; cols to drop: id_v187, user_id_v187, collaborator_id_v187
 (defn- alter-collaborators-table
@@ -576,7 +576,7 @@
   (add-app-references-table)
   (alter-value-type-table)
   (alter-version-table)
-  (alter-genome-ref-table)
+  (alter-genome-reference-table)
   (alter-collaborators-table)
   (alter-data-source-table)
   (alter-tool-types-table)
