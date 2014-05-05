@@ -20,7 +20,9 @@
             [jex.json-body :as jb]
             [clojure.java.io :as ds]
             [clojure.tools.logging :as log]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [me.raynes.fs :as fs]
+            [common-cli.core :as ccli]))
 
 (defn do-submission
   "Handles a request on /. "
@@ -60,7 +62,22 @@
     jb/parse-json-body
     wrap-errors))
 
+(def svc-info
+  {:desc "Submits jobs to a Condor cluster for the DE."
+   :app-name "jex"
+   :group-id "org.iplantc"
+   :art-id "jex"})
+
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
+
 (defn -main
   [& args]
-  (load-config-from-zookeeper)
-  (jetty/run-jetty (site-handler jex-routes) {:port (listen-port)}))
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 (str "The config file does not exist.")))
+    (load-config-from-file (:config options))
+    (jetty/run-jetty (site-handler jex-routes) {:port (listen-port)})))
