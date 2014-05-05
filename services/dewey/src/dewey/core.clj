@@ -8,7 +8,9 @@
             [clojure-commons.config :as config]
             [dewey.amq :as amq]
             [dewey.curation :as curation]
-            [dewey.status :as status])
+            [dewey.status :as status]
+            [common-cli.core :as ccli]
+            [me.raynes.fs :as fs])
   (:import [java.net URL]
            [java.util Properties]))
 
@@ -93,21 +95,26 @@
    (listen props (init-irods props))))
 
 
-(defn- parse-args
-  [args]
-  (cli/cli args
-    ["-c" "--config" "sets the local configuration file to be read, bypassing Zookeeper"]
-    ["-h" "--help"   "show help and exit" :flag true]))
+(def svc-info
+  {:desc "Service that keeps an elasticsearch index synchronized with an iRODS repository."
+   :app-name "dewey"
+   :group-id "org.iplantc"
+   :art-id "dewey"})
+
+
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
 
 
 (defn -main
   [& args]
   (try+
-    (let [[opts _ help-str] (parse-args args)]
-      (if (:help opts)
-        (println help-str)
-        (run (if-let [cfg-file (:config opts)]
-               (partial config/load-config-from-file nil cfg-file)
-               #(config/load-config-from-zookeeper % "dewey")))))
+   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+     (when-not (fs/exists? (:config options))
+       (ccli/exit 1 (str "The config file does not exist.")))
+     (run (partial config/load-config-from-file (:config options))))
     (catch Object _
       (log/error (:throwable &throw-context) "UNEXPECTED ERROR - EXITING"))))

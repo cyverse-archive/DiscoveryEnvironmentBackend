@@ -12,8 +12,6 @@
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :aot [dewey.core]
   :main dewey.core
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/tools.logging "0.2.6"]
@@ -26,7 +24,9 @@
                  [ring/ring-jetty-adapter "1.2.1"]
                  [slingshot "0.10.3"]
                  [org.iplantc/clj-jargon "3.1.1"]
-                 [org.iplantc/clojure-commons "3.1.1"]]
+                 [org.iplantc/clojure-commons "3.1.1"]
+                 [org.iplantc/common-cli "3.1.1"]
+                 [me.raynes/fs "1.4.4"]]
   :resource-paths []
   :profiles {:dev {:dependencies   [[midje "1.6.2"]]
                    :resource-paths ["dev-resource"]}}
