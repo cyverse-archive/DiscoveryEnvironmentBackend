@@ -9,11 +9,8 @@
   :pom-addition [:developers
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/java.jdbc "0.2.3"]
-                 [org.clojure/tools.cli "0.2.2"]
                  [org.clojure/tools.logging "0.2.3"]
                  [cheshire "5.0.2"]
                  [clj-http "0.6.5"]
@@ -25,7 +22,9 @@
                  [org.iplantc/clj-jargon "3.1.1"
                   :exclusions [[org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
                  [org.iplantc/clojure-commons "3.1.1"]
+                 [org.iplantc/common-cli "3.1.1"]
                  [org.iplantc/kameleon "3.1.1"]
+                 [me.raynes/fs "1.4.4"]
                  [org.slf4j/slf4j-api "1.7.2"]
                  [org.slf4j/slf4j-log4j12 "1.6.6"]
                  [slingshot "0.10.3"]]
