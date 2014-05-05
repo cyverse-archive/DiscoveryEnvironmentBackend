@@ -8,6 +8,7 @@ CREATE TABLE parameter_values (
     parameter_id uuid NOT NULL,
     parent_id uuid,
     is_default boolean DEFAULT false,
+    param_order int,
     name character varying(255) NOT NULL,
     value character varying(255) NOT NULL,
     description text,
