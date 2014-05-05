@@ -6,7 +6,6 @@
             [compojure.handler :as handler]
             [clojure.tools.logging :as log]
             [clojure-commons.config :as cfg]
-            [clojure-commons.clavin-client :as cl]
             [iplant-email.send-mail :as sm]
             [iplant-email.json-body :as jb]
             [ring.adapter.jetty :as jetty]
