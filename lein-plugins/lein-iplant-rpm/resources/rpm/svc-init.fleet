@@ -32,19 +32,19 @@ RETVAL=0
 
 
 name_instance() {
-	root="$1"
+    root="$1"
 
-	if [ $# -gt 1 ] && [ -n $2 ]
-	then
-		instance=$2
-		echo "${root}-$instance"
-	else
-		echo "$root"
-	fi
+    if [ $# -gt 1 ] && [ -n $2 ]
+    then
+        instance=$2
+        echo "${root}-$instance"
+    else
+        echo "$root"
+    fi
 }
 
 mk_inst_disp_name() {
-	name_instance "$program" $*
+    name_instance "$program" $*
 }
 
 mk_launch_log() {
@@ -63,9 +63,9 @@ mk_pidfile() {
 }
 
 id_instance() {
-	pidname="$1"
+    pidname="$1"
 
-	echo "$pidfile" | sed 's/^'"$program"'-\{0,1\}\([0-9]*\).pid$/\1/'
+    echo "$pidfile" | sed 's/^'"$program"'-\{0,1\}\([0-9]*\).pid$/\1/'
 }
 
 start_instance() {
@@ -110,29 +110,29 @@ start () {
 
     if [ -z $num_instances ]
     then
-	start_instance
-	RETVAL=$?
+        start_instance
+        RETVAL=$?
     else
-	for instance in $(seq $num_instances)
-	do
-	    start_instance $instance
-	    inst_ret_val=$?
-	    [ $inst_ret_val != 0 ] && RETVAL=$inst_ret_val
-	done
+        for instance in $(seq $num_instances)
+        do
+            start_instance $instance
+            inst_ret_val=$?
+            [ $inst_ret_val != 0 ] && RETVAL=$inst_ret_val
+        done
     fi
 }
 
 stop () {
     for pidfile in $(ls "$piddir")
     do
-    	instance=$(id_instance "$pidfile")
-    	name=$(mk_inst_disp_name $instance)
-    	echo -n $"Stopping $name: "
-    	killproc -p "$piddir/$pidfile"
-    	inst_retval=$?
-    	[ $inst_retval = 0 ] && rm -rf "$(mk_lockfile $instance)" "$pidfile"
-    	[ $inst_retval != 0 ] && RETVAL=$inst_retval
-    	echo
+        instance=$(id_instance "$pidfile")
+        name=$(mk_inst_disp_name $instance)
+        echo -n $"Stopping $name: "
+        killproc -p "$piddir/$pidfile"
+        inst_retval=$?
+        [ $inst_retval = 0 ] && rm -rf "$(mk_lockfile $instance)" "$pidfile"
+        [ $inst_retval != 0 ] && RETVAL=$inst_retval
+        echo
     done
 }
 
@@ -152,8 +152,8 @@ force_reload () {
 showstatus () {
     for pidfile in $(ls "$piddir")
     do
-	instance=$(id_instance "$pidfile")
-    	status -p "$piddir/$pidfile" "$(mk_inst_disp_name $instance)"
+        instance=$(id_instance "$pidfile")
+        status -p "$piddir/$pidfile" "$(mk_inst_disp_name $instance)"
     done
 }
 
@@ -164,37 +164,37 @@ showstatus_q () {
 case "$1" in
     start)
         start
-    ;;
+        ;;
 
     stop)
         stop
-    ;;
+        ;;
 
     restart)
         restart
-    ;;
+        ;;
 
     reload)
         reload
-    ;;
+        ;;
 
     force-reload)
         force_reload
-    ;;
+        ;;
 
     status)
         showstatus
-    ;;
+        ;;
 
     condrestart|try-restart)
         showstatus_q || exit 0
         restart
-    ;;
+        ;;
 
     *)
         echo "Usage: $program {start|stop|restart|reload|force-reload|status|condrestart|try-restart}"
         exit 1
-    ;;
+        ;;
 esac
 
 exit $RETVAL
