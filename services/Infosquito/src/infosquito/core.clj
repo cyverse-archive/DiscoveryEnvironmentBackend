@@ -9,7 +9,9 @@
             [infosquito.exceptions :as exn]
             [infosquito.icat :as icat]
             [infosquito.messages :as messages]
-            [infosquito.props :as props])
+            [infosquito.props :as props]
+            [common-cli.core :as ccli]
+            [me.raynes.fs :as fs])
   (:import [java.util Properties]))
 
 
@@ -27,7 +29,7 @@
 (defn- load-config-from-file
   [config-path]
   (let [p (ref nil)]
-    (config/load-config-from-file nil config-path p)
+    (config/load-config-from-file config-path p)
     (validate-props @p)
     @p))
 
@@ -65,13 +67,11 @@
      (catch Object o# (log/error (exn/fmt-throw-context ~'&throw-context)))))
 
 
-(defn- parse-args
-  [args]
-  (cli/cli
-   args
-   ["-c" "--config" "sets the local configuration file to be read, bypassing Zookeeper"]
-   ["-r" "--reindex" "reindex the iPlant Data Store and exit" :flag true]
-   ["-?" "-h" "--help" "show help and exit" :flag true]))
+(defn cli-options
+  []
+  [["-c" "--config PATH" "sets the local configuration file to be read, bypassing Zookeeper"]
+   ["-r" "--reindex" "reindex the iPlant Data Store and exit"]
+   ["-h" "--help" "show help and exit"]])
 
 
 (defn- get-props
@@ -82,10 +82,18 @@
     (config/log-config props-ref)
     @props-ref))
 
+(def svc-info
+  {:desc "An ICAT database crawler used to index the contents of iRODS."
+   :app-name "infosquito"
+   :group-id "org.iplantc"
+   :art-id "infosquito"})
 
 (defn -main
   [& args]
-  (let [[opts _ help-text] (parse-args args)]
-    (cond (:help opts)    (println help-text)
-          (:reindex opts) (actions/reindex (get-props opts))
-          :else           (messages/repeatedly-connect (get-props opts)))))
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 "The config file does not exist."))
+    (let [props (load-config-from-file (:config options))]
+      (if (:reindex options)
+        (actions/reindex props)
+        (messages/repeatedly-connect props)))))
