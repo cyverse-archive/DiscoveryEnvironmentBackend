@@ -5,7 +5,6 @@
             [clojure-commons.osm :as osm]
             [clojure-commons.props :as props]
             [clojure-commons.config :as cfg]
-            [clojure-commons.clavin-client :as cl]
             [clojure-commons.file-utils :as ft]
             [clojure.tools.logging :as log]
             [clojure.java.shell :as sh]
