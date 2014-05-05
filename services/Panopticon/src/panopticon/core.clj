@@ -4,6 +4,7 @@
   (:require [cheshire.core :as cheshire]
             [clojure-commons.osm :as osm]
             [clojure-commons.props :as props]
+            [clojure-commons.config :as cfg]
             [clojure-commons.clavin-client :as cl]
             [clojure-commons.file-utils :as ft]
             [clojure.tools.logging :as log]
@@ -11,9 +12,11 @@
             [clojure.java.io :as io]
             [clojure.string :as string]
             [clj-time.core :as ct]
-            [clj-time.format :as ctf]))
+            [clj-time.format :as ctf]
+            [common-cli.core :as ccli]
+            [me.raynes.fs :as fs]))
 
-(def props (atom nil))
+(def props (ref nil))
 
 (def SUBMITTED "Submitted")
 (def UNEXPANDED "Unexpanded")
@@ -399,45 +402,47 @@
   (Long/parseLong (or (get @props "panopticon.app.sleep-duration")
                       "5000")))
 
+(def svc-info
+  {:desc "Monitoring for jobs submitted through the JEX"
+   :app-name "panopticon"
+   :group-id "org.iplantc"
+   :art-id "panopticon"})
+
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
+
+(def sleep-duration-memo (memoize sleep-duration))
+
 (defn -main
   [& args]
-  (def zkprops (props/parse-properties "zkhosts.properties"))
-  (def zkurl (get zkprops "zookeeper"))
-  (def sleep-duration-memo (memoize sleep-duration))
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 (str "The config file does not exist.")))
+    (log/info "Starting up. Reading configuration from" (:config options))
+    (cfg/load-config-from-file (:config options) props)
 
-  (log/info "Starting up. Reading configuration from Zookeeper.")
-
-  (cl/with-zk
-    zkurl
-    (when-not (cl/can-run?)
-      (log/warn "THIS APPLICATION CANNOT RUN ON THIS MACHINE. SO SAYETH ZOOKEEPER.")
-      (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")
+    (log/warn "[panopticon]" "Checking for porklock...")
+    (when-not (fs/exists? "/usr/local/bin/porklock")
+      (log/warn "[panopticon]" "Could not find /usr/local/bin/porklock. Exiting")
       (System/exit 1))
+    (log/warn "[panopticon]" "porklock found.")
 
-    (reset! props (cl/properties "panopticon")))
-
-  (log/info "Done reading configuration from Zookeeper.")
-  (log/info (str "OSM Client: " (osm-client)))
-
-  (log/warn "[panopticon]" "Checking for porklock...")
-  (when-not (ft/exists? "/usr/local/bin/porklock")
-    (log/warn "[panopticon]" "Could not find /usr/local/bin/porklock. Exiting")
-    (System/exit 1))
-  (log/warn "[panopticon]" "porklock found.")
-
-  (loop []
-    (try
-      (let [osm-objects (running-jobs)]
-        (when (pos? (count osm-objects))
-          (let [osm-uuids (mapv #(:uuid (:state %)) osm-objects)
-                classads  (filter-classads (concat (queue osm-uuids) (history osm-uuids)))]
-            (-> osm-objects
-              (update-osm-objects classads)
-              (cleanup)
-              (post-osm-updates)))))
-      (catch java.lang.Exception e
-        (log/warn (format-exception e))))
-    (log/warn "[panopticon]" "Beginning sleep...")
-    (Thread/sleep (sleep-duration-memo))
-    (log/warn "[panopticon]" "Done sleeping.")
-    (recur)))
+    (loop []
+      (try
+        (let [osm-objects (running-jobs)]
+          (when (pos? (count osm-objects))
+            (let [osm-uuids (mapv #(:uuid (:state %)) osm-objects)
+                  classads  (filter-classads (concat (queue osm-uuids) (history osm-uuids)))]
+              (-> osm-objects
+                  (update-osm-objects classads)
+                  (cleanup)
+                  (post-osm-updates)))))
+        (catch java.lang.Exception e
+          (log/warn (format-exception e))))
+      (log/warn "[panopticon]" "Beginning sleep...")
+      (Thread/sleep (sleep-duration-memo))
+      (log/warn "[panopticon]" "Done sleeping.")
+      (recur))))
