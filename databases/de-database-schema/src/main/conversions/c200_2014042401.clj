@@ -521,6 +521,27 @@
   (exec-sql-statement "ALTER TABLE ONLY jobs RENAME COLUMN user_id TO user_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY jobs ADD COLUMN user_id UUID"))
 
+(defn- alter-user-preferences-table
+  "Updates columns in the existing user_preferences table."
+  []
+  (println "\t* updating the user_preferences table")
+  (exec-sql-statement "ALTER TABLE ONLY user_preferences RENAME COLUMN user_id TO user_id_v187")
+  (exec-sql-statement "ALTER TABLE ONLY user_preferences ADD COLUMN user_id UUID"))
+
+(defn- alter-user-sessions-table
+  "Updates columns in the existing user_sessions table."
+  []
+  (println "\t* updating the user_sessions table")
+  (exec-sql-statement "ALTER TABLE ONLY user_sessions RENAME COLUMN user_id TO user_id_v187")
+  (exec-sql-statement "ALTER TABLE ONLY user_sessions ADD COLUMN user_id UUID"))
+
+(defn- alter-user-saved-searches-table
+  "Updates columns in the existing user_saved_searches table."
+  []
+  (println "\t* updating the user_saved_searches table")
+  (exec-sql-statement "ALTER TABLE ONLY user_saved_searches RENAME COLUMN user_id TO user_id_v187")
+  (exec-sql-statement "ALTER TABLE ONLY user_saved_searches ADD COLUMN user_id UUID"))
+
 (defn- add-app-category-listing-view
   [unpacked-dir]
   (println "\t* adding app_category_listing view...")
@@ -587,6 +608,9 @@
   (alter-logins-table)
   (alter-job_types-table)
   (alter-jobs-table)
+  (alter-user-preferences-table)
+  (alter-user-sessions-table)
+  (alter-user-saved-searches-table)
   (add-app-category-listing-view unpacked-dir)
   (add-app-job-types-view unpacked-dir)
   (add-app-listing-view unpacked-dir)

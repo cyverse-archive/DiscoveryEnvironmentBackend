@@ -5,6 +5,6 @@ SET search_path = public, pg_catalog;
 ---
 CREATE TABLE user_saved_searches (
     id UUID,
-    user_id BIGINT,
+    user_id UUID,
     saved_searches TEXT NOT NULL
 );
