@@ -32,11 +32,22 @@
                            " ELSE CAST(id AS UUID) END")))
 
 ;; Drop constraints
-;; "SELECT 'ALTER TABLE &quot;'||nspname||'&quot;.&quot;'||relname||'&quot; DROP CONSTRAINT &quot;'||conname||'&quot;;'
-;;  FROM pg_constraint
-;;  INNER JOIN pg_class ON conrelid=pg_class.oid
-;;  INNER JOIN pg_namespace ON pg_namespace.oid=pg_class.relnamespace
-;;  ORDER BY CASE WHEN contype='f' THEN 0 ELSE 1 END,contype,nspname,relname,conname"
+(defn- drop-all-constraints
+  []
+  (println "\t* droping constraints...")
+  (exec-sql-statement (str "DO $body$"
+                           " DECLARE r record;"
+                           " BEGIN"
+                           "  FOR r IN"
+                           "   SELECT * FROM pg_constraint"
+                           "   INNER JOIN pg_class ON conrelid=pg_class.oid"
+                           "   INNER JOIN pg_namespace ON pg_namespace.oid=pg_class.relnamespace"
+                           "   ORDER BY CASE WHEN contype='f' THEN 0 ELSE 1 END,contype,nspname,relname,conname"
+                           "  LOOP"
+                           "   EXECUTE 'ALTER TABLE ' || quote_ident(r.nspname) || '.' || quote_ident(r.relname) || ' DROP CONSTRAINT ' || quote_ident(r.conname) || ';';"
+                           "  END LOOP;"
+                           " END"
+                           " $body$;")))
 
 ;; TODO add NOT NULL contraints to FOREIGN KEY cols.
 
@@ -77,6 +88,7 @@
 ;; tool_architectures_id_seq
 ;; tool_requests_id_seq
 ;; tool_request_statuses_id_seq
+;; tool_request_status_codes_id_seq
 ;; job_types_id_seq
 
 ;; Dropped tables
@@ -541,6 +553,11 @@
   (println "\t* updating the user_saved_searches table")
   (exec-sql-statement "ALTER TABLE ONLY user_saved_searches RENAME COLUMN user_id TO user_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY user_saved_searches ADD COLUMN user_id UUID"))
+
+(defn- re-add-constraints
+  [unpacked-dir]
+  (println "\t* re-adding constraints")
+  (load-sql-file (file unpacked-dir "tables/99_constraints.sql")))
 
 (defn- add-app-category-listing-view
   [unpacked-dir]
