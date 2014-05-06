@@ -58,7 +58,11 @@
 (defn get-trees-from-riak
   [rb bucket sha1]
   (try
-    (-> (key-value rb bucket sha1) json/decode :tree-urls json/encode)
+    (let [kv (key-value rb bucket sha1)
+          d  (json/decode kv true)
+          t  (:tree-urls d)
+          e  (json/encode t)]
+      e)
     (catch Exception e
       (println e)
       (println "ERROR GETTING SHA1 FROM RIAK: " sha1)
@@ -71,13 +75,12 @@
         svc-url  (str (url svc sha1))
         _        (println "\t* -- Posting to" svc-url)
         svc-body (get-trees-from-riak rb bucket sha1)]
-    (println svc-body)
     (when svc-body
       (let [svc-opts { :body svc-body
                       :body-encode "UTF-8"
                       :content-type "application/json"
                       :throw-exceptions false}
-            resp (http/post svc-url svc-opts)]
+            resp     (http/post svc-url svc-opts)]
         (when-not (= 200 (:status resp))
           (println "WARNING, REQUEST FAILED:\n" (:body resp))
           (add-failed-sha1 sha1))
