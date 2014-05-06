@@ -296,6 +296,24 @@ ALTER TABLE ONLY workflow_io_maps
     REFERENCES app_steps(id);
 
 --
+-- Name: workflow_io_maps_input_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Owner: de
+--
+ALTER TABLE ONLY workflow_io_maps
+    ADD CONSTRAINT workflow_io_maps_input_fkey
+    FOREIGN KEY (input)
+    REFERENCES file_parameters(id);
+
+--
+-- Name: workflow_io_maps_output_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Owner: de
+--
+ALTER TABLE ONLY workflow_io_maps
+    ADD CONSTRAINT workflow_io_maps_output_fkey
+    FOREIGN KEY (output)
+    REFERENCES file_parameters(id);
+
+--
 -- Name: parameters_file_parameter_id_fkey; Type: FK CONSTRAINT; Schema: public;
 -- Owner: de
 --
