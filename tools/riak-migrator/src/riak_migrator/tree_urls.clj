@@ -61,7 +61,7 @@
     (let [kv (key-value rb bucket sha1)
           d  (json/decode kv true)
           t  (:tree-urls d)
-          e  (json/encode t)]
+          e  (if (nil? t) nil (json/encode t))]
       e)
     (catch Exception e
       (println e)
@@ -76,7 +76,7 @@
         _        (println "\t* -- Posting to" svc-url)
         svc-body (get-trees-from-riak rb bucket sha1)]
     (when svc-body
-      (let [svc-opts { :body svc-body
+      (let [svc-opts {:body svc-body
                       :body-encode "UTF-8"
                       :content-type "application/json"
                       :throw-exceptions false}
