@@ -4,7 +4,8 @@
         [donkey.util.service]
         [donkey.auth.user-attributes]
         [donkey.util])
-  (:require [donkey.util.config :as config]))
+  (:require [donkey.util.config :as config]
+            [clojure.tools.logging :as log]))
 
 (defn secured-tree-viewer-routes
   []
@@ -12,10 +13,10 @@
    [config/tree-viewer-routes-enabled]
 
    (GET "/tree-viewer-urls" [:as {params :params}]
-        (trap #(tree-viewer-urls
-                (required-param params :path)
-                (:shortUsername current-user)
-                params)))))
+        (trap #(log/spy (tree-viewer-urls
+                         (required-param params :path)
+                         (:shortUsername current-user)
+                         params))))))
 
 (defn unsecured-tree-viewer-routes
   []

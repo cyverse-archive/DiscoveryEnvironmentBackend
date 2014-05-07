@@ -96,7 +96,9 @@
      (log/debug "searching for existing tree URLs for user" user "and path" path)
      (when-let [metaurl (nibblonian/get-tree-metaurl user path)]
        (log/debug "metaurl for path" path "is" metaurl)
-       (get-tree-urls (ft/basename metaurl))))
+       (let [retval (get-tree-urls (ft/basename metaurl))]
+         (log/debug "Return value of get-tree-urls is" retval)
+         retval)))
   ([sha1 user path]
      (log/debug "searching for existing tree URLs for SHA1 hash" sha1)
      (let [metaurl (metaurl-for sha1)]
@@ -153,11 +155,11 @@
        (set-tree-urls sha1 urls)
        urls))
   ([path user dir infile sha1]
-     (let [urls    (build-response-map (get-tree-viewer-urls dir infile))
+     (let [urls    (get-tree-viewer-urls dir infile)
            metaurl (metaurl-for sha1)]
        (set-tree-urls sha1 urls)
        (save-tree-metaurl path metaurl)
-       urls)))
+       (build-response-map urls))))
 
 (defn tree-urls-response
   "Formats the response for one of the tree viewer URL services."
@@ -184,7 +186,7 @@
   ([path user {:keys [refresh]}]
      (log/debug "obtaining tree URLs for user" user "and path" path)
      (tree-urls-response
-      (or (and (not refresh) (get-existing-tree-urls user path))
+      (or (and (not refresh) (log/spy (build-response-map (get-existing-tree-urls user path))))
           (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
             (let [infile (file dir "data.txt")
                   body   (scruffian/download user path)
