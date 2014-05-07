@@ -47,10 +47,10 @@
               :message "unable to parse tree data"
               :details (:body res)
               :success false}]
-   (throw+ {:type :error-status
-            :res  {:status       (:status res)
-                   :content-type :json
-                   :body         (cheshire/generate-string body)}})))
+    (throw+ {:type :error-status
+             :res  {:status       (:status res)
+                    :content-type :json
+                    :body         (cheshire/generate-string body)}})))
 
 (defn- get-tree-viewer-url
   "Obtains a tree viewer URL for a single tree file."
@@ -145,7 +145,7 @@
 (defn- build-response-map
   "Builds the map to use when formatting the response body."
   [urls]
-  (assoc (nibblonian/format-tree-urls urls) :action "tree_manifest"))
+  (when urls (assoc (nibblonian/format-tree-urls urls) :action "tree_manifest")))
 
 (defn- get-and-save-tree-viewer-urls
   "Gets the tree-viewer URLs for a file and stores them via the tree-urls service.  If the username and path to the
@@ -187,10 +187,11 @@
   ([path user {:keys [refresh]}]
      (log/debug "obtaining tree URLs for user" user "and path" path)
      (tree-urls-response
-      (or (and (not refresh) (build-response-map (get-existing-tree-urls user path)))
-          (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
-            (let [infile (file dir "data.txt")
-                  body   (scruffian/download user path)
-                  sha1   (save-file body infile)]
-              (or (and (not refresh) (get-existing-tree-urls sha1 user path))
-                  (get-and-save-tree-viewer-urls path user dir infile sha1))))))))
+      (if-let [existing-urls (and (not refresh) (get-existing-tree-urls user path))]
+        (build-response-map existing-urls)
+        (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
+          (let [infile (file dir "data.txt")
+                body   (scruffian/download user path)
+                sha1   (save-file body infile)]
+            (or (and (not refresh) (get-existing-tree-urls sha1 user path))
+                (get-and-save-tree-viewer-urls path user dir infile sha1))))))))
