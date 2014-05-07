@@ -37,19 +37,21 @@
 (defn- drop-all-constraints
   []
   (println "\t* droping constraints...")
-  (exec-sql-statement (str "DO $body$"
-                           " DECLARE r record;"
-                           " BEGIN"
-                           "  FOR r IN"
-                           "   SELECT * FROM pg_constraint"
-                           "   INNER JOIN pg_class ON conrelid=pg_class.oid"
-                           "   INNER JOIN pg_namespace ON pg_namespace.oid=pg_class.relnamespace"
-                           "   ORDER BY CASE WHEN contype='f' THEN 0 ELSE 1 END,contype,nspname,relname,conname"
-                           "  LOOP"
-                           "   EXECUTE 'ALTER TABLE ' || quote_ident(r.nspname) || '.' || quote_ident(r.relname) || ' DROP CONSTRAINT ' || quote_ident(r.conname) || ';';"
-                           "  END LOOP;"
-                           " END"
-                           " $body$;")))
+  (exec-sql-statement
+   (str "DO $body$"
+        " DECLARE r record;"
+        " BEGIN"
+        "  FOR r IN"
+        "   SELECT * FROM pg_constraint"
+        "   INNER JOIN pg_class ON conrelid=pg_class.oid"
+        "   INNER JOIN pg_namespace ON pg_namespace.oid=pg_class.relnamespace"
+        "   ORDER BY CASE WHEN contype='f' THEN 0 ELSE 1 END,contype,nspname,relname,conname"
+        "  LOOP"
+        "   EXECUTE 'ALTER TABLE ' || quote_ident(r.nspname) || '.' || quote_ident(r.relname) ||"
+        "           ' DROP CONSTRAINT ' || quote_ident(r.conname) || ';';"
+        "  END LOOP;"
+        " END"
+        " $body$;")))
 
 ;; TODO add NOT NULL contraints to FOREIGN KEY cols.
 
