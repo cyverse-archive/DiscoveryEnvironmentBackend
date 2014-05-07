@@ -15,7 +15,8 @@
             [clojure.tools.logging :as log]
             [clj-http.client :as client]
             [facepalm.conversions :as cnv]
-            [kameleon.pgpass :as pgpass])
+            [kameleon.pgpass :as pgpass]
+            [me.raynes.fs :as fs])
   (:import [java.io File IOException]
            [java.sql SQLException]
            [org.apache.log4j BasicConfigurator ConsoleAppender Level
@@ -354,7 +355,8 @@
     (let [versions (get-update-versions (get-current-db-version) (:version opts))]
       (validate-update-versions versions)
       (try+
-       (dorun (map do-conversion versions))
+       (fs/with-cwd dir
+                    (dorun (map do-conversion versions)))
        (catch Exception e
          (log-next-exception e)
          (throw+))))))

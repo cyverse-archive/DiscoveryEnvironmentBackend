@@ -36,6 +36,7 @@
                  [org.iplantc/clojure-commons "4.0.0"]
                  [org.iplantc/kameleon "4.0.0"]
                  [postgresql "9.0-801.jdbc4"]
+                 [me.raynes/fs "1.4.4"]
                  [slingshot "0.10.3"]
                  [clj-http "0.6.3"]]
   :plugins [[org.iplantc/lein-iplant-cmdtar "4.0.0"]

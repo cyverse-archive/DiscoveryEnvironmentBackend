@@ -2,7 +2,8 @@
   (:use [clojure.java.io :only [file reader]]
         [kameleon.sql-reader :only [sql-statements]]
         [korma.core])
-  (:require [clojure.tools.logging :as log])
+  (:require [clojure.tools.logging :as log]
+            [me.raynes.fs :as fs])
   (:import [java.util UUID]))
 
 (def ^:private version
@@ -18,10 +19,11 @@
 
 (defn- load-sql-file
   "Loads a single SQL file into the database."
-  [sql-file]
-  (println (str "Loading " (.getName sql-file) "..."))
-  (with-open [rdr (reader sql-file)]
-    (dorun (map exec-sql-statement (sql-statements rdr)))))
+  [sql-file-path]
+  (let [sql-file (fs/file sql-file-path)]
+    (println (str "Loading " (.getName sql-file) "..."))
+    (with-open [rdr (reader sql-file)]
+      (dorun (map exec-sql-statement (sql-statements rdr))))))
 
 (defn- alter-id-column-to-uuid
   [table]
@@ -311,9 +313,9 @@
 
 (defn- add-parameter-values-table
   "Adds the new parameter_values table."
-  [unpacked-dir]
+  []
   (println "\t* adding the parameter_values table")
-  (load-sql-file (file unpacked-dir "tables/25_parameter_values.sql")))
+  (load-sql-file "tables/25_parameter_values.sql"))
 
 ;; cols to drop: hid, value_type_id_v187
 (defn- add-parameter-types-table
@@ -555,33 +557,33 @@
   (exec-sql-statement "ALTER TABLE ONLY user_saved_searches ADD COLUMN user_id UUID"))
 
 (defn- re-add-constraints
-  [unpacked-dir]
+  []
   (println "\t* re-adding constraints")
-  (load-sql-file (file unpacked-dir "tables/99_constraints.sql")))
+  (load-sql-file "tables/99_constraints.sql"))
 
 (defn- add-app-category-listing-view
-  [unpacked-dir]
+  []
   (println "\t* adding app_category_listing view...")
-  (load-sql-file (file unpacked-dir "views/01_app_category_listing.sql")))
+  (load-sql-file "views/01_app_category_listing.sql"))
 
 (defn- add-app-job-types-view
-  [unpacked-dir]
+  []
   (println "\t* adding app_job_types view...")
-  (load-sql-file (file unpacked-dir "views/02_app_job_types.sql")))
+  (load-sql-file "views/02_app_job_types.sql"))
 
 (defn- add-app-listing-view
-  [unpacked-dir]
+  []
   (println "\t* adding app_listing view...")
-  (load-sql-file (file unpacked-dir "views/03_app_listing.sql")))
+  (load-sql-file "views/03_app_listing.sql"))
 
 (defn- add-tool-listing-view
-  [unpacked-dir]
+  []
   (println "\t* adding tool_listing view...")
-  (load-sql-file (file unpacked-dir "views/04_tool_listing.sql")))
+  (load-sql-file "views/04_tool_listing.sql"))
 
 (defn convert
   "Performs the database conversion."
-  [unpacked-dir]
+  []
   (println "Performing the conversion for" version)
   (drop-views)
   (add-app-categories-table)
@@ -601,7 +603,7 @@
   (alter-multiplicity-table)
   (add-parameters-table)
   (add-parameter-groups-table)
-  (add-parameter-values-table unpacked-dir)
+  (add-parameter-values-table)
   (add-parameter-types-table)
   (alter-users-table)
   (add-validation-rules-table)
@@ -628,7 +630,7 @@
   (alter-user-preferences-table)
   (alter-user-sessions-table)
   (alter-user-saved-searches-table)
-  (add-app-category-listing-view unpacked-dir)
-  (add-app-job-types-view unpacked-dir)
-  (add-app-listing-view unpacked-dir)
-  (add-tool-listing-view unpacked-dir))
+  (add-app-category-listing-view)
+  (add-app-job-types-view)
+  (add-app-listing-view)
+  (add-tool-listing-view))
