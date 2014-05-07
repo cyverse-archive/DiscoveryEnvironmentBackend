@@ -6,11 +6,10 @@ donkey`.
 
 ## Primary Configuration
 
-Donkey gets most of its configuration settings from Apache Zookeeper.  These
-configuration setting are uploaded to Zookeeper using Clavin, a command-line
-tool maintained by iPlant that allows configuration properties and access
-control lists to easily be uploaded to Zookeeper.  Please see the Clavin
-documentation for information about how to upload configuration settings.
+Donkey reads in its configuration from a file. By default, it will look for
+the file at /etc/iplant/de/donkey.properties, but you can override the
+path by passing Donkey the --config setting at start up.
+
 Here's an example configuration file:
 
 ```properties

@@ -12,6 +12,9 @@ $ sudo yum install clockwork
 $ sudo /sbin/service clockwork start
 ```
 
+Clockwork gets its configuration settings from a configuration file. The path
+to the configuration file is given with the --config command-line setting.
+
 ## License
 
 Copyright (c) 2011, The Arizona Board of Regents on behalf of 

@@ -4,6 +4,8 @@ A basic monitoring system for Condor. It alternates between calling condor_q and
 
 Panopticon assumes that it is running as a user that can run the condor_q and condor_history commands. Additionally, Panopticon requires that Porklock be installed on the same box.
 
+Panopticon gets its configuration settings from a configuration file. The path to the configuration file is given with the --config command-line setting. Here's a sample Panopticon configuration file:
+
 #Configuration Template
 
     panopticon.osm.url               = $osm_base$

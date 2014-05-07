@@ -247,12 +247,10 @@ upgraded using `yum upgrade notificationagent`.
 
 ### Primary Configuration
 
-The notification agent gets most of its configuration settings from Apache
-Zookeeper. These configuration settings are uploaded to Zookeeper using Clavin,
-a command-line tool maintained by iPlant that allows configuration properties
-and access control lists to be easily uploaded to Zookeeper. Please see the
-Clavin documentation for information about how to upload configuration settings.
-Here's an example notification agent configuraiton file:
+The notification agent reads in its configuration from a file. By default, 
+it will look for the file at /etc/iplant/de/notificationagent.properties, but you can 
+override the path by passing the notification agent the --config setting at start up.
+Here's an example notification agent configuration file:
 
 ```properties
 # Database connection settings.

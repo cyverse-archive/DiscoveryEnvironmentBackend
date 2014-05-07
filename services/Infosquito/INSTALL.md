@@ -200,7 +200,11 @@ installation of the other backend services for the DE.
 $ sudo yum install infosquito
 ```
 
-### Configulon
+### Configuration
+
+Infosquito reads in its configuration from a file. By default, it will look for
+the file at /etc/iplant/de/infosquito.properties, but you can override the
+path by passing Infosquito the --config setting at start up.
 
 ```properties
 # ElasticSearch Settings

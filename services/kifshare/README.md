@@ -113,3 +113,9 @@ Once the kifshare page comes up, click on the big "Download" button.
 This requires you to know the name of the file referred to by the ticket.
 
     curl http://<kifshare-host>:<kifshare-port>/d/<ticket-name>/<filename>
+
+
+# Configuration
+
+Kifshare gets its configuration settings from a configuration file. The path
+to the configuration file is given with the --config command-line setting.

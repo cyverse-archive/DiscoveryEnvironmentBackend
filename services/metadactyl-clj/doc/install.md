@@ -13,11 +13,9 @@ It can be installed using `yum install metadactyl` and upgraded using
 
 ## Primary Configuration
 
-metadactyl-clj gets most of its configuration settings from Apache Zookeeper.
-These configuration setting are uploaded to Zookeeper using Clavin, a command-
-line tool maintained by iPlant that allows configuration properties and access
-control lists to easily be uploaded to Zookeeper.  Please see the Clavin
-documentation for information about how to upload configuration settings.
+metadactyl-clj gets its configuration settings from a configuration file. The path
+to the configuration file is given with the --config command-line setting.
+
 Here's an example configuration file:
 
 ```properties
