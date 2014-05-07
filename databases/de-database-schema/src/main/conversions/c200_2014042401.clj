@@ -579,7 +579,7 @@
   (println "\t* adding tool_listing view...")
   (load-sql-file (file unpacked-dir "views/04_tool_listing.sql")))
 
-(defn ^{:requires-sql-dir true} convert
+(defn convert
   "Performs the database conversion."
   [unpacked-dir]
   (println "Performing the conversion for" version)

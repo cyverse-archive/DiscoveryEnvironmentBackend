@@ -56,24 +56,14 @@
 
 (def conversions (atom nil))
 
-(def cv-symbols (atom nil))
-
-(defn- set-conversions
-  "Reads in the conversions from the unpacked build artifact. Sets the conversions atom
-   to the conversion map and the cv-symbols atom to the conversion namespace symbols map."
-  [unpacked-dir]
-  (let [[conversion-map cv-symbol-map] (cnv/conversion-map unpacked-dir)]
-      (reset! conversions conversion-map)
-      (reset! cv-symbols cv-symbol-map)))
-
-(defn load-conversions
-  "Sets the conversions and cv-symbols atoms from the conversions in the unpacked build artifact
-   directory, if it exists."
+(defn set-conversions
+  "Reads in the conversions from the unpacked build artifact. Set the conversions atom
+   to the conversion map."
   [unpacked-dir]
   (let [conversion-dir (file unpacked-dir "conversions")]
     (when (.exists conversion-dir)
       (println "Loading conversions...")
-      (set-conversions unpacked-dir)
+      (reset! conversions (cnv/conversion-map unpacked-dir))
       (println "Done loading conversions.")
       (println "Here are the loaded conversions: ")
       (dorun (map (partial println "   ") (keys @conversions))))))
@@ -314,7 +304,7 @@
   (with-temp-dir dir "-fp-" temp-directory-creation-failure
     (get-build-artifact dir opts)
     (unpack-build-artifact dir (:filename opts))
-    (load-conversions dir)
+    (set-conversions dir)
     (transaction (apply-database-init-scripts dir opts))))
 
 (defn- get-current-db-version
@@ -348,16 +338,11 @@
 
 (defn- do-conversion
   "Performs a databae conversion and updates the database version."
-  [unpacked-dir new-version]
-  (let [convert-fn (@conversions new-version)
-        cvfn-symbol (@cv-symbols new-version)
-        fn-metadata (meta (resolve cvfn-symbol))]
-    (transaction
-     (if (:requires-sql-dir fn-metadata)
-       (convert-fn unpacked-dir)
-       (convert-fn))
-     (insert version
-             (values {:version new-version})))))
+  [new-version]
+  (transaction
+   ((@conversions new-version))
+   (insert version
+           (values {:version new-version}))))
 
 (defn- update-database
   "Converts the database schema from one DE version to another."
@@ -365,11 +350,11 @@
   (with-temp-dir dir "-fp-" temp-directory-creation-failure
     (get-build-artifact dir opts)
     (unpack-build-artifact dir (:filename opts))
-    (load-conversions dir)
+    (set-conversions dir)
     (let [versions (get-update-versions (get-current-db-version) (:version opts))]
       (validate-update-versions versions)
       (try+
-       (dorun (map (partial do-conversion dir) versions))
+       (dorun (map do-conversion versions))
        (catch Exception e
          (log-next-exception e)
          (throw+))))))
