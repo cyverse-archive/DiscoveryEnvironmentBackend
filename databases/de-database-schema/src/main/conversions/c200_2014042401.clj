@@ -118,7 +118,8 @@
   (exec-sql-statement "DROP VIEW analysis_group_listing")
   (exec-sql-statement "DROP VIEW analysis_job_types")
   (exec-sql-statement "DROP VIEW analysis_listing")
-  (exec-sql-statement "DROP VIEW deployed_component_listing"))
+  (exec-sql-statement "DROP VIEW deployed_component_listing")
+  (exec-sql-statement "DROP VIEW rating_listing"))
 
 ;; cols to drop: hid, workspace_id_v187
 (defn- add-app-categories-table
@@ -581,6 +582,11 @@
   (println "\t* adding tool_listing view...")
   (load-sql-file "views/04_tool_listing.sql"))
 
+(defn- add-rating-listing-view
+  []
+  (println "\t* adding rating_listing view...")
+  (load-sql-file "views/05_rating_listing.sql"))
+
 (defn convert
   "Performs the database conversion."
   []
@@ -633,4 +639,5 @@
   (add-app-category-listing-view)
   (add-app-job-types-view)
   (add-app-listing-view)
-  (add-tool-listing-view))
+  (add-tool-listing-view)
+  (add-rating-listing-view))
