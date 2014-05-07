@@ -173,11 +173,12 @@
   (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
     (let [infile (file dir "data.txt")
           sha1   (save-file body infile)]
-      (if-let [tree-urls (when-not refresh (get-existing-tree-urls sha1))]
-        (do (log/debug "found existing tree URLs for" sha1)
-            (tree-urls-response tree-urls))
-        (do (log/debug "generating new URLs for" sha1)
-            (tree-urls-response (get-and-save-tree-viewer-urls dir infile sha1)))))))
+      (tree-urls-response
+       (if-let [tree-urls (when-not refresh (get-existing-tree-urls sha1))]
+         (do (log/debug "found existing tree URLs for" sha1)
+             (build-response-map tree-urls))
+         (do (log/debug "generating new URLs for" sha1)
+             (build-response-map (get-and-save-tree-viewer-urls dir infile sha1))))))))
 
 (defn tree-viewer-urls
   "Obtains the tree viewer URLs for a tree file in iRODS."
@@ -186,7 +187,7 @@
   ([path user {:keys [refresh]}]
      (log/debug "obtaining tree URLs for user" user "and path" path)
      (tree-urls-response
-      (or (and (not refresh) (log/spy (build-response-map (get-existing-tree-urls user path))))
+      (or (and (not refresh) (build-response-map (get-existing-tree-urls user path)))
           (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
             (let [infile (file dir "data.txt")
                   body   (scruffian/download user path)

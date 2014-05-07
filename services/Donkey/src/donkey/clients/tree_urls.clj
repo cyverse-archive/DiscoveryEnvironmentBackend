@@ -12,10 +12,10 @@
 
 (defn get-tree-urls
   [sha1]
-  (let [resp (http/get (tree-urls-url sha1))]
+  (let [resp (http/get (tree-urls-url sha1) {:throw-exceptions false})]
     (cond
      (= (:status resp) 404)
-     (throw+ {:error_code ERR_DOES_NOT_EXIST :sha1 sha1})
+     nil
 
      (= (:status resp) 400)
      (throw+ {:error_code ERR_BAD_REQUEST :sha1 sha1})
