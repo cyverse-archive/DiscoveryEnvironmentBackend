@@ -151,9 +151,9 @@
   "Gets the tree-viewer URLs for a file and stores them via the tree-urls service.  If the username and path to the
    file are also provided then a path containing the SHA1 will also be storeed in the AVUs for the file."
   ([dir infile sha1]
-     (let [urls    (build-response-map (get-tree-viewer-urls dir infile))]
+     (let [urls (get-tree-viewer-urls dir infile)]
        (set-tree-urls sha1 urls)
-       urls))
+       (build-response-map urls)))
   ([path user dir infile sha1]
      (let [urls    (get-tree-viewer-urls dir infile)
            metaurl (metaurl-for sha1)]
