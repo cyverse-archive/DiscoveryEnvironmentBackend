@@ -178,7 +178,7 @@
          (do (log/debug "found existing tree URLs for" sha1)
              (build-response-map tree-urls))
          (do (log/debug "generating new URLs for" sha1)
-             (build-response-map (get-and-save-tree-viewer-urls dir infile sha1))))))))
+             (get-and-save-tree-viewer-urls dir infile sha1)))))))
 
 (defn tree-viewer-urls
   "Obtains the tree viewer URLs for a tree file in iRODS."
