@@ -687,6 +687,15 @@ ALTER TABLE ONLY tool_requests
     REFERENCES users(id);
 
 --
+-- Foreign key constraint for the tool_architecture_id field of the
+-- tool_requests table.
+--
+ALTER TABLE ONLY tool_requests
+    ADD CONSTRAINT tool_requests_tool_architecture_id_fkey
+    FOREIGN KEY (tool_architecture_id)
+    REFERENCES tool_architectures(id);
+
+--
 -- Foreign key constraint for the deployed_component_id field of the
 -- tool_requests table.
 --
@@ -705,6 +714,24 @@ ALTER TABLE ONLY tool_request_statuses
     REFERENCES users(id);
 
 --
+-- Foreign key constraint for the tool_request_id field of the tool_request_statuses
+-- table.
+--
+ALTER TABLE ONLY tool_request_statuses
+    ADD CONSTRAINT tool_request_statuses_tool_request_id_fkey
+    FOREIGN KEY (tool_request_id)
+    REFERENCES tool_requests(id);
+
+--
+-- Foreign key constraint for the tool_request_status_code_id field of the tool_request_statuses
+-- table.
+--
+ALTER TABLE ONLY tool_request_statuses
+    ADD CONSTRAINT tool_request_statuses_tool_request_status_code_id_fkey
+    FOREIGN KEY (tool_request_status_code_id)
+    REFERENCES tool_request_status_codes(id);
+
+--
 -- Foreign key constraint for the user_id field of the logins table.
 --
 ALTER TABLE ONLY logins
@@ -719,6 +746,54 @@ ALTER TABLE ONLY jobs
     ADD CONSTRAINT jobs_user_id_fkey
     FOREIGN KEY (user_id)
     REFERENCES users(id);
+
+--
+-- Foreign key constraint for the job_type_id field of the jobs table.
+--
+ALTER TABLE ONLY jobs
+    ADD CONSTRAINT jobs_job_type_id_fkey
+    FOREIGN KEY (job_type_id)
+    REFERENCES job_types(id);
+
+--
+-- Foreign key constraint for the value_type_id field of the metadata_attributes table.
+--
+ALTER TABLE ONLY metadata_attributes
+    ADD CONSTRAINT metadata_attributes_value_type_id_fkey
+    FOREIGN KEY (value_type_id)
+    REFERENCES metadata_value_types(id);
+
+--
+-- Foreign key constraint for the template_id field of the metadata_template_attrs table.
+--
+ALTER TABLE ONLY metadata_template_attrs
+    ADD CONSTRAINT metadata_template_attrs_template_id_fkey
+    FOREIGN KEY (template_id)
+    REFERENCES metadata_templates(id);
+
+--
+-- Foreign key constraint for the attribute_id field of the metadata_template_attrs table.
+--
+ALTER TABLE ONLY metadata_template_attrs
+    ADD CONSTRAINT metadata_template_attrs_attribute_id_fkey
+    FOREIGN KEY (attribute_id)
+    REFERENCES metadata_attributes(id);
+
+--
+-- Foreign key constraint for the attribute_id field of the metadata_attr_synonyms table.
+--
+ALTER TABLE ONLY metadata_attr_synonyms
+    ADD CONSTRAINT metadata_attr_synonyms_attribute_id_fkey
+    FOREIGN KEY (attribute_id)
+    REFERENCES metadata_attributes(id);
+
+--
+-- Foreign key constraint for the synonym_id field of the metadata_attr_synonyms table.
+--
+ALTER TABLE ONLY metadata_attr_synonyms
+    ADD CONSTRAINT metadata_attr_synonyms_synonym_id_fkey
+    FOREIGN KEY (synonym_id)
+    REFERENCES metadata_attributes(id);
 
 --
 -- The primary key for the user_preferences table.

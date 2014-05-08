@@ -4,8 +4,8 @@ SET search_path = public, pg_catalog;
 -- The join table for metadata templates and attributes.
 --
 CREATE TABLE metadata_template_attrs (
-    template_id uuid NOT NULL REFERENCES metadata_templates(id),
-    attribute_id uuid NOT NULL REFERENCES metadata_attributes(id),
+    template_id uuid NOT NULL,
+    attribute_id uuid NOT NULL,
     display_order integer NOT NULL
 );
 

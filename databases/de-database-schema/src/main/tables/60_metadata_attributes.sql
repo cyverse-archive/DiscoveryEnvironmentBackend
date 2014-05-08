@@ -8,6 +8,6 @@ CREATE TABLE metadata_attributes (
     name varchar(64) NOT NULL,
     description varchar(1024) NOT NULL,
     required boolean NOT NULL,
-    value_type_id uuid NOT NULL REFERENCES metadata_value_types(id),
+    value_type_id uuid NOT NULL,
     PRIMARY KEY (id)
 );

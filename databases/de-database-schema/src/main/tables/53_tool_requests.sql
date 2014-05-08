@@ -14,7 +14,7 @@ CREATE TABLE tool_requests (
     version VARCHAR(255) NOT NULL,
     attribution TEXT NOT NULL,
     multithreaded BOOLEAN,
-    tool_architecture_id UUID REFERENCES tool_architectures(id) NOT NULL,
+    tool_architecture_id UUID NOT NULL,
     test_data_path TEXT NOT NULL,
     instructions TEXT NOT NULL,
     additional_info TEXT,
