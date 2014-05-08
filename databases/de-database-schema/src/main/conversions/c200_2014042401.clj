@@ -170,15 +170,13 @@
   (alter-id-column-to-uuid "tasks")
   (exec-sql-statement "ALTER TABLE ONLY tasks ADD COLUMN tool_id UUID"))
 
-;; cols to drop: hid, workspace_id_v187, integration_data_id_v187
+;; cols to drop: hid, workspace_id, type, integration_data_id_v187
 (defn- add-apps-table
   "Renames the existing transformation_activity table to tasks and adds updated columns."
   []
   (println "\t* updating the transformation_activity table to apps")
   (exec-sql-statement "ALTER TABLE transformation_activity RENAME TO apps")
   (alter-id-column-to-uuid "apps")
-  (exec-sql-statement "ALTER TABLE ONLY apps RENAME COLUMN workspace_id TO workspace_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY apps ADD COLUMN workspace_id UUID")
   (exec-sql-statement "ALTER TABLE ONLY apps RENAME COLUMN integration_data_id TO integration_data_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY apps ADD COLUMN integration_data_id UUID"))
 
@@ -579,8 +577,6 @@
   []
   (println "\t* updating workspace uuid foreign keys...")
   (exec-sql-statement "UPDATE app_categories SET workspace_id ="
-                      "(SELECT w.id FROM workspace w WHERE workspace_id_v187 = w.id_v187)")
-  (exec-sql-statement "UPDATE apps SET workspace_id ="
                       "(SELECT w.id FROM workspace w WHERE workspace_id_v187 = w.id_v187)"))
 
 (defn- update-tool-uuids

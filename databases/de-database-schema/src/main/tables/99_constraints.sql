@@ -503,15 +503,6 @@ ALTER TABLE ONLY parameter_groups
     REFERENCES tasks(id);
 
 --
--- Name: app_workspace_id_fk; Type: FK CONSTRAINT; Schema:
--- public; Owner: de
---
-ALTER TABLE ONLY apps
-    ADD CONSTRAINT app_workspace_id_fk
-    FOREIGN KEY (workspace_id)
-    REFERENCES workspace(id);
-
---
 -- Name: app_integration_data_id_fk; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --
