@@ -278,11 +278,11 @@ ALTER TABLE ONLY tools
     REFERENCES integration_data(id);
 
 --
--- Name: tool_test_data_files_deployed_component_id_fkey; Type: FK
+-- Name: tool_test_data_files_tool_id_fkey; Type: FK
 -- CONSTRAINT; Schema: public; Owner: de
 --
 ALTER TABLE ONLY tool_test_data_files
-    ADD CONSTRAINT tool_test_data_files_deployed_component_id_fkey
+    ADD CONSTRAINT tool_test_data_files_tool_id_fkey
     FOREIGN KEY (tool_id)
     REFERENCES tools(id);
 
@@ -661,11 +661,11 @@ ALTER TABLE ONLY file_parameters
     REFERENCES data_source(id);
 
 --
--- Name: tasks_component_id_fk; Type: CONSTRAINT; Schema: public; Owner: de;
+-- Name: tasks_tool_id_fk; Type: CONSTRAINT; Schema: public; Owner: de;
 --
 ALTER TABLE ONLY tasks
-    ADD CONSTRAINT tasks_component_id_fk
-    FOREIGN KEY (component_id)
+    ADD CONSTRAINT tasks_tool_id_fk
+    FOREIGN KEY (tool_id)
     REFERENCES tools(id);
 
 --
@@ -714,11 +714,11 @@ ALTER TABLE ONLY tool_requests
     REFERENCES tool_architectures(id);
 
 --
--- Foreign key constraint for the deployed_component_id field of the
+-- Foreign key constraint for the tool_id field of the
 -- tool_requests table.
 --
 ALTER TABLE ONLY tool_requests
-    ADD CONSTRAINT tool_requests_deployed_component_id_fkey
+    ADD CONSTRAINT tool_requests_tool_id_fkey
     FOREIGN KEY (tool_id)
     REFERENCES tools(id);
 

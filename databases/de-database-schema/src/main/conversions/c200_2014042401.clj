@@ -159,15 +159,14 @@
   (exec-sql-statement "ALTER TABLE ONLY tools RENAME COLUMN integration_data_id TO integration_data_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY tools ADD COLUMN integration_data_id UUID"))
 
-;; cols to drop: hid, component_id_v187
+;; cols to drop: hid, component_id
 (defn- add-tasks-table
   "Renames the existing template table to tasks and adds updated columns."
   []
   (println "\t* updating the template table to tasks")
   (exec-sql-statement "ALTER TABLE template RENAME TO tasks")
   (alter-id-column-to-uuid "tasks")
-  (exec-sql-statement "ALTER TABLE ONLY tasks RENAME COLUMN component_id TO component_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tasks ADD COLUMN component_id UUID"))
+  (exec-sql-statement "ALTER TABLE ONLY tasks ADD COLUMN tool_id UUID"))
 
 ;; cols to drop: hid, workspace_id_v187, integration_data_id_v187
 (defn- add-apps-table

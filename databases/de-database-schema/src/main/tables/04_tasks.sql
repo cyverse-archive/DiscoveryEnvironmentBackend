@@ -9,5 +9,5 @@ CREATE TABLE tasks (
     description character varying(255),
     label character varying(255),
     type character varying(255),
-    component_id uuid
+    tool_id uuid
 );
