@@ -147,13 +147,15 @@
   (exec-sql-statement "ALTER TABLE ONLY workspace RENAME COLUMN user_id TO user_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY workspace ADD COLUMN user_id UUID"))
 
-;; cols to drop: hid, tool_type_id_v187, integration_data_id_v187
+;; cols to drop: hid, id_v187, tool_type_id_v187, integration_data_id_v187
 (defn- add-tools-table
   "Renames the existing deployed_components table to tools and adds updated columns."
   []
   (println "\t* updating the deployed_components table to tools")
   (exec-sql-statement "ALTER TABLE deployed_components RENAME TO tools")
-  (alter-id-column-to-uuid "tools")
+  (exec-sql-statement "ALTER TABLE ONLY tools RENAME COLUMN id TO id_v187")
+  (exec-sql-statement "ALTER TABLE ONLY tools ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
+  (exec-sql-statement "UPDATE tools SET id = CAST(id_v187 AS UUID) WHERE CHAR_LENGTH(id_v187) = 36")
   (exec-sql-statement "ALTER TABLE ONLY tools RENAME COLUMN tool_type_id TO tool_type_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY tools ADD COLUMN tool_type_id UUID")
   (exec-sql-statement "ALTER TABLE ONLY tools RENAME COLUMN integration_data_id TO integration_data_id_v187")
@@ -581,6 +583,16 @@
   (exec-sql-statement "UPDATE apps SET workspace_id ="
                       "(SELECT w.id FROM workspace w WHERE workspace_id_v187 = w.id_v187)"))
 
+(defn- update-tool-uuids
+  []
+  (println "\t* updating tools uuid foreign keys...")
+  (exec-sql-statement "UPDATE tasks SET tool_id ="
+                      "(SELECT t.id FROM tools t WHERE component_id = t.id_v187)")
+  (exec-sql-statement "UPDATE tool_test_data_files SET tool_id ="
+                      "(SELECT t.id FROM tools t WHERE deployed_component_id = t.hid)")
+  (exec-sql-statement "UPDATE tool_requests SET tool_id ="
+                      "(SELECT t.id FROM tools t WHERE deployed_component_id = t.hid)"))
+
 (defn- re-add-constraints
   []
   (println "\t* re-adding constraints")
@@ -662,6 +674,7 @@
   (alter-user-saved-searches-table)
   (update-app-category-uuids)
   (update-workspace-uuids)
+  (update-tool-uuids)
   (drop-all-constraints)
   (re-add-constraints)
   (add-app-category-listing-view)
