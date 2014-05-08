@@ -163,5 +163,6 @@
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
     (cfg/load-config-from-file (:config options) props)
+    (init-service)
     (log/warn "Listening on" (listen-port))
     (jetty/run-jetty app {:port (listen-port)})))
