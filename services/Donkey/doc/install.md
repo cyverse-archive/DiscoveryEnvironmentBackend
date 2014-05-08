@@ -6,11 +6,10 @@ donkey`.
 
 ## Primary Configuration
 
-Donkey gets most of its configuration settings from Apache Zookeeper.  These
-configuration setting are uploaded to Zookeeper using Clavin, a command-line
-tool maintained by iPlant that allows configuration properties and access
-control lists to easily be uploaded to Zookeeper.  Please see the Clavin
-documentation for information about how to upload configuration settings.
+Donkey reads in its configuration from a file. By default, it will look for
+the file at /etc/iplant/de/donkey.properties, but you can override the
+path by passing Donkey the --config setting at start up.
+
 Here's an example configuration file:
 
 ```properties
@@ -39,16 +38,6 @@ donkey.cas.server-name = http://localhost:65002
 # The domain name to append to the user id to get the fully qualified user id.
 donkey.uid.domain = iplantcollaborative.org
 
-# User session settings
-donkey.sessions.base-url = http://localhost:65012/riak/
-donkey.sessions.bucket   = sessions
-
-# User preferences settings
-donkey.preferences.bucket = preferences
-
-# User search history settings.
-donkey.search-history.bucket = search-history
-
 # User information lookup settings.
 donkey.userinfo.base-url             = https://localhost/api/v1
 donkey.userinfo.client-key           = some-client-key
@@ -66,7 +55,6 @@ donkey.scruffian.base-url = http://localhost:65013/
 
 # Tree viewer settings
 donkey.tree-viewer.base-url              = http://localhost/parseTree
-donkey.tree-viewer.bucket                = tree-urls
 
 # Elastic Search settings
 donkey.infosquito.es-url = http://services-2.iplantcollaborative.org:31338

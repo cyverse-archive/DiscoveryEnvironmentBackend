@@ -10,8 +10,6 @@
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :profiles {:dev {:resource-paths ["test-data"]}}
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/tools.logging "0.2.6"]

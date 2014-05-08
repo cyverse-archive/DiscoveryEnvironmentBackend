@@ -21,6 +21,7 @@
             [clojure.java.io :as ds]
             [clojure.tools.logging :as log]
             [cheshire.core :as cheshire]
+            [me.raynes.fs :as fs]
             [common-cli.core :as ccli]))
 
 (defn do-submission
@@ -61,30 +62,25 @@
     jb/parse-json-body
     wrap-errors))
 
-(defn configurate
-  [options]
-  (cond
-   (:config options)
-   (load-config-from-file (:config options))
-
-   :else
-   (load-config-from-zookeeper)))
-
-(def port-number
-  (memoize
-   (fn [options]
-     (if (:port options)
-       (:port options)
-       (listen-port)))))
-
 (def svc-info
-  {:desc "Handles Condor job submission for the DE."
+  {:desc "Submits jobs to a Condor cluster for the DE."
    :app-name "jex"
    :group-id "org.iplantc"
    :art-id "jex"})
 
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"
+    :default "/etc/iplant/de/jex.properties"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
+
 (defn -main
   [& args]
-  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args)]
-    (configurate options)
-    (jetty/run-jetty (site-handler jex-routes) {:port (port-number options)})))
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 (str "The config file does not exist.")))
+    (when-not (fs/readable? (:config options))
+      (ccli/exit 1 "The config file is not readable."))
+    (load-config-from-file (:config options))
+    (jetty/run-jetty (site-handler jex-routes) {:port (listen-port)})))

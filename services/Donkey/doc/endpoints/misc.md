@@ -16,8 +16,9 @@
     * [Resetting a user's default output directory.](#resetting-a-users-default-output-directory.)
     * [Obtaining Identifiers](#obtaining-identifiers)
     * [Submitting User Feedback](#submitting-user-feedback)
-    * [Adding data to a user's bucket](#adding-data-to-a-users-bucket)
-    * [Getting data from a user's bucket](#getting-data-from-a-users-bucket)
+    * [Getting a user's saved searches](#getting-saved-searches)
+    * [Setting a user's saved searches](#setting-saved-searches)
+    * [Deleting a user's saved searches](#deleting-saved-searches)
 
 # Miscellaneous Donkey Endpoints
 
@@ -354,68 +355,58 @@ $ curl -XPUT -s "http://by-tor:8888/secured/feedback?proxyToken=$(cas-ticket)" -
 }
 ```
 
-## Buckets
+## Saved Searches
 
-The buckets endpoint is a generic endpoint for storing/accessing data in a
-key-value store.
+The saved-search endpoint proxies requests to the saved-searches service. This endpoint
+is used to store, retrieve, and delete a user's saved searches.
 
-The Discovery Environment uses a bucket for storing data on the user's behalf,
-which is named _reserved_.
 
-Below is the list of keys used by the Discovery Environment in the
-_:username/reserved_ bucket:
+### Getting saved searches
 
-| Reserved Key | Description |
-| ------------ | ----------- |
-| queryTemplates | Store a representation of a user's saved searches |
+Secured Endpoint: GET /secured/saved-searches
 
-### Adding data to a user's bucket
+Curl example:
 
-Secured Endpoint: POST /secured/buckets/:username/:bucket/:key
+     curl http://localhost:31325/secured/saved-searches?proxyToken=not-real
 
-The body should be anything that can be returned as a string, though there's no
-checking in place to prevent the caller from uploading binary data.
+The response body will be JSON. The service endpoint doesn't have a particular JSON
+structure it looks for, it simply stores whatever JSON is passed to it.
 
-The username, bucket, and key in the URL should be URL encoded.
+Possible error codes: ERR_BAD_REQUEST, ERR_NOT_A_USER, ERR_UNCHECKED_EXCEPTION
 
-Internally, the data is stored in Riak. The Riak bucket name is formed from a
-combination of the username and the bucket name, such as "testuser-testbucket".
-The content type stored in Riak will be "application/octet-stream"..
+### Setting saved searches
 
-Buckets and keys are automatically created if they don't already exist.
+Secured Endpoint: POST /secured/saved-searches
 
-Example:
+Curl example:
 
-```
-$ curl -d "THIS-IS-A-TEST" "http://by-tor:8888/secured/buckets/ipctest/test-bucket/test-key?proxyToken=$(cas-ticket)" | python -mjson.tool
+     curl -d '{"foo":"bar"}' http://localhost:31325/secured/saved-searches?proxyToken=not-real
+
+Response body:
+
+```json
 {
-    "success": true
+        "success" : true,
+        "saved_searches" : {"foo":"bar"}
 }
 ```
 
-Errors will return either a ERR_REQUESTED_FAILED or an ERR_UNCHECKED_EXCEPTION
-error code with a 500 status code.
+Possible error codes: ERR_BAD_REQUEST, ERR_NOT_A_USER, ERR_UNCHECKED_EXCEPTION
 
+If you pass up invalid JSON, you'll get an error like the following:
 
-### Getting data from a user's bucket
+   {"success":false,"reason":"Cannot JSON encode object of class: class org.eclipse.jetty.server.HttpInput: org.eclipse.jetty.server.HttpInput@1cbeb264"}
 
-Secured Endpoint: GET /secured/buckets/:username/:bucket/:key
+### Deleting saved searches
 
-Returns data associated with the key in the user's bucket. The body is returned
-as a string. The data does NOT have to be JSON, it can be a normal string.
+Secured endpoint : DELETE /secured/saved-searches
 
-The username, bucket, and key in the URL should be URL encoded.
+Curl example:
 
-The data that is retrieved comes from Riak. The bucket is a combination of the
-username and the bucket name, i.e. ipctest-testbuck. The content-type that is
-returned will be "application/octet-stream".
+     curl -X DELETE http://localhost:31325/secured/saved-searches?proxyToken=not-real
 
-Example:
+You should get a response body back like the following:
 
+```json
+{"success":true}
 ```
-$ curl "http://by-tor:8888/secured/buckets/ipctest/test-bucket/test-key?proxyToken=$(cas-ticket)" | python -mjson.tool
-THIS-IS-A-TEST
-```
-
-Error will return either a ERR_REQUESTED_FAILED or an ERR_UNCHECKED_EXCEPTION
-error code with a 500 status code.

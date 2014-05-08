@@ -24,15 +24,13 @@
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
 
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
-
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/tools.cli "0.2.1"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/core.memoize "0.5.3"]
                  [org.iplantc/clj-jargon "4.0.0"]
                  [org.iplantc/clojure-commons "4.0.0"]
+                 [org.iplantc/common-cli "4.0.0"]
+                 [me.raynes/fs "1.4.4"]
                  [cheshire "5.0.1"]
                  [slingshot "0.10.1"]
                  [compojure "1.1.3"]

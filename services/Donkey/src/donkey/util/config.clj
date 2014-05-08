@@ -183,33 +183,6 @@
   [props config-valid configs notification-routes-enabled]
   "donkey.notificationagent.base-url")
 
-(cc/defprop-str riak-base-url
-  "The base URL for the Riak HTTP API. Used for user sessions."
-  [props config-valid configs pref-routes-enabled session-routes-enabled
-   tree-viewer-routes-enabled]
-  "donkey.sessions.base-url")
-
-(cc/defprop-str riak-sessions-bucket
-  "The bucket in Riak to retrieve user sessions from."
-  [props config-valid configs session-routes-enabled]
-  "donkey.sessions.bucket")
-
-(cc/defprop-str riak-prefs-bucket
-  "The bucket in Riak to retrieve user preferences from."
-  [props config-valid configs pref-routes-enabled]
-  "donkey.preferences.bucket")
-
-(cc/defprop-int riak-prefs-dw
-  "The durable write quorum for Riak that should be used when writing
-   storing preferences."
-  [props config-valid configs pref-routes-enabled]
-  "donkey.preferences.dw")
-
-(cc/defprop-str riak-search-hist-bucket
-  "The bucket in Riak to use for the storage of user search history."
-  [props config-valid configs pref-routes-enabled]
-  "donkey.search-history.bucket")
-
 (cc/defprop-str userinfo-base-url
   "The base URL for the user info API."
   [props config-valid configs user-info-routes-enabled]
@@ -508,16 +481,6 @@
   [props config-valid configs filesystem-routes-enabled]
   "donkey.fs.copy-key")
 
-(cc/defprop-str fs-riak-url
-  "The base URL to Riak."
-  [props config-valid configs filesystem-routes-enabled]
-  "donkey.fs.riak-base-url")
-
-(cc/defprop-str fs-tree-bucket
-  "The Riak bucket containing tree URLs."
-  [props config-valid configs filesystem-routes-enabled]
-  "donkey.fs.riak-trees-bucket")
-
 (cc/defprop-str fs-filter-chars
   "The characters that are considered invalid in iRODS dir- and filenames."
   [props config-valid configs filesystem-routes-enabled]
@@ -567,11 +530,6 @@
   "The URL for the tree parser service."
   [props config-valid configs tree-viewer-routes-enabled]
   "donkey.tree-viewer.base-url")
-
-(cc/defprop-str tree-url-bucket
-  "The bucket in Riak to use for the storage of tree viewer URLs."
-  [props config-valid configs tree-viewer-routes-enabled]
-  "donkey.tree-viewer.bucket")
 
 (cc/defprop-str es-url
   "The URL for Elastic Search"
@@ -623,6 +581,27 @@
   [props config-valid configs]
   "donkey.job-exec.default-output-folder")
 
+(cc/defprop-str prefs-base-url
+  "The hostname of the user-preferences service"
+  [props config-valid configs]
+  "donkey.preferences.host")
+
+(cc/defprop-str sessions-base-url
+  "The hostname of the user-sessions service"
+  [props config-valid configs]
+  "donkey.sessions.host")
+
+(cc/defprop-str saved-searches-base-url
+  "The base URL of the saved-searches service"
+  [props config-valid configs]
+  "donkey.saved-searches.host")
+
+(cc/defprop-str tree-urls-base-url
+  "The base URL of the tree-urls service"
+  [props config-valid configs]
+  "donkey.tree-urls.host")
+
+
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []
@@ -633,27 +612,13 @@
   []
   (filter #(not (nil? %)) [(icat-password) (icat-user) (irods-pass) (irods-user) (agave-pass)]))
 
-(defn- setup-config
-  "Logs, validates, and registers filters"
-  []
+(defn load-config-from-file
+  "Loads the configuration settings from a file."
+  [cfg-path]
+  (cc/load-config-from-file cfg-path props)
   (cc/log-config props :filters [#"irods\.user" #"icat\.user" #"oauth\.pem"])
   (validate-config)
   (ce/register-filters (exception-filters)))
-
-(defn load-config-from-file
-  "Loads the configuration settings from a file."
-  ([cfg-path]
-   (cc/load-config-from-file cfg-path props)
-   (setup-config))
-  ([]
-   (cc/load-config-from-file (System/getenv "IPLANT_CONF_DIR") "donkey.properties" props)
-   (setup-config)))
-
-(defn load-config-from-zookeeper
-  "Loads the configuration settings from Zookeeper."
-  []
-  (cc/load-config-from-zookeeper props "donkey")
-  (setup-config))
 
 (defn load-config-from-file?
   "Returns true if Donkey should read the config from a file."

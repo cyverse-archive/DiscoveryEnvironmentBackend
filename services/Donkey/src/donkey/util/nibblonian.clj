@@ -51,7 +51,7 @@
   [user path]
   (->> (mt/metadata-get user path)
     (:metadata)
-    (:filter #(= (:attr %) "tree-urls"))
+    (filter #(= (:attr %) "tree-urls"))
     (first)
     (:value)))
 

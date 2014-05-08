@@ -67,7 +67,7 @@
       (reset! conversions (cnv/conversion-map unpacked-dir))
       (println "Done loading conversions.")
       (println "Here are the loaded conversions: ")
-      (dorun (map (partial println "   ") (keys @conversions))))))
+      (dorun (map (partial println "   ") (sort (keys @conversions)))))))
 
 (defn- to-int
   "Parses a string representation of an integer."

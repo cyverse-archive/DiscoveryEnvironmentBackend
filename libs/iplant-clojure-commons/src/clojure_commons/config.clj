@@ -2,27 +2,10 @@
   (:use [clojure.java.io :only [file]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.string :as string]
-            [clojure-commons.clavin-client :as cl]
             [clojure-commons.error-codes :as ce]
             [clojure-commons.props :as cp]
             [clojure.tools.logging :as log])
   (:import [java.io IOException]))
-
-(def ^:private zkhosts-path "/etc/iplant-services/zkhosts.properties")
-
-(defn get-zk-url
-  "Gets the Zookeeper connection information from the standard location for iPlant services.  In
-   cases where the calling service wants to check for the presence of the configuration in order
-   to determine whether the properties should be loaded from Zookeeper or a local configuration
-   file, failure to load the Zookeeper connection information may not be an error.  Because of
-   this, if the connection information can't be loaded, this function logs a warning message and
-   returns nil."
-  []
-  (try
-    (get (cp/read-properties zkhosts-path) "zookeeper")
-    (catch IOException e
-      (log/warn e "unable to load Zookeeper properties")
-      nil)))
 
 (defn load-config-from-file
   "A multi-arity function that loads the configuration properties from a file.
@@ -42,30 +25,6 @@
    (if (nil? conf-dir)
      (dosync (ref-set props (cp/read-properties (file filename))))
      (dosync (ref-set props (cp/read-properties (file conf-dir filename)))))))
-
-(defn load-config-from-zookeeper
-  "Loads the configuration properties from Zookeeper.  If the Zookeeper connection information
-   is specified then that connection information will be used.  Otherwise, the connection
-   information will be obtained from the zkhosts.properties file.
-
-   Parameters:
-       zk-url  - the URL used to connect to connect to Zookeeper (optional).
-       props   - the reference to the properties.
-       service - the name of the service."
-  ([props service]
-     (let [zk-url (get-zk-url)]
-       (when (nil? zk-url)
-         (throw+ {:error_code ce/ERR_MISSING_DEPENDENCY
-                  :detail_msg "iplant-services is not installed"}))
-       (load-config-from-zookeeper zk-url props service)))
-  ([zk-url props service]
-     (cl/with-zk
-       zk-url
-       (when (not (cl/can-run?))
-         (log/warn "THIS APPLICATION CANNOT RUN ON THIS MACHINE. SO SAYETH ZOOKEEPER.")
-         (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")
-         (System/exit 1))
-       (dosync (ref-set props (cl/properties service))))))
 
 (defn masked-field?
   "Returns a truthy value if the field should be masked and a falsey value if it shouldn't."

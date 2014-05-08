@@ -38,7 +38,9 @@
             [clojure-commons.props :as props]
             [common-cli.core :as ccli]
             [donkey.util.anon :as anon]
-            [clojure.tools.nrepl.server :as nrepl]))
+            [clojure.tools.nrepl.server :as nrepl]
+            [me.raynes.fs :as fs]
+            [common-cli.core :as ccli]))
 
 (defn delayed-handler
   [routes-fn]
@@ -117,12 +119,6 @@
   (load-configuration-from-file)
   (icat/configure-icat))
 
-(defn load-configuration-from-zookeeper
-  "Loads the configuration properties from Zookeeper."
-  []
-  (config/load-config-from-zookeeper)
-  (db/define-database))
-
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler routes-fn)
@@ -136,39 +132,31 @@
 (def app
   (site-handler donkey-routes))
 
-(defn configurate
-  [options]
-  (cond
-   (:config options)
-   (load-configuration-from-file (:config options))
-
-   (config/load-config-from-file?)
-   (load-configuration-from-file)
-
-   :else
-   (load-configuration-from-zookeeper)))
-
-(def port-number
-  (memoize
-   (fn [options]
-     (if (:port options)
-       (:port options)
-       (config/listen-port)))))
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"
+    :default "/etc/iplant/de/donkey.properties"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
 
 (def svc-info
-  {:desc "The backend service facade for the Discovery Environment."
+  {:desc "DE service for business logic"
    :app-name "donkey"
    :group-id "org.iplantc"
    :art-id "donkey"})
 
 (defn -main
   [& args]
-  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args)]
-    (configurate options)
-    (log/warn "Listening on" (port-number options))
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 (str "The config file does not exist.")))
+    (when-not (fs/readable? (:config options))
+      (ccli/exit 1 "The config file is not readable."))
+    (config/load-config-from-file (:config options))
+    (db/define-database)
     (start-nrepl)
     (messages/messaging-initialization)
     (icat/configure-icat)
     (anon/create-anon-user)
     (future (apps/sync-job-statuses))
-    (jetty/run-jetty app {:port (port-number options)})))
+    (jetty/run-jetty app {:port (config/listen-port)})))

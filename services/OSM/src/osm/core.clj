@@ -6,10 +6,12 @@
             [compojure.handler :as handler]
             [clojure-commons.json :as cc-json]
             [clojure-commons.props :as cc-props]
-            [clojure-commons.clavin-client :as cl]
+            [clojure-commons.config :as cfg]
             [ring.adapter.jetty :as jetty]
             [cheshire.core :as cheshire]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [common-cli.core :as ccli]
+            [me.raynes.fs :as fs])
   (:use [ring.middleware keyword-params nested-params]
         [slingshot.slingshot :only [throw+ try+]]))
 
@@ -18,7 +20,7 @@
   {:status status
    :body msg})
 
-(def props (atom nil))
+(def props (ref nil))
 
 (defn max-retries [] (Integer/parseInt (get @props "osm.app.max-retries")))
 (defn retry-delay [] (Integer/parseInt (get @props "osm.app.retry-delay")))
@@ -209,23 +211,28 @@
     wrap-keyword-params
     wrap-nested-params))
 
+(def svc-info
+  {:desc "DE service for MongoDB interaction."
+   :app-name "osm"
+   :group-id "org.iplantc"
+   :art-id "osm"})
+
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"
+    :default "/etc/iplant/de/osm.properties"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
+
 (defn -main
   [& args]
-  (def zkprops (cc-props/parse-properties "zkhosts.properties"))
-  (def zkurl (get zkprops "zookeeper"))
-
-  (log/warn "ZKURL: " zkurl)
-
-  (cl/with-zk
-    zkurl
-    (when (not (cl/can-run?))
-      (log/warn "THIS APPLICATION CANNOT RUN ON THIS MACHINE. SO SAYETH ZOOKEEPER.")
-      (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")
-      (System/exit 1))
-
-    (reset! props (cl/properties "osm")))
-
-  (log/warn @props)
-  (mongo/set-mongo-props @props)
-  (log/warn (str "Listening on " (listen-port)))
-  (jetty/run-jetty (site-handler osm-routes) {:port (listen-port)}))
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 (str "The config file does not exist.")))
+    (when-not (fs/readable? (:config options))
+      (ccli/exit 1 "The config file is not readable."))
+    (cfg/load-config-from-file (:config options) props)
+    (log/warn @props)
+    (mongo/set-mongo-props @props)
+    (log/warn (str "Listening on " (listen-port)))
+    (jetty/run-jetty (site-handler osm-routes) {:port (listen-port)})))

@@ -18,11 +18,12 @@
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
             [clojure.tools.logging :as log]
-            [clojure-commons.clavin-client :as cl]
             [clojure-commons.error-codes :as ce]
             [metadactyl.service.app-metadata :as app-metadata]
             [metadactyl.util.config :as config]
-            [ring.adapter.jetty :as jetty]))
+            [ring.adapter.jetty :as jetty]
+            [common-cli.core :as ccli]
+            [me.raynes.fs :as fs]))
 
 (defroutes secured-routes
   (GET "/bootstrap" [:as {params :params headers :headers}]
@@ -250,14 +251,8 @@
 
 (defn load-config-from-file
   "Loads the configuration settings from a properties file."
-  []
-  (config/load-config-from-file)
-  (init-service))
-
-(defn load-config-from-zookeeper
-  "Loads the configuration settings from zookeeper."
-  []
-  (config/load-config-from-zookeeper)
+  [cfg-path]
+  (config/load-config-from-file cfg-path)
   (init-service))
 
 (defn site-handler [routes]
@@ -268,8 +263,26 @@
 (def app
   (site-handler metadactyl-routes))
 
+(def svc-info
+  {:desc "Framework for hosting DiscoveryEnvironment metadata services."
+   :app-name "metadactyl"
+   :group-id "org.iplantc"
+   :art-id "metadactyl"})
+
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"
+    :default "/etc/iplant/de/metadactyl.properties"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
+
 (defn -main
   [& args]
-  (load-config-from-zookeeper)
-  (log/warn "Listening on" (config/listen-port))
-  (jetty/run-jetty app {:port (config/listen-port)}))
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 (str "The config file does not exist.")))
+    (when-not (fs/readable? (:config options))
+      (ccli/exit 1 "The config file is not readable."))
+    (load-config-from-file (:config options))
+    (log/warn "Listening on" (config/listen-port))
+    (jetty/run-jetty app {:port (config/listen-port)})))

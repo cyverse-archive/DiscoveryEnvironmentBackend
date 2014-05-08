@@ -154,20 +154,6 @@
             :file-size     0)
           (dissoc (page->map user (icat/list-folders-in-folder user zone path)) :files))))))
 
-#_(defn list-dir
-   ([user path filter-files set-own?]
-     (log/warn (str "list-dir " user " " path))
-
-     (let [path (ft/rm-last-slash path)]
-       (with-jargon (jargon-cfg) [cm]
-         (validators/user-exists cm user)
-         (validators/path-exists cm path)
-         (when (and set-own? (not (owns? cm user path)))
-           (log/warn "Setting own perms on" path "for" user)
-           (set-permissions cm user path false false true))
-         (validators/path-readable cm user path)
-         (list-directories user path)))))
-
 (defn- top-level-listing
   [{user :user}]
   (let [comm-f     (future (list-directories user (fs-community-data)))

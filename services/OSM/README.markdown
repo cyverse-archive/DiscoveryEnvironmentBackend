@@ -13,15 +13,13 @@ You'll need leiningen installed. Then run the following commands:
 
 ```
 lein deps
-lein ring uberwar
+lein uberjar
 ```
 
 Installing the OSM
 ------------------
-
-Assuming that the OSM is running on the same host as MongoDB, this should be as
-simple as dropping the WAR file into your servlet container.
-
+OSM gets its configuration settings from a configuration file. The path
+to the configuration file is given with the --config command-line setting.
 
 Verifying the OSM is working
 ----------------------------

@@ -14,7 +14,6 @@
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.cli :as cli]
             [clojure.java.io :as io]
-            [clojure-commons.clavin-client :as cl]
             [clojure-commons.props :as prps]
             [clojure-commons.file-utils :as ft]
             [clojure.tools.logging :as log]
@@ -24,11 +23,10 @@
             [ring.util.response :as resp]
             [kifshare.config :as cfg]
             [kifshare.controllers :as controllers]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [common-cli.core :as ccli]
+            [me.raynes.fs :as fs])
   (:use [clojure-commons.error-codes]))
-
-;;(prps/find-resources-file
-;;                           (cfg/favicon-path))
 
 (defn keep-alive
   [resp]
@@ -105,22 +103,21 @@
       wrap-params
       wrap-stacktrace))
 
-(defn parse-args
-  [args]
-  (log/debug "entered kifshare.core/parse-args")
-
-  (cli/cli
-   args
-    ["-c" "--config"
-     "Set the local config file to read from. Bypasses Zookeeper"
-     :default nil]
-    ["-h" "--help"
-     "Show help."
-     :default false
-     :flag true]))
-
 (def app
   (site-handler kifshare-routes))
+
+(def svc-info
+  {:desc "Service that serves up public files from iRODS."
+   :app-name "kifshare"
+   :group-id "org.iplantc"
+   :art-id "kifshare"})
+
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"
+    :default "/etc/iplant/de/kifshare.properties"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
 
 (defn- override-buffer-size
   [opts]
@@ -129,24 +126,15 @@
 
 (defn -main
   [& args]
-  (log/debug "entered kifshare.core/-main")
-
-  (let [[opts args help-str] (parse-args args)]
-    (cond
-     (:help opts)
-     (do (println help-str)
-         (System/exit 0))
-
-     (:config opts)
-     (do
-       (log/warn "Reading local config: " (:config opts))
-       (cfg/local-init (:config opts))
-       (cfg/jargon-init))
-
-     :else
-     (init))
-
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 (str "The config file does not exist.")))
+    (when-not (fs/readable? (:config options))
+      (ccli/exit 1 "The config file is not readable."))
+    (cfg/local-init (:config options))
+    (cfg/jargon-init)
     (with-redefs [clojure.java.io/buffer-size override-buffer-size]
       (let [port (Integer/parseInt (string/trim (get @cfg/props "kifshare.app.port")))]
         (log/warn "Configured listen port is: " port)
         (jetty/run-jetty app {:port port})))))
+

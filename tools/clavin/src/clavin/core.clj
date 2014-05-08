@@ -4,68 +4,18 @@
   (:require [clojure.tools.cli :as cli]
             [clavin.environments :as env]
             [clavin.generator :as gen]
-            [clavin.get-props :as gp]
             [clavin.loader :as loader]
             [clavin.templates :as ct]
-            [clavin.zk :as zk]
             [clavin.edn-filters :as ednf]
             [clojure-commons.file-utils :as ft]
             [clojure.string :as string]
             [clojure-commons.props :as ccprops]))
-
-(def ^:private default-zkhosts-path
-  "/etc/iplant-services/zkhosts.properties")
 
 (declare main-help)
 
 (defn- to-integer
   [v]
   (Integer. v))
-
-(defn parse-args
-  "Parses the arguments for the 'props' subcommand."
-  [args]
-  (cli/cli
-   args
-   ["-h" "--help" "Show help." :default false :flag true]
-   ["-f" "--envs-file" "The file containing the environment definitions."
-    :default nil]
-   ["-t" "--template-dir" "The directory containing the templates."
-    :default nil]
-   ["--host" "The Zookeeper host to connect to." :default nil]
-   ["--port" "The Zookeeper client port to connect to." :default 31381
-    :parse-fn to-integer]
-   ["-z" "--zkhosts-path"
-    "The path to the file containing the Zookeeper connection settings."
-    :default default-zkhosts-path]
-   ["--acl"  "The file containing Zookeeper hostname ACLs." :default nil]
-   ["-a" "--app" "The application the settings are for." :default "de"]
-   ["-e" "--env" "The environment that the options should be entered into."
-    :default nil]
-   ["-d" "--deployment"
-    "The deployment inside the environment that is being configured."
-    :default nil]))
-
-(def ^:private required-args
-  [:envs-file :template-dir :acl :deployment])
-
-(defn parse-get-props-args
-  "Parses the arguments for the 'get-props' subcommand."
-  [args]
-  (cli/cli
-   args
-   ["-h" "--help" "Show help." :default false :flag true]
-   ["--host" "The Zookeeper host to connect to." :default nil]
-   ["--port" "The Zookeeper port to connect to." :default 31381
-    :parse-fn to-integer]
-   ["-z" "--zkhosts-path"
-    "The path to the file containing the Zookeeper connection settings."
-    :default default-zkhosts-path]
-   ["-s" "--service" "The service to get the settings for." :default nil]
-   ["--service-host" "The host that the service is running on." :default nil]))
-
-(def ^:private required-get-props-args
-  [:service])
 
 (defn parse-files-args
   "Parses the arguments for the 'files' subcommand."
@@ -102,23 +52,6 @@
 
 (def ^:private required-edn-args
   [:envs-file :filter-dir :deployment :dest])
-
-(defn parse-hosts-args
-  "Parses the arguments for the 'hosts' subcommand."
-  [args]
-  (cli/cli
-   args
-   ["-h" "--help" "Show help." :default false :flag true]
-   ["--acl"  "The file containing Zookeeper hostname ACLs." :default nil]
-   ["--host" "The Zookeeper host to connection to." :default nil]
-   ["--port" "The Zookeeper client port to connection to." :default 31381
-    :parse-fn to-integer]
-   ["-z" "--zkhosts-path"
-    "The path to the file containing the Zookeeper connection settings."
-    :default default-zkhosts-path]))
-
-(def ^:private required-hosts-args
-  [:acl])
 
 (defn parse-envs-args
   "Parses the arguments for the 'envs' subcommand."
@@ -221,48 +154,6 @@
                 :else           (validate-multiple-opts opts help-str %))
               required-opts)))
 
-(defn read-zkhosts
-  "Obtains the Zookeeper connection settings from zkhosts.properties."
-  [zkhosts-path]
-  (try
-    (let [zkhosts-props (ccprops/read-properties zkhosts-path)
-          zkhosts       (.getProperty zkhosts-props "zookeeper")]
-      (when (nil? zkhosts)
-        (throw
-         (Exception. (str "no zookeeper information found in " zkhosts-path))))
-      zkhosts)))
-
-(defn no-zk-info
-  [help-str]
-  (println "either --host or --zkhosts-path is required")
-  (println help-str)
-  (System/exit 1))
-
-(defn get-zk-connection-str
-  [{:keys [host port zkhosts-path]} help-str]
-  (cond
-   (not (nil? host))         (zk/build-connection-str host port)
-   (not (nil? zkhosts-path)) (read-zkhosts zkhosts-path)
-   :else                     (no-zk-info help-str)))
-
-(defn handle-hosts
-  "Performs tasks for the hosts subcommand."
-  [args-vec]
-  (let [[opts args help-str] (parse-hosts-args args-vec)]
-    (validate-opts opts help-str required-hosts-args)
-    (let [acl-file  (get-regular-file opts help-str :acl)
-          acl-props (ccprops/read-properties acl-file)
-          zk-conn   (get-zk-connection-str opts help-str)]
-
-      (when-not (loader/can-run? acl-props)
-        (println "This machine isn't listed as an admin machine in " (:acl opts))
-        (System/exit 1))
-
-      (println "Starting to load hosts.")
-      (loader/load-hosts zk-conn acl-props)
-      (println "Done loading hosts.")
-      (System/exit 0))))
-
 (defn handle-files
   "Performs tasks for the files subcommand."
   [args-vec]
@@ -321,38 +212,6 @@
           dep-tuple [(keyword env) (keyword dep)]]
       (ednf/spit-edn-files dep-tuple (:envs-file opts) (:filter-dir opts) (:dest opts)))))
 
-(defn handle-properties
-  "Performs tasks for the props subcommand."
-  [args-vec]
-  (let [[opts args help-str] (parse-args args-vec)]
-    (validate-opts opts help-str required-args)
-    (let [envs-file    (get-regular-file opts help-str :envs-file)
-          template-dir (get-directory opts help-str :template-dir)
-          envs         (env/load-envs envs-file)
-          templates    (if (empty? args) (ct/list-templates template-dir) args)
-          acl-file     (get-regular-file opts help-str :acl)
-          acl-props    (ccprops/read-properties acl-file)
-          dep          (:deployment opts)
-          env-name     (or (:env opts) (env/env-for-dep envs dep))
-          app          (:app opts)
-          env          (env/env-configs envs env-name dep)
-          env-path     (str app "." env-name "." dep)
-          zk-conn      (get-zk-connection-str opts help-str)]
-
-      (when (nil? env)
-        (println "no environment defined for" env-path)
-        (System/exit 1))
-
-      (when-not (loader/can-run? acl-props)
-        (println "This machine isn't listed as an admin machine in " acl-file)
-        (System/exit 1))
-
-      (println "Starting to load data into the" env-path "environment...")
-      (let [acls (loader/load-acls app env-name dep acl-props)]
-        (loader/load-settings zk-conn app env-name dep template-dir templates
-                              acls env))
-      (println "Done loading data into the" env-path "environment."))))
-
 (defn- get-service-host
   "Obtains the IP address for the host that the service is running on."
   [host]
@@ -364,35 +223,12 @@
         (println "host" host "is unknown - please check for typos")
         (System/exit 1)))))
 
-(defn- get-deployment
-  "Obtains the deployment for an IP address."
-  [host]
-  (let [host-ip    (.getHostAddress host)
-        deployment (zk/deployment host-ip)]
-    (when (nil? deployment)
-      (println "no deployment is defined for" host-ip)
-      (System/exit 1))
-    deployment))
-
 (defn- show-props
   "Shows properties in columns."
   [props]
   (let [prop-name-width (apply max (map count (keys props)))
         fmt             (str "%-" prop-name-width "s = %s\n")]
     (dorun (map #(.printf System/out fmt (to-array %)) props))))
-
-(defn handle-get-props
-  "Performs tasks for the get-props subcommand."
-  [args-vec]
-  (let [[opts prop-names help-str] (parse-get-props-args args-vec)]
-    (validate-opts opts help-str required-get-props-args)
-    (zk/with-zk (get-zk-connection-str opts help-str)
-      (let [service      (:service opts)
-            service-host (get-service-host (:service-host opts))
-            deployment   (get-deployment service-host)]
-        (if (= (count prop-names) 1)
-          (println (gp/get-prop deployment service (first prop-names)))
-          (show-props (gp/get-props deployment service prop-names)))))))
 
 (defn handle-environments
   "Performs tasks for the envs subcommand."
@@ -430,9 +266,6 @@
   {"help"      (fn [args] (main-help args) (System/exit 0))
    "files"     handle-files
    "edn"       handle-edn
-   "props"     handle-properties
-   "get-props" handle-get-props
-   "hosts"     handle-hosts
    "envs"      handle-environments
    "templates" handle-templates})
 

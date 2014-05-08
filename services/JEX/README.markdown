@@ -7,6 +7,10 @@ Configuration
 -------------
 The JEX is intended to be run as a user that can submit jobs to a Condor cluster. The condor_submit_dag executable needs to be on the PATH for the user that JEX runs as.
 
+JEX reads in its configuration from a file. By default, it will look for
+the file at /etc/iplant/de/jex.properties, but you can override the
+path by passing JEX the --config setting at start up.
+
 
 Input
 -----

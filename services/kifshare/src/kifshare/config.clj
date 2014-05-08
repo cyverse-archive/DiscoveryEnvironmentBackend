@@ -1,7 +1,6 @@
 (ns kifshare.config
   (:require [clojure.string :as string]
             [clj-jargon.init :as jinit]
-            [clojure-commons.clavin-client :as cl]
             [clojure-commons.props :as prps]
             [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]
@@ -147,24 +146,3 @@
   []
   (log/warn "Configuration:")
   (cc/log-config props :filters [#"irods\.user"]))
-
-(defn init []
-  (log/debug "entered kifshare.config/init")
-
-  (let [tmp-props (prps/parse-properties "zkhosts.properties")
-        zkurl (get tmp-props "zookeeper")]
-    (log/warn "zookeeper URL: " zkurl)
-
-    (cl/with-zk
-      zkurl
-      (when-not (cl/can-run?)
-        (log/error "THIS APPLICATION CANNOT RUN ON THIS MACHINE. SO SAYETH ZOOKEEPER.")
-        (log/error "THIS APPLICATION WILL NOT EXECUTE CORRECTLY."))
-
-      (reset! props (cl/properties "kifshare"))))
-
-  (log-config)
-  (register-exception-filters)
-
-  ; Sets up the connection to iRODS through jargon-core.
-  (jargon-init))

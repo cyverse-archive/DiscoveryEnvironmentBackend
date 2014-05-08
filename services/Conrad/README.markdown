@@ -12,12 +12,9 @@ conrad`.
 
 ### Primary Configuration
 
-Conrad gets most of its configuration settings from Apache Zookeeper.  These
-configuration settings are uploaded to Zookeeper using Clavin, a command-line
-tool maintained by iPlant that allows configuration properties and access
-control lists to be easily uploaded to Zookeeper.  Please see the Clavin
-documentation for information about how to upload configuration settings.
-Here's an example Conrad configuraiton file:
+Conrad gets its configuration settings from a configuration file. The path
+to the configuration file is given with the --config command-line setting.
+Here's a sample Conrad configuration file:
 
 ```properties
 # The listen port.
@@ -55,19 +52,6 @@ validating CAS proxy tickets.  conrad.server-namne refers to the name on the
 server on which conrad is deployed.  Typically, this should be an HTTPS URL,
 but HTTP URLs are acceptable for testing when signed certificates are not
 available.
-
-### Zookeeper Connection Information
-
-One piece of information that can't be stored in Zookeeper is the information
-required to connect to Zookeeper.  For Conrad, this is stored in a single file:
-`/etc/conrad/conrad.properties`.  Here's an example:
-
-```properties
-zookeeper=zookeeper://127.0.0.1:2181
-```
-
-After installing Conrad, it will be necessary to modify this file so that it
-points to the correct host and port.
 
 ### Logging Configuration
 

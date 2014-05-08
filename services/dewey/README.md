@@ -21,6 +21,9 @@ $ sudo yum install dewey
 $ sudo /sbin/service dewey start
 ```
 
+Dewet gets its configuration settings from a configuration file. The path
+to the configuration file is given with the --config command-line setting.
+
 Status Endpoint
 ---------------
 

@@ -57,24 +57,35 @@
 
 (defn get-trees-from-riak
   [rb bucket sha1]
-  (json/encode (:tree-urls (json/decode (key-value rb bucket sha1) true))))
+  (try
+    (let [kv (key-value rb bucket sha1)
+          d  (json/decode kv true)
+          t  (:tree-urls d)
+          e  (if (nil? t) nil (json/encode t))]
+      e)
+    (catch Exception e
+      (println e)
+      (println "ERROR GETTING SHA1 FROM RIAK: " sha1)
+      (add-failed-sha1 sha1)
+      nil)))
 
 (defn post-tree-urls
   [svc rb sha1 bucket]
   (let [_        (println "\t* -- Getting key from" (key-url rb bucket sha1))
         svc-url  (str (url svc sha1))
         _        (println "\t* -- Posting to" svc-url)
-        svc-body (get-trees-from-riak rb bucket sha1)
-        svc-opts { :body svc-body
-                  :body-encode "UTF-8"
-                  :content-type "application/json"
-                  :throw-exceptions false}
-        resp     (http/post svc-url svc-opts)]
-    (when-not (= 200 (:status resp))
-      (println "WARNING, REQUEST FAILED:\n" (:body resp))
-      (add-failed-sha1 sha1))
-    (when (= 200 (:status resp))
-      (println "\t* -- Successfully migrated data for" sha1))))
+        svc-body (get-trees-from-riak rb bucket sha1)]
+    (when svc-body
+      (let [svc-opts {:body svc-body
+                      :body-encode "UTF-8"
+                      :content-type "application/json"
+                      :throw-exceptions false}
+            resp     (http/post svc-url svc-opts)]
+        (when-not (= 200 (:status resp))
+          (println "WARNING, REQUEST FAILED:\n" (:body resp))
+          (add-failed-sha1 sha1))
+        (when (= 200 (:status resp))
+          (println "\t* -- Successfully migrated data for" sha1))))))
 
 (defn tree-urls
   [options]

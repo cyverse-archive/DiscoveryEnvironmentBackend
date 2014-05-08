@@ -2,11 +2,11 @@
   (:use [clojure.java.io :only [copy file]]
         [clojure-commons.file-utils :only [with-temp-dir-in]]
         [donkey.util.config
-         :only [tree-parser-url scruffian-base-url nibblonian-base-url riak-base-url
-                tree-url-bucket]]
+         :only [tree-parser-url scruffian-base-url nibblonian-base-url]]
         [donkey.services.buggalo.nexml :only [is-nexml? extract-trees-from-nexml]]
         [donkey.util.service :only [success-response]]
         [donkey.auth.user-attributes :only [current-user]]
+        [donkey.clients.tree-urls]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
@@ -23,10 +23,10 @@
            [org.forester.phylogeny PhylogenyMethods]))
 
 (defn- metaurl-for
-  "Builds the meta-URL for to use when saving tree files in Riak.  The SHA1 hash
-   of the contents of the tree file is used as the key in Riak."
+  "Builds the meta-URL for to use when saving tree files the database.  The SHA1 hash
+   of the contents of the tree file is used as the key in the database."
   [sha1]
-  (->> [(riak-base-url) (tree-url-bucket) sha1]
+  (->> ["/riak/tree-urls" sha1]
        (map #(string/replace % #"^/|/$" ""))
        (string/join "/")))
 
@@ -47,10 +47,10 @@
               :message "unable to parse tree data"
               :details (:body res)
               :success false}]
-   (throw+ {:type :error-status
-            :res  {:status       (:status res)
-                   :content-type :json
-                   :body         (cheshire/generate-string body)}})))
+    (throw+ {:type :error-status
+             :res  {:status       (:status res)
+                    :content-type :json
+                    :body         (cheshire/generate-string body)}})))
 
 (defn- get-tree-viewer-url
   "Obtains a tree viewer URL for a single tree file."
@@ -75,56 +75,34 @@
     (copy (DigestInputStream. contents digest) infile)
     (apply str (map hex-byte (seq (.digest digest))))))
 
-(defn- retrieve-tree-urls-from
-  "Retrieves tree URLs from their external storage."
-  [url]
-  (log/debug "retrieving tree URLs from" url)
-  (let [res (client/get url {:throw-exceptions false})]
-    (when (<= 200 (:status res) 299)
-      (cheshire/parse-string (:body res) true))))
-
-(defn- save-tree-urls
-  "Saves the tree URLs for a file."
-  [tree-urls metaurl]
-  (let [res (client/post metaurl
-                         {:body         (cheshire/generate-string tree-urls)
-                          :content-type :json}
-                         {:throw-exceptions false})]
-    (when-not (<= 200 (:status res) 299)
-      (log/warn "unable to save tree URLs -" (:body res)))))
-
 (defn- save-tree-metaurl
   "Saves the URL used to obtain the tree URLs in the AVUs for the file."
   [path metaurl]
-  (let [urlpath (:path (curl/url metaurl))]
-    (try+
-      (nibblonian/save-tree-metaurl path urlpath)
-      (catch [:error_code ce/ERR_REQUEST_FAILED] {:keys [body]}
-        (log/warn "unable to save the tree metaurl for" path "-"
-                  (cheshire/generate-string (cheshire/parse-string body) {:pretty true})))
-      (catch Exception e
-        (log/warn e "unable to save the tree metaurl for" path)))))
-
-(defn- urlize
-  [url-path]
-  (if-not (or (.startsWith url-path "http") (.startsWith url-path "https"))
-    (str (curl/url (riak-base-url) :path url-path))
-    url-path))
+  (try+
+   (nibblonian/save-tree-metaurl path metaurl)
+   (catch [:error_code ce/ERR_REQUEST_FAILED] {:keys [body]}
+     (log/warn "unable to save the tree metaurl for" path "-"
+               (cheshire/generate-string (cheshire/parse-string body) {:pretty true})))
+   (catch Exception e
+     (log/warn e "unable to save the tree metaurl for" path))))
 
 (defn- get-existing-tree-urls
   "Obtains existing tree URLs for either a file stored in the iPlant data store
    or a SHA1 hash obtained from the contents of a file."
   ([sha1]
      (log/debug "searching for existing tree URLs for SHA1 hash" sha1)
-     (retrieve-tree-urls-from (metaurl-for sha1)))
+     (get-tree-urls sha1))
   ([user path]
      (log/debug "searching for existing tree URLs for user" user "and path" path)
      (when-let [metaurl (nibblonian/get-tree-metaurl user path)]
-       (retrieve-tree-urls-from (urlize metaurl))))
+       (log/debug "metaurl for path" path "is" metaurl)
+       (let [retval (get-tree-urls (ft/basename metaurl))]
+         (log/debug "Return value of get-tree-urls is" retval)
+         retval)))
   ([sha1 user path]
      (log/debug "searching for existing tree URLs for SHA1 hash" sha1)
      (let [metaurl (metaurl-for sha1)]
-       (when-let [urls (retrieve-tree-urls-from metaurl)]
+       (when-let [urls (get-tree-urls sha1)]
          (save-tree-metaurl path metaurl)
          urls))))
 
@@ -167,22 +145,21 @@
 (defn- build-response-map
   "Builds the map to use when formatting the response body."
   [urls]
-  (assoc (nibblonian/format-tree-urls urls) :action "tree_manifest"))
+  (when urls (assoc (nibblonian/format-tree-urls urls) :action "tree_manifest")))
 
 (defn- get-and-save-tree-viewer-urls
-  "Gets the tree-viewer URLs for a file and stores them in Riak.  If the username and path to the
-   file are also provided then the Riak URL will also be storeed in the AVUs for the file."
+  "Gets the tree-viewer URLs for a file and stores them via the tree-urls service.  If the username and path to the
+   file are also provided then a path containing the SHA1 will also be storeed in the AVUs for the file."
   ([dir infile sha1]
-     (let [urls    (build-response-map (get-tree-viewer-urls dir infile))
-           metaurl (metaurl-for sha1)]
-       (save-tree-urls urls metaurl)
-       urls))
+     (let [urls (get-tree-viewer-urls dir infile)]
+       (set-tree-urls sha1 urls)
+       (build-response-map urls)))
   ([path user dir infile sha1]
-     (let [urls    (build-response-map (get-tree-viewer-urls dir infile))
+     (let [urls    (get-tree-viewer-urls dir infile)
            metaurl (metaurl-for sha1)]
-       (save-tree-urls urls metaurl)
+       (set-tree-urls sha1 urls)
        (save-tree-metaurl path metaurl)
-       urls)))
+       (build-response-map urls))))
 
 (defn tree-urls-response
   "Formats the response for one of the tree viewer URL services."
@@ -196,11 +173,12 @@
   (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
     (let [infile (file dir "data.txt")
           sha1   (save-file body infile)]
-      (if-let [tree-urls (when-not refresh (get-existing-tree-urls sha1))]
-        (do (log/debug "found existing tree URLs for" sha1)
-            (tree-urls-response tree-urls))
-        (do (log/debug "generating new URLs for" sha1)
-            (tree-urls-response (get-and-save-tree-viewer-urls dir infile sha1)))))))
+      (tree-urls-response
+       (if-let [tree-urls (when-not refresh (get-existing-tree-urls sha1))]
+         (do (log/debug "found existing tree URLs for" sha1)
+             (build-response-map tree-urls))
+         (do (log/debug "generating new URLs for" sha1)
+             (get-and-save-tree-viewer-urls dir infile sha1)))))))
 
 (defn tree-viewer-urls
   "Obtains the tree viewer URLs for a tree file in iRODS."
@@ -209,10 +187,11 @@
   ([path user {:keys [refresh]}]
      (log/debug "obtaining tree URLs for user" user "and path" path)
      (tree-urls-response
-      (or (and (not refresh) (get-existing-tree-urls user path))
-          (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
-            (let [infile (file dir "data.txt")
-                  body   (scruffian/download user path)
-                  sha1   (save-file body infile)]
-              (or (and (not refresh) (get-existing-tree-urls sha1 user path))
-                  (get-and-save-tree-viewer-urls path user dir infile sha1))))))))
+      (if-let [existing-urls (and (not refresh) (get-existing-tree-urls user path))]
+        (build-response-map existing-urls)
+        (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
+          (let [infile (file dir "data.txt")
+                body   (scruffian/download user path)
+                sha1   (save-file body infile)]
+            (or (and (not refresh) (get-existing-tree-urls sha1 user path))
+                (get-and-save-tree-viewer-urls path user dir infile sha1))))))))

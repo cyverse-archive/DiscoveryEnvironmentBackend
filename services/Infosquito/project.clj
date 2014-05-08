@@ -21,8 +21,6 @@
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :aot [infosquito.core]
   :main infosquito.core
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [postgresql "9.1-901.jdbc4"]
                  [org.clojure/java.jdbc "0.2.3"]
@@ -34,7 +32,8 @@
                  [com.novemberain/langohr "2.3.2"]
                  [slingshot "0.10.3"]
                  [org.iplantc/clojure-commons "4.0.0"]
-                 [org.iplantc/common-cli "4.0.0"]]
+                 [org.iplantc/common-cli "4.0.0"]
+                 [me.raynes/fs "1.4.4"]]
   :profiles {:dev {:resource-paths ["dev-resources"]}}
   :plugins [[org.iplantc/lein-iplant-rpm "4.0.0"]]
   :iplant-rpm {:summary      "infosquito"

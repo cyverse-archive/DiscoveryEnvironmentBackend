@@ -7,13 +7,13 @@
             [clojure-commons.error-codes :as ce]
             [clockwork.config :as config]
             [clockwork.notifications :as cn]
-            [clockwork.tree-urls :as ctu]
             [clojurewerkz.quartzite.jobs :as qj]
             [clojurewerkz.quartzite.schedule.cron :as qsc]
             [clojurewerkz.quartzite.schedule.simple :as qss]
             [clojurewerkz.quartzite.scheduler :as qs]
             [clojurewerkz.quartzite.triggers :as qt]
-            [common-cli.core :as ccli]))
+            [common-cli.core :as ccli]
+            [me.raynes.fs :as fs]))
 
 (defn- split-timestamp
   "Splits a timestamp into its components.  The timestamp should be in the format, HH:MM.  If
@@ -26,13 +26,6 @@
    (catch NumberFormatException e
      (log/error error-message timestamp)
      (System/exit 1))))
-
-(defn- tree-urls-cleanup-start
-  "The start time for the tree URLs cleanup."
-  []
-  (split-timestamp
-   (config/tree-urls-cleanup-start)
-   "Invalid tree URLs cleanup start time:"))
 
 (defn- notification-cleanup-start
   "The start time for the notification cleanup."
@@ -48,27 +41,6 @@
 
 (def ^:private job-name (partial qualified-name "jobs"))
 (def ^:private trigger-name (partial qualified-name "triggers"))
-
-(qj/defjob clean-up-old-tree-urls
-  [ctx]
-  (ctu/clean-up-old-tree-urls))
-
-(defn- schedule-clean-up-old-tree-urls-job
-  "Schedules the job to remove old tree URLs from the external storage."
-  ([hr min]
-     (let [basename "tree-urls.1"
-           job      (qj/build
-                     (qj/of-type clean-up-old-tree-urls)
-                     (qj/with-identity (qj/key (job-name basename))))
-           trigger  (qt/build
-                     (qt/with-identity (qt/key (trigger-name basename)))
-                     (qt/with-schedule (qsc/schedule
-                                        (qsc/daily-at-hour-and-minute hr min)
-                                        (qsc/ignore-misfires))))]
-       (qs/schedule job trigger)
-       (log/debug (qs/get-trigger (trigger-name basename)))))
-  ([]
-     (apply schedule-clean-up-old-tree-urls-job (tree-urls-cleanup-start))))
 
 (qj/defjob clean-up-old-notifications
   [ctx]
@@ -96,40 +68,29 @@
   []
   (qs/initialize)
   (qs/start)
-  (when (config/tree-urls-cleanup-enabled)
-    (schedule-clean-up-old-tree-urls-job))
   (when (config/notification-cleanup-enabled)
     (schedule-notification-cleanup-job)))
 
-(defn cli-options
-  []
-  [["-l" "--local-config" "use a local configuraiton file"]
-   ["-h" "--help" "display the help message"]
-   ["-c" "--config PATH" "Path to the config file"]
-   ["-v" "--version" "Print out version information"]])
-
-(defn configurate
-  [options]
-  (cond
-   (:config options)
-   (config/load-config-from-file (:config options))
-
-   (:local-config options)
-   (config/load-config-from-file)
-
-   :else
-   (config/load-config-from-zookeeper)))
-
 (def svc-info
-  {:desc "Scheduled jobs for the iPlant Discovery Environment."
+  {:desc "Scheduled jobs for the iPlant Discovery Environment"
    :app-name "clockwork"
    :group-id "org.iplantc"
    :art-id "clockwork"})
 
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"
+    :default "/etc/iplant/de/clockwork.properties"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
+
 (defn -main
-  "Initializes the Quartzite scheduler and schedules jobs."
   [& args]
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
-    (configurate options)
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 (str "The config file does not exist.")))
+    (when-not (fs/readable? (:config options))
+      (ccli/exit 1 "The config file is not readable."))
     (log/info "clockwork startup")
+    (config/load-config-from-file (:config options))
     (init-scheduler)))

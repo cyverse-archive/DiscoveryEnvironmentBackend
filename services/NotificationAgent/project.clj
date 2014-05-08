@@ -19,14 +19,14 @@
   :pom-addition [:developers
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.3"]
                  [cheshire "5.0.1"]
                  [compojure "1.0.2"]
                  [org.iplantc/clojure-commons "4.0.0"]
                  [org.iplantc/kameleon "4.0.0"]
+                 [org.iplantc/common-cli "4.0.0"]
+                 [me.raynes/fs "1.4.4"]
                  [clj-http "0.5.5"]
                  [clj-time "0.5.0"]
                  [ring/ring-jetty-adapter "1.1.0"]

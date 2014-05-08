@@ -19,8 +19,6 @@
   :pom-addition [:developers
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.6"]
                  [org.clojure/java.jdbc "0.2.3"]
@@ -28,6 +26,7 @@
                  [org.iplantc/kameleon "4.0.0"]
                  [org.iplantc/clojure-commons "4.0.0"]
                  [org.iplantc/common-cli "4.0.0"]
+                 [me.raynes/fs "1.4.4"]
                  [cheshire "5.0.2"]
                  [compojure "1.1.5"]
                  [swank-clojure "1.4.3"]

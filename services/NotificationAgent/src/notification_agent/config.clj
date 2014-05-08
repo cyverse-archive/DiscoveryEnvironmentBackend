@@ -109,15 +109,7 @@
 
 (defn load-config-from-file
   "Loads the configuration settings from a file."
-  []
-  (cc/load-config-from-file
-   (System/getenv "IPLANT_CONF_DIR") "notificationagent.properties" props)
-  (cc/log-config props)
-  (validate-config))
-
-(defn load-config-from-zookeeper
-  "Loads the configuration settings from Zookeeper."
-  []
-  (cc/load-config-from-zookeeper props "notificationagent")
+  [cfg-path]
+  (cc/load-config-from-file cfg-path props)
   (cc/log-config props)
   (validate-config))

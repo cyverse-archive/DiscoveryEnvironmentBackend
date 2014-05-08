@@ -6,10 +6,11 @@
             [clojurewerkz.elastisch.rest :as es]
             [clj-jargon.init :as irods]
             [clojure-commons.config :as config]
-            [common-cli.core :as ccli]
             [dewey.amq :as amq]
             [dewey.curation :as curation]
-            [dewey.status :as status])
+            [dewey.status :as status]
+            [common-cli.core :as ccli]
+            [me.raynes.fs :as fs])
   (:import [java.net URL]
            [java.util Properties]))
 
@@ -94,34 +95,27 @@
    (listen props (init-irods props))))
 
 
-(defn cli-options
-  []
-  [["-c" "--config PATH" "Path to the config file"]
-   ["-v" "--version" "Print out the version number."]
-   ["-h" "--help"]])
-
-
 (def svc-info
-  {:desc "A DE service that indexes files when they change in iRODS."
+  {:desc "Service that keeps an elasticsearch index synchronized with an iRODS repository."
    :app-name "dewey"
    :group-id "org.iplantc"
    :art-id "dewey"})
 
 
-(defn generate-props-loader
-  [options]
-  (cond
-   (:config options)
-   (partial config/load-config-from-file (:config options))
-
-   :else
-   #(config/load-config-from-zookeeper % "dewey")))
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"
+    :default "/etc/iplant/de/dewey.properties"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
 
 
 (defn -main
   [& args]
   (try+
    (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
-     (run (generate-props-loader options)))
+     (when-not (fs/exists? (:config options))
+       (ccli/exit 1 (str "The config file does not exist.")))
+     (run (partial config/load-config-from-file (:config options))))
     (catch Object _
       (log/error (:throwable &throw-context) "UNEXPECTED ERROR - EXITING"))))

@@ -15,11 +15,11 @@
         [clojure.java.io :only (file)])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
-            [clojure-commons.clavin-client :as cl]
             [clojure-commons.props :as cp]
-            [clojure-commons.config :as config]
+            [clojure-commons.config :as cfg]
             [common-cli.core :as ccli]
             [clojure.tools.logging :as log]
+            [me.raynes.fs :as fs]
             [ring.adapter.jetty :as jetty])
   (:import [java.sql SQLException]))
 
@@ -133,18 +133,6 @@
       (reset! props (cp/read-properties (file conf-dir filename)))))
   (init-service))
 
-(defn load-configuration-from-zookeeper
-  "Loads the configuration properties from Zookeeper."
-  []
-  (cl/with-zk
-    (zk-url)
-    (when (not (cl/can-run?))
-      (log/warn "THIS APPLICATION CANNOT RUN ON THIS MACHINE. SO SAYETH ZOOKEEPER.")
-      (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")
-      (System/exit 1))
-    (reset! props (cl/properties "conrad")))
-  (init-service))
-
 (defn site-handler [routes]
   (-> routes
       wrap-keyword-params
@@ -154,37 +142,26 @@
 (def app
   (site-handler conrad-routes))
 
-(defn configurate
-  [options]
-  (cond
-   (:config options)
-   (do (reset! props (cp/read-properties (file (:config options))))
-     (init-service))
-
-   (System/getenv "IPLANT_CONF_DIR")
-   (do (reset! props (cp/read-properties
-                     (file (System/getenv "IPLANT_CONF_DIR") "conrad.properties")))
-     (init-service))
-
-   :else
-   (load-configuration-from-zookeeper)))
-
-(def port-number
-  (memoize
-   (fn [options]
-     (if (:port options)
-       (:port options)
-       (listen-port)))))
-
 (def svc-info
-  {:desc "The backend facade for the Belphegor UI."
+  {:desc "Backend service for the DE's admin console."
    :app-name "conrad"
    :group-id "org.iplantc"
    :art-id "conrad"})
 
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"
+    :default "/etc/iplant/de/conrad.properties"]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
+
 (defn -main
   [& args]
-  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args)]
-    (configurate options)
-    (log/warn "Listening on" (port-number options))
-    (jetty/run-jetty app {:port (port-number options)})))
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+    (when-not (fs/exists? (:config options))
+      (ccli/exit 1 "The config file does not exist."))
+    (when-not (fs/readable? (:config options))
+      (ccli/exit 1 "The config file is not readable."))
+    (cfg/load-config-from-file (:config options) props)
+    (log/warn "Listening on" (listen-port))
+    (jetty/run-jetty app {:port (listen-port)})))

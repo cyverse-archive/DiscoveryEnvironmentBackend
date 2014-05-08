@@ -35,8 +35,6 @@
 * [GET /secured/app-rerun-info/{job-id}](endpoints/app-execution.md#obtaining-information-to-rerun-a-job)
 * [GET /secured/app/{app-id}](endpoints/updated-app-metadata.md#obtaining-app-information-for-job-submission)
 * [GET /secured/bootstrap](endpoints/misc.md#initializing-a-users-workspace)
-* [GET /secured/buckets/:username/:bucket/:key](endpoints/misc.md#getting-data-from-a-users-bucket)
-* [POST /secured/buckets/:username/:bucket/:key](endpoints/misc.md#adding-data-to-a-users-bucket)
 * [POST /secured/coge/load-genomes](endpoints/filesystem/coge.md#viewing-a-genome-file-in-coge-)
 * [GET /secured/collaborators](endpoints/collaborators.md#listing-collaborators)
 * [POST /secured/collaborators](endpoints/collaborators.md#adding-collaborators)

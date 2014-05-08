@@ -40,7 +40,6 @@ __Response Body__:
 	    "jex": true,
 	    "metadactyl": true,
 	    "notificationagent": true,
-	    "riak": true,
 	    "success": true
 	}
 

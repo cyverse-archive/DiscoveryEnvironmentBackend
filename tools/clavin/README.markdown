@@ -4,41 +4,17 @@ Description
 Clavin is a basic command-line tool for dealing with configuration files at
 iPlant.  Its primary purposes are to:
 
-* load ACLs into Zookeeper;
-
-* load configuration settings into Zookeeper;
-
 * generate configuration files from templates.
 
 
 Overview
 --------
 
-On an admin machine (admin machines are described below):
-
-```
-clavin hosts --host 127.0.0.1 --acl myacls.properties
-clavin props --host 127.0.0.1 --acl myacls.properties -f myenvironments.clj -t
-/path/to/template-dir -a app -e env -d deployment
-```
-
 On a machine where WAR files are being deployed:
 
 ```
 clavin files -f myenvironments.clj -t /path/to/template-dir -a app -e env -d
 deployment --dest /path/to/dest-dir
-```
-
-To list current configuration settings on a services host:
-
-```
-clavin get-props --host 127.0.0.1 -s service-name prop-name-1 prop-name-2
-```
-
-To list current configuration settings on another host:
-
-```
-clavin get-props --host 127.0.0.1 --service-host somehost -s service-name prop-name-1 prop-name-2
 ```
 
 Environment listing and validation:
@@ -54,165 +30,15 @@ Getting help:
 clavin help
 clavin envs -h
 clavin files -h
-clavin hosts -h
-clavin props -h
+clavin edn -h
 ```
-
-Specifying Zookeeper Connection Settings
-----------------------------------------
-
-Zookeeper connection settings can be specified in one of two ways: either by
-specifying the host and port directly on the command line or by reading the file
-that the services use to obtain the connection settings, `zkhosts.properties`.
-In the former case, the options to use are `--host` and `--port`.  The `--port`
-setting defaults to `31381` if it's not specified.  The `--host` option defaults
-to nil, meaning that Clavin will look for `zkhosts.properties`.  For a concrete
-example, suppose you wanted to list the properties for the service, `foo`, on
-the Zookeeper process running on the local host and listening on the standard
-port.  The following command could be used for that:
-
-```
-$ clavin get-props --host localhost -s foo
-```
-
-Now suppose that Zookeeper is listening on port 2001 instead.  In that case, the
-equivalent command would look something like this:
-
-```
-$ clavin get-props --host localhost --port 2001 -s foo
-```
-
-If you have a copy of `zkhosts.properties` in a specific location on the local
-machine then you can tell Clavin to obtain the connection settings from that
-file using the `-z` or `--zkhosts-path` command-line option.  If you wanted to
-use the copy of `zkhosts.properties` in your home directory, for example, then
-the equivalent command from the example above would be something like this:
-
-```
-$ clavin get-props -z ~/zkhosts.properties -s foo
-```
-
-Finally, if your copy of zkhosts.properties is located in the default location
-(`/etc/iplant-services/zkhosts.properties`), then you can leave the connection
-settings off of the command line completely:
-
-```
-$ clavin get-props -s foo
-```
-
-Note that these options apply to all sub-commands that interact with Zookeeper,
-but the examples below will all specify `--host` directly.
-
-Creating an ACLs file
----------------------
-
-An "ACL file" is simply a java properties file that lists the ip-addresses of
-machines that are in a particular environment (dev, qa, stage, prod,
-etc.). Each environment can have multiple deployments. For instance, dev has
-dep-1 and dep-2. Here's the ACLs file for the dep-1 deployment (you can list
-multiple deployments in one file).
-
-```
-app.dev.dep-1 = 192.168.1.1,\
-                192.168.1.2,\
-                192.168.1.3,\
-                192.168.1.4,\
-                192.168.1.5
-
-admin = 192.168.1.5,\
-        192.168.1.6,\
-        192.168.1.7
-```
-
-The naming of the keys is significant. Any machine listed in the "admin" value
-will be given admin privileges in Zookeeper for the deployments included in
-the ACLs file.
-
-The "app.dev.dep-1" key tells clavin the application name, environment, and
-deployment that is being described. In this case, "app" is the application
-name, "dev" is the environment, and "dep-1" is the deployment. These values
-correspond with the \--app (-a), \--env (-e), and \--deployment (-d) options
-that clavin uses when setting properties in Zookeeper. More on that below.
-
-The values associated with each key in the ACLs file are comma separated lists
-of IP addresses.
-
-
-High level guidelines for organizing ACL files
-----------------------------------------------
-
-* Don't reuse the same IP address in multiple deployments.
-
-* If an IP address appears in a deployment and as an admin machine, then that
-  deployment and admin section should be in the same ACL file.
-
-* If an IP address appears in multiple admin sections in different files, then
-  consider merging those files.
-
-
-Loading ACLs file into Zookeeper
---------------------------------
-
-Once you've got the ACLs file put together, you load it into Zookeeper with
-the following command:
-
-```
-clavin hosts --host 127.0.0.1 --acl <path-to-acls-file>
-```
-
-That will create entries in /hosts on Zookeeper for each machine and tell what
-deployments it's associated with (deployments are analogous to groups in this
-case).
-
-For instance, since 192.168.1.5 is listed both as an admin machine and as a
-machine in the "app.dev.dep-2" deployment, Zookeeper will create the following
-nodes for it:
-
-```
-[zk: localhost:31381(CONNECTED) 2] ls /hosts/192.168.1.5
-
-[app.dev.dep-2, admin]
-```
-
-In other words, the /hosts/192.168.1.5/app.dev.dep-2 and
-/hosts/192.168.1.5/admin nodes both exist. The ACLs on the "admin" node are as
-follows:
-
-
-```
-[zk: localhost:31381(CONNECTED) 4] getAcl /hosts/192.168.1.5/admin
-
-'ip,'192.168.1.5
-
-: cdrwa
-
-'ip,'192.168.1.6
-
-: cdrwa
-
-'ip,'192.168.1.7
-
-: cdrwa
-
-'ip,'192.168.1.5
-
-: rw
-```
-
-Translation: Every admin node is listed as having admin access (the "cdrwa"
-part) and the node itself has read-write access. This means that other
-machines can't accidentally or maliciously nuke the group/deployment
-memberships unless they are listed as an admin node in the ACLs file.
-
 
 Creating Configuration File Templates
 -------------------------------------
 
 Clavin uses configuration file templates in conjunction with
 deployment-specific configuration setting definitions in order to generate
-configuration settings.  Once the configuration settings have been generated,
-they may either be loaded directly into Zookeeper or written to a file for
-inspection or use by a web application.
+configuration settings.
 
 The configuration file templates used by Clavin consist of plain text with
 configuration placeholders interspersed throughout the text.  The placeholders
@@ -507,132 +333,11 @@ env-1       dep-2
 In this example, the environment definition file has one environment, `env-1`
 containing two deployments, `dep-1` and `dep-2`.
 
-Loading properties into Zookeeper
----------------------------------
-
-You will need to have access to configuration file templates for the services
-you're going to load the confgurations for and an environment definition file
-that contains definitions for all of the placeholder values that are used in
-the configuration files.  Then you can run the following command:
-
-```
-clavin props --host 127.0.0.1 --acl <path-to-acls-file> -f <path-to-environments-file> -t <path-to-template-dir> -a app -e dev -d dep-2 service-name1 service-name-2
-```
-
-The -a option refers to the app that you're loading configurations for.
-Currently, the Discovery Environment is the only application supported by
-Clavin, so the app will always be `de`.  Because of this, the default value
-for the -a option is `de` and the -a option does not have to be specified.
-
-The -e option refers to the environment that you're loading configurations
-for, which corresponds to the name of the environment in the environments file
-(or the environment and deployment listing described above).  In cases where
-the deployment name is unique across all environments, the environment can be
-determined from the deployment name, so it's not necessary to specify the -e
-option unless another deployment of the same name appears in another
-environment.
-
-The -d option refers to the deployment that you're loading configurations
-for.  Once again, this is the same as the name of the deployment in the
-environments file (or the environment and deployment listing mentioned
-above).  This option _must_ correspond to one of the deployments defined in
-the environments file.
-
-The values of the -a, -e, and -d options MUST correspond to a deployment
-listed in the ACLs file indicated with the --acl option. For instance, in the
-above example there must be a key of "app.dev.dep-2" with IP addresses
-associated with it in the --acl file. You will get a stack trace if it doesn't
-appear and nothing will get changed in Zookeeper.
-
-The value of the -f flag should contain the path to the environment definition
-file and the value of the -t flag should contain the path to the directory
-containing the template files.  Note that all of the template files must have
-an extension of `.st` and the name of the file without the extension
-corresponds to the name of the service that is being configured.
-
-The service name arguments correspond to the names of the services whose
-configurations you want to load into Zookeeper.  For example, if you wanted to
-load only the configurations for metadactyl and donkey, you would mention both
-services on the command line:
-
-```
-clavin props --host 127.0.0.1 --acl acls.properties -f environments.clj -t templates -d dep-2 metadactyl donkey
-```
-
-To load all of the properties files without having to list them all, you can
-simply not include any service names on the command line:
-
-```
-clavin props --host 127.0.0.1 --acl acls.properties -f environments.clj -t templates -d dep-2
-```
-
-Listing Configuration Settings in Zookeeper
--------------------------------------------
-
-Once configuration settings have been loaded into Zookeeper, you can list them
-using the `get-props` subcommand.  Suppose that you wanted to list all of the
-configuration settings for the service, `foo` running on the local machine.  The
-command to do that would look something like this:
-
-```
-clavin get-props --host 127.0.0.1 -s foo
-```
-
-The output from this command contains several lines containing the property name
-followed by some whitespace an equals sign and the property value.  The output
-from the previous command could look something like this:
-
-```
-foo.app.listen-port  = 65535
-foo.bar.closing-time = 2:00
-```
-
-To improve the readability of the output, the equals signs are always aligned
-with the property names and property values left-justified in their respective
-columns.
-
-If you're only interested in specific property values then you can specify the
-property names on the command line using unnamed arguments.  For example, to
-explicitly list the `foo.app.listen-port` and `foo.bar.closing-time` properties
-from the example above, you could use something like this command:
-
-```
-clavin get-props --host 127.0.0.1 -s foo foo.app.listen-port foo.bar.closing-time
-```
-
-As a special case, the get-props subcommand will only display the property value
-if only one property name is specified.  This is helpful for being able to
-access property values from within shell scripts without having to parse the
-output:
-
-```
-$ clavin get-props --host 127.0.0.1 -s foo foo.app.listen-port
-65535
-```
-
-If you've read the previous sections, you may be wondering how Clavin determines
-which deployment to look up in Zookeeper.  The answer is that it determines the
-deployment the same way that the services themselves do: by looking up the IP
-address of the service host in the ACLs stored in Zookeeper.  The service host
-can be specified using the --service-host command-line option.  If the
---service-host option is not specified then the IP address of the local host
-will be used.
-
-As with all subcommands, the -h or --help option can be used to display a brief
-usage message.  This usage message contains brief descriptions of all of the
-command-line options.
-
 Generating Properties Files
 ---------------------------
 
-Not all iPlant services and web applications associated with the Discovery
-Environment use Zookeeper to manage configuration settings.  For the
-components that do not use Zookeeper, Clavin provides a way to generate Java
-properties files from templates and environments files.  The subcommand used
-to generate properties files is `files`.  The command line for the `files`
-subcommand is similar to that of the `props` subcommand; the only differences
-are that the ACL and Zookeeper connection settings aren't required and a
-destination directory is required:
+Clavin provides a way to generate Java properties files from templates and 
+environments files.  The subcommand used to generate properties files is `files`.  
 
 ```
 clavin files --dest <output-dir> -f <path-to-environments-file> -t <path-to-template-dir> -a app -e dev -d dep-2 service-name1 service-name-2
@@ -644,9 +349,6 @@ generated properties files will be placed in this directory.  The file names
 will be the service name with a `.properties` extension.  For example, if you
 generate a properties file for the service, `discoveryenvironment` then the
 name of the generated file will be `discoveryenvironment.properties`.
-
-See the `Loading properties into Zookeeper` section for details about the rest
-of the command-line options.
 
 
 Clavin command-line
@@ -681,8 +383,6 @@ Currently, the supported subcommands are:
         <tr><td>envs</td><td>Performs actions on environment files.</td></tr>
         <tr><td>files</td><td>Generates properties files.</td></tr>
         <tr><td>help</td><td>Displays a brief help message.</td></tr>
-        <tr><td>hosts</td><td>Loads admin ACLs into Zookeeper.</td></tr>
-        <tr><td>props</td><td>Loads configurations into Zookeeper.</td></tr>
         <tr><td>templates</td><td>Performs actions on templates.</td></tr>
     </tbody>
 </table>
@@ -716,57 +416,6 @@ Usage:
  -e, --env                       The environment that the options are for.
  -d, --deployment                The deployment that the properties files are for.
  --dest                          The destination directory for the files.
-```
-
-Here's the help message for the `hosts` subcommand:
-
-```
-$ clavin hosts --help
-Usage:
-
- Switches               Default                                  Desc
- --------               -------                                  ----
- -h, --no-help, --help  false                                    Show help.
- --acl                                                           The file containing Zookeeper hostname ACLs.
- --host                                                          The Zookeeper host to connection to.
- --port                 31381                                    The Zookeeper client port to connection to.
- -z, --zkhosts-path     /etc/iplant-services/zkhosts.properties  The path to the file containing the Zookeeper connection settings.
-```
-
-Here's the help message for the `props` subcommand:
-
-```
-$ clavin props --help
-Usage:
-
- Switches               Default                                  Desc
- --------               -------                                  ----
- -h, --no-help, --help  false                                    Show help.
- -f, --envs-file                                                 The file containing the environment definitions.
- -t, --template-dir                                              The directory containing the templates.
- --host                                                          The Zookeeper host to connect to.
- --port                 31381                                    The Zookeeper client port to connect to.
- -z, --zkhosts-path     /etc/iplant-services/zkhosts.properties  The path to the file containing the Zookeeper connection settings.
- --acl                                                           The file containing Zookeeper hostname ACLs.
- -a, --app              de                                       The application the settings are for.
- -e, --env                                                       The environment that the options should be entered into.
- -d, --deployment                                                The deployment inside the environment that is being configured.
-```
-
-Here's the help message for the `get-props` subcommand:
-
-```
-$ clavin get-props --help
-Usage:
-
- Switches               Default                                  Desc
- --------               -------                                  ----
- -h, --no-help, --help  false                                    Show help.
- --host                                                          The Zookeeper host to connect to.
- --port                 31381                                    The Zookeeper port to connect to.
- -z, --zkhosts-path     /etc/iplant-services/zkhosts.properties  The path to the file containing the Zookeeper connection settings.
- -s, --service                                                   The service to get the settings for.
- --service-host                                                  The host that the service is running on.
 ```
 
 Here's the help message for the `templates` subcommand:
