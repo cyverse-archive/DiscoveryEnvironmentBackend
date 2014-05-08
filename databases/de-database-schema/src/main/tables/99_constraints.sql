@@ -233,6 +233,15 @@ ALTER TABLE ONLY workspace
     PRIMARY KEY (id);
 
 --
+-- Name: app_categories_workspace_id_fk; Type: FK CONSTRAINT; Schema:
+-- public; Owner: de
+--
+ALTER TABLE ONLY app_categories
+    ADD CONSTRAINT app_categories_workspace_id_fk
+    FOREIGN KEY (workspace_id)
+    REFERENCES workspace(id);
+
+--
 -- Name: file_parameters_data_format_fkey; Type: FK CONSTRAINT; Schema: public;
 -- Owner: de
 --
@@ -492,6 +501,15 @@ ALTER TABLE ONLY parameter_groups
     ADD CONSTRAINT parameter_groups_task_id_fkey
     FOREIGN KEY (task_id)
     REFERENCES tasks(id);
+
+--
+-- Name: app_workspace_id_fk; Type: FK CONSTRAINT; Schema:
+-- public; Owner: de
+--
+ALTER TABLE ONLY apps
+    ADD CONSTRAINT app_workspace_id_fk
+    FOREIGN KEY (workspace_id)
+    REFERENCES workspace(id);
 
 --
 -- Name: app_integration_data_id_fk; Type: FK CONSTRAINT; Schema:
