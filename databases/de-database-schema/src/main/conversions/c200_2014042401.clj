@@ -13,9 +13,10 @@
 (defn exec-sql-statement
   "A wrapper around korma.core/exec-raw that logs the statement that is being
    executed if debugging is enabled."
-  [statement]
-  (log/debug "executing SQL statement:" statement)
-  (exec-raw statement))
+  [& statements]
+  (let [statement (clojure.string/join " " statements)]
+    (log/debug "executing SQL statement:" statement)
+    (exec-raw statement)))
 
 (defn- load-sql-file
   "Loads a single SQL file into the database."
@@ -27,31 +28,31 @@
 
 (defn- alter-id-column-to-uuid
   [table]
-  (exec-sql-statement (str "ALTER TABLE ONLY "
-                           table
-                           " ALTER COLUMN id TYPE UUID USING"
-                           " CASE WHEN CHAR_LENGTH(id) < 36 THEN (uuid_generate_v4())"
-                           " ELSE CAST(id AS UUID) END")))
+  (exec-sql-statement "ALTER TABLE ONLY "
+                      table
+                      "ALTER COLUMN id TYPE UUID USING"
+                      "CASE WHEN CHAR_LENGTH(id) < 36 THEN (uuid_generate_v4())"
+                      "ELSE CAST(id AS UUID) END"))
 
 ;; Drop constraints
 (defn- drop-all-constraints
   []
   (println "\t* droping constraints...")
   (exec-sql-statement
-   (str "DO $body$"
-        " DECLARE r record;"
-        " BEGIN"
-        "  FOR r IN"
-        "   SELECT * FROM pg_constraint"
-        "   INNER JOIN pg_class ON conrelid=pg_class.oid"
-        "   INNER JOIN pg_namespace ON pg_namespace.oid=pg_class.relnamespace"
-        "   ORDER BY CASE WHEN contype='f' THEN 0 ELSE 1 END,contype,nspname,relname,conname"
-        "  LOOP"
-        "   EXECUTE 'ALTER TABLE ' || quote_ident(r.nspname) || '.' || quote_ident(r.relname) ||"
-        "           ' DROP CONSTRAINT ' || quote_ident(r.conname) || ';';"
-        "  END LOOP;"
-        " END"
-        " $body$;")))
+   "DO $body$"
+   " DECLARE r record;"
+   " BEGIN"
+   "  FOR r IN"
+   "   SELECT * FROM pg_constraint"
+   "   INNER JOIN pg_class ON conrelid=pg_class.oid"
+   "   INNER JOIN pg_namespace ON pg_namespace.oid=pg_class.relnamespace"
+   "   ORDER BY CASE WHEN contype='f' THEN 0 ELSE 1 END,contype,nspname,relname,conname"
+   "  LOOP"
+   "   EXECUTE 'ALTER TABLE ' || quote_ident(r.nspname) || '.' || quote_ident(r.relname) ||"
+   "           ' DROP CONSTRAINT ' || quote_ident(r.conname) || ';';"
+   "  END LOOP;"
+   " END"
+   "$body$;"))
 
 ;; TODO add NOT NULL contraints to FOREIGN KEY cols.
 
@@ -243,12 +244,12 @@
   (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN app_id UUID")
   (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN target_step UUID")
   (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN source_step UUID")
-  (exec-sql-statement (str "DELETE FROM workflow_io_maps WHERE input IN"
-                           " (SELECT input FROM workflow_io_maps"
-                             " LEFT JOIN dataobjects ON id = input WHERE id IS NULL)"))
-  (exec-sql-statement (str "DELETE FROM workflow_io_maps WHERE output IN"
-                           " (SELECT output FROM workflow_io_maps"
-                             " LEFT JOIN dataobjects ON id = output WHERE id IS NULL)"))
+  (exec-sql-statement "DELETE FROM workflow_io_maps WHERE input IN"
+                      " (SELECT input FROM workflow_io_maps"
+                      " LEFT JOIN dataobjects ON id = input WHERE id IS NULL)")
+  (exec-sql-statement "DELETE FROM workflow_io_maps WHERE output IN"
+                      " (SELECT output FROM workflow_io_maps"
+                      " LEFT JOIN dataobjects ON id = output WHERE id IS NULL)")
   (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ALTER COLUMN input TYPE UUID USING CAST(input AS UUID)")
   (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ALTER COLUMN output TYPE UUID USING CAST(output AS UUID)"))
 
@@ -326,8 +327,8 @@
   []
   (println "\t* updating the property_type table to parameter_types")
   (exec-sql-statement "ALTER TABLE property_type RENAME TO parameter_types")
-  (exec-sql-statement (str "ALTER TABLE ONLY parameter_types ALTER COLUMN id TYPE UUID USING"
-                           " CAST(regexp_replace(id, 'pt(.*)', '\\1') AS UUID)"))
+  (exec-sql-statement "ALTER TABLE ONLY parameter_types ALTER COLUMN id TYPE UUID USING"
+                      " CAST(regexp_replace(id, 'pt(.*)', '\\1') AS UUID)")
   (exec-sql-statement "ALTER TABLE ONLY parameter_types RENAME COLUMN value_type_id TO value_type_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY parameter_types ADD COLUMN value_type_id UUID"))
 
@@ -372,8 +373,8 @@
   "Updates columns in the existing rule_type table."
   []
   (println "\t* updating the rule_type table")
-  (exec-sql-statement (str "ALTER TABLE ONLY rule_type ALTER COLUMN id TYPE UUID USING"
-                           " CAST(regexp_replace(id, 'rt(.*)', '\\1') AS UUID)"))
+  (exec-sql-statement "ALTER TABLE ONLY rule_type ALTER COLUMN id TYPE UUID USING"
+                      " CAST(regexp_replace(id, 'rt(.*)', '\\1') AS UUID)")
   (exec-sql-statement "ALTER TABLE ONLY rule_type RENAME COLUMN rule_subtype_id TO rule_subtype_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY rule_type ADD COLUMN rule_subtype_id UUID"))
 
