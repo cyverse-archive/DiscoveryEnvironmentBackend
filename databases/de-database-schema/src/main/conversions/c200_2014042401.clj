@@ -167,7 +167,9 @@
   []
   (println "\t* updating the template table to tasks")
   (exec-sql-statement "ALTER TABLE template RENAME TO tasks")
-  (alter-id-column-to-uuid "tasks")
+  (exec-sql-statement "ALTER TABLE ONLY tasks RENAME COLUMN id TO id_v187")
+  (exec-sql-statement "ALTER TABLE ONLY tasks ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
+  (exec-sql-statement "UPDATE tasks SET id = CAST(id_v187 AS UUID) WHERE CHAR_LENGTH(id_v187) = 36")
   (exec-sql-statement "ALTER TABLE ONLY tasks ADD COLUMN tool_id UUID"))
 
 ;; cols to drop: hid, workspace_id, type, integration_data_id_v187
@@ -589,6 +591,19 @@
   (exec-sql-statement "UPDATE tool_requests SET tool_id ="
                       "(SELECT t.id FROM tools t WHERE deployed_component_id = t.hid)"))
 
+(defn- update-task-uuids
+  []
+  (println "\t* updating tasks uuid foreign keys...")
+  (exec-sql-statement "UPDATE app_steps SET task_id ="
+                      "(SELECT t.id FROM tasks t"
+                      " LEFT JOIN transformations tx ON tx.template_id = t.id_v187"
+                      " LEFT JOIN transformation_steps ts ON ts.transformation_id = tx.id"
+                      " WHERE transformation_step_id = ts.id)")
+  (exec-sql-statement "UPDATE parameter_groups SET task_id ="
+                      "(SELECT t.id FROM tasks t"
+                      " LEFT JOIN template_property_group tgt ON tgt.template_id = t.hid"
+                      " WHERE property_group_id = parameter_groups.hid)"))
+
 (defn- re-add-constraints
   []
   (println "\t* re-adding constraints")
@@ -671,6 +686,7 @@
   (update-app-category-uuids)
   (update-workspace-uuids)
   (update-tool-uuids)
+  (update-task-uuids)
   (drop-all-constraints)
   (re-add-constraints)
   (add-app-category-listing-view)
