@@ -560,6 +560,20 @@
   (exec-sql-statement "ALTER TABLE ONLY user_saved_searches RENAME COLUMN user_id TO user_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY user_saved_searches ADD COLUMN user_id UUID"))
 
+(defn- update-app-category-uuids
+  []
+  (println "\t* updating app_categories uuid foreign keys...")
+  (exec-sql-statement "UPDATE workspace SET root_category_id ="
+                      "(SELECT ac.id FROM app_categories ac WHERE root_analysis_group_id = ac.hid)")
+  (exec-sql-statement "UPDATE app_category_app SET app_category_id ="
+                      "(SELECT ac.id FROM app_categories ac WHERE template_group_id = ac.hid)")
+  (exec-sql-statement "UPDATE suggested_groups SET app_category_id ="
+                      "(SELECT ac.id FROM app_categories ac WHERE template_group_id = ac.hid)")
+  (exec-sql-statement "UPDATE app_category_group SET parent_category_id ="
+                      "(SELECT ac.id FROM app_categories ac WHERE parent_group_id = ac.hid)")
+  (exec-sql-statement "UPDATE app_category_group SET child_category_id ="
+                      "(SELECT ac.id FROM app_categories ac WHERE subgroup_id = ac.hid)"))
+
 (defn- re-add-constraints
   []
   (println "\t* re-adding constraints")
@@ -639,6 +653,9 @@
   (alter-user-preferences-table)
   (alter-user-sessions-table)
   (alter-user-saved-searches-table)
+  (update-app-category-uuids)
+  (drop-all-constraints)
+  (re-add-constraints)
   (add-app-category-listing-view)
   (add-app-job-types-view)
   (add-app-listing-view)
