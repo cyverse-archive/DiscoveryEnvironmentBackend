@@ -574,6 +574,14 @@
   (exec-sql-statement "UPDATE app_category_group SET child_category_id ="
                       "(SELECT ac.id FROM app_categories ac WHERE subgroup_id = ac.hid)"))
 
+(defn- update-workspace-uuids
+  []
+  (println "\t* updating workspace uuid foreign keys...")
+  (exec-sql-statement "UPDATE app_categories SET workspace_id ="
+                      "(SELECT w.id FROM workspace w WHERE workspace_id_v187 = w.id_v187)")
+  (exec-sql-statement "UPDATE apps SET workspace_id ="
+                      "(SELECT w.id FROM workspace w WHERE workspace_id_v187 = w.id_v187)"))
+
 (defn- re-add-constraints
   []
   (println "\t* re-adding constraints")
@@ -654,6 +662,7 @@
   (alter-user-sessions-table)
   (alter-user-saved-searches-table)
   (update-app-category-uuids)
+  (update-workspace-uuids)
   (drop-all-constraints)
   (re-add-constraints)
   (add-app-category-listing-view)
