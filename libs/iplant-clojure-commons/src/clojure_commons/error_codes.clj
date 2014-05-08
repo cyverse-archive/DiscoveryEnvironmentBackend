@@ -41,6 +41,7 @@
 (deferr ERR_ILLEGAL_ARGUMENT)
 (deferr ERR_BAD_REQUEST)
 (deferr ERR_NOT_FOUND)
+(deferr ERR_UNAVAILABLE)
 
 (def ^:private http-status-for
   {ERR_ILLEGAL_ARGUMENT 400
@@ -115,7 +116,7 @@
         print-writer   (java.io.PrintWriter. string-writer)]
     (.printStackTrace exception print-writer)
     (let [stack-trace (str string-writer)]
-      (reduce #(string/replace %1 %2 "xxxxxxxx") 
+      (reduce #(string/replace %1 %2 "xxxxxxxx")
               (cons (str string-writer) (log-filters))))))
 
 (defn trap [action func & args]
