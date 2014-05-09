@@ -616,6 +616,21 @@
   (exec-sql-statement "DROP INDEX transformation_steps_transformation_id_idx")
   (exec-sql-statement "DROP INDEX template_property_group_property_group_id_idx"))
 
+;; workflow_io_maps needs to be done after its other cols have been populated.
+(defn- update-app-uuids
+  []
+  (println "\t* updating apps uuid foreign keys...")
+  (exec-sql-statement "UPDATE app_steps SET app_id ="
+                      "(SELECT a.id FROM apps a WHERE transformation_task_id = a.hid)")
+  (exec-sql-statement "UPDATE ratings SET app_id ="
+                      "(SELECT a.id FROM apps a WHERE transformation_activity_id = a.hid)")
+  (exec-sql-statement "UPDATE app_category_app SET app_id ="
+                      "(SELECT a.id FROM apps a WHERE template_id = a.hid)")
+  (exec-sql-statement "UPDATE suggested_groups SET app_id ="
+                      "(SELECT a.id FROM apps a WHERE transformation_activity_id = a.hid)")
+  (exec-sql-statement "UPDATE app_references SET app_id ="
+                      "(SELECT a.id FROM apps a WHERE transformation_activity_id = a.hid)"))
+
 (defn- re-add-constraints
   []
   (println "\t* re-adding constraints")
@@ -699,6 +714,7 @@
   (update-workspace-uuids)
   (update-tool-uuids)
   (update-task-uuids)
+  (update-app-uuids)
   (drop-all-constraints)
   (re-add-constraints)
   (add-app-category-listing-view)
