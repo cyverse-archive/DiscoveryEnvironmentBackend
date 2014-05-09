@@ -79,9 +79,9 @@
                                          :id "boo"})]
   (fact "delete-req returns a sane value"
         (delete-req "foo" {:content-type "application/json"
-                           :body "{\"foo\":\"bar\"}"}) => (response {:preferences {:foo "bar"}})
+                           :body "{\"foo\":\"bar\"}"}) => ""
         (delete-req "foo" {:content-type "foo"
-                           :body "{\"foo\":\"bar\"}"}) => (response {:preferences {:foo "bar"}})))
+                           :body "{\"foo\":\"bar\"}"}) => ""))
 
 (with-redefs [user? (fn [u] false)
               delete-user-prefs (fn [u] {:user_id 50
@@ -89,6 +89,6 @@
                                            :id "boo"})]
   (fact "delete-req returns a sane value"
         (delete-req "foo" {:content-type "application/json"
-                           :body "{\"foo\":\"bar\"}"}) => (not-a-user "foo")))
+                           :body "{\"foo\":\"bar\"}"}) => ""))
 
 
