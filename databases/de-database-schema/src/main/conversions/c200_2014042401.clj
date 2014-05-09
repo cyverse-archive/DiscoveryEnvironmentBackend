@@ -639,6 +639,12 @@
   (exec-sql-statement "UPDATE apps SET integration_data_id ="
                       "(SELECT i.id FROM integration_data i WHERE integration_data_id_v187 = i.id_v187)"))
 
+(defn- update-data-formats-uuids
+  []
+  (println "\t* updating data_formats uuid foreign keys...")
+  (exec-sql-statement "UPDATE file_parameters SET data_format ="
+                      "(SELECT d.id FROM data_formats d WHERE data_format_v187 = d.id_v187)"))
+
 (defn- re-add-constraints
   []
   (println "\t* re-adding constraints")
@@ -724,6 +730,7 @@
   (update-task-uuids)
   (update-app-uuids)
   (update-integration-data-uuids)
+  (update-data-formats-uuids)
   (drop-all-constraints)
   (re-add-constraints)
   (add-app-category-listing-view)
