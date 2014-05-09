@@ -594,6 +594,12 @@
 (defn- update-task-uuids
   []
   (println "\t* updating tasks uuid foreign keys...")
+  ;; Add temporary indexes to help speed up the conversion.
+  (exec-sql-statement "CREATE INDEX tasks_id_v187_idx ON tasks(id_v187)")
+  (exec-sql-statement "CREATE INDEX app_steps_transformation_step_id_idx ON app_steps(transformation_step_id)")
+  (exec-sql-statement "CREATE INDEX transformations_template_id_idx ON transformations(template_id)")
+  (exec-sql-statement "CREATE INDEX transformation_steps_transformation_id_idx ON transformation_steps(transformation_id)")
+  (exec-sql-statement "CREATE INDEX template_property_group_property_group_id_idx ON template_property_group(property_group_id)")
   (exec-sql-statement "UPDATE app_steps SET task_id ="
                       "(SELECT t.id FROM tasks t"
                       " LEFT JOIN transformations tx ON tx.template_id = t.id_v187"
@@ -602,7 +608,13 @@
   (exec-sql-statement "UPDATE parameter_groups SET task_id ="
                       "(SELECT t.id FROM tasks t"
                       " LEFT JOIN template_property_group tgt ON tgt.template_id = t.hid"
-                      " WHERE property_group_id = parameter_groups.hid)"))
+                      " WHERE property_group_id = parameter_groups.hid)")
+  ;; Drop temporary indexes.
+  (exec-sql-statement "DROP INDEX tasks_id_v187_idx")
+  (exec-sql-statement "DROP INDEX app_steps_transformation_step_id_idx")
+  (exec-sql-statement "DROP INDEX transformations_template_id_idx")
+  (exec-sql-statement "DROP INDEX transformation_steps_transformation_id_idx")
+  (exec-sql-statement "DROP INDEX template_property_group_property_group_id_idx"))
 
 (defn- re-add-constraints
   []
