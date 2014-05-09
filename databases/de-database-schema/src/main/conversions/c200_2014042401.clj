@@ -631,6 +631,14 @@
   (exec-sql-statement "UPDATE app_references SET app_id ="
                       "(SELECT a.id FROM apps a WHERE transformation_activity_id = a.hid)"))
 
+(defn- update-integration-data-uuids
+  []
+  (println "\t* updating integration_data uuid foreign keys...")
+  (exec-sql-statement "UPDATE tools SET integration_data_id ="
+                      "(SELECT i.id FROM integration_data i WHERE integration_data_id_v187 = i.id_v187)")
+  (exec-sql-statement "UPDATE apps SET integration_data_id ="
+                      "(SELECT i.id FROM integration_data i WHERE integration_data_id_v187 = i.id_v187)"))
+
 (defn- re-add-constraints
   []
   (println "\t* re-adding constraints")
@@ -715,6 +723,7 @@
   (update-tool-uuids)
   (update-task-uuids)
   (update-app-uuids)
+  (update-integration-data-uuids)
   (drop-all-constraints)
   (re-add-constraints)
   (add-app-category-listing-view)
