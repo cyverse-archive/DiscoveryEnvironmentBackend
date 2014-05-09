@@ -6,7 +6,7 @@
 (dosync
  (ref-set
   cfg/validators
-   {:port        [v/required v/number]
+   {:port        [v/required cfg/intablev]
     :db-host     [v/required cfg/stringv]
     :db-port     [v/required cfg/stringv]
     :db-user     [v/required cfg/stringv]
