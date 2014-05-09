@@ -9,8 +9,8 @@
 (fact "santize works"
       (sanitize {:foo "bar"}) => {:foo "bar"}
       (sanitize nil) => {}
-      (sanitize {:tree_urls "{\"foo\":\"bar\"}"}) => {:tree_urls {:foo "bar"}}
-      (sanitize {:tree_urls "{\"foo\":\"bar\"}" :id "foo"}) => {:tree_urls {:foo "bar"}})
+      (sanitize {:tree_urls "{\"foo\":\"bar\"}"}) => {:tree_urls "{\"foo\":\"bar\"}"}
+      (sanitize {:tree_urls "{\"foo\":\"bar\"}" :id "foo"}) => {:tree_urls "{\"foo\":\"bar\"}"})
 
 (fact "not-sha1 returns a sane map"
       (not-sha1 "foo") => {:status 400 :body "Invalid SHA1 format: foo"})
@@ -64,7 +64,7 @@
         (post-req "9e484232659a9f3502bb8340f21fde1dadbbe62d"
                   {:content-type "application/json"
                    :body "{\"foo\":\"bar\"}"}) =>
-                   (response {:tree_urls {:foo "bar"}}))
+                   (response {:tree_urls "{\"foo\":\"bar\"}"}))
 
   (fact "post-req should care about the content type"
         (post-req "9e484232659a9f3502bb8340f21fde1dadbbe62d"
@@ -80,11 +80,11 @@
         (delete-req "9e484232659a9f3502bb8340f21fde1dadbbe62d"
                     {:content-type "application/json"
                      :body "{\"foo\":\"bar\"}"}) =>
-                     (response {:tree_urls {:foo "bar"}})
+                     ""
         (delete-req "9e484232659a9f3502bb8340f21fde1dadbbe62d"
                     {:content-type "foo"
                      :body "{\"foo\":\"bar\"}"}) =>
-                     (response {:tree_urls {:foo "bar"}})))
+                     ""))
 
 (with-redefs [tree-urls?       (fn [u] false)
               delete-tree-urls (fn [u] {:tree_urls "{\"foo\":\"bar\"}"
@@ -92,6 +92,6 @@
   (fact "delete-req returns a sane value"
         (delete-req "9e484232659a9f3502bb8340f21fde1dadbbe62d"
                     {:content-type "application/json"}) =>
-                     nil))
+                     ""))
 
 
