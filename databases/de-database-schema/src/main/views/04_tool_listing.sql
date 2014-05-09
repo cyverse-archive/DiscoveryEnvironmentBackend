@@ -17,5 +17,5 @@ CREATE VIEW tool_listing AS
     FROM apps
          JOIN app_steps steps ON apps.id = steps.app_id
          JOIN tasks t ON steps.task_id = t.id
-         JOIN tools tool ON t.component_id = tool.id
+         JOIN tools tool ON t.tool_id = tool.id
          JOIN tool_types tt ON tool.tool_type_id = tt.id;
