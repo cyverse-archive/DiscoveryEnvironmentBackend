@@ -36,7 +36,7 @@
 (defn configure-logging
   []
   (when (:log-level @cfg)
-    (timbre/set-level! (:log-level @cfg)))
+    (timbre/set-level! (keyword (:log-level @cfg))))
   (when (:log-file @cfg)
     (timbre/set-config! [:appenders :rotor]
                         {:enabled? true
@@ -71,6 +71,15 @@
   {:default-message-format "%s must be a keyword", :optional true}
   [k]
   (keyword? k))
+
+(v/defvalidator intablev
+  {:default-message-format "%s must be parseable as an integer", :optional true}
+  [k]
+  (try
+    (Integer/parseInt k)
+    true
+    (catch Exception e
+      false)))
 
 (defn- loggable-config
   [cfg bad-keys]
