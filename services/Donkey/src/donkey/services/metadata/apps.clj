@@ -41,9 +41,9 @@
 
 (defn- list-all-jobs
   [agave limit offset sort-field sort-order filter]
-  (let [username     (:username current-user)
+  (let [user         (:username current-user)
         types        [jp/de-job-type jp/agave-job-type]
-        jobs         (jp/list-jobs-of-types username limit offset sort-field sort-order filter types)
+        jobs         (jp/list-jobs-of-types user limit offset sort-field sort-order filter types)
         grouped-jobs (group-by :job_type jobs)
         de-states    (da/load-de-job-states (grouped-jobs jp/de-job-type []))
         de-apps      (da/load-app-details (map :analysis_id de-states))
@@ -91,6 +91,7 @@
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
   (populateJobsTable [_])
+  (populateJobDescriptions [_ username])
   (removeDeletedJobs [_])
   (updateJobStatus [_ id username prev-status])
   (getJobParams [_ job-id])
@@ -142,6 +143,9 @@
 
   (populateJobsTable [_]
     (dorun (map da/store-de-job (osm/list-jobs))))
+
+  (populateJobDescriptions [_ username]
+    (da/populate-job-descriptions username))
 
   (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs))
@@ -227,6 +231,10 @@
   (populateJobsTable [_]
     (dorun (map da/store-de-job (osm/list-jobs))))
 
+  (populateJobDescriptions [_ username]
+    (da/populate-job-descriptions username)
+    (aa/populate-job-descriptions agave-client username))
+
   (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs)
     (aa/remove-deleted-agave-jobs agave-client))
@@ -266,7 +274,9 @@
   (let [username (:username current-user)]
     (transaction
      (when (zero? (jp/count-all-jobs username))
-       (.populateJobsTable app-lister)))))
+       (.populateJobsTable app-lister))
+     (when-not (zero? (jp/count-null-descriptions username))
+       (.populateJobDescriptions app-lister username)))))
 
 (defn get-only-app-groups
   []
@@ -382,6 +392,26 @@
     (log-already-deleted-jobs ids)
     (jp/delete-jobs ids)
     (service/success-response)))
+
+(defn- validate-job-existence
+  [id]
+  (when-not (jp/get-job-by-external-id id)
+    (service/not-found "job" id)))
+
+(defn- validate-job-update
+  [body]
+  (let [supported-fields #{:name :description}
+        invalid-fields   (remove supported-fields (keys body))]
+    (when (seq invalid-fields)
+      (throw+ {:error_code ce/ERR_BAD_OR_MISSING_FIELD
+               :reason     (str "unrecognized fields: " invalid-fields)}))))
+
+(defn update-job
+  [id body]
+  (let [body (service/decode-json body)]
+    (validate-job-existence id)
+    (validate-job-update body)
+    (jp/update-job id body)))
 
 (defn get-property-values
   [job-id]

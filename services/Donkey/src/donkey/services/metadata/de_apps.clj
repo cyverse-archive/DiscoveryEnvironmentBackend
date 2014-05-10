@@ -1,7 +1,8 @@
 (ns donkey.services.metadata.de-apps
   (:use [clojure-commons.validators :only [validate-map]]
         [donkey.auth.user-attributes :only [current-user]])
-  (:require [donkey.clients.metadactyl :as metadactyl]
+  (:require [clojure.tools.logging :as log]
+            [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.osm :as osm]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
@@ -27,16 +28,27 @@
   [job]
   (validate-map job de-job-validation-map)
   (jp/save-job (:uuid job) (:name job) jp/de-job-type (:username current-user) (:status job)
-               :app-name   (:analysis_name job)
-               :start-date (db/timestamp-from-str (str (:submission_date job)))
-               :end-date   (get-end-date job)
-               :deleted    (:deleted job)))
+               :description (:description job)
+               :app-name    (:analysis_name job)
+               :start-date  (db/timestamp-from-str (str (:submission_date job)))
+               :end-date    (get-end-date job)
+               :deleted     (:deleted job)))
+
+(defn populate-job-descriptions
+  [username]
+  (->> (jp/list-jobs-with-null-descriptions username [jp/de-job-type])
+       (map :id)
+       (osm/get-jobs)
+       (map (juxt :uuid :description))
+       (map jp/set-job-description)
+       (dorun)))
 
 (defn store-submitted-de-job
   [job]
   (jp/save-job (:id job) (:name job) jp/de-job-type (:username current-user) (:status job)
-               :app-name   (:analysis_name job)
-               :start-date (db/timestamp-from-str (str (:startdate job)))))
+               :description (:description job)
+               :app-name    (:analysis_name job)
+               :start-date  (db/timestamp-from-str (str (:startdate job)))))
 
 (defn format-de-job
   [states de-apps job]
@@ -49,7 +61,7 @@
      :analysis_details (:description app)
      :wiki_url         (:wikiurl app "")
      :app_disabled     (:disabled app false)
-     :description      (:description state)
+     :description      (or (:description job) (:description state))
      :resultfolderid   (:output_dir state))))
 
 (defn load-de-job-states

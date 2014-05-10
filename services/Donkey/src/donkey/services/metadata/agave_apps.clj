@@ -27,10 +27,20 @@
   [agave id job]
   (validate-map job agave-job-validation-map)
   (jp/save-job (:id job) (:name job) jp/agave-job-type (:username current-user) (:status job)
-               :id         id
-               :app-name   (:analysis_name job)
-               :start-date (db/timestamp-from-str (str (:startdate job)))
-               :end-date   (db/timestamp-from-str (str (:enddate job)))))
+               :id          id
+               :description (:description job)
+               :app-name    (:analysis_name job)
+               :start-date  (db/timestamp-from-str (str (:startdate job)))
+               :end-date    (db/timestamp-from-str (str (:enddate job)))))
+
+(defn populate-job-descriptions
+  [agave-client username]
+  (->> (jp/list-jobs-with-null-descriptions username [jp/agave-job-type])
+       (map :id)
+       (.listJobs agave-client)
+       (map (juxt :id :description))
+       (map jp/set-job-description)
+       (dorun)))
 
 (defn submit-agave-job
   [agave-client submission]
@@ -48,6 +58,7 @@
   [job state]
   (assoc state
     :id            (:id job)
+    :description   (or (:description job) (:description state))
     :startdate     (str (or (db/millis-from-timestamp (:startdate job)) 0))
     :enddate       (str (or (db/millis-from-timestamp (:enddate job)) 0))
     :analysis_name (:analysis_name job)
