@@ -7,6 +7,7 @@
   (:require [cheshire.core :as cheshire]
             [clojure-commons.osm :as osm]
             [clojure.tools.logging :as log]
+            [notification-agent.app-db :as app-db]
             [notification-agent.db :as db]))
 
 (defn- get-descriptive-job-name
@@ -86,8 +87,16 @@
   "Handles a job status update request for a job that has completed and
    returns the state object."
   [state]
-  (log/debug "job" (:name state) "just completed")
+  (log/debug "job" (:uuid state) "just completed")
   (persist-and-send-msg (add-email-request (state-to-msg state) state)))
+
+(defn- update-state-fields
+  "Updates fields in the state that can be overridden in the DE database."
+  [state]
+  (let [job-info (app-db/get-job-info (:uuid state))]
+    (assoc state
+      :name        (or (:name job-info) (:name state))
+      :description (or (:description job-info) (:description state)))))
 
 (defn- handle-status-change
   "Handles a job with a status that has been changed since the job was last
@@ -95,11 +104,12 @@
    generated and the prevous_status field has to be updated with the last
    status that was seen by the notification agent."
   [state]
-  (log/debug "the status of job" (:name state) "changed")
-  (if (job-completed? state)
-    (handle-completed-job state)
-    (persist-and-send-msg (state-to-msg state)))
-  (db/update-notification-status (:uuid state) (:status state)))
+  (log/debug "the status of job" (:uuid state) "changed")
+  (let [state (update-state-fields state)]
+    (if (job-completed? state)
+      (handle-completed-job state)
+      (persist-and-send-msg (state-to-msg state)))
+    (db/update-notification-status (:uuid state) (:status state))))
 
 (defn- job-status-changed?
   "Determines whether or not the status of a job corresponding to a state
@@ -122,11 +132,11 @@
    basically just a wrapper around handle-status-change that adds some
    exception handling."
   [state]
-  (when-not (nil? (:name state))
-    (log/debug "fixing state for job" (:name state))
+  (when-not (nil? (:uuid state))
+    (log/debug "fixing state for job" (:uuid state))
     (try (handle-status-change state)
-      (catch Throwable t
-        (log/warn t "unable to fix status for job" (:name state))))))
+         (catch Throwable t
+           (log/warn t "unable to fix status for job" (:uuid state))))))
 
 (defn- fix-inconsistent-state
   "Processes the status changes for any jobs whose state changed without the
@@ -148,9 +158,9 @@
   "Handles a job status update request with the given body."
   [body]
   (let [{:keys [state]} (parse-body body)]
-    (log/info "received a job status update request for job" (:name state)
+    (log/info "received a job status update request for job" (:uuid state)
               "with status" (:status state))
     (if (job-status-changed? state)
       (handle-status-change state)
-      (log/debug "the status of job" (:name state) "did not change"))
+      (log/debug "the status of job" (:uuid state) "did not change"))
     (success-resp)))
