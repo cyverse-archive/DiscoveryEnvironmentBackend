@@ -110,6 +110,8 @@ Sample curl command:
 
 This destroys ALL tree URLs for the user. To remove a single user preference, get the tree URLs, update the JSON to remove the unwanted user preference, and POST the new JSON.
 
+Delete performs no error checking to ensure that the user exists first. Doing so forces the client to handle an exceptional case even though the system ends up in the correct state. The service will return a 200 status and an empty response.
+
 ### Error reporting
 
 JSON parsing and error reporting is handled by [ring-json](https://github.com/ring-clojure/ring-json). If you post malformed JSON, you will receive a 400 status and a message like this will be returned to the client:
