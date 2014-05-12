@@ -109,7 +109,7 @@ Sample curl command:
 
 This destroys ALL saved searches for the user. To remove a single saved search, get the saved searches, update the JSON to remove the unwanted saved search, and POST the new JSON.
 
-Delete performs no error checking to ensure that the user exists first. Doing so forces the client to handle an exceptional case even though the system ends up in the correct state.
+Delete performs no error checking to ensure that the user exists first. Doing so forces the client to handle an exceptional case even though the system ends up in the correct state. The service will return a 200 status and an empty response.
 
 ### Error reporting
 
