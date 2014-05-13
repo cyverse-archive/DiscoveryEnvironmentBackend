@@ -7,6 +7,7 @@ CREATE TABLE jobs (
     id uuid NOT NULL,
     external_id character varying(40) NOT NULL,
     job_name character varying(255) NOT NULL,
+    job_description text DEFAULT '',
     app_name character varying(255),
     start_date timestamp,
     end_date timestamp,

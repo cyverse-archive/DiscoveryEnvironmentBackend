@@ -22,13 +22,30 @@
     (assoc avu :unit "")
     avu))
 
+(def ipc-regex #"(?i)^ipc")
+
+(defn ipc-avu?
+  "Returns a truthy value if the AVU map passed in is reserved for the DE's use."
+  [avu]
+  (or (re-find ipc-regex (:attr avu))
+      (re-find ipc-regex (:unit avu))))
+
+(defn authorized-avus
+  "Validation to make sure the AVUs aren't system AVUs. Throws a slingshot error
+   map if the validation fails."
+  [avus]
+  (when (some ipc-avu? avus)
+    (throw+ {:error_code ERR_NOT_AUTHORIZED
+             :avus avus})))
+
 (defn- list-path-metadata
   "Returns the metadata for a path. Passes all AVUs to (fix-unit).
    AVUs with a unit matching IPCSYSTEM are filtered out."
   [cm path]
-  (filterv
-   #(not= (:unit %) IPCSYSTEM)
-   (map fix-unit (get-metadata cm (ft/rm-last-slash path)))))
+  (let [ipc-regex #"(?i)^ipc"]
+    (filterv
+     #(not= (:unit %) IPCSYSTEM)
+     (map fix-unit (get-metadata cm (ft/rm-last-slash path))))))
 
 (defn- reserved-unit
   "Turns a blank unit into a reserved unit."

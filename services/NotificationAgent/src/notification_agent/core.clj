@@ -13,6 +13,7 @@
         [slingshot.slingshot :only [try+]])
   (:require [compojure.route :as route]
             [clojure.tools.logging :as log]
+            [notification-agent.app-db :as app-db]
             [notification-agent.config :as config]
             [notification-agent.db :as db]
             [ring.adapter.jetty :as jetty]
@@ -209,6 +210,7 @@
 
 (defn- init-service
   []
+  (app-db/define-database)
   (db/define-database))
 
 (defn load-config-from-file
@@ -240,4 +242,3 @@
     (future (initialize-job-status-service))
     (log/warn "Listening on" (config/listen-port))
     (jetty/run-jetty (site-handler notificationagent-routes) {:port (config/listen-port)})))
-

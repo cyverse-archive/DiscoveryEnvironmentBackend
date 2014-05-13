@@ -51,6 +51,41 @@
   [props config-valid configs]
   "notificationagent.db.password")
 
+(cc/defprop-str app-db-driver-class
+  "The name of the JDBC driver to use for the app database."
+  [props config-valid configs]
+  "notificationagent.app-db.driver" )
+
+(cc/defprop-str app-db-subprotocol
+  "The subprotocol to use when connecting to the app database (e.g. postgresql)."
+  [props config-valid configs]
+  "notificationagent.app-db.subprotocol")
+
+(cc/defprop-str app-db-host
+  "The host name or IP address to use when connecting to the app database."
+  [props config-valid configs]
+  "notificationagent.app-db.host")
+
+(cc/defprop-str app-db-port
+  "The port number to use when connecting to the app database."
+  [props config-valid configs]
+  "notificationagent.app-db.port")
+
+(cc/defprop-str app-db-name
+  "The name of the app database to connect to."
+  [props config-valid configs]
+  "notificationagent.app-db.name")
+
+(cc/defprop-str app-db-user
+  "The username to use when authenticating to the app database."
+  [props config-valid configs]
+  "notificationagent.app-db.user")
+
+(cc/defprop-str app-db-password
+  "The password to use when authenticating to the app database."
+  [props config-valid configs]
+  "notificationagent.app-db.password")
+
 (cc/defprop-str osm-base
   "The base URL used to connect to the OSM."
   [props config-valid configs]

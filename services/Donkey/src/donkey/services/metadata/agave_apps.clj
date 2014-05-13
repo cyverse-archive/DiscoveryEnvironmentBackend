@@ -27,10 +27,20 @@
   [agave id job]
   (validate-map job agave-job-validation-map)
   (jp/save-job (:id job) (:name job) jp/agave-job-type (:username current-user) (:status job)
-               :id         id
-               :app-name   (:analysis_name job)
-               :start-date (db/timestamp-from-str (str (:startdate job)))
-               :end-date   (db/timestamp-from-str (str (:enddate job)))))
+               :id          id
+               :description (:description job)
+               :app-name    (:analysis_name job)
+               :start-date  (db/timestamp-from-str (str (:startdate job)))
+               :end-date    (db/timestamp-from-str (str (:enddate job)))))
+
+(defn populate-job-descriptions
+  [agave-client username]
+  (->> (jp/list-jobs-with-null-descriptions username [jp/agave-job-type])
+       (map :id)
+       (.listJobs agave-client)
+       (map (juxt :id :description))
+       (map jp/set-job-description)
+       (dorun)))
 
 (defn submit-agave-job
   [agave-client submission]
@@ -48,6 +58,7 @@
   [job state]
   (assoc state
     :id            (:id job)
+    :description   (or (:description job) (:description state))
     :startdate     (str (or (db/millis-from-timestamp (:startdate job)) 0))
     :enddate       (str (or (db/millis-from-timestamp (:enddate job)) 0))
     :analysis_name (:analysis_name job)
@@ -70,12 +81,14 @@
    (catch Object _ (service/request-failure "lookup for HPC job" id))))
 
 (defn update-agave-job-status
-  [agave id username prev-status]
+  [agave id username prev-job-info]
   (let [job-info (get-agave-job agave id (partial service/not-found "HPC job"))]
     (service/assert-found job-info "HPC job" id)
-    (when-not (= (:status job-info) prev-status)
+    (when-not (= (:status job-info) (:status prev-job-info))
       (jp/update-job id (:status job-info) (db/timestamp-from-str (str (:enddate job-info))))
-      (dn/send-agave-job-status-update username job-info))))
+      (dn/send-agave-job-status-update username (assoc job-info
+                                                  :name        (:name prev-job-info)
+                                                  :description (:description prev-job-info))))))
 
 (defn remove-deleted-agave-jobs
   "Marks jobs that have been deleted in Agave as deleted in the DE also."

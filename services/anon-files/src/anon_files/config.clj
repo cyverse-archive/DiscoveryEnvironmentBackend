@@ -5,7 +5,7 @@
 (dosync
  (ref-set
   cfg/validators
-   {:port           [v/required v/number]
+   {:port           [v/required cfg/intablev]
     :irods-host     [v/required cfg/stringv]
     :irods-port     [v/required cfg/stringv]
     :irods-zone     [v/required cfg/stringv]

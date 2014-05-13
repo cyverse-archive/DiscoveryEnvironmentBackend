@@ -37,6 +37,9 @@
    (PUT "/workspaces/:workspace-id/executions/delete" [_ :as {body :body}]
         (trap #(apps/delete-jobs body)))
 
+   (PATCH "/analysis/:analysis-id" [analysis-id :as {body :body}]
+          (trap #(apps/update-job analysis-id body)))
+
    (GET "/get-property-values/:job-id" [job-id]
         (trap #(apps/get-property-values job-id)))
 

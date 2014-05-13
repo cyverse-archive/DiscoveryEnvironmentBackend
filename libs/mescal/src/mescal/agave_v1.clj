@@ -1,8 +1,12 @@
 (ns mescal.agave-v1
-  (:use [clojure.java.io :only [reader]])
+  (:use [clojure.java.io :only [reader]]
+        [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
             [cemerick.url :as curl]
-            [clj-http.client :as client]))
+            [clj-http.client :as client]
+            [clojure-commons.error-codes :as ce]
+            [clojure.tools.logging :as log])
+  (:import [java.io IOException]))
 
 (defn- decode-json
   [source]
@@ -16,13 +20,26 @@
     ((comp get-result decode-json :body) response)))
 
 (defn authenticate
-  [base-url proxy-user proxy-pass user]
+  [base-url proxy-user proxy-pass user timeout]
   ((comp :token :result decode-json :body)
-   (client/post (str (curl/url base-url "auth-v1") "/")
-                {:accept      :json
-                 :as          :stream
-                 :form-params {:username user}
-                 :basic-auth  [proxy-user proxy-pass]})))
+   (try+
+    (client/post (str (curl/url base-url "auth-v1") "/")
+                 {:accept         :json
+                  :as             :stream
+                  :form-params    {:username user}
+                  :basic-auth     [proxy-user proxy-pass]
+                  :conn-timeout   timeout
+                  :socket-timeout timeout})
+    (catch IOException e
+      (let [msg "the Foundation API appears to be unavailable at this time"]
+        (log/error e msg)
+        (throw+ {:error_code ce/ERR_UNAVAILABLE
+                 :reason     msg})))
+    (catch Object e
+      (let [msg "unable to authenticate to the Foundation API"]
+        (log/error e msg)
+        (throw+ {:error_code ce/ERR_UNCHECKED_EXCEPTION
+                 :reason     msg}))))))
 
 (defn list-systems
   [base-url]

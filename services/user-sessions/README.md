@@ -108,6 +108,8 @@ Sample curl command:
 
 This destroys ALL user sessions for the user. To remove a single user session variable, get the user sessions, update the JSON to remove the unwanted user session variable, and POST the new JSON.
 
+Delete performs no error checking to ensure that the user exists first. Doing so forces the client to handle an exceptional case even though the system ends up in the correct state. The service will return a 200 status and an empty response.
+
 ### Error reporting
 
 If the user doesn't exist, you will receive a 404 status and a message similar to the following:

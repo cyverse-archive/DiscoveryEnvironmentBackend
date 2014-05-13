@@ -103,5 +103,5 @@
     (cfg/load-config options)
     (connect-db)
     (info "Started listening on" (:port @cfg/cfg))
-    (jetty/run-jetty app {:port (:port @cfg/cfg)})))
+    (jetty/run-jetty app {:port (Integer/parseInt (:port @cfg/cfg))})))
 

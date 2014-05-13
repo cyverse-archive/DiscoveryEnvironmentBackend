@@ -6,6 +6,7 @@
     * [Submitting a Job for Execution](#submitting-a-job-for-execution)
     * [Listing Jobs](#listing-jobs)
     * [Deleting Jobs](#deleting-jobs)
+    * [Updating Analysis Information](#updating-analysis-information)
     * [Stopping a Running Analysis](#stopping-a-running-analysis)
 
 # Application Execution Endpoints
@@ -422,6 +423,46 @@ $ curl -X PUT -sd '
 ' "http://by-tor:8888/secured/workspaces/4/executions/delete?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "success": true
+}
+```
+
+## Updating Analysis Information
+
+*Secured Endpoint:* PATCH /secured/analysis/{analysis-id}
+
+This endpoint allows an analysis name or description to be updated. The request
+body is in the following format:
+
+```json
+{
+    "name": "new analysis name",
+    "description": "new analysis description",
+}
+```
+Neither field is required; if both fields are omitted then this service is a
+no-op; no error will be thrown. If the update is successful, the job listing
+will be included in the response body. Here's an example:
+
+```
+$ curl -sX PATCH "http://services-2:31325/secured/analyses/2725F72B-2EC9-4FB8-BF72-05136B5D71F4?proxyToken=$(cas-ticket)" -d '
+{
+    "description": "One word! Two words! Three! Three words! Ah, ah, ah!",
+    "name": "obsessive_word_count"
+}
+' | python -mjson.tool
+{
+    "app_name": "Word Count",
+    "deleted": false,
+    "end_date": "2014-05-10T04:03:32Z",
+    "external_id": "2725F72B-2EC9-4FB8-BF72-05136B5D71F4",
+    "id": "9d63e97f-6bb4-4237-aa01-59238e1a4d89",
+    "job_description": "One word! Two words! Three! Three words! Ah, ah, ah!",
+    "job_name": "obsessive_word_count",
+    "job_type_id": 1,
+    "start_date": "2014-05-10T04:02:58Z",
+    "status": "Completed",
+    "success": true,
+    "user_id": 2
 }
 ```
 

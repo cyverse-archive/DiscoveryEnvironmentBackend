@@ -6,7 +6,8 @@
         [korma.core]
         [korma.db :only [with-db]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as ce]
+  (:require [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as ce]
             [donkey.util.db :as db])
   (:import [java.util UUID]))
 
@@ -61,7 +62,8 @@
 
 (defn save-job
   "Saves information about a job in the database."
-  [job-id job-name job-type username status & {:keys [id app-name start-date end-date deleted]}]
+  [job-id job-name job-type username status
+   & {:keys [id description app-name start-date end-date deleted]}]
   (with-db db/de
     (let [job-type-id (get-job-type-id job-type)
           user-id     (get-user-id username)
@@ -69,15 +71,16 @@
       (insert :jobs
               (values (remove-nil-values
                        {:id          id
-                        :external_id (str job-id)
-                        :job_name    job-name
-                        :app_name    app-name
-                        :start_date  start-date
-                        :end_date    end-date
-                        :status      status
-                        :deleted     deleted
-                        :job_type_id job-type-id
-                        :user_id     user-id})))))
+                        :external_id     (str job-id)
+                        :job_name        job-name
+                        :job_description description
+                        :app_name        app-name
+                        :start_date      start-date
+                        :end_date        end-date
+                        :status          status
+                        :deleted         deleted
+                        :job_type_id     job-type-id
+                        :user_id         user-id})))))
   {:id job-id
    :name job-name
    :status status
@@ -107,6 +110,15 @@
              (where {:jt.name   [in job-types]
                      :j.deleted false})))))
 
+(defn count-null-descriptions
+  "Counts the number of undeleted jobs with null descriptions in the database."
+  [username]
+  (with-db db/de
+    ((comp :count first)
+     (select (count-jobs-base username)
+             (where {:j.deleted         false
+                     :j.job_description nil})))))
+
 (defn- translate-sort-field
   "Translates the sort field sent to get-jobs to a value that can be used in the query."
   [field]
@@ -123,14 +135,15 @@
   (-> (select* [:jobs :j])
       (join [:users :u] {:j.user_id :u.id})
       (join [:job_types :jt] {:j.job_type_id :jt.id})
-      (fields [:j.external_id :id]
-              [:j.job_name    :name]
-              [:j.app_name    :analysis_name]
-              [:j.start_date  :startdate]
-              [:j.end_date    :enddate]
-              [:j.status      :status]
-              [:jt.name       :job_type]
-              [:u.username    :username])))
+      (fields [:j.external_id     :id]
+              [:j.job_name        :name]
+              [:j.job_description :description]
+              [:j.app_name        :analysis_name]
+              [:j.start_date      :startdate]
+              [:j.end_date        :enddate]
+              [:j.status          :status]
+              [:jt.name           :job_type]
+              [:u.username        :username])))
 
 (defn- get-jobs
   "Gets a list of jobs satisfying a query."
@@ -147,6 +160,25 @@
 (defn list-jobs-of-types
   [username limit offset sort-field sort-order filter job-types]
   (get-jobs username limit offset sort-field sort-order filter job-types))
+
+(defn list-jobs-with-null-descriptions
+  "Lists jobs with null description fields."
+  [username job-types]
+  (with-db db/de
+    (select (job-base-query)
+            (where {:j.deleted         false
+                    :u.username        username
+                    :jt.name           [in job-types]
+                    :j.job_description nil}))))
+
+(defn set-job-description
+  "Sets the description of a job. This function expects a single vector containing the
+   external job ID and the description as an argument."
+  [[id description]]
+  (with-db db/de
+    (update :jobs
+            (set-fields {:job_description description})
+            (where {:external_id id}))))
 
 (defn- add-job-type-clause
   "Adds a where clause for a set of job types if the set of job types provided is not nil
@@ -184,13 +216,16 @@
 
 (defn update-job
   "Updates an existing job in the database."
-  ([id {:keys [status end-date deleted]}]
-     (with-db db/de
-       (update :jobs
-               (set-fields (remove-nil-values {:status   status
-                                               :end_date end-date
-                                               :deleted  deleted}))
-               (where {:external_id id}))))
+  ([id {:keys [status end-date deleted name description]}]
+     (when (or status end-date deleted name description)
+       (with-db db/de
+         (update :jobs
+                 (set-fields (remove-nil-values {:status          status
+                                                 :end_date        end-date
+                                                 :deleted         deleted
+                                                 :job_name        name
+                                                 :job_description description}))
+                 (where {:external_id id})))))
   ([id status end-date]
      (update-job id {:status   status
                      :end-date end-date})))
@@ -231,5 +266,5 @@
   [ids]
   (with-db db/de
     (update :jobs
-           (set-fields {:deleted true})
-           (where {:external_id [in ids]}))))
+            (set-fields {:deleted true})
+            (where {:external_id [in ids]}))))

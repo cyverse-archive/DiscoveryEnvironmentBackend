@@ -41,9 +41,9 @@
 
 (defn- list-all-jobs
   [agave limit offset sort-field sort-order filter]
-  (let [username     (:username current-user)
+  (let [user         (:username current-user)
         types        [jp/de-job-type jp/agave-job-type]
-        jobs         (jp/list-jobs-of-types username limit offset sort-field sort-order filter types)
+        jobs         (jp/list-jobs-of-types user limit offset sort-field sort-order filter types)
         grouped-jobs (group-by :job_type jobs)
         de-states    (da/load-de-job-states (grouped-jobs jp/de-job-type []))
         de-apps      (da/load-app-details (map :analysis_id de-states))
@@ -55,8 +55,8 @@
      (jp/update-job id {:status   status
                         :end-date (db/timestamp-from-str (str end-date))
                         :deleted  deleted}))
-  ([agave id username prev-status]
-    (aa/update-agave-job-status agave id username prev-status)))
+  ([agave id username prev-job-info]
+     (aa/update-agave-job-status agave id username prev-job-info)))
 
 (defn- unrecognized-job-type
   [job-type]
@@ -91,6 +91,7 @@
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
   (populateJobsTable [_])
+  (populateJobDescriptions [_ username])
   (removeDeletedJobs [_])
   (updateJobStatus [_ id username prev-status])
   (getJobParams [_ job-id])
@@ -142,6 +143,9 @@
 
   (populateJobsTable [_]
     (dorun (map da/store-de-job (osm/list-jobs))))
+
+  (populateJobDescriptions [_ username]
+    (da/populate-job-descriptions username))
 
   (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs))
@@ -227,12 +231,16 @@
   (populateJobsTable [_]
     (dorun (map da/store-de-job (osm/list-jobs))))
 
+  (populateJobDescriptions [_ username]
+    (da/populate-job-descriptions username)
+    (aa/populate-job-descriptions agave-client username))
+
   (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs)
     (aa/remove-deleted-agave-jobs agave-client))
 
-  (updateJobStatus [_ id username prev-status]
-    (update-job-status agave-client id username prev-status))
+  (updateJobStatus [_ id username prev-job-info]
+    (update-job-status agave-client id username prev-job-info))
 
   (getJobParams [_ job-id]
     (process-job agave-client job-id
@@ -266,7 +274,9 @@
   (let [username (:username current-user)]
     (transaction
      (when (zero? (jp/count-all-jobs username))
-       (.populateJobsTable app-lister)))))
+       (.populateJobsTable app-lister))
+     (when-not (zero? (jp/count-null-descriptions username))
+       (.populateJobDescriptions app-lister username)))))
 
 (defn get-only-app-groups
   []
@@ -347,11 +357,11 @@
 
 (defn update-agave-job-status
   [uuid]
-  (let [{:keys [id username status] :as job} (jp/get-job-by-id (UUID/fromString uuid))
-        username                             (string/replace (or username "") #"@.*" "")]
+  (let [{:keys [id username] :as job} (jp/get-job-by-id (UUID/fromString uuid))
+        username                      (string/replace (or username "") #"@.*" "")]
     (service/assert-found job "job" uuid)
     (service/assert-valid (= jp/agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
-    (.updateJobStatus (get-app-lister username) id username status)))
+    (.updateJobStatus (get-app-lister username) id username job)))
 
 (defn- sync-job-status
   [job]
@@ -371,7 +381,7 @@
   (let [jobs-by-id (into {} (map (juxt :id identity) (jp/list-jobs-to-delete ids)))
         log-it     (fn [desc id] (log/warn "attempt to delete" desc "job" id "ignored"))]
     (dorun (map (fn [id] (cond (nil? (jobs-by-id id))            (log-it "missing" id)
-                              (get-in jobs-by-id [id :deleted]) (log-it "deleted" id)))
+                               (get-in jobs-by-id [id :deleted]) (log-it "deleted" id)))
                 ids))))
 
 (defn delete-jobs
@@ -382,6 +392,26 @@
     (log-already-deleted-jobs ids)
     (jp/delete-jobs ids)
     (service/success-response)))
+
+(defn- validate-job-existence
+  [id]
+  (when-not (jp/get-job-by-external-id id)
+    (service/not-found "job" id)))
+
+(defn- validate-job-update
+  [body]
+  (let [supported-fields #{:name :description}
+        invalid-fields   (remove supported-fields (keys body))]
+    (when (seq invalid-fields)
+      (throw+ {:error_code ce/ERR_BAD_OR_MISSING_FIELD
+               :reason     (str "unrecognized fields: " invalid-fields)}))))
+
+(defn update-job
+  [id body]
+  (let [body (service/decode-json body)]
+    (validate-job-existence id)
+    (validate-job-update body)
+    (jp/update-job id body)))
 
 (defn get-property-values
   [job-id]

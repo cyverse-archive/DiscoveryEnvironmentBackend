@@ -70,4 +70,4 @@
       (.removeAllAppenders (Logger/getRootLogger)))
     (cfg/load-config options)
     (info "Started listening on" (:port @cfg/cfg))
-    (jetty/run-jetty app {:port (:port @cfg/cfg)})))
+    (jetty/run-jetty app {:port (Integer/parseInt (:port @cfg/cfg))})))

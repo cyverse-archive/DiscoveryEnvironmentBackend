@@ -4,7 +4,10 @@
             [bouncer [core :as b] [validators :as v]]
             [taoensso.timbre :as timbre]
             [taoensso.timbre.appenders.rotor :as rotor]
-            [filevents.core :refer [watch]]))
+            [filevents.core :refer [watch]]
+            [clojure.java.io :refer [reader]]
+            [me.raynes.fs :as fs])
+  (:import [java.util Properties]))
 
 (timbre/refer-timbre)
 
@@ -33,7 +36,7 @@
 (defn configure-logging
   []
   (when (:log-level @cfg)
-    (timbre/set-level! (:log-level @cfg)))
+    (timbre/set-level! (keyword (:log-level @cfg))))
   (when (:log-file @cfg)
     (timbre/set-config! [:appenders :rotor]
                         {:enabled? true
@@ -69,15 +72,49 @@
   [k]
   (keyword? k))
 
+(v/defvalidator intablev
+  {:default-message-format "%s must be parseable as an integer", :optional true}
+  [k]
+  (try
+    (Integer/parseInt k)
+    true
+    (catch Exception e
+      false)))
+
 (defn- loggable-config
   [cfg bad-keys]
   (pprint-to-string
    (filter-keys #(not (contains? bad-keys %)) cfg)))
 
+(defn load-properties
+  "Loads a properties file into a map, turning the keys into keywords."
+  [cfg-path]
+  (let [p (Properties.)]
+    (with-open [r (reader (fs/normalized-path (fs/expand-home cfg-path)))]
+      (.load p r)
+      (into {} (map #(vector (keyword (first %1)) (second %1)) 
+                    (into {} (seq p)))))))
+
+(defn load-edn
+  [cfg-path]
+  (edn/read-string (slurp (fs/normalized-path (fs/expand-home cfg-path)))))
+
+(defn load-cfg-file
+  [cfg-path]
+  (cond
+   (.endsWith cfg-path ".properties")
+   (load-properties cfg-path)
+
+   (.endsWith cfg-path ".edn")
+   (load-edn cfg-path)
+
+   :else
+   (throw (Exception. "Unrecognized configuration file type"))))
+
 (defn- load-config-from-file
   "Loads the configuration settings from a file."
   []
-  (let [cfgfile (edn/read-string (slurp (:config @cmd-line)))]
+  (let [cfgfile (load-cfg-file (:config @cmd-line))]
     (when-not (valid-config? cfgfile)
       (error "Config file has errors, exiting.")
       (System/exit 1))
@@ -87,29 +124,7 @@
     (info "Command-line settings:\n" (loggable-config @cmd-line @filters))
     (info "Combined settings:\n" (loggable-config @cfg @filters))))
 
-(defmulti watch-handler
-  (fn [event path] event))
-
-(defmethod watch-handler :created
-  [event path]
-  (warn path "was created. Attempting to load as config.")
-  (load-config-from-file))
-
-(defmethod watch-handler :deleted
-  [event path]
-  (warn path "was deleted! Bad things may happen!"))
-
-(defmethod watch-handler :modified
-  [event path]
-  (info path "was modified, reloading config.")
-  (load-config-from-file))
-
-(defn- watch-config
-  []
-  (watch watch-handler (:config @cmd-line)))
-
 (defn load-config
   [options]
   (dosync (ref-set cmd-line options))
-  (load-config-from-file)
-  (watch-config))
+  (load-config-from-file))
