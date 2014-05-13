@@ -74,20 +74,20 @@ If you installed tree-urls through an RPM, make sure the config file is at /etc/
 
 ### Getting tree URLs for a UUID
 
-    GET /<UUID>
+    GET /<SHA1>
 
 Returns the JSON containing the tree URLs for the UUID. Sample curl command:
 
-    curl http://localhost:31305/C948B489-EDAD-41BA-9781-CEDA745F4ED5
+    curl http://localhost:31305/88ece07c44a55670ebbeb8ec434d44b64974d3a1  
 
 
 ### Updating/creating tree URLs for a user
 
-    POST /<UUID>
+    POST /<SHA1>
 
 Or,
 
-    PUT /<UUID>
+    PUT /<SHA1>
 
 The body of the request should be JSON containing all of the tree URLs for the UUID. The format of the body is not enforced. Any JSON should work.
 
@@ -97,22 +97,26 @@ The Content-Type for the request must be "application/json".
 
 Sample Curl command:
 
-    curl -H "Content-Type: application/json" -d '{"foo" : "bar"}' http://localhost:31305/C948B489-EDAD-41BA-9781-CEDA745F4ED5
+    curl -H "Content-Type: application/json" -d '{"foo" : "bar"}' http://localhost:31305/88ece07c44a55670ebbeb8ec434d44b64974d3a1  
 
 
 ### Deleting tree URLs for a user
 
-    DELETE /<UUID>
+    DELETE /<SHA1>
 
 Sample curl command:
 
-    curl -X DELETE http://localhost:31305/C948B489-EDAD-41BA-9781-CEDA745F4ED5
+    curl -X DELETE http://localhost:31305/88ece07c44a55670ebbeb8ec434d44b64974d3a1  
 
 This destroys ALL tree URLs for the user. To remove a single user preference, get the tree URLs, update the JSON to remove the unwanted user preference, and POST the new JSON.
 
 Delete performs no error checking to ensure that the user exists first. Doing so forces the client to handle an exceptional case even though the system ends up in the correct state. The service will return a 200 status and an empty response.
 
 ### Error reporting
+
+The requests that include a SHA1 in the URLs (namely, all of them) are expecting a SHA1 sum that is 40 hexidecimal digits or less in length. If the SHA1 passed in doesn't match that format, then you will get an error message back like the following:
+
+    Invalid SHA1 format: 99999999-8888-7777-6666-555555555555400
 
 JSON parsing and error reporting is handled by [ring-json](https://github.com/ring-clojure/ring-json). If you post malformed JSON, you will receive a 400 status and a message like this will be returned to the client:
 

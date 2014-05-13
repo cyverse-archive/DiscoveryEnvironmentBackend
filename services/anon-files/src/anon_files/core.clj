@@ -23,7 +23,7 @@
     :validate [#(< 0 % 0x10000) "Ports must be 0-65536"]]
 
    ["-c" "--config PATH" "Path to the config file"
-    :default "/etc/iplant/de/anon-files.edn"
+    :default "/etc/iplant/de/anon-files.properties"
     :validate [#(fs/exists? %) "Config file must exist."
                #(fs/readable? %) "Config file must be readable."]]
 
