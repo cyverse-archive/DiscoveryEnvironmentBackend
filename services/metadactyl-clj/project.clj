@@ -23,7 +23,7 @@
                  [org.iplantc/common-cli "3.1.3"]
                  [me.raynes/fs "1.4.5"]
                  [org.springframework/spring-orm "3.1.0.RELEASE"]
-                 [korma "0.3.1"]
+                 [korma "0.3.0-RC5"]
                  [ring "1.2.2"]
                  #_[org.slf4j/slf4j-api "1.5.8"]
                  #_[org.slf4j/slf4j-log4j12 "1.5.8"]
