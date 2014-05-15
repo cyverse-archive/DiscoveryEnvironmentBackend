@@ -952,3 +952,50 @@ ALTER TABLE ONLY user_saved_searches
     FOREIGN KEY (user_id)
     REFERENCES users(id);
 CREATE INDEX user_saved_searches_user_id_idx ON user_sessions(user_id);
+
+--
+-- The primary key for the integrated_webapps table.
+--
+ALTER TABLE ONLY integrated_webapps
+    ADD CONSTRAINT integrated_webapps_pkey
+    PRIMARY KEY (id);
+
+--
+-- Uniqueness constraint on the name field of the integrated_webapps table.
+--
+ALTER TABLE ONLY integrated_webapps
+    ADD CONSTRAINT integrated_webapps_unique_name
+    UNIQUE (name);
+
+--
+-- The primary key for the authorization_tokens table.
+--
+ALTER TABLE ONLY authorization_tokens
+    ADD CONSTRAINT authorization_tokens_pkey
+    PRIMARY KEY (id);
+
+--
+-- Foreign key constraint for the webapp_id column of the authorization_tokens
+-- table.
+--
+ALTER TABLE ONLY authorization_tokens
+    ADD CONSTRAINT authorization_tokens_webapp_id_fkey
+    FOREIGN KEY (webapp_id)
+    REFERENCES integrated_webapps(id);
+
+--
+-- Foreign key constraint for the user_id column of the authorization_tokens
+-- table.
+--
+ALTER TABLE ONLY authorization_tokens
+    ADD CONSTRAINT authorization_tokens_user_id_fkey
+    FOREIGN KEY (user_id)
+    REFERENCES users(id);
+
+--
+-- Uniqueness constraint on the webapp_id and user_id columns of the
+-- authorization_tokens table.
+--
+ALTER TABLE ONLY authorization_tokens
+    ADD CONSTRAINT authorization_tokens_unique_webapp_id_and_user_id
+    UNIQUE (webapp_id, user_id);
