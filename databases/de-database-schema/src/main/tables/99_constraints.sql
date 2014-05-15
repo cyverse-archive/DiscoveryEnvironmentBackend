@@ -12,7 +12,7 @@ ALTER TABLE ONLY data_formats
 --
 ALTER TABLE ONLY workflow_io_maps
     ADD CONSTRAINT workflow_io_maps_pkey
-    PRIMARY KEY (source_step, output, target_step, input);
+    PRIMARY KEY (id);
 CREATE INDEX workflow_io_maps_app_id_idx ON workflow_io_maps(app_id);
 CREATE INDEX workflow_io_maps_source_idx ON workflow_io_maps(source_step);
 CREATE INDEX workflow_io_maps_target_idx ON workflow_io_maps(target_step);
@@ -48,6 +48,14 @@ ALTER TABLE ONLY tools
 ALTER TABLE ONLY info_type
     ADD CONSTRAINT info_type_pkey
     PRIMARY KEY (id);
+
+--
+-- Name: input_output_mapping_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
+-- Tablespace:
+--
+ALTER TABLE ONLY input_output_mapping
+    ADD CONSTRAINT input_output_mapping_pkey
+    PRIMARY KEY (mapping_id, input);
 
 --
 -- Name: integration_data_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
@@ -233,6 +241,33 @@ ALTER TABLE ONLY workspace
     PRIMARY KEY (id);
 
 --
+-- Name: input_output_mapping_mapping_id_fk; Type: FK CONSTRAINT; Schema:
+-- public; Owner: de
+--
+ALTER TABLE ONLY input_output_mapping
+    ADD CONSTRAINT input_output_mapping_mapping_id_fk
+    FOREIGN KEY (mapping_id)
+    REFERENCES workflow_io_maps(id);
+
+--
+-- Name: input_output_mapping_input_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Owner: de
+--
+ALTER TABLE ONLY input_output_mapping
+    ADD CONSTRAINT input_output_mapping_input_fkey
+    FOREIGN KEY (input)
+    REFERENCES file_parameters(id);
+
+--
+-- Name: input_output_mapping_output_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Owner: de
+--
+ALTER TABLE ONLY input_output_mapping
+    ADD CONSTRAINT input_output_mapping_output_fkey
+    FOREIGN KEY (output)
+    REFERENCES file_parameters(id);
+
+--
 -- Name: app_categories_workspace_id_fk; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --
@@ -287,6 +322,23 @@ ALTER TABLE ONLY tool_test_data_files
     REFERENCES tools(id);
 
 --
+-- Name: workflow_io_maps_unique; Type: CONSTRAINT; Schema: public; Owner: de;
+-- Tablespace:
+--
+ALTER TABLE ONLY workflow_io_maps
+    ADD CONSTRAINT workflow_io_maps_unique
+    UNIQUE (app_id, target_step, source_step);
+
+--
+-- Name: workflow_io_maps_app_id_fkey;
+-- Type: FK CONSTRAINT; Schema: public; Owner: de
+--
+ALTER TABLE ONLY workflow_io_maps
+    ADD CONSTRAINT workflow_io_maps_app_id_fkey
+    FOREIGN KEY (app_id)
+    REFERENCES apps(id);
+
+--
 -- Name: workflow_io_maps_source_fkey; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --
@@ -303,24 +355,6 @@ ALTER TABLE ONLY workflow_io_maps
     ADD CONSTRAINT workflow_io_maps_target_fkey
     FOREIGN KEY (target_step)
     REFERENCES app_steps(id);
-
---
--- Name: workflow_io_maps_input_fkey; Type: FK CONSTRAINT; Schema: public;
--- Owner: de
---
-ALTER TABLE ONLY workflow_io_maps
-    ADD CONSTRAINT workflow_io_maps_input_fkey
-    FOREIGN KEY (input)
-    REFERENCES file_parameters(id);
-
---
--- Name: workflow_io_maps_output_fkey; Type: FK CONSTRAINT; Schema: public;
--- Owner: de
---
-ALTER TABLE ONLY workflow_io_maps
-    ADD CONSTRAINT workflow_io_maps_output_fkey
-    FOREIGN KEY (output)
-    REFERENCES file_parameters(id);
 
 --
 -- Name: parameters_file_parameter_id_fkey; Type: FK CONSTRAINT; Schema: public;
@@ -510,15 +544,6 @@ ALTER TABLE ONLY apps
     ADD CONSTRAINT app_integration_data_id_fk
     FOREIGN KEY (integration_data_id)
     REFERENCES integration_data(id);
-
---
--- Name: workflow_io_maps_app_id_fkey;
--- Type: FK CONSTRAINT; Schema: public; Owner: de
---
-ALTER TABLE ONLY workflow_io_maps
-    ADD CONSTRAINT workflow_io_maps_app_id_fkey
-    FOREIGN KEY (app_id)
-    REFERENCES apps(id);
 
 --
 -- Name: app_references_app_id_fkey;

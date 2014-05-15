@@ -100,7 +100,6 @@
 ;; 06_transformation_steps
 ;; 08_transformations
 ;; 16_hibernate_sequence
-;; 18_input_output_mapping
 ;; 20_notification
 ;; 21_notification_set
 ;; 22_notification_set_notification
@@ -236,23 +235,33 @@
   (exec-sql-statement "ALTER TABLE ONLY data_formats RENAME COLUMN guid TO id")
   (exec-sql-statement "ALTER TABLE ONLY data_formats ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)"))
 
-;; cols to drop: mapping_id
+;; cols to drop: hid, source, target
 (defn- add-workflow-io-maps-table
-  "Renames the existing dataobject_mapping table to workflow_io_maps and adds updated columns."
+  "Renames the existing input_output_mapping table to workflow_io_maps and adds updated columns."
   []
-  (println "\t* updating the dataobject_mapping table to workflow_io_maps")
-  (exec-sql-statement "ALTER TABLE dataobject_mapping RENAME TO workflow_io_maps")
+  (println "\t* updating the input_output_mapping table to workflow_io_maps")
+  (exec-sql-statement "ALTER TABLE input_output_mapping RENAME TO workflow_io_maps")
+  (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
   (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN app_id UUID")
   (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN target_step UUID")
-  (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN source_step UUID")
-  (exec-sql-statement "DELETE FROM workflow_io_maps WHERE input IN"
-                      " (SELECT input FROM workflow_io_maps"
+  (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN source_step UUID"))
+
+;; cols to drop: mapping_id_v187
+(defn- readd-input-output-mapping-table
+  "Renames the existing dataobject_mapping table to input_output_mapping and adds updated columns."
+  []
+  (println "\t* updating the dataobject_mapping table to input_output_mapping")
+  (exec-sql-statement "ALTER TABLE dataobject_mapping RENAME TO input_output_mapping")
+  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping RENAME COLUMN mapping_id TO mapping_id_v187")
+  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping ADD COLUMN mapping_id UUID")
+  (exec-sql-statement "DELETE FROM input_output_mapping WHERE input IN"
+                      " (SELECT input FROM input_output_mapping"
                       " LEFT JOIN dataobjects ON id = input WHERE id IS NULL)")
-  (exec-sql-statement "DELETE FROM workflow_io_maps WHERE output IN"
-                      " (SELECT output FROM workflow_io_maps"
+  (exec-sql-statement "DELETE FROM input_output_mapping WHERE output IN"
+                      " (SELECT output FROM input_output_mapping"
                       " LEFT JOIN dataobjects ON id = output WHERE id IS NULL)")
-  (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ALTER COLUMN input TYPE UUID USING CAST(input AS UUID)")
-  (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ALTER COLUMN output TYPE UUID USING CAST(output AS UUID)"))
+  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping ALTER COLUMN input TYPE UUID USING CAST(input AS UUID)")
+  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping ALTER COLUMN output TYPE UUID USING CAST(output AS UUID)"))
 
 ;; cols to drop: hid, info_type_v187, data_format_v187, multiplicity_v187, data_source_id_v187
 ;; rename orderd?
@@ -626,10 +635,27 @@
                       "(SELECT a.id FROM apps a WHERE transformation_activity_id = a.hid)")
   (exec-sql-statement "UPDATE app_category_app SET app_id ="
                       "(SELECT a.id FROM apps a WHERE template_id = a.hid)")
+  (exec-sql-statement "UPDATE workflow_io_maps m SET app_id ="
+                      "(SELECT a.id FROM apps a"
+                      " LEFT JOIN transformation_activity_mappings tm"
+                      " ON tm.transformation_activity_id = a.hid"
+                      " WHERE m.hid = tm.mapping_id)")
   (exec-sql-statement "UPDATE suggested_groups SET app_id ="
                       "(SELECT a.id FROM apps a WHERE transformation_activity_id = a.hid)")
   (exec-sql-statement "UPDATE app_references SET app_id ="
                       "(SELECT a.id FROM apps a WHERE transformation_activity_id = a.hid)"))
+
+(defn- update-app-steps-uuids
+  []
+  (println "\t* updating app_steps uuid foreign keys...")
+  (exec-sql-statement "UPDATE workflow_io_maps SET source_step ="
+                      "(SELECT step.id FROM app_steps step"
+                      " LEFT JOIN transformation_steps ts ON ts.id = step.transformation_step_id"
+                      " WHERE source = ts.id)")
+  (exec-sql-statement "UPDATE workflow_io_maps SET target_step ="
+                      "(SELECT step.id FROM app_steps step"
+                      " LEFT JOIN transformation_steps ts ON ts.id = step.transformation_step_id"
+                      " WHERE target = ts.id)"))
 
 (defn- update-integration-data-uuids
   []
@@ -644,6 +670,13 @@
   (println "\t* updating data_formats uuid foreign keys...")
   (exec-sql-statement "UPDATE file_parameters SET data_format ="
                       "(SELECT d.id FROM data_formats d WHERE data_format_v187 = d.id_v187)"))
+
+(defn- update-workflow-io-maps-uuids
+  []
+  (println "\t* updating workflow_io_maps uuid foreign keys...")
+  (exec-sql-statement "UPDATE input_output_mapping SET mapping_id ="
+                      "(SELECT id FROM workflow_io_maps"
+                      " WHERE hid = mapping_id_v187)"))
 
 (defn- re-add-constraints
   []
@@ -691,6 +724,7 @@
   (add-app-category-app-table)
   (alter-data-formats-table)
   (add-workflow-io-maps-table)
+  (readd-input-output-mapping-table)
   (add-file-parameters-table)
   (add-tool-test-data-files-table)
   (alter-info-type-table)
@@ -729,8 +763,10 @@
   (update-tool-uuids)
   (update-task-uuids)
   (update-app-uuids)
+  (update-app-steps-uuids)
   (update-integration-data-uuids)
   (update-data-formats-uuids)
+  (update-workflow-io-maps-uuids)
   (drop-all-constraints)
   (re-add-constraints)
   (add-app-category-listing-view)
