@@ -254,14 +254,10 @@
   (exec-sql-statement "ALTER TABLE dataobject_mapping RENAME TO input_output_mapping")
   (exec-sql-statement "ALTER TABLE ONLY input_output_mapping RENAME COLUMN mapping_id TO mapping_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY input_output_mapping ADD COLUMN mapping_id UUID")
-  (exec-sql-statement "DELETE FROM input_output_mapping WHERE input IN"
-                      " (SELECT input FROM input_output_mapping"
-                      " LEFT JOIN dataobjects ON id = input WHERE id IS NULL)")
-  (exec-sql-statement "DELETE FROM input_output_mapping WHERE output IN"
-                      " (SELECT output FROM input_output_mapping"
-                      " LEFT JOIN dataobjects ON id = output WHERE id IS NULL)")
-  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping ALTER COLUMN input TYPE UUID USING CAST(input AS UUID)")
-  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping ALTER COLUMN output TYPE UUID USING CAST(output AS UUID)"))
+  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping RENAME COLUMN input TO input_v187")
+  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping RENAME COLUMN output TO output_v187")
+  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping ADD COLUMN input UUID")
+  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping ADD COLUMN output UUID"))
 
 ;; cols to drop: hid, info_type_v187, data_format_v187, multiplicity_v187, data_source_id_v187
 ;; rename orderd?
@@ -270,7 +266,8 @@
   []
   (println "\t* updating the dataobjects table to file_parameters")
   (exec-sql-statement "ALTER TABLE dataobjects RENAME TO file_parameters")
-  (alter-id-column-to-uuid "file_parameters")
+  (exec-sql-statement "ALTER TABLE ONLY file_parameters RENAME COLUMN id TO id_v187")
+  (exec-sql-statement "ALTER TABLE ONLY file_parameters ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
   (exec-sql-statement "ALTER TABLE ONLY file_parameters RENAME COLUMN info_type TO info_type_v187")
   (exec-sql-statement "ALTER TABLE ONLY file_parameters ADD COLUMN info_type UUID")
   (exec-sql-statement "ALTER TABLE ONLY file_parameters RENAME COLUMN data_format TO data_format_v187")
@@ -681,6 +678,20 @@
                       "(SELECT id FROM workflow_io_maps"
                       " WHERE hid = mapping_id_v187)"))
 
+(defn- update-file-parameters-uuids
+  []
+  (println "\t* updating file_parameters uuid foreign keys...")
+  (exec-sql-statement "UPDATE parameters SET file_parameter_id ="
+                      "(SELECT id FROM file_parameters"
+                      " WHERE hid = dataobject_id)")
+  (exec-sql-statement "UPDATE input_output_mapping SET input ="
+                      "(SELECT id FROM file_parameters"
+                      " WHERE id_v187 = input_v187)")
+  (exec-sql-statement "UPDATE input_output_mapping SET output ="
+                      "(SELECT id FROM file_parameters"
+                      " WHERE id_v187 = output_v187)")
+  (exec-sql-statement "DELETE FROM input_output_mapping WHERE input IS NULL OR output IS NULL"))
+
 (defn- re-add-constraints
   []
   (println "\t* re-adding constraints")
@@ -770,6 +781,7 @@
   (update-integration-data-uuids)
   (update-data-formats-uuids)
   (update-workflow-io-maps-uuids)
+  (update-file-parameters-uuids)
   (drop-all-constraints)
   (re-add-constraints)
   (add-app-category-listing-view)
