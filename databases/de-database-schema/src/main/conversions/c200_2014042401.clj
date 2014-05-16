@@ -173,7 +173,7 @@
 
 ;; cols to drop: hid, workspace_id, type, integration_data_id_v187
 (defn- add-apps-table
-  "Renames the existing transformation_activity table to tasks and adds updated columns."
+  "Renames the existing transformation_activity table to apps and adds updated columns."
   []
   (println "\t* updating the transformation_activity table to apps")
   (exec-sql-statement "ALTER TABLE transformation_activity RENAME TO apps")
@@ -569,6 +569,9 @@
   (println "\t* updating the user_saved_searches table")
   (exec-sql-statement "ALTER TABLE ONLY user_saved_searches RENAME COLUMN user_id TO user_id_v187")
   (exec-sql-statement "ALTER TABLE ONLY user_saved_searches ADD COLUMN user_id UUID"))
+
+
+;; Update new UUID columns.
 
 (defn- update-app-category-uuids
   []
