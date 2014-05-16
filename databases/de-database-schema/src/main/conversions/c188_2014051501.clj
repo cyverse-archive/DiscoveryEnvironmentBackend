@@ -33,24 +33,21 @@
   (insert :integrated_webapps
           (values (prepare-integrated-webapps))))
 
-(defn- add-authorization-tokens-table
+(defn- add-access-tokens-table
   []
-  (println "\t* adding the authorization_tokens table")
+  (println "\t* adding the access_tokens table")
   (exec-raw
-   "CREATE TABLE authorization_tokens (
-    id UUID NOT NULL,
+   "CREATE TABLE access_tokens (
     webapp_id UUID NOT NULL REFERENCES integrated_webapps(id),
     user_id BIGINT NOT NULL REFERENCES users(id),
     token VARCHAR(128) NOT NULL,
-    PRIMARY KEY (id))")
-  (exec-raw
-   "ALTER TABLE ONLY authorization_tokens
-    ADD CONSTRAINT authorization_tokens_unique_webapp_id_and_user_id
-    UNIQUE (webapp_id, user_id)"))
+    expires_at TIMESTAMP,
+    refresh_token VARCHAR(128),
+    PRIMARY KEY (webapp_id, user_id))"))
 
 (defn convert
   "Performs the conversion for database version 1.8.8:20140515.01"
   []
   (add-integrated-webapps-table)
   (populate-integrated-webapps-table)
-  (add-authorization-tokens-table))
+  (add-access-tokens-table))

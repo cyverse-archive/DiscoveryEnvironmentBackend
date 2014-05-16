@@ -968,34 +968,26 @@ ALTER TABLE ONLY integrated_webapps
     UNIQUE (name);
 
 --
--- The primary key for the authorization_tokens table.
+-- The primary key for the access_tokens table.
 --
-ALTER TABLE ONLY authorization_tokens
-    ADD CONSTRAINT authorization_tokens_pkey
-    PRIMARY KEY (id);
+ALTER TABLE ONLY access_tokens
+    ADD CONSTRAINT access_tokens_pkey
+    PRIMARY KEY (webapp_id, user_id);
 
 --
--- Foreign key constraint for the webapp_id column of the authorization_tokens
+-- Foreign key constraint for the webapp_id column of the access_tokens
 -- table.
 --
-ALTER TABLE ONLY authorization_tokens
-    ADD CONSTRAINT authorization_tokens_webapp_id_fkey
+ALTER TABLE ONLY access_tokens
+    ADD CONSTRAINT access_tokens_webapp_id_fkey
     FOREIGN KEY (webapp_id)
     REFERENCES integrated_webapps(id);
 
 --
--- Foreign key constraint for the user_id column of the authorization_tokens
+-- Foreign key constraint for the user_id column of the access_tokens
 -- table.
 --
-ALTER TABLE ONLY authorization_tokens
-    ADD CONSTRAINT authorization_tokens_user_id_fkey
+ALTER TABLE ONLY access_tokens
+    ADD CONSTRAINT access_tokens_user_id_fkey
     FOREIGN KEY (user_id)
     REFERENCES users(id);
-
---
--- Uniqueness constraint on the webapp_id and user_id columns of the
--- authorization_tokens table.
---
-ALTER TABLE ONLY authorization_tokens
-    ADD CONSTRAINT authorization_tokens_unique_webapp_id_and_user_id
-    UNIQUE (webapp_id, user_id);
