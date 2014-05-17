@@ -954,34 +954,11 @@ ALTER TABLE ONLY user_saved_searches
 CREATE INDEX user_saved_searches_user_id_idx ON user_sessions(user_id);
 
 --
--- The primary key for the integrated_webapps table.
---
-ALTER TABLE ONLY integrated_webapps
-    ADD CONSTRAINT integrated_webapps_pkey
-    PRIMARY KEY (id);
-
---
--- Uniqueness constraint on the name field of the integrated_webapps table.
---
-ALTER TABLE ONLY integrated_webapps
-    ADD CONSTRAINT integrated_webapps_unique_name
-    UNIQUE (name);
-
---
 -- The primary key for the access_tokens table.
 --
 ALTER TABLE ONLY access_tokens
     ADD CONSTRAINT access_tokens_pkey
-    PRIMARY KEY (webapp_id, user_id);
-
---
--- Foreign key constraint for the webapp_id column of the access_tokens
--- table.
---
-ALTER TABLE ONLY access_tokens
-    ADD CONSTRAINT access_tokens_webapp_id_fkey
-    FOREIGN KEY (webapp_id)
-    REFERENCES integrated_webapps(id);
+    PRIMARY KEY (webapp, user_id);
 
 --
 -- Foreign key constraint for the user_id column of the access_tokens
