@@ -123,294 +123,65 @@
   (exec-sql-statement "DROP VIEW deployed_component_listing")
   (exec-sql-statement "DROP VIEW rating_listing"))
 
-;; cols to drop: hid, workspace_id_v187
-(defn- add-app-categories-table
-  "Renames the existing template_group table to app_categories and adds updated columns."
+(defn- run-table-conversions
+  "Loads and runs SQL files containing table and column conversions."
   []
   (println "\t* updating the template_group table to app_categories")
-  (exec-sql-statement "ALTER TABLE template_group RENAME TO app_categories")
-  (exec-sql-statement "UPDATE app_categories SET id = '12c7a585-ec23-3352-e313-02e323112a7c' WHERE id = 'g12c7a585ec233352e31302e323112a7ccf18bfd7364'")
-  (exec-sql-statement "UPDATE app_categories SET id = '5401bd146c144470aedd57b47ea1b979' WHERE id = 'g5401bd146c144470aedd57b47ea1b979'")
-  (exec-sql-statement "ALTER TABLE ONLY app_categories ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)")
-  (exec-sql-statement "ALTER TABLE ONLY app_categories RENAME COLUMN workspace_id TO workspace_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY app_categories ADD COLUMN workspace_id UUID"))
-
-;; cols to drop: id_v187, root_analysis_group_id, user_id_v187
-(defn- alter-workspace-table
-  "Updates columns in the existing workspace table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/01_app_categories.sql")
   (println "\t* updating the workspace table")
-  (exec-sql-statement "ALTER TABLE ONLY workspace RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY workspace ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
-  (exec-sql-statement "ALTER TABLE ONLY workspace ADD COLUMN root_category_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY workspace RENAME COLUMN user_id TO user_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY workspace ADD COLUMN user_id UUID"))
-
-;; cols to drop: hid, id_v187, tool_type_id_v187, integration_data_id_v187
-(defn- add-tools-table
-  "Renames the existing deployed_components table to tools and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/02_workspace.sql")
   (println "\t* updating the deployed_components table to tools")
-  (exec-sql-statement "ALTER TABLE deployed_components RENAME TO tools")
-  (exec-sql-statement "ALTER TABLE ONLY tools RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tools ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
-  (exec-sql-statement "UPDATE tools SET id = CAST(id_v187 AS UUID) WHERE CHAR_LENGTH(id_v187) = 36")
-  (exec-sql-statement "ALTER TABLE ONLY tools RENAME COLUMN tool_type_id TO tool_type_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tools ADD COLUMN tool_type_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY tools RENAME COLUMN integration_data_id TO integration_data_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tools ADD COLUMN integration_data_id UUID"))
-
-;; cols to drop: hid, component_id
-(defn- add-tasks-table
-  "Renames the existing template table to tasks and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/03_tools.sql")
   (println "\t* updating the template table to tasks")
-  (exec-sql-statement "ALTER TABLE template RENAME TO tasks")
-  (exec-sql-statement "ALTER TABLE ONLY tasks RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tasks ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
-  (exec-sql-statement "UPDATE tasks SET id = CAST(id_v187 AS UUID) WHERE CHAR_LENGTH(id_v187) = 36")
-  (exec-sql-statement "ALTER TABLE ONLY tasks ADD COLUMN tool_id UUID"))
-
-;; cols to drop: hid, workspace_id, type, integration_data_id_v187
-(defn- add-apps-table
-  "Renames the existing transformation_activity table to apps and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/04_tasks.sql")
   (println "\t* updating the transformation_activity table to apps")
-  (exec-sql-statement "ALTER TABLE transformation_activity RENAME TO apps")
-  (alter-id-column-to-uuid "apps")
-  (exec-sql-statement "ALTER TABLE ONLY apps RENAME COLUMN integration_data_id TO integration_data_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY apps ADD COLUMN integration_data_id UUID"))
-
-;; cols to drop: transformation_task_id, transformation_step_id
-;; transformation_task_id -> app_id
-;; transformation_step_id > transformation_steps.id
-;; transformation_steps.transformation_id > transformations.id
-;; transformations.template_id -> task_id
-(defn- add-app-steps-table
-  "Renames the existing transformation_task_steps table to app_steps and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/05_apps.sql")
   (println "\t* updating the transformation_task_steps table to app_steps")
-  (exec-sql-statement "ALTER TABLE transformation_task_steps RENAME TO app_steps")
-  (exec-sql-statement "ALTER TABLE ONLY app_steps ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
-  (exec-sql-statement "ALTER TABLE ONLY app_steps RENAME COLUMN hid TO step")
-  (exec-sql-statement "ALTER TABLE ONLY app_steps ADD COLUMN app_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY app_steps ADD COLUMN task_id UUID"))
-
-;; cols to drop: id_v187
-(defn- alter-integration-data-table
-  "Updates columns in the existing integration_data table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/07_app_steps.sql")
   (println "\t* updating the integration_data table")
-  (exec-sql-statement "ALTER TABLE ONLY integration_data RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY integration_data ADD COLUMN id UUID DEFAULT (uuid_generate_v4())"))
-
-;; cols to drop: id_v187, user_id_v187, transformation_activity_id, comment_id_v187
-(defn- alter-ratings-table
-  "Updates columns in the existing ratings table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/09_integration_data.sql")
   (println "\t* updating the ratings table")
-  (exec-sql-statement "ALTER TABLE ONLY ratings RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY ratings ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
-  (exec-sql-statement "ALTER TABLE ONLY ratings RENAME COLUMN user_id TO user_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY ratings ADD COLUMN user_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY ratings ADD COLUMN app_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY ratings RENAME COLUMN comment_id TO comment_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY ratings ADD COLUMN comment_id UUID"))
-
-;; cols to drop: template_group_id, template_id
-(defn- add-app-category-app-table
-  "Renames the existing template_group_template table to app_category_app and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/10_ratings.sql")
   (println "\t* updating the template_group_template table to app_category_app")
-  (exec-sql-statement "ALTER TABLE template_group_template RENAME TO app_category_app")
-  (exec-sql-statement "ALTER TABLE ONLY app_category_app ADD COLUMN app_category_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY app_category_app ADD COLUMN app_id UUID"))
-
-;; cols to drop: id_v187
-(defn- alter-data-formats-table
-  "Updates columns in the existing data_formats table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/11_app_category_app.sql")
   (println "\t* updating the data_formats table")
-  (exec-sql-statement "ALTER TABLE ONLY data_formats RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY data_formats RENAME COLUMN guid TO id")
-  (exec-sql-statement "ALTER TABLE ONLY data_formats ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)"))
-
-;; cols to drop: hid, source, target
-(defn- add-workflow-io-maps-table
-  "Renames the existing input_output_mapping table to workflow_io_maps and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/12_data_formats.sql")
   (println "\t* updating the input_output_mapping table to workflow_io_maps")
-  (exec-sql-statement "ALTER TABLE input_output_mapping RENAME TO workflow_io_maps")
-  (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
-  (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN app_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN target_step UUID")
-  (exec-sql-statement "ALTER TABLE ONLY workflow_io_maps ADD COLUMN source_step UUID"))
-
-;; cols to drop: mapping_id_v187
-(defn- readd-input-output-mapping-table
-  "Renames the existing dataobject_mapping table to input_output_mapping and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/13_workflow_io_maps.sql")
   (println "\t* updating the dataobject_mapping table to input_output_mapping")
-  (exec-sql-statement "ALTER TABLE dataobject_mapping RENAME TO input_output_mapping")
-  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping RENAME COLUMN mapping_id TO mapping_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping ADD COLUMN mapping_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping RENAME COLUMN input TO input_v187")
-  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping RENAME COLUMN output TO output_v187")
-  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping ADD COLUMN input UUID")
-  (exec-sql-statement "ALTER TABLE ONLY input_output_mapping ADD COLUMN output UUID"))
-
-;; cols to drop: hid, info_type_v187, data_format_v187, multiplicity_v187, data_source_id_v187
-;; rename orderd?
-(defn- add-file-parameters-table
-  "Renames the existing dataobjects table to file_parameters and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/18_input_output_mapping.sql")
   (println "\t* updating the dataobjects table to file_parameters")
-  (exec-sql-statement "ALTER TABLE dataobjects RENAME TO file_parameters")
-  (exec-sql-statement "ALTER TABLE ONLY file_parameters RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY file_parameters ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
-  (exec-sql-statement "ALTER TABLE ONLY file_parameters RENAME COLUMN info_type TO info_type_v187")
-  (exec-sql-statement "ALTER TABLE ONLY file_parameters ADD COLUMN info_type UUID")
-  (exec-sql-statement "ALTER TABLE ONLY file_parameters RENAME COLUMN data_format TO data_format_v187")
-  (exec-sql-statement "ALTER TABLE ONLY file_parameters ADD COLUMN data_format UUID")
-  (exec-sql-statement "ALTER TABLE ONLY file_parameters RENAME COLUMN multiplicity TO multiplicity_v187")
-  (exec-sql-statement "ALTER TABLE ONLY file_parameters ADD COLUMN multiplicity UUID")
-  (exec-sql-statement "ALTER TABLE ONLY file_parameters RENAME COLUMN data_source_id TO data_source_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY file_parameters ADD COLUMN data_source_id  UUID"))
-
-;; cols to drop: id_v187, deployed_component_id
-(defn- add-tool-test-data-files-table
-  "Renames the existing deployed_component_data_files table to tool_test_data_files and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/14_file_parameters.sql")
   (println "\t* updating the deployed_component_data_files table to tool_test_data_files")
-  (exec-sql-statement "ALTER TABLE deployed_component_data_files RENAME TO tool_test_data_files")
-  (exec-sql-statement "ALTER TABLE ONLY tool_test_data_files RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tool_test_data_files ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
-  (exec-sql-statement "ALTER TABLE ONLY tool_test_data_files ADD COLUMN tool_id UUID"))
-
-;; cols to drop: hid
-(defn- alter-info-type-table
-  "Updates columns in the existing info_type table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/15_tool_test_data_files.sql")
   (println "\t* updating the info_type table")
-  (exec-sql-statement "ALTER TABLE ONLY info_type ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)"))
-
-;; cols to drop: hid
-(defn- alter-multiplicity-table
-  "Updates columns in the existing multiplicity table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/17_info_type.sql")
   (println "\t* updating the multiplicity table")
-  (exec-sql-statement "ALTER TABLE ONLY multiplicity ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)"))
-
-;; cols to drop: hid, property_type, validator, dataobject_id
-(defn- add-parameters-table
-  "Renames the existing property table to parameters and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/19_multiplicity.sql")
   (println "\t* updating the property table to parameters")
-  (exec-sql-statement "ALTER TABLE property RENAME TO parameters")
-  (alter-id-column-to-uuid "parameters")
-  (exec-sql-statement "ALTER TABLE ONLY parameters ADD COLUMN parameter_group_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY parameters ADD COLUMN parameter_type UUID")
-  (exec-sql-statement "ALTER TABLE ONLY parameters ADD COLUMN required boolean DEFAULT false")
-  (exec-sql-statement "ALTER TABLE ONLY parameters ADD COLUMN file_parameter_id UUID"))
-
-;; cols to drop: hid, group_type?
-(defn- add-parameter-groups-table
-  "Renames the existing property_group table to parameter_groups and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/24_parameters.sql")
   (println "\t* updating the property_group table to parameter_groups")
-  (exec-sql-statement "ALTER TABLE property_group RENAME TO parameter_groups")
-  (alter-id-column-to-uuid "parameter_groups")
-  (exec-sql-statement "ALTER TABLE ONLY parameter_groups ADD COLUMN task_id UUID"))
-
-(defn- add-parameter-values-table
-  "Adds the new parameter_values table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/25_parameter_groups.sql")
   (println "\t* adding the parameter_values table")
-  (load-sql-file "tables/25_parameter_values.sql"))
-
-;; cols to drop: hid, value_type_id_v187
-(defn- add-parameter-types-table
-  "Renames the existing property_type table to parameter_types and adds updated columns."
-  []
+  (load-sql-file "tables/25_parameter_values.sql")
   (println "\t* updating the property_type table to parameter_types")
-  (exec-sql-statement "ALTER TABLE property_type RENAME TO parameter_types")
-  (exec-sql-statement "ALTER TABLE ONLY parameter_types ALTER COLUMN id TYPE UUID USING"
-                      " CAST(regexp_replace(id, 'pt(.*)', '\\1') AS UUID)")
-  (exec-sql-statement "ALTER TABLE ONLY parameter_types RENAME COLUMN value_type_id TO value_type_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY parameter_types ADD COLUMN value_type_id UUID"))
-
-;; cols to drop: id_v187
-(defn- alter-users-table
-  "Updates columns in the existing users table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/27_parameter_types.sql")
   (println "\t* updating the users table")
-  (exec-sql-statement "ALTER TABLE ONLY users RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY users ADD COLUMN id UUID DEFAULT (uuid_generate_v4())"))
-
-;; cols to drop: hid, name, description, label, rule_type_v187
-(defn- add-validation-rules-table
-  "Renames the existing rule table to validation_rules and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/28_users.sql")
   (println "\t* updating the rule table to validation_rules")
-  (exec-sql-statement "ALTER TABLE rule RENAME TO validation_rules")
-  (alter-id-column-to-uuid "validation_rules")
-  (exec-sql-statement "ALTER TABLE ONLY validation_rules ADD COLUMN parameter_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY validation_rules RENAME COLUMN rule_type TO rule_type_v187")
-  (exec-sql-statement "ALTER TABLE ONLY validation_rules ADD COLUMN rule_type UUID"))
-
-;; cols to drop: hid, rule_id_v187
-(defn- add-validation-rule-arguments-table
-  "Renames the existing rule_argument table to validation_rule_arguments and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/29_validation_rules.sql")
   (println "\t* updating the rule_argument table to validation_rule_arguments")
-  (exec-sql-statement "ALTER TABLE rule_argument RENAME TO validation_rule_arguments")
-  (exec-sql-statement "ALTER TABLE ONLY validation_rule_arguments ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
-  (exec-sql-statement "ALTER TABLE ONLY validation_rule_arguments RENAME COLUMN rule_id TO rule_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY validation_rule_arguments ADD COLUMN rule_id UUID"))
-
-;; cols to drop: hid
-(defn- alter-rule-subtype-table
-  "Updates columns in the existing rule_subtype table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/30_validation_rule_arguments.sql")
   (println "\t* updating the rule_subtype table")
-  (exec-sql-statement "ALTER TABLE ONLY rule_subtype ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)"))
-
-;; cols to drop: hid
-(defn- alter-rule-type-table
-  "Updates columns in the existing rule_type table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/31_rule_subtype.sql")
   (println "\t* updating the rule_type table")
-  (exec-sql-statement "ALTER TABLE ONLY rule_type ALTER COLUMN id TYPE UUID USING"
-                      " CAST(regexp_replace(id, 'rt(.*)', '\\1') AS UUID)")
-  (exec-sql-statement "ALTER TABLE ONLY rule_type RENAME COLUMN rule_subtype_id TO rule_subtype_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY rule_type ADD COLUMN rule_subtype_id UUID"))
-
-;; cols to drop: rule_type_id_v187, value_type_id_v187
-(defn- alter-rule-type-value-type-table
-  "Updates columns in the existing rule_type_value_type table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/32_rule_type.sql")
   (println "\t* updating the rule_type_value_type table")
-  (exec-sql-statement "ALTER TABLE ONLY rule_type_value_type RENAME COLUMN rule_type_id TO rule_type_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY rule_type_value_type ADD COLUMN rule_type_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY rule_type_value_type RENAME COLUMN value_type_id TO value_type_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY rule_type_value_type ADD COLUMN value_type_id UUID"))
-
-;; cols to drop: transformation_activity_id, template_group_id
-(defn- alter-suggested_groups-table
-  "Updates columns in the existing suggested_groups table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/33_rule_type_value_type.sql")
   (println "\t* updating the suggested_groups table")
-  (exec-sql-statement "ALTER TABLE ONLY suggested_groups ADD COLUMN app_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY suggested_groups ADD COLUMN app_category_id UUID"))
-
-;; cols to drop: hid, parent_group_id, subgroup_id
-(defn- add-app-category-group-table
-  "Renames the existing template_group_group table to app_category_group and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/34_suggested_groups.sql")
   (println "\t* updating the template_group_group table to app_category_group")
-  (exec-sql-statement "ALTER TABLE template_group_group RENAME TO app_category_group")
-  (exec-sql-statement "ALTER TABLE ONLY app_category_group ADD COLUMN parent_category_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY app_category_group ADD COLUMN child_category_id UUID"))
+  (load-sql-file "conversions/c200_2014042401/tables/35_app_category_group.sql"))
 
 ;; cols to drop: id_v187, transformation_activity_id
 (defn- add-app-references-table
@@ -727,34 +498,7 @@
   []
   (println "Performing the conversion for" version)
   (drop-views)
-  (add-app-categories-table)
-  (alter-workspace-table)
-  (add-tools-table)
-  (add-tasks-table)
-  (add-apps-table)
-  (add-app-steps-table)
-  (alter-integration-data-table)
-  (alter-ratings-table)
-  (add-app-category-app-table)
-  (alter-data-formats-table)
-  (add-workflow-io-maps-table)
-  (readd-input-output-mapping-table)
-  (add-file-parameters-table)
-  (add-tool-test-data-files-table)
-  (alter-info-type-table)
-  (alter-multiplicity-table)
-  (add-parameters-table)
-  (add-parameter-groups-table)
-  (add-parameter-values-table)
-  (add-parameter-types-table)
-  (alter-users-table)
-  (add-validation-rules-table)
-  (add-validation-rule-arguments-table)
-  (alter-rule-subtype-table)
-  (alter-rule-type-table)
-  (alter-rule-type-value-type-table)
-  (alter-suggested_groups-table)
-  (add-app-category-group-table)
+  (run-table-conversions)
   (add-app-references-table)
   (alter-value-type-table)
   (alter-version-table)
