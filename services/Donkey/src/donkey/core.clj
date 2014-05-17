@@ -20,6 +20,7 @@
         [donkey.routes.filesystem]
         [donkey.routes.search]
         [donkey.routes.coge]
+        [donkey.routes.oauth]
         [donkey.auth.user-attributes]
         [donkey.util]
         [donkey.util.service]
@@ -61,6 +62,7 @@
    (secured-coge-routes)
    (secured-admin-routes)
    (secured-search-routes)
+   (secured-oauth-routes)
    (route/not-found (unrecognized-path-response))))
 
 (defn cas-store-user

@@ -262,8 +262,8 @@
      (if (config/agave-enabled)
        (DeHpcAppLister. (agave/de-agave-client-v1
                          (config/agave-base-url)
-                         (config/agave-user)
-                         (config/agave-pass)
+                         (config/agave-key)
+                         (config/agave-secret)
                          username
                          (config/agave-jobs-enabled)
                          (config/irods-home)))

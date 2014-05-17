@@ -20,7 +20,7 @@
 (defn masked-config
   "Returns a masked version of the Donkey config as a map."
   []
-  (cc/mask-config props :filters [#"(?:irods|agave)[-.](?:user|pass)"]))
+  (cc/mask-config props :filters [#"(?:irods|agave)[-.](?:user|pass|key|secret)"]))
 
 (cc/defprop-int listen-port
   "The port that donkey listens to."
@@ -541,15 +541,20 @@
   [props config-valid configs agave-enabled]
   "donkey.agave.base-url")
 
-(cc/defprop-str agave-user
-  "The username to use when authenticating to Agave."
+(cc/defprop-str agave-key
+  "The API key to use when authenticating to Agave."
   [props config-valid configs agave-enabled]
-  "donkey.agave.user")
+  "donkey.agave.key")
 
-(cc/defprop-str agave-pass
-  "The password to use when authenticating to Agave."
+(cc/defprop-str agave-secret
+  "The API secret to use when authenticating to Agave."
   [props config-valid configs agave-enabled]
-  "donkey.agave.pass")
+  "donkey.agave.secret")
+
+(cc/defprop-str agave-oauth-base
+  "The base URL for the Agave OAuth 2.0 endpoints."
+  [props config-valid configs agave-enabled]
+  "donkey.agave.oauth-base")
 
 (cc/defprop-str agave-callback-base
   "The base URL for receiving job status update callbacks from Agave."
@@ -610,7 +615,18 @@
 
 (defn- exception-filters
   []
-  (filter #(not (nil? %)) [(icat-password) (icat-user) (irods-pass) (irods-user) (agave-pass)]))
+  (filter #(not (nil? %))
+          [(icat-password) (icat-user) (irods-pass) (irods-user) (agave-key) (agave-secret)]))
+
+(defn- oauth-settings
+  [api-name api-key api-secret oauth-base]
+  {:api-name   api-name
+   :api-key    api-key
+   :api-secret api-secret
+   :oauth-base oauth-base})
+
+(def agave-oauth-settings
+  (memoize #(oauth-settings "agave" (agave-key) (agave-secret) (agave-oauth-base))))
 
 (defn load-config-from-file
   "Loads the configuration settings from a file."
@@ -619,9 +635,3 @@
   (cc/log-config props :filters [#"irods\.user" #"icat\.user" #"oauth\.pem"])
   (validate-config)
   (ce/register-filters (exception-filters)))
-
-(defn load-config-from-file?
-  "Returns true if Donkey should read the config from a file."
-  []
-  (and (System/getenv "IPLANT_CONF_LOAD_FILE")
-       (System/getenv "IPLANT_CONF_DIR")))
