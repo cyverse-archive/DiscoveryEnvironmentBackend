@@ -26,14 +26,6 @@
     (with-open [rdr (reader sql-file)]
       (dorun (map exec-sql-statement (sql-statements rdr))))))
 
-(defn- alter-id-column-to-uuid
-  [table]
-  (exec-sql-statement "ALTER TABLE ONLY "
-                      table
-                      "ALTER COLUMN id TYPE UUID USING"
-                      "CASE WHEN CHAR_LENGTH(id) < 36 THEN (uuid_generate_v4())"
-                      "ELSE CAST(id AS UUID) END"))
-
 ;; Drop constraints
 (defn- drop-all-constraints
   []
@@ -181,162 +173,41 @@
   (println "\t* updating the suggested_groups table")
   (load-sql-file "conversions/c200_2014042401/tables/34_suggested_groups.sql")
   (println "\t* updating the template_group_group table to app_category_group")
-  (load-sql-file "conversions/c200_2014042401/tables/35_app_category_group.sql"))
-
-;; cols to drop: id_v187, transformation_activity_id
-(defn- add-app-references-table
-  "Renames the existing transformation_activity_references table to app_references and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/35_app_category_group.sql")
   (println "\t* updating the transformation_activity_references table to app_references")
-  (exec-sql-statement "ALTER TABLE transformation_activity_references RENAME TO app_references")
-  (exec-sql-statement "ALTER TABLE ONLY app_references RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY app_references ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
-  (exec-sql-statement "ALTER TABLE ONLY app_references ADD COLUMN app_id UUID"))
-
-;; cols to drop: hid
-(defn- alter-value-type-table
-  "Updates columns in the existing value_type table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/40_app_references.sql")
   (println "\t* updating the value_type table")
-  (exec-sql-statement "ALTER TABLE ONLY value_type ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)"))
-
-(defn- alter-version-table
-  "Updates columns in the existing version table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/44_value_type.sql")
   (println "\t* updating the version table")
-  (exec-sql-statement "ALTER TABLE ONLY version DROP COLUMN id")
-  (exec-sql-statement "ALTER TABLE ONLY version ADD PRIMARY KEY (version)"))
-
-;; cols to drop: id_v187, created_by_v187, last_modified_by_v187
-(defn- alter-genome-reference-table
-  "Updates columns in the existing genome_reference table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/45_version.sql")
   (println "\t* updating the genome_reference table")
-  (exec-sql-statement "ALTER TABLE ONLY genome_reference RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY genome_reference RENAME COLUMN uuid TO id")
-  (exec-sql-statement "ALTER TABLE ONLY genome_reference ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)")
-  (exec-sql-statement "ALTER TABLE ONLY genome_reference RENAME COLUMN created_by TO created_by_v187")
-  (exec-sql-statement "ALTER TABLE ONLY genome_reference ADD COLUMN created_by UUID")
-  (exec-sql-statement "ALTER TABLE ONLY genome_reference RENAME COLUMN last_modified_by TO last_modified_by_v187")
-  (exec-sql-statement "ALTER TABLE ONLY genome_reference ADD COLUMN last_modified_by UUID"))
-
-;; cols to drop: id_v187, user_id_v187, collaborator_id_v187
-(defn- alter-collaborators-table
-  "Updates columns in the existing collaborators table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/46_genome_reference.sql")
   (println "\t* updating the collaborators table")
-  (exec-sql-statement "ALTER TABLE ONLY collaborators RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY collaborators RENAME COLUMN user_id TO user_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY collaborators ADD COLUMN user_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY collaborators RENAME COLUMN collaborator_id TO collaborator_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY collaborators ADD COLUMN collaborator_id UUID"))
-
-;; cols to drop: id_v187
-(defn- alter-data-source-table
-  "Updates columns in the existing data_source table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/47_collaborators.sql")
   (println "\t* updating the data_source table")
-  (exec-sql-statement "ALTER TABLE ONLY data_source RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY data_source RENAME COLUMN uuid TO id")
-  (exec-sql-statement "ALTER TABLE ONLY data_source ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)"))
-
-;; cols to drop: id_v187
-(defn- alter-tool-types-table
-  "Updates columns in the existing tool_types table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/48_data_source.sql")
   (println "\t* updating the tool_types table")
-  (exec-sql-statement "ALTER TABLE ONLY tool_types RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tool_types ADD COLUMN id UUID DEFAULT (uuid_generate_v4())"))
-
-;; cols to drop: tool_type_id_v187, property_type_id
-(defn- add-tool-type-parameter-type-table
-  "Renames the existing tool_type_property_type table to tool_type_parameter_type and adds updated columns."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/49_tool_types.sql")
   (println "\t* updating the tool_type_property_type table to tool_type_parameter_type")
-  (exec-sql-statement "ALTER TABLE tool_type_property_type RENAME TO tool_type_parameter_type")
-  (exec-sql-statement "ALTER TABLE ONLY tool_type_parameter_type RENAME COLUMN tool_type_id TO tool_type_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tool_type_parameter_type ADD COLUMN tool_type_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY tool_type_parameter_type ADD COLUMN parameter_type_id UUID"))
-
-;; cols to drop: id_v187
-(defn- alter-tool-architectures-table
-  "Updates columns in the existing tool_architectures table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/50_tool_type_parameter_type.sql")
   (println "\t* updating the tool_architectures table")
-  (exec-sql-statement "ALTER TABLE ONLY tool_architectures RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tool_architectures ADD COLUMN id UUID DEFAULT (uuid_generate_v4())"))
-
-;; cols to drop: id_v187, requestor_id_v187, tool_architecture_id_v187, deployed_component_id
-(defn- alter-tool-requests-table
-  "Updates columns in the existing tool_requests table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/52_tool_architectures.sql")
   (println "\t* updating the tool_requests table")
-  (exec-sql-statement "ALTER TABLE ONLY tool_requests RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tool_requests RENAME COLUMN uuid TO id")
-  (exec-sql-statement "ALTER TABLE ONLY tool_requests RENAME COLUMN requestor_id TO requestor_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tool_requests ADD COLUMN requestor_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY tool_requests RENAME COLUMN tool_architecture_id TO tool_architecture_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tool_requests ADD COLUMN tool_architecture_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY tool_requests ADD COLUMN tool_id UUID"))
-
-;; cols to drop: id_v187, tool_request_id_v187, updater_id_v187
-(defn- alter-tool-request-statuses-table
-  "Updates columns in the existing tool_request_statuses table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/53_tool_requests.sql")
   (println "\t* updating the tool_request_statuses table")
-  (exec-sql-statement "ALTER TABLE ONLY tool_request_statuses RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tool_request_statuses ADD COLUMN id UUID DEFAULT (uuid_generate_v4())")
-  (exec-sql-statement "ALTER TABLE ONLY tool_request_statuses RENAME COLUMN tool_request_id TO tool_request_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tool_request_statuses ADD COLUMN tool_request_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY tool_request_statuses RENAME COLUMN updater_id TO updater_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY tool_request_statuses ADD COLUMN updater_id UUID"))
-
-;; cols to drop: user_id_v187
-(defn- alter-logins-table
-  "Updates columns in the existing logins table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/54_tool_request_statuses.sql")
   (println "\t* updating the logins table")
-  (exec-sql-statement "ALTER TABLE ONLY logins RENAME COLUMN user_id TO user_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY logins ADD COLUMN user_id UUID"))
-
-;; cols to drop: id_v187
-(defn- alter-job_types-table
-  "Updates columns in the existing job_types table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/55_logins.sql")
   (println "\t* updating the job_types table")
-  (exec-sql-statement "ALTER TABLE ONLY job_types RENAME COLUMN id TO id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY job_types ADD COLUMN id UUID DEFAULT (uuid_generate_v4())"))
-
-;; cols to drop: job_type_id_v187, user_id_v187
-(defn- alter-jobs-table
-  "Updates columns in the existing jobs table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/56_job_types.sql")
   (println "\t* updating the jobs table")
-  (exec-sql-statement "ALTER TABLE ONLY jobs RENAME COLUMN job_type_id TO job_type_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY jobs ADD COLUMN job_type_id UUID")
-  (exec-sql-statement "ALTER TABLE ONLY jobs RENAME COLUMN user_id TO user_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY jobs ADD COLUMN user_id UUID"))
-
-(defn- alter-user-preferences-table
-  "Updates columns in the existing user_preferences table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/57_jobs.sql")
   (println "\t* updating the user_preferences table")
-  (exec-sql-statement "ALTER TABLE ONLY user_preferences RENAME COLUMN user_id TO user_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY user_preferences ADD COLUMN user_id UUID"))
-
-(defn- alter-user-sessions-table
-  "Updates columns in the existing user_sessions table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/63_user_preferences.sql")
   (println "\t* updating the user_sessions table")
-  (exec-sql-statement "ALTER TABLE ONLY user_sessions RENAME COLUMN user_id TO user_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY user_sessions ADD COLUMN user_id UUID"))
-
-(defn- alter-user-saved-searches-table
-  "Updates columns in the existing user_saved_searches table."
-  []
+  (load-sql-file "conversions/c200_2014042401/tables/64_user_sessions.sql")
   (println "\t* updating the user_saved_searches table")
-  (exec-sql-statement "ALTER TABLE ONLY user_saved_searches RENAME COLUMN user_id TO user_id_v187")
-  (exec-sql-statement "ALTER TABLE ONLY user_saved_searches ADD COLUMN user_id UUID"))
+  (load-sql-file "conversions/c200_2014042401/tables/66_user_saved_searches.sql"))
 
 
 ;; Update new UUID columns.
@@ -499,23 +370,6 @@
   (println "Performing the conversion for" version)
   (drop-views)
   (run-table-conversions)
-  (add-app-references-table)
-  (alter-value-type-table)
-  (alter-version-table)
-  (alter-genome-reference-table)
-  (alter-collaborators-table)
-  (alter-data-source-table)
-  (alter-tool-types-table)
-  (add-tool-type-parameter-type-table)
-  (alter-tool-architectures-table)
-  (alter-tool-requests-table)
-  (alter-tool-request-statuses-table)
-  (alter-logins-table)
-  (alter-job_types-table)
-  (alter-jobs-table)
-  (alter-user-preferences-table)
-  (alter-user-sessions-table)
-  (alter-user-saved-searches-table)
   (update-app-category-uuids)
   (update-workspace-uuids)
   (update-tool-uuids)
