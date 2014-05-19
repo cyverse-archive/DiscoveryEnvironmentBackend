@@ -22,7 +22,7 @@
   "Loads a single SQL file into the database."
   [sql-file-path]
   (let [sql-file (fs/file sql-file-path)]
-    (println (str "Loading " (.getName sql-file) "..."))
+    (println (str "\tLoading " (.getName sql-file) "..."))
     (with-open [rdr (reader sql-file)]
       (dorun (map exec-sql-statement (sql-statements rdr))))))
 
@@ -212,127 +212,28 @@
 
 ;; Update new UUID columns.
 
-(defn- update-app-category-uuids
+(defn- run-uuid-conversions
   []
   (println "\t* updating app_categories uuid foreign keys...")
-  (exec-sql-statement "UPDATE workspace SET root_category_id ="
-                      "(SELECT ac.id FROM app_categories ac WHERE root_analysis_group_id = ac.hid)")
-  (exec-sql-statement "UPDATE app_category_app SET app_category_id ="
-                      "(SELECT ac.id FROM app_categories ac WHERE template_group_id = ac.hid)")
-  (exec-sql-statement "UPDATE suggested_groups SET app_category_id ="
-                      "(SELECT ac.id FROM app_categories ac WHERE template_group_id = ac.hid)")
-  (exec-sql-statement "UPDATE app_category_group SET parent_category_id ="
-                      "(SELECT ac.id FROM app_categories ac WHERE parent_group_id = ac.hid)")
-  (exec-sql-statement "UPDATE app_category_group SET child_category_id ="
-                      "(SELECT ac.id FROM app_categories ac WHERE subgroup_id = ac.hid)"))
-
-(defn- update-workspace-uuids
-  []
+  (load-sql-file "conversions/c200_2014042401/uuids/01_app_categories.sql")
   (println "\t* updating workspace uuid foreign keys...")
-  (exec-sql-statement "UPDATE app_categories SET workspace_id ="
-                      "(SELECT w.id FROM workspace w WHERE workspace_id_v187 = w.id_v187)"))
-
-(defn- update-tool-uuids
-  []
+  (load-sql-file "conversions/c200_2014042401/uuids/02_workspace.sql")
   (println "\t* updating tools uuid foreign keys...")
-  (exec-sql-statement "UPDATE tasks SET tool_id ="
-                      "(SELECT t.id FROM tools t WHERE component_id = t.id_v187)")
-  (exec-sql-statement "UPDATE tool_test_data_files SET tool_id ="
-                      "(SELECT t.id FROM tools t WHERE deployed_component_id = t.hid)")
-  (exec-sql-statement "UPDATE tool_requests SET tool_id ="
-                      "(SELECT t.id FROM tools t WHERE deployed_component_id = t.hid)"))
-
-(defn- update-task-uuids
-  []
+  (load-sql-file "conversions/c200_2014042401/uuids/03_tools.sql")
   (println "\t* updating tasks uuid foreign keys...")
-  ;; Add temporary indexes to help speed up the conversion.
-  (exec-sql-statement "CREATE INDEX tasks_id_v187_idx ON tasks(id_v187)")
-  (exec-sql-statement "CREATE INDEX app_steps_transformation_step_id_idx ON app_steps(transformation_step_id)")
-  (exec-sql-statement "CREATE INDEX transformations_template_id_idx ON transformations(template_id)")
-  (exec-sql-statement "CREATE INDEX transformation_steps_transformation_id_idx ON transformation_steps(transformation_id)")
-  (exec-sql-statement "CREATE INDEX template_property_group_property_group_id_idx ON template_property_group(property_group_id)")
-  (exec-sql-statement "UPDATE app_steps SET task_id ="
-                      "(SELECT t.id FROM tasks t"
-                      " LEFT JOIN transformations tx ON tx.template_id = t.id_v187"
-                      " LEFT JOIN transformation_steps ts ON ts.transformation_id = tx.id"
-                      " WHERE transformation_step_id = ts.id)")
-  (exec-sql-statement "UPDATE parameter_groups SET task_id ="
-                      "(SELECT t.id FROM tasks t"
-                      " LEFT JOIN template_property_group tgt ON tgt.template_id = t.hid"
-                      " WHERE property_group_id = parameter_groups.hid)")
-  ;; Drop temporary indexes.
-  (exec-sql-statement "DROP INDEX tasks_id_v187_idx")
-  (exec-sql-statement "DROP INDEX app_steps_transformation_step_id_idx")
-  (exec-sql-statement "DROP INDEX transformations_template_id_idx")
-  (exec-sql-statement "DROP INDEX transformation_steps_transformation_id_idx")
-  (exec-sql-statement "DROP INDEX template_property_group_property_group_id_idx"))
-
-;; workflow_io_maps needs to be done after its other cols have been populated.
-(defn- update-app-uuids
-  []
+  (load-sql-file "conversions/c200_2014042401/uuids/04_tasks.sql")
   (println "\t* updating apps uuid foreign keys...")
-  (exec-sql-statement "UPDATE app_steps SET app_id ="
-                      "(SELECT a.id FROM apps a WHERE transformation_task_id = a.hid)")
-  (exec-sql-statement "UPDATE ratings SET app_id ="
-                      "(SELECT a.id FROM apps a WHERE transformation_activity_id = a.hid)")
-  (exec-sql-statement "UPDATE app_category_app SET app_id ="
-                      "(SELECT a.id FROM apps a WHERE template_id = a.hid)")
-  (exec-sql-statement "UPDATE workflow_io_maps m SET app_id ="
-                      "(SELECT a.id FROM apps a"
-                      " LEFT JOIN transformation_activity_mappings tm"
-                      " ON tm.transformation_activity_id = a.hid"
-                      " WHERE m.hid = tm.mapping_id)")
-  (exec-sql-statement "UPDATE suggested_groups SET app_id ="
-                      "(SELECT a.id FROM apps a WHERE transformation_activity_id = a.hid)")
-  (exec-sql-statement "UPDATE app_references SET app_id ="
-                      "(SELECT a.id FROM apps a WHERE transformation_activity_id = a.hid)"))
-
-(defn- update-app-steps-uuids
-  []
+  (load-sql-file "conversions/c200_2014042401/uuids/05_apps.sql")
   (println "\t* updating app_steps uuid foreign keys...")
-  (exec-sql-statement "UPDATE workflow_io_maps SET source_step ="
-                      "(SELECT step.id FROM app_steps step"
-                      " LEFT JOIN transformation_steps ts ON ts.id = step.transformation_step_id"
-                      " WHERE source = ts.id)")
-  (exec-sql-statement "UPDATE workflow_io_maps SET target_step ="
-                      "(SELECT step.id FROM app_steps step"
-                      " LEFT JOIN transformation_steps ts ON ts.id = step.transformation_step_id"
-                      " WHERE target = ts.id)"))
-
-(defn- update-integration-data-uuids
-  []
+  (load-sql-file "conversions/c200_2014042401/uuids/07_app_steps.sql")
   (println "\t* updating integration_data uuid foreign keys...")
-  (exec-sql-statement "UPDATE tools SET integration_data_id ="
-                      "(SELECT i.id FROM integration_data i WHERE integration_data_id_v187 = i.id_v187)")
-  (exec-sql-statement "UPDATE apps SET integration_data_id ="
-                      "(SELECT i.id FROM integration_data i WHERE integration_data_id_v187 = i.id_v187)"))
-
-(defn- update-data-formats-uuids
-  []
+  (load-sql-file "conversions/c200_2014042401/uuids/09_integration_data.sql")
   (println "\t* updating data_formats uuid foreign keys...")
-  (exec-sql-statement "UPDATE file_parameters SET data_format ="
-                      "(SELECT d.id FROM data_formats d WHERE data_format_v187 = d.id_v187)"))
-
-(defn- update-workflow-io-maps-uuids
-  []
+  (load-sql-file "conversions/c200_2014042401/uuids/12_data_formats.sql")
   (println "\t* updating workflow_io_maps uuid foreign keys...")
-  (exec-sql-statement "UPDATE input_output_mapping SET mapping_id ="
-                      "(SELECT id FROM workflow_io_maps"
-                      " WHERE hid = mapping_id_v187)"))
-
-(defn- update-file-parameters-uuids
-  []
+  (load-sql-file "conversions/c200_2014042401/uuids/13_workflow_io_maps.sql")
   (println "\t* updating file_parameters uuid foreign keys...")
-  (exec-sql-statement "UPDATE parameters SET file_parameter_id ="
-                      "(SELECT id FROM file_parameters"
-                      " WHERE hid = dataobject_id)")
-  (exec-sql-statement "UPDATE input_output_mapping SET input ="
-                      "(SELECT id FROM file_parameters"
-                      " WHERE id_v187 = input_v187)")
-  (exec-sql-statement "UPDATE input_output_mapping SET output ="
-                      "(SELECT id FROM file_parameters"
-                      " WHERE id_v187 = output_v187)")
-  (exec-sql-statement "DELETE FROM input_output_mapping WHERE input IS NULL OR output IS NULL"))
+  (load-sql-file "conversions/c200_2014042401/uuids/14_file_parameters.sql"))
 
 (defn- re-add-constraints
   []
@@ -370,16 +271,7 @@
   (println "Performing the conversion for" version)
   (drop-views)
   (run-table-conversions)
-  (update-app-category-uuids)
-  (update-workspace-uuids)
-  (update-tool-uuids)
-  (update-task-uuids)
-  (update-app-uuids)
-  (update-app-steps-uuids)
-  (update-integration-data-uuids)
-  (update-data-formats-uuids)
-  (update-workflow-io-maps-uuids)
-  (update-file-parameters-uuids)
+  (run-uuid-conversions)
   (drop-all-constraints)
   (re-add-constraints)
   (add-app-category-listing-view)
