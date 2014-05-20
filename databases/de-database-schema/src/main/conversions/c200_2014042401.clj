@@ -106,14 +106,9 @@
 ;; 43_validator_rule
 
 (defn- drop-views
-  "Drops the old views."
   []
-  (println "\t* droping views...")
-  (exec-sql-statement "DROP VIEW analysis_group_listing")
-  (exec-sql-statement "DROP VIEW analysis_job_types")
-  (exec-sql-statement "DROP VIEW analysis_listing")
-  (exec-sql-statement "DROP VIEW deployed_component_listing")
-  (exec-sql-statement "DROP VIEW rating_listing"))
+  (println "\t* droping old views...")
+  (load-sql-file "conversions/c200_2014042401/drop_views.sql"))
 
 (defn- run-table-conversions
   "Loads and runs SQL files containing table and column conversions."
@@ -240,28 +235,16 @@
   (println "\t* re-adding constraints")
   (load-sql-file "tables/99_constraints.sql"))
 
-(defn- add-app-category-listing-view
+(defn- add-new-views
   []
   (println "\t* adding app_category_listing view...")
-  (load-sql-file "views/01_app_category_listing.sql"))
-
-(defn- add-app-job-types-view
-  []
+  (load-sql-file "views/01_app_category_listing.sql")
   (println "\t* adding app_job_types view...")
-  (load-sql-file "views/02_app_job_types.sql"))
-
-(defn- add-app-listing-view
-  []
+  (load-sql-file "views/02_app_job_types.sql")
   (println "\t* adding app_listing view...")
-  (load-sql-file "views/03_app_listing.sql"))
-
-(defn- add-tool-listing-view
-  []
+  (load-sql-file "views/03_app_listing.sql")
   (println "\t* adding tool_listing view...")
-  (load-sql-file "views/04_tool_listing.sql"))
-
-(defn- add-rating-listing-view
-  []
+  (load-sql-file "views/04_tool_listing.sql")
   (println "\t* adding rating_listing view...")
   (load-sql-file "views/05_rating_listing.sql"))
 
@@ -274,8 +257,4 @@
   (run-uuid-conversions)
   (drop-all-constraints)
   (re-add-constraints)
-  (add-app-category-listing-view)
-  (add-app-job-types-view)
-  (add-app-listing-view)
-  (add-tool-listing-view)
-  (add-rating-listing-view))
+  (add-new-views))
