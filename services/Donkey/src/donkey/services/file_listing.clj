@@ -3,7 +3,8 @@
         [donkey.clients.nibblonian]
         [donkey.util.config]
         [donkey.util.service :only [decode-stream required-param success-response]]
-        [slingshot.slingshot :only [throw+]])
+        [slingshot.slingshot :only [throw+]]
+        [donkey.auth.user-attributes])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
@@ -14,7 +15,7 @@
   [base]
   (log/debug "generating output directory: base =" base)
   (let [path (gen-output-dir base)]
-    (prefs/save-default-output-dir path)
+    (prefs/save-default-output-dir (:username current-user) path)
     path))
 
 (defn- validate-output-dir
