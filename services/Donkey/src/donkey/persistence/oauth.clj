@@ -6,7 +6,7 @@
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as ce]
             [donkey.util.db :as db])
-  (:import [java.util Date]))
+  (:import [java.sql Timestamp]))
 
 (defn- validate-token-type
   "Verifies that the token type is supported."
@@ -45,7 +45,7 @@
 (defn- determine-expiration-time
   "Determines a token expiration time given its lifetime in seconds."
   [lifetime]
-  (Date. (+ (System/currentTimeMillis) (* 1000 lifetime))))
+  (Timestamp. (+ (System/currentTimeMillis) (* 1000 lifetime))))
 
 (defn- extract-token-info
   "Extracts information from a token, performing conversions where necessary."
