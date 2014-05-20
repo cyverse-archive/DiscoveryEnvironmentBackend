@@ -165,7 +165,7 @@
   "Gets the path to the user's default output folder from the user's preferences."
   []
   (let [user (:username current-user)
-        retv (extract-default-output-dir (user-prefs user))
+        retv (extract-default-output-dir (cheshire/decode (user-prefs user) true))
         dpth (:path retv)]
     retv))
 
