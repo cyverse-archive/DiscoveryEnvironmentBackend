@@ -8,11 +8,13 @@
 
 (defn get-access-token
   "Receives an OAuth authorization code and obtains an access token."
-  [{:keys [api-name api-key api-secret oauth-base]} {code :code}]
+  [{:keys [api-name api-key api-secret oauth-base]} {code :code redirect-uri :redirect_uri}]
   (-> (http/post (str (curl/url oauth-base "token"))
                  {:basic-auth  [api-key api-secret]
-                  :form-params {:grant_type "authorization_code"
-                                :code       code}
+                  :form-params {:grant_type   "authorization_code"
+                                :code         code
+                                :redirect_uri redirect-uri}
                   :as          :stream})
+      (:body)
       (service/decode-json)
       (op/store-access-token api-name (:username current-user))))
