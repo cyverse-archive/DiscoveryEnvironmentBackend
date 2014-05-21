@@ -6,6 +6,5 @@ SET search_path = public, pg_catalog;
 CREATE TABLE metadata_templates (
     id uuid NOT NULL,
     name varchar(64) NOT NULL,
-    deleted boolean DEFAULT FALSE NOT NULL,
-    PRIMARY KEY (id)
+    deleted boolean DEFAULT FALSE NOT NULL
 );

@@ -241,6 +241,90 @@ ALTER TABLE ONLY workspace
     PRIMARY KEY (id);
 
 --
+-- Primary Key for the version table.
+--
+ALTER TABLE ONLY version
+    ADD CONSTRAINT version_pkey
+    PRIMARY KEY (version);
+
+--
+-- Primary Key for the tool_types table.
+--
+ALTER TABLE ONLY tool_types
+    ADD CONSTRAINT tool_types_pkey
+    PRIMARY KEY (id);
+
+--
+-- Primary Key for the tool_request_status_codes table.
+--
+ALTER TABLE ONLY tool_request_status_codes
+    ADD CONSTRAINT tool_request_status_codes_pkey
+    PRIMARY KEY (id);
+
+--
+-- Primary Key for the tool_architectures table.
+--
+ALTER TABLE ONLY tool_architectures
+    ADD CONSTRAINT tool_architectures_pkey
+    PRIMARY KEY (id);
+
+--
+-- Primary Key for the tool_requests table.
+--
+ALTER TABLE ONLY tool_requests
+    ADD CONSTRAINT tool_requests_pkey
+    PRIMARY KEY (id);
+
+--
+-- Primary Key for the tool_request_statuses table.
+--
+ALTER TABLE ONLY tool_request_statuses
+    ADD CONSTRAINT tool_request_statuses_pkey
+    PRIMARY KEY (id);
+
+--
+-- Primary Key for the job_types table.
+--
+ALTER TABLE ONLY job_types
+    ADD CONSTRAINT job_types_pkey
+    PRIMARY KEY (id);
+
+--
+-- Primary Key for the jobs table.
+--
+ALTER TABLE ONLY jobs
+    ADD CONSTRAINT jobs_pkey
+    PRIMARY KEY (id);
+
+--
+-- Primary Key for the metadata_value_types table.
+--
+ALTER TABLE ONLY metadata_value_types
+    ADD CONSTRAINT metadata_value_types_pkey
+    PRIMARY KEY (id);
+
+--
+-- Primary Key for the metadata_templates table.
+--
+ALTER TABLE ONLY metadata_templates
+    ADD CONSTRAINT metadata_templates_pkey
+    PRIMARY KEY (id);
+
+--
+-- Primary Key for the metadata_attributes table.
+--
+ALTER TABLE ONLY metadata_attributes
+    ADD CONSTRAINT metadata_attributes_pkey
+    PRIMARY KEY (id);
+
+--
+-- Primary Key for the tree_urls table.
+--
+ALTER TABLE ONLY tree_urls
+    ADD CONSTRAINT tree_urls_pkey
+    PRIMARY KEY (id);
+
+--
 -- Name: input_output_mapping_mapping_id_fk; Type: FK CONSTRAINT; Schema:
 -- public; Owner: de
 --

@@ -7,8 +7,7 @@ CREATE TABLE tool_request_status_codes (
     id UUID NOT NULL,
     name VARCHAR(64) NOT NULL,
     description VARCHAR(128) NOT NULL,
-    email_template VARCHAR(64),
-    PRIMARY KEY(id)
+    email_template VARCHAR(64)
 );
 
 --

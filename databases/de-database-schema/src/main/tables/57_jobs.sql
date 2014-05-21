@@ -14,6 +14,5 @@ CREATE TABLE jobs (
     status character varying(64) NOT NULL,
     deleted boolean DEFAULT FALSE NOT NULL,
     job_type_id uuid NOT NULL,
-    user_id uuid NOT NULL,
-    PRIMARY KEY (id)
+    user_id uuid NOT NULL
 );

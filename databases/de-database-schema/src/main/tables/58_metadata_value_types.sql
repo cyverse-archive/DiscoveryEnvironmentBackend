@@ -5,6 +5,5 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE metadata_value_types (
     id uuid NOT NULL,
-    name varchar(64) NOT NULL,
-    PRIMARY KEY (id)
+    name varchar(64) NOT NULL
 );

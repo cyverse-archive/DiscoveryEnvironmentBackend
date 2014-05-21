@@ -5,6 +5,5 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE version (
     version character varying(20) NOT NULL,
-    applied timestamp DEFAULT now(),
-    PRIMARY KEY (version)
+    applied timestamp DEFAULT now()
 );

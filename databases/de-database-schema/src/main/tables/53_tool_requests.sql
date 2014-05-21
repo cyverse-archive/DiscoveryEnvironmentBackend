@@ -19,6 +19,5 @@ CREATE TABLE tool_requests (
     instructions TEXT NOT NULL,
     additional_info TEXT,
     additional_data_file TEXT,
-    tool_id UUID,
-    PRIMARY KEY(id)
+    tool_id UUID
 );

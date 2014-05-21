@@ -9,6 +9,5 @@ CREATE TABLE tool_request_statuses (
     tool_request_status_code_id UUID NOT NULL,
     date_assigned TIMESTAMP DEFAULT now() NOT NULL,
     updater_id UUID NOT NULL,
-    comments TEXT,
-    PRIMARY KEY(id)
+    comments TEXT
 );

@@ -7,6 +7,5 @@ CREATE TABLE tool_types (
     id uuid NOT NULL,
     name varchar(50) UNIQUE NOT NULL,
     label varchar(128) NOT NULL,
-    description varchar(256),
-    PRIMARY KEY(id)
+    description varchar(256)
 );
