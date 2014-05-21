@@ -13,3 +13,7 @@ ALTER TABLE ONLY parameter_groups
     END;
 ALTER TABLE ONLY parameter_groups ADD COLUMN task_id UUID;
 
+WITH dups AS (SELECT id, COUNT(hid) FROM parameter_groups GROUP BY id)
+  UPDATE parameter_groups SET id = (uuid_generate_v4())
+    WHERE id IN (SELECT id FROM dups WHERE count > 1);
+

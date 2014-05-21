@@ -16,3 +16,7 @@ ALTER TABLE ONLY parameters ADD COLUMN parameter_type UUID;
 ALTER TABLE ONLY parameters ADD COLUMN required boolean DEFAULT false;
 ALTER TABLE ONLY parameters ADD COLUMN file_parameter_id UUID;
 
+WITH dups AS (SELECT id, COUNT(hid) FROM parameters GROUP BY id)
+  UPDATE parameters SET id = (uuid_generate_v4())
+    WHERE id IN (SELECT id FROM dups WHERE count > 1);
+
