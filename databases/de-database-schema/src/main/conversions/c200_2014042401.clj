@@ -108,6 +108,7 @@
   (println "\t* droping old views...")
   (load-sql-file "conversions/c200_2014042401/drop_views.sql"))
 
+;; Rename or add new tables and columns.
 (defn- run-table-conversions
   "Loads and runs SQL files containing table and column conversions."
   []
@@ -204,7 +205,6 @@
 
 
 ;; Update new UUID columns.
-
 (defn- run-uuid-conversions
   []
   (println "\t* updating app_categories uuid foreign keys...")
@@ -226,7 +226,37 @@
   (println "\t* updating workflow_io_maps uuid foreign keys...")
   (load-sql-file "conversions/c200_2014042401/uuids/13_workflow_io_maps.sql")
   (println "\t* updating file_parameters uuid foreign keys...")
-  (load-sql-file "conversions/c200_2014042401/uuids/14_file_parameters.sql"))
+  (load-sql-file "conversions/c200_2014042401/uuids/14_file_parameters.sql")
+  (println "\t* updating info_type uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/17_info_type.sql")
+  (println "\t* updating multiplicity uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/19_multiplicity.sql")
+  (println "\t* updating parameters uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/24_parameters.sql")
+  (println "\t* updating parameter_groups uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/25_parameter_groups.sql")
+  (println "\t* updating parameter_types uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/27_parameter_types.sql")
+  (println "\t* updating users uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/28_users.sql")
+  (println "\t* updating validation_rules uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/29_validation_rules.sql")
+  (println "\t* updating rule_subtype uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/31_rule_subtype.sql")
+  (println "\t* updating rule_type uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/32_rule_type.sql")
+  (println "\t* updating value_type uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/44_value_type.sql")
+  (println "\t* updating data_source uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/48_data_source.sql")
+  (println "\t* updating tool_types uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/49_tool_types.sql")
+  (println "\t* updating tool_architectures uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/52_tool_architectures.sql")
+  (println "\t* updating tool_requests uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/53_tool_requests.sql")
+  (println "\t* updating job_types uuid foreign keys...")
+  (load-sql-file "conversions/c200_2014042401/uuids/56_job_types.sql"))
 
 (defn- re-add-constraints
   []
