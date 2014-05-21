@@ -13,3 +13,5 @@ ALTER TABLE ONLY app_categories ALTER COLUMN id TYPE UUID USING CAST(id AS UUID)
 ALTER TABLE ONLY app_categories RENAME COLUMN workspace_id TO workspace_id_v187;
 ALTER TABLE ONLY app_categories ADD COLUMN workspace_id UUID;
 
+UPDATE app_categories SET id = (uuid_generate_v4())
+  WHERE id IS NULL;
