@@ -22,7 +22,7 @@
 
 (defn- replace-access-token
   "Replaces an existing access token in the database."
-  [api-name username token-type expires-at refresh-token access-token]
+  [api-name username expires-at refresh-token access-token]
   (with-db db/de
     (update :access_tokens
             (set-fields {:token         access-token
@@ -33,7 +33,7 @@
 
 (defn- insert-access-token
   "Inserts a new access token into the database."
-  [api-name username token-type expires-at refresh-token access-token]
+  [api-name username expires-at refresh-token access-token]
   (with-db db/de
     (insert :access_tokens
             (values {:webapp        api-name
@@ -46,14 +46,6 @@
   "Determines a token expiration time given its lifetime in seconds."
   [lifetime]
   (Timestamp. (+ (System/currentTimeMillis) (* 1000 lifetime))))
-
-(defn- extract-token-info
-  "Extracts information from a token, performing conversions where necessary."
-  [token-info]
-  [(:token_type token-info)
-   (determine-expiration-time (:expires_in token-info))
-   (:refresh_token token-info)
-   (:access_token token-info)])
 
 (defn get-access-token
   "Retrieves an access code from the database."
@@ -75,9 +67,8 @@
 
 (defn store-access-token
   "Stores information about an OAuth access token in the database."
-  [token-info api-name username]
-  (let [[token-type expires-at refresh-token access-token] (extract-token-info token-info)]
-    (validate-token-type (:token_type token-info))
-    (if (has-access-token api-name username)
-      (replace-access-token api-name username token-type expires-at refresh-token access-token)
-      (insert-access-token api-name username token-type expires-at refresh-token access-token))))
+  [api-name username {:keys [token-type expires-at refresh-token access-token]}]
+  (validate-token-type token-type)
+  (if (has-access-token api-name username)
+    (replace-access-token api-name username expires-at refresh-token access-token)
+    (insert-access-token api-name username expires-at refresh-token access-token)))

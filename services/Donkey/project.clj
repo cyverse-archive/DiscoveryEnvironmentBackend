@@ -15,6 +15,7 @@
                  [org.clojure/data.codec "0.1.0"]
                  [org.clojure/java.classpath "0.2.2"]
                  [org.apache.tika/tika-core "1.4"]
+                 [org.iplantc/authy "3.1.5"]
                  [org.iplantc/clj-cas "3.1.5"]
                  [org.iplantc/clj-jargon "3.1.5"
                   :exclusions [[xerces/xmlParserAPIs]

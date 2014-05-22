@@ -1,6 +1,7 @@
 (ns donkey.util.config
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.config :as cc]
+  (:require [cemerick.url :as curl]
+            [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]
             [clojure.core.memoize :as memo]
             [clj-jargon.init :as jg]))
@@ -371,17 +372,17 @@
 
 (def jargon-cfg
   (memo/memo
-    #(jg/init
-       (irods-host)
-       (irods-port)
-       (irods-user)
-       (irods-pass)
-       (irods-home)
-       (irods-zone)
-       (irods-resc)
-       :max-retries (irods-max-retries)
-       :retry-sleep (irods-retry-sleep)
-       :use-trash   (irods-use-trash))))
+   #(jg/init
+     (irods-host)
+     (irods-port)
+     (irods-user)
+     (irods-pass)
+     (irods-home)
+     (irods-zone)
+     (irods-resc)
+     :max-retries (irods-max-retries)
+     :retry-sleep (irods-retry-sleep)
+     :use-trash   (irods-use-trash))))
 ;;; End iRODS configuration
 
 ;;; ICAT connection information
@@ -556,6 +557,11 @@
   [props config-valid configs agave-enabled]
   "donkey.agave.oauth-base")
 
+(cc/defprop-str agave-redirect-uri
+  "The redirect URI used after Agave authorization."
+  [props config-valid configs agave-enabled]
+  "donkey.agave.redirect-uri")
+
 (cc/defprop-str agave-callback-base
   "The base URL for receiving job status update callbacks from Agave."
   [props config-valid configs #(and (agave-enabled) (agave-jobs-enabled))]
@@ -619,14 +625,21 @@
           [(icat-password) (icat-user) (irods-pass) (irods-user) (agave-key) (agave-secret)]))
 
 (defn- oauth-settings
-  [api-name api-key api-secret oauth-base]
-  {:api-name   api-name
-   :api-key    api-key
-   :api-secret api-secret
-   :oauth-base oauth-base})
+  [api-name api-key api-secret token-uri redirect-uri]
+  {:api-name      api-name
+   :client-key    api-key
+   :client-secret api-secret
+   :token-uri     token-uri
+   :redirect-uri  redirect-uri})
 
 (def agave-oauth-settings
-  (memoize #(oauth-settings "agave" (agave-key) (agave-secret) (agave-oauth-base))))
+  (memoize
+   #(oauth-settings
+     "agave"
+     (agave-key)
+     (agave-secret)
+     (str (curl/url (agave-oauth-base) "token"))
+     (str (agave-redirect-uri)))))
 
 (defn load-config-from-file
   "Loads the configuration settings from a file."
