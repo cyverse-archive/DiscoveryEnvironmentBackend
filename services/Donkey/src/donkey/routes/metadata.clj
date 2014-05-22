@@ -4,7 +4,8 @@
         [donkey.services.metadata.metadactyl]
         [donkey.util.service]
         [donkey.util])
-  (:require [donkey.util.config :as config]
+  (:require [clojure-commons.error-codes :as ce]
+            [donkey.util.config :as config]
             [donkey.services.metadata.apps :as apps]
             [donkey.services.jex :as jex]))
 
@@ -62,7 +63,7 @@
         (trap #(apps/get-only-app-groups)))
 
    (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as {params :params}]
-        (trap #(apps/apps-in-group app-group-id params)))
+        (ce/trap "get-analyses-in-group" #(apps/apps-in-group app-group-id params)))
 
    (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id]
         (trap #(apps/apps-in-group app-group-id)))

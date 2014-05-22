@@ -3,7 +3,8 @@
         [donkey.auth.user-attributes :only [current-user]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+ try+]])
-  (:require [clojure.string :as string]
+  (:require [cemerick.url :as curl]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [donkey.clients.metadactyl :as metadactyl]
@@ -74,6 +75,19 @@
        jp/de-job-type    (process-de-job (preprocess-job job))
        jp/agave-job-type (process-agave-job agave-client (preprocess-job job))
        (unrecognized-job-type (:job_type job)))))
+
+(defn- agave-authorization-uri
+  []
+  (-> (curl/url (config/agave-oauth-base) "authorize")
+      (assoc :query {:response_type "code"
+                     :client_id     (config/agave-key)
+                     :redirect-uri  (config/agave-redirect-uri)})
+      (str)))
+
+(defn- agave-authorization-redirect
+  []
+  (throw+ {:error_code ce/ERR_TEMPORARILY_MOVED
+           :location   (agave-authorization-uri)}))
 
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
@@ -170,7 +184,8 @@
 
   (listApps [_ group-id params]
     (if (= group-id (:id (.publicAppGroup agave-client)))
-      (.listPublicApps agave-client params)
+      #_(.listPublicApps agave-client params)
+      (agave-authorization-redirect)
       (metadactyl/apps-in-group group-id params)))
 
   (searchApps [_ search-term]
