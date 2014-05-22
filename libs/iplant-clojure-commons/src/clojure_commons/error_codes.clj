@@ -43,16 +43,27 @@
 (deferr ERR_NOT_FOUND)
 (deferr ERR_UNAVAILABLE)
 (deferr ERR_TOO_MANY_RESULTS)
+(deferr ERR_TEMPORARILY_MOVED)
 
 (def ^:private http-status-for
-  {ERR_ILLEGAL_ARGUMENT 400
-   ERR_INVALID_JSON     400
-   ERR_BAD_REQUEST      400
-   ERR_NOT_FOUND        404})
+  {ERR_ILLEGAL_ARGUMENT  400
+   ERR_INVALID_JSON      400
+   ERR_BAD_REQUEST       400
+   ERR_NOT_FOUND         404
+   ERR_TEMPORARILY_MOVED 302})
 
 (defn- get-http-status
   [err-code]
   (get http-status-for err-code 500))
+
+(def ^:private http-header-fn-for
+  {ERR_TEMPORARILY_MOVED (fn [m] {"Location" (:location m)})})
+
+(defn- get-http-headers
+  [err-obj]
+  (if-let [header-fn (http-header-fn-for (:error_code err-obj))]
+    (header-fn err-obj)
+    {}))
 
 (defn error?
   [obj]
@@ -68,11 +79,13 @@
 (defn err-resp
   ([err-obj]
      {:status (get-http-status (:error_code err-obj))
+      :headers (get-http-headers err-obj)
       :body (-> err-obj
                 (assoc :status "failure")
                 cheshire/encode)})
   ([action err-obj]
      {:status (get-http-status (:error_code err-obj))
+      :headers (get-http-headers err-obj)
       :body (-> err-obj
                 (assoc :action action)
                 (assoc :status "failure")
