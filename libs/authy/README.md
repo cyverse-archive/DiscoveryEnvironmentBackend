@@ -82,7 +82,7 @@ information fields, the response contains the following information about the to
         </tr>
         <tr>
             <td>expires-at</td>
-            <td>The approximate time the token expires (java.util.Date).</td>
+            <td>The approximate time the token expires (java.sql.Timestamp).</td>
         </tr>
         <tr>
             <td>refresh-token</td>

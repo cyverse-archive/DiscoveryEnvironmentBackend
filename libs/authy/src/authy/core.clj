@@ -1,6 +1,6 @@
 (ns authy.core
   (:require [clj-http.client :as http])
-  (:import [java.util Date]))
+  (:import [java.sql Timestamp]))
 
 (defn- call-token-callback
   [{:keys [token-callback] :as token-info}]
@@ -12,7 +12,7 @@
   [token-info]
   (assoc (dissoc token-info :token_type :expires_in :refresh_token :access_token)
     :token-type    (:token_type token-info)
-    :expires-at    (Date. (+ (System/currentTimeMillis) (* 1000 (:expires_in token-info))))
+    :expires-at    (Timestamp. (+ (System/currentTimeMillis) (* 1000 (:expires_in token-info))))
     :refresh-token (:refresh_token token-info)
     :access-token  (:access_token token-info)))
 
@@ -35,10 +35,10 @@
 (defn- refresh-token-request
   [{:keys [token-uri client-key client-secret refresh-token]}]
   (:body (http/post token-uri
-                    :basic-auth  [client-key client-secret]
-                    :form-params {:grant_type    "refresh_token"
-                                  :refresh_token refresh-token}
-                    :as          :json)))
+                    {:basic-auth  [client-key client-secret]
+                     :form-params {:grant_type    "refresh_token"
+                                   :refresh_token refresh-token}
+                     :as          :json})))
 
 (defn refresh-access-token
   [token-info]
@@ -49,4 +49,4 @@
 
 (defn token-expired?
   [{:keys [expires-at]}]
-  (neg? (.compareTo (Date.) expires-at)))
+  (neg? (.compareTo (Timestamp. (System/currentTimeMillis)) expires-at)))
