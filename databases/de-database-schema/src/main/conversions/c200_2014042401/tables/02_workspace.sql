@@ -2,7 +2,7 @@ SET search_path = public, pg_catalog;
 
 --
 -- Updates columns in the existing workspace table.
--- cols to drop: id_v187, root_analysis_group_id, user_id_v187
+-- cols to drop: id_v187, home_folder, root_analysis_group_id, user_id_v187
 --
 ALTER TABLE ONLY workspace RENAME COLUMN id TO id_v187;
 ALTER TABLE ONLY workspace ADD COLUMN id UUID DEFAULT (uuid_generate_v4());

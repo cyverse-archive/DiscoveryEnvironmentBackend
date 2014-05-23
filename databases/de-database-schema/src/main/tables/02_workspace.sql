@@ -5,8 +5,7 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE workspace (
     id uuid NOT NULL,
-    home_folder bigint,
-    root_category_id uuid,
+    root_category_id uuid NOT NULL,
     is_public boolean DEFAULT false,
     user_id uuid NOT NULL
 );

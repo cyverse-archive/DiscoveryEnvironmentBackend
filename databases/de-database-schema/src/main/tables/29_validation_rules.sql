@@ -6,5 +6,5 @@ SET search_path = public, pg_catalog;
 CREATE TABLE validation_rules (
     id uuid NOT NULL,
     parameter_id uuid NOT NULL,
-    rule_type uuid
+    rule_type uuid NOT NULL
 );

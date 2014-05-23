@@ -26,3 +26,7 @@ DROP INDEX transformations_template_id_idx;
 DROP INDEX transformation_steps_transformation_id_idx;
 DROP INDEX template_property_group_property_group_id_idx;
 
+-- Add NOT NULL constraints on foreign key columns.
+ALTER TABLE ONLY app_steps ALTER COLUMN task_id SET NOT NULL;
+ALTER TABLE ONLY parameter_groups ALTER COLUMN task_id SET NOT NULL;
+

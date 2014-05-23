@@ -12,7 +12,7 @@ CREATE TABLE parameters (
     defalut_value character varying(255),
     is_visible boolean,
     ordering integer,
-    parameter_type uuid,
+    parameter_type uuid NOT NULL,
     required boolean DEFAULT false,
     file_parameter_id uuid,
     omit_if_blank boolean DEFAULT true

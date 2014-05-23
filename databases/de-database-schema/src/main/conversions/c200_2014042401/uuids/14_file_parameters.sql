@@ -15,3 +15,8 @@ UPDATE input_output_mapping SET output =
 
 DELETE FROM input_output_mapping WHERE input IS NULL OR output IS NULL;
 
+-- Add NOT NULL constraints on foreign key columns.
+-- parameters.file_parameter_id is NULL for all non-file parameter types.
+ALTER TABLE ONLY input_output_mapping ALTER COLUMN input SET NOT NULL;
+ALTER TABLE ONLY input_output_mapping ALTER COLUMN output SET NOT NULL;
+

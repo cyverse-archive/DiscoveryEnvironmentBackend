@@ -564,7 +564,7 @@ ALTER TABLE ONLY rule_type_value_type
 ALTER TABLE ONLY suggested_groups
     ADD CONSTRAINT suggested_groups_app_category_id_fkey
     FOREIGN KEY (app_category_id)
-    REFERENCES app_categories(id);
+    REFERENCES app_categories(id) ON DELETE CASCADE;
 
 --
 -- Name: suggested_groups_app_id_fkey; Type: FK
@@ -582,7 +582,7 @@ ALTER TABLE ONLY suggested_groups
 ALTER TABLE ONLY app_category_group
     ADD CONSTRAINT app_category_group_parent_category_id_fkey
     FOREIGN KEY (parent_category_id)
-    REFERENCES app_categories(id);
+    REFERENCES app_categories(id) ON DELETE CASCADE;
 
 --
 -- Name: app_category_group_child_category_id_fkey; Type: FK CONSTRAINT; Schema:
@@ -591,7 +591,7 @@ ALTER TABLE ONLY app_category_group
 ALTER TABLE ONLY app_category_group
     ADD CONSTRAINT app_category_group_child_category_id_fkey
     FOREIGN KEY (child_category_id)
-    REFERENCES app_categories(id);
+    REFERENCES app_categories(id) ON DELETE CASCADE;
 
 --
 -- Name: app_category_app_app_category_id_fkey; Type: FK CONSTRAINT;
@@ -600,7 +600,7 @@ ALTER TABLE ONLY app_category_group
 ALTER TABLE ONLY app_category_app
     ADD CONSTRAINT app_category_app_app_category_id_fkey
     FOREIGN KEY (app_category_id)
-    REFERENCES app_categories(id);
+    REFERENCES app_categories(id) ON DELETE CASCADE;
 
 --
 -- Name: app_category_app_app_id_fkey; Type: FK CONSTRAINT;

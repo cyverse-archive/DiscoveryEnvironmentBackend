@@ -7,5 +7,5 @@ CREATE TABLE app_categories (
     id uuid,
     name character varying(255),
     description character varying(255),
-    workspace_id uuid
+    workspace_id uuid NOT NULL
 );
