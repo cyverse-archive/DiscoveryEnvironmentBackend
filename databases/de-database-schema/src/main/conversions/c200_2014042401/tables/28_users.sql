@@ -7,3 +7,6 @@ SET search_path = public, pg_catalog;
 ALTER TABLE ONLY users RENAME COLUMN id TO id_v187;
 ALTER TABLE ONLY users ADD COLUMN id UUID DEFAULT (uuid_generate_v4());
 
+UPDATE users SET id = '00000000-0000-0000-0000-000000000000'
+  WHERE username = '<public>';
+

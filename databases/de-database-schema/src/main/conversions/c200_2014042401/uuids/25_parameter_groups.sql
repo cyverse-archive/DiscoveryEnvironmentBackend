@@ -12,10 +12,6 @@ UPDATE parameters p SET parameter_group_id =
 DROP INDEX property_group_property_property_id_idx;
 
 -- Cleanup rows with NULL foreign keys.
-DELETE FROM validation_rule_arguments WHERE rule_id IN
-  (SELECT r.id FROM validation_rules r
-   LEFT JOIN parameters p ON p.id = r.parameter_id
-   WHERE parameter_group_id IS NULL);
 DELETE FROM validation_rules WHERE parameter_id IN
   (SELECT id FROM parameters WHERE parameter_group_id IS NULL);
 DELETE FROM parameters WHERE parameter_group_id IS NULL;

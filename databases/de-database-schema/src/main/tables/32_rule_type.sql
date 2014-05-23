@@ -11,5 +11,5 @@ CREATE TABLE rule_type (
     deprecated boolean DEFAULT false,
     display_order integer DEFAULT 999,
     rule_description_format character varying(255) DEFAULT '',
-    rule_subtype_id uuid
+    rule_subtype_id uuid NOT NULL
 );

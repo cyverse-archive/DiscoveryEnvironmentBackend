@@ -5,6 +5,6 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE user_preferences (
   id UUID,
-  user_id UUID,
+  user_id UUID NOT NULL,
   preferences TEXT NOT NULL
 );

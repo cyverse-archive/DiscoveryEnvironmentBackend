@@ -231,7 +231,7 @@
   (load-sql-file "conversions/c200_2014042401/uuids/17_info_type.sql")
   (println "\t* updating multiplicity uuid foreign keys...")
   (load-sql-file "conversions/c200_2014042401/uuids/19_multiplicity.sql")
-  (println "\t* updating parameters uuid foreign keys...")
+  (println "\t* updating parameters uuid foreign keys (this might take a minute or 2)...")
   (load-sql-file "conversions/c200_2014042401/uuids/24_parameters.sql")
   (println "\t* updating parameter_groups uuid foreign keys...")
   (load-sql-file "conversions/c200_2014042401/uuids/25_parameter_groups.sql")

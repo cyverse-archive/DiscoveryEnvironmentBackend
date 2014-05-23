@@ -5,6 +5,6 @@ SET search_path = public, pg_catalog;
 ---
 CREATE TABLE user_sessions (
     id UUID,
-    user_id UUID,
+    user_id UUID NOT NULL,
     session TEXT NOT NULL
 );

@@ -16,5 +16,5 @@ CREATE TABLE file_parameters (
     multiplicity uuid NOT NULL,
     retain boolean DEFAULT false,
     is_implicit boolean DEFAULT false,
-    data_source_id uuid
+    data_source_id uuid NOT NULL
 );

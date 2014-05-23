@@ -19,6 +19,8 @@ DROP INDEX validator_rule_validator_id_idx;
 DROP INDEX validator_rule_rule_id_idx;
 
 -- Cleanup rows with NULL foreign keys.
+ALTER TABLE validation_rule_arguments DROP CONSTRAINT rule_argument_rule_id_fkey;
+ALTER TABLE validator_rule DROP CONSTRAINT validator_rule_rule_id_fkey;
 DELETE FROM validation_rule_arguments WHERE rule_id IN
   (SELECT id FROM validation_rules WHERE parameter_id IS NULL);
 DELETE FROM validation_rules WHERE parameter_id IS NULL;
