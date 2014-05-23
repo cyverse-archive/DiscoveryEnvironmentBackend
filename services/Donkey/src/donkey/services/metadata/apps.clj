@@ -10,6 +10,7 @@
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.osm :as osm]
             [donkey.persistence.jobs :as jp]
+            [donkey.persistence.oauth :as op]
             [donkey.services.metadata.agave-apps :as aa]
             [donkey.services.metadata.de-apps :as da]
             [donkey.util.config :as config]
@@ -77,17 +78,20 @@
        (unrecognized-job-type (:job_type job)))))
 
 (defn- agave-authorization-uri
-  []
-  (-> (curl/url (config/agave-oauth-base) "authorize")
-      (assoc :query {:response_type "code"
-                     :client_id     (config/agave-key)
-                     :redirect-uri  (config/agave-redirect-uri)})
-      (str)))
+  [state-info]
+  (let [username (:username current-user)
+        state    (op/store-authorization-request username state-info)]
+    (-> (curl/url (config/agave-oauth-base) "authorize")
+        (assoc :query {:response_type "code"
+                       :client_id     (config/agave-key)
+                       :redirect-uri  (config/agave-redirect-uri)
+                       :state         state})
+        (str))))
 
 (defn- agave-authorization-redirect
-  []
+  [state-info]
   (throw+ {:error_code ce/ERR_TEMPORARILY_MOVED
-           :location   (agave-authorization-uri)}))
+           :location   (agave-authorization-uri state-info)}))
 
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
@@ -185,7 +189,7 @@
   (listApps [_ group-id params]
     (if (= group-id (:id (.publicAppGroup agave-client)))
       #_(.listPublicApps agave-client params)
-      (agave-authorization-redirect)
+      (agave-authorization-redirect (str "type=apps&group-id=" group-id))
       (metadactyl/apps-in-group group-id params)))
 
   (searchApps [_ search-term]

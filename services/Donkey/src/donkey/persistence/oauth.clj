@@ -6,7 +6,8 @@
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as ce]
             [donkey.util.db :as db])
-  (:import [java.sql Timestamp]))
+  (:import [java.sql Timestamp]
+           [java.util UUID]))
 
 (defn- validate-token-type
   "Verifies that the token type is supported."
@@ -72,3 +73,50 @@
   (if (has-access-token api-name username)
     (replace-access-token api-name username expires-at refresh-token access-token)
     (insert-access-token api-name username expires-at refresh-token access-token)))
+
+(defn- remove-prior-authorization-requests
+  "Removes any previous OAuth authorization requests for the user."
+  [username]
+  (with-db db/de
+    (delete :authorization_requests
+            (where {:user_id (user-id-subselect username)}))))
+
+(defn- insert-authorization-request
+  "Inserts information about a new authorization request into the database."
+  [id username state-info]
+  (with-db db/de
+    (insert :authorization_requests
+            (values {:id         id
+                     :user_id    (user-id-subselect username)
+                     :state_info state-info}))))
+
+(defn store-authorization-request
+  "Stores state information for an OAuth authorization request."
+  [username state-info]
+  (let [id (UUID/randomUUID)]
+    (remove-prior-authorization-requests username)
+    (insert-authorization-request id username state-info)
+    (str id)))
+
+(defn- get-authorization-request
+  "Gets authorization request information from the database."
+  [id]
+  (with-db db/de
+    (first (select [:authorization_requests :r]
+                   (join [:users :u] {:r.user_id :u.id})
+                   (fields [:u.username :username]
+                           [:r.state_info :state-info])))))
+
+(defn retrieve-authorization-request-state
+  "Retrieves an authorization request for a given UUID."
+  [id username]
+  (let [id  (if (string? id) (UUID/fromString id) id)
+        req (get-authorization-request id)]
+    (when (nil? req)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     (str "authorization request " (str id) " not found")}))
+    (when (not= (:username req) username)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     (str "wrong user for authorization request " (str id))}))
+    (remove-prior-authorization-requests username)
+    (:state-info req)))

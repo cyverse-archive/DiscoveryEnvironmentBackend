@@ -15,7 +15,9 @@
 
 (defn get-access-token
   "Receives an OAuth authorization code and obtains an access token."
-  [{:keys [api-name] :as server-info} {code :code}]
-  (let [token-callback (partial op/store-access-token api-name (:username current-user))]
+  [{:keys [api-name] :as server-info} {:keys [code state]}]
+  (let [username       (:username current-user)
+        state-info     (op/retrieve-authorization-request-state state username)
+        token-callback (partial op/store-access-token api-name username)]
     (authy/get-access-token (build-authy-server-info server-info token-callback) code)
-    (service/success-response)))
+    (service/success-response {:state_info state-info})))
