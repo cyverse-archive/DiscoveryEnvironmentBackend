@@ -17,7 +17,7 @@
                  [postgresql "9.0-801.jdbc4"]
                  [slingshot "0.10.3"]]
   :plugins [[lein-marginalia "0.7.1"]]
-  :manifest {"db-version" "1.8.8:20140515.01"}
+  :manifest {"db-version" "1.8.8:20140522.01"}
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
   :deploy-repositories [["sonatype-nexus-staging"
