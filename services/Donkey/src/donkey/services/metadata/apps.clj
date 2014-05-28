@@ -189,7 +189,7 @@
   (listApps [_ group-id params]
     (if (= group-id (:id (.publicAppGroup agave-client)))
       #_(.listPublicApps agave-client params)
-      (agave-authorization-redirect (str "type=apps&group-id=" group-id))
+      (agave-authorization-redirect (str "type=apps&app-category=" group-id))
       (metadactyl/apps-in-group group-id params)))
 
   (searchApps [_ search-term]
