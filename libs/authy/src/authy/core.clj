@@ -47,6 +47,11 @@
        (merge token-info)
        (call-token-callback)))
 
+(defn token-expiring?
+  [{:keys [expires-at]} window]
+  (let [last-valid-time (Timestamp. (+ (System/currentTimeMillis) window))]
+    (neg? (.compareTo expires-at last-valid-time))))
+
 (defn token-expired?
-  [{:keys [expires-at]}]
-  (neg? (.compareTo (Timestamp. (System/currentTimeMillis)) expires-at)))
+  [token-info]
+  (token-expiring? token-info 0))
