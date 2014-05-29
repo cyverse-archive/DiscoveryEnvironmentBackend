@@ -278,7 +278,7 @@
   (if-let [token-info (op/get-access-token "agave" username)]
     (DeHpcAppLister. (agave/de-agave-client-v2
                       (config/agave-base-url)
-                      (log/spy :warn (merge (config/agave-oauth-settings) token-info))
+                      (merge (config/agave-oauth-settings) token-info)
                       (config/agave-jobs-enabled)))
     (agave-authorization-redirect state-info)))
 

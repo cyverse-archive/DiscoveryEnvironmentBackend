@@ -7,7 +7,7 @@
 (defn check-access-token
   [token-info-ref timeout]
   (when (authy/token-expiring? @token-info-ref)
-    (let [new-token-info (authy/refresh-access-token @token-info-ref timeout)]
+    (let [new-token-info (authy/refresh-access-token @token-info-ref :timeout timeout)]
       (dosync (ref-set token-info-ref new-token-info)))))
 
 (defn list-systems
