@@ -29,7 +29,7 @@
 ;; Drop constraints
 (defn- drop-all-constraints
   []
-  (println "\t* droping constraints...")
+  (println "\t* dropping constraints...")
   (exec-sql-statement "
     DO $$DECLARE r record;
     BEGIN
@@ -43,8 +43,6 @@
                 ' DROP CONSTRAINT ' || quote_ident(r.conname) || ';';
       END LOOP;
     END$$;"))
-
-;; TODO add NOT NULL contraints to FOREIGN KEY cols.
 
 ;; Dropped sequences
 ;; template_group_id_seq
@@ -105,7 +103,7 @@
 
 (defn- drop-views
   []
-  (println "\t* droping old views...")
+  (println "\t* dropping old views...")
   (load-sql-file "conversions/c200_2014042401/drop_views.sql"))
 
 ;; Rename or add new tables and columns.
