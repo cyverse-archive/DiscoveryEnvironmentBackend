@@ -111,20 +111,13 @@
   (partial find-file #".*[.]war"
            "A WAR file dependency is required for :jetty projects"))
 
-(def ^:private clavin-dep
-  "iplant-clavin >= 1.2.0-29")
-
 (defn- build-rpm-dependencies
   "Builds the RPM dependencies to use for the RPM.  Jetty projects have a
    special dependency on Clavin, which has to be added to the list if it's not
    already there."
   [{:keys [dependencies type]
     :or   {dependencies []}}]
-  (let [depends-on-clavin? #(some (partial re-find #"\Aiplant-clavin") %)]
-   (cond
-    (not= type :jetty)                dependencies
-    (depends-on-clavin? dependencies) dependencies
-    :else                             (cons clavin-dep dependencies))))
+  dependencies)
 
 (defn- project-to-settings
   "Converts a project map to the settings map that we need to fill in the
