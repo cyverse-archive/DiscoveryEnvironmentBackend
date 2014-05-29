@@ -9,7 +9,6 @@ CREATE TABLE parameters (
     name character varying(255) NOT NULL,
     description character varying(255),
     label text,
-    defalut_value character varying(255),
     is_visible boolean,
     ordering integer,
     parameter_type uuid NOT NULL,

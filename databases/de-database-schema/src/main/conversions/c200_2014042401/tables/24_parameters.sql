@@ -2,7 +2,7 @@ SET search_path = public, pg_catalog;
 
 --
 -- Renames the existing property table to parameters and adds updated columns.
--- cols to drop: hid, property_type, validator, dataobject_id
+-- cols to drop: hid, defalut_value, property_type, validator, dataobject_id
 --
 ALTER TABLE property RENAME TO parameters;
 ALTER TABLE ONLY parameters
