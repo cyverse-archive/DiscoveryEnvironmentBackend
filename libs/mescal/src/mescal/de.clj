@@ -14,8 +14,17 @@
   (listApps [this]
     (v2/list-apps agave jobs-enabled?)))
 
+(deftype UnauthorizedDeAgaveClientV2 []
+  DeAgaveClient
+  (hpcAppGroup [this]
+    (v2/hpc-app-group)))
+
 (defn de-agave-client-v2
   [base-url token-info jobs-enabled? & {:keys [timeout] :or {timeout 5000}}]
   (DeAgaveClientV2.
    (core/agave-client-v2 base-url token-info :timeout timeout)
    jobs-enabled?))
+
+(defn unauthorized-de-agave-client-v2
+  []
+  (UnauthorizedDeAgaveClientV2.))
