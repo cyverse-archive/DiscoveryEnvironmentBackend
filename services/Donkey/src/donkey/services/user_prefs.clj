@@ -136,7 +136,9 @@
        (log/warn "Getting user prefs")
        (get-user-prefs user prefs)))
   ([user req-prefs-string]
-     (let [prefs (cheshire/decode req-prefs-string true)]
+     (let [prefs (if-not (map? req-prefs-string)
+                   (cheshire/decode req-prefs-string true)
+                   req-prefs-string)]
        (validate-user-prefs prefs)
        (set-user-prefs user prefs))))
 
@@ -148,7 +150,7 @@
 (defn save-default-output-dir
   "Saves the path to the user's default output folder in the user's preferences."
   [user path]
-  (let [prefs (user-prefs user)]
+  (let [prefs (cheshire/decode (user-prefs user))]
     (user-prefs user (add-default-output-dir prefs path))))
 
 (defn- create-output-dir
@@ -163,7 +165,7 @@
   "Gets the path to the user's default output folder from the user's preferences."
   []
   (let [user (:username current-user)
-        retv (extract-default-output-dir (user-prefs user))
+        retv (extract-default-output-dir (cheshire/decode (user-prefs user) true))
         dpth (:path retv)]
     retv))
 
