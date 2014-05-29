@@ -5,7 +5,8 @@
             [cemerick.url :as curl]
             [clj-http.client :as http]
             [donkey.persistence.oauth :as op]
-            [donkey.util.service :as service]))
+            [donkey.util.service :as service]
+            [donkey.util.validators :as v]))
 
 (defn- build-authy-server-info
   "Builds the server info to pass to authy."
@@ -16,6 +17,8 @@
 (defn get-access-token
   "Receives an OAuth authorization code and obtains an access token."
   [{:keys [api-name] :as server-info} {:keys [code state]}]
+  (v/validate-param :code code)
+  (v/validate-param :state state)
   (let [username       (:username current-user)
         state-info     (op/retrieve-authorization-request-state state username)
         token-callback (partial op/store-access-token api-name username)]
