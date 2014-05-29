@@ -277,7 +277,8 @@
   [{:keys [api-name] :as server-info} state-info username]
   (if-let [token-info (op/get-access-token api-name username)]
     (assoc (merge server-info token-info)
-      :token-callback (partial op/store-access-token api-name username))
+      :token-callback  (partial op/store-access-token api-name username)
+      :reauth-callback (partial agave-authorization-redirect state-info))
     (agave-authorization-redirect state-info)))
 
 (defn- get-de-hpc-app-lister

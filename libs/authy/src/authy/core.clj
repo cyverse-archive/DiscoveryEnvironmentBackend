@@ -1,4 +1,5 @@
 (ns authy.core
+  (:use [slingshot.slingshot :only [throw+ try+]])
   (:require [clj-http.client :as http])
   (:import [java.sql Timestamp]))
 
@@ -36,7 +37,7 @@
        (merge oauth-info)
        (call-token-callback)))
 
-(defn- refresh-token-request
+(defn- send-refresh-token-request
   [{:keys [token-uri client-key client-secret refresh-token]} timeout]
   (:body (http/post token-uri
                     {:basic-auth     [client-key client-secret]
@@ -45,6 +46,14 @@
                      :as             :json
                      :conn-timeout   timeout
                      :socket-timeout timeout})))
+
+(defn- refresh-token-request
+  [{:keys [reauth-callback] :as token-info} timeout]
+  (try+ (send-refresh-token-request token-info timeout)
+        (catch Object _
+          (if (fn? reauth-callback)
+            (reauth-callback)
+            (throw+)))))
 
 (defn refresh-access-token
   [token-info & {:keys [timeout] :or {timeout 5000}}]
