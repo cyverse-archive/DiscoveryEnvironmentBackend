@@ -273,14 +273,19 @@
                   :preprocess-job    :id})))
 ;; DeHpcAppLister
 
+(defn- get-access-token
+  [{:keys [api-name] :as server-info} state-info username]
+  (if-let [token-info (op/get-access-token api-name username)]
+    (assoc (merge server-info token-info)
+      :token-callback (partial op/store-access-token api-name username))
+    (agave-authorization-redirect state-info)))
+
 (defn- get-de-hpc-app-lister
   [state-info username]
-  (if-let [token-info (op/get-access-token "agave" username)]
-    (DeHpcAppLister. (agave/de-agave-client-v2
-                      (config/agave-base-url)
-                      (merge (config/agave-oauth-settings) token-info)
-                      (config/agave-jobs-enabled)))
-    (agave-authorization-redirect state-info)))
+  (DeHpcAppLister. (agave/de-agave-client-v2
+                    (config/agave-base-url)
+                    (partial get-access-token (config/agave-oauth-settings) state-info username)
+                    (config/agave-jobs-enabled))))
 
 (defn- get-app-lister
   ([state-info]
@@ -289,12 +294,6 @@
      (if (config/agave-enabled)
        (get-de-hpc-app-lister state-info username)
        (DeOnlyAppLister.))))
-
-(defn- get-unauthorized-app-lister
-  []
-  (if (config/agave-enabled)
-    (DeHpcAppLister. (agave/unauthorized-de-agave-client-v2))
-    (DeOnlyAppLister.)))
 
 (defn- populate-jobs-table
   [app-lister]
@@ -307,7 +306,7 @@
 
 (defn get-only-app-groups
   []
-  (service/success-response (.listAppGroups (get-unauthorized-app-lister))))
+  (service/success-response (.listAppGroups (get-app-lister "type=apps"))))
 
 (defn apps-in-group
   [group-id params]
