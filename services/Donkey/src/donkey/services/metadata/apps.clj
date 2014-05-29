@@ -184,12 +184,11 @@
 
   (listAppGroups [_]
     (-> (metadactyl/get-only-app-groups)
-        (update-in [:groups] conj (.publicAppGroup agave-client))))
+        (update-in [:groups] conj (.hpcAppGroup agave-client))))
 
   (listApps [_ group-id params]
-    (if (= group-id (:id (.publicAppGroup agave-client)))
-      #_(.listPublicApps agave-client params)
-      (agave-authorization-redirect (str "type=apps&app-category=" group-id))
+    (if (= group-id (:id (.hpcAppGroup agave-client)))
+      (.listApps agave-client)
       (metadactyl/apps-in-group group-id params)))
 
   (searchApps [_ search-term]
@@ -274,19 +273,28 @@
                   :preprocess-job    :id})))
 ;; DeHpcAppLister
 
+(defn- get-de-hpc-app-lister
+  [state-info username]
+  (if-let [token-info (op/get-access-token "agave" username)]
+    (DeHpcAppLister. (agave/de-agave-client-v2
+                      (config/agave-base-url)
+                      (log/spy :warn (merge (config/agave-oauth-settings) token-info))
+                      (config/agave-jobs-enabled)))
+    (agave-authorization-redirect state-info)))
+
 (defn- get-app-lister
-  ([]
-     (get-app-lister (:shortUsername current-user)))
-  ([username]
+  ([state-info]
+     (get-app-lister state-info (:username current-user)))
+  ([state-info username]
      (if (config/agave-enabled)
-       (DeHpcAppLister. (agave/de-agave-client-v1
-                         (config/agave-base-url)
-                         (config/agave-key)
-                         (config/agave-secret)
-                         username
-                         (config/agave-jobs-enabled)
-                         (config/irods-home)))
+       (get-de-hpc-app-lister state-info username)
        (DeOnlyAppLister.))))
+
+(defn- get-unauthorized-app-lister
+  []
+  (if (config/agave-enabled)
+    (DeHpcAppLister. (agave/unauthorized-de-agave-client-v2))
+    (DeOnlyAppLister.)))
 
 (defn- populate-jobs-table
   [app-lister]
@@ -299,11 +307,13 @@
 
 (defn get-only-app-groups
   []
-  (service/success-response (.listAppGroups (get-app-lister))))
+  (service/success-response (.listAppGroups (get-unauthorized-app-lister))))
 
 (defn apps-in-group
   [group-id params]
-  (service/success-response (.listApps (get-app-lister) group-id params)))
+  (-> (get-app-lister (str "type=apps&app-category=" group-id))
+      (.listApps group-id params)
+      (service/success-response)))
 
 (defn search-apps
   [{search-term :search}]
@@ -376,18 +386,16 @@
 
 (defn update-agave-job-status
   [uuid]
-  (let [{:keys [id username] :as job} (jp/get-job-by-id (UUID/fromString uuid))
-        username                      (string/replace (or username "") #"@.*" "")]
+  (let [{:keys [id username] :as job} (jp/get-job-by-id (UUID/fromString uuid))]
     (service/assert-found job "job" uuid)
     (service/assert-valid (= jp/agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
-    (.updateJobStatus (get-app-lister username) id username job)))
+    (.updateJobStatus (get-app-lister "" username) id username job)))
 
 (defn- sync-job-status
   [job]
   (try+
    (log/debug "synchronizing the job status for" (:id job))
-   (let [username (string/replace (:username job) #"@.*" "")]
-     (.syncJobStatus (get-app-lister username) job))
+   (.syncJobStatus (get-app-lister "" (:username job)) job)
    (catch Object e
      (log/error e "unable to sync the job status for job" (:id job)))))
 

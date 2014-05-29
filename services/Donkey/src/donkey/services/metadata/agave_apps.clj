@@ -82,7 +82,8 @@
 
 (defn update-agave-job-status
   [agave id username prev-job-info]
-  (let [job-info (get-agave-job agave id (partial service/not-found "HPC job"))]
+  (let [job-info (get-agave-job agave id (partial service/not-found "HPC job"))
+        username (string/replace username #"@.*" "")]
     (service/assert-found job-info "HPC job" id)
     (when-not (= (:status job-info) (:status prev-job-info))
       (jp/update-job id (:status job-info) (db/timestamp-from-str (str (:enddate job-info))))

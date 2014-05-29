@@ -57,7 +57,8 @@
              (join [:users :u] {:t.user_id :u.id})
              (fields [:t.webapp        :webapp]
                      [:t.expires_at    :expires-at]
-                     [:t.refresh_token :refresh-token])
+                     [:t.refresh_token :refresh-token]
+                     [:t.token         :access-token])
              (where {:u.username username
                      :t.webapp   api-name})))))
 

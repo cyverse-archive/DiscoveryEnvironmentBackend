@@ -557,6 +557,11 @@
   [props config-valid configs agave-enabled]
   "donkey.agave.oauth-base")
 
+(cc/defprop-int agave-oauth-refresh-window
+  "The number of minutes before a token expires to refresh it."
+  [props config-valid configs agave-enabled]
+  "donkey.agave.oauth-refresh-window")
+
 (cc/defprop-str agave-redirect-uri
   "The redirect URI used after Agave authorization."
   [props config-valid configs agave-enabled]
@@ -625,12 +630,13 @@
           [(icat-password) (icat-user) (irods-pass) (irods-user) (agave-key) (agave-secret)]))
 
 (defn- oauth-settings
-  [api-name api-key api-secret token-uri redirect-uri]
-  {:api-name      api-name
-   :client-key    api-key
-   :client-secret api-secret
-   :token-uri     token-uri
-   :redirect-uri  redirect-uri})
+  [api-name api-key api-secret token-uri redirect-uri refresh-window]
+  {:api-name       api-name
+   :client-key     api-key
+   :client-secret  api-secret
+   :token-uri      token-uri
+   :redirect-uri   redirect-uri
+   :refresh-window (* refresh-window 60 1000)})
 
 (def agave-oauth-settings
   (memoize
@@ -639,7 +645,8 @@
      (agave-key)
      (agave-secret)
      (str (curl/url (agave-oauth-base) "token"))
-     (str (agave-redirect-uri)))))
+     (agave-redirect-uri)
+     (agave-oauth-refresh-window))))
 
 (defn load-config-from-file
   "Loads the configuration settings from a file."
