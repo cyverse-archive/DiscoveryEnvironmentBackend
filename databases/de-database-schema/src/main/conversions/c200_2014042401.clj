@@ -6,6 +6,8 @@
             [me.raynes.fs :as fs])
   (:import [java.util UUID]))
 
+;; TODO template_input, template_output, validator conversions.
+
 (def ^:private version
   "The destination database version."
   "2.0.0:20140424.01")
@@ -84,23 +86,6 @@
 ;; tool_request_status_codes_id_seq
 ;; job_types_id_seq
 
-;; Dropped tables
-;; 06_transformation_steps
-;; 08_transformations
-;; 16_hibernate_sequence
-;; 20_notification
-;; 21_notification_set
-;; 22_notification_set_notification
-;; 23_notifications_receivers
-;; 26_property_group_property
-;; 36_template_input
-;; 37_template_output
-;; 38_template_property_group
-;; 39_transformation_activity_mappings
-;; 41_transformation_values
-;; 42_validator
-;; 43_validator_rule
-
 (defn- drop-views
   []
   (println "\t* dropping old views...")
@@ -110,6 +95,8 @@
 (defn- run-table-conversions
   "Loads and runs SQL files containing table and column conversions."
   []
+  (println "\t* renaming obsolete tables")
+  (load-sql-file "conversions/c200_2014042401/tables/rename_obsolete_tables.sql")
   (println "\t* updating the template_group table to app_categories")
   (load-sql-file "conversions/c200_2014042401/tables/01_app_categories.sql")
   (println "\t* updating the workspace table")
@@ -256,6 +243,11 @@
   (println "\t* updating job_types uuid foreign keys...")
   (load-sql-file "conversions/c200_2014042401/uuids/56_job_types.sql"))
 
+(defn- drop-obsolete-tables
+  []
+  (println "\t* dropping empty obsolete tables")
+  (load-sql-file "conversions/c200_2014042401/tables/drop_empty_obsolete_tables.sql"))
+
 (defn- re-add-constraints
   []
   (println "\t* re-adding constraints")
@@ -282,5 +274,6 @@
   (run-table-conversions)
   (run-uuid-conversions)
   (drop-all-constraints)
+  (drop-obsolete-tables)
   (re-add-constraints)
   (add-new-views))

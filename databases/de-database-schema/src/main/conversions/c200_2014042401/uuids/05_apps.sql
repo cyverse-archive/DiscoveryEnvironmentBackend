@@ -11,7 +11,7 @@ UPDATE app_category_app SET app_id =
     (SELECT a.id FROM apps a WHERE template_id = a.hid);
 UPDATE workflow_io_maps m SET app_id =
     (SELECT a.id FROM apps a
-     LEFT JOIN transformation_activity_mappings tm
+     LEFT JOIN transformation_activity_mappings_v187 tm
      ON tm.transformation_activity_id = a.hid
      WHERE m.hid = tm.mapping_id);
 UPDATE suggested_groups SET app_id =
