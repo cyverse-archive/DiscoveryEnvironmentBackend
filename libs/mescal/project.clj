@@ -14,7 +14,9 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [cheshire "5.3.1"]
                  [clj-http "0.9.1"]
+                 [clj-time "0.7.0"]
                  [com.cemerick/url "0.1.1"]
+                 [org.iplantc/authy "3.1.5"]
                  [org.iplantc/clojure-commons "3.1.5"]
                  [slingshot "0.10.3"]]
   :repositories [["sonatype-nexus-snapshots"

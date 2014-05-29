@@ -2,6 +2,7 @@
   (:use [clojure.java.io :only [reader]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
+            [clj-time.format :as tf]
             [clojure-commons.error-codes :as ce]))
 
 (defn- assert-defined*
@@ -22,3 +23,8 @@
   (if (string? source)
     (cheshire/decode source true)
     (cheshire/decode-stream (reader source) true)))
+
+(defn parse-timestamp
+  "Converts a formatted timestamp to the number of milliseconds since the epoch."
+  [timestamp]
+  (.getMillis (tf/parse (:date-time tf/formatters) timestamp)))
