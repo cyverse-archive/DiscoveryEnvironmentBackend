@@ -132,6 +132,7 @@
 * [POST /secured/notifications/system/seen](endpoints/notifications.md#endpoints-for-system-messages-aka-system-notifications)
 * [GET /secured/notifications/system/unseen-messages](endpoints/notifications.md#endpoints-for-system-messages-aka-system-notifications)
 * [GET /secured/notifications/unseen-messages](endpoints/notifications.md#obtaining-unseen-notifications)
+* [GET /secured/oauth/access-code/{api-name}](endpoints/callbacks.md#obtaining-oauth-authorization-codes)
 * [POST /secured/permanently-delete-workflow](endpoints/app-metadata.md#permanently-deleting-an-analysis)
 * [DELETE /secured/preferences](endpoints/misc.md#removing-user-preferences)
 * [GET /secured/preferences](endpoints/misc.md#retrieving-user-preferences)
