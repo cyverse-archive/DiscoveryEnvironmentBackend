@@ -7,8 +7,8 @@ SET search_path = public, pg_catalog;
 CREATE INDEX property_group_property_property_id_idx ON property_group_property_v187(property_id);
 UPDATE parameters p SET parameter_group_id =
     (SELECT g.id FROM parameter_groups g
-     LEFT JOIN property_group_property_v187 pgp ON pgp.property_group_id = g.hid
-     WHERE p.hid = pgp.property_id);
+     LEFT JOIN property_group_property_v187 pgp ON pgp.property_group_id = g.hid_v187
+     WHERE p.hid_v187 = pgp.property_id);
 DROP INDEX property_group_property_property_id_idx;
 
 -- Cleanup rows with NULL foreign keys.

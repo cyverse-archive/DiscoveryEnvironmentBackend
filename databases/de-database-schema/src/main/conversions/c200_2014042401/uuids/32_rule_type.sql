@@ -5,11 +5,11 @@ SET search_path = public, pg_catalog;
 --
 UPDATE validation_rules SET rule_type =
     (SELECT r.id FROM rule_type r
-     WHERE r.hid = rule_type_v187);
+     WHERE r.hid_v187 = rule_type_v187);
 
 UPDATE rule_type_value_type SET rule_type_id =
     (SELECT r.id FROM rule_type r
-     WHERE r.hid = rule_type_id_v187);
+     WHERE r.hid_v187 = rule_type_id_v187);
 
 -- Add NOT NULL constraints on foreign key columns.
 ALTER TABLE ONLY validation_rules ALTER COLUMN rule_type SET NOT NULL;

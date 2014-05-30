@@ -2,7 +2,6 @@ SET search_path = public, pg_catalog;
 
 --
 -- Updates columns in the existing data_source table.
--- cols to drop: id_v187
 --
 ALTER TABLE ONLY data_source RENAME COLUMN id TO id_v187;
 ALTER TABLE ONLY data_source RENAME COLUMN uuid TO id;

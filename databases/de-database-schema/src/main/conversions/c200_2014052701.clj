@@ -80,10 +80,10 @@
   []
   (println "\t* migrating parameter defalut values to parameter_values...")
     (exec-raw "INSERT INTO parameter_values (parameter_id, value, is_default)
-              (SELECT p.id AS parameter_id, defalut_value AS value, TRUE AS is_default
+              (SELECT p.id AS parameter_id, defalut_value_v187 AS value, TRUE AS is_default
                FROM parameters p
                LEFT JOIN parameter_types pt ON pt.id = p.parameter_type
-               WHERE CHAR_LENGTH(defalut_value) > 0 AND pt.name NOT LIKE '%Selection')"))
+               WHERE CHAR_LENGTH(defalut_value_v187) > 0 AND pt.name NOT LIKE '%Selection')"))
 
 (defn convert
   "Performs the database conversion."

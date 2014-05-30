@@ -4,14 +4,14 @@ SET search_path = public, pg_catalog;
 -- Updates parameters uuid foreign keys.
 -- Adds temporary indexes to help speed up the conversion.
 --
-CREATE INDEX parameters_validator_idx ON parameters(validator);
+CREATE INDEX parameters_validator_idx ON parameters(validator_v187);
 CREATE INDEX validator_rule_validator_id_idx ON validator_rule_v187(validator_id);
 CREATE INDEX validator_rule_rule_id_idx ON validator_rule_v187(rule_id);
 
 UPDATE validation_rules r SET parameter_id =
     (SELECT p.id FROM parameters p
-     LEFT JOIN validator_rule_v187 vr ON vr.validator_id = p.validator
-     WHERE r.hid = vr.rule_id);
+     LEFT JOIN validator_rule_v187 vr ON vr.validator_id = p.validator_v187
+     WHERE r.hid_v187 = vr.rule_id);
 
 -- Drop temporary indexes.
 DROP INDEX parameters_validator_idx;

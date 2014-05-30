@@ -5,7 +5,7 @@ SET search_path = public, pg_catalog;
 --
 UPDATE validation_rule_arguments SET rule_id =
     (SELECT r.id FROM validation_rules r
-     WHERE r.hid = rule_id_v187);
+     WHERE r.hid_v187 = rule_id_v187);
 
 -- Cleanup rows with NULL foreign keys.
 DELETE FROM validation_rule_arguments WHERE rule_id IS NULL;
