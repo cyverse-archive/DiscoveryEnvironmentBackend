@@ -64,3 +64,7 @@
     (assoc (hpc-app-group)
       :templates      listing
       :template_count total)))
+
+;; TODO: implement me
+(defn get-app
+  [agave jobs-enabled? app-id])

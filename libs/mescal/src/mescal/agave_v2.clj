@@ -28,22 +28,24 @@
   (when (authy/token-expiring? @(token-info-fn))
     (refresh-access-token token-info-fn timeout)))
 
-(defn list-systems
-  [base-url token-info-fn timeout]
+(defn agave-get
+  [token-info-fn timeout url]
   (with-refresh [token-info-fn timeout]
     ((comp :result :body)
-     (http/get (str (curl/url base-url "/systems/v2/"))
+     (http/get (str url)
                {:oauth-token    (:access-token @(token-info-fn))
                 :as             :json
                 :conn-timeout   timeout
                 :socket-timeout timeout}))))
 
+(defn list-systems
+  [base-url token-info-fn timeout]
+  (agave-get token-info-fn timeout (curl/url base-url "/systems/v2/")))
+
 (defn list-apps
   [base-url token-info-fn timeout]
-  (with-refresh [token-info-fn timeout]
-    ((comp :result :body)
-     (http/get (str (curl/url base-url "/apps/v2/"))
-               {:oauth-token    (:access-token @(token-info-fn))
-                :as             :json
-                :conn-timeout   timeout
-                :socket-timeout timeout}))))
+  (agave-get token-info-fn timeout (curl/url base-url "/apps/v2/")))
+
+(defn get-app
+  [base-url token-info-fn timeout app-id]
+  (agave-get token-info-fn timeout (curl/url base-url "/apps/v2" app-id)))

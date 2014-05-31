@@ -4,7 +4,8 @@
 (defprotocol AgaveClient
   "A client for the Agave API."
   (listSystems [this])
-  (listApps [this]))
+  (listApps [this])
+  (getApp [this app-id]))
 
 (deftype AgaveClientV2 [base-url token-info-fn timeout]
   AgaveClient
@@ -13,7 +14,10 @@
     (v2/list-systems base-url token-info-fn timeout))
   (listApps [this]
     (v2/check-access-token token-info-fn timeout)
-    (v2/list-apps base-url token-info-fn timeout)))
+    (v2/list-apps base-url token-info-fn timeout))
+  (getApp [this app-id]
+    (v2/check-access-token token-info-fn timeout)
+    (v2/get-app base-url token-info-fn timeout app-id)))
 
 (defn agave-client-v2
   [base-url token-info-fn & {:keys [timeout] :or {timeout 5000}}]
