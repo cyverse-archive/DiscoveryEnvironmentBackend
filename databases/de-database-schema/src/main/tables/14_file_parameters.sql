@@ -4,7 +4,7 @@ SET search_path = public, pg_catalog;
 -- file_parameters table
 --
 CREATE TABLE file_parameters (
-    id uuid,
+    id uuid NOT NULL DEFAULT uuid_generate_v4(),
     name character varying(255),
     label character varying(255),
     orderd integer,
@@ -18,3 +18,4 @@ CREATE TABLE file_parameters (
     is_implicit boolean DEFAULT false,
     data_source_id uuid NOT NULL
 );
+

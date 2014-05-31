@@ -15,6 +15,7 @@ ALTER TABLE ONLY parameters
           THEN (uuid_generate_v4())
           ELSE CAST(id AS UUID)
     END;
+ALTER TABLE ONLY parameters ALTER COLUMN id SET DEFAULT uuid_generate_v4();
 ALTER TABLE ONLY parameters ADD COLUMN parameter_group_id UUID;
 ALTER TABLE ONLY parameters ADD COLUMN parameter_type UUID;
 ALTER TABLE ONLY parameters ADD COLUMN required boolean DEFAULT false;

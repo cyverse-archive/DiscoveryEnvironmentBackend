@@ -14,6 +14,7 @@ ALTER TABLE ONLY apps
           THEN (uuid_generate_v4())
           ELSE CAST(id AS UUID)
     END;
+ALTER TABLE ONLY apps ALTER COLUMN id SET DEFAULT uuid_generate_v4();
 ALTER TABLE ONLY apps ADD COLUMN integration_data_id UUID;
 ALTER TABLE ONLY apps ALTER COLUMN deleted SET DEFAULT false;
 ALTER TABLE ONLY apps ALTER COLUMN deleted SET NOT NULL;

@@ -4,7 +4,7 @@ SET search_path = public, pg_catalog;
 -- The tool requests themselves.
 --
 CREATE TABLE tool_requests (
-    id UUID NOT NULL,
+    id UUID NOT NULL DEFAULT uuid_generate_v4(),
     requestor_id UUID NOT NULL,
     phone VARCHAR(30),
     tool_name VARCHAR(255) NOT NULL,
@@ -21,3 +21,4 @@ CREATE TABLE tool_requests (
     additional_data_file TEXT,
     tool_id UUID
 );
+

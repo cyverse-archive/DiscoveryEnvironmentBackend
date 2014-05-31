@@ -12,6 +12,7 @@ ALTER TABLE ONLY parameter_groups
           THEN (uuid_generate_v4())
           ELSE CAST(id AS UUID)
     END;
+ALTER TABLE ONLY parameter_groups ALTER COLUMN id SET DEFAULT uuid_generate_v4();
 ALTER TABLE ONLY parameter_groups ADD COLUMN task_id UUID;
 
 WITH dups AS (SELECT id, COUNT(hid_v187) FROM parameter_groups GROUP BY id)
