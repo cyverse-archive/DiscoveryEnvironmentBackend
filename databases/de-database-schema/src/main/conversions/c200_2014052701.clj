@@ -12,26 +12,33 @@
   (let [arg (cheshire/decode argument_value true)]
     (insert :parameter_values
             (values {:parameter_id parameter_id
-                     :is_default (:isDefault arg)
+                     :is_default (or (:isDefault arg) false)
                      :name (:name arg)
                      :value (:value arg)
                      :description (:description arg)
                      :label (:display arg)}))))
 
 (defn- insert-tree-value
-  [parameter_id parent_id item]
-  (let [item_id (UUID/fromString (:id item))]
+  [parameter_id parent_id item display_order]
+  (let [item_id (UUID/randomUUID)]
     (insert :parameter_values
             (values {:id item_id
                      :parameter_id parameter_id
                      :parent_id parent_id
-                     :is_default (:isDefault item)
+                     :is_default (or (:isDefault item) false)
+                     :display_order display_order
                      :name (:name item)
                      :value (:value item)
                      :description (:description item)
                      :label (:display item)}))
-    (map (partial insert-tree-value parameter_id item_id) (:arguments item))
-    (map (partial insert-tree-value parameter_id item_id) (:groups item))))
+    (dorun
+     (map #(insert-tree-value parameter_id item_id %1 %2)
+          (:arguments item)
+          (range)))
+    (dorun
+     (map #(insert-tree-value parameter_id item_id %1 %2)
+          (:groups item)
+          (range)))))
 
 (defn- insert-tree-selection-values
   [{:keys [argument_value parameter_id]}]
@@ -40,9 +47,12 @@
     (insert :parameter_values
             (values {:id root_id
                      :parameter_id parameter_id
-                     :is_default (:isSingleSelect arg)
+                     :is_default (or (:isSingleSelect arg) false)
                      :name (:selectionCascade arg)}))
-    (map (partial insert-tree-value parameter_id root_id) (:groups arg))))
+    (dorun
+     (map #(insert-tree-value parameter_id root_id %1 %2)
+          (:groups arg)
+          (range)))))
 
 (defn- convert-selection-values
   []
