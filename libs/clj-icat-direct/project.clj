@@ -1,4 +1,4 @@
-(defproject org.iplantc/clj-icat-direct "3.1.3"
+(defproject org.iplantc/clj-icat-direct "3.1.4"
   :description "A Clojure library for accessing the iRODS ICAT database directly."
   :url "http://github.com/iPlantCollaborativeOpenSource/clj-icat-direct/"
   :license {:name "BSD Standard License"
