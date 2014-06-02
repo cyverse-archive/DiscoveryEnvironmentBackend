@@ -102,7 +102,7 @@
 
  "heuristomancer"
  {:type     :library
-  :type-num 11
+  :type-num 12
   :path     "libs/heuristomancer"
   :build    :lein
   :install  :lein
@@ -141,7 +141,7 @@
 
  "common-cli"
  {:type     :library
-  :type-num 12
+  :type-num 13
   :path     "libs/common-cli"
   :build    :lein
   :install  :lein
@@ -154,7 +154,7 @@
 
  "common-cfg"
  {:type     :library
-  :type-num 13
+  :type-num 14
   :path     "libs/common-cfg"
   :build    :lein
   :install  :lein
@@ -178,9 +178,22 @@
   :language :clojure
   :archive? false}
 
- "mescal"
+ "authy"
  {:type     :library
   :type-num 10
+  :path     "libs/authy"
+  :build    :lein
+  :install  :lein
+  :rpm?     false
+  :tarball? false
+  :uberjar? false
+  :install? true
+  :language :clojure
+  :archive? false}
+
+ "mescal"
+ {:type     :library
+  :type-num 11
   :path     "libs/mescal"
   :build    :lein
   :install  :lein
