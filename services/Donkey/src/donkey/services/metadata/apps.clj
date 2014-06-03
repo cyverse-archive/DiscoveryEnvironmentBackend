@@ -218,7 +218,7 @@
   (getApp [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/get-app app-id)
-      (aa/filter-default-inputs (.getApp agave-client app-id))))
+      (.getApp agave-client app-id)))
 
   (getAppDeployedComponents [_ app-id]
     (if (is-uuid? app-id)
@@ -290,6 +290,8 @@
                     (config/irods-home))))
 
 (defn- get-app-lister
+  ([]
+     (get-app-lister ""))
   ([state-info]
      (get-app-lister state-info (:username current-user)))
   ([state-info username]
