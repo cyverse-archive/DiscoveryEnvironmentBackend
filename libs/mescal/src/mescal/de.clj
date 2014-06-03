@@ -15,7 +15,7 @@
   (listApps [this]
     (v2/list-apps agave jobs-enabled?))
   (getApp [this app-id]
-    (v2/get-app agave irods-home app-id)))
+    (v2/get-app agave app-id)))
 
 (defn de-agave-client-v2
   [base-url token-info jobs-enabled? irods-home & {:keys [timeout] :or {timeout 5000}}]

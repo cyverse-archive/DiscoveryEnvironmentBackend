@@ -14,7 +14,6 @@
   [agave jobs-enabled?]
   (app-listings/list-apps agave (get-system-statuses agave) jobs-enabled?))
 
-;; TODO: implement me
 (defn get-app
-  [agave irods-home app-id]
-  (apps/format-app (.getApp agave app-id) irods-home))
+  [agave app-id]
+  (apps/format-app (.getApp agave app-id)))
