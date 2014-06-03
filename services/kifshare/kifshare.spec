@@ -15,7 +15,6 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 License: BSD
 Provides: kifshare
 Requires: iplant-service-config >= 0.1.0-5
-Requires: iplant-clavin
 Requires: java-1.7.0-openjdk
 Source0: %{name}-build.tar.gz
 

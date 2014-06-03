@@ -37,15 +37,21 @@
     {:id          dest-path
      :permissions (dataobject-perm-map cm user dest-path)}))
 
+(defn copy-metadata
+  "Copies AVUs from src and applies them to dest."
+  [cm src dest]
+  (doseq [m (get-metadata cm src)]
+    (set-metadata cm dest (:attr m) (:value m) (:unit m))))
+
 (defn save
   [cm istream user dest-path]
-  (log/info "In save function for " user dest-path)
+  (log/warn "In save function for " user dest-path)
   (let [ddir (ft/dirname dest-path)]
     (when-not (exists? cm ddir)
       (mkdirs cm ddir))
 
     (scruffy-copy cm istream user dest-path)
-    (log/info "save function after copy.")
+    (log/warn "save function after copy.")
     dest-path))
 
 (defn store

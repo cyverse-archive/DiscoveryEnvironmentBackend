@@ -33,7 +33,6 @@
   :plugins [[org.iplantc/lein-iplant-rpm "4.0.0"]]
   :iplant-rpm {:summary "iplant-email"
                :dependencies ["iplant-service-config >= 0.1.0-5"
-                              "iplant-clavin"
                               "java-1.7.0-openjdk"]
                :config-files ["log4j.properties"]
                :config-path "conf"

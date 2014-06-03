@@ -142,9 +142,10 @@
         (try+
           (with-in-str content
             (actions/save cm *in* user dest))
+          (actions/copy-metadata cm tmp-file dest)
           (jargon-ops/delete cm tmp-file true)
           (catch Object e
-            (log/debug e)
+            (log/warn e)
             (jargon-ops/move cm tmp-file dest :user user :admin-users (irods-admins))
             (throw+)))
 

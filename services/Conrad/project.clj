@@ -46,7 +46,7 @@
          :port 31334}
   :iplant-rpm {:summary "iPlant Conrad"
                :provides "conrad"
-               :dependencies ["iplant-service-config >= 0.1.0-5" "iplant-clavin" "java-1.7.0-openjdk"]
+               :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
                :config-files ["log4j.properties"]
                :config-path "conf/main"}
   :repositories [["sonatype-nexus-snapshots"
