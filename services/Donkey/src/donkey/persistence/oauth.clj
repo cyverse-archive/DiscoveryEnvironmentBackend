@@ -106,7 +106,8 @@
     (first (select [:authorization_requests :r]
                    (join [:users :u] {:r.user_id :u.id})
                    (fields [:u.username :username]
-                           [:r.state_info :state-info])))))
+                           [:r.state_info :state-info])
+                   (where {:r.id id})))))
 
 (defn retrieve-authorization-request-state
   "Retrieves an authorization request for a given UUID."
