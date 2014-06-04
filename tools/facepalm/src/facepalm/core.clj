@@ -293,7 +293,7 @@
   [opts]
   (try+
     (refresh-public-schema (:user opts))
-    (dorun (map #(load-sql-files %) ["tables" "views" "data" "functions"]))
+    (dorun (map #(load-sql-files %) ["tables" "constraints" "views" "data" "functions"]))
     (catch Exception e
       (log-next-exception e)
       (throw+))))
