@@ -1,6 +1,7 @@
 (ns clojure-commons.file-utils
   (:use [clojure.java.io :only [file]]
         [clojure.string :only [join split]])
+  (:require [me.raynes.fs :as fs])
   (:import [java.io File]))
 
 (def ^:dynamic *max-temp-dir-attempts*
@@ -8,7 +9,7 @@
   10)
 
 (defn path-join
-  "Joins paths together and returns the resulting path as a string. nil and empty strings are 
+  "Joins paths together and returns the resulting path as a string. nil and empty strings are
    silently discarded.
 
    Parameters:
@@ -151,7 +152,8 @@
      (try
        (.delete ~sym)
        (.mkdir ~sym)
-       ~@body
+       (fs/with-cwd ~sym
+         ~@body)
        (finally (rec-delete ~sym)))))
 
 (defmacro with-temp-dir-in
@@ -169,5 +171,6 @@
      (try
        (.delete ~sym)
        (.mkdir ~sym)
-       ~@body
+       (fs/with-cwd ~sym
+         ~@body)
        (finally (rec-delete ~sym)))))

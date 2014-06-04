@@ -15,7 +15,8 @@
             [clojure.tools.logging :as log]
             [clj-http.client :as client]
             [facepalm.conversions :as cnv]
-            [kameleon.pgpass :as pgpass])
+            [kameleon.pgpass :as pgpass]
+            [me.raynes.fs :as fs])
   (:import [java.io File IOException]
            [java.sql SQLException]
            [org.apache.log4j BasicConfigurator ConsoleAppender Level
@@ -59,11 +60,11 @@
 (defn set-conversions
   "Reads in the conversions from the unpacked build artifact. Set the conversions atom
    to the conversion map."
-  [unpacked-dir]
-  (let [conversion-dir (file unpacked-dir "conversions")]
+  []
+  (let [conversion-dir (fs/file "conversions")]
     (when (.exists conversion-dir)
       (println "Loading conversions...")
-      (reset! conversions (cnv/conversion-map unpacked-dir))
+      (reset! conversions (cnv/conversion-map))
       (println "Done loading conversions.")
       (println "Here are the loaded conversions: ")
       (dorun (map (partial println "   ") (sort (keys @conversions)))))))
@@ -212,19 +213,19 @@
 
 (defn- get-build-artifact-from-url
   "Gets the build artifact from a URL."
-  [dir opts]
+  [opts]
   (let [artifact-url          (build-artifact-url opts)
         {:keys [status body]} (get-remote-resource artifact-url)]
     (if-not (< 199 status 300)
       (build-artifact-retrieval-failed status artifact-url))
     (with-open [in body]
-      (copy in (file dir (:filename opts))))))
+      (copy in (fs/file (:filename opts))))))
 
 (defn get-build-artifact-from-file
   "Gets the build artifact from a local file."
-  [dir filename]
+  [filename]
   (let [src (file filename)
-        dst (file dir (.getName src))]
+        dst (fs/file (.getName src))]
     (try+
      (copy src dst)
      (catch IOException e
@@ -233,17 +234,17 @@
 
 (defn- get-build-artifact
   "Obtains the database build artifact."
-  [dir {:keys [filename job qa-drop] :as opts}]
+  [{:keys [filename job qa-drop] :as opts}]
   (println "Retrieving the build artifact...")
   (if (every? string/blank? [qa-drop job])
-    (get-build-artifact-from-file dir filename)
-    (get-build-artifact-from-url dir opts)))
+    (get-build-artifact-from-file filename)
+    (get-build-artifact-from-url opts)))
 
 (defn- unpack-build-artifact
   "Unpacks the database build artifact after it has been obtained."
   [dir filename]
   (println "Unpacking the build artifact...")
-  (let [file-path   (.getPath (file dir (.getName (file filename))))
+  (let [file-path   (.getPath (fs/file (.getName (file filename))))
         exit-status (sh "tar" "xvf" file-path "-C" (.getPath dir))]
     (when-not (zero? exit-status)
       (build-artifact-expansion-failed))))
@@ -264,8 +265,8 @@
 
 (defn- load-sql-files
   "Loads SQL files from a subdirectory of the artifact directory."
-  [parent subdir-name]
-  (let [subdir (file parent subdir-name)]
+  [subdir-name]
+  (let [subdir (fs/file subdir-name)]
     (dorun (map load-sql-file
                 (sort-by #(.getName %) (.listFiles subdir))))))
 
@@ -289,10 +290,10 @@
 
 (defn- apply-database-init-scripts
   "Applies the database initialization scripts to the database."
-  [dir opts]
+  [opts]
   (try+
     (refresh-public-schema (:user opts))
-    (dorun (map #(load-sql-files dir %) ["tables" "views" "data" "functions"]))
+    (dorun (map #(load-sql-files %) ["tables" "views" "data" "functions"]))
     (catch Exception e
       (log-next-exception e)
       (throw+))))
@@ -302,10 +303,10 @@
    location."
   [opts]
   (with-temp-dir dir "-fp-" temp-directory-creation-failure
-    (get-build-artifact dir opts)
+    (get-build-artifact opts)
     (unpack-build-artifact dir (:filename opts))
-    (set-conversions dir)
-    (transaction (apply-database-init-scripts dir opts))))
+    (set-conversions)
+    (transaction (apply-database-init-scripts opts))))
 
 (defn- get-current-db-version
   "Gets the current database version, defaulting to 1.2.0:20120101.01 if the
@@ -348,9 +349,9 @@
   "Converts the database schema from one DE version to another."
   [opts]
   (with-temp-dir dir "-fp-" temp-directory-creation-failure
-    (get-build-artifact dir opts)
+    (get-build-artifact opts)
     (unpack-build-artifact dir (:filename opts))
-    (set-conversions dir)
+    (set-conversions)
     (let [versions (get-update-versions (get-current-db-version) (:version opts))]
       (validate-update-versions versions)
       (try+
