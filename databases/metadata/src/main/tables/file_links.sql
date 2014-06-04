@@ -10,3 +10,5 @@ CREATE TABLE file_links (
   created_on timestamp DEFAULT now() NOT NULL
 );
 
+CREATE INDEX file_links_target_id_idx ON file_links(target_id);
+

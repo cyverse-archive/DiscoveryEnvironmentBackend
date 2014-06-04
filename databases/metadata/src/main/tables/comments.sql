@@ -12,3 +12,5 @@ CREATE TABLE comments (
   owner_id UUID NOT NULL
 );
 
+CREATE INDEX comments_target_id_idx ON comments(target_id);
+

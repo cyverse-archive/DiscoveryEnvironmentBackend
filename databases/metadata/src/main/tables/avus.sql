@@ -14,3 +14,6 @@ CREATE TABLE avus (
   modified_on timestamp DEFAULT now() NOT NULL
 );
 
+CREATE INDEX avus_target_id_idx ON avus(target_id);
+CREATE INDEX avus_owner_id_idx ON avus(owner_id);
+

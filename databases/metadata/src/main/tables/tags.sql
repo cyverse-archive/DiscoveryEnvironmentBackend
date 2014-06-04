@@ -14,3 +14,6 @@ CREATE TABLE tags (
   modified_on timestamp DEFAULT now() NOT NULL
 );
 
+CREATE INDEX tags_target_id_idx ON tags(target_id);
+CREATE INDEX tags_owner_id_idx ON tags(owner_id);
+

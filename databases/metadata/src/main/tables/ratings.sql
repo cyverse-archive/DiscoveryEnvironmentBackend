@@ -11,3 +11,6 @@ CREATE TABLE ratings (
   created_on timestamp DEFAULT now() NOT NULL
 );
 
+CREATE INDEX ratings_target_id_idx ON ratings(target_id);
+CREATE INDEX ratings_owner_id_idx ON ratings(owner_id);
+
