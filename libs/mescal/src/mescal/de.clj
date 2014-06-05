@@ -4,18 +4,21 @@
 
 (defprotocol DeAgaveClient
   "An Agave client with customizations that are specific to the discovery environment."
-  (hpcAppGroup [this])
-  (listApps [this])
-  (getApp [this app-id]))
+  (hpcAppGroup [_])
+  (listApps [_])
+  (getApp [_ app-id])
+  (submitJob [_ submission]))
 
 (deftype DeAgaveClientV2 [agave jobs-enabled? irods-home]
   DeAgaveClient
-  (hpcAppGroup [this]
+  (hpcAppGroup [_]
     (v2/hpc-app-group))
-  (listApps [this]
+  (listApps [_]
     (v2/list-apps agave jobs-enabled?))
-  (getApp [this app-id]
-    (v2/get-app agave app-id)))
+  (getApp [_ app-id]
+    (v2/get-app agave app-id))
+  (submitJob [_ submission]
+    (v2/submit-job agave irods-home submission)))
 
 (defn de-agave-client-v2
   [base-url token-info jobs-enabled? irods-home & {:keys [timeout] :or {timeout 5000}}]

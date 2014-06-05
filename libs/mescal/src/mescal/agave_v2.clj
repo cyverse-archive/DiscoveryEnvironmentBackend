@@ -38,6 +38,17 @@
                 :conn-timeout   timeout
                 :socket-timeout timeout}))))
 
+(defn agave-post
+  [token-info-fn timeout url body]
+  (with-refresh [token-info-fn timeout]
+    ((comp :result :body)
+     (http/post (str url)
+                {:oauth-token   (:access-token @(token-info-fn))
+                 :as            :json
+                 :accept        :json
+                 :content-type  :json
+                 :form-params   body}))))
+
 (defn list-systems
   [base-url token-info-fn timeout]
   (agave-get token-info-fn timeout (curl/url base-url "/systems/v2/")))
@@ -49,3 +60,7 @@
 (defn get-app
   [base-url token-info-fn timeout app-id]
   (agave-get token-info-fn timeout (curl/url base-url "/apps/v2" app-id)))
+
+(defn submit-job
+  [base-url token-info-fn timeout submission]
+  (agave-post token-info-fn timeout (curl/url base-url "/jobs/v2/") submission))
