@@ -26,3 +26,7 @@
     (->> (jobs/prepare-submission irods-home app submission)
          (.submitJob agave)
          (jobs/format-job irods-home true (get-system-statuses agave) {app-id app}))))
+
+(defn translate-job-status
+  [status]
+  (jobs/translate-job-status status))

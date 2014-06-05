@@ -7,7 +7,8 @@
   (hpcAppGroup [_])
   (listApps [_])
   (getApp [_ app-id])
-  (submitJob [_ submission]))
+  (submitJob [_ submission])
+  (translateJobStatus [_ status]))
 
 (deftype DeAgaveClientV2 [agave jobs-enabled? irods-home]
   DeAgaveClient
@@ -18,7 +19,9 @@
   (getApp [_ app-id]
     (v2/get-app agave app-id))
   (submitJob [_ submission]
-    (v2/submit-job agave irods-home submission)))
+    (v2/submit-job agave irods-home submission))
+  (translateJobStatus [_ status]
+    (v2/translate-job-status status)))
 
 (defn de-agave-client-v2
   [base-url token-info jobs-enabled? irods-home & {:keys [timeout] :or {timeout 5000}}]

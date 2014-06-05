@@ -110,3 +110,7 @@
            app-info (app-info-map app-id {})]
        (assoc (format-job irods-home jobs-enabled? app-info-map job)
          :app-disabled (not (app-enabled? statuses jobs-enabled? app-info))))))
+
+(defn translate-job-status
+  [status]
+  (get job-status-translations status))
