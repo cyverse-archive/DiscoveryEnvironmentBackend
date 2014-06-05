@@ -5,7 +5,7 @@ SET search_path = public, pg_catalog;
 --
 ALTER TABLE file_links
     ADD CONSTRAINT file_links_pkey
-    PRIMARY KEY (file_id);
+    PRIMARY KEY (file_id, target_id, owner_id);
 
 --
 -- file_links table foreign key to the targets table.
