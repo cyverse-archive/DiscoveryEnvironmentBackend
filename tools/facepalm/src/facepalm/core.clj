@@ -34,6 +34,10 @@
   [opts]
   (update-database opts))
 
+(def ^:private db-admin-user
+  "The admin user to connect as an admin."
+  "postgres")
+
 (def ^:private default-jenkins-base
   "The base URL used to connect to Jenkins."
   "http://watson.iplantcollaborative.org/hudson")
@@ -56,6 +60,8 @@
   (apply str (string/join " | " (map name (keys modes)))))
 
 (def conversions (atom nil))
+
+(def admin-db-spec (atom nil))
 
 (defn set-conversions
   "Reads in the conversions from the unpacked build artifact. Set the conversions atom
@@ -172,17 +178,30 @@
 (defn- define-db
   "Defines the database connection settings."
   [{:keys [host port database user]}]
-  (let [password (get-password host port database user)]
-    (defdb de {:classname "org.postgresql.Driver"
-               :subprotocol "postgresql"
-               :subname (str "//" host ":" port "/" database)
-               :user user
-               :password (apply str password)})))
+  (let [db-spec {:classname "org.postgresql.Driver"
+                 :subprotocol "postgresql"
+                 :subname (str "//" host ":" port "/" database)}
+        password (get-password host port database user)
+        admin-password (pgpass/get-password host port database db-admin-user)]
+    (when admin-password
+      (reset! admin-db-spec
+              (postgres (assoc db-spec
+                          :schema "public"
+                           :user db-admin-user
+                           :password (apply str admin-password)))))
+    (defdb de (assoc db-spec
+                :user user
+                :password (apply str password)))))
 
 (defn- test-db
   "Test the database connection settings to ensure that the connection settings
    are correct."
-  [{:keys [host port database user]}]
+  [{:keys [mode host port database user]}]
+  (when (= :init (keyword mode))
+    (try+
+     (with-db @admin-db-spec (transaction))
+     (catch Exception e
+       (database-connection-failure host port database db-admin-user))))
   (try+
    (transaction)
    (catch Exception e
@@ -288,11 +307,21 @@
       (log/error (.getNextException e) "next exception"))
     (recur (.getCause e))))
 
-(defn- apply-database-init-scripts
-  "Applies the database initialization scripts to the database."
+(defn- init-database
+  "Refreshes the public schema and initializes extension scripts with the admin user."
   [opts]
   (try+
-    (refresh-public-schema (:user opts))
+   (refresh-public-schema (:user opts))
+   (with-db @admin-db-spec
+     (load-sql-files "extensions"))
+   (catch Exception e
+     (log-next-exception e)
+     (throw+))))
+
+(defn- apply-database-init-scripts
+  "Applies the database initialization scripts to the database."
+  []
+  (try+
     (dorun (map #(load-sql-files %) ["tables" "constraints" "views" "data" "functions"]))
     (catch Exception e
       (log-next-exception e)
@@ -306,7 +335,8 @@
     (get-build-artifact opts)
     (unpack-build-artifact dir (:filename opts))
     (set-conversions)
-    (transaction (apply-database-init-scripts opts))))
+    (init-database opts)
+    (transaction (apply-database-init-scripts))))
 
 (defn- get-current-db-version
   "Gets the current database version, defaulting to 1.2.0:20120101.01 if the
