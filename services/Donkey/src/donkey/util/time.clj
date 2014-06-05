@@ -1,6 +1,6 @@
 (ns donkey.util.time
   (:use [clj-time.core :only [default-time-zone]]
-        [clj-time.format :only [formatter parse]])
+        [clj-time.format :only [formatter formatters parse]])
   (:require [clojure.string :as string]))
 
 (def ^:private timestamp-parser
@@ -8,7 +8,8 @@
              "EEE MMM dd YYYY HH:mm:ss 'GMT'Z"
              "YYYY MMM dd HH:mm:ss"
              "YYYY-MM-dd-HH-mm-ss.SSS"
-             "YYYY-MM-dd HH:mm:ss.SSS"))
+             "YYYY-MM-dd HH:mm:ss.SSS"
+             "YYYY-MM-dd'T'HH:mm:ss.SSSZ"))
 
 (defn- strip-time-zone
   "Removes the time zone abbreviation from a date timestamp."

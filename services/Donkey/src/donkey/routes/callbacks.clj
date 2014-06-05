@@ -24,8 +24,8 @@
   (optional-routes
    [agave-callback-routes-enabled]
 
-   (POST "/agave-job/:uuid" [uuid]
-         (trap #(svc/receive-agave-job-status-update uuid)))))
+   (POST "/agave-job/:uuid" [uuid :as {params :params}]
+         (trap #(svc/receive-agave-job-status-update uuid params)))))
 
 (defn unsecured-callback-routes
   "All unsecured callback routes."

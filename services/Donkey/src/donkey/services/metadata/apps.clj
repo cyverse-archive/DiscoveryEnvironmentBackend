@@ -57,8 +57,8 @@
      (jp/update-job id {:status   status
                         :end-date (db/timestamp-from-str (str end-date))
                         :deleted  deleted}))
-  ([agave id username prev-job-info]
-     (aa/update-agave-job-status agave id username prev-job-info)))
+  ([agave id username prev-job-info status end-time]
+     (aa/update-agave-job-status agave id username prev-job-info status end-time)))
 
 (defn- unrecognized-job-type
   [job-type]
@@ -111,7 +111,7 @@
   (populateJobsTable [_])
   (populateJobDescriptions [_ username])
   (removeDeletedJobs [_])
-  (updateJobStatus [_ id username prev-status])
+  (updateJobStatus [_ id username prev-status status end-time])
   (getJobParams [_ job-id])
   (getAppRerunInfo [_ job-id]))
 ;; AppLister
@@ -168,7 +168,7 @@
   (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs))
 
-  (updateJobStatus [_ id username prev-status]
+  (updateJobStatus [_ id username prev-status status end-time]
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "HPC_JOBS_DISABLED"}))
 
@@ -257,8 +257,8 @@
     (da/remove-deleted-de-jobs)
     (aa/remove-deleted-agave-jobs agave-client))
 
-  (updateJobStatus [_ id username prev-job-info]
-    (update-job-status agave-client id username prev-job-info))
+  (updateJobStatus [_ id username prev-job-info status end-time]
+    (update-job-status agave-client id username prev-job-info status end-time))
 
   (getJobParams [_ job-id]
     (process-job agave-client job-id
@@ -388,11 +388,11 @@
                       :end-date end-date}))
 
 (defn update-agave-job-status
-  [uuid]
-  (let [{:keys [id username] :as job} (jp/get-job-by-id (UUID/fromString uuid))]
+  [uuid status end-time]
+  (let [{:keys [username] :as job} (jp/get-job-by-id (UUID/fromString uuid))]
     (service/assert-found job "job" uuid)
     (service/assert-valid (= jp/agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
-    (.updateJobStatus (get-app-lister "" username) id username job)))
+    (.updateJobStatus (get-app-lister "" username) username job status end-time)))
 
 (defn- sync-job-status
   [job]

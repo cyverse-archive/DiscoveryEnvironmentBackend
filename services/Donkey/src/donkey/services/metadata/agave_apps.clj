@@ -42,11 +42,18 @@
        (map jp/set-job-description)
        (dorun)))
 
+(defn- build-callback-url
+  [id]
+  (str (assoc (curl/url (config/agave-callback-base) (str id))
+         :query {:status   "${JOB_STATUS}"
+                 :job      "${JOB_ID}"
+                 :end-time "${JOB_END_TIME}"})))
+
 (defn submit-agave-job
   [agave-client submission]
   (let [id     (UUID/randomUUID)
-        cb-url (str (curl/url (config/agave-callback-base) (str id)))
-        job    (.submitJob agave-client (assoc-in submission [:config :callbackUrl] cb-url))]
+        cb-url (build-callback-url id)
+        job    (.submitJob agave-client (assoc submission :callbackUrl cb-url))]
     (store-agave-job agave-client id job)
     (dn/send-agave-job-status-update (:shortUsername current-user) job)
     {:id id
@@ -80,16 +87,21 @@
    (catch [:status 400] _ (not-found-fn id))
    (catch Object _ (service/request-failure "lookup for HPC job" id))))
 
+(defn- is-complete?
+  [status]
+  (#{"Failed" "Completed"} status))
+
 (defn update-agave-job-status
-  [agave id username prev-job-info]
-  (let [job-info (get-agave-job agave id (partial service/not-found "HPC job"))
-        username (string/replace username #"@.*" "")]
-    (service/assert-found job-info "HPC job" id)
-    (when-not (= (:status job-info) (:status prev-job-info))
-      (jp/update-job id (:status job-info) (db/timestamp-from-str (str (:enddate job-info))))
-      (dn/send-agave-job-status-update username (assoc job-info
-                                                  :name        (:name prev-job-info)
-                                                  :description (:description prev-job-info))))))
+  [agave id username prev-job-info status end-time]
+  (let [status     (.translateJobStatus agave status)
+        username   (string/replace username #"@.*" "")
+        end-time   (when (is-complete? status) (db/timestamp-from-str end-time))
+        end-millis (when-not (nil? end-time) (str (.getMillis end-time)))]
+    (when-not (= status (:status prev-job-info))
+      (jp/update-job id status end-time)
+      (dn/send-agave-job-status-update username (assoc prev-job-info
+                                                  :status  status
+                                                  :enddate end-millis)))))
 
 (defn remove-deleted-agave-jobs
   "Marks jobs that have been deleted in Agave as deleted in the DE also."
