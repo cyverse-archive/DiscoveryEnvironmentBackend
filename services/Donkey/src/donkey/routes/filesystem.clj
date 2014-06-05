@@ -163,7 +163,13 @@
           (controller req do-read-csv-chunk :params :body))
 
     (POST "/filesystem/anon-files" [:as req]
-          (controller req do-anon-files :params :body))))
+          (controller req do-anon-files :params :body))
+
+    (POST "/filesystem/paths-for-uuids" [:as req]
+          (controller req do-paths-for-uuids :params :body))
+
+    (POST "/filesystem/uuids-for-paths" [:as req]
+          (controller req do-uuids-for-paths :params :body))))
 
 (defn secured-filesystem-metadata-routes
   "The routes for file metadata endpoints."
@@ -183,3 +189,4 @@
 
    (DELETE "/filesystem/:data-id/template-avus/:template-id/:avu-id" [data-id template-id avu-id :as req]
         (controller req do-remove-metadata-template-avu :params data-id template-id avu-id))))
+
