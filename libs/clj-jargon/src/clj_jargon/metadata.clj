@@ -360,3 +360,17 @@
     (mapv
      #(.getCollectionName %)
      (.findDomainByMetadataQuery (:collectionAO cm) query))))
+
+(defn list-collections-with-attr-value
+  [cm attr value]
+  (let [query [(AVUQueryElement/instanceForValueQuery
+                AVUQueryElement$AVUQueryPart/VALUE
+                AVUQueryOperatorEnum/EQUAL
+                value)
+               (AVUQueryElement/instanceForValueQuery
+                AVUQueryElement$AVUQueryPart/ATTRIBUTE
+                AVUQueryOperatorEnum/EQUAL
+                attr)]]
+    (mapv
+     #(.getCollectionName %)
+     (.findDomainByMetadataQuery (:collectionAO cm) query))))

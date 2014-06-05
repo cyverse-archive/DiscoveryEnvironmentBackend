@@ -22,6 +22,7 @@
         [donkey.services.filesystem.copy]
         [donkey.services.filesystem.page-file]
         [donkey.services.filesystem.page-csv]
+        [donkey.services.filesystem.uuids]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]
@@ -162,4 +163,10 @@
           (controller req do-read-csv-chunk :params :body))
 
     (POST "/filesystem/anon-files" [:as req]
-          (controller req do-anon-files :params :body))))
+          (controller req do-anon-files :params :body))
+
+    (POST "/filesystem/paths-for-uuids" [:as req]
+          (controller req do-paths-for-uuids :params :body))
+
+    (POST "/filesystem/uuids-for-paths" [:as req]
+          (controller req do-uuids-for-paths :params :body))))
