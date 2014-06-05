@@ -4,7 +4,7 @@ SET search_path = public, pg_catalog;
 -- tags table
 --
 CREATE TABLE tags (
-  id UUID NOT NULL,
+  id UUID NOT NULL DEFAULT uuid_generate_v4(),
   value VARCHAR(255),
   description TEXT,
   public BOOLEAN DEFAULT false,
