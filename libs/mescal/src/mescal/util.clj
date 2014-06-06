@@ -27,4 +27,5 @@
 (defn parse-timestamp
   "Converts a formatted timestamp to the number of milliseconds since the epoch."
   [timestamp]
-  (.getMillis (tf/parse (:date-time tf/formatters) timestamp)))
+  (when-not (nil? timestamp)
+    (.getMillis (tf/parse (:date-time tf/formatters) timestamp))))

@@ -45,9 +45,7 @@
 (defn- build-callback-url
   [id]
   (str (assoc (curl/url (config/agave-callback-base) (str id))
-         :query {:status   "${JOB_STATUS}"
-                 :job      "${JOB_ID}"
-                 :end-time "${JOB_END_TIME}"})))
+         :query "status=${JOB_STATUS}&job=${JOB_ID}&end-time=${JOB_END_TIME}")))
 
 (defn submit-agave-job
   [agave-client submission]
@@ -92,16 +90,18 @@
   (#{"Failed" "Completed"} status))
 
 (defn update-agave-job-status
-  [agave id username prev-job-info status end-time]
-  (let [status     (.translateJobStatus agave status)
-        username   (string/replace username #"@.*" "")
-        end-time   (when (is-complete? status) (db/timestamp-from-str end-time))
-        end-millis (when-not (nil? end-time) (str (.getMillis end-time)))]
+  [agave username {:keys [startdate] :as prev-job-info} status end-time]
+  (let [status       (.translateJobStatus agave status)
+        username     (string/replace username #"@.*" "")
+        end-time     (when (is-complete? status) (db/timestamp-from-str end-time))
+        end-millis   (when-not (nil? end-time) (str (.getTime end-time)))
+        start-millis (str (.getTime startdate))]
     (when-not (= status (:status prev-job-info))
-      (jp/update-job id status end-time)
+      (jp/update-job (:id prev-job-info) status end-time)
       (dn/send-agave-job-status-update username (assoc prev-job-info
-                                                  :status  status
-                                                  :enddate end-millis)))))
+                                                  :status    status
+                                                  :enddate   end-millis
+                                                  :startdate start-millis)))))
 
 (defn remove-deleted-agave-jobs
   "Marks jobs that have been deleted in Agave as deleted in the DE also."

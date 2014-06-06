@@ -57,8 +57,8 @@
      (jp/update-job id {:status   status
                         :end-date (db/timestamp-from-str (str end-date))
                         :deleted  deleted}))
-  ([agave id username prev-job-info status end-time]
-     (aa/update-agave-job-status agave id username prev-job-info status end-time)))
+  ([agave username prev-job-info status end-time]
+     (aa/update-agave-job-status agave username prev-job-info status end-time)))
 
 (defn- unrecognized-job-type
   [job-type]
@@ -111,7 +111,7 @@
   (populateJobsTable [_])
   (populateJobDescriptions [_ username])
   (removeDeletedJobs [_])
-  (updateJobStatus [_ id username prev-status status end-time])
+  (updateJobStatus [_ username prev-status status end-time])
   (getJobParams [_ job-id])
   (getAppRerunInfo [_ job-id]))
 ;; AppLister
@@ -168,7 +168,7 @@
   (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs))
 
-  (updateJobStatus [_ id username prev-status status end-time]
+  (updateJobStatus [_ username prev-status status end-time]
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "HPC_JOBS_DISABLED"}))
 
@@ -257,8 +257,8 @@
     (da/remove-deleted-de-jobs)
     (aa/remove-deleted-agave-jobs agave-client))
 
-  (updateJobStatus [_ id username prev-job-info status end-time]
-    (update-job-status agave-client id username prev-job-info status end-time))
+  (updateJobStatus [_ username prev-job-info status end-time]
+    (update-job-status agave-client username prev-job-info status end-time))
 
   (getJobParams [_ job-id]
     (process-job agave-client job-id

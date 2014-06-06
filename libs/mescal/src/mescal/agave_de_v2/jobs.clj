@@ -2,7 +2,8 @@
   (:use [clojure.java.io :only [file]]
         [medley.core :only [remove-vals]])
   (:require [clojure.string :as string]
-            [mescal.agave-de-v2.app-listings :as app-listings]))
+            [mescal.agave-de-v2.app-listings :as app-listings]
+            [mescal.util :as util]))
 
 (defn- remove-trailing-slash
   [path]
@@ -52,7 +53,7 @@
    "CLEANING_UP"        running
    "ARCHIVING"          running
    "STAGING_JOB"        submitted
-   "FINISHED"           running
+   "FINISHED"           completed
    "KILLED"             failed
    "FAILED"             failed
    "STOPPED"            failed
@@ -98,11 +99,11 @@
         :analysis_details (:longDescription app-info "")
         :analysis_name    (app-listings/get-app-name app-info)
         :description      ""
-        :enddate          (str (:endTime job ""))
+        :enddate          (or (str (util/parse-timestamp (:endTime job))) "")
         :name             (:name job)
         :raw_status       (:status job)
         :resultfolderid   (build-path irods-home (:archivePath job))
-        :startdate        (str (:submitTime job))
+        :startdate        (str (util/parse-timestamp (:submitTime job)))
         :status           (job-status-translations (:status job) "")
         :wiki_url         ""}))
   ([irods-home jobs-enabled? statuses app-info-map job]
