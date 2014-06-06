@@ -21,6 +21,7 @@
         [donkey.routes.search]
         [donkey.routes.coge]
         [donkey.routes.tags]
+        [donkey.routes.comments]
         [donkey.auth.user-attributes]
         [donkey.util]
         [donkey.util.service]
@@ -64,6 +65,7 @@
    (secured-admin-routes)
    (secured-search-routes)
    (secured-tag-routes)
+   (secured-comment-routes)
    (route/not-found (unrecognized-path-response))))
 
 (defn cas-store-user
