@@ -5,9 +5,11 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE comments (
   id UUID NOT NULL DEFAULT uuid_generate_v1(),
-  value TEXT,
+  value TEXT NOT NULL,
   post_time timestamp DEFAULT now() NOT NULL,
-  deleted BOOLEAN DEFAULT false,
+  retracted BOOLEAN NOT NULL DEFAULT false,
+  retracted_by varchar(512) DEFAULT NULL,
+  deleted BOOLEAN NOT NULL DEFAULT false,
   target_id UUID NOT NULL,
   owner_id varchar(512) NOT NULL
 );
