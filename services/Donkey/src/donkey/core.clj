@@ -59,6 +59,7 @@
    (secured-session-routes)
    (secured-fileio-routes)
    (secured-filesystem-routes)
+   (secured-filesystem-metadata-routes)
    (secured-coge-routes)
    (secured-admin-routes)
    (secured-search-routes)

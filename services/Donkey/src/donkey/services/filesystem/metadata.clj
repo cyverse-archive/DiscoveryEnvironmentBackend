@@ -6,6 +6,9 @@
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.metadata]
+        [kameleon.queries :only [get-user-id]]
+        [korma.core]
+        [korma.db :only [with-db transaction]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
@@ -13,7 +16,9 @@
             [cheshire.core :as json]
             [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.services.filesystem.validators :as validators]))
+            [donkey.services.filesystem.validators :as validators]
+            [donkey.util.db :as db])
+  (:import [java.util UUID]))
 
 (defn- fix-unit
   "Used to replace the IPCRESERVED unit with an empty string."
@@ -244,3 +249,58 @@
                           :value string?})))
 
 (with-post-hook! #'do-metadata-delete (log-func "do-metadata-delete"))
+
+(defn- format-new-avu
+  [user-id data-id avu]
+  (-> avu
+      (assoc
+        :id (UUID/randomUUID)
+        :target_id data-id
+        :owner_id user-id
+        :attribute (:attr avu))
+      (dissoc :attr)))
+
+(defn- add-metadata-template-avus
+  [user-id data-id template-id body]
+  (log/warn "Connecting to database: " db/metadata)
+  (with-db db/metadata
+    (let [avus (map (partial format-new-avu user-id data-id) (:avus body))
+          target (first (select :targets (where {:id data-id})))]
+      (transaction
+       (when-not target
+         (insert :targets
+                 (values {:id data-id
+                          :type "data"})))
+       (insert :avus
+               (values avus))
+       (insert :template_instances
+               (values (map #({:template_id template-id
+                               :avu_id (:id %)}) avus))))
+      {:user user-id :data_id data-id :template_id template-id :avus avus})))
+
+(defn do-metadata-template-avu-list
+  ""
+  ([{user :user} data-id]
+   {:user user :data-id data-id})
+
+  ([{user :user} data-id template-id]
+   (let [avus (with-db db/metadata
+                (select :avus
+                        (join [:template_instances :t]
+                              {:t.avu_id :avus.id})
+                        (where {:t.template_id (UUID/fromString template-id)})))]
+     {:user user :data_id data-id :template_id template-id :avus avus})))
+
+(defn do-add-metadata-template-avus
+  ""
+  [{username :user} data-id template-id body]
+  (add-metadata-template-avus username
+                              (UUID/fromString data-id)
+                              (UUID/fromString template-id)
+                              body))
+
+(defn do-remove-metadata-template-avu
+  ""
+  [{user :user} data-id template-id avu-id]
+   {:user user :data-id data-id :template-id template-id :avu avu-id})
+

@@ -163,3 +163,23 @@
 
     (POST "/filesystem/anon-files" [:as req]
           (controller req do-anon-files :params :body))))
+
+(defn secured-filesystem-metadata-routes
+  "The routes for file metadata endpoints."
+  []
+  (optional-routes
+   [#(and (config/filesystem-routes-enabled)
+          (config/metadata-routes-enabled))]
+
+   (GET "/filesystem/:data-id/template-avus" [data-id :as req]
+        (controller req do-metadata-template-avu-list :params data-id))
+
+   (GET "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
+        (controller req do-metadata-template-avu-list :params data-id template-id))
+
+   (PUT "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
+        (controller req do-add-metadata-template-avus :params data-id template-id :body))
+
+   (DELETE "/filesystem/:data-id/template-avus/:template-id/:avu-id" [data-id template-id avu-id :as req]
+        (controller req do-remove-metadata-template-avu :params data-id template-id avu-id))))
+
