@@ -4,7 +4,7 @@ SET search_path = public, pg_catalog;
 -- avus table
 --
 CREATE TABLE avus (
-  id UUID NOT NULL DEFAULT uuid_generate_v4(),
+  id UUID NOT NULL DEFAULT uuid_generate_v1(),
   attribute TEXT,
   value TEXT,
   unit TEXT,

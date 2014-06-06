@@ -4,7 +4,7 @@ SET search_path = public, pg_catalog;
 -- comments table
 --
 CREATE TABLE comments (
-  id UUID NOT NULL DEFAULT uuid_generate_v4(),
+  id UUID NOT NULL DEFAULT uuid_generate_v1(),
   value TEXT,
   post_time timestamp DEFAULT now() NOT NULL,
   deleted BOOLEAN DEFAULT false,
