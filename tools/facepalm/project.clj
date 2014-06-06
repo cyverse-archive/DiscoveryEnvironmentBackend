@@ -22,7 +22,7 @@
                  [cheshire "5.2.0"]
                  [com.cemerick/pomegranate "0.0.13"]
                  [fleet "0.9.5"]
-                 [korma "0.3.0-RC2"]
+                 [korma "0.3.0-RC5"]
                  [me.raynes/fs "1.4.5"]
                  [org.iplantc/clojure-commons "3.1.4"]
                  [org.iplantc/kameleon "3.1.4"]

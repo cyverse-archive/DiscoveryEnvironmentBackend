@@ -22,7 +22,7 @@
                  [swank-clojure "1.4.3"]
                  [log4j/log4j "1.2.17"]
                  [c3p0/c3p0 "0.9.1.2"]
-                 [korma/korma "0.3.0-RC4"]
+                 [korma/korma "0.3.0-RC5"]
                  [ring/ring-jetty-adapter "1.1.0"]
                  [postgresql/postgresql "9.0-801.jdbc4"]]
   :plugins [[org.iplantc/lein-iplant-rpm "3.1.4"]
