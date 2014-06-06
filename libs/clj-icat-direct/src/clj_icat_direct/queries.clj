@@ -138,12 +138,13 @@
            c.modify_ts                            as modify_ts,
            'collection'                           as type,
            0                                      as data_size,
-           a.access_type_id                       as access_type_id
+           MAX(a.access_type_id)                  as access_type_id
       FROM r_coll_main c
       JOIN r_objt_access a ON c.coll_id = a.object_id
       JOIN parent p ON c.parent_coll_name = p.coll_name
      WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
        AND c.coll_type != 'linkPoint'
+  GROUP BY dir_name, full_path, base_name, c.create_ts, c.modify_ts, type, data_size
   ORDER BY base_name ASC"
 
    :count-files-in-folder
