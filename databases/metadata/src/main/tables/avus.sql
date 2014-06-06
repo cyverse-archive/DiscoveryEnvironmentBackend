@@ -16,4 +16,5 @@ CREATE TABLE avus (
 
 CREATE INDEX avus_target_id_idx ON avus(target_id);
 CREATE INDEX avus_owner_id_idx ON avus(owner_id);
+CREATE INDEX avus_avu_idx ON avus(attribute, value, unit);
 

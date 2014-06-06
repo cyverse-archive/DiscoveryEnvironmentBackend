@@ -15,3 +15,10 @@ ALTER TABLE avus
     FOREIGN KEY (target_id)
     REFERENCES targets(id);
 
+--
+-- avus table unique values contraint.
+--
+ALTER TABLE avus
+    ADD CONSTRAINT avus_unique
+    UNIQUE (owner_id, target_id, attribute, value, unit);
+
