@@ -5,7 +5,7 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE favorites (
   target_id UUID NOT NULL,
-  owner_id UUID NOT NULL,
+  owner_id varchar(512) NOT NULL,
   created_on timestamp DEFAULT now() NOT NULL
 );
 
