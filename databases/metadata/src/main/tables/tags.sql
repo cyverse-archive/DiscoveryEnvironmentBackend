@@ -5,11 +5,11 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE tags (
   id UUID NOT NULL DEFAULT uuid_generate_v1(),
-  value VARCHAR(255),
+  value VARCHAR(255) NOT NULL,
   description TEXT,
-  public BOOLEAN DEFAULT false,
+  public BOOLEAN NOT NULL DEFAULT false,
   target_id UUID NOT NULL,
-  owner_id varchar(512) NOT NULL,
+  owner_id varchar(512),
   created_on timestamp DEFAULT now() NOT NULL,
   modified_on timestamp DEFAULT now() NOT NULL
 );
