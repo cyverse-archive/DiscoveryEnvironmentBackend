@@ -250,33 +250,70 @@
 
 (with-post-hook! #'do-metadata-delete (log-func "do-metadata-delete"))
 
-(defn- format-new-avu
-  [user-id data-id avu]
-  (-> avu
-      (assoc
-        :id (UUID/randomUUID)
-        :target_id data-id
-        :owner_id user-id
-        :attribute (:attr avu))
-      (dissoc :attr)))
+(defn- get-existing-avu
+  [{avu-id :id, :as avu}]
+  (first
+   (select :avus
+           (where (if avu-id
+                    {:id (UUID/fromString avu-id)}
+                    (select-keys avu [:attribute :target_id :owner_id]))))))
 
-(defn- add-metadata-template-avus
+(defn- format-avu
+  [user-id data-id avu]
+  (let [avu (-> (select-keys avu [:value :unit])
+                (assoc
+                  :target_id data-id
+                  :owner_id user-id
+                  :attribute (:attr avu)))
+        existing-avu (get-existing-avu avu)]
+    (if existing-avu
+      (assoc avu :id (:id existing-avu))
+      avu)))
+
+(defn- add-data-target
+  [data-id]
+  (let [target (first (select :targets (where {:id data-id})))]
+    (when-not target
+      (insert :targets
+              (values {:id data-id
+                       :type (raw "'data'")})))))
+
+(defn- add-template-instances
+  [template-id avu-ids]
+  (delete :template_instances
+          (where {:template_id template-id
+                  :avu_id [in avu-ids]}))
+  (insert :template_instances
+          (values (map #(hash-map :template_id template-id
+                                  :avu_id %)
+                       avu-ids))))
+
+(defn- update-avu
+  [avu]
+  (update :avus
+          (set-fields (-> (select-keys avu [:attribute :value :unit])
+                          (assoc :modified_on (sqlfn now))))
+          (where (select-keys avu [:id]))))
+
+(defn- set-metadata-template-avus
   [user-id data-id template-id body]
-  (log/warn "Connecting to database: " db/metadata)
   (with-db db/metadata
-    (let [avus (map (partial format-new-avu user-id data-id) (:avus body))
-          target (first (select :targets (where {:id data-id})))]
+    (let [avus (map (partial format-avu user-id data-id) (:avus body))
+          existing-avus (filter :id avus)
+          new-avus (map #(assoc % :id (UUID/randomUUID)) (remove :id avus))]
       (transaction
-       (when-not target
-         (insert :targets
-                 (values {:id data-id
-                          :type "data"})))
-       (insert :avus
-               (values avus))
-       (insert :template_instances
-               (values (map #({:template_id template-id
-                               :avu_id (:id %)}) avus))))
-      {:user user-id :data_id data-id :template_id template-id :avus avus})))
+       (add-data-target data-id)
+       (when (seq existing-avus)
+         (dorun (map update-avu existing-avus))
+         (dorun (add-template-instances template-id (map :id existing-avus))))
+       (when (seq new-avus)
+         (insert :avus (values new-avus))
+         (dorun (add-template-instances template-id (map :id new-avus)))))
+      {:user user-id
+       :data_id data-id
+       :template_id template-id
+       :avus (map #(select-keys % [:id :attribute :value :unit])
+                  (concat existing-avus new-avus))})))
 
 (defn do-metadata-template-avu-list
   ""
@@ -291,10 +328,10 @@
                         (where {:t.template_id (UUID/fromString template-id)})))]
      {:user user :data_id data-id :template_id template-id :avus avus})))
 
-(defn do-add-metadata-template-avus
+(defn do-set-metadata-template-avus
   ""
   [{username :user} data-id template-id body]
-  (add-metadata-template-avus username
+  (set-metadata-template-avus username
                               (UUID/fromString data-id)
                               (UUID/fromString template-id)
                               body))
