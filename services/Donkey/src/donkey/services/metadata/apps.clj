@@ -187,6 +187,7 @@
       (.listApps agave-client)
       (metadactyl/apps-in-group group-id params)))
 
+  ;; TODO: modify to work with Agave.
   (searchApps [_ search-term]
     (let [de-apps  (metadactyl/search-apps search-term)
           hpc-apps (.searchPublicApps agave-client search-term)]
@@ -216,11 +217,13 @@
       (metadactyl/get-app app-id)
       (.getApp agave-client app-id)))
 
+  ;; TODO: modify to work with Agave.
   (getAppDeployedComponents [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/get-deployed-components-in-app app-id)
       {:deployed_components [(.getAppDeployedComponent agave-client app-id)]}))
 
+  ;; TODO: modify to work with Agave.
   (getAppDetails [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/get-app-details app-id)
@@ -235,8 +238,11 @@
     (count-jobs-of-types [jp/de-job-type jp/agave-job-type] filter))
 
   (listJobs [_ limit offset sort-field sort-order filter]
-    (list-all-jobs agave-client limit offset sort-field sort-order filter))
+    (if (user-has-access-token?)
+      (list-all-jobs agave-client limit offset sort-field sort-order filter)
+      (da/list-de-jobs limit offset sort-field sort-order filter)))
 
+  ;; TODO: modify to work with Agave.
   (syncJobStatus [_ job]
     (process-job agave-client (:id job) job
                  {:process-de-job    da/sync-de-job-status
@@ -247,17 +253,20 @@
 
   (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs)
-    (aa/remove-deleted-agave-jobs agave-client))
+    (when (user-has-access-token?)
+      (aa/remove-deleted-agave-jobs agave-client)))
 
   (updateJobStatus [_ username prev-job-info status end-time]
     (update-job-status agave-client username prev-job-info status end-time))
 
+  ;; TODO: modify to work with Agave.
   (getJobParams [_ job-id]
     (process-job agave-client job-id
                  {:process-de-job    da/get-de-job-params
                   :process-agave-job aa/get-agave-job-params
                   :preprocess-job    :id}))
 
+  ;; TODO: modify to work with Agave.
   (getAppRerunInfo [_ job-id]
     (process-job agave-client job-id
                  {:process-de-job    da/get-de-app-rerun-info
