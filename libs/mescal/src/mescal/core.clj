@@ -6,7 +6,8 @@
   (listSystems [_])
   (listApps [_])
   (getApp [_ app-id])
-  (submitJob [_ submission]))
+  (submitJob [_ submission])
+  (listJobs [_] [_ job-ids]))
 
 (deftype AgaveClientV2 [base-url token-info-fn timeout]
   AgaveClient
@@ -21,7 +22,13 @@
     (v2/get-app base-url token-info-fn timeout app-id))
   (submitJob [_ submission]
     (v2/check-access-token token-info-fn timeout)
-    (v2/submit-job base-url token-info-fn timeout submission)))
+    (v2/submit-job base-url token-info-fn timeout submission))
+  (listJobs [_]
+    (v2/check-access-token token-info-fn timeout)
+    (v2/list-jobs base-url token-info-fn timeout))
+  (listJobs [_ job-ids]
+    (v2/check-access-token token-info-fn timeout)
+    (v2/list-jobs base-url token-info-fn timeout job-ids)))
 
 (defn agave-client-v2
   [base-url token-info-fn & {:keys [timeout] :or {timeout 5000}}]

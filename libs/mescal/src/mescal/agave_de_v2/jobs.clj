@@ -88,7 +88,7 @@
 
 (defn- build-path
   [base & rest]
-  (string/join "/" (cons base (map #(string/replace % #"^/|/$" "") rest))))
+  (string/join "/" (cons base (map #(string/replace % #"^/|/$" "") (remove nil? rest)))))
 
 (defn format-job
   ([irods-home jobs-enabled? app-info-map job]
@@ -96,14 +96,14 @@
            app-info (app-info-map app-id {})]
        {:id               (str (:id job))
         :analysis_id      app-id
-        :analysis_details (:longDescription app-info "")
+        :analysis_details (:shortDescription app-info "")
         :analysis_name    (app-listings/get-app-name app-info)
         :description      ""
         :enddate          (or (str (util/parse-timestamp (:endTime job))) "")
         :name             (:name job)
         :raw_status       (:status job)
         :resultfolderid   (build-path irods-home (:archivePath job))
-        :startdate        (str (util/parse-timestamp (:submitTime job)))
+        :startdate        (or (str (util/parse-timestamp (:startTime job))) "")
         :status           (job-status-translations (:status job) "")
         :wiki_url         ""}))
   ([irods-home jobs-enabled? statuses app-info-map job]

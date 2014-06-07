@@ -8,6 +8,8 @@
   (listApps [_])
   (getApp [_ app-id])
   (submitJob [_ submission])
+  (listJobs [_] [_ job-ids])
+  (listJobIds [_])
   (translateJobStatus [_ status]))
 
 (deftype DeAgaveClientV2 [agave jobs-enabled? irods-home]
@@ -20,6 +22,12 @@
     (v2/get-app agave app-id))
   (submitJob [_ submission]
     (v2/submit-job agave irods-home submission))
+  (listJobs [_]
+    (v2/list-jobs agave irods-home jobs-enabled?))
+  (listJobs [_ job-ids]
+    (v2/list-jobs agave irods-home jobs-enabled? job-ids))
+  (listJobIds [_]
+    (mapv :id (.listJobs agave)))
   (translateJobStatus [_ status]
     (v2/translate-job-status status)))
 

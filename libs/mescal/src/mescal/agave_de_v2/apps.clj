@@ -106,3 +106,10 @@
      :label        app-label
      :component_id c/hpc-group-id
      :groups       (format-groups app)}))
+
+(defn load-app-info
+  [agave app-ids]
+  (->> (.listApps agave)
+       (filter (comp (set app-ids) :id))
+       (map (juxt :id identity))
+       (into {})))

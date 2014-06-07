@@ -64,3 +64,9 @@
 (defn submit-job
   [base-url token-info-fn timeout submission]
   (agave-post token-info-fn timeout (curl/url base-url "/jobs/v2/") submission))
+
+(defn list-jobs
+  ([base-url token-info-fn timeout]
+     (agave-get token-info-fn timeout (curl/url base-url "/jobs/v2/")))
+  ([base-url token-info-fn timeout job-ids]
+     (filter (comp (set job-ids) :id) (list-jobs base-url token-info-fn timeout))))

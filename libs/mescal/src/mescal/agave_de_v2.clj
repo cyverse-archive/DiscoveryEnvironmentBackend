@@ -27,6 +27,18 @@
          (.submitJob agave)
          (jobs/format-job irods-home true (get-system-statuses agave) {app-id app}))))
 
+(defn- format-jobs
+  [agave irods-home jobs-enabled? jobs]
+  (let [app-info (apps/load-app-info agave (mapv :appId jobs))
+        statuses (get-system-statuses agave)]
+    (mapv (partial jobs/format-job irods-home jobs-enabled? statuses app-info) jobs)))
+
+(defn list-jobs
+  ([agave irods-home jobs-enabled?]
+     (format-jobs agave irods-home jobs-enabled? (.listJobs agave)))
+  ([agave irods-home jobs-enabled? job-ids]
+     (format-jobs agave irods-home jobs-enabled? (.listJobs agave job-ids))))
+
 (defn translate-job-status
   [status]
   (jobs/translate-job-status status))
