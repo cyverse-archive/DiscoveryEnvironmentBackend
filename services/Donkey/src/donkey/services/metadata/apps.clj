@@ -109,7 +109,6 @@
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
   (populateJobsTable [_])
-  (populateJobDescriptions [_ username])
   (removeDeletedJobs [_])
   (updateJobStatus [_ username prev-status status end-time])
   (getJobParams [_ job-id])
@@ -162,9 +161,6 @@
   (populateJobsTable [_]
     (dorun (map da/store-de-job (osm/list-jobs))))
 
-  (populateJobDescriptions [_ username]
-    (da/populate-job-descriptions username))
-
   (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs))
 
@@ -179,7 +175,7 @@
     (da/get-de-app-rerun-info job-id)))
 ;; DeOnlyAppLister
 
-(deftype DeHpcAppLister [agave-client]
+(deftype DeHpcAppLister [agave-client user-has-access-token?]
   AppLister
 
   (listAppGroups [_]
@@ -249,10 +245,6 @@
   (populateJobsTable [_]
     (dorun (map da/store-de-job (osm/list-jobs))))
 
-  (populateJobDescriptions [_ username]
-    (da/populate-job-descriptions username)
-    (aa/populate-job-descriptions agave-client username))
-
   (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs)
     (aa/remove-deleted-agave-jobs agave-client))
@@ -273,6 +265,10 @@
                   :preprocess-job    :id})))
 ;; DeHpcAppLister
 
+(defn- has-access-token
+  [{:keys [api-name] :as server-info} username]
+  (seq (op/get-access-token api-name username)))
+
 (defn- get-access-token
   [{:keys [api-name] :as server-info} state-info username]
   (if-let [token-info (op/get-access-token api-name username)]
@@ -287,7 +283,8 @@
                     (config/agave-base-url)
                     (partial get-access-token (config/agave-oauth-settings) state-info username)
                     (config/agave-jobs-enabled)
-                    (config/irods-home))))
+                    (config/irods-home))
+                   (partial has-access-token (config/agave-oauth-settings) username)))
 
 (defn- get-app-lister
   ([]
@@ -304,9 +301,7 @@
   (let [username (:username current-user)]
     (transaction
      (when (zero? (jp/count-all-jobs username))
-       (.populateJobsTable app-lister))
-     (when-not (zero? (jp/count-null-descriptions username))
-       (.populateJobDescriptions app-lister username)))))
+       (.populateJobsTable app-lister)))))
 
 (defn get-only-app-groups
   []

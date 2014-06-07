@@ -33,15 +33,6 @@
                :start-date  (db/timestamp-from-str (str (:startdate job)))
                :end-date    (db/timestamp-from-str (str (:enddate job)))))
 
-(defn populate-job-descriptions
-  [agave-client username]
-  (->> (jp/list-jobs-with-null-descriptions username [jp/agave-job-type])
-       (map :id)
-       (.listJobs agave-client)
-       (map (juxt :id :description))
-       (map jp/set-job-description)
-       (dorun)))
-
 (defn- build-callback-url
   [id]
   (str (assoc (curl/url (config/agave-callback-base) (str id))
