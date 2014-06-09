@@ -22,6 +22,7 @@
         [donkey.services.filesystem.copy]
         [donkey.services.filesystem.page-file]
         [donkey.services.filesystem.page-csv]
+        [donkey.services.filesystem.uuids]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]
@@ -182,4 +183,3 @@
 
    (DELETE "/filesystem/:data-id/template-avus/:template-id/:avu-id" [data-id template-id avu-id :as req]
         (controller req do-remove-metadata-template-avu :params data-id template-id avu-id))))
-

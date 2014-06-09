@@ -56,21 +56,21 @@
     (is-dir? cm path)))
 
 (defn path-stat
-  [user path]
+  [cm user path]
   (let [path (ft/rm-last-slash path)]
     (log/warn "[path-stat] user:" user "path:" path)
-    (with-jargon (jargon-cfg) [cm]
-      (validators/path-exists cm path)
-      (-> (stat cm path)
+    (validators/path-exists cm path)
+    (-> (stat cm path)
         (assoc :label (id->label cm user path))
         (merge {:permission (permission-for cm user path)})
         (merge-type-info cm user path)
         (merge-shares cm user path)
-        (merge-counts cm user path)))))
+        (merge-counts cm user path))))
 
 (defn do-stat
   [{user :user} {paths :paths}]
-  {:paths (into {} (map #(vector % (path-stat user %)) paths))})
+  (with-jargon (jargon-cfg) [cm]
+    {:paths (into {} (map #(vector % (path-stat cm user %)) paths))}))
 
 (with-pre-hook! #'do-stat
   (fn [params body]

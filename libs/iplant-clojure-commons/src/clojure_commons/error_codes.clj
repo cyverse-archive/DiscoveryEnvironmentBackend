@@ -42,6 +42,7 @@
 (deferr ERR_BAD_REQUEST)
 (deferr ERR_NOT_FOUND)
 (deferr ERR_UNAVAILABLE)
+(deferr ERR_TOO_MANY_RESULTS)
 
 (def ^:private http-status-for
   {ERR_ILLEGAL_ARGUMENT 400
