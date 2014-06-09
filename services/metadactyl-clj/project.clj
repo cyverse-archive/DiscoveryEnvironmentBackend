@@ -1,4 +1,4 @@
-(defproject org.iplantc/metadactyl "3.1.4"
+(defproject org.iplantc/metadactyl "3.1.5"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -17,10 +17,10 @@
                  [com.cemerick/url "0.1.1"]
                  [compojure "1.1.7"]
                  [medley "0.1.5"]
-                 [org.iplantc/clojure-commons "3.1.4"]
-                 [org.iplantc/kameleon "3.1.4"]
-                 [org.iplantc.core/metadactyl "3.1.4"]
-                 [org.iplantc/common-cli "3.1.4"]
+                 [org.iplantc/clojure-commons "3.1.5"]
+                 [org.iplantc/kameleon "3.1.5"]
+                 [org.iplantc.core/metadactyl "3.1.5"]
+                 [org.iplantc/common-cli "3.1.5"]
                  [me.raynes/fs "1.4.5"]
                  [org.springframework/spring-orm "3.1.0.RELEASE"]
                  [korma "0.3.0-RC5"]
@@ -29,7 +29,7 @@
                  #_[org.slf4j/slf4j-log4j12 "1.5.8"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [slingshot "0.10.3"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.1.4"]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.1.5"]
             [lein-ring "0.8.10"]
             [lein-swank "1.4.4"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
