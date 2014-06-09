@@ -1,6 +1,8 @@
 (ns donkey.routes.tags
-  (:use [compojure.core :only [GET PUT PATCH]])
-  (:require [donkey.util :as util]
+  (:use [compojure.core :only [GET PATCH POST]])
+  (:require [donkey.auth.user-attributes :as user]
+            [donkey.services.metadata.tags :as tags]
+            [donkey.util :as util]
             [donkey.util.config :as config]
             [donkey.util.service :as svc]))
 
@@ -13,14 +15,17 @@
     (GET "/filesystem/entry/:entry-id/tags" [:as req]
       (svc/success-response {:tags ["user/username/tag+1" "user/username/tag+2"]}))
 
-    (PATCH "/filesystem/entry/:entry-id/tags" [:as req]
+    (PATCH "/filesystem/entry/:entry-id/tags" [entry-id :as {params :params body :body}]
       (svc/success-response))
 
-    (GET "/tags/suggestions" [:as req]
-      (svc/success-response {:suggestions ["user/username/tag+1" "user/username/tag+2"]}))
+    (GET "/tags/suggestions" [begins-with]
+      (svc/success-response {:suggestions ["user/tag+1" "user/tag+2"]})
+      #_(util/trap #(tags/suggest-tags (:shortUsername user/current-user) begins-with)))
 
-    (PUT "/tags/user/:username/:value" [:as req]
-      (svc/success-response))
+    (POST "/tags/user" [:as {body :body}]
+      (svc/success-response {:id "bd255110-f022-11e3-b83d-d70b82c8b57e"})
+      #_(util/trap #(tags/create-user-tag (:shortUsername user/current-user) body)))
 
-    (PATCH "/tags/user/:username/:value" [:as req]
-      (svc/success-response))))
+    (PATCH "/tags/user/:tag-id" [tag-id :as {body :body}]
+      (svc/success-response)
+      #_(util/trap #(tags/update-user-tag (:shortUsername user/current-user) value body)))))
