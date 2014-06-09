@@ -23,8 +23,7 @@
       #_(util/trap #(tags/suggest-tags (:shortUsername user/current-user) begins-with)))
 
     (POST "/tags/user" [:as {body :body}]
-      (svc/success-response {:id "bd255110-f022-11e3-b83d-d70b82c8b57e"})
-      #_(util/trap #(tags/create-user-tag (:shortUsername user/current-user) body)))
+      (util/trap #(tags/create-user-tag (:shortUsername user/current-user) body)))
 
     (PATCH "/tags/user/:tag-id" [tag-id :as {body :body}]
       (svc/success-response)
