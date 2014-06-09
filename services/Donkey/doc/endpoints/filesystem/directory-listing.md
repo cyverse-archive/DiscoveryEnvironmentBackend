@@ -3,10 +3,6 @@ Directory List (Non-Recursive)
 
 Only lists subdirectories of the directory path passed into it.
 
-The following characters are considered invalid since they cause issues:
-
-    =!\"#$'%*+,\\:?@[]^{}|&;<>`~\n\t\\
-
 __URL Path__: /secured/filesystem/directory
 
 __HTTP Method__: GET
@@ -34,6 +30,7 @@ __Response Body__:
             "id": "/iplant/home/wregglej/acsxfdqswfrdafds",
             "path": "/iplant/home/wregglej/acsxfdqswfrdafds",
             "label": "acsxfdqswfrdafds",
+            "uuid": "0c3eb574-df8a-11e3-bfa5-6abdce5a08d5",
             "permission": "own"
         },
         {
@@ -45,6 +42,7 @@ __Response Body__:
             "id": "/iplant/home/wregglej/analyses",
             "path": "/iplant/home/wregglej/analyses",
             "label": "analyses",
+            "uuid": "1c2c436c-e128-11e3-9087-6abdce5a08d5",
             "permission": "own"
         },
         {
@@ -56,12 +54,14 @@ __Response Body__:
             "id": "/iplant/home/wregglej/analyses3",
             "path": "/iplant/home/wregglej/analyses3",
             "label": "analyses3",
+            "uuid": "1f293516-e128-11e3-9087-6abdce5a08d5",
             "permission": "own"
         },
 
     ],
     "hasSubDirs": true,
     "id": "/iplant/home/wregglej",
+    "uuid": "a3794158-df89-11e3-bf7d-6abdce5a08d5",
     "path": "/iplant/home/wregglej",
     "label": "wregglej",
     "filter": true,
@@ -114,6 +114,7 @@ __Response Body__:
                 "date-modified": 1379520049000,
                 "file-size": 196903039,
                 "id": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
+                "uuid": "0d880c78-df8a-11e3-bfa5-6abdce5a08d5",
                 "path": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
                 "label": "centos-5.8-x86-64-minimal.box",
                 "permission": "own"
@@ -126,6 +127,7 @@ __Response Body__:
                 "file-size": 0,
                 "hasSubDirs": true,
                 "id": "/iplant/home/wregglej/asdfafa",
+                "uuid": "6375efce-e061-11e3-bfa5-6abdce5a08d5",
                 "path": "/iplant/home/wregglej/asdfafa",
                 "label": "asdfafa",
                 "permission": "own"
@@ -136,6 +138,7 @@ __Response Body__:
                 "file-size": 0,
                 "hasSubDirs": true,
                 "id": "/iplant/home/wregglej/asdf bar",
+                "uuid": "b4987bf4-e063-11e3-bfa5-6abdce5a08d5",
                 "path": "/iplant/home/wregglej/asdf bar",
                 "label": "asdf bar",
                 "permission": "own"
@@ -146,6 +149,7 @@ __Response Body__:
                 "file-size": 0,
                 "hasSubDirs": true,
                 "id": "/iplant/home/wregglej/Find_Unique_Values_analysis1-2013-07-09-12-15-37.024",
+                "uuid" : "0d622cd8-df8a-11e3-bfa5-6abdce5a08d5",
                 "path": "/iplant/home/wregglej/Find_Unique_Values_analysis1-2013-07-09-12-15-37.024",
                 "label": "Find_Unique_Values_analysis1-2013-07-09-12-15-37.024",
                 "permission": "own"
@@ -156,6 +160,7 @@ __Response Body__:
                 "file-size": 0,
                 "hasSubDirs": true,
                 "id": "/iplant/home/wregglej/zaaaaaaaa",
+                "uuid": "0d627292-df8a-11e3-bfa5-6abdce5a08d5",
                 "path": "/iplant/home/wregglej/zaaaaaaaa",
                 "label": "zaaaaaaaa",
                 "permission": "own"
@@ -163,6 +168,7 @@ __Response Body__:
         ],
         "hasSubDirs": true,
         "id": "/iplant/home/wregglej",
+        "uuid": "16426b48-e128-11e3-9076-6abdce5a08d5",
         "path": "/iplant/home/wregglej",
         "label": "wregglej",
         "permission": "own",
