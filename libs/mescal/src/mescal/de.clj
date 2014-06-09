@@ -7,6 +7,8 @@
   (hpcAppGroup [_])
   (listApps [_])
   (getApp [_ app-id])
+  (getAppDetails [_ app-id])
+  (getAppDeployedComponent [_ app-id])
   (submitJob [_ submission])
   (listJobs [_] [_ job-ids])
   (listJobIds [_])
@@ -20,6 +22,10 @@
     (v2/list-apps agave jobs-enabled?))
   (getApp [_ app-id]
     (v2/get-app agave app-id))
+  (getAppDetails [_ app-id]
+    (v2/get-app-details agave app-id))
+  (getAppDeployedComponent [_ app-id]
+    (v2/get-app-deployed-component agave app-id))
   (submitJob [_ submission]
     (v2/submit-job agave irods-home submission))
   (listJobs [_]

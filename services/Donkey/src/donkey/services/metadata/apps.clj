@@ -217,13 +217,11 @@
       (metadactyl/get-app app-id)
       (.getApp agave-client app-id)))
 
-  ;; TODO: modify to work with Agave.
   (getAppDeployedComponents [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/get-deployed-components-in-app app-id)
       {:deployed_components [(.getAppDeployedComponent agave-client app-id)]}))
 
-  ;; TODO: modify to work with Agave.
   (getAppDetails [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/get-app-details app-id)

@@ -1,6 +1,7 @@
 (ns mescal.agave-de-v2.apps
   (:use [mescal.agave-de-v2.app-listings :only [get-app-name]])
-  (:require [mescal.agave-de-v2.constants :as c]
+  (:require [clojure.string :as string]
+            [mescal.agave-de-v2.constants :as c]
             [mescal.util :as util]))
 
 (defn- get-boolean
@@ -113,3 +114,30 @@
        (filter (comp (set app-ids) :id))
        (map (juxt :id identity))
        (into {})))
+
+
+(defn format-deployed-component-for-app
+  [{path :deploymentPath :as app}]
+  {:attribution ""
+   :description (:shortDescription app)
+   :id          (:id app)
+   :location    (string/replace path #"/[^/]+$" "")
+   :name        (string/replace path #"^.*/" "")
+   :type        (:executionType app)
+   :version     (:version app)})
+
+(defn format-app-details
+  [app]
+  (let [app-label (get-app-name app)
+        mod-time  (str (util/parse-timestamp (:lastModified app)))]
+    {:published_date   mod-time
+     :edited_date      mod-time
+     :id               (:id app)
+     :references       []
+     :description      (:shortDescription app)
+     :name             app-label
+     :label            app-label
+     :tito             (:id app)
+     :components       [(format-deployed-component-for-app app)]
+     :groups           [c/hpc-group-overview]
+     :suggested_groups [c/hpc-group-overview]}))

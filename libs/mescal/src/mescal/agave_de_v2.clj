@@ -19,6 +19,14 @@
   [agave app-id]
   (apps/format-app (.getApp agave app-id)))
 
+(defn get-app-details
+  [agave app-id]
+  (apps/format-app-details (.getApp agave app-id)))
+
+(defn get-app-deployed-component
+  [agave app-id]
+  (apps/format-deployed-component-for-app (.getApp agave app-id)))
+
 (defn submit-job
   [agave irods-home submission]
   (let [app-id (:analysis_id submission)
