@@ -187,6 +187,9 @@
    (POST "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
         (controller req do-set-metadata-template-avus :params data-id template-id :body))
 
+   (DELETE "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
+        (controller req do-remove-metadata-template-avus :params data-id template-id))
+
    (DELETE "/filesystem/:data-id/template-avus/:template-id/:avu-id" [data-id template-id avu-id :as req]
-        (controller req do-remove-metadata-template-avu :params data-id template-id avu-id))))
+        (controller req do-remove-metadata-template-avus :params data-id template-id avu-id))))
 
