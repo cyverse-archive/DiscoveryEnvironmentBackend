@@ -138,13 +138,17 @@
            c.modify_ts                            as modify_ts,
            'collection'                           as type,
            0                                      as data_size,
+           m.meta_attr_value                      as uuid,
            MAX(a.access_type_id)                  as access_type_id
       FROM r_coll_main c
       JOIN r_objt_access a ON c.coll_id = a.object_id
       JOIN parent p ON c.parent_coll_name = p.coll_name
+      JOIN r_objt_metamap mm ON mm.object_id = c.coll_id
+      JOIN r_meta_main m ON m.meta_id = mm.meta_id 
      WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
        AND c.coll_type != 'linkPoint'
-  GROUP BY dir_name, full_path, base_name, c.create_ts, c.modify_ts, type, data_size
+       AND m.meta_attr_name = 'ipc_UUID'
+  GROUP BY dir_name, full_path, base_name, c.create_ts, c.modify_ts, type, data_size, uuid
   ORDER BY base_name ASC"
 
    :count-files-in-folder
@@ -257,6 +261,7 @@
                     p.data_size,
                     p.create_ts,
                     p.modify_ts,
+                    p.uuid,
                     p.type
     FROM ( SELECT c.coll_name                       as dir_name,
                   c.coll_name || '/' || d.data_name as full_path,
@@ -265,13 +270,17 @@
                   (array_agg(d.modify_ts))[1]       as modify_ts,
                   'dataobject'                      as type,
                   (array_agg(d.data_size))[1]       as data_size,
+                  m.meta_attr_value                 as uuid,
                   (array_agg(a.access_type_id))[1]  as access_type_id
              FROM r_objt_access a
              JOIN data_objs d ON a.object_id = d.data_id
              JOIN r_coll_main c ON c.coll_id = d.coll_id
+             JOIN r_objt_metamap om ON om.object_id = d.data_id
+             JOIN r_meta_main m ON m.meta_id = om.meta_id
             WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
               AND a.object_id IN ( SELECT data_id FROM data_objs )
-         GROUP BY c.coll_name, d.data_name
+              AND m.meta_attr_name = 'ipc_UUID'
+         GROUP BY c.coll_name, d.data_name, uuid
             UNION
            SELECT c.parent_coll_name                     as dir_name,
                   c.coll_name                            as full_path,
@@ -280,12 +289,16 @@
                   c.modify_ts                            as modify_ts,
                   'collection'                           as type,
                   0                                      as data_size,
+                  m.meta_attr_value                      as uuid,
                   a.access_type_id                       as access_type_id
              FROM r_coll_main c
              JOIN r_objt_access a ON c.coll_id = a.object_id
              JOIN parent p ON c.parent_coll_name = p.coll_name
+             JOIN r_objt_metamap om ON om.object_id = c.coll_id
+             JOIN r_meta_main m ON m.meta_id = om.meta_id
             WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-              AND c.coll_type != 'linkPoint') AS p
+              AND c.coll_type != 'linkPoint'
+              AND m.meta_attr_name = 'ipc_UUID') AS p
     ORDER BY p.type ASC, %s %s
        LIMIT ?
       OFFSET ?"})
