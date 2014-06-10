@@ -16,18 +16,22 @@
 
 (defn update-user-tag
   [owner tag-id body]
-  (if (= owner (:owner_id (first (db/get-tag-owner tag-id))))
-    (let [req-updates     (json/parse-string (slurp body) true)
-          new-value       (:value req-updates)
-          new-description (:description req-updates)
-          updates         (cond
-                            (and new-value new-description) {:value       new-value
-                                                             :description new-description}
-                            new-value                       {:value new-value}
-                            new-description                 {:description new-description})]
-      (when updates (db/update-user-tag tag-id updates))
-      (svc/success-response))
-    (svc/donkey-response {} 403)))
+  (letfn [(do-update []
+            (let [req-updates     (json/parse-string (slurp body) true)
+                  new-value       (:value req-updates)
+                  new-description (:description req-updates)
+                  updates         (cond
+                                    (and new-value new-description) {:value       new-value
+                                                                     :description new-description}
+                                    new-value                       {:value new-value}
+                                    new-description                 {:description new-description})]
+              (when updates (db/update-user-tag tag-id updates))
+              (svc/success-response)))]
+    (let [tag (first (db/get-tag tag-id))]
+      (cond
+        (empty? tag)                 (svc/donkey-response {} 404)
+        (not= owner (:owner_id tag)) (svc/donkey-response {} 403)
+        :else                        (do-update)))))
 
 #_(defn suggest-tags
   [user tag-prefix]

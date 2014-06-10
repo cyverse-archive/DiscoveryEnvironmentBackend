@@ -13,11 +13,10 @@
     (select tags
       (where {:owner_id owner :value value}))))
 
-(defn get-tag-owner
+(defn get-tag
   [tag-id]
   (korma/with-db db/metadata
     (select tags
-      (fields :owner_id)
       (where {:id (UUID/fromString tag-id)}))))
 
 (defn insert-user-tag
