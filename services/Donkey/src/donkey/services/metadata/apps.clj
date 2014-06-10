@@ -31,13 +31,9 @@
   [job-types filter]
   (jp/count-jobs (:username current-user) job-types filter))
 
-(defn- agave-job-id?
-  [id]
-  (re-matches #"\d+" id))
-
 (defn- format-job
   [de-states de-apps agave-states {:keys [id] :as job}]
-  (if (agave-job-id? id)
+  (if (= (:job_type job) jp/agave-job-type)
     (aa/format-agave-job job (agave-states id))
     (da/format-de-job de-states de-apps job)))
 
@@ -92,6 +88,12 @@
   [state-info]
   (throw+ {:error_code ce/ERR_TEMPORARILY_MOVED
            :location   (agave-authorization-uri state-info)}))
+
+(defn- add-predicate
+  [predicate f]
+  (fn [& args]
+    (when (predicate)
+      (apply f args))))
 
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
@@ -240,11 +242,11 @@
       (list-all-jobs agave-client limit offset sort-field sort-order filter)
       (da/list-de-jobs limit offset sort-field sort-order filter)))
 
-  ;; TODO: modify to work with Agave.
   (syncJobStatus [_ job]
-    (process-job agave-client (:id job) job
-                 {:process-de-job    da/sync-de-job-status
-                  :process-agave-job aa/sync-agave-job-status}))
+    (let [sync-agave (add-predicate user-has-access-token? aa/sync-agave-job-status)]
+      (process-job agave-client (:id job) job
+                   {:process-de-job    da/sync-de-job-status
+                    :process-agave-job sync-agave})))
 
   (populateJobsTable [_]
     (dorun (map da/store-de-job (osm/list-jobs))))

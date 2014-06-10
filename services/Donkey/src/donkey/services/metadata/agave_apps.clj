@@ -1,7 +1,7 @@
 (ns donkey.services.metadata.agave-apps
   (:use [clojure-commons.validators :only [validate-map]]
         [donkey.auth.user-attributes :only [current-user]]
-        [slingshot.slingshot :only [try+]])
+        [slingshot.slingshot :only [try+ throw+]])
   (:require [cemerick.url :as curl]
             [clj-jargon.item-info :as jargon-info]
             [clj-jargon.init :as jargon-init]
@@ -23,6 +23,11 @@
    :startdate     string?
    :status        string?})
 
+(defn- determine-start-time
+  [job]
+  (or (db/timestamp-from-str (str (:startdate job)))
+      (db/now)))
+
 (defn- store-agave-job
   [agave id job]
   (validate-map job agave-job-validation-map)
@@ -30,7 +35,7 @@
                :id          id
                :description (:description job)
                :app-name    (:analysis_name job)
-               :start-date  (db/timestamp-from-str (str (:startdate job)))
+               :start-date  (determine-start-time job)
                :end-date    (db/timestamp-from-str (str (:enddate job)))))
 
 (defn- build-callback-url
@@ -50,13 +55,19 @@
      :status (:status job)
      :start-date (time-utils/millis-from-str (str (:startdate job)))}))
 
+(defn- determine-display-timestamp
+  [k job state]
+  (cond (not (string/blank? (k state))) (k state)
+        (not (nil? (k job)))            (str (.getTime (k job)))
+        :else                           "0"))
+
 (defn format-agave-job
   [job state]
   (assoc state
     :id            (:id job)
     :description   (or (:description job) (:description state))
-    :startdate     (str (or (db/millis-from-timestamp (:startdate job)) 0))
-    :enddate       (str (or (db/millis-from-timestamp (:enddate job)) 0))
+    :startdate     (determine-display-timestamp :startdate job state)
+    :enddate       (determine-display-timestamp :enddate job state)
     :analysis_name (:analysis_name job)
     :status        (:status job)))
 
@@ -71,7 +82,7 @@
 (defn get-agave-job
   [agave id not-found-fn]
   (try+
-   (not-empty (.listRawJob agave id))
+   (not-empty (.listJob agave id))
    (catch [:status 404] _ (not-found-fn id))
    (catch [:status 400] _ (not-found-fn id))
    (catch Object _ (service/request-failure "lookup for HPC job" id))))
@@ -86,7 +97,7 @@
         username     (string/replace username #"@.*" "")
         end-time     (when (is-complete? status) (db/timestamp-from-str end-time))
         end-millis   (when-not (nil? end-time) (str (.getTime end-time)))
-        start-millis (str (.getTime startdate))]
+        start-millis (when-not (nil? startdate) (str (.getTime startdate)))]
     (when-not (= status (:status prev-job-info))
       (jp/update-job (:id prev-job-info) status end-time)
       (dn/send-agave-job-status-update username (assoc prev-job-info
@@ -115,9 +126,10 @@
     (when (agave-job-status-changed job curr-state)
       (jp/update-job-by-internal-id
        (:id job)
-       {:status   (:status curr-state)
-        :end-date (db/timestamp-from-str (str (:enddate curr-state)))
-        :deleted  (nil? curr-state)}))))
+       {:status     (:status curr-state)
+        :start-date (db/timestamp-from-str (str (:startdate curr-state)))
+        :end-date   (db/timestamp-from-str (str (:enddate curr-state)))
+        :deleted    (nil? curr-state)}))))
 
 (defn get-agave-app-rerun-info
   [agave job-id]

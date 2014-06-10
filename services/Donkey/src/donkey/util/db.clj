@@ -38,3 +38,8 @@
   [timestamp]
   (when-not (nil? timestamp)
     (.getTime timestamp)))
+
+(defn now
+  "Returns a timestamp representing the current date and time."
+  []
+  (Timestamp. (System/currentTimeMillis)))
