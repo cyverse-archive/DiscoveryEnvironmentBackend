@@ -1,6 +1,7 @@
 (ns mescal.agave-de-v2
   (:require [mescal.agave-de-v2.apps :as apps]
             [mescal.agave-de-v2.app-listings :as app-listings]
+            [mescal.agave-de-v2.job-params :as params]
             [mescal.agave-de-v2.jobs :as jobs]))
 
 (defn hpc-app-group
@@ -53,6 +54,11 @@
         statuses (get-system-statuses agave)
         app-info (apps/load-app-info agave [(:appId job)])]
     (jobs/format-job irods-home jobs-enabled? statuses app-info job)))
+
+(defn get-job-params
+  [agave irods-home job-id]
+  (when-let [job (.listJob agave job-id)]
+    (params/format-params irods-home job (:appId job) (.getApp agave (:appId job)))))
 
 (defn translate-job-status
   [status]

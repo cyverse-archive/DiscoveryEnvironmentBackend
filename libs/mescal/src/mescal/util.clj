@@ -29,3 +29,9 @@
   [timestamp]
   (when-not (nil? timestamp)
     (.getMillis (tf/parse (:date-time tf/formatters) timestamp))))
+
+(defn get-boolean
+  [value default]
+  (cond (nil? value)    default
+        (string? value) (Boolean/parseBoolean value)
+        :else           value))

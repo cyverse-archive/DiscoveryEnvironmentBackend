@@ -13,6 +13,7 @@
   (listJobs [_] [_ job-ids])
   (listJob [_ job-id])
   (listJobIds [_])
+  (getJobParams [_ job-id])
   (translateJobStatus [_ status]))
 
 (deftype DeAgaveClientV2 [agave jobs-enabled? irods-home]
@@ -37,6 +38,8 @@
     (v2/list-job agave irods-home jobs-enabled? job-id))
   (listJobIds [_]
     (mapv :id (.listJobs agave)))
+  (getJobParams [_ job-id]
+    (v2/get-job-params agave irods-home job-id))
   (translateJobStatus [_ status]
     (v2/translate-job-status status)))
 
