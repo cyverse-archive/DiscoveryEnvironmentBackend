@@ -11,6 +11,7 @@
   (getAppDeployedComponent [_ app-id])
   (submitJob [_ submission])
   (listJobs [_] [_ job-ids])
+  (listJob [_ job-id])
   (listJobIds [_])
   (translateJobStatus [_ status]))
 
@@ -32,6 +33,8 @@
     (v2/list-jobs agave irods-home jobs-enabled?))
   (listJobs [_ job-ids]
     (v2/list-jobs agave irods-home jobs-enabled? job-ids))
+  (listJob [_ job-id]
+    (v2/list-job agave irods-home jobs-enabled? job-id))
   (listJobIds [_]
     (mapv :id (.listJobs agave)))
   (translateJobStatus [_ status]

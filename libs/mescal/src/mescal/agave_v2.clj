@@ -70,3 +70,7 @@
      (agave-get token-info-fn timeout (curl/url base-url "/jobs/v2/")))
   ([base-url token-info-fn timeout job-ids]
      (filter (comp (set job-ids) :id) (list-jobs base-url token-info-fn timeout))))
+
+(defn list-job
+  [base-url token-info-fn timeout job-id]
+  (agave-get token-info-fn timeout (curl/url base-url "/jobs/v2" job-id)))
