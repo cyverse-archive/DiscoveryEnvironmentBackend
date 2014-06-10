@@ -133,7 +133,7 @@
 
 (defn get-agave-app-rerun-info
   [agave job-id]
-  (.getAppRerunInfo agave job-id))
+  (service/assert-found (.getAppRerunInfo agave job-id) "HPC job" job-id))
 
 (defn get-agave-job-params
   [agave job-id]

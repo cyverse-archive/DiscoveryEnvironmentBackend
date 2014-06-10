@@ -265,7 +265,6 @@
                   :process-agave-job aa/get-agave-job-params
                   :preprocess-job    :id}))
 
-  ;; TODO: modify to work with Agave.
   (getAppRerunInfo [_ job-id]
     (process-job agave-client job-id
                  {:process-de-job    da/get-de-app-rerun-info
