@@ -18,9 +18,8 @@
     (PATCH "/filesystem/entry/:entry-id/tags" [entry-id :as {params :params body :body}]
       (svc/success-response))
 
-    (GET "/tags/suggestions" [begins-with]
-      (svc/success-response {:suggestions ["user/tag+1" "user/tag+2"]})
-      #_(util/trap #(tags/suggest-tags (:shortUsername user/current-user) begins-with)))
+    (GET "/tags/suggestions" [contains]
+      (util/trap #(tags/suggest-tags (:shortUsername user/current-user) contains)))
 
     (POST "/tags/user" [:as {body :body}]
       (util/trap #(tags/create-user-tag (:shortUsername user/current-user) body)))

@@ -5,13 +5,14 @@
   (:import [java.util UUID]))
 
 
-(defentity ^{:private true} tags)
+(defentity ^{:private true} tags
+  (entity-fields :id :owner_id :value :description))
 
-(defn get-tag-by-value
+(defn get-tags-by-value
   [owner value]
   (korma/with-db db/metadata
     (select tags
-      (where {:owner_id owner :value value}))))
+      (where {:owner_id owner :value [like value]}))))
 
 (defn get-tag
   [tag-id]

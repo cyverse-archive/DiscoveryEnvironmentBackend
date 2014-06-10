@@ -9,7 +9,7 @@
   (let [tag         (json/parse-string (slurp body) true)
         value       (:value tag)
         description (:description tag)]
-    (if (empty? (db/get-tag-by-value owner value))
+    (if (empty? (db/get-tags-by-value owner value))
       (let [id (:id (db/insert-user-tag owner value description))]
         (svc/success-response {:id id}))
       (svc/donkey-response {} 409))))
@@ -33,7 +33,7 @@
         (not= owner (:owner_id tag)) (svc/donkey-response {} 403)
         :else                        (do-update)))))
 
-#_(defn suggest-tags
-  [user tag-prefix]
-  (svc/success-response {:suggestions ["user/tag+1" "user/tag+2"]}))
-
+(defn suggest-tags
+  [user value-part]
+  (let [matches (db/get-tags-by-value user (str "%" value-part "%"))]
+  (svc/success-response {:suggestions (map #(dissoc % :owner_id) matches)})))
