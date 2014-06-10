@@ -137,7 +137,7 @@
 
 (defn get-agave-job-params
   [agave job-id]
-  (.getJobParams agave job-id))
+  (service/assert-found (.getJobParams agave job-id) "HPC job" job-id))
 
 (defn- is-readable?
   [cm path]

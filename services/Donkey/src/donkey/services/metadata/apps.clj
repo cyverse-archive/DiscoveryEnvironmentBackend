@@ -259,7 +259,6 @@
   (updateJobStatus [_ username prev-job-info status end-time]
     (update-job-status agave-client username prev-job-info status end-time))
 
-  ;; TODO: modify to work with Agave.
   (getJobParams [_ job-id]
     (process-job agave-client job-id
                  {:process-de-job    da/get-de-job-params
