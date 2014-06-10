@@ -60,6 +60,11 @@
   (when-let [job (.listJob agave job-id)]
     (params/format-params irods-home job (:appId job) (.getApp agave (:appId job)))))
 
+(defn get-app-rerun-info
+  [agave irods-home job-id]
+  (when-let [job (.listJob agave job-id)]
+    (apps/format-app-rerun-info irods-home (.getApp agave (:appId job)) job)))
+
 (defn translate-job-status
   [status]
   (jobs/translate-job-status status))
