@@ -1,11 +1,18 @@
 (ns donkey.persistence.metadata
   (:use korma.core)
   (:require [korma.db :as korma]
-            [donkey.util.db :as db]))
+            [donkey.util.db :as db])
+  (:import [java.util UUID]))
 
 
 (defentity ^{:private true} tags)
 
+(defn get-tag-owner
+  [tag-id]
+  (korma/with-db db/metadata
+    (select tags
+      (fields :owner_id)
+      (where {:id (UUID/fromString tag-id)}))))
 
 (defn insert-user-tag
   [owner value description]
@@ -14,10 +21,9 @@
                           :description description
                           :owner_id    owner}))))
 
-#_(defn update-user-tag
-  [owner old-value updates]
+(defn update-user-tag
+  [tag-id updates]
   (korma/with-db db/metadata
     (update tags
       (set-fields updates)
-      (where {:owner_id owner :value old-value}))))
-
+      (where {:id (UUID/fromString tag-id)}))))

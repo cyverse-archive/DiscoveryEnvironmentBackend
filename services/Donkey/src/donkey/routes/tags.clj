@@ -26,5 +26,4 @@
       (util/trap #(tags/create-user-tag (:shortUsername user/current-user) body)))
 
     (PATCH "/tags/user/:tag-id" [tag-id :as {body :body}]
-      (svc/success-response)
-      #_(util/trap #(tags/update-user-tag (:shortUsername user/current-user) value body)))))
+      (util/trap #(tags/update-user-tag (:shortUsername user/current-user) tag-id body)))))
