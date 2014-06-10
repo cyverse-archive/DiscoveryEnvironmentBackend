@@ -1,4 +1,4 @@
-5%define __jar_repack %{nil}
+%define __jar_repack %{nil}
 %define debug_package %{nil}
 %define __strip /bin/true
 %define __os_install_post   /bin/true
