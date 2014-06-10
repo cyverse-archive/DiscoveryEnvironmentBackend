@@ -189,10 +189,11 @@
       (.listApps agave-client)
       (metadactyl/apps-in-group group-id params)))
 
-  ;; TODO: modify to work with Agave.
   (searchApps [_ search-term]
     (let [de-apps  (metadactyl/search-apps search-term)
-          hpc-apps (.searchPublicApps agave-client search-term)]
+          hpc-apps (if (user-has-access-token?)
+                     (.searchApps agave-client search-term)
+                     {:template_count 0 :templates {}})]
       {:template_count (apply + (map :template_count [de-apps hpc-apps]))
        :templates      (mapcat :templates [de-apps hpc-apps])}))
 
