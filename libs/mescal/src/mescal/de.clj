@@ -6,6 +6,7 @@
   "An Agave client with customizations that are specific to the discovery environment."
   (hpcAppGroup [_])
   (listApps [_])
+  (searchApps [_ search-term])
   (getApp [_ app-id])
   (getAppDetails [_ app-id])
   (getAppDeployedComponent [_ app-id])
@@ -23,6 +24,8 @@
     (v2/hpc-app-group))
   (listApps [_]
     (v2/list-apps agave jobs-enabled?))
+  (searchApps [_ search-term]
+    (v2/search-apps agave jobs-enabled? search-term))
   (getApp [_ app-id]
     (v2/get-app agave app-id))
   (getAppDetails [_ app-id]
