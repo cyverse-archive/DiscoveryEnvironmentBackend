@@ -8,9 +8,11 @@
   [owner body]
   (let [tag         (json/parse-string (slurp body) true)
         value       (:value tag)
-        description (:description tag)
-        id          (:id (db/insert-user-tag owner value description))]
-    (svc/success-response {:id id})))
+        description (:description tag)]
+    (if (empty? (db/get-tag-by-value owner value))
+      (let [id (:id (db/insert-user-tag owner value description))]
+        (svc/success-response {:id id}))
+      (svc/donkey-response {} 409))))
 
 (defn update-user-tag
   [owner tag-id body]

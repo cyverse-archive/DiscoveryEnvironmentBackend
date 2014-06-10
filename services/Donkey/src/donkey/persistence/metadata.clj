@@ -7,6 +7,12 @@
 
 (defentity ^{:private true} tags)
 
+(defn get-tag-by-value
+  [owner value]
+  (korma/with-db db/metadata
+    (select tags
+      (where {:owner_id owner :value value}))))
+
 (defn get-tag-owner
   [tag-id]
   (korma/with-db db/metadata
