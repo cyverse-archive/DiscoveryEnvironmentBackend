@@ -31,7 +31,7 @@
       (validators/path-not-exists cm fixed-path)
       (mkdir cm fixed-path)
       (set-owner cm fixed-path user)
-      (stat/path-stat user fixed-path))))
+      (stat/path-stat cm user fixed-path))))
 
 (defn do-create
   "Entrypoint for the API that calls (create)."

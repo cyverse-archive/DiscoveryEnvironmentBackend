@@ -149,7 +149,7 @@
             (jargon-ops/move cm tmp-file dest :user user :admin-users (irods-admins))
             (throw+)))
 
-        {:file (stat/path-stat user dest)}))))
+        {:file (stat/path-stat cm user dest)}))))
 
 (defn saveas
   [req-params req-body]
@@ -180,4 +180,4 @@
         (with-in-str cont
           (actions/store cm *in* user dest))
 
-        {:file (stat/path-stat user dest)}))))
+        {:file (stat/path-stat cm user dest)}))))
