@@ -444,7 +444,7 @@ no-op; no error will be thrown. If the update is successful, the job listing
 will be included in the response body. Here's an example:
 
 ```
-$ curl -sX PATCH "http://services-2:31325/secured/analyses/2725F72B-2EC9-4FB8-BF72-05136B5D71F4?proxyToken=$(cas-ticket)" -d '
+$ curl -sX PATCH "http://services-2:31325/secured/analysis/2725F72B-2EC9-4FB8-BF72-05136B5D71F4?proxyToken=$(cas-ticket)" -d '
 {
     "description": "One word! Two words! Three! Three words! Ah, ah, ah!",
     "name": "obsessive_word_count"
