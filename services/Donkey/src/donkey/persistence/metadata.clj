@@ -69,6 +69,15 @@
       (korma/with-db db/metadata
         (insert attached_tags (values new-values))))))
 
+(defn mark-tags-detached
+  [detacher target-id tag-ids]
+  (korma/with-db db/metadata
+    (update attached_tags
+      (set-fields {:detacher_id detacher
+                   :detached_on (sqlfn now)})
+      (where {:target_id   target-id
+              :detached_on nil
+              :tag_id      [in tag-ids]}))))
 
 (defn- register-target
   "Registers an ID and type if it does not already exist in the targets table."

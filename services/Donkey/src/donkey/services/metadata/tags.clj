@@ -72,5 +72,7 @@
 
 
 (defn detach-tags
-  [fs-cfg user entry-id attached-tags]
+  [fs-cfg user entry-id tag-ids]
+  (validate-entry-accessible fs-cfg user entry-id)
+  (db/mark-tags-detached user entry-id (db/filter-tags-owned-by-user user (set tag-ids)))
   (svc/success-response))
