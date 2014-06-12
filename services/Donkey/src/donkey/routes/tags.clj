@@ -1,10 +1,22 @@
 (ns donkey.routes.tags
   (:use [compojure.core :only [GET PATCH POST]])
-  (:require [donkey.auth.user-attributes :as user]
+  (:require [cheshire.core :as json]
+            [donkey.auth.user-attributes :as user]
             [donkey.services.metadata.tags :as tags]
             [donkey.util :as util]
             [donkey.util.config :as config]
-            [donkey.util.service :as svc]))
+            [donkey.util.service :as svc])
+  (:import [java.util UUID]))
+
+
+(defn- handle-patch-file-tags
+  [fs-cfg user entry-id type body]
+  (let [req  (-> body slurp (json/parse-string true))
+        mods (map #(UUID/fromString %) (:tags req))]
+    (condp = type
+      "insertion" (tags/attach-tags fs-cfg user entry-id mods)
+      "removal"   (tags/detach-tags user entry-id mods)
+                  (svc/donkey-response {} 400))))
 
 
 (defn secured-tag-routes
@@ -13,10 +25,15 @@
     [config/metadata-routes-enabled]
 
     (GET "/filesystem/entry/:entry-id/tags" [:as req]
+      ;; TODO implement
       (svc/success-response {:tags ["user/username/tag+1" "user/username/tag+2"]}))
 
-    (PATCH "/filesystem/entry/:entry-id/tags" [entry-id :as {params :params body :body}]
-      (svc/success-response))
+    (PATCH "/filesystem/entry/:entry-id/tags" [entry-id type :as {body :body}]
+      (util/trap #(handle-patch-file-tags (config/jargon-cfg)
+                                          (:shortUsername user/current-user)
+                                          (UUID/fromString entry-id)
+                                          type
+                                          body)))
 
     (GET "/tags/suggestions" [contains]
       (util/trap #(tags/suggest-tags (:shortUsername user/current-user) contains)))

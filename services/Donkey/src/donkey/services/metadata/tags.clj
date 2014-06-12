@@ -1,6 +1,13 @@
 (ns donkey.services.metadata.tags
-  (:require [cheshire.core :as json]
+  (:use [slingshot.slingshot :only [throw+]])
+  (:require [clojure.set :as set]
+            [cheshire.core :as json]
+            [clj-jargon.init :as fs-init]
+            [clj-jargon.permissions :as fs-perm]
+            [clojure-commons.error-codes :as error]
             [donkey.persistence.metadata :as db]
+            [donkey.services.filesystem.uuids :as uuid]
+            [donkey.services.filesystem.validators :as valid]
             [donkey.util.service :as svc]))
 
 
@@ -13,6 +20,7 @@
       (let [id (:id (db/insert-user-tag owner value description))]
         (svc/success-response {:id id}))
       (svc/donkey-response {} 409))))
+
 
 (defn update-user-tag
   [owner tag-id body]
@@ -33,7 +41,29 @@
         (not= owner (:owner_id tag)) (svc/donkey-response {} 403)
         :else                        (do-update)))))
 
+
 (defn suggest-tags
   [user value-part]
   (let [matches (db/get-tags-by-value user (str "%" value-part "%"))]
   (svc/success-response {:suggestions (map #(dissoc % :owner_id) matches)})))
+
+
+(defn attach-tags
+  [fs-cfg user entry-id new-tags]
+  (fs-init/with-jargon fs-cfg [fs]
+    (valid/user-exists fs user)
+    (let [entry-path (:path (uuid/path-for-uuid fs user (str entry-id)))]
+      (when-not (and entry-path (fs-perm/is-readable? fs user entry-path))
+        (throw+ {:error_code error/ERR_NOT_FOUND :uuid entry-id}))))
+  (let [unknown-tags (set/difference (set new-tags)
+                                     (set (db/filter-tags-owned-by-user user new-tags)))]
+    (when-not (empty? unknown-tags)
+      (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags})))
+  (db/insert-attached-tags user entry-id "data" new-tags)
+  (svc/success-response))
+
+
+(defn detach-tags
+  [user entry-id new-tags]
+  ;; TODO implements
+  (svc/success-response))

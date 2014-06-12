@@ -5,8 +5,21 @@
   (:import [java.util UUID]))
 
 
+(defentity ^{:private true} attached_tags)
+
 (defentity ^{:private true} tags
   (entity-fields :id :owner_id :value :description))
+
+
+(defn filter-tags-owned-by-user
+  [owner tag-ids]
+  (map :id
+       (korma/with-db db/metadata
+         (select tags
+           (fields :id)
+           (where {:owner_id owner
+                   :id       [in tag-ids]})))))
+
 
 (defn get-tags-by-value
   [owner value]
@@ -33,6 +46,19 @@
     (update tags
       (set-fields updates)
       (where {:id (UUID/fromString tag-id)}))))
+
+
+(defn insert-attached-tags
+  [attacher target-id target-type tag-ids]
+  (when-not (empty? tag-ids)
+    (let [new-values (map #(hash-map :tag_id      %
+                                     :target_id   target-id
+                                     :target_type (raw (str \' target-type \'))
+                                     :attacher_id attacher)
+                          tag-ids)]
+      (korma/with-db db/metadata
+        (insert attached_tags (values new-values))))))
+
 
 (defn- register-target
   "Registers an ID and type if it does not already exist in the targets table."
