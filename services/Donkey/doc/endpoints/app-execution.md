@@ -341,7 +341,7 @@ function will work:
 
 ```bash
 function urlencode {
-    python -c "import urllib;print urllib.quote_plus('$@')"
+    python -c "import urllib;import sys;print urllib.quote_plus(sys.argv[1])" "$1"
 }
 ```
 
