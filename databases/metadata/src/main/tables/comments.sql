@@ -11,6 +11,7 @@ CREATE TABLE comments (
   retracted_by varchar(512) DEFAULT NULL,
   deleted BOOLEAN NOT NULL DEFAULT false,
   target_id UUID NOT NULL,
+  target_type target_enum NOT NULL,
   owner_id varchar(512) NOT NULL
 );
 

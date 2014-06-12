@@ -6,6 +6,7 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE attached_tags (
   target_id UUID NOT NULL,
+  target_type target_enum NOT NULL,
   tag_id UUID NOT NULL,
   attacher_id VARCHAR (512),
   attached_on TIMESTAMP NOT NULL DEFAULT now(),
