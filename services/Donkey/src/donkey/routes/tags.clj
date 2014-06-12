@@ -15,7 +15,7 @@
         mods (map #(UUID/fromString %) (:tags req))]
     (condp = type
       "insertion" (tags/attach-tags fs-cfg user entry-id mods)
-      "removal"   (tags/detach-tags user entry-id mods)
+      "removal"   (tags/detach-tags fs-cfg user entry-id mods)
                   (svc/donkey-response {} 400))))
 
 

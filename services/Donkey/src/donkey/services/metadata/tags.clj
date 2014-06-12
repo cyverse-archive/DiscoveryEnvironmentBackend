@@ -48,22 +48,28 @@
   (svc/success-response {:suggestions (map #(dissoc % :owner_id) matches)})))
 
 
-(defn attach-tags
-  [fs-cfg user entry-id new-tags]
+(defn- validate-entry-accessible
+  [fs-cfg user entry-id]
   (fs-init/with-jargon fs-cfg [fs]
     (valid/user-exists fs user)
     (let [entry-path (:path (uuid/path-for-uuid fs user (str entry-id)))]
       (when-not (and entry-path (fs-perm/is-readable? fs user entry-path))
-        (throw+ {:error_code error/ERR_NOT_FOUND :uuid entry-id}))))
+        (throw+ {:error_code error/ERR_NOT_FOUND :uuid entry-id})))))
+
+
+(defn attach-tags
+  [fs-cfg user entry-id new-tags]
+  (validate-entry-accessible fs-cfg user entry-id)
   (let [unknown-tags (set/difference (set new-tags)
                                      (set (db/filter-tags-owned-by-user user new-tags)))]
     (when-not (empty? unknown-tags)
       (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags})))
+  ;; TODO ignore already attached tags
+  ;; TODO handle reattach tags
   (db/insert-attached-tags user entry-id "data" new-tags)
   (svc/success-response))
 
 
 (defn detach-tags
-  [user entry-id new-tags]
-  ;; TODO implements
+  [fs-cfg user entry-id attached-tags]
   (svc/success-response))
