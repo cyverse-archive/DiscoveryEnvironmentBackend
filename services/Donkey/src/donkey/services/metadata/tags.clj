@@ -11,6 +11,16 @@
             [donkey.util.service :as svc]))
 
 
+(defn- validate-entry-accessible
+  [fs-cfg user entry-id]
+  (fs-init/with-jargon fs-cfg [fs]
+    (valid/user-exists fs user)
+    (let [entry-path (:path (uuid/path-for-uuid fs user (str entry-id)))]
+      (when-not (and entry-path (fs-perm/is-readable? fs user entry-path))
+        (throw+ {:error_code error/ERR_NOT_FOUND :uuid entry-id})))))
+
+
+
 (defn create-user-tag
   [owner body]
   (let [tag         (json/parse-string (slurp body) true)
@@ -48,13 +58,11 @@
   (svc/success-response {:suggestions (map #(dissoc % :owner_id) matches)})))
 
 
-(defn- validate-entry-accessible
+(defn list-attached-tags
   [fs-cfg user entry-id]
-  (fs-init/with-jargon fs-cfg [fs]
-    (valid/user-exists fs user)
-    (let [entry-path (:path (uuid/path-for-uuid fs user (str entry-id)))]
-      (when-not (and entry-path (fs-perm/is-readable? fs user entry-path))
-        (throw+ {:error_code error/ERR_NOT_FOUND :uuid entry-id})))))
+  (validate-entry-accessible fs-cfg user entry-id)
+  (let [tags (db/select-attached-tags user entry-id)]
+    (svc/success-response {:tags (map #(dissoc % :owner_id) tags)})))
 
 
 (defn attach-tags

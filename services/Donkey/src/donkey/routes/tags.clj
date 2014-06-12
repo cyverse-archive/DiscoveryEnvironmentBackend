@@ -19,14 +19,16 @@
                (svc/donkey-response {} 400))))
 
 
+
 (defn secured-tag-routes
   []
   (util/optional-routes
     [config/metadata-routes-enabled]
 
-    (GET "/filesystem/entry/:entry-id/tags" [:as req]
-      ;; TODO implement
-      (svc/success-response {:tags ["user/username/tag+1" "user/username/tag+2"]}))
+    (GET "/filesystem/entry/:entry-id/tags" [entry-id]
+      (util/trap #(tags/list-attached-tags (config/jargon-cfg)
+                                           (:shortUsername user/current-user)
+                                           (UUID/fromString entry-id))))
 
     (PATCH "/filesystem/entry/:entry-id/tags" [entry-id type :as {body :body}]
       (util/trap #(handle-patch-file-tags (config/jargon-cfg)

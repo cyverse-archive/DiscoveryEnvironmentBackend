@@ -47,6 +47,16 @@
       (set-fields updates)
       (where {:id (UUID/fromString tag-id)}))))
 
+(defn select-attached-tags
+  [user target-id]
+  (korma/with-db db/metadata
+    (select tags
+      (fields :id :value :description)
+      (where {:owner_id user
+              :id       [in (subselect attached_tags
+                              (fields :tag_id)
+                              (where {:target_id   target-id
+                                      :detached_on nil}))]}))))
 
 (defn filter-attached-tags
   [target-id tag-ids]
