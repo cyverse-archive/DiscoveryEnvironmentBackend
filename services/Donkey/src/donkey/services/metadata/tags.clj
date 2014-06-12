@@ -60,14 +60,15 @@
 (defn attach-tags
   [fs-cfg user entry-id new-tags]
   (validate-entry-accessible fs-cfg user entry-id)
-  (let [unknown-tags (set/difference (set new-tags)
-                                     (set (db/filter-tags-owned-by-user user new-tags)))]
+  (let [tag-set         (set new-tags)
+        known-tags      (set (db/filter-tags-owned-by-user user tag-set))
+        unknown-tags    (set/difference tag-set known-tags)
+        unattached-tags (set/difference known-tags
+                                        (set (db/filter-attached-tags entry-id known-tags)))]
     (when-not (empty? unknown-tags)
-      (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags})))
-  ;; TODO ignore already attached tags
-  ;; TODO handle reattach tags
-  (db/insert-attached-tags user entry-id "data" new-tags)
-  (svc/success-response))
+      (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
+    (db/insert-attached-tags user entry-id "data" unattached-tags)
+    (svc/success-response)))
 
 
 (defn detach-tags

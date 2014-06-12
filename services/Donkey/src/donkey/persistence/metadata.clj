@@ -48,6 +48,16 @@
       (where {:id (UUID/fromString tag-id)}))))
 
 
+(defn filter-attached-tags
+  [target-id tag-ids]
+  (map :tag_id
+       (korma/with-db db/metadata
+         (select attached_tags
+           (fields :tag_id)
+           (where {:target_id   target-id
+                   :detached_on nil
+                   :tag_id      [in tag-ids]})))))
+
 (defn insert-attached-tags
   [attacher target-id target-type tag-ids]
   (when-not (empty? tag-ids)
