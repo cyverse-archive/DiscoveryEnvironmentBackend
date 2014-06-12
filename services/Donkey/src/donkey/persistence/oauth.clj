@@ -5,7 +5,8 @@
         [korma.db :only [with-db]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as ce]
-            [donkey.util.db :as db])
+            [donkey.util.db :as db]
+            [donkey.util.pgp :as pgp])
   (:import [java.sql Timestamp]
            [java.util UUID]))
 
@@ -26,9 +27,9 @@
   [api-name username expires-at refresh-token access-token]
   (with-db db/de
     (update :access_tokens
-            (set-fields {:token         access-token
+            (set-fields {:token         (pgp/encrypt access-token)
                          :expires_at    expires-at
-                         :refresh_token refresh-token})
+                         :refresh_token (pgp/encrypt refresh-token)})
             (where {:webapp  api-name
                     :user_id (user-id-subselect username)}))))
 
@@ -39,28 +40,37 @@
     (insert :access_tokens
             (values {:webapp        api-name
                      :user_id       (user-id-subselect username)
-                     :token         access-token
+                     :token         (pgp/encrypt access-token)
                      :expires_at    expires-at
-                     :refresh_token refresh-token}))))
+                     :refresh_token (pgp/encrypt refresh-token)}))))
 
 (defn- determine-expiration-time
   "Determines a token expiration time given its lifetime in seconds."
   [lifetime]
   (Timestamp. (+ (System/currentTimeMillis) (* 1000 lifetime))))
 
+(defn- decrypt-tokens
+  "Decrypts access and refresh tokens retrieved from the database."
+  [token-info]
+  (when-not (nil? token-info)
+    (-> token-info
+        (update-in [:access-token] pgp/decrypt)
+        (update-in [:refresh-token] pgp/decrypt))))
+
 (defn get-access-token
   "Retrieves an access code from the database."
   [api-name username]
   (with-db db/de
-    (first
-     (select [:access_tokens :t]
-             (join [:users :u] {:t.user_id :u.id})
-             (fields [:t.webapp        :webapp]
-                     [:t.expires_at    :expires-at]
-                     [:t.refresh_token :refresh-token]
-                     [:t.token         :access-token])
-             (where {:u.username username
-                     :t.webapp   api-name})))))
+    (->> (select [:access_tokens :t]
+                 (join [:users :u] {:t.user_id :u.id})
+                 (fields [:t.webapp        :webapp]
+                         [:t.expires_at    :expires-at]
+                         [:t.refresh_token :refresh-token]
+                         [:t.token         :access-token])
+                 (where {:u.username username
+                         :t.webapp   api-name}))
+         (first)
+         (decrypt-tokens))))
 
 (defn has-access-token
   "Determines whether a user has an access token for an API."

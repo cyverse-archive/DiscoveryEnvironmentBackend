@@ -621,7 +621,7 @@
   "The path to the secure PGP keyring."
   [props config-valid configs]
   "donkey.pgp.keyring-path"
-  "/etc/iplant/de/crypto/secring.pgp")
+  "/etc/iplant/de/crypto/secring.gpg")
 
 (cc/defprop-str key-password
   "The password needed to unlock the PGP password."
