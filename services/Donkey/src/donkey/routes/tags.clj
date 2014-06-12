@@ -14,9 +14,9 @@
   (let [req  (-> body slurp (json/parse-string true))
         mods (map #(UUID/fromString %) (:tags req))]
     (condp = type
-      "insertion" (tags/attach-tags fs-cfg user entry-id mods)
-      "removal"   (tags/detach-tags fs-cfg user entry-id mods)
-                  (svc/donkey-response {} 400))))
+      "attach" (tags/attach-tags fs-cfg user entry-id mods)
+      "detach" (tags/detach-tags fs-cfg user entry-id mods)
+               (svc/donkey-response {} 400))))
 
 
 (defn secured-tag-routes
