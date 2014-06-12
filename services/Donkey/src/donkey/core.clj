@@ -96,11 +96,44 @@
   []
   (nrepl/start-server :port 7888))
 
+(defn- iplant-conf-dir-file
+  [filename]
+  (when-let [conf-dir (System/getenv "IPLANT_CONF_DIR")]
+    (let [f (file conf-dir filename)]
+      (when (.isFile f) (.getPath f)))))
+
+(defn- cwd-file
+  [filename]
+  (let [f (file filename)]
+    (when (.isFile f) (.getPath f))))
+
+(defn- classpath-file
+  [filename]
+  (-> (Thread/currentThread)
+      (.getContextClassLoader)
+      (.findResource filename)
+      (.toURI)
+      (file)))
+
+(defn- no-configuration-found
+  [filename]
+  (throw (RuntimeException. (str "configuration file " filename " not found"))))
+
+(defn- find-configuration-file
+  []
+  (let [conf-file "donkey.properties"]
+    (or (iplant-conf-dir-file conf-file)
+        (cwd-file conf-file)
+        (classpath-file conf-file)
+        (no-configuration-found conf-file))))
+
 (defn load-configuration-from-file
   "Loads the configuration properties from a file."
-  []
-  (config/load-config-from-file)
-  (db/define-database))
+  ([]
+     (load-configuration-from-file (find-configuration-file)))
+  ([path]
+     (config/load-config-from-file path)
+     (db/define-database)))
 
 (defn lein-ring-init
   []
@@ -118,12 +151,12 @@
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler routes-fn)
-    (wrap-multipart-params {:store fileio/store-irods})
-    trap-handler
-    req-logger
-    wrap-keyword-params
-    wrap-lcase-params
-    wrap-query-params))
+      (wrap-multipart-params {:store fileio/store-irods})
+      trap-handler
+      req-logger
+      wrap-keyword-params
+      wrap-lcase-params
+      wrap-query-params))
 
 (def app
   (site-handler donkey-routes))
