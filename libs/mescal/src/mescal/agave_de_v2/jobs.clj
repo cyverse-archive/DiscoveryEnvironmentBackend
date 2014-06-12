@@ -70,9 +70,12 @@
        (:available listing)
        (= "up" (statuses (:executionHost listing)))))
 
-(defn- build-path
-  [base & rest]
-  (string/join "/" (cons base (map #(string/replace % #"^/|/$" "") (remove nil? rest)))))
+(defn- path-from-agave-url
+  [irods-home agave-url]
+  (when-not (nil? agave-url)
+    (let [relative-path (string/replace agave-url #".*?/listings/+" "")
+          irods-home    (string/replace irods-home #"/$" "")]
+      (str irods-home "/" relative-path))))
 
 (defn format-job
   ([irods-home jobs-enabled? app-info-map job]
@@ -86,7 +89,7 @@
         :enddate          (or (str (util/parse-timestamp (:endTime job))) "")
         :name             (:name job)
         :raw_status       (:status job)
-        :resultfolderid   (build-path irods-home (:archivePath job))
+        :resultfolderid   (path-from-agave-url irods-home (get-in job [:_links :archiveData :href]))
         :startdate        (or (str (util/parse-timestamp (:startTime job))) "")
         :status           (job-status-translations (:status job) "")
         :wiki_url         ""}))
