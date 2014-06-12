@@ -326,6 +326,32 @@ service behaves:
 | sort-order | `asc` or `ASC` for ascending and `desc` or `DESC` for descending. | desc |
 | filter | Allows results to be filtered based on the value of some result field.  The format of this parameter is `[{"field":"some_field", "value":"search-term"}, ...]`, where `field` is the name of the field on which the filter is based and `value` is the search value. If `field` is `name` or `analysis_name`, then `value` can be contained anywhere, case-insensitive, in the corresponding field. For example, to obtain the list of all jobs that were executed using an application with `CACE` anywhere in its name, the parameter value can be `[{"field":"analysis_name","value":"cace"}]`. To find a job with a specific `id`, the parameter value can be `[{"field":"id","value":"C09F5907-B2A2-4429-A11E-5B96F421C3C1"}]`. Additional filters may be provided in the query array, and any analysis that matches any filter will be returned. | No filtering |
 
+Note that the JSON value used by the filter parameter can potentially contain
+characters that must be URL encoded. For example, the URL encoded version of
+`[{"field":"analysis_name","value":"cace"}]` would be:
+
+```
+%5B%7B%22field%22%3A%22analysis_name%22%2C%22value%22%3A%22cace%22%7D%5D
+```
+
+Of course, this is a pain to type in, for example, a `curl` command. If you're
+calling the service using curl then a bash function that encodes strings for you
+will be very helpful. If you have a recent version of Python installed then this
+function will work:
+
+```bash
+function urlencode {
+    python -c "import urllib;print urllib.quote_plus('$@')"
+}
+```
+
+With this function defined, a `curl` command to call this service with a filter
+can be simplified to something like this:
+
+```
+curl -s "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket)&filter=$(urlencode '[{"field":"analysis_name","value":"cace"}]')" | python -mjson.tool
+```
+
 Here's an example using no parameters:
 
 ```
