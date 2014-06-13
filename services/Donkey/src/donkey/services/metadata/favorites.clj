@@ -9,3 +9,11 @@
   (when-not (db/is-favorite user entry-id)
     (db/insert-favorite user entry-id "data"))
   (svc/success-response))
+
+(defn remove-favorite
+  [user entry-id]
+  (if (db/is-favorite user entry-id)
+    (do
+      (db/delete-favorite user entry-id)
+      (svc/success-response))
+    (svc/donkey-response {} 404)))

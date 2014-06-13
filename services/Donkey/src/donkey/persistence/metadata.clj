@@ -25,6 +25,12 @@
                :target_type (raw (str \' target-type \'))
                :owner_id    owner}))))
 
+(defn delete-favorite
+  [owner target-id]
+  (korma/with-db db/metadata
+    (delete favorites
+      (where {:target_id target-id :owner_id owner}))))
+
 
 ;; TAGS
 

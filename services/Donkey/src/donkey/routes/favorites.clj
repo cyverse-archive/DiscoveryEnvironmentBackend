@@ -19,8 +19,8 @@
                                      (UUID/fromString entry-id))))
 
     (DELETE "/favorites/filesystem/:entry-id" [entry-id]
-      ;; TODO implement
-      (svc/success-response))
+      (util/trap #(fave/remove-favorite (:shortUsername user/current-user)
+                                        (UUID/fromString entry-id))))
 
     (GET "/favorites/filesystem" []
       ;; TODO implement
