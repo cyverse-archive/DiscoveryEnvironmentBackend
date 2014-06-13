@@ -61,7 +61,7 @@
 (defn suggest-tags
   [user value-part]
   (let [matches (db/get-tags-by-value user (str "%" value-part "%"))]
-  (svc/success-response {:suggestions (map #(dissoc % :owner_id) matches)})))
+  (svc/success-response {:tags (map #(dissoc % :owner_id) matches)})))
 
 
 (defn list-attached-tags
