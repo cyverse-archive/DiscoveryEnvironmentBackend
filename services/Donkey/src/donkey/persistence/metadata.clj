@@ -5,11 +5,33 @@
   (:import [java.util UUID]))
 
 
+;; FAVORITES
+
+(defentity ^{:private true} favorites)
+
+(defn is-favorite
+  [owner target-id]
+  (-> (korma/with-db db/metadata
+        (select favorites
+          (aggregate (count :*) :cnt)
+          (where {:target_id target-id :owner_id owner})))
+    first :cnt pos?))
+
+(defn insert-favorite
+  [owner target-id target-type]
+  (korma/with-db db/metadata
+    (insert favorites
+      (values {:target_id   target-id
+               :target_type (raw (str \' target-type \'))
+               :owner_id    owner}))))
+
+
+;; TAGS
+
 (defentity ^{:private true} attached_tags)
 
 (defentity ^{:private true} tags
   (entity-fields :id :owner_id :value :description))
-
 
 (defn filter-tags-owned-by-user
   [owner tag-ids]
@@ -17,9 +39,7 @@
        (korma/with-db db/metadata
          (select tags
            (fields :id)
-           (where {:owner_id owner
-                   :id       [in tag-ids]})))))
-
+           (where {:owner_id owner :id [in tag-ids]})))))
 
 (defn get-tags-by-value
   [owner value]
@@ -36,9 +56,10 @@
 (defn insert-user-tag
   [owner value description]
   (korma/with-db db/metadata
-    (insert tags (values {:value       value
-                          :description description
-                          :owner_id    owner}))))
+    (insert tags
+      (values {:value       value
+               :description description
+               :owner_id    owner}))))
 
 (defn update-user-tag
   [tag-id updates]
@@ -88,6 +109,9 @@
       (where {:target_id   target-id
               :detached_on nil
               :tag_id      [in tag-ids]}))))
+
+
+;; TEMPLATES
 
 (defn- register-target
   "Registers an ID and type if it does not already exist in the targets table."

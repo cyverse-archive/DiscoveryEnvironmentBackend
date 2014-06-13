@@ -20,6 +20,7 @@
         [donkey.routes.filesystem]
         [donkey.routes.search]
         [donkey.routes.coge]
+        [donkey.routes.favorites]
         [donkey.routes.tags]
         [donkey.routes.comments]
         [donkey.auth.user-attributes]
@@ -64,6 +65,7 @@
    (secured-coge-routes)
    (secured-admin-routes)
    (secured-search-routes)
+   (secured-favorites-routes)
    (secured-tag-routes)
    (secured-comment-routes)
    (route/not-found (unrecognized-path-response))))

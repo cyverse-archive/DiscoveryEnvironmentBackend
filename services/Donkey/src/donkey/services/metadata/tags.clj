@@ -11,7 +11,8 @@
             [donkey.util.service :as svc]))
 
 
-(defn- validate-entry-accessible
+;; TODO move this some place special
+(defn validate-entry-accessible
   [fs-cfg user entry-id]
   (fs-init/with-jargon fs-cfg [fs]
     (valid/user-exists fs user)
