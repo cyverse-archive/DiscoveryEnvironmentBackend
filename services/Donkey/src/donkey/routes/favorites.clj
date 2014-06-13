@@ -1,11 +1,19 @@
 (ns donkey.routes.favorites
   (:use [compojure.core :only [DELETE GET POST PUT]])
-  (:require [donkey.auth.user-attributes :as user]
+  (:require [cheshire.core :as json]
+            [donkey.auth.user-attributes :as user]
             [donkey.services.metadata.favorites :as fave]
             [donkey.util :as util]
             [donkey.util.config :as config]
             [donkey.util.service :as svc])
   (:import [java.util UUID]))
+
+
+(defn- handle-filter
+  [fs-cfg user body]
+  (let [ids-txt (-> body slurp (json/parse-string true) :filesystem)
+        uuids   (->> ids-txt (map #(UUID/fromString %)) set)]
+    (fave/filter-favorites fs-cfg user uuids)))
 
 
 (defn secured-favorites-routes
@@ -25,9 +33,5 @@
     (GET "/favorites/filesystem" []
       (util/trap #(fave/list-favorite-data (config/jargon-cfg) (:shortUsername user/current-user))))
 
-    (POST "/favorites/filter" []
-      ;; TODO implement
-      (svc/success-response {:analyses   []
-                             :apps       []
-                             :filesystem ["f81d4fae-7dec-11d0-a765-00a0c91e6bf7"
-                                          "f81d4fae-7dec-11d0-a765-00a0c91e6bf6"]}))))
+    (POST "/favorites/filter" [:as {body :body}]
+      (util/trap #(handle-filter (config/jargon-cfg) (:shortUsername user/current-user) body)))))

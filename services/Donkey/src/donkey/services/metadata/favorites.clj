@@ -1,10 +1,10 @@
 (ns donkey.services.metadata.favorites
-  (:require [clj-jargon.init :as fs]
+  (:require [clojure.set :as set]
+            [clj-jargon.init :as fs]
             [donkey.persistence.metadata :as db]
             [donkey.services.filesystem.validators :as valid]
             [donkey.services.metadata.tags :as tag]
             [donkey.util.service :as svc]))
-
 
 
 (defn add-favorite
@@ -28,5 +28,15 @@
     (valid/user-exists fs user)
     (->> (db/select-favorites-of-type user "data")
       (filter (partial tag/entry-accessible? fs user))
+      (hash-map :filesystem)
+      svc/success-response)))
+
+(defn filter-favorites
+  [fs-cfg user entries]
+  (fs/with-jargon fs-cfg [fs]
+    (valid/user-exists fs user)
+    (->> (db/select-favorites-of-type user "data")
+      (filter (partial tag/entry-accessible? fs user))
+      (set/intersection (set entries))
       (hash-map :filesystem)
       svc/success-response)))
