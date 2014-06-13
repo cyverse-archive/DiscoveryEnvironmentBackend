@@ -12,14 +12,19 @@
 
 
 ;; TODO move this some place special
+(defn entry-accessible?
+  [fs user entry-id]
+  (let [entry-path (:path (uuid/path-for-uuid fs user (str entry-id)))]
+    (and entry-path (fs-perm/is-readable? fs user entry-path))))
+
+
+;; TODO move this some place special
 (defn validate-entry-accessible
   [fs-cfg user entry-id]
   (fs-init/with-jargon fs-cfg [fs]
     (valid/user-exists fs user)
-    (let [entry-path (:path (uuid/path-for-uuid fs user (str entry-id)))]
-      (when-not (and entry-path (fs-perm/is-readable? fs user entry-path))
-        (throw+ {:error_code error/ERR_NOT_FOUND :uuid entry-id})))))
-
+    (if-not (entry-accessible? fs user entry-id)
+      (throw+ {:error_code error/ERR_NOT_FOUND :uuid entry-id}))))
 
 
 (defn create-user-tag

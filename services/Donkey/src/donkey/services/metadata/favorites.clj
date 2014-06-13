@@ -1,7 +1,11 @@
 (ns donkey.services.metadata.favorites
-  (:require [donkey.persistence.metadata :as db]
+  (:require [clj-jargon.init :as fs]
+            [donkey.persistence.metadata :as db]
+            [donkey.services.filesystem.validators :as valid]
             [donkey.services.metadata.tags :as tag]
             [donkey.util.service :as svc]))
+
+
 
 (defn add-favorite
   [fs-cfg user entry-id]
@@ -17,3 +21,12 @@
       (db/delete-favorite user entry-id)
       (svc/success-response))
     (svc/donkey-response {} 404)))
+
+(defn list-favorite-data
+  [fs-cfg user]
+  (fs/with-jargon fs-cfg [fs]
+    (valid/user-exists fs user)
+    (->> (db/select-favorites-of-type user "data")
+      (filter (partial tag/entry-accessible? fs user))
+      (hash-map :filesystem)
+      svc/success-response)))

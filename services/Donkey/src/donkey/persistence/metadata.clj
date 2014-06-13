@@ -5,6 +5,11 @@
   (:import [java.util UUID]))
 
 
+(defn- ->enum-val
+  [val]
+  (raw (str \' val \')))
+
+
 ;; FAVORITES
 
 (defentity ^{:private true} favorites)
@@ -17,12 +22,21 @@
           (where {:target_id target-id :owner_id owner})))
     first :cnt pos?))
 
+(defn select-favorites-of-type
+  [owner target-type]
+  (map :target_id
+       (korma/with-db db/metadata
+         (select favorites
+           (fields :target_id)
+           (where {:target_type (->enum-val target-type)
+                   :owner_id    owner})))))
+
 (defn insert-favorite
   [owner target-id target-type]
   (korma/with-db db/metadata
     (insert favorites
       (values {:target_id   target-id
-               :target_type (raw (str \' target-type \'))
+               :target_type (->enum-val target-type)
                :owner_id    owner}))))
 
 (defn delete-favorite
@@ -100,7 +114,7 @@
   (when-not (empty? tag-ids)
     (let [new-values (map #(hash-map :tag_id      %
                                      :target_id   target-id
-                                     :target_type (raw (str \' target-type \'))
+                                     :target_type (->enum-val target-type)
                                      :attacher_id attacher)
                           tag-ids)]
       (korma/with-db db/metadata
@@ -133,7 +147,7 @@
 (defn register-data-target
   "Registers the given data ID if it does not already exist in the targets table."
   [id]
-  (register-target id (raw "'data'")))
+  (register-target id (->enum-val "data")))
 
 (defn find-existing-metadata-template-avu
   "Finds an existing AVU by ID, or by attribute, target_id, and owner_id if no ID is given."

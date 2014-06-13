@@ -23,9 +23,7 @@
                                         (UUID/fromString entry-id))))
 
     (GET "/favorites/filesystem" []
-      ;; TODO implement
-      (svc/success-response {:filesystem ["f81d4fae-7dec-11d0-a765-00a0c91e6bf7"
-                                          "f81d4fae-7dec-11d0-a765-00a0c91e6bf6"]}))
+      (util/trap #(fave/list-favorite-data (config/jargon-cfg) (:shortUsername user/current-user))))
 
     (POST "/favorites/filter" []
       ;; TODO implement
