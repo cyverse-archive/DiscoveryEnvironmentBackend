@@ -8,9 +8,12 @@
   (getApp [_ app-id])
   (submitJob [_ submission])
   (listJobs [_] [_ job-ids])
-  (listJob [_ job-id]))
+  (listJob [_ job-id])
+  (fileDownloadUrl [_ file-path])
+  (fileListingUrl [_ file-path])
+  (filePath [_ file-url]))
 
-(deftype AgaveClientV2 [base-url token-info-fn timeout]
+(deftype AgaveClientV2 [base-url storage-system token-info-fn timeout]
   AgaveClient
   (listSystems [_]
     (v2/check-access-token token-info-fn timeout)
@@ -32,9 +35,18 @@
     (v2/list-jobs base-url token-info-fn timeout job-ids))
   (listJob [_ job-id]
     (v2/check-access-token token-info-fn timeout)
-    (v2/list-job base-url token-info-fn timeout job-id)))
+    (v2/list-job base-url token-info-fn timeout job-id))
+  (fileDownloadUrl [_ file-path]
+    (v2/check-access-token token-info-fn timeout)
+    (v2/file-path-to-url "media" base-url token-info-fn timeout storage-system file-path))
+  (fileListingUrl [_ file-path]
+    (v2/check-access-token token-info-fn timeout)
+    (v2/file-path-to-url "listings" base-url token-info-fn timeout storage-system file-path))
+  (filePath [_ file-url]
+    (v2/check-access-token token-info-fn timeout)
+    (v2/file-url-to-path base-url token-info-fn timeout file-url)))
 
 (defn agave-client-v2
-  [base-url token-info-fn & {:keys [timeout] :or {timeout 5000}}]
+  [base-url storage-system token-info-fn & {:keys [timeout] :or {timeout 5000}}]
   (let [token-info-wrapper-fn (memoize #(ref (token-info-fn)))]
-    (AgaveClientV2. base-url token-info-wrapper-fn timeout)))
+    (AgaveClientV2. base-url storage-system token-info-wrapper-fn timeout)))
