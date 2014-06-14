@@ -2,7 +2,8 @@
   (:require [mescal.agave-de-v2.apps :as apps]
             [mescal.agave-de-v2.app-listings :as app-listings]
             [mescal.agave-de-v2.job-params :as params]
-            [mescal.agave-de-v2.jobs :as jobs]))
+            [mescal.agave-de-v2.jobs :as jobs]
+            [clojure.tools.logging :as log]))
 
 (defn hpc-app-group
   []
@@ -45,41 +46,41 @@
   (apps/format-deployed-component-for-app (.getApp agave app-id)))
 
 (defn submit-job
-  [agave irods-home submission]
+  [agave submission]
   (let [app-id (:analysis_id submission)
         app    (.getApp agave app-id)]
-    (->> (jobs/prepare-submission irods-home app submission)
+    (->> (jobs/prepare-submission agave app submission)
          (.submitJob agave)
-         (jobs/format-job irods-home true (get-system-statuses agave) {app-id app}))))
+         (jobs/format-job agave true (get-system-statuses agave) {app-id app}))))
 
 (defn- format-jobs
-  [agave irods-home jobs-enabled? jobs]
+  [agave jobs-enabled? jobs]
   (let [app-info (apps/load-app-info agave (mapv :appId jobs))
         statuses (get-system-statuses agave)]
-    (mapv (partial jobs/format-job irods-home jobs-enabled? statuses app-info) jobs)))
+    (mapv (partial jobs/format-job agave jobs-enabled? statuses app-info) jobs)))
 
 (defn list-jobs
-  ([agave irods-home jobs-enabled?]
-     (format-jobs agave irods-home jobs-enabled? (.listJobs agave)))
-  ([agave irods-home jobs-enabled? job-ids]
-     (format-jobs agave irods-home jobs-enabled? (.listJobs agave job-ids))))
+  ([agave jobs-enabled?]
+     (format-jobs agave jobs-enabled? (.listJobs agave)))
+  ([agave jobs-enabled? job-ids]
+     (format-jobs agave jobs-enabled? (.listJobs agave job-ids))))
 
 (defn list-job
-  [agave irods-home jobs-enabled? job-id]
+  [agave jobs-enabled? job-id]
   (let [job      (.listJob agave job-id)
         statuses (get-system-statuses agave)
         app-info (apps/load-app-info agave [(:appId job)])]
-    (jobs/format-job irods-home jobs-enabled? statuses app-info job)))
+    (jobs/format-job agave jobs-enabled? statuses app-info job)))
 
 (defn get-job-params
-  [agave irods-home job-id]
+  [agave job-id]
   (when-let [job (.listJob agave job-id)]
-    (params/format-params irods-home job (:appId job) (.getApp agave (:appId job)))))
+    (params/format-params agave job (:appId job) (.getApp agave (:appId job)))))
 
 (defn get-app-rerun-info
-  [agave irods-home job-id]
+  [agave job-id]
   (when-let [job (.listJob agave job-id)]
-    (apps/format-app-rerun-info irods-home (.getApp agave (:appId job)) job)))
+    (apps/format-app-rerun-info agave (.getApp agave (:appId job)) job)))
 
 (defn translate-job-status
   [status]

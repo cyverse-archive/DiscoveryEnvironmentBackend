@@ -1,7 +1,6 @@
 (ns mescal.agave-de-v2.apps
   (:use [mescal.agave-de-v2.app-listings :only [get-app-name]]
-        [mescal.agave-de-v2.params :only [get-param-type]]
-        [mescal.agave-de-v2.paths :only [de-path]])
+        [mescal.agave-de-v2.params :only [get-param-type]])
   (:require [clojure.string :as string]
             [mescal.agave-de-v2.constants :as c]
             [mescal.util :as util]))
@@ -120,8 +119,8 @@
           (get-default-param-value p)))))
 
 (defn- format-groups-for-rerun
-  [irods-home job app]
-  (let [input-getter (comp (partial de-path irods-home) (app-rerun-value-getter job :inputs))
+  [agave job app]
+  (let [input-getter (comp #(.irodsFilePath agave %) (app-rerun-value-getter job :inputs))
         format-input (input-param-formatter :get-default input-getter)
         opt-getter   (app-rerun-value-getter job :parameters)
         format-opt   (opt-param-formatter :get-default opt-getter)]
@@ -131,5 +130,5 @@
              (format-group "Outputs" (map (output-param-formatter) (:outputs app)))])))
 
 (defn format-app-rerun-info
-  [irods-home app job]
-  (format-app app (partial format-groups-for-rerun irods-home job)))
+  [agave app job]
+  (format-app app (partial format-groups-for-rerun agave job)))

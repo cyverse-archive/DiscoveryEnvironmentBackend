@@ -18,7 +18,7 @@
   (getAppRerunInfo [_ job-id])
   (translateJobStatus [_ status]))
 
-(deftype DeAgaveClientV2 [agave jobs-enabled? irods-home]
+(deftype DeAgaveClientV2 [agave jobs-enabled?]
   DeAgaveClient
   (hpcAppGroup [_]
     (v2/hpc-app-group))
@@ -33,25 +33,24 @@
   (getAppDeployedComponent [_ app-id]
     (v2/get-app-deployed-component agave app-id))
   (submitJob [_ submission]
-    (v2/submit-job agave irods-home submission))
+    (v2/submit-job agave submission))
   (listJobs [_]
-    (v2/list-jobs agave irods-home jobs-enabled?))
+    (v2/list-jobs agave jobs-enabled?))
   (listJobs [_ job-ids]
-    (v2/list-jobs agave irods-home jobs-enabled? job-ids))
+    (v2/list-jobs agave jobs-enabled? job-ids))
   (listJob [_ job-id]
-    (v2/list-job agave irods-home jobs-enabled? job-id))
+    (v2/list-job agave jobs-enabled? job-id))
   (listJobIds [_]
     (mapv :id (.listJobs agave)))
   (getJobParams [_ job-id]
-    (v2/get-job-params agave irods-home job-id))
+    (v2/get-job-params agave job-id))
   (getAppRerunInfo [_ job-id]
-    (v2/get-app-rerun-info agave irods-home job-id))
+    (v2/get-app-rerun-info agave job-id))
   (translateJobStatus [_ status]
     (v2/translate-job-status status)))
 
 (defn de-agave-client-v2
-  [base-url token-info jobs-enabled? irods-home & {:keys [timeout] :or {timeout 5000}}]
+  [base-url storage-system token-info-fn jobs-enabled? & {:keys [timeout] :or {timeout 5000}}]
   (DeAgaveClientV2.
-   (core/agave-client-v2 base-url token-info :timeout timeout)
-   jobs-enabled?
-   irods-home))
+   (core/agave-client-v2 base-url storage-system token-info-fn :timeout timeout)
+   jobs-enabled?))

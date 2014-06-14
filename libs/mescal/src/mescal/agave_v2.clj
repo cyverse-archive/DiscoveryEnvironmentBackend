@@ -88,7 +88,8 @@
 (def ^:private get-default-storage-system
   (memoize (fn [base-url token-info-fn timeout]
              (->> (list-systems base-url token-info-fn timeout)
-                  (first #(and (= (:type %) "STORAGE") (:default %)))
+                  (filter #(and (= (:type %) "STORAGE") (:default %)))
+                  (first)
                   (:id)))))
 
 (defn- get-root-dir
@@ -108,6 +109,17 @@
         url-path (string/replace file-path (re-pattern (str "\\Q" root-dir "/")) "")]
     (str (curl/url base-url "/files/v2" url-type "system" storage-system url-path))))
 
+(defn- build-path
+  [base & rest]
+  (string/join "/" (concat [(string/replace base #"/+$" "")]
+                           (map #(string/replace % #"^/+|/+$" "") rest))))
+
+(defn file-path-to-agave-url
+  [base-url token-info-fn timeout storage-system file-path]
+  (let [root-dir (get-root-dir base-url token-info-fn timeout storage-system)
+        url-path (string/replace file-path (re-pattern (str "\\Q" root-dir "/")) "")]
+    (build-path (str "agave://" storage-system) url-path)))
+
 (defn- files-base
   [base-url]
   (str (curl/url base-url "/files/v2")))
@@ -123,11 +135,6 @@
   (let [regex (re-pattern (str "\\Q" base-url "\\E/files/v2/[^/]+/system/([^/]+)"))]
     (second (re-find regex file-url))))
 
-(defn- build-path
-  [base & rest]
-  (string/join "/" (concat [(string/replace base #"/$" "")]
-                           (map #(string/replace % #"^/|/$" "") rest))))
-
 (defn file-url-to-path
   [base-url token-info-fn timeout file-url]
   (if-let [storage-system (extract-storage-system base-url file-url)]
@@ -135,3 +142,18 @@
                 (string/replace file-url (files-base-regex base-url storage-system) ""))
     (build-path (get-default-root-dir base-url token-info-fn timeout)
                 (string/replace file-url (files-base-regex base-url) ""))))
+
+(defn is-http-url?
+  [url]
+  (re-find #"^https?://" url))
+
+(defn agave-to-irods-path
+  [base-url token-info-fn timeout storage-system file-url]
+  (if (is-http-url? file-url)
+    (file-url-to-path base-url token-info-fn timeout file-url)
+    (build-path (get-root-dir base-url token-info-fn timeout storage-system) file-url)))
+
+(defn irods-to-agave-path
+  [base-url token-info-fn timeout storage-system irods-path]
+  (let [root-dir (get-root-dir base-url token-info-fn timeout storage-system)]
+    (string/replace irods-path (re-pattern (str "\\Q" root-dir)) "")))

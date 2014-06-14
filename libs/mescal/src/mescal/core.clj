@@ -11,7 +11,10 @@
   (listJob [_ job-id])
   (fileDownloadUrl [_ file-path])
   (fileListingUrl [_ file-path])
-  (filePath [_ file-url]))
+  (agaveUrl [_ file-path])
+  (irodsFilePath [_ file-url])
+  (agaveFilePath [_ file-url])
+  (storageSystem [_]))
 
 (deftype AgaveClientV2 [base-url storage-system token-info-fn timeout]
   AgaveClient
@@ -42,9 +45,17 @@
   (fileListingUrl [_ file-path]
     (v2/check-access-token token-info-fn timeout)
     (v2/file-path-to-url "listings" base-url token-info-fn timeout storage-system file-path))
-  (filePath [_ file-url]
+  (agaveUrl [_ file-path]
     (v2/check-access-token token-info-fn timeout)
-    (v2/file-url-to-path base-url token-info-fn timeout file-url)))
+    (v2/file-path-to-agave-url base-url token-info-fn timeout storage-system file-path))
+  (irodsFilePath [_ file-url]
+    (v2/check-access-token token-info-fn timeout)
+    (v2/agave-to-irods-path base-url token-info-fn timeout storage-system file-url))
+  (agaveFilePath [_ irods-path]
+    (v2/check-access-token token-info-fn timeout)
+    (v2/irods-to-agave-path base-url token-info-fn timeout storage-system irods-path))
+  (storageSystem [_]
+    storage-system))
 
 (defn agave-client-v2
   [base-url storage-system token-info-fn & {:keys [timeout] :or {timeout 5000}}]

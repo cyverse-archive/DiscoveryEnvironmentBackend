@@ -1,6 +1,5 @@
 (ns mescal.agave-de-v2.job-params
-  (:use [mescal.agave-de-v2.params :only [get-param-type]]
-        [mescal.agave-de-v2.paths :only [de-path]])
+  (:use [mescal.agave-de-v2.params :only [get-param-type]])
   (:require [mescal.util :as util]))
 
 (defn- format-param-value
@@ -26,9 +25,9 @@
   (:defaultValue param ""))
 
 (defn- format-input-param-value
-  [irods-home param-values param]
-  (format-param-value #(de-path irods-home (get-param-value param-values param))
-                      #(de-path irods-home (get-default-param-value param))
+  [agave param-values param]
+  (format-param-value #(.irodsFilePath agave (get-param-value param-values param))
+                      #(.irodsFilePath agave (get-default-param-value param))
                       (constantly "FileInput")
                       (constantly "Unspecified")
                       (constantly "File")
@@ -44,8 +43,8 @@
                       param))
 
 (defn format-params
-  [irods-home job app-id app]
-  (let [format-input (partial format-input-param-value irods-home (:inputs job))
+  [agave job app-id app]
+  (let [format-input (partial format-input-param-value agave (:inputs job))
         format-opt   (partial format-opt-param-value (:parameters job))]
     {:analysis_id app-id
      :parameters  (concat (mapv format-input (:inputs app))

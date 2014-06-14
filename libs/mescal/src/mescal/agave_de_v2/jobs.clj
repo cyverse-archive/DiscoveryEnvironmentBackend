@@ -1,10 +1,8 @@
 (ns mescal.agave-de-v2.jobs
   (:use [clojure.java.io :only [file]]
-        [medley.core :only [remove-vals]]
-        [mescal.agave-de-v2.paths :only [agave-path de-path]])
+        [medley.core :only [remove-vals]])
   (:require [clojure.string :as string]
             [mescal.agave-de-v2.app-listings :as app-listings]
-            [mescal.agave-de-v2.paths :as paths]
             [mescal.util :as util]))
 
 (defn- params-for
@@ -18,13 +16,13 @@
             (remove-vals nil?)))))
 
 (defn- prepare-params
-  [irods-home app config]
-  {:inputs     (params-for config (app :inputs) (partial agave-path irods-home))
+  [agave app config]
+  {:inputs     (params-for config (app :inputs) #(.agaveFilePath agave %))
    :parameters (params-for config (app :parameters))})
 
 (defn- archive-path
-  [irods-home {job-name :name output-directory :outputDirectory}]
-  (agave-path irods-home (str output-directory "/" (string/replace job-name #"\s" "_"))))
+  [agave {job-name :name output-directory :outputDirectory}]
+  (.agaveFilePath agave (str output-directory "/" (string/replace job-name #"\s" "_"))))
 
 (def ^:private submitted "Submitted")
 (def ^:private running "Running")
@@ -55,12 +53,13 @@
   (map (fn [status] {:url callback-url :event status}) (keys job-status-translations)))
 
 (defn prepare-submission
-  [irods-home app submission]
-  (->> (assoc (prepare-params irods-home app (:config submission))
+  [agave app submission]
+  (->> (assoc (prepare-params agave app (:config submission))
          :name          (:name submission)
          :appId         (:analysis_id submission)
          :archive       true
-         :archivePath   (archive-path irods-home submission)
+         :archivePath   (archive-path agave submission)
+         :archiveSystem (.storageSystem agave)
          :notifications (job-notifications (:callbackUrl submission)))
        (remove-vals nil?)))
 
@@ -70,15 +69,13 @@
        (:available listing)
        (= "up" (statuses (:executionHost listing)))))
 
-(defn- path-from-agave-url
-  [irods-home agave-url]
-  (when-not (nil? agave-url)
-    (let [relative-path (string/replace agave-url #".*?/listings/+" "")
-          irods-home    (string/replace irods-home #"/$" "")]
-      (str irods-home "/" relative-path))))
+(defn- get-result-folder-id
+  [agave job]
+  (when-let [agave-path (or (:archivePath job) (get-in job [:_links :archiveData :href]))]
+    (.irodsFilePath agave agave-path)))
 
 (defn format-job
-  ([irods-home jobs-enabled? app-info-map job]
+  ([agave jobs-enabled? app-info-map job]
      (let [app-id   (:appId job)
            app-info (app-info-map app-id {})]
        {:id               (str (:id job))
@@ -89,14 +86,14 @@
         :enddate          (or (str (util/parse-timestamp (:endTime job))) "")
         :name             (:name job)
         :raw_status       (:status job)
-        :resultfolderid   (path-from-agave-url irods-home (get-in job [:_links :archiveData :href]))
+        :resultfolderid   (get-result-folder-id agave job)
         :startdate        (or (str (util/parse-timestamp (:startTime job))) "")
         :status           (job-status-translations (:status job) "")
         :wiki_url         ""}))
-  ([irods-home jobs-enabled? statuses app-info-map job]
+  ([agave jobs-enabled? statuses app-info-map job]
      (let [app-id   (:appId job)
            app-info (app-info-map app-id {})]
-       (assoc (format-job irods-home jobs-enabled? app-info-map job)
+       (assoc (format-job agave jobs-enabled? app-info-map job)
          :app-disabled (not (app-enabled? statuses jobs-enabled? app-info))))))
 
 (defn translate-job-status
