@@ -616,6 +616,12 @@
   [props config-valid configs #(and (agave-enabled) (agave-jobs-enabled))]
   "donkey.agave.callback-base")
 
+(cc/defprop-optstr agave-storage-system
+  "The storage system that Agave should use when interacting with the DE."
+  [props config-valid configs agave-enabled]
+  "donkey.agave.storage-system"
+  "data.iplantcollaborative.org")
+
 (cc/defprop-str coge-genome-load-url
   "The COGE service URL for loading genomes and creating viewer URLs."
   [props config-valid configs coge-enabled]

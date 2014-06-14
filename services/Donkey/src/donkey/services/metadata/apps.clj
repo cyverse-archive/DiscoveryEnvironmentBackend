@@ -289,9 +289,9 @@
   [state-info username]
   (DeHpcAppLister. (agave/de-agave-client-v2
                     (config/agave-base-url)
+                    (config/agave-storage-system)
                     (partial get-access-token (config/agave-oauth-settings) state-info username)
-                    (config/agave-jobs-enabled)
-                    (config/irods-home))
+                    (config/agave-jobs-enabled))
                    (partial has-access-token (config/agave-oauth-settings) username)))
 
 (defn- get-app-lister
