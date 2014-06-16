@@ -12,7 +12,9 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.filesystem.uuids :as uuids]
-            [clj-icat-direct.icat :as icat]))
+            [donkey.persistence.metadata :as meta]
+            [clj-icat-direct.icat :as icat])
+  (:import [java.util UUID]))
 
 
 (defn get-paths-in-folder
@@ -45,6 +47,7 @@
                   :uuid          uuid
                   :path          full_path
                   :label         base_name
+                  :isFavorite    (meta/is-favorite user (UUID/fromString uuid))
                   :filter        (or (should-filter? user full_path)
                                      (should-filter? user base_name))
                   :file-size     data_size
@@ -112,13 +115,15 @@
       (let [stat (stat cm path)
             scol (user-col->api-col sort-col)
             sord (user-order->api-order sort-order)
-            zone (irods-zone)]
+            zone (irods-zone)
+            uuid (:uuid (uuids/uuid-for-path cm user path))]
         (merge
          (hash-map
           :id               path
-          :uuid             (:uuid (uuids/uuid-for-path cm user path))
+          :uuid             uuid
           :path             path
           :label            (id->label cm user path)
+          :isFavorite       (meta/is-favorite user (UUID/fromString uuid))
           :filter           (should-filter? user path)
           :permission       (permission-for cm user path)
           :hasSubDirs       true
@@ -143,13 +148,15 @@
       (validators/path-is-dir cm path)
 
       (let [stat (stat cm path)
-            zone (irods-zone)]
+            zone (irods-zone)
+            uuid (:uuid (uuids/uuid-for-path cm user path))]
         (merge
          (hash-map
           :id            path          
-          :uuid          (:uuid (uuids/uuid-for-path cm user path))
+          :uuid          uuid
           :path          path
           :label         (id->label cm user path)
+          :isFavorite    (meta/is-favorite user (UUID/fromString uuid))
           :filter        (should-filter? user path)
           :permisssion   (permission-for cm user path)
           :hasSubDirs    true
