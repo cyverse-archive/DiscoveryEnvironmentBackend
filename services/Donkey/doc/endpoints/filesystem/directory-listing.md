@@ -30,6 +30,7 @@ __Response Body__:
             "id": "/iplant/home/wregglej/acsxfdqswfrdafds",
             "path": "/iplant/home/wregglej/acsxfdqswfrdafds",
             "label": "acsxfdqswfrdafds",
+            "isFavorite" : false,
             "uuid": "0c3eb574-df8a-11e3-bfa5-6abdce5a08d5",
             "permission": "own"
         },
@@ -42,6 +43,7 @@ __Response Body__:
             "id": "/iplant/home/wregglej/analyses",
             "path": "/iplant/home/wregglej/analyses",
             "label": "analyses",
+            "isFavorite" : false,
             "uuid": "1c2c436c-e128-11e3-9087-6abdce5a08d5",
             "permission": "own"
         },
@@ -54,6 +56,7 @@ __Response Body__:
             "id": "/iplant/home/wregglej/analyses3",
             "path": "/iplant/home/wregglej/analyses3",
             "label": "analyses3",
+            "isFavorite" : false,
             "uuid": "1f293516-e128-11e3-9087-6abdce5a08d5",
             "permission": "own"
         },
@@ -64,6 +67,7 @@ __Response Body__:
     "uuid": "a3794158-df89-11e3-bf7d-6abdce5a08d5",
     "path": "/iplant/home/wregglej",
     "label": "wregglej",
+    "isFavorite" : false,
     "filter": true,
     "permission": "own"
     "success": true
@@ -117,6 +121,7 @@ __Response Body__:
                 "uuid": "0d880c78-df8a-11e3-bfa5-6abdce5a08d5",
                 "path": "/iplant/home/wregglej/centos-5.8-x86-64-minimal.box",
                 "label": "centos-5.8-x86-64-minimal.box",
+                "isFavorite" : false,
                 "permission": "own"
             }
         ],
@@ -130,6 +135,7 @@ __Response Body__:
                 "uuid": "6375efce-e061-11e3-bfa5-6abdce5a08d5",
                 "path": "/iplant/home/wregglej/asdfafa",
                 "label": "asdfafa",
+                "isFavorite" : false,
                 "permission": "own"
             },
             {
@@ -141,6 +147,7 @@ __Response Body__:
                 "uuid": "b4987bf4-e063-11e3-bfa5-6abdce5a08d5",
                 "path": "/iplant/home/wregglej/asdf bar",
                 "label": "asdf bar",
+                "isFavorite" : false,
                 "permission": "own"
             },
             {
@@ -152,6 +159,7 @@ __Response Body__:
                 "uuid" : "0d622cd8-df8a-11e3-bfa5-6abdce5a08d5",
                 "path": "/iplant/home/wregglej/Find_Unique_Values_analysis1-2013-07-09-12-15-37.024",
                 "label": "Find_Unique_Values_analysis1-2013-07-09-12-15-37.024",
+                "isFavorite" : false,
                 "permission": "own"
             },
             {
@@ -163,6 +171,7 @@ __Response Body__:
                 "uuid": "0d627292-df8a-11e3-bfa5-6abdce5a08d5",
                 "path": "/iplant/home/wregglej/zaaaaaaaa",
                 "label": "zaaaaaaaa",
+                "isFavorite" : false,
                 "permission": "own"
             }
         ],
@@ -171,6 +180,7 @@ __Response Body__:
         "uuid": "16426b48-e128-11e3-9076-6abdce5a08d5",
         "path": "/iplant/home/wregglej",
         "label": "wregglej",
+        "isFavorite" : false,
         "permission": "own",
         "success": true,
         "total" : 218
