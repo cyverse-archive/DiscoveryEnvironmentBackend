@@ -117,4 +117,3 @@
   (nr/json {:count_by_bucket (cq/historical-app-count)
             :accumulated_count (cq/accumulated-app-count)
             }))
-

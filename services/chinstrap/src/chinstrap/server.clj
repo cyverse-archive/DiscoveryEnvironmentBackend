@@ -12,9 +12,8 @@
     (db-config)
     (catch Exception e
       (log/error e "Configuration Failed")))
-  
+
   (let [mode (keyword (or (first m) :dev))
         port (listen-port)]
     (server/start port {:mode mode
                         :ns 'chinstrap})))
-

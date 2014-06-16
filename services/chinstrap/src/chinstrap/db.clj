@@ -35,7 +35,7 @@
       (log/warn "THIS APPLICATION WILL NOT EXECUTE CORRECTLY.")
       (System/exit 1))
     (reset! props (cl/properties "chinstrap")))
-  
+
   (log/warn "Configuration Data loaded from the Zookeeper server:")
   (log-config @props)
 
