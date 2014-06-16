@@ -154,6 +154,61 @@ readable explanation of the failure.
 }
 ```
 
+### Listing Stat Info for Favorite Data
+
+`GET /secured/favorites/filesystem/favorites`
+
+This endpoint lists stat information for the authenticated user's favorite files and folders. Only UUIDs for files and folders accessible to the user will be listed.
+
+### Request
+
+A request to this endpoint requires no parameters beyond the `proxyToken` authentication parameter.
+The user that owns the favorite is determined from the authentication. Any additional parameters
+will be ignored.
+
+Any body attached to the request will be ignored.
+
+### Response
+
+| Status Code | Cause |
+| ----------- | ----- |
+| 200         | The list of stat info was obtained and is included in the response body. |
+| 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
+
+Upon success, the response body will be a [data id collection](#data-id-collection) JSON document
+containing the stat information of the favorite files and folders with an additional field `"success"` with the
+value `true`. The format of the JSON maps is the same as that for the /secured/filesystem/stat endpoint.
+
+Upon failure, a JSON document with `"success"` and `"reason"` fields will the returned. The
+`"success"` field will have the value `false`.  The `"reason"` field will provide a short, human
+readable explanation of the failure.
+
+### Example
+
+```
+? curl localhost/secured/favorites/filesystem/favorites?proxyToken=fake-token
+```
+```json
+{
+    "filesystem": [
+        {
+            "date-created": 1.397233899e+12,
+            "date-modified": 1.397233899e+12,
+            "dir-count": 256,
+            "file-count": 0,
+            "id": "/iplant/home/wregglej/analyses",
+            "label": "analyses",
+            "path": "/iplant/home/wregglej/analyses",
+            "permission": "own",
+            "share-count": 1,
+            "type": "dir",
+            "uuid": "0d880c78-df8a-11e3-bfa5-6abdce5a08d5"
+        }
+    ],
+    "success": true
+}
+```
+
 ## Filter a Set of Resources for Favorites
 
 `POST /secured/favorites/filter`

@@ -2,9 +2,11 @@
   (:require [clojure.set :as set]
             [clj-jargon.init :as fs]
             [donkey.persistence.metadata :as db]
+            [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as valid]
             [donkey.services.metadata.tags :as tag]
-            [donkey.util.service :as svc]))
+            [donkey.util.service :as svc]
+            [clojure.tools.logging :as log]))
 
 
 (defn add-favorite
@@ -22,6 +24,11 @@
       (svc/success-response))
     (svc/donkey-response {} 404)))
 
+(defn- favorite-data
+  [fs user]
+  (->> (db/select-favorites-of-type user "data")
+       (filter (partial tag/entry-accessible? fs user))))
+
 (defn list-favorite-data
   [fs-cfg user]
   (fs/with-jargon fs-cfg [fs]
@@ -30,6 +37,15 @@
       (filter (partial tag/entry-accessible? fs user))
       (hash-map :filesystem)
       svc/success-response)))
+
+(defn list-favorite-data-with-stat
+  "Returns a listing of a user's favorite data, including stat information about it."
+  [fs-cfg user]
+  (fs/with-jargon fs-cfg [fs]
+    (->> (map str (favorite-data fs user))
+         (mapv (partial uuids/path-for-uuid fs user))
+         (hash-map :filesystem)
+         svc/success-response)))
 
 (defn filter-favorites
   [fs-cfg user entries]
@@ -40,3 +56,5 @@
       (set/intersection (set entries))
       (hash-map :filesystem)
       svc/success-response)))
+
+
