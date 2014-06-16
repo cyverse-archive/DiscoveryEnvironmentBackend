@@ -35,7 +35,7 @@ with a single `filesystem` field that holds an array of UUIDs, each for a file o
 
 ## Marking a Data Resource as Favorite
 
-`PUT /secured/favorites/filesystem/<favorite>`
+`PUT /secured/favorites/filesystem/{favorite}`
 
 This endpoint marks a given file or folder a favorite of the authenticated user. `<favorite>` is the
 UUID of the file or folder being marked.
@@ -73,7 +73,7 @@ human readable explanation of the failure.
 
 ## Removing a Data Resource from Being a Favorite
 
-`DELETE /secured/favorites/filesystem/<favorite>`
+`DELETE /secured/favorites/filesystem/{favorite}`
 
 This endpoint removes a given file or folder from the authenticated user's favorites. `<favorite>`
 is the UUID of the file or folder.

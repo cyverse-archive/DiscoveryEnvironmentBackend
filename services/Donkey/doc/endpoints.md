@@ -22,3 +22,4 @@ Request and response bodies are in JSON format unless otherwise noted.
 * [Reference Genome Endpoints](endpoints/reference-genomes.md)
 * [Data Search Endpoints](endpoints/filesystem/search.md)
 * [Callback Endpoints](endpoints/callbacks.md)
+* [Favorites Endpoints](endpoints/favorites.md)
