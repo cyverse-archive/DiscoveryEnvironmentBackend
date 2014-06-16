@@ -17,6 +17,7 @@
             [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.persistence.metadata :as persistence]
+            [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as validators]
             [donkey.util.db :as db]
             [donkey.util.service :as service])
@@ -281,6 +282,7 @@
   [user-id data-id avu]
   (let [avu (-> (select-keys avu [:value :unit])
                 (assoc
+                  :id (when (:id avu) (UUID/fromString (:id avu)))
                   :target_id data-id
                   :owner_id user-id
                   :attribute (:attr avu)))
@@ -310,9 +312,16 @@
 (defn- remove-metadata-template-avu
   "Removes the given Metadata Template AVU association for the given user's data item."
   [user-id data-id template-id avu-id]
-  (transaction
-   (persistence/remove-avu-template-instances template-id [avu-id])
-   (persistence/remove-avu avu-id))
+  (let [avu {:id avu-id
+             :target_id data-id
+             :owner_id user-id}
+        existing-avu (persistence/find-existing-metadata-template-avu avu)]
+    (if existing-avu
+      (transaction
+       (persistence/remove-avu-template-instances template-id [avu-id])
+       (persistence/remove-avu avu-id))
+      (throw+ {:error_code ERR_DOES_NOT_EXIST
+               :avu avu})))
   (service/success-response))
 
 (defn- remove-metadata-template-avus
@@ -334,6 +343,19 @@
                                (UUID/fromString data-id)
                                (UUID/fromString template-id))))
 
+(with-pre-hook! #'do-metadata-template-avu-list
+  (fn [params data-id & [template-id]]
+    (log-call "do-metadata-template-avu-list" params data-id template-id)
+    (with-jargon (jargon-cfg) [cm]
+      (validate-map params {:user string?})
+      (let [user (:user params)
+            path (:path (uuids/path-for-uuid cm user data-id))]
+        (validators/user-exists cm user)
+        (validators/path-exists cm path)
+        (validators/path-readable cm user path)))))
+
+(with-post-hook! #'do-metadata-template-avu-list (log-func "do-metadata-template-avu-list"))
+
 (defn do-set-metadata-template-avus
   "Adds or Updates AVUs associated with a Metadata Template for the given user's data item."
   [{username :user} data-id template-id body]
@@ -341,6 +363,20 @@
                               (UUID/fromString data-id)
                               (UUID/fromString template-id)
                               body))
+
+(with-pre-hook! #'do-set-metadata-template-avus
+  (fn [params data-id template-id body]
+    (log-call "do-set-metadata-template-avus" params data-id template-id body)
+    (with-jargon (jargon-cfg) [cm]
+      (validate-map body {:avus sequential?})
+      (validate-map params {:user string?})
+      (let [user (:user params)
+            path (:path (uuids/path-for-uuid cm user data-id))]
+        (validators/user-exists cm user)
+        (validators/path-exists cm path)
+        (validators/path-readable cm user path)))))
+
+(with-post-hook! #'do-set-metadata-template-avus (log-func "do-set-metadata-template-avus"))
 
 (defn do-remove-metadata-template-avus
   "Removes AVUs associated with a Metadata Template for the given user's data item."
@@ -354,4 +390,17 @@
                                  (UUID/fromString data-id)
                                  (UUID/fromString template-id)
                                  (UUID/fromString avu-id))))
+
+(with-pre-hook! #'do-remove-metadata-template-avus
+  (fn [params data-id template-id & [avu-id]]
+    (log-call "do-remove-metadata-template-avus" params data-id template-id avu-id)
+    (with-jargon (jargon-cfg) [cm]
+      (validate-map params {:user string?})
+      (let [user (:user params)
+            path (:path (uuids/path-for-uuid cm user data-id))]
+        (validators/user-exists cm user)
+        (validators/path-exists cm path)
+        (validators/path-readable cm user path)))))
+
+(with-post-hook! #'do-remove-metadata-template-avus (log-func "do-remove-metadata-template-avus"))
 

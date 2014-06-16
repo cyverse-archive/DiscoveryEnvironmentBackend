@@ -134,14 +134,13 @@
 ;; TEMPLATES
 
 (defn find-existing-metadata-template-avu
-  "Finds an existing AVU by ID, or by attribute, target_id, and owner_id if no ID is given."
+  "Finds an existing AVU by ID or attribute, and by target_id and owner_id."
   [{avu-id :id, :as avu}]
-  (korma/with-db db/metadata
-    (first
-     (select :avus
-             (where (if avu-id
-                      {:id (UUID/fromString avu-id)}
-                      (-> (select-keys avu [:attribute :target_id :owner_id])
+  (let [id-key (if avu-id :id :attribute)]
+    (korma/with-db db/metadata
+      (first
+       (select :avus
+               (where (-> (select-keys avu [id-key :target_id :owner_id])
                           (assoc :target_type (->enum-val "data")))))))))
 
 (defn get-avus-for-metadata-template
