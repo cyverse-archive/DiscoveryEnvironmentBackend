@@ -255,8 +255,9 @@
 (defn- get-metadata-template-avus
   "Gets a map containing AVUs for the given Metadata Template and the template's ID."
   [user-id data-id template-id]
-  {:template_id template-id
-   :avus (persistence/get-avus-for-metadata-template user-id data-id template-id)})
+  (let [avus (persistence/get-avus-for-metadata-template user-id data-id template-id)]
+    {:template_id template-id
+     :avus (map #(dissoc % :target_type) avus)}))
 
 (defn- metadata-template-list
   "Lists all Metadata Template AVUs for the given user's data item."
@@ -296,7 +297,6 @@
         new-avus (map #(assoc % :id (UUID/randomUUID)) (remove :id avus))
         avus (concat existing-avus new-avus)]
     (transaction
-     (persistence/register-data-target data-id)
      (when (seq existing-avus)
        (dorun (map persistence/update-avu existing-avus)))
      (when (seq new-avus)

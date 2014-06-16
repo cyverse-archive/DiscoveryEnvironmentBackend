@@ -133,22 +133,6 @@
 
 ;; TEMPLATES
 
-(defn- register-target
-  "Registers an ID and type if it does not already exist in the targets table."
-  [id target-type]
-  (korma/with-db db/metadata
-    (let [target (first (select :targets (where {:id id
-                                                 :type target-type})))]
-      (when-not target
-        (insert :targets
-                (values {:id id
-                         :type target-type}))))))
-
-(defn register-data-target
-  "Registers the given data ID if it does not already exist in the targets table."
-  [id]
-  (register-target id (->enum-val "data")))
-
 (defn find-existing-metadata-template-avu
   "Finds an existing AVU by ID, or by attribute, target_id, and owner_id if no ID is given."
   [{avu-id :id, :as avu}]
@@ -157,7 +141,8 @@
      (select :avus
              (where (if avu-id
                       {:id (UUID/fromString avu-id)}
-                      (select-keys avu [:attribute :target_id :owner_id])))))))
+                      (-> (select-keys avu [:attribute :target_id :owner_id])
+                          (assoc :target_type (->enum-val "data")))))))))
 
 (defn get-avus-for-metadata-template
   "Gets AVUs for the given Metadata Template."
@@ -168,6 +153,7 @@
                   {:t.avu_id :avus.id})
             (where {:t.template_id template-id
                     :avus.target_id data-id
+                    :avus.target_type (->enum-val "data")
                     :avus.owner_id user-id}))))
 
 (defn get-metadata-template-ids
@@ -179,6 +165,7 @@
             (join :avus
                   {:t.avu_id :avus.id})
             (where {:avus.target_id data-id
+                    :avus.target_type (->enum-val "data")
                     :avus.owner_id user-id})
             (group :template_id))))
 
@@ -205,7 +192,7 @@
   "Adds the given AVUs to the Metadata database."
   [avus]
   (korma/with-db db/metadata
-    (insert :avus (values avus))))
+    (insert :avus (values (map #(assoc % :target_type (->enum-val "data")) avus)))))
 
 (defn update-avu
   "Updates the attribute, value, unit, and modified_on fields of the given AVU."
