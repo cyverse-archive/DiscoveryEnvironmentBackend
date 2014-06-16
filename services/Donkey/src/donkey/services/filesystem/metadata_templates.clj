@@ -16,6 +16,17 @@
             [donkey.util.service :as service])
   (:import [java.util UUID]))
 
+(defn- get-metadata-template
+  [id]
+  (with-db db/de
+    (first (select :metadata_templates (where {:id id})))))
+
+(defn- validate-metadata-template-exists
+  [id]
+  (when-not (get-metadata-template (UUID/fromString id))
+    (throw+ {:error_code error-codes/ERR_DOES_NOT_EXIST
+             :metadata_template id})))
+
 (defn- list-metadata-templates
   []
   (with-db db/de
@@ -25,7 +36,7 @@
 
 (defn- get-metadata-template-name
   [id]
-  (if-let [template-name (:name (first (select :metadata_templates (where {:id id}))))]
+  (if-let [template-name (:name (get-metadata-template id))]
     template-name
     (service/not-found "metadata template" id)))
 
@@ -200,6 +211,7 @@
 (with-pre-hook! #'do-metadata-template-avu-list
   (fn [params data-id & [template-id]]
     (log-call "do-metadata-template-avu-list" params data-id template-id)
+    (when template-id (validate-metadata-template-exists template-id))
     (with-jargon (jargon-cfg) [cm]
       (common-validators/validate-map params {:user string?})
       (let [user (:user params)
@@ -221,9 +233,10 @@
 (with-pre-hook! #'do-set-metadata-template-avus
   (fn [params data-id template-id body]
     (log-call "do-set-metadata-template-avus" params data-id template-id body)
+    (validate-metadata-template-exists template-id)
+    (common-validators/validate-map body {:avus sequential?})
+    (common-validators/validate-map params {:user string?})
     (with-jargon (jargon-cfg) [cm]
-      (common-validators/validate-map body {:avus sequential?})
-      (common-validators/validate-map params {:user string?})
       (let [user (:user params)
             path (:path (uuids/path-for-uuid cm user data-id))]
         (validators/user-exists cm user)
@@ -248,8 +261,9 @@
 (with-pre-hook! #'do-remove-metadata-template-avus
   (fn [params data-id template-id & [avu-id]]
     (log-call "do-remove-metadata-template-avus" params data-id template-id avu-id)
+    (validate-metadata-template-exists template-id)
+    (common-validators/validate-map params {:user string?})
     (with-jargon (jargon-cfg) [cm]
-      (common-validators/validate-map params {:user string?})
       (let [user (:user params)
             path (:path (uuids/path-for-uuid cm user data-id))]
         (validators/user-exists cm user)
