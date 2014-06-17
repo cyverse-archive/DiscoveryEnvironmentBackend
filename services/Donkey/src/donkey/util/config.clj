@@ -69,6 +69,11 @@
   [props config-valid configs]
   "donkey.routes.notifications" true)
 
+(cc/defprop-optboolean app-routes-enabled
+  "Enables or disables app endpoints."
+  [props config-valid configs]
+  "donkey.routes.apps" true)
+
 (cc/defprop-optboolean metadata-routes-enabled
   "Enables or disables metadata endpoints."
   [props config-valid configs]
@@ -151,32 +156,32 @@
 
 (cc/defprop-str iplant-email-base-url
   "The base URL to use when connnecting to the iPlant email service."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.email.base-url")
 
 (cc/defprop-str tool-request-dest-addr
   "The destination email address for tool request messages."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.email.tool-request-dest")
 
 (cc/defprop-str tool-request-src-addr
   "The source email address for tool request messages."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.email.tool-request-src")
 
 (cc/defprop-str feedback-dest-addr
   "The destination email address for DE feedback messages."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.email.feedback-dest")
 
 (cc/defprop-str metadactyl-base-url
   "The base URL to use when connecting to secured Metadactyl services."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.metadactyl.base-url")
 
 (cc/defprop-str metadactyl-unprotected-base-url
   "The base URL to use when connecting to unsecured Metadactyl services."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.metadactyl.unprotected-base-url")
 
 (cc/defprop-str notificationagent-base-url
@@ -201,7 +206,7 @@
 
 (cc/defprop-str jex-base-url
   "The base URL for the JEX."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.jex.base-url")
 
 ;;;RabbitMQ connection information
@@ -557,7 +562,7 @@
 
 (cc/defprop-str nibblonian-base-url
   "The base URL for the Nibblonian data management services."
-  [props config-valid configs metadata-routes-enabled data-routes-enabled
+  [props config-valid configs app-routes-enabled data-routes-enabled
    tree-viewer-routes-enabled]
   "donkey.nibblonian.base-url")
 

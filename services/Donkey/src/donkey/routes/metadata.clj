@@ -12,7 +12,7 @@
 (defn secured-metadata-routes
   []
   (optional-routes
-   [config/metadata-routes-enabled]
+   [config/app-routes-enabled]
 
    (GET "/bootstrap" [:as req]
         (trap #(bootstrap req)))
@@ -137,7 +137,7 @@
 (defn unsecured-metadata-routes
   []
   (optional-routes
-   [config/metadata-routes-enabled]
+   [config/app-routes-enabled]
 
    (GET "/get-workflow-elements/:element-type" [element-type :as req]
         (trap #(get-workflow-elements req element-type)))

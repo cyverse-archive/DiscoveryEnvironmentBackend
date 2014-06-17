@@ -8,7 +8,7 @@
   "Callback routes used by the DE."
   []
   (optional-routes
-   [config/metadata-routes-enabled]
+   [config/app-routes-enabled]
 
    (POST "/notification" [:as {body :body}]
          (trap #(svc/receive-notification body)))))
