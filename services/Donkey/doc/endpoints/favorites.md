@@ -131,7 +131,7 @@ Any body attached to the request will be ignored.
 | 200         | The list of stat info was obtained and is included in the response body. |
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 
-Upon success, the response body will be a [data collection](endpoints/filesystem/stat.md) JSON
+Upon success, the response body will be a [data collection](filesystem/stat.md) JSON
 document (but with the field be `filesystem` instead of `paths`) containing the stat information of
 the favorite files and folders with an additional field `"success"` with the value `true`. The
 format of the JSON maps is the same as that for the /secured/filesystem/stat endpoint.
