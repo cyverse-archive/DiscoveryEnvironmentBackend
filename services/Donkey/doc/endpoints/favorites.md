@@ -147,21 +147,25 @@ readable explanation of the failure.
 ```
 ```json
 {
-    "filesystem": [
-        {
-            "date-created": 1.397233899e+12,
-            "date-modified": 1.397233899e+12,
-            "dir-count": 256,
-            "file-count": 0,
-            "id": "/iplant/home/wregglej/analyses",
-            "label": "analyses",
-            "path": "/iplant/home/wregglej/analyses",
-            "permission": "own",
-            "share-count": 1,
-            "type": "dir",
-            "uuid": "0d880c78-df8a-11e3-bfa5-6abdce5a08d5"
-        }
-    ],
+    "filesystem": {
+        "files": [],
+        "folders": [
+            {
+                "date-created": 1.397233899e+12,
+                "date-modified": 1.397233899e+12,
+                "dir-count": 256,
+                "file-count": 0,
+                "id": "/iplant/home/wregglej/analyses",
+                "isFavorite": true,
+                "label": "analyses",
+                "path": "/iplant/home/wregglej/analyses",
+                "permission": "own",
+                "share-count": 1,
+                "type": "dir",
+                "uuid": "0d880c78-df8a-11e3-bfa5-6abdce5a08d5"
+            }
+        ]
+    },
     "success": true
 }
 ```
