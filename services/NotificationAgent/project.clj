@@ -22,7 +22,7 @@
                  [ring/ring-jetty-adapter "1.1.0"]
                  [org.codehaus.jackson/jackson-core-asl "1.9.5"]
                  [slingshot "0.10.3"]
-                 [korma "0.3.0-beta15"]]
+                 [korma "0.3.0-RC5"]]
   :plugins [[lein-ring "0.6.4"]
             [swank-clojure "1.4.2"]
             [lein-marginalia "0.7.0"]

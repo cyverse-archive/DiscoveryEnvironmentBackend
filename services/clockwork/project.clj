@@ -17,7 +17,7 @@
                  [clj-time "0.4.5"]
                  [clojurewerkz/quartzite "1.0.1"]
                  [com.cemerick/url "0.0.7"]
-                 [korma "0.3.0-RC2"]
+                 [korma "0.3.0-RC5"]
                  [log4j "1.2.17"]
                  [org.iplantc/clj-jargon "3.1.5"
                   :exclusions [[org.irods.jargon.transfer/jargon-transfer-dao-spring]]]

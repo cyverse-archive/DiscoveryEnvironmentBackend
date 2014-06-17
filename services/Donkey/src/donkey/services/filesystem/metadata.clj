@@ -244,3 +244,4 @@
                           :value string?})))
 
 (with-post-hook! #'do-metadata-delete (log-func "do-metadata-delete"))
+

@@ -17,6 +17,7 @@
                  [clj-http-fake "0.4.1"]
                  [com.cemerick/url "0.0.7"]
                  [log4j/log4j "1.2.17"]
+                 [me.raynes/fs "1.4.5"]
                  [slingshot "0.10.3"]
                  [org.mongodb/mongo-java-driver "2.10.1"]
                  [commons-configuration/commons-configuration "1.8"]

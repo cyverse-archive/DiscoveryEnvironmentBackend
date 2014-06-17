@@ -170,3 +170,26 @@
 
     (POST "/filesystem/uuids-for-paths" [:as req]
           (controller req do-uuids-for-paths :params :body))))
+
+(defn secured-filesystem-metadata-routes
+  "The routes for file metadata endpoints."
+  []
+  (optional-routes
+   [#(and (config/filesystem-routes-enabled)
+          (config/metadata-routes-enabled))]
+
+   (GET "/filesystem/:data-id/template-avus" [data-id :as req]
+        (controller req do-metadata-template-avu-list :params data-id))
+
+   (GET "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
+        (controller req do-metadata-template-avu-list :params data-id template-id))
+
+   (POST "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
+        (controller req do-set-metadata-template-avus :params data-id template-id :body))
+
+   (DELETE "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
+        (controller req do-remove-metadata-template-avus :params data-id template-id))
+
+   (DELETE "/filesystem/:data-id/template-avus/:template-id/:avu-id" [data-id template-id avu-id :as req]
+        (controller req do-remove-metadata-template-avus :params data-id template-id avu-id))))
+
