@@ -4,7 +4,7 @@
             [chinstrap.models.sqlqueries :as cq]
             [clj-time.format :as format]
             [clj-time.coerce :as coerce])
-  (:use [noir.core]
+  (:use [chinstrap.db :only [mongo-db]]
         [chinstrap.models.helpers]))
 
 (def old-osm-format (format/formatter "EEE MMM d y H:m:s 'GMT'Z '(MST)'"))
@@ -28,7 +28,7 @@
     (coerce/to-long (format/parse old-osm-format dt))))
 
 ;AJAX call from the Javascript file 'resources/public/js/day-graph.js' for graph data.
-(defpage "/de-analytics/get-day-data/" []
+(defn get-day-data []
   (nr/json
     (format-data-for-graph
       (into (sorted-map) (reduce #(assoc %1 %2 (inc (%1 %2 0))) {}
@@ -37,7 +37,7 @@
             (fetch-submission-date-by-status)))))))
 
 ;AJAX call from the Javascript file 'resources/public/js/month-graph.js' for graph data.
-(defpage "/de-analytics/get-month-data/" []
+(defn get-month-data []
   (nr/json
     (format-data-for-graph
       (into (sorted-map) (reduce #(assoc %1 %2 (inc (%1 %2 0))) {}
@@ -46,7 +46,7 @@
           (fetch-submission-date-by-status)))))))
 
 ;AJAX call from the Javascript file 'resources/public/js/day-graph.js' for graph data.
-(defpage "/de-analytics/get-day-data/:status" {:keys [status]}
+(defn get-day-data-for [status]
   (nr/json
     (format-data-for-graph
       (into (sorted-map) (reduce #(assoc %1 %2 (inc (%1 %2 0))) {}
@@ -56,7 +56,7 @@
   (format/formatter "MM yyyy"))
 
 ;AJAX call from the Javascript file 'resources/public/js/month-graph.js' for graph data.
-(defpage "/de-analytics/get-month-data/:status" {:keys [status]}
+(defn get-month-data-for [status]
   (nr/json
     (format-data-for-graph
       (into (sorted-map) (reduce #(assoc %1 %2 (inc (%1 %2 0))) {}
@@ -65,24 +65,24 @@
           (fetch-submission-date-by-status status)))))))
 
 ;AJAX call from the Javascript file 'resources/public/js/get-info.js'.
-(defpage "/de-analytics/get-info/:date" {:keys [date]}
+(defn get-date-info [date]
   (nr/json {:tools
     (cq/count-apps
       (map #(str (:analysis_id (:state %)))
-        (mc/find-maps "jobs" {:state.submission_date
+        (mc/find-maps @mongo-db "jobs" {:state.submission_date
           {"$gte" (read-string date) "$lt" (+ 86400000 (read-string date))}}
             [:state.analysis_id])))}))
 
-;AJAX call from the Javascript file 'resources/public/js/get-integrators.js for specific integrator data'.
-(defpage "/de-analytics/get-integrator-data/:id" {:keys [id]}
+;AJAX call from the Javascript file 'resources/public/js/get-integrators.js'.
+(defn get-integrator-data-for [id]
   (nr/json {
       :data
         (cq/integrator-data id)
       :apps
         (cq/integrator-details id)}))
 
-;AJAX call from the Javascript file 'resources/public/js/integrator-script.js' for general integrator data.
-(defpage "/de-analytics/get-integrator-data/" []
+;AJAX call from the Javascript file 'resources/public/js/integrator-script.js'.
+(defn get-integrator-data []
   (let [cq-data (map :count (cq/integrator-list))]
     (nr/json {
       :average
@@ -92,28 +92,27 @@
     })))
 
 ;AJAX call from the Javascript file 'resources/public/js/get-apps.js'.
-(defpage "/de-analytics/get-apps" []
+(defn get-apps []
   (let [fmt-job-details (partial app-details-str [:user :name])]
-    (nr/json {:running (mc/count "jobs" {:state.status "Running"}),
-              :submitted (mc/count "jobs" {:state.status "Submitted"}),
-              :failed (mc/count "jobs" {:state.status "Failed"}),
-              :completed (mc/count "jobs" {:state.status "Completed"}),
+    (nr/json {:running (mc/count @mongo-db "jobs" {:state.status "Running"}),
+              :submitted (mc/count @mongo-db "jobs" {:state.status "Submitted"}),
+              :failed (mc/count @mongo-db "jobs" {:state.status "Failed"}),
+              :completed (mc/count @mongo-db "jobs" {:state.status "Completed"}),
               :running-names (fmt-job-details "Running"),
               :failed-names (fmt-job-details "Failed"),
               :submitted-names (fmt-job-details "Submitted")})))
 
 ;AJAX call to get information about pending analyses grouped by username.
-(defpage "/de-analytics/pending-analyses-by-user" []
+(defn get-pending-analyses-by-user []
   (nr/json (pending-analyses :user #{:uuid})))
 
 ;AJAX call from the Javascript file 'resources/public/js/get-components.js'.
-(defpage "/de-analytics/get-components" []
+(defn get-components []
   (nr/json {:all (cq/all-app-count)
             :without (cq/unused-app-count)
             :with (cq/used-app-count)}))
 
 ;Historical data of app count
-(defpage "/de-analytics/get-historical-app-count" []
+(defn get-historical-app-count []
   (nr/json {:count_by_bucket (cq/historical-app-count)
-            :accumulated_count (cq/accumulated-app-count)
-            }))
+            :accumulated_count (cq/accumulated-app-count)}))

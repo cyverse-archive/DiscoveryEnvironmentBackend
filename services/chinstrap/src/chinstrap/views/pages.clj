@@ -1,17 +1,12 @@
 (ns chinstrap.views.pages
   (:require [chinstrap.views.common :as template]
-            [noir.response :as nr]
             [clojure.string :as string]
             [chinstrap.models.sqlqueries :as cq])
-  (:use [noir.core]
-        [chinstrap.db]
+  (:use [chinstrap.db]
         [chinstrap.models.ajax-endpoints]
         [hiccup.element]))
 
-(defpage "/de-analytics/" []
-  (render "/de-analytics/info"))
-
-(defpage "/de-analytics/info" []
+(defn de-analytics-info-page []
   (template/info-page
     [:h3 "Discovery Environment App Info by Day"]
     [:br]
@@ -19,8 +14,11 @@
     [:br]
     [:input#date.left {:onChange "getInfo()"}]))
 
+(defn de-analytics-page []
+  (de-analytics-info-page))
+
 ;Page listing the count of different states of Discovery Environment Apps.
-(defpage "/de-analytics/apps" []
+(defn de-analytics-apps-page []
   (template/apps-page
     [:h3 "Discovery Environment App Status"]
     [:br]
@@ -43,7 +41,7 @@
       [:div#failed-apps]]))
 
 ;Page listing count and info of Components with no transformation activities.
-(defpage "/de-analytics/components" []
+(defn de-analytics-components-page []
   (template/components-page
     [:h3 "Discovery Environment Component Info"]
     [:br]
@@ -82,7 +80,7 @@
                     (:integrator_name record)])]]))]]]))
 
 ;Page listing information about Integrators.
-(defpage "/de-analytics/integrators" []
+(defn de-analytics-integrators-page []
   (template/integrators-page
     [:h3 "Discovery Environment Integrator Information"]
     [:br]
@@ -112,21 +110,21 @@
                 [:input.id {:type "hidden" :value (:id record)}]
                 [:td.center (:count record)]]))]]]))
 
-(defpage "/de-analytics/graph" []
-  (render "/de-analytics/graph/day"))
-
-(defpage "/de-analytics/graph/day" []
+(defn de-analytics-graph-day-page []
   (template/graph-page
     [:div.select
       [:input#rb1 {:type "radio" :name "dayGroup" :onClick "setPanSelect()"} "Select&nbsp&nbsp"]
       [:input {:type "radio" :checked "true" :name "dayGroup" :onClick "setPanSelect()"} "Pan"]]
     (template/day-page)))
 
-(defpage "/de-analytics/graph/month" []
+(defn de-analytics-graph-page []
+  (de-analytics-graph-day-page))
+
+(defn de-analytics-graph-month-page []
   (template/graph-page
     (template/month-page)))
 
-(defpage "/de-analytics/raw" []
+(defn de-analytics-raw-page []
   (template/raw-page
     [:h3 "Raw JSON Data:"]
     [:br]

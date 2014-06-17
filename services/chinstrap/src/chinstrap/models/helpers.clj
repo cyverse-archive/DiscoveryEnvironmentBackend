@@ -1,5 +1,6 @@
 (ns chinstrap.models.helpers
-  (:use [monger.operators :only [$nin]])
+  (:use [chinstrap.db :only [mongo-db]]
+        [monger.operators :only [$nin]])
   (:require [clojure.string :as string]
             [monger.collection :as mc]))
 
@@ -21,7 +22,7 @@
   [status]
     (apply str
       (map #(str (:name (:state %)) "<br>")
-        (mc/find-maps "jobs" {:state.status (str status)} [:state.name]))))
+        (mc/find-maps @mongo-db "jobs" {:state.status (str status)} [:state.name]))))
 
 (defn- submap
   "Returns a map containing only the specified fields in the parent map."
@@ -43,7 +44,8 @@
    to return is specified by the sequence in the first argument."
   [result-fields status]
   (map :state
-       (mc/find-maps "jobs"
+       (mc/find-maps @mongo-db
+                     "jobs"
                      {:state.status status}
                      (field-selector-for result-fields))))
 
@@ -73,7 +75,7 @@
    fields in addition to the grouping field."
   ([]
      (map :state
-          (mc/find-maps "jobs" {:state.status {$nin completed-states}})))
+          (mc/find-maps @mongo-db "jobs" {:state.status {$nin completed-states}})))
   ([grouping-field]
      (group-by grouping-field (pending-analyses)))
   ([grouping-field result-fields]
@@ -86,10 +88,10 @@
    dates in milliseconds of apps with the passed status."
   ([]
    (map #(:submission_date (:state %))
-    (mc/find-maps "jobs"
+    (mc/find-maps @mongo-db "jobs"
       {:state.status {"$in" ["Completed" "Failed"]}})))
   ([status]
   (map #(:submission_date (:state %))
-    (mc/find-maps "jobs"
+    (mc/find-maps @mongo-db "jobs"
       {:state.status {"$in" [status]}}
       [:state.submission_date]))))
