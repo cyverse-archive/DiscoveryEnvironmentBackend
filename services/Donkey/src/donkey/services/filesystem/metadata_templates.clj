@@ -16,6 +16,14 @@
             [donkey.util.service :as service])
   (:import [java.util UUID]))
 
+(defn valid-uuid-to-path
+  [cm user uuid]
+  (let [path (:path (uuids/path-for-uuid cm user uuid))]
+    (when-not path
+      (throw+ {:error_code error-codes/ERR_DOES_NOT_EXIST
+               :data_id uuid}))
+    path))
+
 (defn- get-metadata-template
   [id]
   (with-db db/de
@@ -214,10 +222,9 @@
     (when template-id (validate-metadata-template-exists template-id))
     (with-jargon (jargon-cfg) [cm]
       (common-validators/validate-map params {:user string?})
+      (validators/user-exists cm (:user params))
       (let [user (:user params)
-            path (:path (uuids/path-for-uuid cm user data-id))]
-        (validators/user-exists cm user)
-        (validators/path-exists cm path)
+            path (valid-uuid-to-path cm user data-id)]
         (validators/path-readable cm user path)))))
 
 (with-post-hook! #'do-metadata-template-avu-list (log-func "do-metadata-template-avu-list"))
@@ -237,10 +244,9 @@
     (common-validators/validate-map body {:avus sequential?})
     (common-validators/validate-map params {:user string?})
     (with-jargon (jargon-cfg) [cm]
+      (validators/user-exists cm (:user params))
       (let [user (:user params)
-            path (:path (uuids/path-for-uuid cm user data-id))]
-        (validators/user-exists cm user)
-        (validators/path-exists cm path)
+            path (valid-uuid-to-path cm user data-id)]
         (validators/path-readable cm user path)))))
 
 (with-post-hook! #'do-set-metadata-template-avus (log-func "do-set-metadata-template-avus"))
@@ -264,10 +270,9 @@
     (validate-metadata-template-exists template-id)
     (common-validators/validate-map params {:user string?})
     (with-jargon (jargon-cfg) [cm]
+      (validators/user-exists cm (:user params))
       (let [user (:user params)
-            path (:path (uuids/path-for-uuid cm user data-id))]
-        (validators/user-exists cm user)
-        (validators/path-exists cm path)
+            path (valid-uuid-to-path cm user data-id)]
         (validators/path-readable cm user path)))))
 
 (with-post-hook! #'do-remove-metadata-template-avus (log-func "do-remove-metadata-template-avus"))
