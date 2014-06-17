@@ -29,12 +29,19 @@
   (->> (db/select-favorites-of-type user "data")
        (filter (partial tag/entry-accessible? fs user))))
 
+(defn- format-favorites
+  [favs]
+  (let [favs (map #(assoc % :isFavorite true) favs)]
+    {:folders (filter #(= (:type %) :dir) favs)
+     :files (filter #(= (:type %) :file) favs)}))
+
 (defn list-favorite-data-with-stat
   "Returns a listing of a user's favorite data, including stat information about it."
   [fs-cfg user]
   (fs/with-jargon fs-cfg [fs]
     (->> (map str (favorite-data fs user))
          (mapv (partial uuids/path-for-uuid fs user))
+         (format-favorites)
          (hash-map :filesystem)
          svc/success-response)))
 
