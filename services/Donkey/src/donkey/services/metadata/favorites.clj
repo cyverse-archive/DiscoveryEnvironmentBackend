@@ -51,6 +51,7 @@
     (valid/user-exists fs user)
     (->> (db/select-favorites-of-type user "data")
       (filter (partial tag/entry-accessible? fs user))
+      set
       (set/intersection (set entries))
       (hash-map :filesystem)
       svc/success-response)))
