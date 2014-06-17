@@ -1,4 +1,4 @@
-(defproject org.iplantc/donkey "3.1.5-SNAPSHOT"
+(defproject org.iplantc/donkey "3.1.6-SNAPSHOT"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
   :url "https://github.com/iPlantCollaborativeOpenSource/Donkey"
   :license {:name "BSD Standard License"
@@ -15,17 +15,17 @@
                  [org.clojure/data.codec "0.1.0"]
                  [org.clojure/java.classpath "0.2.2"]
                  [org.apache.tika/tika-core "1.4"]
-                 [org.iplantc/authy "3.1.5"]
-                 [org.iplantc/clj-cas "3.1.5"]
-                 [org.iplantc/clj-jargon "3.1.5"
+                 [org.iplantc/authy "3.1.6"]
+                 [org.iplantc/clj-cas "3.1.6"]
+                 [org.iplantc/clj-jargon "3.1.6"
                   :exclusions [[xerces/xmlParserAPIs]
                                [org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
-                 [org.iplantc/clojure-commons "3.1.5"]
-                 [org.iplantc/mescal "3.1.5"]
-                 [org.iplantc/kameleon "3.1.5"]
-                 [org.iplantc/heuristomancer "3.1.5"]
-                 [org.iplantc/clj-icat-direct "3.1.5"]
-                 [org.iplantc/common-cli "3.1.5"]
+                 [org.iplantc/clojure-commons "3.1.6"]
+                 [org.iplantc/mescal "3.1.6"]
+                 [org.iplantc/kameleon "3.1.6"]
+                 [org.iplantc/heuristomancer "3.1.6"]
+                 [org.iplantc/clj-icat-direct "3.1.6"]
+                 [org.iplantc/common-cli "3.1.6"]
                  [org/forester "1.005" ]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
@@ -48,7 +48,7 @@
                  [me.raynes/fs "1.4.5"]
                  [dire "0.5.2"]
                  [mvxcvi/clj-pgp "0.5.2"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.1.5"]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.1.6"]
             [lein-ring "0.8.8"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}

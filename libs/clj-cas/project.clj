@@ -1,4 +1,4 @@
-(defproject org.iplantc/clj-cas "3.1.5"
+(defproject org.iplantc/clj-cas "3.1.6"
   :description "A CAS Client library written in Clojure."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
