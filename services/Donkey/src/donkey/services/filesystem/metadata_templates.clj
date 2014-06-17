@@ -7,7 +7,6 @@
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as error-codes]
             [clojure-commons.validators :as common-validators]
-            [clojure.tools.logging :as log]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.persistence.metadata :as persistence]
             [donkey.services.filesystem.uuids :as uuids]
@@ -171,10 +170,8 @@
         avus (concat existing-avus new-avus)]
     (transaction
      (when (seq existing-avus)
-       (log/debug "Updating existing avus:" (map :id existing-avus))
        (dorun (map persistence/update-avu existing-avus)))
      (when (seq new-avus)
-       (log/debug "Inserting new avus:" (map :id new-avus))
        (persistence/add-metadata-template-avus new-avus))
      (dorun (persistence/add-template-instances template-id (map :id avus))))
     {:user user-id
