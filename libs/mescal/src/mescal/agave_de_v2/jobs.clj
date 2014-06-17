@@ -1,9 +1,14 @@
 (ns mescal.agave-de-v2.jobs
   (:use [clojure.java.io :only [file]]
         [medley.core :only [remove-vals]])
-  (:require [clojure.string :as string]
+  (:require [clj-time.core :as t]
+            [clj-time.format :as tf]
+            [clojure.string :as string]
             [mescal.agave-de-v2.app-listings :as app-listings]
             [mescal.util :as util]))
+
+(def ^:private timestamp-formatter
+  (tf/formatter "yyyy-MM-dd-HH-mm-ss.S"))
 
 (defn- params-for
   ([config app-section]
@@ -22,7 +27,9 @@
 
 (defn- archive-path
   [agave {job-name :name output-directory :outputDirectory}]
-  (.agaveFilePath agave (str output-directory "/" (string/replace job-name #"\s" "_"))))
+  (let [job-name  (string/replace job-name #"\s" "_")
+        timestamp (tf/unparse timestamp-formatter (t/now))]
+    (.agaveFilePath agave (str output-directory "/" job-name "-" timestamp))))
 
 (def ^:private submitted "Submitted")
 (def ^:private running "Running")
