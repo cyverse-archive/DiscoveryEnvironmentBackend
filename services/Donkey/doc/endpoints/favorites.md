@@ -1,4 +1,4 @@
-This document descriptions the favorites resource.
+This document describes the favorites resource.
 
 A _favorite_ is something that a user has decided is important enough that it should be more readily
 accessible than other resources of the same time.
@@ -37,7 +37,7 @@ with a single `filesystem` field that holds an array of UUIDs, each for a file o
 
 `PUT /secured/favorites/filesystem/{favorite}`
 
-This endpoint marks a given file or folder a favorite of the authenticated user. `<favorite>` is the
+This endpoint marks a given file or folder a favorite of the authenticated user. `{favorite}` is the
 UUID of the file or folder being marked.
 
 ### Request
@@ -54,7 +54,7 @@ Any body attached to the request will be ignored.
 | ----------- | ----- |
 | 200         | The file or folder corresponding to the `<favorite>` UUID has been marked as a favorite of the authenticated user. |
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
-| 403         | The `<favorite>` UUID doesn't belong to a known file or folder or the file or folder isn't readable by the authenticated user. |
+| 404         | The `{favorite}` UUID doesn't belong to a known file or folder or the file or folder isn't readable by the authenticated user. |
 
 The response will be a JSON document with a `"success"` field indicating whether or not the request
 succeeded. If `"success"` is `false`, a `"reason"` field will exist as well, providing a short,

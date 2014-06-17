@@ -23,3 +23,4 @@ Request and response bodies are in JSON format unless otherwise noted.
 * [Data Search Endpoints](endpoints/filesystem/search.md)
 * [Callback Endpoints](endpoints/callbacks.md)
 * [Favorites Endpoints](endpoints/favorites.md)
+* [Tags Endpoints](endpoints/tags.md)
