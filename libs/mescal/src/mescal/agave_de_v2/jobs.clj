@@ -17,7 +17,7 @@
 
 (defn- prepare-params
   [agave app config]
-  {:inputs     (params-for config (app :inputs) #(.agaveFilePath agave %))
+  {:inputs     (params-for config (app :inputs) #(.agaveUrl agave %))
    :parameters (params-for config (app :parameters))})
 
 (defn- archive-path
