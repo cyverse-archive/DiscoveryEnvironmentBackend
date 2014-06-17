@@ -71,12 +71,15 @@
         (ajax/get-components))
 
    (GET "/de-analytics/get-historical-app-count" []
-        (ajax/get-historical-app-count))
+        (ajax/get-historical-app-count))])
 
-   (route/not-found "Not Found")])
+(defroutes resources-routes
+  (route/resources "/"))
 
 (def ^:private app
-  (nm/app-handler app-routes))
+  (routes (nm/app-handler app-routes)
+          resources-routes
+          (route/not-found "Not Found")))
 
 (def ^:private cli-options
   [["-c" "--config PATH" "The path to the configuration file."
