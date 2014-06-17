@@ -217,6 +217,17 @@
   :language :java
   :archive? false}
 
+ "chinstrap"
+ {:type     :service
+  :path     "services/chinstrap"
+  :build    :lein
+  :rpm?     true
+  :tarball? false
+  :uberjar? true
+  :install? false
+  :language :clojure
+  :archive? true}
+
  "clockwork"
  {:type     :service
   :path     "services/clockwork"
