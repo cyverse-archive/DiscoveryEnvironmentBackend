@@ -21,10 +21,6 @@
   (util/optional-routes
    [config/metadata-routes-enabled]
 
-   (GET "/favorites/filesystem/favorites" []
-        (util/trap #(fave/list-favorite-data-with-stat (config/jargon-cfg)
-                                                       (:shortUsername user/current-user))))
-
    (PUT "/favorites/filesystem/:entry-id" [entry-id]
         (util/trap #(fave/add-favorite (config/jargon-cfg)
                                        (:shortUsername user/current-user)
@@ -35,7 +31,8 @@
                                              (UUID/fromString entry-id))))
    
    (GET "/favorites/filesystem" []
-        (util/trap #(fave/list-favorite-data (config/jargon-cfg) (:shortUsername user/current-user))))
+        (util/trap #(fave/list-favorite-data-with-stat (config/jargon-cfg)
+                                                       (:shortUsername user/current-user))))
    
    (POST "/favorites/filter" [:as {body :body}]
          (util/trap #(handle-filter (config/jargon-cfg) (:shortUsername user/current-user) body)))))

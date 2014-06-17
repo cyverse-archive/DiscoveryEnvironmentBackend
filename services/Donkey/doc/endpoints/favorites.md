@@ -109,56 +109,12 @@ human readable explanation of the failure.
 }
 ```
 
-### Listing UUIDs for Favorite Data
+### Listing Stat Info for Favorite Data
 
 `GET /secured/favorites/filesystem`
 
-This endpoint lists all of the UUIDs for the authenticated user's favorite files and folders. Only
-UUIDs for files and folders accessible to the user will be listed.
-
-### Request
-
-A request to this endpoint requires no parameters beyond the `proxyToken` authentication parameter.
-The user that owns the favorite is determined from the authentication. Any additional parameters
-will be ignored.
-
-Any body attached to the request will be ignored.
-
-### Response
-
-| Status Code | Cause |
-| ----------- | ----- |
-| 200         | The list of UUIDs was obtained and is included in the response body. |
-| 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
-
-Upon success, the response body will be a [data id collection](#data-id-collection) JSON document
-containing the UUIDs of the favorite files and folders with an additional field `"success"` with the
-value `true`.
-
-Upon failure, a JSON document with `"success"` and `"reason"` fields will the returned. The
-`"success"` field will have the value `false`.  The `"reason"` field will provide a short, human
-readable explanation of the failure.
-
-### Example
-
-```
-? curl localhost/secured/favorites/filesystem?proxyToken=fake-token
-```
-```json
-{
-  "filesystem" : [
-    "f86700ac-df88-11e3-bf3b-6abdce5a08d1",
-    "9cdb9492-f288-11e3-ab3e-13be1320bb50"
-  ],
-  "success"    : true
-}
-```
-
-### Listing Stat Info for Favorite Data
-
-`GET /secured/favorites/filesystem/favorites`
-
-This endpoint lists stat information for the authenticated user's favorite files and folders. Only UUIDs for files and folders accessible to the user will be listed.
+This endpoint lists stat information for the authenticated user's favorite files and folders. Only
+files and folders accessible to the user will be listed.
 
 ### Request
 
@@ -175,9 +131,10 @@ Any body attached to the request will be ignored.
 | 200         | The list of stat info was obtained and is included in the response body. |
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 
-Upon success, the response body will be a [data id collection](#data-id-collection) JSON document
-containing the stat information of the favorite files and folders with an additional field `"success"` with the
-value `true`. The format of the JSON maps is the same as that for the /secured/filesystem/stat endpoint.
+Upon success, the response body will be a [data collection](endpoints/filesystem/stat.md) JSON
+document (but with the field be `filesystem` instead of `paths`) containing the stat information of
+the favorite files and folders with an additional field `"success"` with the value `true`. The
+format of the JSON maps is the same as that for the /secured/filesystem/stat endpoint.
 
 Upon failure, a JSON document with `"success"` and `"reason"` fields will the returned. The
 `"success"` field will have the value `false`.  The `"reason"` field will provide a short, human

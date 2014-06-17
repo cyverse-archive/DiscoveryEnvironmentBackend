@@ -29,15 +29,6 @@
   (->> (db/select-favorites-of-type user "data")
        (filter (partial tag/entry-accessible? fs user))))
 
-(defn list-favorite-data
-  [fs-cfg user]
-  (fs/with-jargon fs-cfg [fs]
-    (valid/user-exists fs user)
-    (->> (db/select-favorites-of-type user "data")
-      (filter (partial tag/entry-accessible? fs user))
-      (hash-map :filesystem)
-      svc/success-response)))
-
 (defn list-favorite-data-with-stat
   "Returns a listing of a user's favorite data, including stat information about it."
   [fs-cfg user]
