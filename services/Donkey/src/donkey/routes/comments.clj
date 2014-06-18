@@ -18,23 +18,20 @@
                           comment)))
 
 
+(defn- handle-get-comments
+  [entry-id]
+  (comments/list-comments (config/jargon-cfg)
+                          (:shortUsername user/current-user)
+                          (UUID/fromString entry-id)))
+
+
 (defn secured-comment-routes
   []
   (util/optional-routes
     [config/metadata-routes-enabled]
 
-    (GET "/filesystem/entry/:entry-id/comments" [:as req]
-      ;; TODO implement
-      (svc/success-response {:comments [{:id           "f81d4fae-7dec-11d0-a765-00a0c91e6bf6"
-                                         :commenter    "tedgin"
-                                         :comment_time 1000000000000
-                                         :retracted    true
-                                         :comment      "Your momma smells like a gopher!"}
-                                        {:id           "f81d4fae-7dec-11d0-a765-00a0c91e6bf7"
-                                         :commenter    "tedgin"
-                                         :comment_time 1000000000001
-                                         :retracted    false
-                                         :comment      "I shouldn't have said that."}]}))
+    (GET "/filesystem/entry/:entry-id/comments" [entry-id]
+      (handle-get-comments entry-id))
 
     (POST "/filesystem/entry/:entry-id/comments" [entry-id :as {body :body}]
       (util/trap #(handle-add-comment entry-id body)))

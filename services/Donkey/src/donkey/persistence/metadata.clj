@@ -23,6 +23,15 @@
                        :target_type (->enum-val target-type)
                        :value       comment}))))))
 
+(defn select-comments
+  [target-id]
+  (-> (korma/with-db db/metadata
+        (select comments
+          (fields :id [:owner_id :commenter] :post_time :retracted [:value :comment])
+          (where {:target_id target-id
+                  :deleted   false})))))
+
+
 ;; FAVORITES
 
 (defentity ^{:private true} favorites)
