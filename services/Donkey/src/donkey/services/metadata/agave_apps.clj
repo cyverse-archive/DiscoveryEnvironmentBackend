@@ -7,6 +7,7 @@
             [clj-jargon.init :as jargon-init]
             [clj-jargon.permissions :as jargon-perms]
             [clojure.string :as string]
+            [clojure-commons.error-codes :as ce]
             [donkey.clients.notifications :as dn]
             [donkey.persistence.jobs :as jp]
             [donkey.util.config :as config]
@@ -63,20 +64,23 @@
 
 (defn format-agave-job
   [job state]
-  (assoc state
-    :id            (:id job)
-    :description   (or (:description job) (:description state))
-    :startdate     (determine-display-timestamp :startdate job state)
-    :enddate       (determine-display-timestamp :enddate job state)
-    :analysis_name (:analysis_name job)
-    :status        (:status job)))
+  (when-not (nil? state)
+    (assoc state
+      :id            (:id job)
+      :description   (or (:description job) (:description state))
+      :startdate     (determine-display-timestamp :startdate job state)
+      :enddate       (determine-display-timestamp :enddate job state)
+      :analysis_name (:analysis_name job)
+      :status        (:status job))))
 
 (defn load-agave-job-states
   [agave agave-jobs]
   (if-not (empty? agave-jobs)
-    (->> (.listJobs agave (map :id agave-jobs))
-         (map (juxt :id identity))
-         (into {}))
+    (try+
+     (->> (.listJobs agave (map :id agave-jobs))
+          (map (juxt :id identity))
+          (into {}))
+     (catch [:error_code ce/ERR_UNAVAILABLE] _ {}))
     {}))
 
 (defn get-agave-job
@@ -108,11 +112,13 @@
 (defn remove-deleted-agave-jobs
   "Marks jobs that have been deleted in Agave as deleted in the DE also."
   [agave]
-  (let [extant-jobs (set (.listJobIds agave))]
-    (->> (jp/get-external-job-ids (:username current-user) {:job-types [jp/agave-job-type]})
-         (remove extant-jobs)
-         (map #(jp/update-job % {:deleted true}))
-         (dorun))))
+  (try+
+   (let [extant-jobs (set (.listJobIds agave))]
+     (->> (jp/get-external-job-ids (:username current-user) {:job-types [jp/agave-job-type]})
+          (remove extant-jobs)
+          (map #(jp/update-job % {:deleted true}))
+          (dorun)))
+   (catch [:error_code ce/ERR_UNAVAILABLE] _ nil)))
 
 (defn- agave-job-status-changed
   [job curr-state]
@@ -139,11 +145,8 @@
   [agave job-id]
   (service/assert-found (.getJobParams agave job-id) "HPC job" job-id))
 
-(defn- is-readable?
-  [cm path]
-  (and (jargon-info/exists? cm path)
-       (jargon-perms/is-readable? cm (:shortUsername current-user) path)))
-
-(defn- is-input-property
-  [{property-type :type}]
-  (re-matches #".*Input" property-type))
+(defn search-apps
+  [agave-client search-term def-result]
+  (try+
+   (.searchApps agave-client search-term)
+   (catch [:error_code ce/ERR_UNAVAILABLE] _ def-result)))

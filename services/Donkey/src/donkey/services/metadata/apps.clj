@@ -46,7 +46,7 @@
         de-states    (da/load-de-job-states (grouped-jobs jp/de-job-type []))
         de-apps      (da/load-app-details (map :analysis_id de-states))
         agave-states (aa/load-agave-job-states agave (grouped-jobs jp/agave-job-type []))]
-    (map (partial format-job de-states de-apps agave-states) jobs)))
+    (remove nil? (map (partial format-job de-states de-apps agave-states) jobs))))
 
 (defn- update-job-status
   ([{:keys [id status end-date deleted]}]
@@ -190,10 +190,11 @@
       (metadactyl/apps-in-group group-id params)))
 
   (searchApps [_ search-term]
-    (let [de-apps  (metadactyl/search-apps search-term)
-          hpc-apps (if (user-has-access-token?)
-                     (.searchApps agave-client search-term)
-                     {:template_count 0 :templates {}})]
+    (let [def-result {:template_count 0 :templates {}}
+          de-apps    (metadactyl/search-apps search-term)
+          hpc-apps   (if (user-has-access-token?)
+                       (aa/search-apps agave-client search-term def-result)
+                       def-result)]
       {:template_count (apply + (map :template_count [de-apps hpc-apps]))
        :templates      (mapcat :templates [de-apps hpc-apps])}))
 
