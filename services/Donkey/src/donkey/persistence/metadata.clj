@@ -23,13 +23,35 @@
                        :target_type (->enum-val target-type)
                        :value       comment}))))))
 
-(defn select-comments
+(defn select-comment
+  [comment-id]
+  (korma/with-db db/metadata
+    (select comments
+      (where {:id comment-id}))))
+
+(defn select-all-comments
   [target-id]
-  (-> (korma/with-db db/metadata
-        (select comments
-          (fields :id [:owner_id :commenter] :post_time :retracted [:value :comment])
-          (where {:target_id target-id
-                  :deleted   false})))))
+  (korma/with-db db/metadata
+    (select comments
+      (fields :id [:owner_id :commenter] :post_time :retracted [:value :comment])
+      (where {:target_id target-id
+              :deleted   false}))))
+
+(defn retract-comment
+  [comment-id rectracting-user]
+  (korma/with-db db/metadata
+    (update comments
+      (set-fields {:retracted    true
+                   :retracted_by rectracting-user})
+      (where {:id comment-id}))))
+
+(defn readmit-comment
+  [comment-id]
+  (korma/with-db db/metadata
+    (update comments
+      (set-fields {:retracted    false
+                   :retracted_by nil})
+      (where {:id comment-id}))))
 
 
 ;; FAVORITES

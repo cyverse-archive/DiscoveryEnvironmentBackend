@@ -25,6 +25,15 @@
                           (UUID/fromString entry-id)))
 
 
+(defn- handle-retract-comment
+  [entry-id comment-id retracted]
+  (comments/update-retract-status (config/jargon-cfg)
+                                  (:shortUsername user/current-user)
+                                  (UUID/fromString entry-id)
+                                  (UUID/fromString comment-id)
+                                  (Boolean/parseBoolean retracted)))
+
+
 (defn secured-comment-routes
   []
   (util/optional-routes
@@ -36,6 +45,5 @@
     (POST "/filesystem/entry/:entry-id/comments" [entry-id :as {body :body}]
       (util/trap #(handle-add-comment entry-id body)))
 
-    (PATCH "/filesystem/entry/:entry-id/comments/:comment-id" [:as req]
-      ;; TODO implement
-      (svc/success-response))))
+    (PATCH "/filesystem/entry/:entry-id/comments/:comment-id" [entry-id comment-id retracted]
+      (util/trap #(handle-retract-comment entry-id comment-id retracted)))))
