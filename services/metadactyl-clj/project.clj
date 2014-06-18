@@ -25,8 +25,6 @@
                  [org.springframework/spring-orm "3.1.0.RELEASE"]
                  [korma "0.3.0-RC5"]
                  [ring "1.2.2"]
-                 #_[org.slf4j/slf4j-api "1.5.8"]
-                 #_[org.slf4j/slf4j-log4j12 "1.5.8"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [slingshot "0.10.3"]]
   :plugins [[org.iplantc/lein-iplant-rpm "3.1.6"]
@@ -36,7 +34,8 @@
   :aot [metadactyl.core]
   :main metadactyl.core
   :ring {:handler metadactyl.core/app
-         :init metadactyl.core/load-config-from-file}
+         :init metadactyl.core/load-config-from-file
+         :port 31323}
   :iplant-rpm {:summary "iPlant Discovery Environment Metadata Services"
                :provides "metadactyl"
                :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
