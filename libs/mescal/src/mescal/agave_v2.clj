@@ -1,21 +1,32 @@
 (ns mescal.agave-v2
-  (:use [slingshot.slingshot :only [try+]])
+  (:use [slingshot.slingshot :only [try+ throw+]])
   (:require [authy.core :as authy]
             [cemerick.url :as curl]
             [clj-http.client :as http]
-            [mescal.util :as util]
             [clojure.tools.logging :as log]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure-commons.error-codes :as ce]
+            [mescal.util :as util])
+  (:import [java.io IOException]))
 
 (defn- refresh-access-token
   [token-info-fn timeout]
   (let [new-token-info (authy/refresh-access-token @(token-info-fn) :timeout timeout)]
     (dosync (ref-set (token-info-fn) new-token-info))))
 
+(defn- agave-unavailable
+  [e]
+  (let [msg "the Foundation API appears to be unavailable at this time"]
+    (log/error e msg)
+    (throw+ {:error_code ce/ERR_UNAVAILABLE
+             :reason     msg})))
+
 (defn- wrap-refresh
   [token-info-fn timeout request-fn]
   (try+
    (request-fn)
+   (catch IOException e
+     (agave-unavailable e))
    (catch [:status 401] _
      (refresh-access-token token-info-fn timeout)
      (request-fn))))
