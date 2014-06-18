@@ -62,10 +62,15 @@
            (where {:owner_id owner :id [in tag-ids]})))))
 
 (defn get-tags-by-value
-  [owner value]
-  (korma/with-db db/metadata
-    (select tags
-      (where {:owner_id owner :value [like value]}))))
+  [owner value & [max-results]]
+  (let [query  (-> (select* tags)
+                   (where {:owner_id owner :value [like value]}))
+        query' (if max-results
+                 (-> query
+                     (limit max-results))
+                 query)]
+    (korma/with-db db/metadata
+      (select query'))))
 
 (defn get-tag
   [tag-id]

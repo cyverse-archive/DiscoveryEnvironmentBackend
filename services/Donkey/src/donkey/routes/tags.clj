@@ -37,8 +37,8 @@
                                           type
                                           body)))
 
-    (GET "/tags/suggestions" [contains]
-      (util/trap #(tags/suggest-tags (:shortUsername user/current-user) contains)))
+    (GET "/tags/suggestions" [contains limit]
+      (util/trap #(tags/suggest-tags (:shortUsername user/current-user) contains limit)))
 
     (POST "/tags/user" [:as {body :body}]
       (util/trap #(tags/create-user-tag (:shortUsername user/current-user) body)))
