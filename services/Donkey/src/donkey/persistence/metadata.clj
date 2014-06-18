@@ -10,6 +10,19 @@
   (raw (str \' val \')))
 
 
+;; COMMENTS
+
+(defentity ^{:private true} comments)
+
+(defn insert-comment
+  [owner target-id target-type comment]
+  (:id (-> (korma/with-db db/metadata
+             (insert comments
+               (values {:owner_id    owner
+                       :target_id   target-id
+                       :target_type (->enum-val target-type)
+                       :value       comment}))))))
+
 ;; FAVORITES
 
 (defentity ^{:private true} favorites)
