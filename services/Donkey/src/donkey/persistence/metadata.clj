@@ -64,6 +64,7 @@
 (defn get-tags-by-value
   [owner value & [max-results]]
   (let [query  (-> (select* tags)
+                   (fields :id :value :description)
                    (where {:owner_id owner :value [like value]}))
         query' (if max-results
                  (-> query
