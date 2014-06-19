@@ -25,9 +25,10 @@
     (svc/donkey-response {} 404)))
 
 (defn- favorite-data
-  [fs user]
+  [user]
   (->> (db/select-favorites-of-type user "data")
-       (filter (partial tag/entry-accessible? fs user))))
+       (map str)
+       (uuids/paths-for-uuids user)))
 
 (defn- format-favorites
   [favs]
@@ -39,8 +40,7 @@
   "Returns a listing of a user's favorite data, including stat information about it."
   [fs-cfg user]
   (fs/with-jargon fs-cfg [fs]
-    (->> (map str (favorite-data fs user))
-         (mapv (partial uuids/path-for-uuid fs user))
+    (->> (favorite-data user)
          (format-favorites)
          (hash-map :filesystem)
          svc/success-response)))
