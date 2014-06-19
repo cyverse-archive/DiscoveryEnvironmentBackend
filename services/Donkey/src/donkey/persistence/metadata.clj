@@ -12,12 +12,10 @@
 
 ;; COMMENTS
 
-(defentity ^{:private true} comments)
-
 (defn insert-comment
   [owner target-id target-type comment]
   (let [rec (korma/with-db db/metadata
-              (insert comments
+              (insert :comments
                 (values {:owner_id    owner
                          :target_id   target-id
                          :target_type (->enum-val target-type)
@@ -31,14 +29,14 @@
 (defn select-comment
   [comment-id]
   (korma/with-db db/metadata
-    (select comments
+    (select :comments
       (where {:id      comment-id
               :deleted false}))))
 
 (defn select-all-comments
   [target-id]
   (korma/with-db db/metadata
-    (select comments
+    (select :comments
       (fields :id [:owner_id :commenter] :post_time :retracted [:value :comment])
       (where {:target_id target-id
               :deleted   false}))))
@@ -46,7 +44,7 @@
 (defn retract-comment
   [comment-id rectracting-user]
   (korma/with-db db/metadata
-    (update comments
+    (update :comments
       (set-fields {:retracted    true
                    :retracted_by rectracting-user})
       (where {:id comment-id}))))
@@ -54,7 +52,7 @@
 (defn readmit-comment
   [comment-id]
   (korma/with-db db/metadata
-    (update comments
+    (update :comments
       (set-fields {:retracted    false
                    :retracted_by nil})
       (where {:id comment-id}))))
