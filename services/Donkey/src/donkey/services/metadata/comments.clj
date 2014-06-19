@@ -10,8 +10,8 @@
 (defn add-comment
   [fs-cfg user entry-id comment]
   (tags/validate-entry-accessible fs-cfg user entry-id)
-  (let [comment-id (db/insert-comment user entry-id "data" comment)]
-    (svc/success-response {:id comment-id})))
+  (let [comment (db/insert-comment user entry-id "data" comment)]
+    (svc/success-response {:comment comment})))
 
 
 (defn list-comments
@@ -28,7 +28,7 @@
           comment     (db/select-comment comment-id)]
       (if (and entry-path comment)
         (if retracting?
-          (if (or owns-entry? (= user (:owner_id comment)))
+          (if (or owns-entry? (= user (:commenter comment)))
             (do
               (db/retract-comment comment-id user)
               (svc/success-response))

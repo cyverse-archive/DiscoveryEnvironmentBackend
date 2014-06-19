@@ -16,18 +16,24 @@
 
 (defn insert-comment
   [owner target-id target-type comment]
-  (:id (-> (korma/with-db db/metadata
-             (insert comments
-               (values {:owner_id    owner
-                       :target_id   target-id
-                       :target_type (->enum-val target-type)
-                       :value       comment}))))))
+  (let [rec (korma/with-db db/metadata
+              (insert comments
+                (values {:owner_id    owner
+                         :target_id   target-id
+                         :target_type (->enum-val target-type)
+                         :value       comment})))]
+    {:id        (:id rec)
+     :commenter (:owner_id rec)
+     :post_time (:post_time rec)
+     :retracted (:retracted rec)
+     :comment   (:value rec)}))
 
 (defn select-comment
   [comment-id]
   (korma/with-db db/metadata
     (select comments
-      (where {:id comment-id}))))
+      (where {:id      comment-id
+              :deleted false}))))
 
 (defn select-all-comments
   [target-id]
