@@ -90,9 +90,9 @@ Any body attached to the request will be ignored.
 
 | Status Code | Cause |
 | ----------- | ----- |
-| 200         | The file or folder corresponding to the `<favorite>` UUID has been marked as a favorite of the authenticated user. |
+| 200         | The file or folder corresponding to the `favorite` UUID has been marked as a favorite of the authenticated user. |
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
-| 404         | The file or folder corresponding to the `<favorite>` UUID wasn't marked as a favorite. |
+| 404         | The file or folder corresponding to the `favorite` UUID wasn't marked as a favorite. |
 
 The response will be a JSON document with a `"success"` field indicating whether or not the request
 succeeded. If `"success"` is `false`, a `"reason"` field will exist as well, providing a short,
