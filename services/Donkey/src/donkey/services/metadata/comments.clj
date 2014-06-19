@@ -33,7 +33,7 @@
           comment     (db/select-comment comment-id)]
       (if (and entry-path comment)
         (if retracting?
-          (if (or owns-entry? (= user (:commenter comment)))
+          (if (or owns-entry? (= user (:owner_id comment)))
             (do
               (db/retract-comment comment-id user)
               (svc/success-response))
