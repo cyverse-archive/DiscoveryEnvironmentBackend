@@ -7,17 +7,22 @@
             [donkey.services.metadata.tags :as tags]))
 
 
+(defn- prepare-post-time
+  [comment]
+  (assoc comment :post_time (.getTime (:post_time comment))))
+
+
 (defn add-comment
   [fs-cfg user entry-id comment]
   (tags/validate-entry-accessible fs-cfg user entry-id)
   (let [comment (db/insert-comment user entry-id "data" comment)]
-    (svc/success-response {:comment comment})))
+    (svc/success-response {:comment (prepare-post-time comment)})))
 
 
 (defn list-comments
   [fs-cfg user entry-id]
   (tags/validate-entry-accessible fs-cfg user entry-id)
-  (svc/success-response {:comments (db/select-all-comments entry-id)}))
+  (svc/success-response {:comments (map prepare-post-time (db/select-all-comments entry-id))}))
 
 
 (defn update-retract-status
