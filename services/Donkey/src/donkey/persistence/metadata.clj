@@ -28,10 +28,10 @@
 
 (defn select-comment
   [comment-id]
-  (korma/with-db db/metadata
-    (select :comments
-      (where {:id      comment-id
-              :deleted false}))))
+  (first (korma/with-db db/metadata
+           (select :comments
+             (where {:id      comment-id
+                     :deleted false})))))
 
 (defn select-all-comments
   [target-id]
