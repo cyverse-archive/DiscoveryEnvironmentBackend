@@ -23,6 +23,9 @@
   (let [folders (list-collections-with-attr-value cm uuid-attr uuid)
         files   (list-files-with-avu cm uuid-attr := uuid)
         results (concat folders files)]
+    (when (empty? results)
+      (throw+ {:error_code ERR_DOES_NOT_EXIST
+               :uuid uuid}))
     (when (> (count results) 1)
       (log/warn "Too many results for" uuid ":" (count results))
       (log/debug "Results for" uuid ":" results)
