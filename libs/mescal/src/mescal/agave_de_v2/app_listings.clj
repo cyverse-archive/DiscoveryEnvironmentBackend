@@ -24,6 +24,7 @@
                 :_links)
         (assoc
             :name                 (get-app-name listing)
+            :app_type             "External"
             :can_run              true
             :can_favor            false
             :can_rate             false
