@@ -37,12 +37,13 @@
 
 (defn paths-for-uuids
   [user uuids]
-  (with-jargon (jargon-cfg) [cm]
-    (user-exists cm user)
-    (->> (concat (icat/select-folders-with-uuids uuids)
-                 (icat/select-files-with-uuids uuids))
-      (mapv #(merge % (stat/path-stat cm user (:path %))))
-      (remove #(nil? (:permission %))))))
+  (letfn [(id-type [type entity] (merge entity {:id (:path entity) :type type}))]
+    (with-jargon (jargon-cfg) [cm]
+      (user-exists cm user)
+      (->> (concat (map (partial id-type :dir) (icat/select-folders-with-uuids uuids))
+                   (map (partial id-type :file) (icat/select-files-with-uuids uuids)))
+        (mapv (partial stat/decorate-stat cm user))
+        (remove #(nil? (:permission %)))))))
 
 (defn do-paths-for-uuids
   [params body]

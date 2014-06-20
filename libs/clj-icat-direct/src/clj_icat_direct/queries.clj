@@ -310,7 +310,10 @@
 
    :select-files-with-uuids
    "SELECT DISTINCT m.meta_attr_value                   uuid,
-                    (c.coll_name || '/' || d.data_name) path
+                    (c.coll_name || '/' || d.data_name) path,
+                    1000 * CAST(d.create_ts AS BIGINT)  \"date-created\",
+                    1000 * CAST(d.modify_ts AS BIGINT)  \"date-modified\",
+                    d.data_size                         \"file-size\"
       FROM r_meta_main m
         JOIN r_objt_metamap o ON m.meta_id = o.meta_id
         JOIN r_data_main d ON o.object_id = d.data_id
@@ -318,8 +321,10 @@
       WHERE m.meta_attr_name = 'ipc_UUID' AND m.meta_attr_value IN (%s)"
 
    :select-folders-with-uuids
-   "SELECT m.meta_attr_value uuid,
-           c.coll_name       path
+   "SELECT m.meta_attr_value                  uuid,
+           c.coll_name                        path,
+           1000 * CAST(c.create_ts AS BIGINT) \"date-created\",
+           1000 * CAST(c.modify_ts AS BIGINT) \"date-modified\"
       FROM r_meta_main m
         JOIN r_objt_metamap o ON m.meta_id = o.meta_id
         JOIN r_coll_main c ON o.object_id = c.coll_id
