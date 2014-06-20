@@ -214,10 +214,15 @@ public class TitoAnalysisUnmarshaller implements TitoUnmarshaller<Transformation
      */
     private Transformation transformationFromTransformationStepJson(JSONObject json) throws JSONException {
         Transformation transformation = new Transformation();
-        String templateId = getTemplateId(json);
-        validateTemplateId(templateId);
         transformation.setName("");
-        transformation.setTemplate_id(templateId);
+
+        String appType = json.optString("app_type", "DE");
+        if (StringUtils.equalsIgnoreCase(appType, "DE")) {
+            transformation.setTemplate_id(validateTemplateId(getTemplateId(json)));
+        }
+        else {
+            transformation.setExternalAppId(getTemplateId(json));
+        }
 
         Map<String, String> valuesMap = propertyValueMapFromTransformationStepJson(json.getJSONObject("config"));
 
@@ -260,14 +265,16 @@ public class TitoAnalysisUnmarshaller implements TitoUnmarshaller<Transformation
     }
 
     /**
-     * Validates a template identifier.
+     * Validates a template identifier, returning the identifier if it's valid.
      *
      * @param templateId the template identifier.
+     * @return the template ID.
      */
-    private void validateTemplateId(String templateId) {
+    private String validateTemplateId(String templateId) {
         if (!templateInRegistry(templateId) && !templateInDatabase(templateId)) {
             throw new WorkflowException("no template with identifier, " + templateId + " found");
         }
+        return templateId;
     }
 
     /**

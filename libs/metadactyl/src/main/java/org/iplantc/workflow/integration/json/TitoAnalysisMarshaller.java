@@ -9,12 +9,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.iplantc.persistence.dto.step.TransformationStep;
+import org.iplantc.persistence.dto.transformation.Transformation;
 import org.iplantc.workflow.WorkflowException;
 import org.iplantc.workflow.core.Rating;
 import org.iplantc.workflow.core.TransformationActivity;
 import org.iplantc.workflow.core.TransformationActivityReference;
 import org.iplantc.workflow.dao.DaoFactory;
 import org.iplantc.workflow.data.InputOutputMap;
+import org.iplantc.workflow.integration.util.JsonUtils;
 import org.iplantc.workflow.model.Template;
 import org.iplantc.workflow.template.groups.TemplateGroup;
 import org.json.JSONArray;
@@ -203,13 +205,12 @@ public class TitoAnalysisMarshaller implements TitoMarshaller<TransformationActi
         json.put("id", step.getGuid());
         json.put("name", step.getName());
         json.put("description", step.getDescription());
-        if (useReferences) {
-            json.put("template_ref", getTemplateName(step.getTransformation().getTemplate_id()));
-        }
-        else {
-            json.put("template_id", step.getTransformation().getTemplate_id());
-        }
-        
+
+        Transformation transformation = step.getTransformation();
+        JsonUtils.putIfNotNull(json, "template_ref", getTemplateRef(transformation));
+        JsonUtils.putIfNotNull(json, "template_id", getTemplateId(transformation));
+        json.put("app_type", getAppType(transformation));
+
         Map<String, String> propertyValues = step.getTransformation().getPropertyValues();
         JSONObject config = new JSONObject();
         for(String key : propertyValues.keySet()) {
@@ -218,6 +219,46 @@ public class TitoAnalysisMarshaller implements TitoMarshaller<TransformationActi
         
         json.put("config", config);
         return json;
+    }
+
+    /**
+     * Returns the template reference to place in the JSON. Template references are only used
+     * if the {@code useReferences} flag is set to {@code true} and the app associated with
+     * the current step is a DE app.
+     *
+     * @param transformation the transformation belonging to the step being rendered.
+     * @return the template reference or null if a reference shouldn't be used.
+     */
+    private String getTemplateRef(Transformation transformation) {
+        String templateId = transformation.getTemplate_id();
+        return useReferences && templateId != null ? getTemplateName(templateId) : null;
+    }
+
+    /**
+     * Returns the template identifier to place in the JSON. The template ID field will contain the
+     * external app ID if the app is external. If the app is internal (that is, if it's a DE app),
+     * then the template ID field will contain null if the {@code useReferences} flag is set or the
+     * template ID otherwise.
+     *
+     * @param transformation the transformation belonging to the step being rendered.
+     * @return the template ID to place in the JSON.
+     */
+    private String getTemplateId(Transformation transformation) {
+        String templateId = transformation.getTemplate_id();
+        String externalAppId = transformation.getExternalAppId();
+        return externalAppId != null ? externalAppId
+             : useReferences         ? null
+             :                         templateId;
+    }
+
+    /**
+     * Returns a string describing the type of the app referenced in the current transformation step.
+     *
+     * @param transformation the transformation belonging to the step being rendered.
+     * @return {@code "External"} or {@code "DE"}.
+     */
+    private String getAppType(Transformation transformation) {
+        return transformation.getTemplate_id() == null ? "External" : "DE";
     }
 
     /**

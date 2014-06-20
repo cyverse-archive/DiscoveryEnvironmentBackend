@@ -90,7 +90,30 @@ public class TitoAnalysisMarshallerTest {
         assertEquals("firststepid", step1.getString("id"));
         assertEquals("firststepname", step1.getString("name"));
         assertEquals("firststepdescription", step1.getString("description"));
+        assertEquals("DE", step1.getString("app_type"));
         assertEquals("firsttemplateid", step1.getString("template_id"));
+    }
+
+    /**
+     * Verifies that the marshaller correctly marshals the transformation and transformation step fields for
+     * an external transformation step.
+     *
+     * @throws JSONException if a JSON error occurs.
+     */
+    @Test
+    public void shouldMarshalExternalTransformationSteps() throws JSONException {
+        JSONObject analysis = marshaller.toJson(createExternalAnalysis());
+        assertTrue(analysis.has("steps"));
+
+        JSONArray steps = analysis.getJSONArray("steps");
+        assertEquals(1, steps.length());
+
+        JSONObject step1 = steps.getJSONObject(0);
+        assertEquals("firstexternalstepid", step1.getString("id"));
+        assertEquals("firstexternalstepname", step1.getString("name"));
+        assertEquals("firstexternalstepdescription", step1.getString("description"));
+        assertEquals("External", step1.getString("app_type"));
+        assertEquals("firstexternalappid", step1.getString("template_id"));
     }
 
     /**
@@ -184,6 +207,26 @@ public class TitoAnalysisMarshallerTest {
         JSONObject step = steps.getJSONObject(0);
         assertFalse(step.has("template_id"));
         assertEquals("firsttemplate", step.get("template_ref"));
+    }
+
+    /**
+     * Verifies that the marshaller does not use backward references for external apps, even if backward
+     * references are enabled.
+     *
+     * @throws JSONException if a JSON error occurs.
+     */
+    @Test
+    public void externalStepsShouldNotUseBackwardReferences() throws JSONException {
+        JSONObject analysis = new TitoAnalysisMarshaller(daoFactory, true).toJson(createExternalAnalysis());
+        assertTrue(analysis.has("steps"));
+
+        JSONArray steps = analysis.getJSONArray("steps");
+        assertEquals(1, steps.length());
+
+        JSONObject step = steps.getJSONObject(0);
+        assertFalse(step.has("template_ref"));
+        assertEquals("External", step.get("app_type"));
+        assertEquals("firstexternalappid", step.get("template_id"));
     }
 
     /**
@@ -287,18 +330,40 @@ public class TitoAnalysisMarshallerTest {
     }
 
     /**
-     * Creates the analysis to use for testing.
-     * 
+     * Creates an analysis with no transformation steps.
+     *
      * @return the analysis.
      */
-    private TransformationActivity createAnalysis() {
+    private TransformationActivity createEmptyAnalysis() {
         TransformationActivity analysis = new TransformationActivity();
         analysis.setId("analysisid");
         analysis.setName("analysisname");
         analysis.setDescription("analysisdescription");
         analysis.setType("analysistype");
         analysis.setWikiurl("analysiswikiurl");
+        return analysis;
+    }
+
+    /**
+     * Creates the analysis to use for testing.
+     * 
+     * @return the analysis.
+     */
+    private TransformationActivity createAnalysis() {
+        TransformationActivity analysis = createEmptyAnalysis();
         analysis.setSteps(createTransformationSteps());
+        analysis.setIntegrationDatum(UnitTestUtils.createIntegrationDatum());
+        return analysis;
+    }
+
+    /**
+     * Creates an analysis with an external step to use for testing.
+     *
+     * @return the analysis.
+     */
+    private TransformationActivity createExternalAnalysis() {
+        TransformationActivity analysis = createEmptyAnalysis();
+        analysis.setSteps(createExternalTransformationSteps());
         analysis.setIntegrationDatum(UnitTestUtils.createIntegrationDatum());
         return analysis;
     }
@@ -311,6 +376,17 @@ public class TitoAnalysisMarshallerTest {
     private List<TransformationStep> createTransformationSteps() {
         List<TransformationStep> steps = new ArrayList<TransformationStep>();
         steps.add(createFirstTransformationStep());
+        return steps;
+    }
+
+    /**
+     * Creates a list of transformation steps containing an external step to use for testing.
+     *
+     * @return the list of transformation steps.
+     */
+    private List<TransformationStep> createExternalTransformationSteps() {
+        List<TransformationStep> steps = new ArrayList<TransformationStep>();
+        steps.add(createFirstExternalTransformationStep());
         return steps;
     }
 
@@ -342,6 +418,20 @@ public class TitoAnalysisMarshallerTest {
     }
 
     /**
+     * Creates the first transformation step containing an external step.
+     *
+     * @return the transformation step.
+     */
+    private TransformationStep createFirstExternalTransformationStep() {
+        TransformationStep step = new TransformationStep();
+        step.setGuid("firstexternalstepid");
+        step.setName("firstexternalstepname");
+        step.setDescription("firstexternalstepdescription");
+        step.setTransformation(createExternalTransformation("firstexternalappid"));
+        return step;
+    }
+
+    /**
      * Creates the second transformation step in the list of transformation steps.
      * 
      * @return the transformation step.
@@ -368,7 +458,7 @@ public class TitoAnalysisMarshallerTest {
      * Creates a transformation for the template with the given identifier.
      * 
      * @param templateId the template identifier.
-     * @param the map of property names to property values.
+     * @param propertyValues the map of property names to property values.
      * @return the transformation.
      */
     private Transformation createTransformation(String templateId, Map<String, String> propertyValues) {
@@ -378,6 +468,19 @@ public class TitoAnalysisMarshallerTest {
         for(String key : propertyValues.keySet()) {
             transformation.addPropertyValue(key, propertyValues.get(key));
         }
+        return transformation;
+    }
+
+    /**
+     * Creates a transformation for the external app with the given identifier.
+     *
+     * @param externalAppId the template identifier.
+     * @return the transformation.
+     */
+    private Transformation createExternalTransformation(String externalAppId) {
+        Transformation transformation = new Transformation();
+        transformation.setName("transformation_for_" + externalAppId);
+        transformation.setExternalAppId(externalAppId);
         return transformation;
     }
 }
