@@ -42,8 +42,7 @@
     (->> (concat (icat/select-folders-with-uuids uuids)
                  (icat/select-files-with-uuids uuids))
       (mapv #(merge % (stat/path-stat cm user (:path %))))
-      (filter #(and (not (nil? %))
-                    (is-readable? cm user (:id %)))))))
+      (remove #(nil? (:permission %))))))
 
 (defn do-paths-for-uuids
   [params body]
