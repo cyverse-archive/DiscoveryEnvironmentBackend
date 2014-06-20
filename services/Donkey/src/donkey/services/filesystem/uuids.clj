@@ -36,7 +36,6 @@
   [user uuids]
   (with-jargon (jargon-cfg) [cm]
     (user-exists cm user)
-    (log/warn "Received the following folders: " (icat/select-folders-with-uuids uuids))
     (->> (concat (icat/select-folders-with-uuids uuids)
                  (icat/select-files-with-uuids uuids))
       (mapv #(merge % (stat/path-stat cm user (:path %))))
