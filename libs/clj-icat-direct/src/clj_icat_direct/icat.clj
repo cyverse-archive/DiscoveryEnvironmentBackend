@@ -1,6 +1,7 @@
 (ns clj-icat-direct.icat
   (:use [clojure.java.io :only [file]])
   (:require [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [korma.db :as db]
             [korma.core :as k]
             [clj-icat-direct.queries :as q]))
@@ -27,7 +28,7 @@
   [query-kw & args]
   (if-not (contains? q/queries query-kw)
     (throw (Exception. (str "query " query-kw " is not defined."))))
-
+  (log/warn "run-simple-query: " (get q/queries query-kw))
   (k/exec-raw icat [(get q/queries query-kw) args] :results))
 
 (defn- run-query-string
@@ -128,3 +129,19 @@
         query (format (:paged-folder-listing q/queries) sc so)
         p     (partial add-permission user)]
     (map p (run-query-string query user zone folder-path limit offset))))
+
+(defn select-files-with-uuids
+  "Given a set of UUIDs, it returns a list of UUID-path pairs for each UUID that corresponds to a
+   file."
+  [uuids]
+  ; This can't be run as a simple query.  I suspect the UUID db type is causing trouble
+  (let [query (format (:select-files-with-uuids q/queries) (q/prepare-text-set uuids))]
+    (run-query-string query)))
+
+(defn select-folders-with-uuids
+  "Given a set of UUIDs, it returns a list of UUID-path pairs for each UUID that corresponds to a
+   folder."
+  [uuids]
+  ; This can't be run as a simple query. I suspect the UUID db type is causing trouble
+  (let [query (format (:select-folders-with-uuids q/queries) (q/prepare-text-set uuids))]
+    (run-query-string query)))

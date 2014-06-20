@@ -24,12 +24,6 @@
       (svc/success-response))
     (svc/donkey-response {} 404)))
 
-(defn- favorite-data
-  [user]
-  (->> (db/select-favorites-of-type user "data")
-       (map str)
-       (uuids/paths-for-uuids user)))
-
 (defn- format-favorites
   [favs]
   (let [favs (map #(assoc % :isFavorite true) favs)]
@@ -38,12 +32,12 @@
 
 (defn list-favorite-data-with-stat
   "Returns a listing of a user's favorite data, including stat information about it."
-  [fs-cfg user]
-  (fs/with-jargon fs-cfg [fs]
-    (->> (favorite-data user)
-         (format-favorites)
-         (hash-map :filesystem)
-         svc/success-response)))
+  [user]
+  (->> (db/select-favorites-of-type user "data")
+    (uuids/paths-for-uuids user)
+    (format-favorites)
+    (hash-map :filesystem)
+    svc/success-response))
 
 (defn filter-favorites
   [fs-cfg user entries]

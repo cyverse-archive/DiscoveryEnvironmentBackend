@@ -8,6 +8,7 @@
         [slingshot.slingshot :only [try+ throw+]]
         [donkey.services.filesystem.validators])
   (:require [clojure.tools.logging :as log]
+            [clj-icat-direct.icat :as icat]
             [donkey.services.filesystem.stat :as stat]
             [cheshire.core :as json]))
 
@@ -35,10 +36,12 @@
   [user uuids]
   (with-jargon (jargon-cfg) [cm]
     (user-exists cm user)
-    (filter
-     #(and (not (nil? %1))
-           (is-readable? cm user (:id %1)))
-     (mapv (partial path-for-uuid cm user) uuids))))
+    (log/warn "Received the following folders: " (icat/select-folders-with-uuids uuids))
+    (->> (concat (icat/select-folders-with-uuids uuids)
+                 (icat/select-files-with-uuids uuids))
+      (mapv #(merge % (stat/path-stat cm user (:path %))))
+      (filter #(and (not (nil? %))
+                    (is-readable? cm user (:id %)))))))
 
 (defn do-paths-for-uuids
   [params body]

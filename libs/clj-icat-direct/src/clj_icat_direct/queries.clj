@@ -37,6 +37,11 @@
                             "]" "\\]"})
        "]"))
 
+(defn prepare-text-set
+  "Given a set, it prepares the elements for injection into an SQL query. It returns a string
+   containing the quoted values separated by commas."
+  [values]
+  (string/join ", " (map #(str \' % \') values)))
 
 (def queries
   {:count-items-in-folder
@@ -301,4 +306,21 @@
               AND m.meta_attr_name = 'ipc_UUID') AS p
     ORDER BY p.type ASC, %s %s
        LIMIT ?
-      OFFSET ?"})
+      OFFSET ?"
+
+   :select-files-with-uuids
+   "SELECT DISTINCT m.meta_attr_value                   uuid,
+                    (c.coll_name || '/' || d.data_name) path
+      FROM r_meta_main m
+        JOIN r_objt_metamap o ON m.meta_id = o.meta_id
+        JOIN r_data_main d ON o.object_id = d.data_id
+        JOIN r_coll_main c ON d.coll_id = c.coll_id
+      WHERE m.meta_attr_name = 'ipc_UUID' AND m.meta_attr_value IN (%s)"
+
+   :select-folders-with-uuids
+   "SELECT m.meta_attr_value uuid,
+           c.coll_name       path
+      FROM r_meta_main m
+        JOIN r_objt_metamap o ON m.meta_id = o.meta_id
+        JOIN r_coll_main c ON o.object_id = c.coll_id
+      WHERE m.meta_attr_name = 'ipc_UUID' AND m.meta_attr_value IN (%s)"})
