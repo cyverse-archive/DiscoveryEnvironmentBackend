@@ -240,4 +240,7 @@
          :body istream}
       (rsp-utils/header
         "Content-Disposition"
-        (str "attachment; filename=\"" (ft/basename file-path) "\"")))))
+        (str "attachment; filename=\"" (ft/basename file-path) "\""))
+      (rsp-utils/header
+       "Content-Type"
+       "application/octet-stream"))))

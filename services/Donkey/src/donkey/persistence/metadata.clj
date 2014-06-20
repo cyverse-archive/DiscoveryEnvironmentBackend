@@ -10,6 +10,54 @@
   (raw (str \' val \')))
 
 
+;; COMMENTS
+
+(defn insert-comment
+  [owner target-id target-type comment]
+  (let [rec (korma/with-db db/metadata
+              (insert :comments
+                (values {:owner_id    owner
+                         :target_id   target-id
+                         :target_type (->enum-val target-type)
+                         :value       comment})))]
+    {:id        (:id rec)
+     :commenter (:owner_id rec)
+     :post_time (:post_time rec)
+     :retracted (:retracted rec)
+     :comment   (:value rec)}))
+
+(defn select-comment
+  [comment-id]
+  (first (korma/with-db db/metadata
+           (select :comments
+             (where {:id      comment-id
+                     :deleted false})))))
+
+(defn select-all-comments
+  [target-id]
+  (korma/with-db db/metadata
+    (select :comments
+      (fields :id [:owner_id :commenter] :post_time :retracted [:value :comment])
+      (where {:target_id target-id
+              :deleted   false}))))
+
+(defn retract-comment
+  [comment-id rectracting-user]
+  (korma/with-db db/metadata
+    (update :comments
+      (set-fields {:retracted    true
+                   :retracted_by rectracting-user})
+      (where {:id comment-id}))))
+
+(defn readmit-comment
+  [comment-id]
+  (korma/with-db db/metadata
+    (update :comments
+      (set-fields {:retracted    false
+                   :retracted_by nil})
+      (where {:id comment-id}))))
+
+
 ;; FAVORITES
 
 (defentity ^{:private true} favorites)
@@ -62,10 +110,16 @@
            (where {:owner_id owner :id [in tag-ids]})))))
 
 (defn get-tags-by-value
-  [owner value]
-  (korma/with-db db/metadata
-    (select tags
-      (where {:owner_id owner :value [like value]}))))
+  [owner value & [max-results]]
+  (let [query  (-> (select* tags)
+                   (fields :id :value :description)
+                   (where {:owner_id owner :value [like value]}))
+        query' (if max-results
+                 (-> query
+                     (limit max-results))
+                 query)]
+    (korma/with-db db/metadata
+      (select query'))))
 
 (defn get-tag
   [tag-id]

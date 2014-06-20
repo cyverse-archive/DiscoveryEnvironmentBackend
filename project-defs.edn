@@ -490,4 +490,15 @@
   :uberjar? false
   :install? false
   :language :sql
+  :archive? true}
+
+ "metadata-db"
+ {:type     :database
+  :path     "databases/metadata"
+  :build    :shell
+  :rpm?     false
+  :tarball? false
+  :uberjar? false
+  :install? false
+  :language :sql
   :archive? true}}

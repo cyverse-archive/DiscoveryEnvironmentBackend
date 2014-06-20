@@ -1,21 +1,32 @@
 (ns mescal.agave-v2
-  (:use [slingshot.slingshot :only [try+]])
+  (:use [slingshot.slingshot :only [try+ throw+]])
   (:require [authy.core :as authy]
             [cemerick.url :as curl]
             [clj-http.client :as http]
-            [mescal.util :as util]
             [clojure.tools.logging :as log]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure-commons.error-codes :as ce]
+            [mescal.util :as util])
+  (:import [java.io IOException]))
 
 (defn- refresh-access-token
   [token-info-fn timeout]
   (let [new-token-info (authy/refresh-access-token @(token-info-fn) :timeout timeout)]
     (dosync (ref-set (token-info-fn) new-token-info))))
 
+(defn- agave-unavailable
+  [e]
+  (let [msg "the Foundation API appears to be unavailable at this time"]
+    (log/error e msg)
+    (throw+ {:error_code ce/ERR_UNAVAILABLE
+             :reason     msg})))
+
 (defn- wrap-refresh
   [token-info-fn timeout request-fn]
   (try+
    (request-fn)
+   (catch IOException e
+     (agave-unavailable e))
    (catch [:status 401] _
      (refresh-access-token token-info-fn timeout)
      (request-fn))))
@@ -105,9 +116,10 @@
 
 (defn file-path-to-url
   [url-type base-url token-info-fn timeout storage-system file-path]
-  (let [root-dir (get-root-dir base-url token-info-fn timeout storage-system)
-        url-path (string/replace file-path (re-pattern (str "\\Q" root-dir "/")) "")]
-    (str (curl/url base-url "/files/v2" url-type "system" storage-system url-path))))
+  (when-not (string/blank? file-path)
+    (let [root-dir (get-root-dir base-url token-info-fn timeout storage-system)
+          url-path (string/replace file-path (re-pattern (str "\\Q" root-dir "/")) "")]
+      (str (curl/url base-url "/files/v2" url-type "system" storage-system url-path)))))
 
 (defn- build-path
   [base & rest]
@@ -116,9 +128,10 @@
 
 (defn file-path-to-agave-url
   [base-url token-info-fn timeout storage-system file-path]
-  (let [root-dir (get-root-dir base-url token-info-fn timeout storage-system)
-        url-path (string/replace file-path (re-pattern (str "\\Q" root-dir "/")) "")]
-    (build-path (str "agave://" storage-system) url-path)))
+  (when-not (string/blank? file-path)
+    (let [root-dir (get-root-dir base-url token-info-fn timeout storage-system)
+          url-path (string/replace file-path (re-pattern (str "\\Q" root-dir "/")) "")]
+      (build-path (str "agave://" storage-system) url-path))))
 
 (defn- files-base
   [base-url]
@@ -137,11 +150,12 @@
 
 (defn file-url-to-path
   [base-url token-info-fn timeout file-url]
-  (if-let [storage-system (extract-storage-system base-url file-url)]
-    (build-path (get-root-dir base-url token-info-fn timeout storage-system)
-                (string/replace file-url (files-base-regex base-url storage-system) ""))
-    (build-path (get-default-root-dir base-url token-info-fn timeout)
-                (string/replace file-url (files-base-regex base-url) ""))))
+  (when-not (string/blank? file-url)
+    (if-let [storage-system (extract-storage-system base-url file-url)]
+      (build-path (get-root-dir base-url token-info-fn timeout storage-system)
+                  (string/replace file-url (files-base-regex base-url storage-system) ""))
+      (build-path (get-default-root-dir base-url token-info-fn timeout)
+                  (string/replace file-url (files-base-regex base-url) "")))))
 
 (defn is-http-url?
   [url]
@@ -149,11 +163,13 @@
 
 (defn agave-to-irods-path
   [base-url token-info-fn timeout storage-system file-url]
-  (if (is-http-url? file-url)
-    (file-url-to-path base-url token-info-fn timeout file-url)
-    (build-path (get-root-dir base-url token-info-fn timeout storage-system) file-url)))
+  (when-not (string/blank? file-url)
+    (if (is-http-url? file-url)
+      (file-url-to-path base-url token-info-fn timeout file-url)
+      (build-path (get-root-dir base-url token-info-fn timeout storage-system) file-url))))
 
 (defn irods-to-agave-path
   [base-url token-info-fn timeout storage-system irods-path]
-  (let [root-dir (get-root-dir base-url token-info-fn timeout storage-system)]
-    (string/replace irods-path (re-pattern (str "\\Q" root-dir)) "")))
+  (when-not (string/blank? irods-path)
+    (let [root-dir (get-root-dir base-url token-info-fn timeout storage-system)]
+      (string/replace irods-path (re-pattern (str "\\Q" root-dir)) ""))))

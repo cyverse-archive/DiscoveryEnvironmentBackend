@@ -236,7 +236,7 @@
        (trap #(list-tool-request-status-codes params)))
 
   (POST "/arg-preview" [:as {body :body}]
-       (ce/trap "arg-preview" #(app-metadata/preview-command-line body)))
+        (ce/trap "arg-preview" #(app-metadata/preview-command-line body)))
 
   (context "/secured" [:as {params :params}]
            (store-current-user secured-routes params))
@@ -249,11 +249,44 @@
   (init-registered-beans)
   (define-database))
 
+(defn- iplant-conf-dir-file
+  [filename]
+  (when-let [conf-dir (System/getenv "IPLANT_CONF_DIR")]
+    (let [f (file conf-dir filename)]
+      (when (.isFile f) (.getPath f)))))
+
+(defn- cwd-file
+  [filename]
+  (let [f (file filename)]
+    (when (.isFile f) (.getPath f))))
+
+(defn- classpath-file
+  [filename]
+  (-> (Thread/currentThread)
+      (.getContextClassLoader)
+      (.findResource filename)
+      (.toURI)
+      (file)))
+
+(defn- no-configuration-found
+  [filename]
+  (throw (RuntimeException. (str "configuration file " filename " not found"))))
+
+(defn- find-config-file
+  []
+  (let [conf-file "metadactyl.properties"]
+    (or (iplant-conf-dir-file conf-file)
+        (cwd-file conf-file)
+        (classpath-file conf-file)
+        (no-configuration-found conf-file))))
+
 (defn load-config-from-file
   "Loads the configuration settings from a properties file."
-  [cfg-path]
-  (config/load-config-from-file cfg-path)
-  (init-service))
+  ([]
+     (load-config-from-file (find-config-file)))
+  ([cfg-path]
+     (config/load-config-from-file cfg-path)
+     (init-service)))
 
 (defn site-handler [routes]
   (-> routes

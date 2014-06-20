@@ -26,4 +26,5 @@ libs/kameleon/kameleon
 libs/mescal/mescal
 libs/metadactyl/metadactyl
 node_modules/
-
+.idea
+*.iml
