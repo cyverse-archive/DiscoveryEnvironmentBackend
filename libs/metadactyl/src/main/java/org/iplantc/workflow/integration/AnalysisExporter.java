@@ -207,7 +207,9 @@ public class AnalysisExporter {
     private Set<Template> loadTemplatesInAnalysis(TransformationActivity analysis) {
         Set<Template> templates = new HashSet<Template>();
         for (String templateId : daoFactory.getTransformationActivityDao().getTemplateIdsInAnalysis(analysis)) {
-            templates.add(loadTemplate(templateId));
+            if (templateId != null) {
+                templates.add(loadTemplate(templateId));
+            }
         }
         return templates;
     }
