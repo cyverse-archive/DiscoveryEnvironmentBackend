@@ -2253,16 +2253,28 @@ description must be provided before an app can be made public.
             <td>yes</td>
         </tr>
         <tr>
+            <td>app_type</td>
+            <td>The type of app; may be `DE` or `External`</td>
+            <td>app_type</td>
+            <td>no; defaults to `DE` if unspecified</td>
+        </tr>
+        <tr>
             <td>template_id</td>
             <td>the identifier of the template used to perform the step</td>
             <td>template_id</td>
-            <td>either template_id or template_ref must be specified</td>
+            <td>
+                required for external apps; otherwise, either template_id or template_ref must be
+                specified
+            </td>
         </tr>
         <tr>
             <td>template_ref</td>
             <td>the name of the template used to perform the step</td>
             <td>template_ref</td>
-            <td>either template_id or template_ref must be specified</td>
+            <td>
+                can't be used for external apps; either template_id or template_ref must be
+                specified
+            </td>
         </tr>
         <tr>
             <td>config</td>
@@ -2281,13 +2293,14 @@ two properties in different steps have the same identifier. This name is not
 displayed, so it would be perfectly reasonable to put an ID in this field or use
 general names such as `step1`.
 
-The `template_id` and `template_ref` fields represent two different means of
-indicating which template should be used for the step. If the `template_id`
-field is used then the template ID must be known in advance, either by
-specifying the template ID when it is being imported or by importing the
-template first then looking up the identifier. If the `template_ref` field is
-used then the field value refers to the template by name and the template must
-be defined within the same JSON document as the app.
+For DE apps, the `template_id` and `template_ref` fields represent two different
+means of indicating which template should be used for the step. If the
+`template_id` field is used then the template ID must be known in advance,
+either by specifying the template ID when it is being imported or by importing
+the template first then looking up the identifier. If the `template_ref` field
+is used then the field value refers to the template by name and the template
+must be defined within the same JSON document as the app.  For external apps,
+the `template_id` field must be used.
 
 The `config` field contains a set of automatically assigned property values to
 use in the step. These are the values that will be used every time the app is

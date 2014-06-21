@@ -805,6 +805,7 @@ The response body for this service is in the following format:
     "template_count": "number-of-analyses-in-group-and-descendents",
     "templates": [
         {
+            "app_type": "app-type-id",
             "can_favor": "analysis-can-favor-flag",
             "can_rate": "analysis-can-rate-flag",
             "can_run": "analysis-can-run-flag",
@@ -845,6 +846,7 @@ $ curl -s "http://by-tor:8888/secured/get-analyses-in-group/6A1B9EBD-4950-4F3F-9
     "template_count": 100,
     "templates": [
         {
+            "app_type": "DE",
             "can_favor": true,
             "can_rate": true,
             "can_run": true,
