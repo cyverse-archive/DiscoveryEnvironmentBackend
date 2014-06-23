@@ -232,7 +232,7 @@ __Curl Command__:
 
     curl -s "http://127.0.0.1:3000/secured/filesystem/metadata/template/attr/33e3e3d8-cd48-4572-8b16-89207b1609ec?proxyToken=notReal"
 
-Viewing all Metadata Template Attributes on a File/Folder
+Viewing all Metadata Template AVUs on a File/Folder
 -----------------------------------------------------
 __URL Path__: /secured/filesystem/:data-id/template-avus
 
@@ -295,7 +295,7 @@ __Curl Command__:
 
     curl -s "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus?proxyToken=notReal"
 
-Viewing a Metadata Template's Attributes on a File/Folder
+Viewing a Metadata Template's AVUs on a File/Folder
 ---------------------------------------------------------
 __URL Path__: /secured/filesystem/:data-id/template-avus/:template-id
 
@@ -350,7 +350,7 @@ __Curl Command__:
 
     curl -s "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10?proxyToken=notReal"
 
-Adding and Updating Metadata Template Attributes on a File/Folder
+Adding and Updating Metadata Template AVUs on a File/Folder
 -----------------------------------------------------------------
 Including an existing AVU’s ID in its JSON in the POST body will update its values and modified_on
 timestamp, and also ensure that the AVU is associated with the metadata template. AVUs included
@@ -362,6 +362,31 @@ __URL Path__: /secured/filesystem/:data-id/template-avus/:template-id
 __HTTP Method__: POST
 
 __Error Codes__: ERR_NOT_READABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER, ERR_BAD_OR_MISSING_FIELD
+
+__Request Body__:
+
+```json
+{
+    "avus": [
+        {
+            "id": "avu-uuid",
+            "attr": "attr-1",
+            "value": "value-1",
+            "unit": "unit-1"
+        },
+        {
+            "attr": "attr-2",
+            "value": "value-2",
+            "unit": "unit-2"
+        },
+        {
+            "attr": "...",
+            "value": "...",
+            "unit": "..."
+        }
+    ]
+}
+```
 
 __Response__:
 
@@ -421,7 +446,7 @@ curl -sd '
 ' "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10?proxyToken=notReal"
 ```
 
-Removing all Metadata Template Attributes on a File/Folder
+Removing all Metadata Template AVUs on a File/Folder
 ----------------------------------------------------------
 __URL Path__: /secured/filesystem/:data-id/template-avus/:template-id
 
@@ -439,7 +464,7 @@ __Curl Command__:
 
     curl -X DELETE "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10?proxyToken=notReal"
 
-Removing a Metadata Template Attribute from a File/Folder
+Removing a Metadata Template AVU from a File/Folder
 ---------------------------------------------------------
 __URL Path__: /secured/filesystem/:data-id/template-avus/:template-id/:avu-id
 
