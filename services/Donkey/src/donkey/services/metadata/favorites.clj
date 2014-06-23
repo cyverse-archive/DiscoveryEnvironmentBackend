@@ -46,7 +46,8 @@
   [favs]
   (let [favs (map #(assoc % :isFavorite true) favs)]
     {:folders (filter #(= (:type %) :dir) favs)
-     :files (filter #(= (:type %) :file) favs)}))
+     :files (filter #(= (:type %) :file) favs)
+     :total (count favs)}))
 
 (defn list-favorite-data-with-stat
   "Returns a listing of a user's favorite data, including stat information about it."
