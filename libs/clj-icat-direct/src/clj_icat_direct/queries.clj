@@ -328,4 +328,44 @@
       FROM r_meta_main m
         JOIN r_objt_metamap o ON m.meta_id = o.meta_id
         JOIN r_coll_main c ON o.object_id = c.coll_id
-      WHERE m.meta_attr_name = 'ipc_UUID' AND m.meta_attr_value IN (%s)"})
+      WHERE m.meta_attr_name = 'ipc_UUID' AND m.meta_attr_value IN (%s)"
+
+   :paged-uuid-listing
+   "WITH groups AS (SELECT group_user_id
+                      FROM r_user_group
+                      WHERE user_id IN (SELECT user_id
+                                          FROM r_user_main
+                                          WHERE user_name = ? AND zone_name = ?)),
+         uuids AS (SELECT m.meta_attr_value uuid,
+                          o.object_id
+                     FROM r_meta_main m JOIN r_objt_metamap o ON m.meta_id = o.meta_id
+                     WHERE m.meta_attr_name = 'ipc_UUID'
+                       AND m.meta_attr_value IN (%s)
+                       AND o.object_id IN (SELECT object_id
+                                             FROM r_objt_access
+                                             WHERE user_id in (SELECT group_user_id FROM groups)))
+    SELECT *
+      FROM (SELECT c.coll_name                            AS full_path,
+                   regexp_replace(c.coll_name, '.*/', '') AS base_name,
+                   0                                      AS data_size,
+                   c.create_ts                            AS create_ts,
+                   c.modify_ts                            AS modify_ts,
+                   u.uuid                                 AS uuid,
+                   'collection'                           AS type
+                   FROM uuids u JOIN r_coll_main c ON u.object_id = c.coll_id
+                   WHERE c.coll_type != 'linkPoint'
+            UNION
+            SELECT (c.coll_name || '/' || d.data_name) AS full_path,
+                   d.data_name                         AS base_name,
+                   (array_agg(d.data_size))[1]         AS data_size,
+                   (array_agg(d.create_ts))[1]         AS create_ts,
+                   (array_agg(d.modify_ts))[1]         AS modify_ts,
+                   u.uuid                              AS uuid,
+                   'dataobject'                        AS type
+              FROM uuids u
+                JOIN r_data_main d ON u.object_id = d.data_id
+                JOIN r_coll_main c ON d.coll_id = c.coll_id
+              GROUP BY full_path, base_name, uuid) p
+      ORDER BY type ASC, %s %s
+      LIMIT ?
+      OFFSET ?"})

@@ -5,6 +5,7 @@
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as valid]
             [donkey.services.metadata.tags :as tag]
+            [donkey.util.config :as cfg]
             [donkey.util.service :as svc]
             [clojure.tools.logging :as log]))
 
@@ -24,6 +25,23 @@
       (svc/success-response))
     (svc/donkey-response {} 404)))
 
+(defn- user-col->api-col
+  [sort-col]
+  (case sort-col
+    "NAME"         :base-name
+    "ID"           :full-path
+    "LASTMODIFIED" :modify-ts
+    "DATECREATED"  :create-ts
+    "SIZE"         :data-size
+    :base-name))
+
+(defn- user-order->api-order
+  [sort-order]
+  (case sort-order
+    "ASC"  :asc
+    "DESC" :desc
+    :asc))
+
 (defn- format-favorites
   [favs]
   (let [favs (map #(assoc % :isFavorite true) favs)]
@@ -32,12 +50,14 @@
 
 (defn list-favorite-data-with-stat
   "Returns a listing of a user's favorite data, including stat information about it."
-  [user]
-  (->> (db/select-favorites-of-type user "data")
-    (uuids/paths-for-uuids user)
-    (format-favorites)
-    (hash-map :filesystem)
-    svc/success-response))
+  [user sort-col sort-order limit offset]
+  (let [col (user-col->api-col sort-col)
+        ord (user-order->api-order sort-order)]
+    (->> (db/select-favorites-of-type user "data")
+      (uuids/paths-for-uuids-paged user col ord limit offset)
+      (format-favorites)
+      (hash-map :filesystem)
+      svc/success-response)))
 
 (defn filter-favorites
   [fs-cfg user entries]

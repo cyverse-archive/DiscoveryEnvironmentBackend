@@ -45,6 +45,27 @@
         (mapv (partial stat/decorate-stat cm user))
         (remove #(nil? (:permission %)))))))
 
+(defn- fmt-stat
+  [cm user entry]
+  (let [path (:full_path entry)]
+    (->> {:date-created  (* 1000 (Long/valueOf (:create_ts entry)))
+          :date-modified (* 1000 (Long/valueOf (:modify_ts entry)))
+          :file-size     (:data_size entry)
+          :id            path
+          :path          path
+          :type          (case (:type entry)
+                           "collection" :dir
+                           "dataobject" :file)
+          :uuid          (:uuid entry)}
+      (stat/decorate-stat cm user))))
+
+(defn paths-for-uuids-paged
+  [user sort-col sort-order limit offset uuids]
+  (with-jargon (jargon-cfg) [cm]
+    (user-exists cm user)
+    (map (partial fmt-stat cm user)
+         (icat/paged-uuid-listing user (irods-zone) sort-col sort-order limit offset uuids))))
+
 (defn do-paths-for-uuids
   [params body]
   (validate-map params {:user string?})

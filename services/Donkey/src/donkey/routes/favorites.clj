@@ -30,8 +30,12 @@
            (util/trap #(fave/remove-favorite (:shortUsername user/current-user)
                                              (UUID/fromString entry-id))))
    
-   (GET "/favorites/filesystem" []
-        (util/trap #(fave/list-favorite-data-with-stat (:shortUsername user/current-user))))
+   (GET "/favorites/filesystem" [limit offset sort-col sort-order]
+        (util/trap #(fave/list-favorite-data-with-stat (:shortUsername user/current-user)
+                                                       (.toUpperCase sort-col)
+                                                       (.toUpperCase sort-order)
+                                                       (Long/valueOf limit)
+                                                       (Long/valueOf offset))))
    
    (POST "/favorites/filter" [:as {body :body}]
          (util/trap #(handle-filter (config/jargon-cfg) (:shortUsername user/current-user) body)))))
