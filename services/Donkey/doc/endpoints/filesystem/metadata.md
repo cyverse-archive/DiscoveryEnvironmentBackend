@@ -174,7 +174,7 @@ __Response__:
 
 __Curl Command__:
 
-    curl -s "http://services-2:31325/secured/filesystem/metadata/templates?proxyToken=notReal"
+    curl -s "http://127.0.0.1:3000/secured/filesystem/metadata/templates?proxyToken=notReal"
 
 
 Viewing a Metadata Template
@@ -206,7 +206,7 @@ __Response__:
 
 __Curl Command__:
 
-    curl -s "http://services-2:31325/secured/filesystem/metadata/template/59bd3d26-34d5-4e75-99f5-840a20089caf?proxyToken=notReal"
+    curl -s "http://127.0.0.1:3000/secured/filesystem/metadata/template/59bd3d26-34d5-4e75-99f5-840a20089caf?proxyToken=notReal"
 
 Viewing a Metadata Attribute
 ----------------------------
@@ -230,7 +230,7 @@ __Response__:
 
 __Curl Command__:
 
-    curl -s "http://localhost:31325/secured/filesystem/metadata/template/attr/33e3e3d8-cd48-4572-8b16-89207b1609ec?proxyToken=notReal"
+    curl -s "http://127.0.0.1:3000/secured/filesystem/metadata/template/attr/33e3e3d8-cd48-4572-8b16-89207b1609ec?proxyToken=notReal"
 
 Viewing all Metadata Template Attributes on a File/Folder
 -----------------------------------------------------
@@ -293,7 +293,7 @@ __Response__:
 
 __Curl Command__:
 
-    curl -s "http://localhost:31325/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus?proxyToken=notReal"
+    curl -s "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus?proxyToken=notReal"
 
 Viewing a Metadata Template's Attributes on a File/Folder
 ---------------------------------------------------------
@@ -348,7 +348,7 @@ __Response__:
 
 __Curl Command__:
 
-    curl -s "http://localhost:31325/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10?proxyToken=notReal"
+    curl -s "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10?proxyToken=notReal"
 
 Adding and Updating Metadata Template Attributes on a File/Folder
 -----------------------------------------------------------------
@@ -418,7 +418,7 @@ curl -sd '
         }
     ]
 }
-' "http://localhost:31325/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10?proxyToken=notReal"
+' "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10?proxyToken=notReal"
 ```
 
 Removing all Metadata Template Attributes on a File/Folder
@@ -437,7 +437,7 @@ __Response__:
 
 __Curl Command__:
 
-    curl -X DELETE "http://localhost:31325/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10?proxyToken=notReal"
+    curl -X DELETE "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10?proxyToken=notReal"
 
 Removing a Metadata Template Attribute from a File/Folder
 ---------------------------------------------------------
@@ -455,5 +455,5 @@ __Response__:
 
 __Curl Command__:
 
-    curl -X DELETE "http://localhost:31325/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10/b9315be3-5dd4-42bd-9b9f-b3486eee5a9b?proxyToken=notReal"
+    curl -X DELETE "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10/b9315be3-5dd4-42bd-9b9f-b3486eee5a9b?proxyToken=notReal"
 
