@@ -10,6 +10,7 @@
         [donkey.services.filesystem.create]
         [donkey.services.filesystem.metadata]
         [donkey.services.filesystem.metadata-templates]
+        [donkey.services.filesystem.metadata-template-avus]
         [donkey.services.filesystem.sharing]
         [donkey.services.filesystem.preview]
         [donkey.services.filesystem.exists]
