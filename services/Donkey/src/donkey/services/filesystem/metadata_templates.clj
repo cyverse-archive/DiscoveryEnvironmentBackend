@@ -115,12 +115,22 @@
 
 (with-post-hook! #'do-metadata-attribute-view (log-func "do-metadata-attribute-view"))
 
+(defn- format-avu
+  "Formats a Metadata Template AVU for JSON responses."
+  [avu]
+  (let [convert-timestamp #(assoc %1 %2 (db/millis-from-timestamp (%2 %1)))]
+    (-> avu
+        (convert-timestamp :created_on)
+        (convert-timestamp :modified_on)
+        (assoc :attr (:attribute avu))
+        (dissoc :attribute :target_type))))
+
 (defn- get-metadata-template-avus
   "Gets a map containing AVUs for the given Metadata Template and the template's ID."
   [user-id data-id template-id]
   (let [avus (persistence/get-avus-for-metadata-template user-id data-id template-id)]
     {:template_id template-id
-     :avus (map #(dissoc % :target_type) avus)}))
+     :avus (map format-avu avus)}))
 
 (defn- metadata-template-list
   "Lists all Metadata Template AVUs for the given user's data item."
@@ -138,7 +148,7 @@
     :user user-id
     :data_id data-id))
 
-(defn- format-avu
+(defn- find-existing-metadata-template-avu
   "Formats the given AVU for adding or updating.
    If the AVU already exists, the result will contain its ID."
   [user-id data-id avu]
@@ -156,10 +166,11 @@
 (defn- set-metadata-template-avus
   "Adds or Updates AVUs associated with a Metadata Template for the given user's data item."
   [user-id data-id template-id {avus :avus}]
-  (let [avus (map (partial format-avu user-id data-id) avus)
+  (let [avus (map (partial find-existing-metadata-template-avu user-id data-id) avus)
         existing-avus (filter :id avus)
         new-avus (map #(assoc % :id (UUID/randomUUID)) (remove :id avus))
-        avus (concat existing-avus new-avus)]
+        avus (concat existing-avus new-avus)
+        filter-avu-keys #(select-keys % [:id :attr :value :unit])]
     (transaction
      (when (seq existing-avus)
        (dorun (map persistence/update-avu existing-avus)))
@@ -169,7 +180,7 @@
     {:user user-id
      :data_id data-id
      :template_id template-id
-     :avus (map #(select-keys % [:id :attribute :value :unit]) avus)}))
+     :avus (map (comp filter-avu-keys format-avu) avus)}))
 
 (defn- remove-metadata-template-avu
   "Removes the given Metadata Template AVU association for the given user's data item."
