@@ -1,8 +1,10 @@
 (ns facepalm.c200-2014042401
   (:use [clojure.java.io :only [file reader]]
         [kameleon.sql-reader :only [sql-statements]]
-        [korma.core])
+        [korma.core]
+        [korma.db :only [with-db]])
   (:require [clojure.tools.logging :as log]
+            [facepalm.core :as migrator]
             [me.raynes.fs :as fs])
   (:import [java.util UUID]))
 
@@ -27,6 +29,12 @@
     (println (str "\t\t Loading " sql-file-path "..."))
     (with-open [rdr (reader sql-file)]
       (dorun (map exec-sql-statement (sql-statements rdr))))))
+
+(defn- add-uuid-extension
+  []
+  (println "\t* adding uuid-ossp extension...")
+  (with-db @migrator/admin-db-spec
+     (load-sql-file "extensions/uuid.sql")))
 
 ;; Drop constraints
 (defn- drop-all-constraints
@@ -280,6 +288,7 @@
   "Performs the database conversion."
   []
   (println "Performing the conversion for" version)
+  (add-uuid-extension)
   (drop-views)
   (run-table-conversions)
   (run-uuid-conversions)
