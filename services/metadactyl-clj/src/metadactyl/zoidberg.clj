@@ -84,36 +84,47 @@
   [template]
   (dissoc template :hid))
 
+(defn- add-app-type
+  [step]
+  (assoc step :app_type (if (:external_app_id step) "External" "DE")))
+
+(defn- fix-template-id
+  [step]
+  (-> step
+      (assoc :template_id (first (remove nil? ((juxt :template_id :external_app_id) step))))
+      (dissoc :external_app_id)))
+
 (defn- get-steps
   "Fetches the steps for the given app ID, including their template ID and
    source/target mapping IDs and step names."
   [app-id]
-  (select transformation_steps
-          (with input_mapping
-            (join [:transformation_steps :source_step]
-                  {:input_mapping.source :source_step.id})
-            (join [:transformation_steps :target_step]
-                  {:input_mapping.target :target_step.id})
-            (fields [:source_step.name :source_name]
-                    [:target_step.name :target_name]
-                    :source
-                    :target)
-            (group :source
-                   :source_name
-                   :target
-                   :target_name))
-          (join [:transformations :tx]
-                {:transformation_steps.transformation_id :tx.id})
-          (join [:transformation_task_steps :tts]
-                {:transformation_steps.id :tts.transformation_step_id})
-          (join [:transformation_activity :app]
-                {:tts.transformation_task_id :app.hid})
-          (fields :transformation_steps.id
-                  :guid
-                  :transformation_steps.name
-                  :transformation_steps.description
-                  :tx.template_id)
-          (where {:app.id app-id})))
+  (map (comp fix-template-id add-app-type)
+   (select transformation_steps
+           (with input_mapping
+                 (join [:transformation_steps :source_step]
+                       {:input_mapping.source :source_step.id})
+                 (join [:transformation_steps :target_step]
+                       {:input_mapping.target :target_step.id})
+                 (fields [:source_step.name :source_name]
+                         [:target_step.name :target_name]
+                         :source
+                         :target)
+                 (group :source
+                        :source_name
+                        :target
+                        :target_name))
+           (join [:transformations :tx]
+                 {:transformation_steps.transformation_id :tx.id})
+           (join [:transformation_task_steps :tts]
+                 {:transformation_steps.id :tts.transformation_step_id})
+           (join [:transformation_activity :app]
+                 {:tts.transformation_task_id :app.hid})
+           (fields :transformation_steps.id
+                   :guid
+                   :transformation_steps.name
+                   :transformation_steps.description
+                   :tx.template_id)
+           (where {:app.id app-id}))))
 
 (defn- format-step
   "Formats step fields for the client."
@@ -164,8 +175,8 @@
    template IDs from the steps into a templates field."
   [analysis]
   (let [steps (get-steps (:analysis_id analysis))
-        template-ids (set (map #(:template_id %) steps))
-        mappings (apply concat (map #(get-formatted-mapping %) steps))
+        template-ids (set (map :template_id steps))
+        mappings (mapcat #(get-formatted-mapping %) steps)
         steps (map #(format-step %) steps)]
     (-> analysis
       (dissoc :integration_data_id)
@@ -199,8 +210,8 @@
    appropriate analysis fields to prepare it for saving as a copy."
   [analysis]
   (let [steps (get-steps (:analysis_id analysis))
-        mappings (apply concat (map #(get-formatted-mapping %) steps))
-        steps (map #(format-step-copy %) steps)]
+        mappings (mapcat get-formatted-mapping steps)
+        steps (map format-step-copy steps)]
     (-> analysis
       (dissoc :integration_data_id)
       (assoc :analysis_id "auto-gen")
