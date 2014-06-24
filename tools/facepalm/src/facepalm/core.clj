@@ -385,8 +385,7 @@
     (let [versions (get-update-versions (get-current-db-version) (:version opts))]
       (validate-update-versions versions)
       (try+
-       (fs/with-cwd dir
-                    (dorun (map do-conversion versions)))
+       (dorun (map do-conversion versions))
        (catch Exception e
          (log-next-exception e)
          (throw+))))))
