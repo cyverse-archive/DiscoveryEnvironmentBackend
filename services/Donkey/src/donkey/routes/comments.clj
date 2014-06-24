@@ -37,10 +37,10 @@
 (defn secured-comment-routes
   []
   (util/optional-routes
-    [config/metadata-routes-enabled]
+    [#(and (config/filesystem-routes-enabled) (config/metadata-routes-endabled))]
 
     (GET "/filesystem/entry/:entry-id/comments" [entry-id]
-      (handle-get-comments entry-id))
+      (util/trap #(handle-get-comments entry-id)))
 
     (POST "/filesystem/entry/:entry-id/comments" [entry-id :as {body :body}]
       (util/trap #(handle-add-comment entry-id body)))
