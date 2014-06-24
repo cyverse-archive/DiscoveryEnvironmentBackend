@@ -3,12 +3,14 @@
         [donkey.auth.user-attributes :only [current-user]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+ try+]])
-  (:require [clojure.string :as string]
+  (:require [cemerick.url :as curl]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.osm :as osm]
             [donkey.persistence.jobs :as jp]
+            [donkey.persistence.oauth :as op]
             [donkey.services.metadata.agave-apps :as aa]
             [donkey.services.metadata.de-apps :as da]
             [donkey.util.config :as config]
@@ -29,13 +31,9 @@
   [job-types filter]
   (jp/count-jobs (:username current-user) job-types filter))
 
-(defn- agave-job-id?
-  [id]
-  (re-matches #"\d+" id))
-
 (defn- format-job
   [de-states de-apps agave-states {:keys [id] :as job}]
-  (if (agave-job-id? id)
+  (if (= (:job_type job) jp/agave-job-type)
     (aa/format-agave-job job (agave-states id))
     (da/format-de-job de-states de-apps job)))
 
@@ -48,15 +46,15 @@
         de-states    (da/load-de-job-states (grouped-jobs jp/de-job-type []))
         de-apps      (da/load-app-details (map :analysis_id de-states))
         agave-states (aa/load-agave-job-states agave (grouped-jobs jp/agave-job-type []))]
-    (map (partial format-job de-states de-apps agave-states) jobs)))
+    (remove nil? (map (partial format-job de-states de-apps agave-states) jobs))))
 
 (defn- update-job-status
   ([{:keys [id status end-date deleted]}]
      (jp/update-job id {:status   status
                         :end-date (db/timestamp-from-str (str end-date))
                         :deleted  deleted}))
-  ([agave id username prev-job-info]
-     (aa/update-agave-job-status agave id username prev-job-info)))
+  ([agave username prev-job-info status end-time]
+     (aa/update-agave-job-status agave username prev-job-info status end-time)))
 
 (defn- unrecognized-job-type
   [job-type]
@@ -75,6 +73,28 @@
        jp/agave-job-type (process-agave-job agave-client (preprocess-job job))
        (unrecognized-job-type (:job_type job)))))
 
+(defn- agave-authorization-uri
+  [state-info]
+  (let [username (:username current-user)
+        state    (op/store-authorization-request username state-info)]
+    (-> (curl/url (config/agave-oauth-base) "authorize")
+        (assoc :query {:response_type "code"
+                       :client_id     (config/agave-key)
+                       :redirect-uri  (config/agave-redirect-uri)
+                       :state         state})
+        (str))))
+
+(defn- agave-authorization-redirect
+  [state-info]
+  (throw+ {:error_code ce/ERR_TEMPORARILY_MOVED
+           :location   (agave-authorization-uri state-info)}))
+
+(defn- add-predicate
+  [predicate f]
+  (fn [& args]
+    (when (predicate)
+      (apply f args))))
+
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
   (listAppGroups [_])
@@ -91,9 +111,8 @@
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
   (populateJobsTable [_])
-  (populateJobDescriptions [_ username])
   (removeDeletedJobs [_])
-  (updateJobStatus [_ id username prev-status])
+  (updateJobStatus [_ username prev-status status end-time])
   (getJobParams [_ job-id])
   (getAppRerunInfo [_ job-id]))
 ;; AppLister
@@ -144,13 +163,10 @@
   (populateJobsTable [_]
     (dorun (map da/store-de-job (osm/list-jobs))))
 
-  (populateJobDescriptions [_ username]
-    (da/populate-job-descriptions username))
-
   (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs))
 
-  (updateJobStatus [_ id username prev-status]
+  (updateJobStatus [_ username prev-status status end-time]
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "HPC_JOBS_DISABLED"}))
 
@@ -161,21 +177,24 @@
     (da/get-de-app-rerun-info job-id)))
 ;; DeOnlyAppLister
 
-(deftype DeHpcAppLister [agave-client]
+(deftype DeHpcAppLister [agave-client user-has-access-token?]
   AppLister
 
   (listAppGroups [_]
     (-> (metadactyl/get-only-app-groups)
-        (update-in [:groups] conj (.publicAppGroup agave-client))))
+        (update-in [:groups] conj (.hpcAppGroup agave-client))))
 
   (listApps [_ group-id params]
-    (if (= group-id (:id (.publicAppGroup agave-client)))
-      (.listPublicApps agave-client params)
+    (if (= group-id (:id (.hpcAppGroup agave-client)))
+      (.listApps agave-client)
       (metadactyl/apps-in-group group-id params)))
 
   (searchApps [_ search-term]
-    (let [de-apps  (metadactyl/search-apps search-term)
-          hpc-apps (.searchPublicApps agave-client search-term)]
+    (let [def-result {:template_count 0 :templates {}}
+          de-apps    (metadactyl/search-apps search-term)
+          hpc-apps   (if (user-has-access-token?)
+                       (aa/search-apps agave-client search-term def-result)
+                       def-result)]
       {:template_count (apply + (map :template_count [de-apps hpc-apps]))
        :templates      (mapcat :templates [de-apps hpc-apps])}))
 
@@ -200,7 +219,7 @@
   (getApp [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/get-app app-id)
-      (aa/filter-default-inputs (.getApp agave-client app-id))))
+      (.getApp agave-client app-id)))
 
   (getAppDeployedComponents [_ app-id]
     (if (is-uuid? app-id)
@@ -221,26 +240,26 @@
     (count-jobs-of-types [jp/de-job-type jp/agave-job-type] filter))
 
   (listJobs [_ limit offset sort-field sort-order filter]
-    (list-all-jobs agave-client limit offset sort-field sort-order filter))
+    (if (user-has-access-token?)
+      (list-all-jobs agave-client limit offset sort-field sort-order filter)
+      (da/list-de-jobs limit offset sort-field sort-order filter)))
 
   (syncJobStatus [_ job]
-    (process-job agave-client (:id job) job
-                 {:process-de-job    da/sync-de-job-status
-                  :process-agave-job aa/sync-agave-job-status}))
+    (let [sync-agave (add-predicate user-has-access-token? aa/sync-agave-job-status)]
+      (process-job agave-client (:id job) job
+                   {:process-de-job    da/sync-de-job-status
+                    :process-agave-job sync-agave})))
 
   (populateJobsTable [_]
     (dorun (map da/store-de-job (osm/list-jobs))))
 
-  (populateJobDescriptions [_ username]
-    (da/populate-job-descriptions username)
-    (aa/populate-job-descriptions agave-client username))
-
   (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs)
-    (aa/remove-deleted-agave-jobs agave-client))
+    (when (user-has-access-token?)
+      (aa/remove-deleted-agave-jobs agave-client)))
 
-  (updateJobStatus [_ id username prev-job-info]
-    (update-job-status agave-client id username prev-job-info))
+  (updateJobStatus [_ username prev-job-info status end-time]
+    (update-job-status agave-client username prev-job-info status end-time))
 
   (getJobParams [_ job-id]
     (process-job agave-client job-id
@@ -255,18 +274,35 @@
                   :preprocess-job    :id})))
 ;; DeHpcAppLister
 
+(defn- has-access-token
+  [{:keys [api-name] :as server-info} username]
+  (seq (op/get-access-token api-name username)))
+
+(defn- get-access-token
+  [{:keys [api-name] :as server-info} state-info username]
+  (if-let [token-info (op/get-access-token api-name username)]
+    (assoc (merge server-info token-info)
+      :token-callback  (partial op/store-access-token api-name username)
+      :reauth-callback (partial agave-authorization-redirect state-info))
+    (agave-authorization-redirect state-info)))
+
+(defn- get-de-hpc-app-lister
+  [state-info username]
+  (DeHpcAppLister. (agave/de-agave-client-v2
+                    (config/agave-base-url)
+                    (config/agave-storage-system)
+                    (partial get-access-token (config/agave-oauth-settings) state-info username)
+                    (config/agave-jobs-enabled))
+                   (partial has-access-token (config/agave-oauth-settings) username)))
+
 (defn- get-app-lister
   ([]
-     (get-app-lister (:shortUsername current-user)))
-  ([username]
+     (get-app-lister ""))
+  ([state-info]
+     (get-app-lister state-info (:username current-user)))
+  ([state-info username]
      (if (config/agave-enabled)
-       (DeHpcAppLister. (agave/de-agave-client-v1
-                         (config/agave-base-url)
-                         (config/agave-user)
-                         (config/agave-pass)
-                         username
-                         (config/agave-jobs-enabled)
-                         (config/irods-home)))
+       (get-de-hpc-app-lister state-info username)
        (DeOnlyAppLister.))))
 
 (defn- populate-jobs-table
@@ -274,17 +310,17 @@
   (let [username (:username current-user)]
     (transaction
      (when (zero? (jp/count-all-jobs username))
-       (.populateJobsTable app-lister))
-     (when-not (zero? (jp/count-null-descriptions username))
-       (.populateJobDescriptions app-lister username)))))
+       (.populateJobsTable app-lister)))))
 
 (defn get-only-app-groups
   []
-  (service/success-response (.listAppGroups (get-app-lister))))
+  (service/success-response (.listAppGroups (get-app-lister "type=apps"))))
 
 (defn apps-in-group
   [group-id params]
-  (service/success-response (.listApps (get-app-lister) group-id params)))
+  (-> (get-app-lister (str "type=apps&app-category=" group-id))
+      (.listApps group-id params)
+      (service/success-response)))
 
 (defn search-apps
   [{search-term :search}]
@@ -356,19 +392,17 @@
                       :end-date end-date}))
 
 (defn update-agave-job-status
-  [uuid]
-  (let [{:keys [id username] :as job} (jp/get-job-by-id (UUID/fromString uuid))
-        username                      (string/replace (or username "") #"@.*" "")]
+  [uuid status end-time]
+  (let [{:keys [username] :as job} (jp/get-job-by-id (UUID/fromString uuid))]
     (service/assert-found job "job" uuid)
     (service/assert-valid (= jp/agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
-    (.updateJobStatus (get-app-lister username) id username job)))
+    (.updateJobStatus (get-app-lister "" username) username job status end-time)))
 
 (defn- sync-job-status
   [job]
   (try+
    (log/debug "synchronizing the job status for" (:id job))
-   (let [username (string/replace (:username job) #"@.*" "")]
-     (.syncJobStatus (get-app-lister username) job))
+   (.syncJobStatus (get-app-lister "" (:username job)) job)
    (catch Object e
      (log/error e "unable to sync the job status for job" (:id job)))))
 

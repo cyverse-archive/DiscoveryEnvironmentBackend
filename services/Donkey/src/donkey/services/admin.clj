@@ -23,12 +23,12 @@
 (defn check-jex?
   "Returns true if the JEX settings should be checked."
   []
-  (config/metadata-routes-enabled))
+  (config/app-routes-enabled))
 
 (defn check-metadactyl?
   "Returns true if the metadactyl settings should be checked."
   []
-  (config/metadata-routes-enabled))
+  (config/app-routes-enabled))
 
 (defn check-notificationagent?
   "Returns true if the notification agent settings should be checked."
@@ -42,11 +42,11 @@
 (defn perform-irods-check
   []
   (try
-    (with-jargon (config/jargon-cfg) [cm] 
+    (with-jargon (config/jargon-cfg) [cm]
       (exists? cm (:home cm)))
     (catch Exception e
       (log/error "Error performing iRODS status check:")
-      (log/error (ce/format-exception e)) 
+      (log/error (ce/format-exception e))
       false)))
 
 (defn perform-jex-check

@@ -28,20 +28,11 @@
   [job]
   (validate-map job de-job-validation-map)
   (jp/save-job (:uuid job) (:name job) jp/de-job-type (:username current-user) (:status job)
-               :description (:description job)
+               :description (or (:description job) "")
                :app-name    (:analysis_name job)
                :start-date  (db/timestamp-from-str (str (:submission_date job)))
                :end-date    (get-end-date job)
                :deleted     (:deleted job)))
-
-(defn populate-job-descriptions
-  [username]
-  (->> (jp/list-jobs-with-null-descriptions username [jp/de-job-type])
-       (map :id)
-       (osm/get-jobs)
-       (map (juxt :uuid :description))
-       (map jp/set-job-description)
-       (dorun)))
 
 (defn store-submitted-de-job
   [job]
@@ -80,7 +71,8 @@
 (defn list-de-jobs
   [limit offset sort-field sort-order filter]
   (let [user    (:username current-user)
-        jobs    (jp/list-jobs-of-types user limit offset sort-field sort-order filter [jp/de-job-type])
+        jobs    (jp/list-jobs-of-types user limit offset sort-field sort-order filter
+                                       [jp/de-job-type])
         states  (load-de-job-states jobs)
         de-apps (load-app-details (map :analysis_id states))]
     (mapv (partial format-de-job states de-apps) jobs)))

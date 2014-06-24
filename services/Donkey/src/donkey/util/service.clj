@@ -279,8 +279,9 @@
 (defn assert-found
   "Asserts that an object to modify or retrieve was found."
   [obj desc id]
-  (when (nil? obj)
-    (not-found desc id)))
+  (if (nil? obj)
+    (not-found desc id)
+    obj))
 
 (defn assert-valid
   "Throws an exception if an arbitrary expression is false."

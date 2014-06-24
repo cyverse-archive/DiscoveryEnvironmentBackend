@@ -1,57 +1,56 @@
 (ns mescal.de
-  (:require [mescal.agave-de-v1 :as v1]
+  (:require [mescal.agave-de-v2 :as v2]
             [mescal.core :as core]))
 
 (defprotocol DeAgaveClient
   "An Agave client with customizations that are specific to the discovery environment."
-  (publicAppGroup [this])
-  (listPublicApps [this params])
-  (searchPublicApps [this search-term])
-  (getApp [this app-id])
-  (getAppDeployedComponent [this app-id])
-  (getAppDetails [this app-id])
-  (submitJob [this submission])
-  (listJobs [this] [this job-ids])
-  (listRawJob [this job-id])
-  (listJobIds [this])
-  (getJobParams [this job-id])
-  (getAppRerunInfo [this job-id])
-  (translateJobStatus [this status]))
+  (hpcAppGroup [_])
+  (listApps [_])
+  (searchApps [_ search-term])
+  (getApp [_ app-id])
+  (getAppDetails [_ app-id])
+  (getAppDeployedComponent [_ app-id])
+  (submitJob [_ submission])
+  (listJobs [_] [_ job-ids])
+  (listJob [_ job-id])
+  (listJobIds [_])
+  (getJobParams [_ job-id])
+  (getAppRerunInfo [_ job-id])
+  (translateJobStatus [_ status]))
 
-(deftype DeAgaveClientV1 [agave jobs-enabled? irods-home]
+(deftype DeAgaveClientV2 [agave jobs-enabled?]
   DeAgaveClient
-  (publicAppGroup [this]
-    (v1/public-app-group))
-  (listPublicApps [this params]
-    (v1/list-public-apps agave jobs-enabled? params))
-  (searchPublicApps [this search-term]
-    (v1/search-public-apps agave jobs-enabled? search-term))
-  (getApp [this app-id]
-    (v1/get-app agave irods-home app-id))
-  (getAppDeployedComponent [this app-id]
-    (v1/get-deployed-component-for-app agave app-id))
-  (getAppDetails [this app-id]
-    (v1/get-app-details agave app-id))
-  (submitJob [this submission]
-    (v1/submit-job agave irods-home submission))
-  (listJobs [this]
-    (v1/list-jobs agave jobs-enabled? irods-home))
-  (listJobs [this job-ids]
-    (v1/list-jobs agave jobs-enabled? irods-home job-ids))
-  (listRawJob [this job-id]
-    (v1/list-raw-job agave jobs-enabled? irods-home job-id))
-  (listJobIds [this]
-    (v1/list-job-ids agave))
-  (getJobParams [this job-id]
-    (v1/get-job-params agave irods-home job-id))
-  (getAppRerunInfo [this job-id]
-    (v1/get-app-rerun-info agave irods-home job-id))
-  (translateJobStatus [this status]
-    (v1/translate-job-status status)))
+  (hpcAppGroup [_]
+    (v2/hpc-app-group))
+  (listApps [_]
+    (v2/list-apps agave jobs-enabled?))
+  (searchApps [_ search-term]
+    (v2/search-apps agave jobs-enabled? search-term))
+  (getApp [_ app-id]
+    (v2/get-app agave app-id))
+  (getAppDetails [_ app-id]
+    (v2/get-app-details agave app-id))
+  (getAppDeployedComponent [_ app-id]
+    (v2/get-app-deployed-component agave app-id))
+  (submitJob [_ submission]
+    (v2/submit-job agave submission))
+  (listJobs [_]
+    (v2/list-jobs agave jobs-enabled?))
+  (listJobs [_ job-ids]
+    (v2/list-jobs agave jobs-enabled? job-ids))
+  (listJob [_ job-id]
+    (v2/list-job agave jobs-enabled? job-id))
+  (listJobIds [_]
+    (mapv :id (.listJobs agave)))
+  (getJobParams [_ job-id]
+    (v2/get-job-params agave job-id))
+  (getAppRerunInfo [_ job-id]
+    (v2/get-app-rerun-info agave job-id))
+  (translateJobStatus [_ status]
+    (v2/translate-job-status status)))
 
-(defn de-agave-client-v1
-  [base-url proxy-user proxy-pass user jobs-enabled? irods-home]
-  (DeAgaveClientV1.
-   (core/agave-client-v1 base-url proxy-user proxy-pass user)
-   jobs-enabled?
-   irods-home))
+(defn de-agave-client-v2
+  [base-url storage-system token-info-fn jobs-enabled? & {:keys [timeout] :or {timeout 5000}}]
+  (DeAgaveClientV2.
+   (core/agave-client-v2 base-url storage-system token-info-fn :timeout timeout)
+   jobs-enabled?))

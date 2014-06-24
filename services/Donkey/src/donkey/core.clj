@@ -20,6 +20,10 @@
         [donkey.routes.filesystem]
         [donkey.routes.search]
         [donkey.routes.coge]
+        [donkey.routes.oauth]
+        [donkey.routes.favorites]
+        [donkey.routes.tags]
+        [donkey.routes.comments]
         [donkey.auth.user-attributes]
         [donkey.util]
         [donkey.util.service]
@@ -61,9 +65,14 @@
    (secured-session-routes)
    (secured-fileio-routes)
    (secured-filesystem-routes)
+   (secured-filesystem-metadata-routes)
    (secured-coge-routes)
    (secured-admin-routes)
    (secured-search-routes)
+   (secured-oauth-routes)
+   (secured-favorites-routes)
+   (secured-tag-routes)
+   (secured-comment-routes)
    (route/not-found (unrecognized-path-response))))
 
 (defn cas-store-user
@@ -97,14 +106,44 @@
   []
   (nrepl/start-server :port 7888))
 
+(defn- iplant-conf-dir-file
+  [filename]
+  (when-let [conf-dir (System/getenv "IPLANT_CONF_DIR")]
+    (let [f (file conf-dir filename)]
+      (when (.isFile f) (.getPath f)))))
+
+(defn- cwd-file
+  [filename]
+  (let [f (file filename)]
+    (when (.isFile f) (.getPath f))))
+
+(defn- classpath-file
+  [filename]
+  (-> (Thread/currentThread)
+      (.getContextClassLoader)
+      (.findResource filename)
+      (.toURI)
+      (file)))
+
+(defn- no-configuration-found
+  [filename]
+  (throw (RuntimeException. (str "configuration file " filename " not found"))))
+
+(defn- find-configuration-file
+  []
+  (let [conf-file "donkey.properties"]
+    (or (iplant-conf-dir-file conf-file)
+        (cwd-file conf-file)
+        (classpath-file conf-file)
+        (no-configuration-found conf-file))))
+
 (defn load-configuration-from-file
   "Loads the configuration properties from a file."
-  ([cfg-path]
-   (config/load-config-from-file cfg-path)
-   (db/define-database))
   ([]
-   (config/load-config-from-file)
-   (db/define-database)))
+     (load-configuration-from-file (find-configuration-file)))
+  ([path]
+     (config/load-config-from-file path)
+     (db/define-database)))
 
 (defn lein-ring-init
   []
@@ -122,12 +161,12 @@
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler routes-fn)
-    (wrap-multipart-params {:store fileio/store-irods})
-    trap-handler
-    req-logger
-    wrap-keyword-params
-    wrap-lcase-params
-    wrap-query-params))
+      (wrap-multipart-params {:store fileio/store-irods})
+      trap-handler
+      req-logger
+      wrap-keyword-params
+      wrap-lcase-params
+      wrap-query-params))
 
 (def app
   (site-handler donkey-routes))
@@ -154,7 +193,6 @@
       (ccli/exit 1 "The config file is not readable."))
     (config/load-config-from-file (:config options))
     (db/define-database)
-    (start-nrepl)
     (messages/messaging-initialization)
     (icat/configure-icat)
     (anon/create-anon-user)

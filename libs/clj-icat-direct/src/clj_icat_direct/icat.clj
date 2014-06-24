@@ -128,3 +128,34 @@
         query (format (:paged-folder-listing q/queries) sc so)
         p     (partial add-permission user)]
     (map p (run-query-string query user zone folder-path limit offset))))
+
+(defn select-files-with-uuids
+  "Given a set of UUIDs, it returns a list of UUID-path pairs for each UUID that corresponds to a
+   file."
+  [uuids]
+  ; This can't be run as a simple query.  I suspect the UUID db type is causing trouble
+  (let [query (format (:select-files-with-uuids q/queries) (q/prepare-text-set uuids))]
+    (run-query-string query)))
+
+(defn select-folders-with-uuids
+  "Given a set of UUIDs, it returns a list of UUID-path pairs for each UUID that corresponds to a
+   folder."
+  [uuids]
+  ; This can't be run as a simple query. I suspect the UUID db type is causing trouble
+  (let [query (format (:select-folders-with-uuids q/queries) (q/prepare-text-set uuids))]
+    (run-query-string query)))
+
+(defn paged-uuid-listing
+  "Returns a page of filesystem entries corresponding to a list a set of UUIDs."
+  [user zone sort-column sort-order limit offset uuids]
+  (if-not (contains? sort-columns sort-column)
+    (throw (Exception. (str "Invalid sort-column " sort-column))))
+
+  (if-not (contains? sort-orders sort-order)
+    (throw (Exception. (str "Invalid sort-order " sort-order))))
+
+  (let [sc    (get sort-columns sort-column)
+        so    (get sort-orders sort-order)
+        query (format (:paged-uuid-listing q/queries) (q/prepare-text-set uuids) sc so)
+        p     (partial add-permission user)]
+    (map p (run-query-string query user zone limit offset))))

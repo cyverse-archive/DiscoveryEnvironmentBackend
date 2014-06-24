@@ -1,6 +1,7 @@
 (ns donkey.util.config
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.config :as cc]
+  (:require [cemerick.url :as curl]
+            [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]
             [clojure.core.memoize :as memo]
             [clj-jargon.init :as jg]))
@@ -20,7 +21,7 @@
 (defn masked-config
   "Returns a masked version of the Donkey config as a map."
   []
-  (cc/mask-config props :filters [#"(?:irods|agave)[-.](?:user|pass)"]))
+  (cc/mask-config props :filters [#"(?:irods|agave)[-.](?:user|pass|key|secret)"]))
 
 (cc/defprop-int listen-port
   "The port that donkey listens to."
@@ -67,6 +68,11 @@
   "Enables or disables notification endpoints."
   [props config-valid configs]
   "donkey.routes.notifications" true)
+
+(cc/defprop-optboolean app-routes-enabled
+  "Enables or disables app endpoints."
+  [props config-valid configs]
+  "donkey.routes.apps" true)
 
 (cc/defprop-optboolean metadata-routes-enabled
   "Enables or disables metadata endpoints."
@@ -150,32 +156,32 @@
 
 (cc/defprop-str iplant-email-base-url
   "The base URL to use when connnecting to the iPlant email service."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.email.base-url")
 
 (cc/defprop-str tool-request-dest-addr
   "The destination email address for tool request messages."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.email.tool-request-dest")
 
 (cc/defprop-str tool-request-src-addr
   "The source email address for tool request messages."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.email.tool-request-src")
 
 (cc/defprop-str feedback-dest-addr
   "The destination email address for DE feedback messages."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.email.feedback-dest")
 
 (cc/defprop-str metadactyl-base-url
   "The base URL to use when connecting to secured Metadactyl services."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.metadactyl.base-url")
 
 (cc/defprop-str metadactyl-unprotected-base-url
   "The base URL to use when connecting to unsecured Metadactyl services."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.metadactyl.unprotected-base-url")
 
 (cc/defprop-str notificationagent-base-url
@@ -200,7 +206,7 @@
 
 (cc/defprop-str jex-base-url
   "The base URL for the JEX."
-  [props config-valid configs metadata-routes-enabled]
+  [props config-valid configs app-routes-enabled]
   "donkey.jex.base-url")
 
 ;;;RabbitMQ connection information
@@ -356,6 +362,45 @@
   "donkey.db.password")
 ;;;End database connection information
 
+;;;Metadata database connection information
+(cc/defprop-str metadata-db-driver-class
+  "The name of the JDBC driver to use."
+  [props config-valid configs]
+  "donkey.metadata.driver" )
+
+(cc/defprop-str metadata-db-subprotocol
+  "The subprotocol to use when connecting to the database (e.g.
+   postgresql)."
+  [props config-valid configs]
+  "donkey.metadata.subprotocol")
+
+(cc/defprop-str metadata-db-host
+  "The host name or IP address to use when
+   connecting to the database."
+  [props config-valid configs]
+  "donkey.metadata.host")
+
+(cc/defprop-str metadata-db-port
+  "The port number to use when connecting to the database."
+  [props config-valid configs]
+  "donkey.metadata.port")
+
+(cc/defprop-str metadata-db-name
+  "The name of the database to connect to."
+  [props config-valid configs]
+  "donkey.metadata.db")
+
+(cc/defprop-str metadata-db-user
+  "The username to use when authenticating to the database."
+  [props config-valid configs]
+  "donkey.metadata.user")
+
+(cc/defprop-str metadata-db-password
+  "The password to use when authenticating to the database."
+  [props config-valid configs]
+  "donkey.metadata.password")
+;;;End Metadata database connection information
+
 ;;;OSM connection information
 (cc/defprop-str osm-base-url
   "The base URL to use when connecting to the OSM."
@@ -371,17 +416,17 @@
 
 (def jargon-cfg
   (memo/memo
-    #(jg/init
-       (irods-host)
-       (irods-port)
-       (irods-user)
-       (irods-pass)
-       (irods-home)
-       (irods-zone)
-       (irods-resc)
-       :max-retries (irods-max-retries)
-       :retry-sleep (irods-retry-sleep)
-       :use-trash   (irods-use-trash))))
+   #(jg/init
+     (irods-host)
+     (irods-port)
+     (irods-user)
+     (irods-pass)
+     (irods-home)
+     (irods-zone)
+     (irods-resc)
+     :max-retries (irods-max-retries)
+     :retry-sleep (irods-retry-sleep)
+     :use-trash   (irods-use-trash))))
 ;;; End iRODS configuration
 
 ;;; ICAT connection information
@@ -517,7 +562,7 @@
 
 (cc/defprop-str nibblonian-base-url
   "The base URL for the Nibblonian data management services."
-  [props config-valid configs metadata-routes-enabled data-routes-enabled
+  [props config-valid configs app-routes-enabled data-routes-enabled
    tree-viewer-routes-enabled]
   "donkey.nibblonian.base-url")
 
@@ -541,20 +586,41 @@
   [props config-valid configs agave-enabled]
   "donkey.agave.base-url")
 
-(cc/defprop-str agave-user
-  "The username to use when authenticating to Agave."
+(cc/defprop-str agave-key
+  "The API key to use when authenticating to Agave."
   [props config-valid configs agave-enabled]
-  "donkey.agave.user")
+  "donkey.agave.key")
 
-(cc/defprop-str agave-pass
-  "The password to use when authenticating to Agave."
+(cc/defprop-str agave-secret
+  "The API secret to use when authenticating to Agave."
   [props config-valid configs agave-enabled]
-  "donkey.agave.pass")
+  "donkey.agave.secret")
+
+(cc/defprop-str agave-oauth-base
+  "The base URL for the Agave OAuth 2.0 endpoints."
+  [props config-valid configs agave-enabled]
+  "donkey.agave.oauth-base")
+
+(cc/defprop-int agave-oauth-refresh-window
+  "The number of minutes before a token expires to refresh it."
+  [props config-valid configs agave-enabled]
+  "donkey.agave.oauth-refresh-window")
+
+(cc/defprop-str agave-redirect-uri
+  "The redirect URI used after Agave authorization."
+  [props config-valid configs agave-enabled]
+  "donkey.agave.redirect-uri")
 
 (cc/defprop-str agave-callback-base
   "The base URL for receiving job status update callbacks from Agave."
   [props config-valid configs #(and (agave-enabled) (agave-jobs-enabled))]
   "donkey.agave.callback-base")
+
+(cc/defprop-optstr agave-storage-system
+  "The storage system that Agave should use when interacting with the DE."
+  [props config-valid configs agave-enabled]
+  "donkey.agave.storage-system"
+  "data.iplantcollaborative.org")
 
 (cc/defprop-str coge-genome-load-url
   "The COGE service URL for loading genomes and creating viewer URLs."
@@ -601,6 +667,16 @@
   [props config-valid configs]
   "donkey.tree-urls.host")
 
+(cc/defprop-optstr keyring-path
+  "The path to the secure PGP keyring."
+  [props config-valid configs]
+  "donkey.pgp.keyring-path"
+  "/etc/iplant/de/crypto/secring.gpg")
+
+(cc/defprop-str key-password
+  "The password needed to unlock the PGP password."
+  [props config-valid configs]
+  "donkey.pgp.key-password")
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
@@ -610,7 +686,27 @@
 
 (defn- exception-filters
   []
-  (filter #(not (nil? %)) [(icat-password) (icat-user) (irods-pass) (irods-user) (agave-pass)]))
+  (filter #(not (nil? %))
+          [(icat-password) (icat-user) (irods-pass) (irods-user) (agave-key) (agave-secret)]))
+
+(defn- oauth-settings
+  [api-name api-key api-secret token-uri redirect-uri refresh-window]
+  {:api-name       api-name
+   :client-key     api-key
+   :client-secret  api-secret
+   :token-uri      token-uri
+   :redirect-uri   redirect-uri
+   :refresh-window (* refresh-window 60 1000)})
+
+(def agave-oauth-settings
+  (memoize
+   #(oauth-settings
+     "agave"
+     (agave-key)
+     (agave-secret)
+     (str (curl/url (agave-oauth-base) "token"))
+     (agave-redirect-uri)
+     (agave-oauth-refresh-window))))
 
 (defn load-config-from-file
   "Loads the configuration settings from a file."
@@ -619,9 +715,3 @@
   (cc/log-config props :filters [#"irods\.user" #"icat\.user" #"oauth\.pem"])
   (validate-config)
   (ce/register-filters (exception-filters)))
-
-(defn load-config-from-file?
-  "Returns true if Donkey should read the config from a file."
-  []
-  (and (System/getenv "IPLANT_CONF_LOAD_FILE")
-       (System/getenv "IPLANT_CONF_DIR")))

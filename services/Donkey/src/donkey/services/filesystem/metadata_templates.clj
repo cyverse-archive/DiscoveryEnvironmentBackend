@@ -1,11 +1,24 @@
 (ns donkey.services.filesystem.metadata-templates
   (:use [donkey.services.filesystem.common-paths]
         [korma.core]
-        [korma.db :only [with-db]])
-  (:require [dire.core :refer [with-pre-hook! with-post-hook!]]
+        [korma.db :only [with-db]]
+        [slingshot.slingshot :only [throw+]])
+  (:require [clojure-commons.error-codes :as error-codes]
+            [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.db :as db]
             [donkey.util.service :as service])
   (:import [java.util UUID]))
+
+(defn- get-metadata-template
+  [id]
+  (with-db db/de
+    (first (select :metadata_templates (where {:id id})))))
+
+(defn validate-metadata-template-exists
+  [id]
+  (when-not (get-metadata-template (UUID/fromString id))
+    (throw+ {:error_code error-codes/ERR_DOES_NOT_EXIST
+             :metadata_template id})))
 
 (defn- list-metadata-templates
   []
@@ -16,7 +29,7 @@
 
 (defn- get-metadata-template-name
   [id]
-  (if-let [template-name (:name (first (select :metadata_templates (where {:id id}))))]
+  (if-let [template-name (:name (get-metadata-template id))]
     template-name
     (service/not-found "metadata template" id)))
 
@@ -95,3 +108,4 @@
     (log-call "do-metadata-attribute-view" id)))
 
 (with-post-hook! #'do-metadata-attribute-view (log-func "do-metadata-attribute-view"))
+

@@ -1,4 +1,4 @@
-(defproject org.iplantc/kameleon "3.1.4"
+(defproject org.iplantc/kameleon "3.1.7"
   :description "Library for interacting with backend relational databases."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -13,7 +13,7 @@
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.6"]
-                 [korma "0.3.0-RC4"]
+                 [korma "0.3.0-RC5"]
                  [postgresql "9.0-801.jdbc4"]
                  [slingshot "0.10.3"]]
   :plugins [[lein-marginalia "0.7.1"]]

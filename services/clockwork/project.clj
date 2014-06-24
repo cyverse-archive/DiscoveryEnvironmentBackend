@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/clockwork "3.1.4"
+(defproject org.iplantc/clockwork "3.1.7"
   :description "Scheduled jobs for the iPlant Discovery Environment"
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -27,18 +27,18 @@
                  [clj-time "0.4.5"]
                  [clojurewerkz/quartzite "1.0.1"]
                  [com.cemerick/url "0.0.7"]
-                 [korma "0.3.0-RC2"]
+                 [korma "0.3.0-RC5"]
                  [log4j "1.2.17"]
-                 [org.iplantc/clj-jargon "3.1.4"
+                 [org.iplantc/clj-jargon "3.1.7"
                   :exclusions [[org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
-                 [org.iplantc/clojure-commons "3.1.4"]
-                 [org.iplantc/common-cli "3.1.4"]
-                 [org.iplantc/kameleon "3.1.4"]
+                 [org.iplantc/clojure-commons "3.1.7"]
+                 [org.iplantc/common-cli "3.1.7"]
+                 [org.iplantc/kameleon "3.1.7"]
                  [me.raynes/fs "1.4.4"]
                  [org.slf4j/slf4j-api "1.7.2"]
                  [org.slf4j/slf4j-log4j12 "1.6.6"]
                  [slingshot "0.10.3"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.1.4"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.1.7"]]
   :profiles {:dev {:resource-paths ["resources/test"]}}
   :aot [clockwork.core]
   :main clockwork.core

@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/conrad "3.1.4"
+(defproject org.iplantc/conrad "3.1.7"
   :description "Back-End Services for the iPlant Administrative Console"
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -22,20 +22,20 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.6"]
                  [org.clojure/java.jdbc "0.2.3"]
-                 [org.iplantc/clj-cas "3.1.4"]
-                 [org.iplantc/kameleon "3.1.4"]
-                 [org.iplantc/clojure-commons "3.1.4"]
-                 [org.iplantc/common-cli "3.1.4"]
+                 [org.iplantc/clj-cas "3.1.7"]
+                 [org.iplantc/kameleon "3.1.7"]
+                 [org.iplantc/clojure-commons "3.1.7"]
+                 [org.iplantc/common-cli "3.1.7"]
                  [me.raynes/fs "1.4.4"]
                  [cheshire "5.0.2"]
                  [compojure "1.1.5"]
                  [swank-clojure "1.4.3"]
                  [log4j/log4j "1.2.17"]
                  [c3p0/c3p0 "0.9.1.2"]
-                 [korma/korma "0.3.0-RC4"]
+                 [korma/korma "0.3.0-RC5"]
                  [ring/ring-jetty-adapter "1.1.0"]
                  [postgresql/postgresql "9.0-801.jdbc4"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.1.4"]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.1.7"]
             [lein-ring "0.8.3"]
             [lein-swank "1.4.5"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}

@@ -960,3 +960,19 @@ ALTER TABLE ONLY user_saved_searches
     FOREIGN KEY (user_id)
     REFERENCES users(id);
 CREATE INDEX user_saved_searches_user_id_idx ON user_sessions(user_id);
+
+--
+-- The primary key for the access_tokens table.
+--
+ALTER TABLE ONLY access_tokens
+    ADD CONSTRAINT access_tokens_pkey
+    PRIMARY KEY (webapp, user_id);
+
+--
+-- Foreign key constraint for the user_id column of the access_tokens
+-- table.
+--
+ALTER TABLE ONLY access_tokens
+    ADD CONSTRAINT access_tokens_user_id_fkey
+    FOREIGN KEY (user_id)
+    REFERENCES users(id);

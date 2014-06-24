@@ -37,6 +37,11 @@
                             "]" "\\]"})
        "]"))
 
+(defn prepare-text-set
+  "Given a set, it prepares the elements for injection into an SQL query. It returns a string
+   containing the quoted values separated by commas."
+  [values]
+  (string/join ", " (map #(str \' % \') values)))
 
 (def queries
   {:count-items-in-folder
@@ -138,12 +143,17 @@
            c.modify_ts                            as modify_ts,
            'collection'                           as type,
            0                                      as data_size,
-           a.access_type_id                       as access_type_id
+           m.meta_attr_value                      as uuid,
+           MAX(a.access_type_id)                  as access_type_id
       FROM r_coll_main c
       JOIN r_objt_access a ON c.coll_id = a.object_id
       JOIN parent p ON c.parent_coll_name = p.coll_name
+      JOIN r_objt_metamap mm ON mm.object_id = c.coll_id
+      JOIN r_meta_main m ON m.meta_id = mm.meta_id 
      WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
        AND c.coll_type != 'linkPoint'
+       AND m.meta_attr_name = 'ipc_UUID'
+  GROUP BY dir_name, full_path, base_name, c.create_ts, c.modify_ts, type, data_size, uuid
   ORDER BY base_name ASC"
 
    :count-files-in-folder
@@ -256,6 +266,7 @@
                     p.data_size,
                     p.create_ts,
                     p.modify_ts,
+                    p.uuid,
                     p.type
     FROM ( SELECT c.coll_name                       as dir_name,
                   c.coll_name || '/' || d.data_name as full_path,
@@ -264,13 +275,17 @@
                   (array_agg(d.modify_ts))[1]       as modify_ts,
                   'dataobject'                      as type,
                   (array_agg(d.data_size))[1]       as data_size,
+                  m.meta_attr_value                 as uuid,
                   (array_agg(a.access_type_id))[1]  as access_type_id
              FROM r_objt_access a
              JOIN data_objs d ON a.object_id = d.data_id
              JOIN r_coll_main c ON c.coll_id = d.coll_id
+             JOIN r_objt_metamap om ON om.object_id = d.data_id
+             JOIN r_meta_main m ON m.meta_id = om.meta_id
             WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
               AND a.object_id IN ( SELECT data_id FROM data_objs )
-         GROUP BY c.coll_name, d.data_name
+              AND m.meta_attr_name = 'ipc_UUID'
+         GROUP BY c.coll_name, d.data_name, uuid
             UNION
            SELECT c.parent_coll_name                     as dir_name,
                   c.coll_name                            as full_path,
@@ -279,12 +294,78 @@
                   c.modify_ts                            as modify_ts,
                   'collection'                           as type,
                   0                                      as data_size,
+                  m.meta_attr_value                      as uuid,
                   a.access_type_id                       as access_type_id
              FROM r_coll_main c
              JOIN r_objt_access a ON c.coll_id = a.object_id
              JOIN parent p ON c.parent_coll_name = p.coll_name
+             JOIN r_objt_metamap om ON om.object_id = c.coll_id
+             JOIN r_meta_main m ON m.meta_id = om.meta_id
             WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-              AND c.coll_type != 'linkPoint') AS p
+              AND c.coll_type != 'linkPoint'
+              AND m.meta_attr_name = 'ipc_UUID') AS p
     ORDER BY p.type ASC, %s %s
        LIMIT ?
+      OFFSET ?"
+
+   :select-files-with-uuids
+   "SELECT DISTINCT m.meta_attr_value                   uuid,
+                    (c.coll_name || '/' || d.data_name) path,
+                    1000 * CAST(d.create_ts AS BIGINT)  \"date-created\",
+                    1000 * CAST(d.modify_ts AS BIGINT)  \"date-modified\",
+                    d.data_size                         \"file-size\"
+      FROM r_meta_main m
+        JOIN r_objt_metamap o ON m.meta_id = o.meta_id
+        JOIN r_data_main d ON o.object_id = d.data_id
+        JOIN r_coll_main c ON d.coll_id = c.coll_id
+      WHERE m.meta_attr_name = 'ipc_UUID' AND m.meta_attr_value IN (%s)"
+
+   :select-folders-with-uuids
+   "SELECT m.meta_attr_value                  uuid,
+           c.coll_name                        path,
+           1000 * CAST(c.create_ts AS BIGINT) \"date-created\",
+           1000 * CAST(c.modify_ts AS BIGINT) \"date-modified\"
+      FROM r_meta_main m
+        JOIN r_objt_metamap o ON m.meta_id = o.meta_id
+        JOIN r_coll_main c ON o.object_id = c.coll_id
+      WHERE m.meta_attr_name = 'ipc_UUID' AND m.meta_attr_value IN (%s)"
+
+   :paged-uuid-listing
+   "WITH groups AS (SELECT group_user_id
+                      FROM r_user_group
+                      WHERE user_id IN (SELECT user_id
+                                          FROM r_user_main
+                                          WHERE user_name = ? AND zone_name = ?)),
+         uuids AS (SELECT m.meta_attr_value uuid,
+                          o.object_id
+                     FROM r_meta_main m JOIN r_objt_metamap o ON m.meta_id = o.meta_id
+                     WHERE m.meta_attr_name = 'ipc_UUID'
+                       AND m.meta_attr_value IN (%s)
+                       AND o.object_id IN (SELECT object_id
+                                             FROM r_objt_access
+                                             WHERE user_id in (SELECT group_user_id FROM groups)))
+    SELECT *
+      FROM (SELECT c.coll_name                            AS full_path,
+                   regexp_replace(c.coll_name, '.*/', '') AS base_name,
+                   0                                      AS data_size,
+                   c.create_ts                            AS create_ts,
+                   c.modify_ts                            AS modify_ts,
+                   u.uuid                                 AS uuid,
+                   'collection'                           AS type
+                   FROM uuids u JOIN r_coll_main c ON u.object_id = c.coll_id
+                   WHERE c.coll_type != 'linkPoint'
+            UNION
+            SELECT (c.coll_name || '/' || d.data_name) AS full_path,
+                   d.data_name                         AS base_name,
+                   (array_agg(d.data_size))[1]         AS data_size,
+                   (array_agg(d.create_ts))[1]         AS create_ts,
+                   (array_agg(d.modify_ts))[1]         AS modify_ts,
+                   u.uuid                              AS uuid,
+                   'dataobject'                        AS type
+              FROM uuids u
+                JOIN r_data_main d ON u.object_id = d.data_id
+                JOIN r_coll_main c ON d.coll_id = c.coll_id
+              GROUP BY full_path, base_name, uuid) p
+      ORDER BY type ASC, %s %s
+      LIMIT ?
       OFFSET ?"})

@@ -27,6 +27,6 @@
 
 (defn receive-agave-job-status-update
   "Receives notification from Agave that a job status has changed."
-  [uuid]
-  (apps/update-agave-job-status uuid)
+  [uuid {:keys [status end-time]}]
+  (apps/update-agave-job-status uuid status end-time)
   (service/success-response))

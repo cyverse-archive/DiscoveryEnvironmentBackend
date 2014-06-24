@@ -10,6 +10,7 @@
         [donkey.services.filesystem.create]
         [donkey.services.filesystem.metadata]
         [donkey.services.filesystem.metadata-templates]
+        [donkey.services.filesystem.metadata-template-avus]
         [donkey.services.filesystem.sharing]
         [donkey.services.filesystem.preview]
         [donkey.services.filesystem.exists]
@@ -22,6 +23,7 @@
         [donkey.services.filesystem.copy]
         [donkey.services.filesystem.page-file]
         [donkey.services.filesystem.page-csv]
+        [donkey.services.filesystem.uuids]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]
@@ -162,4 +164,33 @@
           (controller req do-read-csv-chunk :params :body))
 
     (POST "/filesystem/anon-files" [:as req]
-          (controller req do-anon-files :params :body))))
+          (controller req do-anon-files :params :body))
+
+    (POST "/filesystem/paths-for-uuids" [:as req]
+          (controller req do-paths-for-uuids :params :body))
+
+    (POST "/filesystem/uuids-for-paths" [:as req]
+          (controller req do-uuids-for-paths :params :body))))
+
+(defn secured-filesystem-metadata-routes
+  "The routes for file metadata endpoints."
+  []
+  (optional-routes
+   [#(and (config/filesystem-routes-enabled)
+          (config/metadata-routes-enabled))]
+
+   (GET "/filesystem/:data-id/template-avus" [data-id :as req]
+        (controller req do-metadata-template-avu-list :params data-id))
+
+   (GET "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
+        (controller req do-metadata-template-avu-list :params data-id template-id))
+
+   (POST "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
+        (controller req do-set-metadata-template-avus :params data-id template-id :body))
+
+   (DELETE "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
+        (controller req do-remove-metadata-template-avus :params data-id template-id))
+
+   (DELETE "/filesystem/:data-id/template-avus/:template-id/:avu-id" [data-id template-id avu-id :as req]
+        (controller req do-remove-metadata-template-avus :params data-id template-id avu-id))))
+

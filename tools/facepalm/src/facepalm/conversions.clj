@@ -2,7 +2,8 @@
   (:use [clojure.java.io :only [file reader]]
         [cemerick.pomegranate :only [add-dependencies]])
   (:require [clojure.string :as string]
-            [clojure-commons.file-utils :as fu])
+            [clojure-commons.file-utils :as fu]
+            [me.raynes.fs :as fs])
   (:import [java.io PushbackReader]))
 
 (def ^:private dependency-filename
@@ -76,12 +77,12 @@
       eval))
 
 (defn- list-conversions
-  [dir]
+  []
   (filter
    #(re-seq #"^c.*_[0-9]{10}\.clj$" (fu/basename %1))
    (map
     str
-    (.listFiles (file dir "conversions")))))
+    (.listFiles (fs/file "conversions")))))
 
 (defn- load-conversions
   [cv-list]
@@ -95,16 +96,16 @@
       (read r))))
 
 (defn load-dependencies
-  [dir]
-  (let [f (file dir dependency-filename)]
+  []
+  (let [f (fs/file dependency-filename)]
     (when (.isFile f)
       (let [{:keys [dependencies repositories]} (load-dependency-file f)]
         (add-dependencies :coordinates dependencies
                           :repositories (merge default-repositories repositories))))))
 
 (defn conversion-map
-  [dir]
-  (load-dependencies dir)
-  (let [conversions (list-conversions dir)]
+  []
+  (load-dependencies)
+  (let [conversions (list-conversions)]
     (load-conversions conversions)
     (into {} (map #(vector (fname->db-version %) (fname->cv-ref %)) conversions))))

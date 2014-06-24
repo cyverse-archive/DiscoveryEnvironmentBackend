@@ -9,7 +9,11 @@
 (def accepted-timestamp-formats
   ^{:private true
     :doc "The formats that we support for incoming timestamps"}
-  ["EEE MMM dd YYYY HH:mm:ss 'GMT'Z" "YYYY MMM dd HH:mm:ss"])
+  ["EEE MMM dd YYYY HH:mm:ss 'GMT'Z"
+   "YYYY MMM dd HH:mm:ss"
+   "YYYY-MM-dd-HH-mm-ss.SSS"
+   "YYYY-MM-dd HH:mm:ss.SSS"
+   "YYYY-MM-dd'T'HH:mm:ss.SSSZ"])
 
 (def date-formatter
   ^{:private true

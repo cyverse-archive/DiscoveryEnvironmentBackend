@@ -118,7 +118,7 @@
         (if (exists? cm new-path) (delete cm new-path))
         (move cm tmp-path new-path :user user :admin-users (irods-admins) :skip-source-perms? true)
         (set-owner cm new-path user)
-        {:file (stat/path-stat user new-path)}))))
+        {:file (stat/path-stat cm user new-path)}))))
 
 (defn url-encoded?
   [string-to-check]
@@ -240,4 +240,7 @@
          :body istream}
       (rsp-utils/header
         "Content-Disposition"
-        (str "attachment; filename=\"" (ft/basename file-path) "\"")))))
+        (str "attachment; filename=\"" (ft/basename file-path) "\""))
+      (rsp-utils/header
+       "Content-Type"
+       "application/octet-stream"))))

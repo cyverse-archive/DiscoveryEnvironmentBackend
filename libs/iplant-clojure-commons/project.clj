@@ -1,4 +1,4 @@
-(defproject org.iplantc/clojure-commons "3.1.4"
+(defproject org.iplantc/clojure-commons "3.1.7"
   :description "Common Utilities for Clojure Projects"
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -17,6 +17,7 @@
                  [clj-http-fake "0.4.1"]
                  [com.cemerick/url "0.0.7"]
                  [log4j/log4j "1.2.17"]
+                 [me.raynes/fs "1.4.5"]
                  [slingshot "0.10.3"]
                  [org.mongodb/mongo-java-driver "2.10.1"]
                  [commons-configuration/commons-configuration "1.8"]

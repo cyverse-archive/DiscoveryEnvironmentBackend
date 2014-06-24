@@ -34,6 +34,10 @@
   [opts]
   (update-database opts))
 
+(def ^:private db-admin-user
+  "The admin user to connect as an admin."
+  "postgres")
+
 (def ^:private default-jenkins-base
   "The base URL used to connect to Jenkins."
   "http://watson.iplantcollaborative.org/hudson")
@@ -57,14 +61,16 @@
 
 (def conversions (atom nil))
 
+(def admin-db-spec (atom nil))
+
 (defn set-conversions
   "Reads in the conversions from the unpacked build artifact. Set the conversions atom
    to the conversion map."
-  [unpacked-dir]
-  (let [conversion-dir (file unpacked-dir "conversions")]
+  []
+  (let [conversion-dir (fs/file "conversions")]
     (when (.exists conversion-dir)
       (println "Loading conversions...")
-      (reset! conversions (cnv/conversion-map unpacked-dir))
+      (reset! conversions (cnv/conversion-map))
       (println "Done loading conversions.")
       (println "Here are the loaded conversions: ")
       (dorun (map (partial println "   ") (sort (keys @conversions)))))))
@@ -172,17 +178,30 @@
 (defn- define-db
   "Defines the database connection settings."
   [{:keys [host port database user]}]
-  (let [password (get-password host port database user)]
-    (defdb de {:classname "org.postgresql.Driver"
-               :subprotocol "postgresql"
-               :subname (str "//" host ":" port "/" database)
-               :user user
-               :password (apply str password)})))
+  (let [db-spec {:classname "org.postgresql.Driver"
+                 :subprotocol "postgresql"
+                 :subname (str "//" host ":" port "/" database)}
+        password (get-password host port database user)
+        admin-password (pgpass/get-password host port database db-admin-user)]
+    (when admin-password
+      (reset! admin-db-spec
+              (postgres (assoc db-spec
+                          :schema "public"
+                           :user db-admin-user
+                           :password (apply str admin-password)))))
+    (defdb de (assoc db-spec
+                :user user
+                :password (apply str password)))))
 
 (defn- test-db
   "Test the database connection settings to ensure that the connection settings
    are correct."
-  [{:keys [host port database user]}]
+  [{:keys [mode host port database user]}]
+  (when (= :init (keyword mode))
+    (try+
+     (with-db @admin-db-spec (transaction))
+     (catch Exception e
+       (database-connection-failure host port database db-admin-user))))
   (try+
    (transaction)
    (catch Exception e
@@ -213,19 +232,19 @@
 
 (defn- get-build-artifact-from-url
   "Gets the build artifact from a URL."
-  [dir opts]
+  [opts]
   (let [artifact-url          (build-artifact-url opts)
         {:keys [status body]} (get-remote-resource artifact-url)]
     (if-not (< 199 status 300)
       (build-artifact-retrieval-failed status artifact-url))
     (with-open [in body]
-      (copy in (file dir (:filename opts))))))
+      (copy in (fs/file (:filename opts))))))
 
 (defn get-build-artifact-from-file
   "Gets the build artifact from a local file."
-  [dir filename]
+  [filename]
   (let [src (file filename)
-        dst (file dir (.getName src))]
+        dst (fs/file (.getName src))]
     (try+
      (copy src dst)
      (catch IOException e
@@ -234,17 +253,17 @@
 
 (defn- get-build-artifact
   "Obtains the database build artifact."
-  [dir {:keys [filename job qa-drop] :as opts}]
+  [{:keys [filename job qa-drop] :as opts}]
   (println "Retrieving the build artifact...")
   (if (every? string/blank? [qa-drop job])
-    (get-build-artifact-from-file dir filename)
-    (get-build-artifact-from-url dir opts)))
+    (get-build-artifact-from-file filename)
+    (get-build-artifact-from-url opts)))
 
 (defn- unpack-build-artifact
   "Unpacks the database build artifact after it has been obtained."
   [dir filename]
   (println "Unpacking the build artifact...")
-  (let [file-path   (.getPath (file dir (.getName (file filename))))
+  (let [file-path   (.getPath (fs/file (.getName (file filename))))
         exit-status (sh "tar" "xvf" file-path "-C" (.getPath dir))]
     (when-not (zero? exit-status)
       (build-artifact-expansion-failed))))
@@ -265,8 +284,8 @@
 
 (defn- load-sql-files
   "Loads SQL files from a subdirectory of the artifact directory."
-  [parent subdir-name]
-  (let [subdir (file parent subdir-name)]
+  [subdir-name]
+  (let [subdir (fs/file subdir-name)]
     (dorun (map load-sql-file
                 (sort-by #(.getName %) (.listFiles subdir))))))
 
@@ -288,12 +307,22 @@
       (log/error (.getNextException e) "next exception"))
     (recur (.getCause e))))
 
+(defn- init-database
+  "Refreshes the public schema and initializes extension scripts with the admin user."
+  [opts]
+  (try+
+   (refresh-public-schema (:user opts))
+   (with-db @admin-db-spec
+     (load-sql-files "extensions"))
+   (catch Exception e
+     (log-next-exception e)
+     (throw+))))
+
 (defn- apply-database-init-scripts
   "Applies the database initialization scripts to the database."
-  [dir opts]
+  []
   (try+
-    (refresh-public-schema (:user opts))
-    (dorun (map #(load-sql-files dir %) ["tables" "views" "data" "functions"]))
+    (dorun (map #(load-sql-files %) ["tables" "constraints" "views" "data" "functions"]))
     (catch Exception e
       (log-next-exception e)
       (throw+))))
@@ -303,10 +332,11 @@
    location."
   [opts]
   (with-temp-dir dir "-fp-" temp-directory-creation-failure
-    (get-build-artifact dir opts)
+    (get-build-artifact opts)
     (unpack-build-artifact dir (:filename opts))
-    (set-conversions dir)
-    (transaction (apply-database-init-scripts dir opts))))
+    (set-conversions)
+    (init-database opts)
+    (transaction (apply-database-init-scripts))))
 
 (defn- get-current-db-version
   "Gets the current database version, defaulting to 1.2.0:20120101.01 if the
@@ -349,9 +379,9 @@
   "Converts the database schema from one DE version to another."
   [opts]
   (with-temp-dir dir "-fp-" temp-directory-creation-failure
-    (get-build-artifact dir opts)
+    (get-build-artifact opts)
     (unpack-build-artifact dir (:filename opts))
-    (set-conversions dir)
+    (set-conversions)
     (let [versions (get-update-versions (get-current-db-version) (:version opts))]
       (validate-update-versions versions)
       (try+

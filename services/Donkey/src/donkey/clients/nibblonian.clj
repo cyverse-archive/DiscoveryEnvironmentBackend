@@ -30,8 +30,8 @@
 
 (defn stat
   "Obtains file status information for a path."
-  [path]
-  (st/path-stat (:shortUsername current-user) path))
+  [cm path]
+  (st/path-stat cm (:shortUsername current-user) path))
 
 (defn get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If

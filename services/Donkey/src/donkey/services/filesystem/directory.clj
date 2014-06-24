@@ -11,7 +11,10 @@
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]
-            [clj-icat-direct.icat :as icat]))
+            [donkey.services.filesystem.uuids :as uuids]
+            [donkey.persistence.metadata :as meta]
+            [clj-icat-direct.icat :as icat])
+  (:import [java.util UUID]))
 
 
 (defn get-paths-in-folder
@@ -39,10 +42,12 @@
 (defn- page-entry->map
   "Turns a entry in a paged listing result into a map containing file/directory
    information that can be consumed by the front-end."
-  [user {:keys [type full_path base_name data_size modify_ts create_ts access_type_id]}]
+  [user {:keys [type full_path base_name data_size modify_ts create_ts access_type_id uuid]}]
   (let [base-map {:id            full_path
+                  :uuid          uuid
                   :path          full_path
                   :label         base_name
+                  :isFavorite    (meta/is-favorite user (UUID/fromString uuid))
                   :filter        (or (should-filter? user full_path)
                                      (should-filter? user base_name))
                   :file-size     data_size
@@ -110,24 +115,27 @@
       (let [stat (stat cm path)
             scol (user-col->api-col sort-col)
             sord (user-order->api-order sort-order)
-            zone (irods-zone)]
+            zone (irods-zone)
+            uuid (:uuid (uuids/uuid-for-path cm user path))]
         (merge
-          (hash-map
-            :id               path
-            :path             path
-            :label            (id->label cm user path)
-            :filter           (should-filter? user path)
-            :permission       (permission-for cm user path)
-            :hasSubDirs       true
-            :date-created     (:date-created stat)
-            :date-modified    (:date-modified stat)
-            :file-size        0)
-          (icat/number-of-items-in-folder user zone path)
-          (icat/number-of-filtered-items-in-folder user zone path
-                                                   (fs-filter-chars)
-                                                   (fs-filter-files)
-                                                   (filtered-paths user))
-          (page->map user (icat/paged-folder-listing user zone path scol sord limit offset)))))))
+         (hash-map
+          :id               path
+          :uuid             uuid
+          :path             path
+          :label            (id->label cm user path)
+          :isFavorite       (meta/is-favorite user (UUID/fromString uuid))
+          :filter           (should-filter? user path)
+          :permission       (permission-for cm user path)
+          :hasSubDirs       true
+          :date-created     (:date-created stat)
+          :date-modified    (:date-modified stat)
+          :file-size        0)
+         (icat/number-of-items-in-folder user zone path)
+         (icat/number-of-filtered-items-in-folder user zone path
+                                                  (fs-filter-chars)
+                                                  (fs-filter-files)
+                                                  (filtered-paths user))
+         (page->map user (log/spy (icat/paged-folder-listing user zone path scol sord limit offset))))))))
 
 (defn list-directories
   "Lists the directories contained under path."
@@ -140,19 +148,22 @@
       (validators/path-is-dir cm path)
 
       (let [stat (stat cm path)
-            zone (irods-zone)]
+            zone (irods-zone)
+            uuid (:uuid (uuids/uuid-for-path cm user path))]
         (merge
-          (hash-map
-            :id            path
-            :path          path
-            :label         (id->label cm user path)
-            :filter        (should-filter? user path)
-            :permisssion   (permission-for cm user path)
-            :hasSubDirs    true
-            :date-created  (:date-created stat)
-            :date-modified (:date-modified stat)
-            :file-size     0)
-          (dissoc (page->map user (icat/list-folders-in-folder user zone path)) :files))))))
+         (hash-map
+          :id            path          
+          :uuid          uuid
+          :path          path
+          :label         (id->label cm user path)
+          :isFavorite    (meta/is-favorite user (UUID/fromString uuid))
+          :filter        (should-filter? user path)
+          :permisssion   (permission-for cm user path)
+          :hasSubDirs    true
+          :date-created  (:date-created stat)
+          :date-modified (:date-modified stat)
+          :file-size     0)
+         (dissoc (page->map user (icat/list-folders-in-folder user zone path)) :files))))))
 
 (defn- top-level-listing
   [{user :user}]
