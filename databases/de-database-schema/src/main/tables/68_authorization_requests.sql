@@ -5,7 +5,7 @@ SET search_path = public, pg_catalog;
 ---
 CREATE TABLE authorization_requests (
     id UUID NOT NULL,
-    user_id BIGINT UNIQUE NOT NULL,
+    user_id UUID UNIQUE NOT NULL,
     state_info TEXT NOT NULL,
     PRIMARY KEY (id)
 );

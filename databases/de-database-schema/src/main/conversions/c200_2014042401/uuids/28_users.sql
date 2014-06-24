@@ -55,6 +55,14 @@ UPDATE user_saved_searches SET user_id =
     (SELECT u.id FROM users u
      WHERE u.id_v187 = user_id_v187);
 
+UPDATE access_tokens SET user_id =
+    (SELECT u.id FROM users u
+     WHERE u.id_v187 = user_id_v187);
+
+UPDATE authorization_requests SET user_id =
+    (SELECT u.id FROM users u
+     WHERE u.id_v187 = user_id_v187);
+
 -- Add NOT NULL constraints on foreign key columns.
 ALTER TABLE ONLY workspace ALTER COLUMN user_id SET NOT NULL;
 ALTER TABLE ONLY ratings ALTER COLUMN user_id SET NOT NULL;
@@ -69,4 +77,6 @@ ALTER TABLE ONLY jobs ALTER COLUMN user_id SET NOT NULL;
 ALTER TABLE ONLY user_preferences ALTER COLUMN user_id SET NOT NULL;
 ALTER TABLE ONLY user_sessions ALTER COLUMN user_id SET NOT NULL;
 ALTER TABLE ONLY user_saved_searches ALTER COLUMN user_id SET NOT NULL;
+ALTER TABLE ONLY access_tokens ALTER COLUMN user_id SET NOT NULL;
+ALTER TABLE ONLY authorization_requests ALTER COLUMN user_id SET NOT NULL;
 

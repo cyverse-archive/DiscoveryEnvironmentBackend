@@ -204,7 +204,12 @@
   (println "\t* updating the tree_urls table")
   (load-sql-file "conversions/c200_2014042401/tables/65_tree_urls.sql")
   (println "\t* updating the user_saved_searches table")
-  (load-sql-file "conversions/c200_2014042401/tables/66_user_saved_searches.sql"))
+  (load-sql-file "conversions/c200_2014042401/tables/66_user_saved_searches.sql")
+  (println "\t* updating the access_tokens table")
+  (load-sql-file "conversions/c200_2014042401/tables/67_access_tokens.sql")
+  (println "\t* updating the authorization_requests table")
+  (load-sql-file "conversions/c200_2014042401/tables/68_authorization_requests.sql")
+  )
 
 
 ;; Update new UUID columns.
