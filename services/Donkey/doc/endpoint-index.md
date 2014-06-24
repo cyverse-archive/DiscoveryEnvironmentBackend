@@ -48,7 +48,7 @@
 * [GET /secured/edit-app/{app-id}](endpoints/updated-app-metadata.md#obtaining-an-app-representation-for-editing)
 * [GET /secured/edit-template/{analysis-id}](endpoints/app-metadata.md#making-an-analysis-available-for-editing-in-tito)
 * [GET /secured/edit-workflow/{analysis-id}](endpoints/app-metadata.md#making-a-pipeline-available-for-editing)
-* [GET /secured/favorites/filesystem](endpoints/favorites.md#listing-uuids-for-favorite-data)
+* [GET /secured/favorites/filesystem](endpoints/favorites.md#listing-stat-info-for-favorite-data)
 * [DELETE /secured/favorites/filesystem/{favorite}](endpoints/favorites.md#removing-a-data-resource-from-being-a-favorite)
 * [PUT /secured/favorites/filesystem/{favorite}](endpoints/favorites.md#marking-a-data-resource-as-favorite)
 * [POST /secured/favorites/filter](endpoints/favorites.md#filter-a-set-of-resources-for-favorites)
