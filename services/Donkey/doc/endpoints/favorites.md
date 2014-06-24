@@ -192,10 +192,9 @@ Any body attached to the request will be ignored.
 | 400         | one of the parameters was missing or had a nonsensical value. |
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 
-Upon success, the response body will be a [data collection](filesystem/stat.md) JSON
-document (but with the field `filesystem` instead of `paths`) containing the stat information of
-the favorite files and folders with an additional field `"success"` with the value `true`. The
-format of the JSON maps is the same as that for the /secured/filesystem/stat endpoint.
+Upon success, the response body will be a [data collection](#favorite-data-collection) JSON document
+containing the stat information of the favorite files and folders with an additional field `success`
+with the value `true`.
 
 Upon failure, a JSON document with `"success"` and `"reason"` fields will the returned. The
 `"success"` field will have the value `false`.  The `"reason"` field will provide a short, human
