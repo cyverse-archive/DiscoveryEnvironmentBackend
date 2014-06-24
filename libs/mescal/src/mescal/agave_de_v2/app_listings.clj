@@ -39,7 +39,7 @@
             :integrator_name      c/unknown-value
             :is_favorite          false
             :is_public            (:isPublic listing)
-            :pipeline_eligibility {:is_valid false :reason "HPC App"}
+            :pipeline_eligibility {:is_valid true}
             :rating               {:average 0.0}
             :step-count           1
             :wiki_url             ""))))
