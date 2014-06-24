@@ -12,10 +12,10 @@ ALTER TABLE ONLY validation_rules RENAME COLUMN rule_type TO rule_type_v187;
 ALTER TABLE ONLY validation_rules
   ALTER COLUMN id TYPE UUID USING
     CASE WHEN CHAR_LENGTH(id) < 36
-          THEN (uuid_generate_v4())
+          THEN (uuid_generate_v1())
           ELSE CAST(id AS UUID)
     END;
-ALTER TABLE ONLY validation_rules ALTER COLUMN id SET DEFAULT uuid_generate_v4();
+ALTER TABLE ONLY validation_rules ALTER COLUMN id SET DEFAULT uuid_generate_v1();
 ALTER TABLE ONLY validation_rules ADD COLUMN parameter_id UUID;
 ALTER TABLE ONLY validation_rules ADD COLUMN rule_type UUID;
 

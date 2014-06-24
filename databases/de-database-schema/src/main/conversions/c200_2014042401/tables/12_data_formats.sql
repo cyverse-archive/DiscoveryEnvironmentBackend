@@ -6,5 +6,5 @@ SET search_path = public, pg_catalog;
 ALTER TABLE ONLY data_formats RENAME COLUMN id TO id_v187;
 ALTER TABLE ONLY data_formats RENAME COLUMN guid TO id;
 ALTER TABLE ONLY data_formats ALTER COLUMN id TYPE UUID USING CAST(id AS UUID);
-ALTER TABLE ONLY data_formats ALTER COLUMN id SET DEFAULT uuid_generate_v4();
+ALTER TABLE ONLY data_formats ALTER COLUMN id SET DEFAULT uuid_generate_v1();
 

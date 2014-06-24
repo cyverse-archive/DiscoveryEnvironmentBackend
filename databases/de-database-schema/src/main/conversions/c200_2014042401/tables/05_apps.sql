@@ -11,10 +11,10 @@ ALTER TABLE ONLY apps RENAME COLUMN integration_data_id TO integration_data_id_v
 ALTER TABLE ONLY apps
   ALTER COLUMN id TYPE UUID USING
     CASE WHEN CHAR_LENGTH(id) < 36
-          THEN (uuid_generate_v4())
+          THEN (uuid_generate_v1())
           ELSE CAST(id AS UUID)
     END;
-ALTER TABLE ONLY apps ALTER COLUMN id SET DEFAULT uuid_generate_v4();
+ALTER TABLE ONLY apps ALTER COLUMN id SET DEFAULT uuid_generate_v1();
 ALTER TABLE ONLY apps ADD COLUMN integration_data_id UUID;
 ALTER TABLE ONLY apps ALTER COLUMN deleted SET DEFAULT false;
 ALTER TABLE ONLY apps ALTER COLUMN deleted SET NOT NULL;

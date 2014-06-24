@@ -4,7 +4,7 @@ SET search_path = public, pg_catalog;
 -- apps table
 --
 CREATE TABLE apps (
-    id uuid NOT NULL DEFAULT uuid_generate_v4(),
+    id uuid NOT NULL DEFAULT uuid_generate_v1(),
     name character varying(255),
     description character varying(255),
     deleted boolean DEFAULT false NOT NULL,
