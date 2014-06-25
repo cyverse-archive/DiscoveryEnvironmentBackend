@@ -5,15 +5,23 @@
         [slingshot.slingshot :only [throw+]])
   (:import [java.sql Timestamp]))
 
+(defn- version-table-exists?
+  []
+  (first
+   (select :information_schema.tables
+           (fields :table_name)
+           (where {:table_name "version"}))))
+
 (defn current-db-version
   "Determines the current database version."
   []
-  (-> (select version
-              (fields [:version])
-              (order :version :DESC)
-              (limit 1))
-      ffirst
-      val))
+  (when (version-table-exists?)
+    (-> (select version
+                (fields [:version])
+                (order :version :DESC)
+                (limit 1))
+        ffirst
+        val)))
 
 (defn check-db-version
   "Verifies that the current database version is the same as the version that
