@@ -111,6 +111,30 @@
      :groups           [c/hpc-group-overview]
      :suggested_groups [c/hpc-group-overview]}))
 
+(defn- build-data-object
+  [prop]
+  {:cmdSwitch      (:name prop)
+   :description    (:description prop)
+   :file_info_type "File"
+   :format         "Unspecified"
+   :id             (:id prop)
+   :multiplicity   "One"
+   :name           (:label prop)
+   :order          1
+   :required       (:required prop)
+   :retain         false})
+
+(defn- add-data-object
+  [prop]
+  (assoc prop :data_object (build-data-object prop)))
+
+(defn format-app-data-objects
+  [app]
+  {:id      (:id app)
+   :inputs  (map (comp add-data-object (input-param-formatter)) (:inputs app))
+   :name    (get-app-name app)
+   :outputs (map (comp add-data-object (output-param-formatter)) (:outputs app))})
+
 (defn- app-rerun-value-getter
   [job k]
   (let [values (job k)]
