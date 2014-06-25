@@ -123,7 +123,8 @@
                    :guid
                    :transformation_steps.name
                    :transformation_steps.description
-                   :tx.template_id)
+                   :tx.template_id
+                   :tx.external_app_id)
            (where {:app.id app-id}))))
 
 (defn- format-step
