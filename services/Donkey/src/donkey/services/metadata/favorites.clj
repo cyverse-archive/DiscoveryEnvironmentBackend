@@ -2,6 +2,7 @@
   (:require [clojure.set :as set]
             [clj-jargon.init :as fs]
             [donkey.persistence.metadata :as db]
+            [donkey.services.filesystem.exists :as exist]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as valid]
             [donkey.services.metadata.tags :as tag]
@@ -66,7 +67,7 @@
   (fs/with-jargon fs-cfg [fs]
     (valid/user-exists fs user)
     (->> (db/select-favorites-of-type user "data")
-      (filter (partial tag/entry-accessible? fs user))
+      (filter (partial exist/entry-accessible? fs user))
       set
       (set/intersection (set entries))
       (hash-map :filesystem)
