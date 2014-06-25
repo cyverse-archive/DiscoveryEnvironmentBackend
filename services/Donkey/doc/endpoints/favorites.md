@@ -31,6 +31,57 @@ with a single `filesystem` field that holds an array of UUIDs, each for a file o
 }
 ```
 
+## Favorite Data Collection
+
+A collection of favorite data or filesystem entities is its own resource. It is a JSON document
+(media type `application/json`) with the following fields.
+
+| Field   | Type   | Description |
+| ------- | ------ | ----------- |
+| files   | array  | an array of [favorite file objects](#favorite-file-object) |
+| folders | array  | an array of [favorite folder objects](#favorite-folder-object) |
+| total   | number | the total number of favorite files and folders for a given authenticated user |
+
+### Favorite File Object
+
+A favorite file object has the following fields.
+
+| Field         | Type    | Description |
+| ------------- | ------- | ----------- |
+| date-created  | number  | the time when the file was created in ms since the POSIX epoch |
+| date-modified | number  | the time when the file was last modified in ms since the POSIX epoch |
+| file-size     | number  | the size in bytes of the file |
+| id            | string  | the absolute path to the file |
+| info-type     | string  | the semantic type of the content of the file |
+| isFavorite    | boolean | `true` |
+| label         | string  | the name of file relative to its containing folder |
+| mime-type     | string  | the media type of the file |
+| path          | string  | the absolute path to the file |
+| permission    | string  | the permission the authenticated user has on the file, `"read"|"write"|"own"` |
+| share-count   | number  | the number of other users this file has been shared with |
+| type          | string  | `"file"` |
+| uuid          | string  | the file's UUID |
+
+### Favorite Folder Object
+
+A favorite folder object has the following fields.
+
+| Field         | Type    | Description |
+| ------------- | ------- | ----------- |
+| date-created  | number  | the time when the folder was created in ms since the POSIX epoch |
+| date-modified | number  | the time when the folder was last modified (i.e. had a member file or folder added or removed) in ms since the POSIX epoch |
+| dir-count     | number  | the number of member folders |
+| file-count    | number  | the number of member files |
+| file-size     | number  | `0` |
+| id            | string  | the absolute path to the folder |
+| isFavorite    | boolean | `true` |
+| label         | string  | the name of folder relative to its containing folder |
+| path          | string  | the absolute path to the folder |
+| permission    | string  | the permission the authenticated user has on the folder, `"read"|"write"|"own"` |
+| share-count   | number  | the number of other users this folder has been shared with |
+| type          | string  | `"dir"` |
+| uuid          | string  | the folder's UUID |
+
 # Endpoints
 
 ## Marking a Data Resource as Favorite
@@ -114,13 +165,22 @@ human readable explanation of the failure.
 `GET /secured/favorites/filesystem`
 
 This endpoint lists stat information for the authenticated user's favorite files and folders. Only
-files and folders accessible to the user will be listed.
+files and folders accessible to the user will be listed. The result set is paged.
 
 ### Request
 
-A request to this endpoint requires no parameters beyond the `proxyToken` authentication parameter.
-The user that owns the favorite is determined from the authentication. Any additional parameters
-will be ignored.
+A request to this endpoint requires the parameters in the following table.
+
+| Parameter  | Description |
+| ---------- | ----------- |
+| proxyToken | the CAS authentication token |
+| sort-col   | the field used to sort the filesystem entries in the result set. This can be `NAME|ID|LASTMODIFIED|DATECREATED|SIZE`. All values are case insensitive. |
+| sort-order | the sorting direction.  It can be `ASC|DESC`. Both values are case insensitive. |
+| limit      | the maximum number of filesystem entries to return |
+| offset     | the number entries in the sorted total result set to skip before including entries in the response document. |
+
+
+Any additional parameters will be ignored.
 
 Any body attached to the request will be ignored.
 
@@ -129,12 +189,12 @@ Any body attached to the request will be ignored.
 | Status Code | Cause |
 | ----------- | ----- |
 | 200         | The list of stat info was obtained and is included in the response body. |
+| 400         | one of the parameters was missing or had a nonsensical value. |
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 
-Upon success, the response body will be a [data collection](filesystem/stat.md) JSON
-document (but with the field `filesystem` instead of `paths`) containing the stat information of
-the favorite files and folders with an additional field `"success"` with the value `true`. The
-format of the JSON maps is the same as that for the /secured/filesystem/stat endpoint.
+Upon success, the response body will be a [data collection](#favorite-data-collection) JSON document
+containing the stat information of the favorite files and folders with an additional field `success`
+with the value `true`.
 
 Upon failure, a JSON document with `"success"` and `"reason"` fields will the returned. The
 `"success"` field will have the value `false`.  The `"reason"` field will provide a short, human
@@ -143,7 +203,7 @@ readable explanation of the failure.
 ### Example
 
 ```
-? curl localhost/secured/favorites/filesystem/favorites?proxyToken=fake-token
+? curl "localhost/secured/favorites/filesystem/favorites?proxyToken=fake-token&sort-col=ID&sort-order=ASC&limit=1&offset=0"
 ```
 ```json
 {
@@ -164,7 +224,8 @@ readable explanation of the failure.
                 "type": "dir",
                 "uuid": "0d880c78-df8a-11e3-bfa5-6abdce5a08d5"
             }
-        ]
+        ],
+        "total": 3
     },
     "success": true
 }

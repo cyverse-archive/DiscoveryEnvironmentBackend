@@ -46,17 +46,18 @@
   [favs]
   (let [favs (map #(assoc % :isFavorite true) favs)]
     {:folders (filter #(= (:type %) :dir) favs)
-     :files (filter #(= (:type %) :file) favs)
-     :total (count favs)}))
+     :files   (filter #(= (:type %) :file) favs)}))
 
 (defn list-favorite-data-with-stat
   "Returns a listing of a user's favorite data, including stat information about it."
   [user sort-col sort-order limit offset]
-  (let [col (user-col->api-col sort-col)
-        ord (user-order->api-order sort-order)]
-    (->> (db/select-favorites-of-type user "data")
-      (uuids/paths-for-uuids-paged user col ord limit offset)
+  (let [col          (user-col->api-col sort-col)
+        ord          (user-order->api-order sort-order)
+        uuids        (db/select-favorites-of-type user "data")
+        attach-total (fn [favs] (assoc favs :total (count uuids)))]
+    (->> (uuids/paths-for-uuids-paged user col ord limit offset uuids)
       (format-favorites)
+      attach-total
       (hash-map :filesystem)
       svc/success-response)))
 
