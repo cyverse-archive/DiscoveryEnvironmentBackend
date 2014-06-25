@@ -1,10 +1,14 @@
 (ns donkey.services.metadata.comments
-  (:require [clj-jargon.init :as fs-init]
+  (:require [cheshire.core :as json]
+            [clj-jargon.init :as fs-init]
             [clj-jargon.permissions :as fs-perm]
+            [donkey.auth.user-attributes :as user]
             [donkey.persistence.metadata :as db]
+            [donkey.util.config :as config]
             [donkey.util.service :as svc]
             [donkey.services.filesystem.uuids :as uuid]
-            [donkey.services.metadata.tags :as tags]))
+            [donkey.services.metadata.tags :as tags])
+  (:import [java.util UUID]))
 
 
 (defn- prepare-post-time
@@ -13,22 +17,50 @@
 
 
 (defn add-comment
-  [fs-cfg user entry-id comment]
-  (tags/validate-entry-accessible fs-cfg user entry-id)
-  (let [comment (db/insert-comment user entry-id "data" comment)]
-    (svc/success-response {:comment (prepare-post-time comment)})))
+  "Adds a comment to an filesystem entry.
+
+   Parameters:
+     entry-id - the `entry-id` from the request. This should be the UUID corresponding to the entry
+                being commented on
+     body - the request body. It should be a JSON document containing the comment"
+  [entry-id body]
+  (let [user     (:shortUsername user/current-user)
+        entry-id (UUID/fromString entry-id)
+        comment  (-> body slurp (json/parse-string true) :comment)]
+    (tags/validate-entry-accessible (config/jargon-cfg) user entry-id)
+    (let [comment (db/insert-comment  entry-id "data" comment)]
+      (svc/success-response {:comment (prepare-post-time comment)}))))
 
 
 (defn list-comments
-  [fs-cfg user entry-id]
-  (tags/validate-entry-accessible fs-cfg user entry-id)
-  (svc/success-response {:comments (map prepare-post-time (db/select-all-comments entry-id))}))
+  [entry-id]
+  "Returns a list of comments attached to a given filesystem entry.
+
+   Parameters:
+     entry-id - the `entry-id` from the request. This should be the UUID corresponding to the entry
+                being inspected"
+  (let [user     (:shortUsername user/current-user)
+        entry-id (UUID/fromString entry-id)]
+  (tags/validate-entry-accessible (config/jargon-cfg) user entry-id)
+  (svc/success-response {:comments (map prepare-post-time (db/select-all-comments entry-id))})))
 
 
 (defn update-retract-status
-  [fs-cfg user entry-id comment-id retracting?]
-  (fs-init/with-jargon fs-cfg [fs]
-    (let [entry-path  (:path (uuid/path-for-uuid fs user (str entry-id)))
+  [entry-id comment-id retracted]
+  "Changes the retraction status for a given comment.
+
+   Parameters:
+     entry-id - the `entry-id` from the request. This should be the UUID corresponding to the entry
+                owning the comment being modified
+     comment-id - the comment-id from the request. This should be the UUID corresponding to the
+                  comment being modified
+     retracted - the `retracted` query parameter.  This should be either `true` or `false`."
+  (fs-init/with-jargon (config/jargon-cfg) [fs]
+    (let [user        (:shortUsername user/current-user)
+          entry-id    (UUID/fromString entry-id)
+          comment-id  (UUID/fromString comment-id)
+          retracting? (Boolean/parseBoolean retracted)
+          entry-path  (:path (uuid/path-for-uuid fs user (str entry-id)))
           owns-entry? (and entry-path (fs-perm/owns? fs user entry-path))
           comment     (db/select-comment comment-id)]
       (if (and entry-path comment)
