@@ -8,6 +8,6 @@ CREATE TABLE ratings (
     user_id uuid NOT NULL,
     app_id uuid NOT NULL,
     rating integer NOT NULL,
-    comment_id uuid
+    comment_id bigint
 );
 
