@@ -8,7 +8,7 @@
             [me.raynes.fs :as fs])
   (:import [java.util UUID]))
 
-;; TODO template_input, template_output, validator conversions.
+;; TODO file_parameters, template_input, template_output, validator conversions.
 
 (def ^:private version
   "The destination database version."
