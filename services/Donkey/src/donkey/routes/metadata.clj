@@ -83,14 +83,14 @@
    (GET "/edit-app/:app-id" [app-id :as req]
         (trap #(edit-app-new-format req app-id)))
 
-   (GET "/edit-workflow/:app-id" [app-id :as req]
-        (trap #(edit-workflow req app-id)))
+   (GET "/edit-workflow/:app-id" [app-id]
+        (trap #(apps/edit-workflow app-id)))
 
    (GET "/copy-template/:app-id" [app-id :as req]
         (trap #(copy-app req app-id)))
 
-   (GET "/copy-workflow/:app-id" [app-id :as req]
-        (trap #(copy-workflow req app-id)))
+   (GET "/copy-workflow/:app-id" [app-id]
+        (trap #(apps/copy-workflow app-id)))
 
    (PUT "/update-template" [:as req]
         (trap #(update-template-secured req)))

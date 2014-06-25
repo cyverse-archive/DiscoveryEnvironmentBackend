@@ -150,3 +150,23 @@
   (try+
    (.searchApps agave-client search-term)
    (catch [:error_code ce/ERR_UNAVAILABLE] _ def-result)))
+
+(defn- format-workflow-data-objects
+  [template]
+  (let [fields  [:description :format :id :name :required]
+        fmt     (fn [data-obj] (select-keys data-obj fields))
+        fmt-all (fn [data-objs] (map (comp fmt :data_object) data-objs))]
+    (assoc template
+      :inputs  (fmt-all (:inputs template))
+      :outputs (fmt-all (:outputs template)))))
+
+(defn- get-workflow-templates
+  [agave workflow]
+  (->> (mapcat :steps (:analyses workflow))
+       (filter (fn [step] (= "External" (:app_type step))))
+       (map (fn [step] (.listAppDataObjects agave (:template_id step))))
+       (map format-workflow-data-objects)))
+
+(defn add-workflow-templates
+  [agave workflow]
+  (update-in workflow [:templates] (partial concat (get-workflow-templates agave workflow))))

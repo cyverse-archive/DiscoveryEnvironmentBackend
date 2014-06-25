@@ -107,6 +107,8 @@
   (getAppDeployedComponents [_ app-id])
   (getAppDetails [_ app-id])
   (listAppDataObjects [_ app-id])
+  (editWorkflow [_ app-id])
+  (copyWorkflow [_ app-id])
   (submitJob [_ workspace-id submission])
   (countJobs [_ filter])
   (listJobs [_ limit offset sort-field sort-order filter])
@@ -150,6 +152,12 @@
 
   (listAppDataObjects [_ app-id]
     (metadactyl/list-app-data-objects))
+
+  (editWorkflow [_ app-id]
+    (metadactyl/edit-workflow app-id))
+
+  (copyWorkflow [_ app-id]
+    (metadactyl/copy-workflow app-id))
 
   (submitJob [_ workspace-id submission]
     (da/store-submitted-de-job (metadactyl/submit-job workspace-id submission)))
@@ -239,6 +247,12 @@
     (if (is-uuid? app-id)
       (metadactyl/list-app-data-objects app-id)
       (.listAppDataObjects agave-client app-id)))
+
+  (editWorkflow [_ app-id]
+    (aa/add-workflow-templates agave-client (metadactyl/edit-workflow app-id)))
+
+  (copyWorkflow [_ app-id]
+    (aa/add-workflow-templates agave-client (metadactyl/copy-workflow app-id)))
 
   (submitJob [_ workspace-id submission]
     (if (is-uuid? (:analysis_id submission))
@@ -467,3 +481,11 @@
 (defn list-app-data-objects
   [app-id]
   (service/success-response (.listAppDataObjects (get-app-lister) app-id)))
+
+(defn edit-workflow
+  [app-id]
+  (service/success-response (.editWorkflow (get-app-lister) app-id)))
+
+(defn copy-workflow
+  [app-id]
+  (service/success-response (.copyWorkflow (get-app-lister) app-id)))

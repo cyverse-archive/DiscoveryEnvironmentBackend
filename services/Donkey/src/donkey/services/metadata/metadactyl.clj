@@ -411,22 +411,10 @@
    (build-metadactyl-secured-url req "edit-app" app-id)
    req))
 
-(defn edit-workflow
-  "This service makes a workflow available for editing in the client."
-  [req app-id]
-  (let [url (build-metadactyl-secured-url req "edit-workflow" app-id)]
-    (forward-get url req)))
-
 (defn copy-app
   "This service makes a copy of an app available in Tito for editing."
   [req app-id]
   (let [url (build-metadactyl-secured-url req "copy-template" app-id)]
-    (forward-get url req)))
-
-(defn copy-workflow
-  "This service makes a copy of a workflow available for editing in the client."
-  [req app-id]
-  (let [url (build-metadactyl-secured-url req "copy-workflow" app-id)]
     (forward-get url req)))
 
 (defn update-template-secured
