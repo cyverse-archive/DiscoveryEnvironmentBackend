@@ -29,6 +29,9 @@
    (GET "/app-details/:app-id" [app-id]
         (trap #(apps/get-app-details app-id)))
 
+   (GET "/apps/:app-id/data-objects" [app-id]
+        (trap #(apps/list-app-data-objects app-id)))
+
    (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
         (trap #(apps/submit-job workspace-id body)))
 
@@ -153,9 +156,6 @@
 
    (GET "/validate-analysis-for-pipelines/:app-id" [app-id :as req]
         (trap #(validate-app-for-pipelines req app-id)))
-
-   (GET "/analysis-data-objects/:app-id" [app-id :as req]
-        (trap #(get-data-objects-for-app req app-id)))
 
    (POST "/categorize-analyses" [:as req]
          (trap #(categorize-apps req)))

@@ -106,6 +106,7 @@
   (getApp [_ app-id])
   (getAppDeployedComponents [_ app-id])
   (getAppDetails [_ app-id])
+  (listAppDataObjects [_ app-id])
   (submitJob [_ workspace-id submission])
   (countJobs [_ filter])
   (listJobs [_ limit offset sort-field sort-order filter])
@@ -146,6 +147,9 @@
 
   (getAppDetails [_ app-id]
     (metadactyl/get-app-details app-id))
+
+  (listAppDataObjects [_ app-id]
+    (metadactyl/list-app-data-objects))
 
   (submitJob [_ workspace-id submission]
     (da/store-submitted-de-job (metadactyl/submit-job workspace-id submission)))
@@ -230,6 +234,11 @@
     (if (is-uuid? app-id)
       (metadactyl/get-app-details app-id)
       (.getAppDetails agave-client app-id)))
+
+  (listAppDataObjects [_ app-id]
+    (if (is-uuid? app-id)
+      (metadactyl/list-app-data-objects app-id)
+      (.listAppDataObjects agave-client app-id)))
 
   (submitJob [_ workspace-id submission]
     (if (is-uuid? (:analysis_id submission))
@@ -454,3 +463,7 @@
 (defn get-app-rerun-info
   [job-id]
   (service/success-response (.getAppRerunInfo (get-app-lister) job-id)))
+
+(defn list-app-data-objects
+  [app-id]
+  (service/success-response (.listAppDataObjects (get-app-lister) app-id)))

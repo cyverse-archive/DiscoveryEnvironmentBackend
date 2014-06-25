@@ -92,6 +92,14 @@
       (:body)
       (service/decode-json)))
 
+(defn list-app-data-objects
+  [app-id]
+  (-> (client/get (unsecured-url "apps" app-id "data-objects")
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
 (defn submit-job
   [workspace-id submission]
   (-> (client/put (secured-url "workspaces" workspace-id "newexperiment")

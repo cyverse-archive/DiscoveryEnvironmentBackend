@@ -104,12 +104,77 @@ path. Please see the metadactyl documentation for more information.
 
 ## Listing Data Objects in an Analysis
 
-Unsecured Endpoint: GET /analysis-data-objects/{analysis-id}
+Secured Endpoint: GET /secured/apps/{app-id}/data-objects
 
-Delegates to metadactyl: GET /analysis-data-objects/{analysis-id}
+This service obtains the lists of inputs and outputs for an app. For apps that
+run within the DE itself, this service delegates to the metadactyl endpoint,
+`GET /apps/{app-id}/data-objects`. For other apps, the response is assembled
+within Donkey from information received from remote services. Here's an
+example:
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+```
+$ curl -s "http://by-tor:8888/secured/apps/wc-osg-1.00u1/data-objects?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "id": "wc-osg-1.00u1",
+    "inputs": [
+        {
+            "arguments": [],
+            "data_object": {
+                "cmdSwitch": "query1",
+                "description": "",
+                "file_info_type": "File",
+                "format": "Unspecified",
+                "id": "query1",
+                "multiplicity": "One",
+                "name": "File to count words in: ",
+                "order": 1,
+                "required": false,
+                "retain": false
+            },
+            "defaultValue": "",
+            "description": "",
+            "id": "query1",
+            "isVisible": true,
+            "label": "File to count words in: ",
+            "name": "query1",
+            "order": 0,
+            "required": false,
+            "type": "FileInput",
+            "validators": []
+        }
+    ],
+    "name": "wc-osg [wc-osg-1.00u1]",
+    "outputs": [
+        {
+            "arguments": [],
+            "data_object": {
+                "cmdSwitch": "outputWC",
+                "description": "Results of WC",
+                "file_info_type": "File",
+                "format": "Unspecified",
+                "id": "outputWC",
+                "multiplicity": "One",
+                "name": "Text file",
+                "order": 1,
+                "required": false,
+                "retain": false
+            },
+            "defaultValue": "wc_out.txt",
+            "description": "Results of WC",
+            "id": "outputWC",
+            "isVisible": false,
+            "label": "Text file",
+            "name": "outputWC",
+            "order": 0,
+            "required": false,
+            "type": "Output",
+            "validators": []
+        }
+    ],
+    "success": true
+}
+
+```
 
 ## Categorizing Analyses
 

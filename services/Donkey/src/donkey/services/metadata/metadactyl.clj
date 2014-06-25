@@ -66,12 +66,6 @@
   (let [url (build-metadactyl-unprotected-url req "validate-analysis-for-pipelines" app-id)]
     (forward-get url req)))
 
-(defn get-data-objects-for-app
-  "A service used to list the data objects in an app."
-  [req app-id]
-  (let [url (build-metadactyl-unprotected-url req "analysis-data-objects" app-id)]
-    (forward-get url req)))
-
 (defn categorize-apps
   "A service used to recategorize apps."
   [req]
