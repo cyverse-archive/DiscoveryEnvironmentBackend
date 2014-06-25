@@ -483,7 +483,7 @@ $ curl -s http://by-tor:8888/get-all-analysis-ids | python -mjson.tool
 
 ## Listing Data Objects in an Analysis
 
-*Unsecured Endpoint:* GET /analysis-data-objects/{analysis-id}
+*Unsecured Endpoint:* GET /apps/{app-id}/data-objects
 
 When a pipeline is being created, the UI needs to know what types of files are
 consumed by and what types of files are produced by each analysis in the
