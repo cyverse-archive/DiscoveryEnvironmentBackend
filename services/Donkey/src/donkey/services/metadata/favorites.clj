@@ -2,10 +2,8 @@
   (:require [clojure.set :as set]
             [clj-jargon.init :as fs]
             [donkey.persistence.metadata :as db]
-            [donkey.services.filesystem.exists :as exist]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as valid]
-            [donkey.services.metadata.tags :as tag]
             [donkey.util.config :as cfg]
             [donkey.util.service :as svc]
             [clojure.tools.logging :as log]))
@@ -13,7 +11,8 @@
 
 (defn add-favorite
   [fs-cfg user entry-id]
-  (tag/validate-entry-accessible fs-cfg user entry-id)
+  (fs/with-jargon fs-cfg [cm]
+    (uuids/validate-uuid-accessible cm user entry-id))
   (when-not (db/is-favorite user entry-id)
     (db/insert-favorite user entry-id "data"))
   (svc/success-response))
@@ -67,7 +66,7 @@
   (fs/with-jargon fs-cfg [fs]
     (valid/user-exists fs user)
     (->> (db/select-favorites-of-type user "data")
-      (filter (partial exist/entry-accessible? fs user))
+      (filter (partial uuids/uuid-accessible? fs user))
       set
       (set/intersection (set entries))
       (hash-map :filesystem)

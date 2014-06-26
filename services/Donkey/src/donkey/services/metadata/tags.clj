@@ -5,18 +5,14 @@
             [clj-jargon.init :as fs-init]
             [clojure-commons.error-codes :as error]
             [donkey.persistence.metadata :as db]
-            [donkey.services.filesystem.exists :as exist]
-            [donkey.services.filesystem.validators :as valid]
+            [ donkey.services.filesystem.uuids :as uuids]
             [donkey.util.service :as svc]))
 
 
-;; TODO move this some place special
-(defn validate-entry-accessible
+(defn- validate-entry-accessible
   [fs-cfg user entry-id]
   (fs-init/with-jargon fs-cfg [fs]
-    (valid/user-exists fs user)
-    (if-not (exist/entry-accessible? fs user entry-id)
-      (throw+ {:error_code error/ERR_NOT_FOUND :uuid entry-id}))))
+    (uuids/validate-uuid-accessible fs-cfg user entry-id)))
 
 
 (defn create-user-tag

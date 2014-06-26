@@ -6,14 +6,20 @@
             [donkey.persistence.metadata :as db]
             [donkey.util.config :as config]
             [donkey.util.service :as svc]
-            [donkey.services.filesystem.uuids :as uuid]
-            [donkey.services.metadata.tags :as tags])
+            [donkey.services.filesystem.validators :as valid]
+            [donkey.services.filesystem.uuids :as uuid])
   (:import [java.util UUID]))
 
 
 (defn- prepare-post-time
   [comment]
   (assoc comment :post_time (.getTime (:post_time comment))))
+
+
+(defn- validate-entry-accessible
+  [fs-cfg user entry-id]
+  (fs-init/with-jargon fs-cfg [fs]
+    (uuid/validate-uuid-accessible fs user entry-id)))
 
 
 (defn add-comment
@@ -24,11 +30,12 @@
                 being commented on
      body - the request body. It should be a JSON document containing the comment"
   [entry-id body]
-  (let [user     (:shortUsername user/current-user)
+  (let [user (:shortUsername user/current-user)
         entry-id (UUID/fromString entry-id)
-        comment  (-> body slurp (json/parse-string true) :comment)]
-    (tags/validate-entry-accessible (config/jargon-cfg) user entry-id)
-    (let [comment (db/insert-comment  entry-id "data" comment)]
+        comment (-> body slurp (json/parse-string true) :comment)]
+
+    (validate-entry-accessible (config/jargon-cfg) user entry-id)
+    (let [comment (db/insert-comment  user entry-id "data" comment)]
       (svc/success-response {:comment (prepare-post-time comment)}))))
 
 
@@ -41,7 +48,7 @@
                 being inspected"
   (let [user     (:shortUsername user/current-user)
         entry-id (UUID/fromString entry-id)]
-  (tags/validate-entry-accessible (config/jargon-cfg) user entry-id)
+  (validate-entry-accessible (config/jargon-cfg) user entry-id)
   (svc/success-response {:comments (map prepare-post-time (db/select-all-comments entry-id))})))
 
 

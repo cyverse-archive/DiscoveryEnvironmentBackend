@@ -13,9 +13,7 @@
             [cheshire.core :as json]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [clj-jargon.permissions :as fs-perm]
-            [donkey.services.filesystem.validators :as validators]
-            [donkey.services.filesystem.uuids :as uuid]))
+            [donkey.services.filesystem.validators :as validators]))
 
 (defn- url-encoded?
   [string-to-check]
@@ -50,15 +48,3 @@
     (validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-exists (log-func "do-exists"))
-
-(defn entry-accessible?
-  "Indicates if a filesystem entry is readble by a given user.
-
-   Parameters:
-     cm - The open Jargon context for the filesystem
-     user - the authenticated name of the user
-     entry-id the UUID of the filesystem entry"
-  [cm user entry-id]
-  (let [entry-path (:path (uuid/path-for-uuid cm user (str entry-id)))]
-    (and entry-path (fs-perm/is-readable? cm user entry-path))))
-
