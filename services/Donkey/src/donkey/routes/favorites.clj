@@ -8,7 +8,7 @@
 (defn secured-favorites-routes
   []
   (util/optional-routes
-   [config/metadata-routes-enabled]
+   [#(and (config/filesystem-routes-enabled) (config/metadata-routes-enabled))]
 
    (PUT "/favorites/filesystem/:entry-id" [entry-id]
         (util/trap #(fave/add-favorite entry-id)))
