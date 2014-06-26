@@ -23,7 +23,7 @@
 (defn secured-tag-routes
   []
   (util/optional-routes
-    [config/metadata-routes-enabled]
+    [#(and (config/filesystem-routes-enabled) (config/metadata-routes-enabled))]
 
     (GET "/filesystem/entry/:entry-id/tags" [entry-id]
       (util/trap #(tags/list-attached-tags (config/jargon-cfg)
