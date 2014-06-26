@@ -1,33 +1,40 @@
 (ns donkey.services.metadata.favorites
   (:require [clojure.set :as set]
+            [cheshire.core :as json]
             [clj-jargon.init :as fs]
+            [donkey.auth.user-attributes :as user]
             [donkey.persistence.metadata :as db]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as valid]
             [donkey.util.config :as cfg]
             [donkey.util.service :as svc]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log])
+  (:import [java.util UUID]))
 
 
 (defn add-favorite
-  [fs-cfg user entry-id]
-  (fs/with-jargon fs-cfg [cm]
-    (uuids/validate-uuid-accessible cm user entry-id))
-  (when-not (db/is-favorite user entry-id)
-    (db/insert-favorite user entry-id "data"))
-  (svc/success-response))
+  [entry-id]
+  (let [user     (:shortUsername user/current-user)
+        entry-id (UUID/fromString entry-id)]
+    (fs/with-jargon (cfg/jargon-cfg) [cm]
+      (uuids/validate-uuid-accessible cm user entry-id))
+    (when-not (db/is-favorite user entry-id)
+      (db/insert-favorite user entry-id "data"))
+    (svc/success-response)))
 
 (defn remove-favorite
-  [user entry-id]
+  [entry-id]
+  (let [user     (:shortUsername user/current-user)
+        entry-id (UUID/fromString entry-id)]
   (if (db/is-favorite user entry-id)
     (do
       (db/delete-favorite user entry-id)
       (svc/success-response))
-    (svc/donkey-response {} 404)))
+    (svc/donkey-response {} 404))))
 
 (defn- user-col->api-col
-  [sort-col]
-  (case sort-col
+  [col]
+  (case (.toUpperCase col)
     "NAME"         :base-name
     "ID"           :full-path
     "LASTMODIFIED" :modify-ts
@@ -36,8 +43,8 @@
     :base-name))
 
 (defn- user-order->api-order
-  [sort-order]
-  (case sort-order
+  [order]
+  (case (.toUpperCase order)
     "ASC"  :asc
     "DESC" :desc
     :asc))
@@ -50,9 +57,12 @@
 
 (defn list-favorite-data-with-stat
   "Returns a listing of a user's favorite data, including stat information about it."
-  [user sort-col sort-order limit offset]
-  (let [col          (user-col->api-col sort-col)
+  [sort-col sort-order limit offset]
+  (let [user         (:shortUsername user/current-user)
+        col          (user-col->api-col sort-col)
         ord          (user-order->api-order sort-order)
+        limit        (Long/valueOf limit)
+        offset       (Long/valueOf offset)
         uuids        (db/select-favorites-of-type user "data")
         attach-total (fn [favs] (assoc favs :total (count uuids)))]
     (->> (uuids/paths-for-uuids-paged user col ord limit offset uuids)
@@ -62,14 +72,15 @@
       svc/success-response)))
 
 (defn filter-favorites
-  [fs-cfg user entries]
-  (fs/with-jargon fs-cfg [fs]
-    (valid/user-exists fs user)
-    (->> (db/select-favorites-of-type user "data")
-      (filter (partial uuids/uuid-accessible? fs user))
-      set
-      (set/intersection (set entries))
-      (hash-map :filesystem)
-      svc/success-response)))
-
-
+  [body]
+  (let [user    (:shortUsername user/current-user)
+        ids-txt (-> body slurp (json/parse-string true) :filesystem)
+        entries (->> ids-txt (map #(UUID/fromString %)) set)]
+    (fs/with-jargon (cfg/jargon-cfg) [fs]
+      (valid/user-exists fs user)
+      (->> (db/select-favorites-of-type user "data")
+        (filter (partial uuids/uuid-accessible? fs user))
+        set
+        (set/intersection entries)
+        (hash-map :filesystem)
+        svc/success-response))))
