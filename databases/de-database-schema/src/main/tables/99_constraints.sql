@@ -968,3 +968,19 @@ ALTER TABLE ONLY access_tokens
     ADD CONSTRAINT access_tokens_user_id_fkey
     FOREIGN KEY (user_id)
     REFERENCES users(id);
+
+--
+-- The primary key for the authorization_requests table.
+--
+ALTER TABLE ONLY authorization_requests
+    ADD CONSTRAINT authorization_requests_pkey
+    PRIMARY KEY (id);
+
+--
+-- Foreign key constraint for the user_id column of the authorization_requests
+-- table.
+--
+ALTER TABLE ONLY authorization_requests
+    ADD CONSTRAINT authorization_requests_user_id_fkey
+    FOREIGN KEY (user_id)
+    REFERENCES users(id);
