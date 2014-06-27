@@ -97,3 +97,25 @@
   (validate-map body {:paths sequential?})
   (json/encode {:paths (uuids-for-paths (:user params) (:paths body))}))
 
+(defn uuid-accessible?
+  "Indicates if a filesystem entry is readble by a given user.
+
+   Parameters:
+     cm - The open Jargon context for the filesystem
+     user - the authenticated name of the user
+     entry-id the UUID of the filesystem entry"
+  [cm user entry-id]
+  (let [entry-path (:path (path-for-uuid cm user (str entry-id)))]
+    (and entry-path (is-readable? cm user entry-path))))
+
+(defn validate-uuid-accessible
+  "Throws an exception if the given entry is not accessible to the given user.
+
+   Parameters:
+     cm - The open Jargon context for the filesystem
+     user - the authenticated name of the user
+     entry-id - the UUID of the filesystem entry"
+  [cm user entry-id]
+  (user-exists cm user)
+  (if-not (uuid-accessible? cm user entry-id)
+    (throw+ {:error_code ERR_NOT_FOUND :uuid entry-id})))

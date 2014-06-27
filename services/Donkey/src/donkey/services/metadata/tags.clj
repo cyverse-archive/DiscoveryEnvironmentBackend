@@ -3,33 +3,51 @@
   (:require [clojure.set :as set]
             [cheshire.core :as json]
             [clj-jargon.init :as fs-init]
-            [clj-jargon.permissions :as fs-perm]
             [clojure-commons.error-codes :as error]
+            [donkey.auth.user-attributes :as user]
             [donkey.persistence.metadata :as db]
-            [donkey.services.filesystem.uuids :as uuid]
-            [donkey.services.filesystem.validators :as valid]
-            [donkey.util.service :as svc]))
+            [donkey.services.filesystem.uuids :as uuids]
+            [donkey.util.config :as config]
+            [donkey.util.service :as svc])
+  (:import [java.util UUID]))
 
 
-;; TODO move this some place special
-(defn entry-accessible?
-  [fs user entry-id]
-  (let [entry-path (:path (uuid/path-for-uuid fs user (str entry-id)))]
-    (and entry-path (fs-perm/is-readable? fs user entry-path))))
-
-
-;; TODO move this some place special
-(defn validate-entry-accessible
+(defn- validate-entry-accessible
   [fs-cfg user entry-id]
   (fs-init/with-jargon fs-cfg [fs]
-    (valid/user-exists fs user)
-    (if-not (entry-accessible? fs user entry-id)
-      (throw+ {:error_code error/ERR_NOT_FOUND :uuid entry-id}))))
+    (uuids/validate-uuid-accessible fs user entry-id)))
+
+
+(defn- attach-tags
+  [fs-cfg user entry-id new-tags]
+  (validate-entry-accessible fs-cfg user entry-id)
+  (let [tag-set         (set new-tags)
+        known-tags      (set (db/filter-tags-owned-by-user user tag-set))
+        unknown-tags    (set/difference tag-set known-tags)
+        unattached-tags (set/difference known-tags
+                          (set (db/filter-attached-tags entry-id known-tags)))]
+    (when-not (empty? unknown-tags)
+      (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
+    (db/insert-attached-tags user entry-id "data" unattached-tags)
+    (svc/success-response)))
+
+
+(defn- detach-tags
+  [fs-cfg user entry-id tag-ids]
+  (validate-entry-accessible fs-cfg user entry-id)
+  (db/mark-tags-detached user entry-id (db/filter-tags-owned-by-user user (set tag-ids)))
+  (svc/success-response))
 
 
 (defn create-user-tag
-  [owner body]
-  (let [tag         (json/parse-string (slurp body) true)
+  "Creates a new user tag
+
+   Parameters:
+     body - This is the request body. It should be a JSON document containing a `value` text field
+            and optionally a `description` text field."
+  [body]
+  (let [owner       (:shortUsername user/current-user)
+        tag         (json/parse-string (slurp body) true)
         value       (:value tag)
         description (:description tag)]
     (if (empty? (db/get-tags-by-value owner value))
@@ -38,8 +56,61 @@
       (svc/donkey-response {} 409))))
 
 
+(defn handle-patch-file-tags
+  "Adds or removes tags to a filesystem entry.
+
+   Parameters:
+     entry-id - The entry-id from the request. It should be a filesystem UUID.
+     type - The `type` query parameter. It should be either `attach` or `detach`.
+     body - This is the request body. It should be a JSON document containing a `tags` field. This
+            field should hold an array of tag UUIDs."
+  [entry-id type body]
+  (let [entry-id (UUID/fromString entry-id)
+        req      (-> body slurp (json/parse-string true))
+        mods     (map #(UUID/fromString %) (:tags req))
+        user     (:shortUsername user/current-user)
+        fs-cfg   (config/jargon-cfg)]
+    (condp = type
+      "attach" (attach-tags fs-cfg user entry-id mods)
+      "detach" (detach-tags fs-cfg user entry-id mods)
+      (svc/donkey-response {} 400))))
+
+
+(defn list-attached-tags
+  "Lists the tags attached to a filesystem entry.
+
+   Parameters:
+     entry-id - The entry-id from the request.  It should be a filesystem UUID."
+  [entry-id]
+  (let [user     (:shortUsername user/current-user)
+        entry-id (UUID/fromString entry-id)
+        tags     (db/select-attached-tags user entry-id)]
+    (validate-entry-accessible (config/jargon-cfg) user entry-id)
+    (svc/success-response {:tags (map #(dissoc % :owner_id) tags)})))
+
+
+(defn suggest-tags
+  "Given a tag value fragment, this function will return a list tags whose values contain that
+   fragment.
+
+   Parameters:
+     contains - The `contains` query parameter.
+     limit - The `limit` query parameter. It should be a positive integer."
+  [contains limit]
+  (let [matches (db/get-tags-by-value (:shortUsername user/current-user)
+                                      (str "%" contains "%")
+                                      (Long/valueOf limit))]
+    (svc/success-response {:tags (map #(dissoc % :owner_id) matches)})))
+
+
 (defn update-user-tag
-  [owner tag-id body]
+  "updates the value and/or description of a tag.
+
+   Parameters:
+     tag-id - The tag-id from request URL. It should be a tag UUID.
+     body - The request body. It should be a JSON document containing at most one `value` text field
+            and one `description` text field."
+  [tag-id body]
   (letfn [(do-update []
             (let [req-updates     (json/parse-string (slurp body) true)
                   new-value       (:value req-updates)
@@ -51,42 +122,9 @@
                                     new-description                 {:description new-description})]
               (when updates (db/update-user-tag tag-id updates))
               (svc/success-response)))]
-    (let [tag (first (db/get-tag tag-id))]
+    (let [owner (:shortUsername user/current-user)
+          tag   (first (db/get-tag tag-id))]
       (cond
         (empty? tag)                 (svc/donkey-response {} 404)
         (not= owner (:owner_id tag)) (svc/donkey-response {} 403)
         :else                        (do-update)))))
-
-
-(defn suggest-tags
-  [user value-part max-results]
-  (let [matches (db/get-tags-by-value user (str "%" value-part "%") max-results)]
-    (svc/success-response {:tags (map #(dissoc % :owner_id) matches)})))
-
-
-(defn list-attached-tags
-  [fs-cfg user entry-id]
-  (validate-entry-accessible fs-cfg user entry-id)
-  (let [tags (db/select-attached-tags user entry-id)]
-    (svc/success-response {:tags (map #(dissoc % :owner_id) tags)})))
-
-
-(defn attach-tags
-  [fs-cfg user entry-id new-tags]
-  (validate-entry-accessible fs-cfg user entry-id)
-  (let [tag-set         (set new-tags)
-        known-tags      (set (db/filter-tags-owned-by-user user tag-set))
-        unknown-tags    (set/difference tag-set known-tags)
-        unattached-tags (set/difference known-tags
-                                        (set (db/filter-attached-tags entry-id known-tags)))]
-    (when-not (empty? unknown-tags)
-      (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
-    (db/insert-attached-tags user entry-id "data" unattached-tags)
-    (svc/success-response)))
-
-
-(defn detach-tags
-  [fs-cfg user entry-id tag-ids]
-  (validate-entry-accessible fs-cfg user entry-id)
-  (db/mark-tags-detached user entry-id (db/filter-tags-owned-by-user user (set tag-ids)))
-  (svc/success-response))
