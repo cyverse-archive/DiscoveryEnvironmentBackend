@@ -40,6 +40,11 @@
 
 
 (defn create-user-tag
+  "Creates a new user tag
+
+   Parameters:
+     body - This is the request body. It should be a JSON document containing a `value` text field
+            and optionally a `description` text field."
   [body]
   (let [owner       (:shortUsername user/current-user)
         tag         (json/parse-string (slurp body) true)
@@ -52,6 +57,13 @@
 
 
 (defn handle-patch-file-tags
+  "Adds or removes tags to a filesystem entry.
+
+   Parameters:
+     entry-id - The entry-id from the request. It should be a filesystem UUID.
+     type - The `type` query parameter. It should be either `attach` or `detach`.
+     body - This is the request body. It should be a JSON document containing a `tags` field. This
+            field should hold an array of tag UUIDs."
   [entry-id type body]
   (let [entry-id (UUID/fromString entry-id)
         req      (-> body slurp (json/parse-string true))
@@ -65,6 +77,10 @@
 
 
 (defn list-attached-tags
+  "Lists the tags attached to a filesystem entry.
+
+   Parameters:
+     entry-id - The entry-id from the request.  It should be a filesystem UUID."
   [entry-id]
   (let [user     (:shortUsername user/current-user)
         entry-id (UUID/fromString entry-id)
@@ -74,6 +90,12 @@
 
 
 (defn suggest-tags
+  "Given a tag value fragment, this function will return a list tags whose values contain that
+   fragment.
+
+   Parameters:
+     contains - The `contains` query parameter.
+     limit - The `limit` query parameter. It should be a positive integer."
   [contains limit]
   (let [matches (db/get-tags-by-value (:shortUsername user/current-user)
                                       (str "%" contains "%")
@@ -82,6 +104,12 @@
 
 
 (defn update-user-tag
+  "updates the value and/or description of a tag.
+
+   Parameters:
+     tag-id - The tag-id from request URL. It should be a tag UUID.
+     body - The request body. It should be a JSON document containing at most one `value` text field
+            and one `description` text field."
   [tag-id body]
   (letfn [(do-update []
             (let [req-updates     (json/parse-string (slurp body) true)
