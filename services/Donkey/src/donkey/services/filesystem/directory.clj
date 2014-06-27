@@ -43,8 +43,7 @@
   "Turns a entry in a paged listing result into a map containing file/directory
    information that can be consumed by the front-end."
   [user {:keys [type full_path base_name data_size modify_ts create_ts access_type_id uuid]}]
-  (let [base-map {:id            full_path
-                  :uuid          uuid
+  (let [base-map {:id            uuid
                   :path          full_path
                   :label         base_name
                   :isFavorite    (meta/is-favorite user (UUID/fromString uuid))
@@ -119,8 +118,7 @@
             uuid (:uuid (uuids/uuid-for-path cm user path))]
         (merge
          (hash-map
-          :id               path
-          :uuid             uuid
+          :id               uuid
           :path             path
           :label            (id->label cm user path)
           :isFavorite       (meta/is-favorite user (UUID/fromString uuid))
@@ -152,8 +150,7 @@
             uuid (:uuid (uuids/uuid-for-path cm user path))]
         (merge
          (hash-map
-          :id            path          
-          :uuid          uuid
+          :id            uuid
           :path          path
           :label         (id->label cm user path)
           :isFavorite    (meta/is-favorite user (UUID/fromString uuid))

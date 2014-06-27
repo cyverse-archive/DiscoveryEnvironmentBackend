@@ -7,6 +7,7 @@
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [is-dir? stat]]
         [clj-jargon.item-ops :only [input-stream]]
+        [clj-jargon.metadata :only [get-attribute]]
         [clj-jargon.permissions :only [list-user-perms permission-for owns?]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
@@ -59,11 +60,12 @@
   [cm user stat]
   (let [path (:path stat)]
     (-> stat
-      (assoc :label      (id->label cm user path)
-             :permission (permission-for cm user path))
-      (merge-type-info cm user path)
-      (merge-shares cm user path)
-      (merge-counts cm user path))))
+        (assoc :id (:value (first (get-attribute cm path "ipc_UUID")))
+               :label      (id->label cm user path)
+               :permission (permission-for cm user path))
+        (merge-type-info cm user path)
+        (merge-shares cm user path)
+        (merge-counts cm user path))))
 
 (defn path-stat
   [cm user path]

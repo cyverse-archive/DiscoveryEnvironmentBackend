@@ -51,12 +51,11 @@
     (->> {:date-created  (* 1000 (Long/valueOf (:create_ts entry)))
           :date-modified (* 1000 (Long/valueOf (:modify_ts entry)))
           :file-size     (:data_size entry)
-          :id            path
+          :id            (:uuid entry)
           :path          path
           :type          (case (:type entry)
                            "collection" :dir
-                           "dataobject" :file)
-          :uuid          (:uuid entry)}
+                           "dataobject" :file)}
       (stat/decorate-stat cm user))))
 
 (defn paths-for-uuids-paged
