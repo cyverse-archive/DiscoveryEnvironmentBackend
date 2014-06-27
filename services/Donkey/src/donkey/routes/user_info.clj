@@ -9,8 +9,8 @@
   (optional-routes
    [config/user-info-routes-enabled]
 
-   (GET "/user-search/:search-string" [search-string :as req]
-        (trap #(user-search search-string (get-in req [:headers "range"]))))
+   (GET "/user-search" [:as {:keys [headers params]}]
+        (trap #(user-search params headers)))
 
    (GET "/user-info" [:as {params :params}]
         (trap #(user-info (as-vector (:username params)))))))

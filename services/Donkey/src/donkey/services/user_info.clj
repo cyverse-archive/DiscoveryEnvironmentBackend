@@ -1,7 +1,6 @@
 (ns donkey.services.user-info
   (:use [cemerick.url :only [url]]
-        [clojure.string :only [split]]
-        [clojure-commons.error-codes]
+        [clojure.string :only [split blank?]]
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
@@ -83,10 +82,9 @@
 (defn user-search
   "Performs user searches by username, name and e-mail address and returns the
    merged results."
-  ([search-string]
-     (user-search search-string 0 (default-user-search-result-limit)))
-  ([search-string range-setting]
-     (apply user-search search-string (parse-range range-setting)))
+  ([{:keys [search]} {:strs [range]}]
+     (validate-field "search" search (comp not blank?))
+     (apply user-search search (parse-range range)))
   ([search-string start end]
      (let [results (map #(% search-string start end) search-fns)
            users (remove-duplicates (mapcat :users results))
@@ -143,4 +141,3 @@
     {:status       200
      :body         (cheshire/encode body)
      :content-type :json}))
-
