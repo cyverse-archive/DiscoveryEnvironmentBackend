@@ -898,14 +898,6 @@ ALTER TABLE ONLY logins
     REFERENCES users(id);
 
 --
--- Foreign key constraint for the user_id field of the jobs table.
---
-ALTER TABLE ONLY jobs
-    ADD CONSTRAINT jobs_user_id_fkey
-    FOREIGN KEY (user_id)
-    REFERENCES users(id);
-
---
 -- The primary key for the user_preferences table.
 --
 ALTER TABLE ONLY user_preferences
@@ -984,3 +976,41 @@ ALTER TABLE ONLY authorization_requests
     ADD CONSTRAINT authorization_requests_user_id_fkey
     FOREIGN KEY (user_id)
     REFERENCES users(id);
+
+--
+-- The primary key for the jobs table.
+--
+ALTER TABLE ONLY jobs
+    ADD CONSTRAINT jobs_pkey
+    PRIMARY KEY (id);
+
+--
+-- Foreign key constraint for the user_id field of the jobs table.
+--
+ALTER TABLE ONLY jobs
+    ADD CONSTRAINT jobs_user_id_fkey
+    FOREIGN KEY (user_id)
+    REFERENCES users(id);
+
+--
+-- The primary key for the job_steps table.
+--
+ALTER TABLE ONLY job_steps
+    ADD CONSTRAINT job_steps_pkey
+    PRIMARY KEY (id);
+
+--
+-- Foreign key constraint for the job_id field of the job_steps table.
+--
+ALTER TABLE ONLY job_steps
+    ADD CONSTRAINT job_steps_job_id_fkey
+    FOREIGN KEY (job_id)
+    REFERENCES jobs(id);
+
+--
+-- Foreign key constraint for the type_type_id field of the job_steps table.
+--
+ALTER TABLE ONLY job_steps
+    ADD CONSTRAINT job_steps_job_type_id_fkey
+    FOREIGN KEY (job_type_id)
+    REFERENCES job_types(id);
