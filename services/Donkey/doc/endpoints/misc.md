@@ -155,8 +155,30 @@ JSON passed in.
 Example:
 
 ```
-$ curl -sd data "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)"
-data
+$ curl -sd '{"appsKBShortcut":"A","rememberLastPath":true,"closeKBShortcut":"Q","defaultOutputFolder":{"id":"/iplant/home/wregglej/analyses","path":"/iplant/home/wregglej/analyses"},"dataKBShortcut":"D","systemDefaultOutputDir":{"id":"/iplant/home/wregglej/analyses","path":"/iplant/home/wregglej/analyses"},"saveSession":true,"enableEmailNotification":true,"lastPathId":"/iplant/home/wregglej","notificationKBShortcut":"N","defaultFileSelectorPath":"/iplant/home/wregglej","analysisKBShortcut":"Y"}' "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)" | squiggles
+{
+    "preferences": {
+        "analysisKBShortcut": "Y",
+        "appsKBShortcut": "A",
+        "closeKBShortcut": "Q",
+        "dataKBShortcut": "D",
+        "defaultFileSelectorPath": "/iplant/home/wregglej",
+        "defaultOutputFolder": {
+            "id": "/iplant/home/wregglej/analyses",
+            "path": "/iplant/home/wregglej/analyses"
+        },
+        "enableEmailNotification": true,
+        "lastPathId": "/iplant/home/wregglej",
+        "notificationKBShortcut": "N",
+        "rememberLastPath": true,
+        "saveSession": true,
+        "systemDefaultOutputDir": {
+            "id": "/iplant/home/wregglej/analyses",
+            "path": "/iplant/home/wregglej/analyses"
+        }
+    },
+    "success": true
+}
 ```
 
 ## Retrieving User Preferences
@@ -168,8 +190,27 @@ This service can be used to retrieve a user's preferences.
 Example:
 
 ```
-$ curl -s "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)"
-data
+$ curl -s "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)" | squiggles
+{
+    "analysisKBShortcut": "Y",
+    "appsKBShortcut": "A",
+    "closeKBShortcut": "Q",
+    "dataKBShortcut": "D",
+    "defaultFileSelectorPath": "/iplant/home/test",
+    "defaultOutputFolder": {
+        "id": "/iplant/home/test/analyses",
+        "path": "/iplant/home/test/analyses"
+    },
+    "enableEmailNotification": true,
+    "lastPathId": "/iplant/home/test",
+    "notificationKBShortcut": "N",
+    "rememberLastPath": true,
+    "saveSession": true,
+    "systemDefaultOutputDir": {
+        "id": "/iplant/home/test/analyses",
+        "path": "/iplant/home/test/analyses"
+    }
+}
 ```
 
 ## Removing User Preferences
@@ -185,10 +226,9 @@ Example:
 
 ```
 $ curl -X DELETE "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)"
-{
-    "success" : true
-}
 ```
+
+Check the HTTP status code of the response to determine success. It should be in the 200 range.
 
 An attempt to remove preference data that doesn't already exist will be silently
 ignored.
