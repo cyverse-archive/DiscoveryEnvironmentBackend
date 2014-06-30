@@ -1,7 +1,9 @@
 (ns donkey.services.metadata.comments
+  (:use [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as json]
             [clj-jargon.init :as fs-init]
             [clj-jargon.permissions :as fs-perm]
+            [clojure-commons.error-codes :as err]
             [donkey.auth.user-attributes :as user]
             [donkey.persistence.metadata :as db]
             [donkey.util.config :as config]
@@ -30,13 +32,16 @@
                 being commented on
      body - the request body. It should be a JSON document containing the comment"
   [entry-id body]
-  (let [user (:shortUsername user/current-user)
-        entry-id (UUID/fromString entry-id)
-        comment (-> body slurp (json/parse-string true) :comment)]
-
-    (validate-entry-accessible (config/jargon-cfg) user entry-id)
-    (let [comment (db/insert-comment  user entry-id "data" comment)]
-      (svc/create-response {:comment (prepare-post-time comment)}))))
+  (try+
+    (let [user     (:shortUsername user/current-user)
+          entry-id (UUID/fromString entry-id)
+          comment  (-> body slurp (json/parse-string true) :comment)]
+      (validate-entry-accessible (config/jargon-cfg) user entry-id)
+      (let [comment (db/insert-comment  user entry-id "data" comment)]
+        (svc/create-response {:comment (prepare-post-time comment)})))
+    (catch [:error_code err/ERR_NOT_FOUND] _ (throw+ {:type :not-found}))
+    (catch [:error_code err/ERR_DOES_NOT_EXIST] _ (throw+ {:type :not-found}))
+    (catch IllegalArgumentException _ (throw+ {:type :not-found}))))
 
 
 (defn list-comments

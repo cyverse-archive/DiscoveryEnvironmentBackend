@@ -104,6 +104,11 @@
   (log/error e "bad request")
   (donkey-response e 400))
 
+(defn not-found-response
+  "Generates a 404 response indicating the URL doesn't point to a resource."
+  []
+  (donkey-response {} 404))
+
 (defn error-response [e]
   (log/error e "internal error")
   (donkey-response e 500))

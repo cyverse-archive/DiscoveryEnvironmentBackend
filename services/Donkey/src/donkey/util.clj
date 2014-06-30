@@ -32,6 +32,7 @@
    (catch [:type :invalid-configuration] {:keys [reason]} (invalid-cfg-response reason))
    (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
    (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
+   (catch [:type :not-found] _ (not-found-response))
 
    (catch ce/error? err
      (log/error (ce/format-exception (:throwable &throw-context)))
