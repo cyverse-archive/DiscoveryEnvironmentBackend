@@ -92,6 +92,14 @@
   ([retval]
     (donkey-response retval 200)))
 
+(defn create-response
+  "Generates a 201 response indicating that a new resource has been created. Optionally, a JSON
+   document may be included and will form part of the response body."
+  ([]
+    (create-response {}))
+  ([retval]
+    (donkey-response retval 201)))
+
 (defn failure-response [e]
   (log/error e "bad request")
   (donkey-response e 400))

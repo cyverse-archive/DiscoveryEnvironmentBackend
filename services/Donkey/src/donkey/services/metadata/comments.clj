@@ -36,7 +36,7 @@
 
     (validate-entry-accessible (config/jargon-cfg) user entry-id)
     (let [comment (db/insert-comment  user entry-id "data" comment)]
-      (svc/success-response {:comment (prepare-post-time comment)}))))
+      (svc/create-response {:comment (prepare-post-time comment)}))))
 
 
 (defn list-comments
