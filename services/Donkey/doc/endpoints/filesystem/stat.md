@@ -16,40 +16,30 @@ __Request Body__:
 ```json
 {
     "paths": [
-        "/iplant/home/dennis/foo",
-        "/iplant/home/dennis/foo.txt",
-        "/iplant/home/dennis/foo.bar"
+         "/iplant/home/wregglej/BTSync.dmg"
     ]
 }
 ```
 
 __Response Body__:
-
 ```json
 {
     "paths": {
-        "/iplant/home/dennis/foo": {
-            "share-count": 0,
+        "/iplant/home/wregglej/BTSync.dmg": {
+            "date-created": 1.398183371e+12,
+            "date-modified": 1.398183371e+12,
+            "file-size": 1.0822742e+07,
+            "id": "0dfcac40-df8a-11e3-bfa5-6abdce5a08d5",
+            "info-type": "",
+            "label": "BTSync.dmg",
+            "mime-type": "application/octet-stream",
+            "path": "/iplant/home/wregglej/BTSync.dmg",
             "permission": "own",
-            "dir-count": 3,
-            "file-count": 4,
-            "created": "1339001248000",
-            "modified": "1339001248000",
-            "type": "dir"
-        },
-        "/iplant/home/dennis/foo.bar": null,
-        "/iplant/home/dennis/foo.txt": {
-            "share-count": 0,
-            "permission": "own",
-            "created": "1335289356000",
-            "modified": "1335289356000",
-            "size": 4,
-            "type": "file",
-            "info-type": "<an info type or empty string>",
-            "mime-type": "<a valid filetype>"
+            "share-count": 1,
+            "type": "file"
         }
     },
-    "status": "success"
+    "success": true
 }
 ```
 
@@ -59,7 +49,7 @@ The "share-count" field is provided for both files and directories and lists the
 
 __Curl Command__:
 
-    curl -H "Content-Type:application/json" -sd '{"paths":["/iplant/home/dennis/foo","/iplant/home/dennis/foo.txt","/iplant/home/dennis/foo.bar"]}' http://services-2:31360/secured/filesystem/stat?proxyToken=notReal
+    curl -H "Content-Type:application/json" -sd '{"paths":["/iplant/home/wregglej/BTSync.dmg"]}' http://services-2:31360/secured/filesystem/stat?proxyToken=notReal
 
 
 
