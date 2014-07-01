@@ -19,6 +19,14 @@
   (assoc comment :post_time (.getTime (:post_time comment))))
 
 
+(defn- read-body
+  [stream]
+  (try+
+    (slurp stream)
+    (catch OutOfMemoryError _
+      (throw+ {:error_code err/ERR_REQUEST_BODY_TOO_LARGE}))))
+
+
 (defn- validate-entry-accessible
   [fs-cfg user entry-id]
   (fs-init/with-jargon fs-cfg [fs]
@@ -36,7 +44,7 @@
   (try+
     (let [user     (:shortUsername user/current-user)
           entry-id (UUID/fromString entry-id)
-          comment  (-> body slurp (json/parse-string true) :comment)]
+          comment  (-> body read-body (json/parse-string true) :comment)]
       (validate-entry-accessible (config/jargon-cfg) user entry-id)
       (when-not comment (throw+ {:error_code err/ERR_INVALID_JSON}))
       (let [comment (db/insert-comment  user entry-id "data" comment)]
