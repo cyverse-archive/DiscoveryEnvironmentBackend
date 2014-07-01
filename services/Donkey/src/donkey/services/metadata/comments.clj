@@ -1,10 +1,10 @@
 (ns donkey.services.metadata.comments
-  (:use [slingshot.slingshot :only [try+ throw+]]
-        [clojure-commons.error-codes])
+  (:use [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [cheshire.core :as json]
             [clj-jargon.init :as fs-init]
             [clj-jargon.permissions :as fs-perm]
+            [clojure-commons.error-codes :as err]
             [donkey.auth.user-attributes :as user]
             [donkey.persistence.metadata :as db]
             [donkey.util.config :as config]
@@ -13,6 +13,31 @@
             [donkey.services.filesystem.uuids :as uuid])
   (:import [java.util UUID]
            [com.fasterxml.jackson.core JsonParseException]))
+
+
+(defn- extract-uuid
+  [uuid-txt]
+  (try+
+    (UUID/fromString uuid-txt)
+    (catch IllegalArgumentException _ (throw+ {:error_code err/ERR_NOT_FOUND}))))
+
+
+(defn- extract-comment-id
+  [comment-id-text]
+  (try+
+    (let [comment-id (extract-uuid comment-id-text)]
+      (when-not (db/comment-exists? comment-id)
+        (throw+ {:error_code err/ERR_NOT_FOUND}))
+      comment-id)))
+
+
+(defn- extract-entry-id
+  [fs user entry-id-txt]
+  (try+
+    (let [entry-id (extract-uuid entry-id-txt)]
+      (uuid/validate-uuid-accessible fs user entry-id)
+      entry-id)
+    (catch [:error_code err/ERR_DOES_NOT_EXIST] _ (throw+ {:error_code err/ERR_NOT_FOUND}))))
 
 
 (defn- prepare-post-time
@@ -25,17 +50,7 @@
   (try+
     (slurp stream)
     (catch OutOfMemoryError _
-      (throw+ {:error_code ERR_REQUEST_BODY_TOO_LARGE}))))
-
-
-(defn- extract-entry-id
-  [fs user entry-id-txt]
-  (try+
-    (let [entry-id (UUID/fromString entry-id-txt)]
-      (uuid/validate-uuid-accessible fs user entry-id)
-      entry-id)
-    (catch [:error_code ERR_DOES_NOT_EXIST] _ (throw+ {:error_code ERR_NOT_FOUND}))
-    (catch IllegalArgumentException _ (throw+ {:error_code ERR_NOT_FOUND}))))
+      (throw+ {:error_code err/ERR_REQUEST_BODY_TOO_LARGE}))))
 
 
 (defn add-comment
@@ -51,11 +66,11 @@
       (let [user     (:shortUsername user/current-user)
             entry-id (extract-entry-id fs user entry-id)
             comment  (-> body read-body (json/parse-string true) :comment)]
-        (when-not comment (throw+ {:error_code ERR_INVALID_JSON}))
+        (when-not comment (throw+ {:error_code err/ERR_INVALID_JSON}))
         (svc/create-response {:comment (->> comment
                                          (db/insert-comment user entry-id "data")
                                          prepare-post-time)})))
-    (catch JsonParseException _ (throw+ {:error_code ERR_INVALID_JSON}))))
+    (catch JsonParseException _ (throw+ {:error_code err/ERR_INVALID_JSON}))))
 
 
 (defn list-comments
@@ -84,7 +99,7 @@
   (fs-init/with-jargon (config/jargon-cfg) [fs]
     (let [user        (:shortUsername user/current-user)
           entry-id    (extract-entry-id fs user entry-id)
-          comment-id  (UUID/fromString comment-id)
+          comment-id  (extract-comment-id comment-id)
           retracting? (Boolean/parseBoolean retracted)
           entry-path  (:path (uuid/path-for-uuid fs user (str entry-id)))
           owns-entry? (and entry-path (fs-perm/owns? fs user entry-path))
