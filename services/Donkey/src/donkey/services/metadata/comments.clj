@@ -1,6 +1,7 @@
 (ns donkey.services.metadata.comments
   (:use [slingshot.slingshot :only [try+ throw+]])
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.string :as str]
+            [clojure.tools.logging :as log]
             [cheshire.core :as json]
             [clj-jargon.init :as fs-init]
             [clj-jargon.permissions :as fs-perm]
@@ -86,6 +87,16 @@
       (svc/success-response {:comments comments}))))
 
 
+(defn- extract-retracted
+  [retracted-txt]
+  (when-not retracted-txt
+    (throw+ {:error_code err/ERR_MISSING_QUERY_PARAMETER :parameter "retracted"}))
+  (case (str/lower-case retracted-txt)
+    "true"  true
+    "false" false
+            (throw+ {:error_code err/ERR_BAD_QUERY_PARAMETER :parameter "retracted"})))
+
+
 (defn update-retract-status
   [entry-id comment-id retracted]
   "Changes the retraction status for a given comment.
@@ -95,12 +106,12 @@
                 owning the comment being modified
      comment-id - the comment-id from the request. This should be the UUID corresponding to the
                   comment being modified
-     retracted - the `retracted` query parameter.  This should be either `true` or `false`."
+     retracted - the `retracted` query parameter. This should be either `true` or `false`."
   (fs-init/with-jargon (config/jargon-cfg) [fs]
     (let [user        (:shortUsername user/current-user)
           entry-id    (extract-entry-id fs user entry-id)
           comment-id  (extract-comment-id comment-id)
-          retracting? (Boolean/parseBoolean retracted)
+          retracting? (extract-retracted retracted)
           entry-path  (:path (uuid/path-for-uuid fs user (str entry-id)))
           owns-entry? (and entry-path (fs-perm/owns? fs user entry-path))
           comment     (db/select-comment comment-id)]

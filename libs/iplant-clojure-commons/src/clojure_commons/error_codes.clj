@@ -47,12 +47,14 @@
 (deferr ERR_REQUEST_BODY_TOO_LARGE)
 
 (def ^:private http-status-for
-  {ERR_ILLEGAL_ARGUMENT       400
-   ERR_INVALID_JSON           400
-   ERR_BAD_REQUEST            400
-   ERR_NOT_FOUND              404
-   ERR_REQUEST_BODY_TOO_LARGE 413
-   ERR_TEMPORARILY_MOVED      302})
+  {ERR_ILLEGAL_ARGUMENT        400
+   ERR_INVALID_JSON            400
+   ERR_BAD_REQUEST             400
+   ERR_BAD_QUERY_PARAMETER     400
+   ERR_MISSING_QUERY_PARAMETER 400
+   ERR_NOT_FOUND               404
+   ERR_REQUEST_BODY_TOO_LARGE  413
+   ERR_TEMPORARILY_MOVED       302})
 
 (defn get-http-status
   [err-code]
