@@ -91,10 +91,18 @@
   [retracted-txt]
   (when-not retracted-txt
     (throw+ {:error_code err/ERR_MISSING_QUERY_PARAMETER :parameter "retracted"}))
-  (case (str/lower-case retracted-txt)
-    "true"  true
-    "false" false
-            (throw+ {:error_code err/ERR_BAD_QUERY_PARAMETER :parameter "retracted"})))
+  (if (coll? retracted-txt)
+    (let [vals (set (map str/lower-case retracted-txt))]
+      (when (> (count vals) 1) (throw+ {:error_code err/ERR_CONFLICTING_QUERY_PARAMETER_VALUES
+                                        :parameter  "retracted"
+                                        :values     vals}))
+      (extract-retracted (first vals)))
+    (case (str/lower-case retracted-txt)
+      "true"  true
+      "false" false
+              (throw+ {:error_code err/ERR_BAD_QUERY_PARAMETER
+                       :parameter  "retracted"
+                       :value      retracted-txt}))))
 
 
 (defn update-retract-status
