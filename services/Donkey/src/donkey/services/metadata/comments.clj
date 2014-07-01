@@ -10,7 +10,8 @@
             [donkey.util.service :as svc]
             [donkey.services.filesystem.validators :as valid]
             [donkey.services.filesystem.uuids :as uuid])
-  (:import [java.util UUID]))
+  (:import [java.util UUID]
+           [com.fasterxml.jackson.core JsonParseException]))
 
 
 (defn- prepare-post-time
@@ -37,11 +38,12 @@
           entry-id (UUID/fromString entry-id)
           comment  (-> body slurp (json/parse-string true) :comment)]
       (validate-entry-accessible (config/jargon-cfg) user entry-id)
+      (when-not comment (throw+ {:error_code err/ERR_INVALID_JSON}))
       (let [comment (db/insert-comment  user entry-id "data" comment)]
         (svc/create-response {:comment (prepare-post-time comment)})))
-    (catch [:error_code err/ERR_NOT_FOUND] _ (throw+ {:type :not-found}))
-    (catch [:error_code err/ERR_DOES_NOT_EXIST] _ (throw+ {:type :not-found}))
-    (catch IllegalArgumentException _ (throw+ {:type :not-found}))))
+    (catch [:error_code err/ERR_DOES_NOT_EXIST] _ (throw+ {:error_code  err/ERR_NOT_FOUND}))
+    (catch IllegalArgumentException _ (throw+ {:error_code  err/ERR_NOT_FOUND}))
+    (catch JsonParseException _ (throw+ {:error_code err/ERR_INVALID_JSON}))))
 
 
 (defn list-comments
