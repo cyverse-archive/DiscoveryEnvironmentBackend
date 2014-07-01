@@ -215,8 +215,7 @@
   (korma/with-db db/metadata
     (select [:template_instances :t]
             (fields :template_id)
-            (join :avus
-                  {:t.avu_id :avus.id})
+            (join :avus {:t.avu_id :avus.id})
             (where {:avus.target_id data-id
                     :avus.target_type (->enum-val "data")
                     :avus.owner_id user-id})
@@ -237,9 +236,8 @@
     (korma/transaction
      (remove-avu-template-instances template-id avu-ids)
      (insert :template_instances
-             (values (map #(hash-map :template_id template-id
-                                     :avu_id %)
-                          avu-ids))))))
+             (values
+              (map #(hash-map :template_id template-id, :avu_id %) avu-ids))))))
 
 (defn add-metadata-template-avus
   "Adds the given AVUs to the Metadata database."
@@ -267,4 +265,24 @@
   [avu-id]
   (korma/with-db db/metadata
     (delete :avus (where {:id avu-id}))))
+
+(defn remove-data-item-template-instances
+  "Removes all Metadata Template AVU associations from the given data item."
+  [user-id data-id]
+  (let [avu-id-select (-> (select* :avus)
+                          (fields :id)
+                          (where {:target_id data-id
+                                  :target_type (->enum-val "data")
+                                  :owner_id user-id}))]
+    (korma/with-db db/metadata
+    (delete :template_instances (where {:avu_id [in (subselect avu-id-select)]})))))
+
+(defn set-template-instances
+  "Associates the given AVU IDs with the given Metadata Template ID,
+   removing all other Metadata Template ID associations."
+  [user-id data-id template-id avu-ids]
+  (korma/with-db db/metadata
+    (korma/transaction
+     (remove-data-item-template-instances user-id data-id)
+     (add-template-instances template-id avu-ids))))
 

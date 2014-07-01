@@ -77,7 +77,7 @@
        (dorun (map persistence/update-avu existing-avus)))
      (when (seq new-avus)
        (persistence/add-metadata-template-avus new-avus))
-     (dorun (persistence/add-template-instances template-id (map :id avus))))
+     (dorun (persistence/set-template-instances user-id data-id template-id (map :id avus))))
     {:user user-id
      :data_id data-id
      :template_id template-id

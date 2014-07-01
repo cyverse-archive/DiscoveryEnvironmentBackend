@@ -357,6 +357,8 @@ timestamp, and also ensure that the AVU is associated with the metadata template
 without an ID will be added to the data item if the AVU does not already exist, otherwise the AVU
 with matching attr, owner, and target is updated as previously described.
 
+AVUs can only be associated with one metadata template per data item, per user. All AVUs on the given data item will be disaccociated with all other Metadata Templates.
+
 __URL Path__: /secured/filesystem/:data-id/template-avus/:template-id
 
 __HTTP Method__: POST
