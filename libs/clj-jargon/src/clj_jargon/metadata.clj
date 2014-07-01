@@ -137,7 +137,8 @@
       (.addConditionAsGenQueryField RodsGenQueryEnum/COL_META_DATA_ATTR_NAME
                                     QueryConditionOperators/EQUAL name)
       (.addConditionAsGenQueryField RodsGenQueryEnum/COL_META_DATA_ATTR_VALUE
-                                    (op->constant op) value)
+                                    (op->constant op)
+                                    (str value))
       (.exportIRODSQueryFromBuilder 50000)))
 
 (defn- build-file-attr-query
@@ -160,7 +161,8 @@
       (.addConditionAsGenQueryField RodsGenQueryEnum/COL_META_DATA_ATTR_NAME
                                     QueryConditionOperators/EQUAL attr)
       (.addConditionAsGenQueryField RodsGenQueryEnum/COL_META_DATA_ATTR_VALUE
-                                    (op->constant op) value)
+                                    (op->constant op)
+                                    (str value))
       (.exportIRODSQueryFromBuilder 50000)))
 
 (defn list-files-with-attr
@@ -366,7 +368,7 @@
   (let [query [(AVUQueryElement/instanceForValueQuery
                 AVUQueryElement$AVUQueryPart/VALUE
                 AVUQueryOperatorEnum/EQUAL
-                value)
+                (str value))
                (AVUQueryElement/instanceForValueQuery
                 AVUQueryElement$AVUQueryPart/ATTRIBUTE
                 AVUQueryOperatorEnum/EQUAL

@@ -120,7 +120,7 @@
           entry-id    (extract-entry-id fs user entry-id)
           comment-id  (extract-comment-id comment-id)
           retracting? (extract-retracted retracted)
-          entry-path  (:path (uuid/path-for-uuid fs user (str entry-id)))
+          entry-path  (:path (uuid/path-for-uuid fs user entry-id))
           owns-entry? (and entry-path (fs-perm/owns? fs user entry-path))
           comment     (db/select-comment comment-id)]
       (if (and entry-path comment)
