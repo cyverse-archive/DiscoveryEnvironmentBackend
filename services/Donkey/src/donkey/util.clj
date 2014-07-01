@@ -34,7 +34,7 @@
    (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
    (catch ce/error? err
      (log/error (ce/format-exception (:throwable &throw-context)))
-     (error-response err))
+     (error-response err (ce/get-http-status (:error_code err))))
 
    (catch IllegalArgumentException e (failure-response e))
    (catch IllegalStateException e (failure-response e))

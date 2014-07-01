@@ -104,9 +104,12 @@
   (log/error e "bad request")
   (donkey-response e 400))
 
-(defn error-response [e]
-  (log/error e "internal error")
-  (donkey-response e 500))
+(defn error-response
+  ([e]
+    (error-response e 500))
+  ([e status]
+    (when (>= status 500) (log/error e "internal error"))
+    (donkey-response e status)))
 
 (defn invalid-arg-response [arg val reason]
   {:status       400

@@ -54,7 +54,7 @@
    ERR_REQUEST_BODY_TOO_LARGE 413
    ERR_TEMPORARILY_MOVED      302})
 
-(defn- get-http-status
+(defn get-http-status
   [err-code]
   (get http-status-for err-code 500))
 
