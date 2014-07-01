@@ -44,7 +44,7 @@
   [cm path]
   (let [ipc-regex #"(?i)^ipc"]
     (filterv
-     #(not= (:unit %) IPCSYSTEM)
+     #(not (ipc-avu? %))
      (map fix-unit (get-metadata cm (ft/rm-last-slash path))))))
 
 (defn- reserved-unit
@@ -101,6 +101,7 @@
       (throw+ {:error_code ERR_INVALID_JSON}))
     (validators/path-exists cm path)
     (validators/path-writeable cm user path)
+    (authorized-avus [avu-map])
     {:path (common-metadata-set cm path avu-map)
      :user user}))
 
@@ -144,6 +145,8 @@
     (validators/user-exists cm user)
     (validators/path-exists cm path)
     (validators/path-writeable cm user path)
+    (authorized-avus (:delete adds-dels))
+    (authorized-avus (:add adds-dels))
     (let [new-path (ft/rm-last-slash path)]
       (doseq [del (:delete adds-dels)]
         (let [attr  (:attr del)
@@ -165,6 +168,7 @@
     (validators/user-exists cm user)
     (validators/path-exists cm path)
     (validators/path-writeable cm user path)
+    (authorized-avus [{:attr attr :value value :unit ""}])
     (delete-metadata cm path attr value)
     {:path path :user user}))
 
