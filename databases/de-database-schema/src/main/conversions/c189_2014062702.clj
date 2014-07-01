@@ -37,7 +37,10 @@
   (println "\t* updating the jobs table")
   (exec-raw "ALTER TABLE jobs DROP COLUMN external_id")
   (exec-raw "ALTER TABLE jobs ADD COLUMN app_id character varying(255)")
-  (exec-raw "ALTER TABLE jobs DROP COLUMN job_type_id"))
+  (exec-raw "ALTER TABLE jobs DROP COLUMN job_type_id")
+  (exec-raw "ALTER TABLE jobs ADD COLUMN app_wiki_url text")
+  (exec-raw "ALTER TABLE jobs ADD COLUMN app_description text")
+  (exec-raw "ALTER TABLE jobs ADD COLUMN result_folder_path text"))
 
 (defn convert
   "Performs the database conversion."
