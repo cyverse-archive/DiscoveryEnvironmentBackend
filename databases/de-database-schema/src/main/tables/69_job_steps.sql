@@ -4,8 +4,8 @@ SET search_path = public, pg_catalog;
 -- Records individual steps of jobs that the user has submitted.
 --
 CREATE TABLE job_steps (
-    id uuid NOT NULL,
     job_id uuid NOT NULL,
+    step_number integer NOT NULL,
     external_id character varying(40) NOT NULL,
     start_date timestamp,
     end_date timestamp,

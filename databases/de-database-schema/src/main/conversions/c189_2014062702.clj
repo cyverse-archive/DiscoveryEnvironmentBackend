@@ -1,6 +1,5 @@
 (ns facepalm.c189-2014062702
-  (:use [korma.core])
-  (:import [java.util UUID]))
+  (:use [korma.core]))
 
 (def ^:private version
   "The destination database version."
@@ -11,24 +10,25 @@
   (println "\t* adding the job_steps table")
   (exec-raw
    "CREATE TABLE job_steps (
-    id uuid NOT NULL,
     job_id uuid NOT NULL REFERENCES jobs(id),
+    step_number integer NOT NULL,
     external_id character varying(40) NOT NULL,
     start_date timestamp,
     end_date timestamp,
     status character varying(64) NOT NULL,
     job_type_id bigint NOT NULL REFERENCES job_types(id),
     app_step_number integer NOT NULL,
-    PRIMARY KEY (id))"))
+    PRIMARY KEY (job_id, step_number))"))
 
 (defn- populate-job-steps-table
   []
   (println "\t* populating the job_steps table")
   (->> (select :jobs (fields :id :external_id :start_date :end_date :status :job_type_id))
-       (map (fn [m] (assoc m
-                      :job_id          (:id m)
-                      :id              (UUID/randomUUID)
-                      :app_step_number 1)))
+       (map (fn [m] (-> (assoc m
+                          :job_id          (:id m)
+                          :step_number     1
+                          :app_step_number 1)
+                        (dissoc :id))))
        (map (fn [m] (insert :job_steps (values m))))
        (dorun)))
 

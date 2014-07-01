@@ -997,7 +997,7 @@ ALTER TABLE ONLY jobs
 --
 ALTER TABLE ONLY job_steps
     ADD CONSTRAINT job_steps_pkey
-    PRIMARY KEY (id);
+    PRIMARY KEY (job_id, step_number);
 
 --
 -- Foreign key constraint for the job_id field of the job_steps table.
