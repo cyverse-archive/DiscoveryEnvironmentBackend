@@ -123,16 +123,11 @@
           entry-path  (:path (uuid/path-for-uuid fs user entry-id))
           owns-entry? (and entry-path (fs-perm/owns? fs user entry-path))
           comment     (db/select-comment comment-id)]
-      (if (and entry-path comment)
-        (if retracting?
-          (if (or owns-entry? (= user (:owner_id comment)))
-            (do
-              (db/retract-comment comment-id user)
-              (svc/success-response))
-            (svc/donkey-response {} 403))
-          (if (= user (:retracted_by comment))
-            (do
-              (db/readmit-comment comment-id)
-              (svc/success-response))
-            (svc/donkey-response {} 403)))
-        (svc/donkey-response {} 404)))))
+      (if retracting?
+        (if (or owns-entry? (= user (:owner_id comment)))
+          (db/retract-comment comment-id user)
+          (throw+ {:error_code err/ERR_NOT_OWNER :reason "doesn't own either entry or comment"}))
+        (if (= user (:retracted_by comment))
+          (db/readmit-comment comment-id)
+          (throw+ {:error_code err/ERR_NOT_OWNER :reason "wasn't retractor"})))
+      (svc/success-response))))
