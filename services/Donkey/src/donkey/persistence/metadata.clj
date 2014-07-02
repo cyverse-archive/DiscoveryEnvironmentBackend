@@ -69,9 +69,7 @@
       The comment resource or nil if comment-id isn't a comment that hasn't been deleted."
   [comment-id]
   (-> (korma/with-db db/metadata
-        (select :comments
-          (where {:id      comment-id
-                  :deleted false})))
+        (select :comments (where {:id comment-id :deleted false})))
     first fmt-comment))
 
 (defn select-all-comments
@@ -86,9 +84,7 @@
   [target-id]
   (map fmt-comment
        (korma/with-db db/metadata
-         (select :comments
-           (where {:target_id target-id
-                   :deleted   false})))))
+         (select :comments (where {:target_id target-id :deleted false})))))
 
 (defn retract-comment
   "Marks a comment as retracted. It assumes the retracting user is an authenticated user. If the
@@ -100,8 +96,7 @@
   [comment-id retracting-user]
   (korma/with-db db/metadata
     (update :comments
-      (set-fields {:retracted    true
-                   :retracted_by retracting-user})
+      (set-fields {:retracted true :retracted_by retracting-user})
       (where {:id comment-id})))
   nil)
 
@@ -113,44 +108,74 @@
   [comment-id]
   (korma/with-db db/metadata
     (update :comments
-      (set-fields {:retracted    false
-                   :retracted_by nil})
+      (set-fields {:retracted false :retracted_by nil})
       (where {:id comment-id})))
   nil)
 
 
 ;; FAVORITES
 
-(defn is-favorite
-  [owner target-id]
+(defn is-favorite?
+  "Indicates whether or not given target is a favorite of the given authenticated user.
+
+   Parameters:
+     user      - the authenticated user name
+     target-id - the UUID of the thing being marked as a user favorite
+
+   Returns:
+     It returns true if the give target has been marked as a favorite, otherwise it returns false.
+     It also returns false if the user or target doesn't exist."
+  [user target-id]
   (-> (korma/with-db db/metadata
         (select :favorites
           (aggregate (count :*) :cnt)
-          (where {:target_id target-id :owner_id owner})))
+          (where {:target_id target-id :owner_id user})))
     first :cnt pos?))
 
 (defn select-favorites-of-type
-  [owner target-type]
+  "Selects all targets of a given type that have are favorites of a given authenticated user.
+
+   Parameters:
+     user        - the authenticated user name
+     target-type - the type of target (`analysis`|`app`|`data`|`user`)
+
+   Returns:
+     It returns a lazy sequence of favorite target UUIDs. If the user doesn't exist, the sequence
+     will be empty."
+  [user target-type]
   (map :target_id
        (korma/with-db db/metadata
          (select :favorites
            (fields :target_id)
            (where {:target_type (->enum-val target-type)
-                   :owner_id    owner})))))
+                   :owner_id    user})))))
 
 (defn insert-favorite
-  [owner target-id target-type]
+  "Marks a given target as a favorite of the given authenticated user. It assumes the authenticated
+   user exists and the target is of the indicated type.
+
+   Parameters:
+     user        - the authenticated user name
+     target-id   - the UUID of the target
+     target-type - the type of target (`analysis`|`app`|`data`|`user`)"
+  [user target-id target-type]
   (korma/with-db db/metadata
     (insert :favorites
       (values {:target_id   target-id
                :target_type (->enum-val target-type)
-               :owner_id    owner}))))
+               :owner_id    user})))
+  nil)
 
 (defn delete-favorite
-  [owner target-id]
+  [user target-id]
+  "Unmarks a given target as a favorite of the given authenticated user.
+
+   Parameters:
+     user      - the authenticated user name
+     target-id - the UUID of the target"
   (korma/with-db db/metadata
-    (delete :favorites
-      (where {:target_id target-id :owner_id owner}))))
+    (delete :favorites (where {:target_id target-id :owner_id user})))
+  nil)
 
 
 ;; TAGS

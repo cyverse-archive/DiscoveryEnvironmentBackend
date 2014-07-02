@@ -46,7 +46,7 @@
         entry-id (UUID/fromString entry-id)]
     (fs/with-jargon (cfg/jargon-cfg) [cm]
       (uuids/validate-uuid-accessible cm user entry-id))
-    (when-not (db/is-favorite user entry-id)
+    (when-not (db/is-favorite? user entry-id)
       (db/insert-favorite user entry-id "data"))
     (svc/success-response)))
 
@@ -59,7 +59,7 @@
   [entry-id]
   (let [user     (:shortUsername user/current-user)
         entry-id (UUID/fromString entry-id)]
-  (if (db/is-favorite user entry-id)
+  (if (db/is-favorite? user entry-id)
     (do
       (db/delete-favorite user entry-id)
       (svc/success-response))
