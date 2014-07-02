@@ -26,13 +26,14 @@
      :retracted (:retracted rec)
      :comment   (:value rec)}))
 
-(defn comment-exists?
-  [comment-id]
+(defn comment-on?
+  [comment-id entry-id]
   (-> (korma/with-db db/metadata
         (select :comments
           (aggregate (count :*) :cnt)
-          (where {:id      comment-id
-                  :deleted false})))
+          (where {:id        comment-id
+                  :target_id entry-id
+                  :deleted   false})))
     first :cnt pos?))
 
 (defn select-comment

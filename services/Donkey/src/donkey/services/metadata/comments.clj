@@ -24,10 +24,10 @@
 
 
 (defn- extract-comment-id
-  [comment-id-text]
+  [entry-id comment-id-text]
   (try+
     (let [comment-id (extract-uuid comment-id-text)]
-      (when-not (db/comment-exists? comment-id)
+      (when-not (db/comment-on? comment-id entry-id)
         (throw+ {:error_code err/ERR_NOT_FOUND}))
       comment-id)))
 
@@ -118,7 +118,7 @@
   (fs-init/with-jargon (config/jargon-cfg) [fs]
     (let [user        (:shortUsername user/current-user)
           entry-id    (extract-entry-id fs user entry-id)
-          comment-id  (extract-comment-id comment-id)
+          comment-id  (extract-comment-id entry-id comment-id)
           retracting? (extract-retracted retracted)
           entry-path  (:path (uuid/path-for-uuid fs user entry-id))
           owns-entry? (and entry-path (fs-perm/owns? fs user entry-path))
