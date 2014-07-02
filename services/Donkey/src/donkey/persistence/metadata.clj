@@ -70,12 +70,10 @@
 
 ;; FAVORITES
 
-(defentity ^{:private true} favorites)
-
 (defn is-favorite
   [owner target-id]
   (-> (korma/with-db db/metadata
-        (select favorites
+        (select :favorites
           (aggregate (count :*) :cnt)
           (where {:target_id target-id :owner_id owner})))
     first :cnt pos?))
@@ -84,7 +82,7 @@
   [owner target-type]
   (map :target_id
        (korma/with-db db/metadata
-         (select favorites
+         (select :favorites
            (fields :target_id)
            (where {:target_type (->enum-val target-type)
                    :owner_id    owner})))))
@@ -92,7 +90,7 @@
 (defn insert-favorite
   [owner target-id target-type]
   (korma/with-db db/metadata
-    (insert favorites
+    (insert :favorites
       (values {:target_id   target-id
                :target_type (->enum-val target-type)
                :owner_id    owner}))))
@@ -100,28 +98,23 @@
 (defn delete-favorite
   [owner target-id]
   (korma/with-db db/metadata
-    (delete favorites
+    (delete :favorites
       (where {:target_id target-id :owner_id owner}))))
 
 
 ;; TAGS
 
-(defentity ^{:private true} attached_tags)
-
-(defentity ^{:private true} tags
-  (entity-fields :id :owner_id :value :description))
-
 (defn filter-tags-owned-by-user
   [owner tag-ids]
   (map :id
        (korma/with-db db/metadata
-         (select tags
+         (select :tags
            (fields :id)
            (where {:owner_id owner :id [in tag-ids]})))))
 
 (defn get-tags-by-value
   [owner value & [max-results]]
-  (let [query  (-> (select* tags)
+  (let [query  (-> (select* :tags)
                    (fields :id :value :description)
                    (where {:owner_id owner :value [like value]}))
         query' (if max-results
@@ -134,13 +127,13 @@
 (defn get-tag
   [tag-id]
   (korma/with-db db/metadata
-    (select tags
+    (select :tags
       (where {:id (UUID/fromString tag-id)}))))
 
 (defn insert-user-tag
   [owner value description]
   (korma/with-db db/metadata
-    (insert tags
+    (insert :tags
       (values {:value       value
                :description description
                :owner_id    owner}))))
@@ -148,17 +141,17 @@
 (defn update-user-tag
   [tag-id updates]
   (korma/with-db db/metadata
-    (update tags
+    (update :tags
       (set-fields updates)
       (where {:id (UUID/fromString tag-id)}))))
 
 (defn select-attached-tags
   [user target-id]
   (korma/with-db db/metadata
-    (select tags
+    (select :tags
       (fields :id :value :description)
       (where {:owner_id user
-              :id       [in (subselect attached_tags
+              :id       [in (subselect :attached_tags
                               (fields :tag_id)
                               (where {:target_id   target-id
                                       :detached_on nil}))]}))))
@@ -167,7 +160,7 @@
   [target-id tag-ids]
   (map :tag_id
        (korma/with-db db/metadata
-         (select attached_tags
+         (select :attached_tags
            (fields :tag_id)
            (where {:target_id   target-id
                    :detached_on nil
@@ -182,12 +175,12 @@
                                      :attacher_id attacher)
                           tag-ids)]
       (korma/with-db db/metadata
-        (insert attached_tags (values new-values))))))
+        (insert :attached_tags (values new-values))))))
 
 (defn mark-tags-detached
   [detacher target-id tag-ids]
   (korma/with-db db/metadata
-    (update attached_tags
+    (update :attached_tags
       (set-fields {:detacher_id detacher
                    :detached_on (sqlfn now)})
       (where {:target_id   target-id
