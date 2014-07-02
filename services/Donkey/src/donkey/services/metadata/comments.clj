@@ -41,9 +41,29 @@
     (catch [:error_code err/ERR_DOES_NOT_EXIST] _ (throw+ {:error_code err/ERR_NOT_FOUND}))))
 
 
-(defn- prepare-post-time
+(defn- extract-retracted
+  [retracted-txt]
+  (when-not retracted-txt
+    (throw+ {:error_code err/ERR_MISSING_QUERY_PARAMETER :parameter "retracted"}))
+  (if (coll? retracted-txt)
+    (let [vals (set (map str/lower-case retracted-txt))]
+      (when (> (count vals) 1) (throw+ {:error_code err/ERR_CONFLICTING_QUERY_PARAMETER_VALUES
+                                        :parameter  "retracted"
+                                        :values     vals}))
+      (extract-retracted (first vals)))
+    (case (str/lower-case retracted-txt)
+      "true"  true
+      "false" false
+      (throw+ {:error_code err/ERR_BAD_QUERY_PARAMETER
+               :parameter  "retracted"
+               :value      retracted-txt}))))
+
+
+(defn- prepare-comment
   [comment]
-  (assoc comment :post_time (.getTime (:post_time comment))))
+  (-> comment
+    (dissoc :retracted_by)
+    (assoc :post_time (.getTime (:post_time comment)))))
 
 
 (defn- read-body
@@ -70,7 +90,7 @@
         (when-not comment (throw+ {:error_code err/ERR_INVALID_JSON}))
         (svc/create-response {:comment (->> comment
                                          (db/insert-comment user entry-id "data")
-                                         prepare-post-time)})))
+                                         prepare-comment)})))
     (catch JsonParseException _ (throw+ {:error_code err/ERR_INVALID_JSON}))))
 
 
@@ -83,26 +103,8 @@
                 being inspected"
   (fs-init/with-jargon (config/jargon-cfg) [fs]
     (let [entry-id (extract-entry-id fs (:shortUsername user/current-user) entry-id)
-          comments (map prepare-post-time (db/select-all-comments entry-id))]
+          comments (map prepare-comment (db/select-all-comments entry-id))]
       (svc/success-response {:comments comments}))))
-
-
-(defn- extract-retracted
-  [retracted-txt]
-  (when-not retracted-txt
-    (throw+ {:error_code err/ERR_MISSING_QUERY_PARAMETER :parameter "retracted"}))
-  (if (coll? retracted-txt)
-    (let [vals (set (map str/lower-case retracted-txt))]
-      (when (> (count vals) 1) (throw+ {:error_code err/ERR_CONFLICTING_QUERY_PARAMETER_VALUES
-                                        :parameter  "retracted"
-                                        :values     vals}))
-      (extract-retracted (first vals)))
-    (case (str/lower-case retracted-txt)
-      "true"  true
-      "false" false
-              (throw+ {:error_code err/ERR_BAD_QUERY_PARAMETER
-                       :parameter  "retracted"
-                       :value      retracted-txt}))))
 
 
 (defn update-retract-status
@@ -124,7 +126,7 @@
           owns-entry? (and entry-path (fs-perm/owns? fs user entry-path))
           comment     (db/select-comment comment-id)]
       (if retracting?
-        (if (or owns-entry? (= user (:owner_id comment)))
+        (if (or owns-entry? (= user (:commenter comment)))
           (db/retract-comment comment-id user)
           (throw+ {:error_code err/ERR_NOT_OWNER :reason "doesn't own either entry or comment"}))
         (if (= user (:retracted_by comment))

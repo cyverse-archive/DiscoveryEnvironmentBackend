@@ -12,60 +12,111 @@
 
 ;; COMMENTS
 
+(defn- fmt-comment
+  [comment]
+  (when comment
+    {:id           (:id comment)
+     :commenter    (:owner_id comment)
+     :post_time    (:post_time comment)
+     :retracted    (:retracted comment)
+     :retracted_by (:retracted_by comment)
+     :comment      (:value comment)}))
+
 (defn insert-comment
+  "Inserts a comment into the comments table.
+
+   Parameters:
+     owner       - The authenticated user making the comment
+     target-id   - The UUID of the thing being commented on
+     target-type - The type of target (`analysis`|`app`|`data`|`user`)
+     comment     - The comment
+
+   Returns:
+     It returns a comment resource"
   [owner target-id target-type comment]
-  (let [rec (korma/with-db db/metadata
-              (insert :comments
-                (values {:owner_id    owner
-                         :target_id   target-id
-                         :target_type (->enum-val target-type)
-                         :value       comment})))]
-    {:id        (:id rec)
-     :commenter (:owner_id rec)
-     :post_time (:post_time rec)
-     :retracted (:retracted rec)
-     :comment   (:value rec)}))
+  (fmt-comment (korma/with-db db/metadata
+                 (insert :comments
+                   (values {:owner_id    owner
+                            :target_id   target-id
+                            :target_type (->enum-val target-type)
+                            :value       comment})))))
 
 (defn comment-on?
-  [comment-id entry-id]
+  "Indicates whether or not a given comment was attached to a given target.
+
+   Parameters:
+     comment-id - The UUID of the comment
+     target-id  - The UUID of the target
+
+   Returns:
+     It returns true if the comment is attached to the target, otherwise it returns false."
+  [comment-id target-id]
   (-> (korma/with-db db/metadata
         (select :comments
           (aggregate (count :*) :cnt)
           (where {:id        comment-id
-                  :target_id entry-id
+                  :target_id target-id
                   :deleted   false})))
     first :cnt pos?))
 
 (defn select-comment
+  "Retrieves a comment resource
+
+    Parameters:
+      comment-id - The UUID of the comment
+
+    Returns:
+      The comment resource or nil if comment-id isn't a comment that hasn't been deleted."
   [comment-id]
-  (first (korma/with-db db/metadata
-           (select :comments
-             (where {:id      comment-id
-                     :deleted false})))))
+  (-> (korma/with-db db/metadata
+        (select :comments
+          (where {:id      comment-id
+                  :deleted false})))
+    first fmt-comment))
 
 (defn select-all-comments
+  "Retrieves all undeleted comments attached to a given target.
+
+   Parameters:
+     target-id - The UUID of the target of interest
+
+   Returns:
+     It returns a collection of comment resources attached to the target. If the target doesn't
+     exist, an empty collection will be returned."
   [target-id]
-  (korma/with-db db/metadata
-    (select :comments
-      (fields :id [:owner_id :commenter] :post_time :retracted [:value :comment])
-      (where {:target_id target-id
-              :deleted   false}))))
+  (map fmt-comment
+       (korma/with-db db/metadata
+         (select :comments
+           (where {:target_id target-id
+                   :deleted   false})))))
 
 (defn retract-comment
-  [comment-id rectracting-user]
+  "Marks a comment as retracted. It assumes the retracting user is an authenticated user. If the
+   comment doesn't exist, it silently fails.
+
+   Parameters:
+     comment-id      - The UUID of the comment being retracted
+     retracting-user - The authenticated user retracting the comment."
+  [comment-id retracting-user]
   (korma/with-db db/metadata
     (update :comments
       (set-fields {:retracted    true
-                   :retracted_by rectracting-user})
-      (where {:id comment-id}))))
+                   :retracted_by retracting-user})
+      (where {:id comment-id})))
+  nil)
 
 (defn readmit-comment
+  "Unmarks a comment as retracted. If the comment doesn't exist, it silently fails.
+
+   Parameters:
+     comment-id - The UUID of the comment being readmitted."
   [comment-id]
   (korma/with-db db/metadata
     (update :comments
       (set-fields {:retracted    false
                    :retracted_by nil})
-      (where {:id comment-id}))))
+      (where {:id comment-id})))
+  nil)
 
 
 ;; FAVORITES
