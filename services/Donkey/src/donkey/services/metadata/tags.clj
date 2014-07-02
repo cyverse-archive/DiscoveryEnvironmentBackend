@@ -120,11 +120,11 @@
                                                                      :description new-description}
                                     new-value                       {:value new-value}
                                     new-description                 {:description new-description})]
-              (when updates (db/update-user-tag tag-id updates))
+              (when updates (db/update-user-tag (UUID/fromString tag-id) updates))
               (svc/success-response)))]
-    (let [owner (:shortUsername user/current-user)
-          tag   (first (db/get-tag tag-id))]
+    (let [owner     (:shortUsername user/current-user)
+          tag-owner (db/get-tag-owner (UUID/fromString tag-id))]
       (cond
-        (empty? tag)                 (svc/donkey-response {} 404)
-        (not= owner (:owner_id tag)) (svc/donkey-response {} 403)
-        :else                        (do-update)))))
+        (nil? tag-owner)       (svc/donkey-response {} 404)
+        (not= owner tag-owner) (svc/donkey-response {} 403)
+        :else                  (do-update)))))
