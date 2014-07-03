@@ -124,17 +124,6 @@
                                                   :enddate   end-millis
                                                   :startdate start-millis)))))
 
-(defn remove-deleted-agave-jobs
-  "Marks jobs that have been deleted in Agave as deleted in the DE also."
-  [agave]
-  (try+
-   (let [extant-jobs (set (.listJobIds agave))]
-     (->> (jp/get-external-job-ids (:username current-user) {:job-types [jp/agave-job-type]})
-          (remove extant-jobs)
-          (map #(jp/update-job % {:deleted true}))
-          (dorun)))
-   (catch [:error_code ce/ERR_UNAVAILABLE] _ nil)))
-
 (defn- agave-job-status-changed
   [job curr-state]
   (or (nil? curr-state)

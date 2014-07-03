@@ -88,10 +88,6 @@
         de-apps (load-app-details (map :analysis_id states))]
     (mapv (partial format-de-job states de-apps) jobs)))
 
-(defn remove-deleted-de-jobs
-  "This function currently does nothing; the DE is notified any time one if its jobs is deleted."
-  [])
-
 (defn- de-job-status-changed
   [job curr-state]
   (or (not= (:status job) (:status curr-state))

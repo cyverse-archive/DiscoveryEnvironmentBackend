@@ -113,7 +113,6 @@
   (countJobs [_ filter])
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
-  (removeDeletedJobs [_])
   (updateJobStatus [_ username prev-status status end-time])
   (getJobParams [_ job-id])
   (getAppRerunInfo [_ job-id]))
@@ -170,9 +169,6 @@
   (syncJobStatus [_ job]
     (when (= (:job_type job) jp/de-job-type)
       (da/sync-de-job-status job)))
-
-  (removeDeletedJobs [_]
-    (da/remove-deleted-de-jobs))
 
   (updateJobStatus [_ username prev-status status end-time]
     (throw+ {:error_code ce/ERR_BAD_REQUEST
@@ -268,11 +264,6 @@
       (process-job agave-client (:id job) job
                    {:process-de-job    da/sync-de-job-status
                     :process-agave-job sync-agave})))
-
-  (removeDeletedJobs [_]
-    (da/remove-deleted-de-jobs)
-    (when (user-has-access-token?)
-      (aa/remove-deleted-agave-jobs agave-client)))
 
   (updateJobStatus [_ username prev-job-info status end-time]
     (update-job-status agave-client username prev-job-info status end-time))
@@ -387,7 +378,6 @@
         sort-order (keyword sort-order)
         app-lister (get-app-lister)
         filter     (when-not (nil? filter) (service/decode-json filter))]
-    (.removeDeletedJobs app-lister)
     (service/success-response
      {:analyses  (.listJobs app-lister limit offset sort-field sort-order filter)
       :timestamp (str (System/currentTimeMillis))
