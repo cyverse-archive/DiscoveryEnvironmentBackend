@@ -16,6 +16,7 @@
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]
+            [donkey.services.filesystem.stat :refer [detect-content-type]]
             [donkey.services.garnish.irods :as filetypes]
             [ring.util.codec :as cdc])
   (:import [org.apache.tika Tika]))
@@ -58,7 +59,7 @@
 (defn- manifest-map
   [cm user path]
   {:action       "manifest"
-   :content-type (.detect (Tika.) (ft/basename path))
+   :content-type (detect-content-type cm path)
    :urls         (extract-urls cm path)
    :info-type    (filetypes/get-types cm user path)
    :preview      (preview-url user path)})

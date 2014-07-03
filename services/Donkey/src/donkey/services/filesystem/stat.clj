@@ -42,12 +42,20 @@
     (merge stat-map {:share-count (count-shares cm user path)})
     stat-map))
 
+(defn detect-content-type
+  [cm path]
+  (let [path-type (.detect (Tika.) (ft/basename path))]
+    (if (or (= path-type "application/octet-stream")
+            (= path-type "text/plain"))
+      (.detect (Tika.) (input-stream cm path))
+      path-type)))
+
 (defn- merge-type-info
   [stat-map cm user path]
   (if-not (is-dir? cm path)
     (-> stat-map
       (merge {:info-type (filetypes/get-types cm user path)})
-      (merge {:mime-type (.detect (Tika.) (ft/basename path))}))
+      (merge {:mime-type (detect-content-type cm path)}))
     stat-map))
 
 (defn path-is-dir?
