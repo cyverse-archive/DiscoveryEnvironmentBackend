@@ -26,10 +26,6 @@
   [user path]
   (str "file/preview?user=" (cdc/url-encode user) "&path=" (cdc/url-encode path)))
 
-(defn- content-type
-  [cm path]
-  (.detect (Tika.) (input-stream cm path)))
-
 (defn- extract-tree-urls
   [cm fpath]
   (if (attribute? cm fpath "tree-urls")
@@ -62,10 +58,9 @@
 (defn- manifest-map
   [cm user path]
   {:action       "manifest"
-   :content-type (content-type cm path)
+   :content-type (.detect (Tika.) (ft/basename path))
    :urls         (extract-urls cm path)
    :info-type    (filetypes/get-types cm user path)
-   :mime-type    (.detect (Tika.) (input-stream cm path))
    :preview      (preview-url user path)})
 
 (defn- manifest
