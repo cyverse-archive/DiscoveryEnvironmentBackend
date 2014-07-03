@@ -128,7 +128,7 @@
   (-> (korma/with-db db/metadata
         (select :favorites
           (aggregate (count :*) :cnt)
-          (where {:target_id target-id :owner_id user})))
+          (where {:target_id (java.util.UUID/fromString target-id) :owner_id user})))
     first :cnt pos?))
 
 (defn select-favorites-of-type
