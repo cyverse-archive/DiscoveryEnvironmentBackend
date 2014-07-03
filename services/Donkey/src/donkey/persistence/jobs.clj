@@ -62,29 +62,41 @@
 
 (defn save-job
   "Saves information about a job in the database."
-  [job-id job-name job-type username status
-   & {:keys [id description app-name start-date end-date deleted]}]
+  [{:keys [id job-name description app-id app-name app-description app-wiki-url result-folder-path
+           start-date end-date status deleted username]}]
   (with-db db/de
-    (let [job-type-id (get-job-type-id job-type)
-          user-id     (get-user-id username)
-          id          (or id (UUID/randomUUID))]
+    (let [user-id (get-user-id username)]
       (insert :jobs
               (values (remove-nil-values
-                       {:id          id
-                        :external_id     (str job-id)
-                        :job_name        job-name
-                        :job_description description
-                        :app_name        app-name
+                       {:id                 id
+                        :job_name           job-name
+                        :job_description    description
+                        :app_id             app-id
+                        :app_name           app-name
+                        :app_description    app-description
+                        :app_wiki_url       app-wiki-url
+                        :result_folder_path result-folder-path
+                        :start_date         start-date
+                        :end_date           end-date
+                        :status             status
+                        :deleted            deleted
+                        :user_id            user-id}))))))
+
+(defn save-job-step
+  "Saves a single job step in the database."
+  [{:keys [job-id step-number external-id start-date end-date status job-type app-step-number]}]
+  (with-db db/de
+    (let [job-type-id (get-job-type-id job-type)]
+      (insert :job_steps
+              (values (remove-nil-values
+                       {:job_id job-id
+                        :step_number     step-number
+                        :external_id     external-id
                         :start_date      start-date
                         :end_date        end-date
                         :status          status
-                        :deleted         deleted
                         :job_type_id     job-type-id
-                        :user_id         user-id})))))
-  {:id job-id
-   :name job-name
-   :status status
-   :start-date (db/millis-from-timestamp start-date)})
+                        :app_step_number app-step-number}))))))
 
 (defn- count-jobs-base
   "The base query for counting the number of jobs in the database for a user."

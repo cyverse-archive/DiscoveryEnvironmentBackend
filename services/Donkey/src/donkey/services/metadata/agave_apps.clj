@@ -30,14 +30,28 @@
       (db/now)))
 
 (defn- store-agave-job
-  [agave id job]
-  (validate-map job agave-job-validation-map)
-  (jp/save-job (:id job) (:name job) jp/agave-job-type (:username current-user) (:status job)
-               :id          id
-               :description (:description job)
-               :app-name    (:analysis_name job)
-               :start-date  (determine-start-time job)
-               :end-date    (db/timestamp-from-str (str (:enddate job)))))
+  [job-id job]
+  (jp/save-job {:id                 job-id
+                :job-name           (:name job)
+                :description        (:description job)
+                :app-id             (:analysis_id job)
+                :app-name           (:analysis_name job)
+                :app-description    (:analysis_details job)
+                :app-wiki-url       (:wiki_url job)
+                :result-folder-path (:resultfolderid job)
+                :start-date         (db/timestamp-from-str (str (:startdate job)))
+                :username           (:username current-user)
+                :status             (:status job)}))
+
+(defn- store-job-step
+  [job-id job]
+  (jp/save-job-step {:job-id          job-id
+                     :step-number     1
+                     :external-id     (:id job)
+                     :start-date      (db/timestamp-from-str (str (:startdate job)))
+                     :status          (:status job)
+                     :job-type        jp/agave-job-type
+                     :app-step-number 1}))
 
 (defn- build-callback-url
   [id]
@@ -49,11 +63,12 @@
   (let [id     (UUID/randomUUID)
         cb-url (build-callback-url id)
         job    (.submitJob agave-client (assoc submission :callbackUrl cb-url))]
-    (store-agave-job agave-client id job)
+    (store-agave-job id job)
+    (store-job-step id job)
     (dn/send-agave-job-status-update (:shortUsername current-user) job)
-    {:id id
-     :name (:name job)
-     :status (:status job)
+    {:id         id
+     :name       (:name job)
+     :status     (:status job)
      :start-date (time-utils/millis-from-str (str (:startdate job)))}))
 
 (defn- determine-display-timestamp

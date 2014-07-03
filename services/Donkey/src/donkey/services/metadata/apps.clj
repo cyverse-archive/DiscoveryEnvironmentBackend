@@ -113,7 +113,6 @@
   (countJobs [_ filter])
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
-  (populateJobsTable [_])
   (removeDeletedJobs [_])
   (updateJobStatus [_ username prev-status status end-time])
   (getJobParams [_ job-id])
@@ -160,7 +159,7 @@
     (metadactyl/copy-workflow app-id))
 
   (submitJob [_ workspace-id submission]
-    (da/store-submitted-de-job (metadactyl/submit-job workspace-id submission)))
+    (da/submit-job workspace-id submission))
 
   (countJobs [_ filter]
     (count-jobs-of-types [jp/de-job-type] filter))
@@ -171,9 +170,6 @@
   (syncJobStatus [_ job]
     (when (= (:job_type job) jp/de-job-type)
       (da/sync-de-job-status job)))
-
-  (populateJobsTable [_]
-    (dorun (map da/store-de-job (osm/list-jobs))))
 
   (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs))
@@ -256,7 +252,7 @@
 
   (submitJob [_ workspace-id submission]
     (if (is-uuid? (:analysis_id submission))
-      (da/store-submitted-de-job (metadactyl/submit-job workspace-id submission))
+      (da/submit-job workspace-id submission)
       (aa/submit-agave-job agave-client submission)))
 
   (countJobs [_ filter]
@@ -272,9 +268,6 @@
       (process-job agave-client (:id job) job
                    {:process-de-job    da/sync-de-job-status
                     :process-agave-job sync-agave})))
-
-  (populateJobsTable [_]
-    (dorun (map da/store-de-job (osm/list-jobs))))
 
   (removeDeletedJobs [_]
     (da/remove-deleted-de-jobs)
@@ -327,13 +320,6 @@
      (if (config/agave-enabled)
        (get-de-hpc-app-lister state-info username)
        (DeOnlyAppLister.))))
-
-(defn- populate-jobs-table
-  [app-lister]
-  (let [username (:username current-user)]
-    (transaction
-     (when (zero? (jp/count-all-jobs username))
-       (.populateJobsTable app-lister)))))
 
 (defn get-only-app-groups
   []
@@ -401,7 +387,6 @@
         sort-order (keyword sort-order)
         app-lister (get-app-lister)
         filter     (when-not (nil? filter) (service/decode-json filter))]
-    (populate-jobs-table app-lister)
     (.removeDeletedJobs app-lister)
     (service/success-response
      {:analyses  (.listJobs app-lister limit offset sort-field sort-order filter)
