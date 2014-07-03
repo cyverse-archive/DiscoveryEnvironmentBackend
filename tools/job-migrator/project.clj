@@ -15,5 +15,6 @@
                  [mvxcvi/clj-pgp "0.5.2"]
                  [postgresql "9.0-801.jdbc4"]
                  [slingshot "0.10.3"]]
+  :uberjar-name "job-migrator.jar"
   :aot [job-migrator.core]
   :main job-migrator.core)
