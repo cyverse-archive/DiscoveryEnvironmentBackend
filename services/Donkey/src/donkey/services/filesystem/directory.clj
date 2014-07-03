@@ -46,7 +46,7 @@
   (let [base-map {:id            uuid
                   :path          full_path
                   :label         base_name
-                  :isFavorite    (meta/is-favorite? user (UUID/fromString uuid))
+                  :isFavorite    (meta/is-favorite? user uuid)
                   :filter        (or (should-filter? user full_path)
                                      (should-filter? user base_name))
                   :file-size     data_size
