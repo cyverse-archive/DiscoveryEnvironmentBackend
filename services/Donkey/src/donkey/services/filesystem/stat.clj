@@ -47,7 +47,7 @@
   (if-not (is-dir? cm path)
     (-> stat-map
       (merge {:info-type (filetypes/get-types cm user path)})
-      (merge {:mime-type (.detect (Tika.) (input-stream cm path))}))
+      (merge {:mime-type (.detect (Tika.) (ft/basename path))}))
     stat-map))
 
 (defn path-is-dir?
