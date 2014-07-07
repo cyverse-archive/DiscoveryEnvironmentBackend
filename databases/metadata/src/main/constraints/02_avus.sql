@@ -12,5 +12,5 @@ ALTER TABLE avus
 --
 ALTER TABLE avus
     ADD CONSTRAINT avus_unique
-    UNIQUE (owner_id, target_id, target_type, attribute, value, unit);
+    UNIQUE (target_id, target_type, attribute, value, unit);
 
