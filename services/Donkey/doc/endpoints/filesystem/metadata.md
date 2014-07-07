@@ -245,7 +245,6 @@ __Response__:
 ```json
 {
     "success": true,
-    "user": "ipctest",
     "data_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
     "templates": [
         {
@@ -256,8 +255,9 @@ __Response__:
                     "attr": "submitted to insdc",
                     "value": "true",
                     "unit": "",
-                    "owner_id": "ipctest",
                     "target_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
+                    "created_by": "ipctest",
+                    "modified_by": "ipctest",
                     "created_on": 1402967025701,
                     "modified_on": 1402968064927
                 },
@@ -266,8 +266,9 @@ __Response__:
                     "attr": "project name",
                     "value": "CORE-5602",
                     "unit": "",
-                    "owner_id": "ipctest",
                     "target_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
+                    "created_by": "ipctest",
+                    "modified_by": "ipctest",
                     "created_on": 1402967025701,
                     "modified_on": 1402968064980
                 },
@@ -276,8 +277,9 @@ __Response__:
                     "attr": "Metadata complete",
                     "value": "false",
                     "unit": "",
-                    "owner_id": "ipctest",
                     "target_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
+                    "created_by": "ipctest",
+                    "modified_by": "ipctest",
                     "created_on": 1402967025701,
                     "modified_on": 1402968065030
                 }
@@ -317,8 +319,9 @@ __Response__:
             "attr": "submitted to insdc",
             "value": "true",
             "unit": "",
-            "owner_id": "ipctest",
             "target_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
+            "created_by": "ipctest",
+            "modified_by": "ipctest",
             "created_on": 1402967025701,
             "modified_on": 1402968064927
         },
@@ -327,8 +330,9 @@ __Response__:
             "attr": "project name",
             "value": "CORE-5602",
             "unit": "",
-            "owner_id": "ipctest",
             "target_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
+            "created_by": "ipctest",
+            "modified_by": "ipctest",
             "created_on": 1402967025701,
             "modified_on": 1402968064980
         },
@@ -337,8 +341,9 @@ __Response__:
             "attr": "Metadata complete",
             "value": "false",
             "unit": "",
-            "owner_id": "ipctest",
             "target_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
+            "created_by": "ipctest",
+            "modified_by": "ipctest",
             "created_on": 1402967025701,
             "modified_on": 1402968065030
         }
@@ -363,7 +368,7 @@ __URL Path__: /secured/filesystem/:data-id/template-avus/:template-id
 
 __HTTP Method__: POST
 
-__Error Codes__: ERR_NOT_READABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER, ERR_BAD_OR_MISSING_FIELD
+__Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER, ERR_BAD_OR_MISSING_FIELD
 
 __Request Body__:
 
@@ -395,7 +400,6 @@ __Response__:
 ```json
 {
     "success": true,
-    "user": "ipctest",
     "data_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
     "template_id": "40ac191f-bb36-4f4e-85fb-8b50abec8e10",
     "avus": [
@@ -454,7 +458,7 @@ __URL Path__: /secured/filesystem/:data-id/template-avus/:template-id
 
 __HTTP Method__: DELETE
 
-__Error Codes__: ERR_NOT_READABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER
+__Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER
 
 __Response__:
 
@@ -472,7 +476,7 @@ __URL Path__: /secured/filesystem/:data-id/template-avus/:template-id/:avu-id
 
 __HTTP Method__: DELETE
 
-__Error Codes__: ERR_NOT_READABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER
+__Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER
 
 __Response__:
 
