@@ -1,5 +1,5 @@
 (ns donkey.routes.tags
-  (:use [compojure.core :only [GET PATCH POST]])
+  (:use [compojure.core :only [DELETE GET PATCH POST]])
   (:require [donkey.services.metadata.tags :as tags]
             [donkey.util :as util]
             [donkey.util.config :as config]))
@@ -23,4 +23,7 @@
       (util/trap #(tags/create-user-tag body)))
 
     (PATCH "/tags/user/:tag-id" [tag-id :as {body :body}]
-      (util/trap #(tags/update-user-tag tag-id body)))))
+      (util/trap #(tags/update-user-tag tag-id body)))
+
+    (DELETE "/tags/user/:tag-id" [tag-id]
+      (util/trap #(tags/delete-user-tag tag-id)))))

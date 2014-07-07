@@ -8,7 +8,8 @@
             [donkey.persistence.metadata :as db]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.util.config :as config]
-            [donkey.util.service :as svc])
+            [donkey.util.service :as svc]
+            [donkey.util.validators :as valid])
   (:import [java.util UUID]))
 
 
@@ -54,6 +55,26 @@
       (let [id (:id (db/insert-user-tag owner value description))]
         (svc/success-response {:id id}))
       (svc/donkey-response {} 409))))
+
+
+(defn delete-user-tag
+  "Deletes a user tag. This will detach it from all metadata.
+
+   Parameters:
+     tag-id - The tag's UUID from the URL
+
+   Returns:
+     A success response with no body.
+
+   Throws:
+     ERR_NOT_FOUND - if the text isn't a UUID owned by the authenticated user."
+  [tag-id]
+  (let [tag-id    (valid/extract-uri-uuid tag-id)
+        tag-owner (db/get-tag-owner tag-id)]
+    (when (not= tag-owner (:shortUsername user/current-user))
+      (throw+ {:error_code error/ERR_NOT_FOUND :tag-id tag-id}))
+    (db/delete-user-tag tag-id)
+    (svc/success-response)))
 
 
 (defn handle-patch-file-tags

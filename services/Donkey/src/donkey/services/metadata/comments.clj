@@ -10,23 +10,15 @@
             [donkey.persistence.metadata :as db]
             [donkey.util.config :as config]
             [donkey.util.service :as svc]
-            [donkey.services.filesystem.validators :as valid]
+            [donkey.util.validators :as valid]
             [donkey.services.filesystem.uuids :as uuid])
-  (:import [java.util UUID]
-           [com.fasterxml.jackson.core JsonParseException]))
-
-
-(defn- extract-uuid
-  [uuid-txt]
-  (try+
-    (UUID/fromString uuid-txt)
-    (catch IllegalArgumentException _ (throw+ {:error_code err/ERR_NOT_FOUND}))))
+  (:import [com.fasterxml.jackson.core JsonParseException]))
 
 
 (defn- extract-comment-id
   [entry-id comment-id-text]
   (try+
-    (let [comment-id (extract-uuid comment-id-text)]
+    (let [comment-id (valid/extract-uri-uuid comment-id-text)]
       (when-not (db/comment-on? comment-id entry-id)
         (throw+ {:error_code err/ERR_NOT_FOUND}))
       comment-id)))
@@ -35,7 +27,7 @@
 (defn- extract-entry-id
   [fs user entry-id-txt]
   (try+
-    (let [entry-id (extract-uuid entry-id-txt)]
+    (let [entry-id (valid/extract-uri-uuid entry-id-txt)]
       (uuid/validate-uuid-accessible fs user entry-id)
       entry-id)
     (catch [:error_code err/ERR_DOES_NOT_EXIST] _ (throw+ {:error_code err/ERR_NOT_FOUND}))))

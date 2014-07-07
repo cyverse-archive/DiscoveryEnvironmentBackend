@@ -268,6 +268,17 @@
         (where {:id tag-id})))
     nil))
 
+(defn delete-user-tag
+  "This detaches a user tag from all metadata and deletes it.
+
+   Parameters:
+     tag-id - The UUID of the tag to delete."
+  [tag-id]
+  (korma/with-db db/metadata
+    (delete :attached_tags (where {:tag_id tag-id}))
+    (delete :tags (where {:id tag-id})))
+  nil)
+
 (defn select-attached-tags
   "Retrieves the set of tags a user has attached to something.
 
