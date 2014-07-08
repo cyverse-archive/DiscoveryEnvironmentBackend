@@ -1,4 +1,4 @@
-(ns donkey.routes.admin
+     (ns donkey.routes.admin
   (:use [compojure.core]
         [donkey.auth.user-attributes]
         [donkey.util])

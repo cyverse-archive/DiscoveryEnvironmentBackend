@@ -40,7 +40,7 @@
 (defn- mk-colls-query
   [coll-base]
   (str "SELECT coll_id                                         \"db-id\",
-               coll_name                                       \"id\",
+               coll_name                                       \"path\",
                REPLACE(coll_name, parent_coll_name || '/', '') \"label\",
                coll_owner_name                                 \"creator-name\",
                coll_owner_zone                                 \"creator-zone\",
@@ -53,7 +53,7 @@
 (defn- mk-data-objs-query
   [coll-base]
   (str "SELECT d1.data_id                           \"db-id\",
-               (c.coll_name || '/' || d1.data_name) \"id\",
+               (c.coll_name || '/' || d1.data_name) \"path\",
                d1.data_name                         \"label\",
                d1.data_owner_name                   \"creator-name\",
                d1.data_owner_zone                   \"creator-zone\",
@@ -141,7 +141,7 @@
 
 (defn- filter-indexable-collections
   [cfg collections]
-  (filter (comp (partial index/indexable? (:collection-base cfg)) :id) collections))
+  (filter (comp (partial index/indexable? (:collection-base cfg)) :path) collections))
 
 
 (defn init
@@ -238,25 +238,41 @@
   (get-data-objs-wo-acls cfg #(prepare-entries-for cfg % obj-receiver)))
 
 
+(defn- fmt-user
+  [name zone]
+  (str name "#" zone))
+
+
+(defn- fmt-access
+  [access]
+  (letfn [(fmt-perm [perm] (condp = perm
+                             "read object"   "read"
+                             "modify object" "write"
+                             "own"           "own"
+                                             nil))]
+    {:permission (fmt-perm (:permission access))
+     :user       (fmt-user (:username access) (:zone access))}))
+
+
+(defn- split-uuid-from
+  [metadata]
+  (let [grp (group-by #(= "ipc_UUID" (:attribute %)) metadata)]
+    [(-> (get grp true) first :value)
+     (get grp false)]))
+
+
 (defn- mk-index-doc
   [entry-type entry]
-  (let [fmt-perm   (fn [perm] (condp = perm
-                               "read object"   "read"
-                               "modify object" "write"
-                               "own"           "own"
-                               nil))
-        fmt-user   (fn [name zone] (str name "#" zone))
-        fmt-access (fn [access] {:permission (fmt-perm (:permission access))
-                                 :user       (fmt-user (:username access) (:zone access))})
-        s->ms      (partial * 1000)
-        doc        {:id              (:id entry)
-                    :path            (:id entry)
-                    :userPermissions (map fmt-access (:user-permissions entry))
-                    :creator         (fmt-user (:creator-name entry) (:creator-zone entry))
-                    :dateCreated     (s->ms (:date-created entry))
-                    :dateModified    (s->ms (:date-modified entry))
-                    :label           (:label entry)
-                    :metadata        (:metadata entry)}]
+  (let [s->ms         (partial * 1000)
+        [id metadata] (split-uuid-from (:metadata entry))
+        doc           {:id              id
+                       :path            (:path entry)
+                       :userPermissions (map fmt-access (:user-permissions entry))
+                       :creator         (fmt-user (:creator-name entry) (:creator-zone entry))
+                       :dateCreated     (s->ms (:date-created entry))
+                       :dateModified    (s->ms (:date-modified entry))
+                       :label           (:label entry)
+                       :metadata        metadata}]
     (if (= entry-type dir-type)
       doc
       (assoc doc
@@ -264,20 +280,28 @@
         :fileType (:info-type entry)))))
 
 
+(defn- has-id?
+  [doc]
+  (if (:id doc)
+    true
+    (log/warn "Filesystem entry" (:path doc) "doesn't have a UUID. Skipping indexing.")))
+
+
 (defn index-entries
   [indexer entry-type entries]
-  (log/debug "indexing" entry-type (map :id entries))
+  (log/debug "indexing" entry-type (map :path entries))
   (letfn [(log-failures [bulk-result]
             (doseq [{result :index} (:items bulk-result)]
               (when-not (:ok result) (log/error "failed to index" (:_type result) (:_id result)))))]
     (try
-      (->>  (map (partial mk-index-doc entry-type) entries)
-            (map #(assoc % :_id (:id %)))
-            (log/spy :trace)
-            (es-if/put-bulk indexer index entry-type)
-            log-failures)
+      (->> (map (partial mk-index-doc entry-type) entries)
+           (filter has-id?)
+           (map #(assoc % :_id (:id %)))
+           (log/spy :trace)
+           (es-if/put-bulk indexer index entry-type)
+           log-failures)
       (catch Exception e
-        (log/error e "failed to index" entry-type (map :id entries))))))
+        (log/error e "failed to index" entry-type (map :path entries))))))
 
 
 (def ^:private count-collections-query
