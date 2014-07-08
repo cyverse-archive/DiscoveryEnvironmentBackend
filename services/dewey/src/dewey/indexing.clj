@@ -12,13 +12,13 @@
 (def ^{:private true} data-object-type "file")
 
 
-(defmulti ^{:private true} format-id type)
+(defmulti ^{:private true} format-path type)
 
-(defmethod format-id String
+(defmethod format-path String
   [path]
   path)
 
-(defmethod format-id CollectionAndDataObjectListingEntry
+(defmethod format-path CollectionAndDataObjectListingEntry
   [entry]
   (.getFormattedAbsolutePath entry))
 
@@ -41,7 +41,7 @@
    Throws:
      This function can throw an exception if it can't connect to elasticsearch."
   [entity-type entity]
-  (es-doc/present? index (mapping-type-of entity-type) (format-id entity)))
+  (es-doc/present? index (mapping-type-of entity-type) (format-path entity)))
 
 
 (defn- index-entry
@@ -61,7 +61,7 @@
      This function can throw an exception if it can't connect to elasticsearch or iRODS. The
      function can also throw one if the collection is not in the iRODS data store."
   [irods collection]
-  (let [entry (prep/format-folder (format-id collection)
+  (let [entry (prep/format-folder (format-path collection)
                                   (.acl irods :collection collection)
                                   (.creator irods :collection collection)
                                   (.date-created irods collection)
@@ -82,7 +82,7 @@
      This function can throw an exception if it can't connect to elasticsearch or iRODS. The
      function can also throw one if the data object is not in the iRODS data store."
   [irods data-object & {:keys [creator file-size file-type]}]
-  (let [entry (prep/format-file (format-id data-object)
+  (let [entry (prep/format-file (format-path data-object)
                                 (.acl irods :data-object data-object)
                                 (or creator (.creator irods :data-object data-object))
                                 (.date-created irods data-object)
@@ -105,7 +105,7 @@
      This functino can throw an exception if it can't connect to elasticsearch."
   [entity-type entity]
   (when (entity-indexed? entity-type entity)
-    (es-doc/delete index (mapping-type-of entity-type) (format-id entity))))
+    (es-doc/delete index (mapping-type-of entity-type) (format-path entity))))
 
 
 (defn remove-entities-like
@@ -139,7 +139,7 @@
   [irods entity-type entity]
   (es-doc/update-with-script index
     (mapping-type-of entity-type)
-    (format-id entity)
+    (format-path entity)
     "ctx._source.userPermissions = permissions"
     {:permissions (prep/format-acl (.acl irods entity-type entity))}))
 
@@ -160,7 +160,7 @@
   [irods entity-type entity]
   (es-doc/update-with-script index
                              (mapping-type-of entity-type)
-                             (format-id entity)
+                             (format-path entity)
                              "ctx._source.metadata = metadata"
                              {:metadata (prep/format-metadata (.metadata irods entity))}))
 
@@ -180,14 +180,14 @@
   [irods collection]
   (es-doc/update-with-script index
     collection-type
-    (format-id collection)
+    (format-path collection)
     "ctx._source.dateModified = dateModified;"
     {:dateModified (prep/format-time (.date-modified irods collection))}))
 
 
 (defn- update-obj-with-script
   [obj script vals]
-  (es-doc/update-with-script index data-object-type (format-id obj) script vals))
+  (es-doc/update-with-script index data-object-type (format-path obj) script vals))
 
 
 (defn update-data-object
