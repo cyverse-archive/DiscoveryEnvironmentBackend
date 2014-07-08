@@ -101,11 +101,22 @@
 
 (defmethod get-metadata String
   [ctx path]
-  (r-meta/get-metadata ctx path))
+  (remove #(= "ipc_UUID" (:attr %))
+          (r-meta/get-metadata ctx path)))
 
 (defmethod get-metadata CollectionAndDataObjectListingEntry
   [ctx entity]
-  (r-meta/get-metadata ctx (.getFormattedAbsolutePath entity)))
+  (get-metadata ctx (.getFormattedAbsolutePath entity)))
+
+(defmulti ^{:private true} get-uuid #(type %2))
+
+(defmethod get-uuid String
+  [ctx path]
+  (-> (r-meta/get-attribute ctx path "ipc_UUID") first :value))
+
+(defmethod get-uuid CollectionAndDataObjectListingEntry
+  [ctx entity]
+  (get-uuid ctx (.getFormattedAbsolutePath entity)))
 
 
 (defprotocol DataStore
@@ -258,6 +269,21 @@
        This method can throw an exception if the connection to the data store is lost or the entity
        is not in the data store.")
 
+  (uuid [_ entity]
+    "Retrives the UUID associated with a collection or data object.
+
+     Parameters:
+       entity - The path to the entity or a corresponding CollectionAndDataObjectListingEntry
+                object.
+
+     Returns:
+       It returns a UUID or nil.  A nil UUID doesn't necessarily indicate a problem. It is possible
+       that the entity is newly created and the UUID hasn't been set yet.
+
+     Throws:
+       This method can throw an exception if the connection to the data store is lost or the entity
+       is not in the data store.")
+
   (zone [_]
     "Retrieves the authentication zone.
 
@@ -278,6 +304,7 @@
   (data-objects-in [_ path] (r-lazy/list-files-in ctx path))
   (collections-in [_ path] (r-lazy/list-subdirs-in ctx path))
   (metadata [_ entity] (get-metadata ctx entity))
+  (uuid [_ entity] (get-uuid ctx entity))
   (zone [_] (:zone ctx)))
 
 
