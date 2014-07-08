@@ -3,7 +3,7 @@
 ;; changes need to be recorded in the version number.  Please increment the
 ;; minor version number rather than the release number for minor changes.
 
-(defproject org.iplantc/facepalm "3.1.8"
+(defproject org.iplantc/facepalm "3.1.9"
   :description "Command-line utility for DE database managment."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -24,13 +24,13 @@
                  [fleet "0.9.5"]
                  [korma "0.3.0-RC5"]
                  [me.raynes/fs "1.4.5"]
-                 [org.iplantc/clojure-commons "3.1.8"]
-                 [org.iplantc/kameleon "3.1.8"]
+                 [org.iplantc/clojure-commons "3.1.9"]
+                 [org.iplantc/kameleon "3.1.9"]
                  [postgresql "9.0-801.jdbc4"]
                  [slingshot "0.10.3"]
                  [clj-http "0.6.3"]]
-  :plugins [[org.iplantc/lein-iplant-cmdtar "3.1.8"]
-            [org.iplantc/lein-iplant-rpm "3.1.8"]
+  :plugins [[org.iplantc/lein-iplant-cmdtar "3.1.9"]
+            [org.iplantc/lein-iplant-rpm "3.1.9"]
             [lein-marginalia "0.7.1"]]
   :iplant-rpm {:summary "Facepalm"
                :type :command}
