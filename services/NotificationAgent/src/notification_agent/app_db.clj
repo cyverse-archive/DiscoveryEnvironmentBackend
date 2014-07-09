@@ -1,7 +1,8 @@
 (ns notification-agent.app-db
   (:use [korma.db]
         [korma.core]
-        [notification-agent.config]))
+        [notification-agent.config])
+  (:import [java.util UUID]))
 
 (defn- create-db-spec
   "Creates the database connection spec to use when accessing the app database."
@@ -26,4 +27,4 @@
      (select :jobs
              (fields [:job_name        :name
                       :job_description :description])
-             (where {:external_id id})))))
+             (where {:id (UUID/fromString id)})))))
