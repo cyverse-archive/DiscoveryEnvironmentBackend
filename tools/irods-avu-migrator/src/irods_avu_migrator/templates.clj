@@ -56,16 +56,21 @@
             (where {:meta_attr_name "ipc-metadata-template"})
             (where (raw "d.data_id IS NOT NULL")))))
 
+(defn- fmt-icat-avu
+  [target-id avu]
+  (-> avu
+      (dissoc :meta_id)
+      (assoc
+        :target_id   target-id
+        :unit        (when (not= (:unit avu) "ipc-reserved-unit") (:unit avu))
+        :created_by  "iplant-admin"
+        :modified_by "iplant-admin"
+        :target_type (raw "'data'"))))
+
 (defn- add-metadata-avus
   [ipc-uuid avus]
   (let [target-id (uuids/uuidify ipc-uuid)
-        fmt-avu #(-> %
-                     (dissoc :meta_id)
-                     (assoc
-                       :target_id   target-id
-                       :created_by  "iplant-admin"
-                       :modified_by "iplant-admin"
-                       :target_type (raw "'data'")))]
+        fmt-avu (partial fmt-icat-avu target-id)]
     (with-db db/metadata
       (insert :avus (values (map fmt-avu avus))))))
 
