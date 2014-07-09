@@ -1,6 +1,7 @@
 package org.iplantc.workflow.experiment.dto;
 
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.iplantc.workflow.core.TransformationActivity;
 import org.iplantc.workflow.util.SfJsonUtils;
 
@@ -36,6 +37,7 @@ public class JobConstructor {
      * @param experimentJson the JSON to generate the job DTO from.
      */
     public void setExperimentJson(JSONObject experimentJson) {
+        setJobUuid(experimentJson);
         job.setName(experimentJson.getString("name"));
         job.setDisplayName(experimentJson.optString("display_name"));
         job.setDescription(experimentJson.optString("description", ""));
@@ -43,6 +45,18 @@ public class JobConstructor {
         job.setWorkspaceId(experimentJson.getString("workspace_id"));
         job.setOutputDir(SfJsonUtils.optString(experimentJson, "", "outputDirectory", "output_dir"));
         job.setCreateOutputSubdir(experimentJson.optBoolean("create_output_subdir", true));
+    }
+
+    /**
+     * Sets the job UUID if one was specified in the incoming JSON.
+     *
+     * @param experimentJson the JSON to generate the job DTO from.
+     */
+    private void setJobUuid(JSONObject experimentJson) {
+        String uuid = experimentJson.optString("uuid");
+        if (!StringUtils.isEmpty(uuid)) {
+            job.setUuid(uuid);
+        }
     }
 
     /**
