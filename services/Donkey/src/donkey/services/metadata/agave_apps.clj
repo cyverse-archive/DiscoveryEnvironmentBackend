@@ -7,6 +7,7 @@
             [clj-jargon.init :as jargon-init]
             [clj-jargon.permissions :as jargon-perms]
             [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [donkey.clients.notifications :as dn]
             [donkey.persistence.jobs :as jp]
@@ -15,6 +16,14 @@
             [donkey.util.time :as time-utils]
             [donkey.util.service :as service])
   (:import [java.util UUID]))
+
+(defn load-app-details
+  [agave app-ids]
+  (->> (.listApps agave)
+       (:templates)
+       (filter (comp (set app-ids) :id))
+       (map (juxt :id identity))
+       (into {})))
 
 (def ^:private agave-job-validation-map
   "The validation map to use for Agave jobs."
@@ -78,15 +87,11 @@
         :else                           "0"))
 
 (defn format-agave-job
-  [job state]
-  (when-not (nil? state)
-    (assoc state
-      :id            (:id job)
-      :description   (or (:description job) (:description state))
-      :startdate     (determine-display-timestamp :startdate job state)
-      :enddate       (determine-display-timestamp :enddate job state)
-      :analysis_name (:analysis_name job)
-      :status        (:status job))))
+  [agave-apps {app-id :analysis_id :as job}]
+  (assoc job
+    :startdate    (str (or (db/millis-from-timestamp (:startdate job)) 0))
+    :enddate      (str (or (db/millis-from-timestamp (:enddate job)) 0))
+    :app_disabled (get-in agave-apps [app-id :disabled] true)))
 
 (defn load-agave-job-states
   [agave agave-jobs]

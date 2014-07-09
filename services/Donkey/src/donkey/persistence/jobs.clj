@@ -98,11 +98,20 @@
                         :job_type_id     job-type-id
                         :app_step_number app-step-number}))))))
 
+(defn- agave-job-subselect
+  []
+  (subselect [:job_steps :s]
+             (join [:job_types :t] {:s.job_type_id :t.id})
+             (where {:j.id   :s.job_id
+                     :t.name agave-job-type})))
+
 (defn- count-jobs-base
   "The base query for counting the number of jobs in the database for a user."
   [username]
   (-> (select* [:jobs :j])
       (join [:users :u] {:j.user_id :u.id})
+      (join [:job_steps :s] {:j.id :s.job_id})
+      (join [:job_types :t] {:s.job_type_id :t.id})
       (aggregate (count :*) :count)
       (where {:u.username username})))
 
@@ -112,15 +121,24 @@
   (with-db db/de
     ((comp :count first) (select (count-jobs-base username)))))
 
+;; TODO: split the job type detection into a separate step
 (defn count-jobs
   "Counts the number of undeleted jobs in the database for a user."
-  [username job-types filter]
+  [username filter]
   (with-db db/de
     ((comp :count first)
      (select (add-job-query-filter-clause (count-jobs-base username) filter)
-             (join [:job_types :jt] {:j.job_type_id :jt.id})
-             (where {:jt.name   [in job-types]
-                     :j.deleted false})))))
+             (where {:j.deleted false})))))
+
+;; TODO: split the job type detection into a separate step.
+(defn count-de-jobs
+  "Counts the number of undeleted DE jobs int he database for a user."
+  [username filter]
+  (with-db db/de
+    ((comp :count first)
+     (select (add-job-query-filter-clause (count-jobs-base username) filter)
+             (where {:j.deleted false})
+             (where (not (sqlfn exists (agave-job-subselect))))))))
 
 (defn count-null-descriptions
   "Counts the number of undeleted jobs with null descriptions in the database."
@@ -141,37 +159,49 @@
     :enddate       :j.end_date
     :status        :j.status))
 
+;; TODO: split the job type query out inot a separate query.
 (defn- job-base-query
   "The base query used for retrieving job information from the database."
   []
   (-> (select* [:jobs :j])
       (join [:users :u] {:j.user_id :u.id})
-      (join [:job_types :jt] {:j.job_type_id :jt.id})
-      (fields [:j.external_id     :id]
-              [:j.job_name        :name]
-              [:j.job_description :description]
-              [:j.app_name        :analysis_name]
-              [:j.start_date      :startdate]
-              [:j.end_date        :enddate]
-              [:j.status          :status]
-              [:jt.name           :job_type]
-              [:u.username        :username])))
+      (join [:job_steps :s] {:j.id :s.job_id})
+      (join [:job_types :t] {:s.job_type_id :t.id})
+      (fields [:j.app_description    :analysis_details]
+              [:j.app_id             :analysis_id]
+              [:j.app_name           :analysis_name]
+              [:j.job_description    :description]
+              [:j.end_date           :enddate]
+              [:j.id                 :id]
+              [:j.job_name           :name]
+              [:j.result_folder_path :resultfolderid]
+              [:j.start_date         :startdate]
+              [:j.status             :status]
+              [:u.username           :username]
+              [:t.name               :job_type]
+              [:j.app_wiki_url       :wiki_url])))
 
-(defn- get-jobs
+(defn list-jobs
   "Gets a list of jobs satisfying a query."
-  [username row-limit row-offset sort-field sort-order filter job-types]
+  [username row-limit row-offset sort-field sort-order filter]
   (with-db db/de
     (select (add-job-query-filter-clause (job-base-query) filter)
             (where {:j.deleted  false
-                    :u.username username
-                    :jt.name    [in job-types]})
+                    :u.username username})
             (order sort-field sort-order)
             (offset (nil-if-zero row-offset))
             (limit (nil-if-zero row-limit)))))
 
-(defn list-jobs-of-types
-  [username limit offset sort-field sort-order filter job-types]
-  (get-jobs username limit offset sort-field sort-order filter job-types))
+(defn list-de-jobs
+  "Gets a list of jobs that contain only DE steps."
+  [username row-limit row-offset sort-field sort-order filter]
+  (with-db db/de
+    (select (add-job-query-filter-clause (job-base-query) filter)
+            (where {:j.deleted  false})
+            (where (not (sqlfn exists (agave-job-subselect))))
+            (order sort-field sort-order)
+            (offset (nil-if-zero row-offset))
+            (limit (nil-if-zero row-limit)))))
 
 (defn list-jobs-with-null-descriptions
   "Lists jobs with null description fields."

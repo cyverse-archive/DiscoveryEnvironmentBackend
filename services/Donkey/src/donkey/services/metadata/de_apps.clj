@@ -53,18 +53,12 @@
      :start-date (time-utils/millis-from-str (str (:startdate job)))}))
 
 (defn format-de-job
-  [states de-apps job]
-  (let [state (states (:id job) {})
-        app   (de-apps (:analysis_id state) {})]
+  [de-apps job]
+  (let [app (de-apps (:analysis_id job) {})]
    (assoc job
-     :startdate        (str (or (db/millis-from-timestamp (:startdate job)) 0))
-     :enddate          (str (or (db/millis-from-timestamp (:enddate job)) 0))
-     :analysis_id      (:analysis_id state)
-     :analysis_details (:description app)
-     :wiki_url         (:wikiurl app "")
-     :app_disabled     (:disabled app false)
-     :description      (or (:description job) (:description state))
-     :resultfolderid   (:output_dir state))))
+     :startdate    (str (or (db/millis-from-timestamp (:startdate job)) 0))
+     :enddate      (str (or (db/millis-from-timestamp (:enddate job)) 0))
+     :app_disabled (:disabled app false))))
 
 (defn load-de-job-states
   [de-jobs]
@@ -82,11 +76,9 @@
 (defn list-de-jobs
   [limit offset sort-field sort-order filter]
   (let [user    (:username current-user)
-        jobs    (jp/list-jobs-of-types user limit offset sort-field sort-order filter
-                                       [jp/de-job-type])
-        states  (load-de-job-states jobs)
-        de-apps (load-app-details (map :analysis_id states))]
-    (mapv (partial format-de-job states de-apps) jobs)))
+        jobs    (jp/list-de-jobs user limit offset sort-field sort-order filter)
+        de-apps (load-app-details (map :analysis_id jobs))]
+    (mapv (partial format-de-job de-apps) jobs)))
 
 (defn- de-job-status-changed
   [job curr-state]

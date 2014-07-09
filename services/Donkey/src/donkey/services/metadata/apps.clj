@@ -27,26 +27,34 @@
   [id]
   (some #(re-find % id) uuid-regexes))
 
-(defn- count-jobs-of-types
-  [job-types filter]
-  (jp/count-jobs (:username current-user) job-types filter))
+(defn- count-de-jobs
+  [filter]
+  (jp/count-de-jobs (:username-current-user) filter))
+
+(defn- count-jobs
+  [filter]
+  (jp/count-jobs (:username current-user) filter))
 
 (defn- format-job
-  [de-states de-apps agave-states {:keys [id] :as job}]
+  [de-apps agave-apps {app-id :analysis_id :as job}]
   (if (= (:job_type job) jp/agave-job-type)
-    (aa/format-agave-job job (agave-states id))
-    (da/format-de-job de-states de-apps job)))
+    (aa/format-agave-job agave-apps job)
+    (da/format-de-job de-apps job)))
+
+(defn- extract-app-ids
+  [jobs]
+  (set (map :analysis_id jobs)))
 
 (defn- list-all-jobs
   [agave limit offset sort-field sort-order filter]
-  (let [user         (:username current-user)
-        types        [jp/de-job-type jp/agave-job-type]
-        jobs         (jp/list-jobs-of-types user limit offset sort-field sort-order filter types)
-        grouped-jobs (group-by :job_type jobs)
-        de-states    (da/load-de-job-states (grouped-jobs jp/de-job-type []))
-        de-apps      (da/load-app-details (map :analysis_id de-states))
-        agave-states (aa/load-agave-job-states agave (grouped-jobs jp/agave-job-type []))]
-    (remove nil? (map (partial format-job de-states de-apps agave-states) jobs))))
+  (let [user          (:username current-user)
+        jobs          (jp/list-jobs user limit offset sort-field sort-order filter)
+        grouped-jobs  (group-by :job_type jobs)
+        de-app-ids    (extract-app-ids (grouped-jobs jp/de-job-type))
+        de-apps       (da/load-app-details de-app-ids)
+        agave-app-ids (extract-app-ids (grouped-jobs jp/agave-job-type))
+        agave-apps    (aa/load-app-details agave agave-app-ids)]
+    (remove nil? (map (partial format-job de-apps agave-apps) jobs))))
 
 (defn- update-job-status
   ([{:keys [id status end-date deleted]}]
@@ -161,7 +169,7 @@
     (da/submit-job workspace-id submission))
 
   (countJobs [_ filter]
-    (count-jobs-of-types [jp/de-job-type] filter))
+    (count-de-jobs filter))
 
   (listJobs [_ limit offset sort-field sort-order filter]
     (da/list-de-jobs limit offset sort-field sort-order filter))
@@ -252,7 +260,7 @@
       (aa/submit-agave-job agave-client submission)))
 
   (countJobs [_ filter]
-    (count-jobs-of-types [jp/de-job-type jp/agave-job-type] filter))
+    (count-jobs filter))
 
   (listJobs [_ limit offset sort-field sort-order filter]
     (if (user-has-access-token?)
