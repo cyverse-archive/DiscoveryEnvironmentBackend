@@ -1,6 +1,7 @@
 (ns irods-avu-migrator.templates
   (:use [korma.core])
   (:require [irods-avu-migrator.db :as db]
+            [taoensso.timbre :as timbre :refer [log warn]]
             [kameleon.uuids :as uuids]
             [korma.db :refer [with-db]]))
 
@@ -76,6 +77,7 @@
 
 (defn- remove-irods-avus
   [data-id avu-ids]
+  (warn "Removing ICAT object_id" data-id "AVUs:" avu-ids)
   (with-db db/icat
     (delete :r_objt_metamap (where {:object_id data-id
                                     :meta_id [in avu-ids]}))))
