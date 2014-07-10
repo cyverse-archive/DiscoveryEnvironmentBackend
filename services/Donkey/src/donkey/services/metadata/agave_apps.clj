@@ -139,7 +139,7 @@
   [agave job]
   (let [curr-state (get-agave-job agave (:external_id job) (constantly nil))]
     (when (agave-job-status-changed job curr-state)
-      (jp/update-job-by-internal-id
+      (jp/update-job
        (:id job)
        {:status     (:status curr-state)
         :start-date (db/timestamp-from-str (str (:startdate curr-state)))

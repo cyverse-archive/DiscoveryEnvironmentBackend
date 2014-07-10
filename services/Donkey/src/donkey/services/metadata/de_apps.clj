@@ -92,12 +92,12 @@
   (let [curr-state (first (osm/get-jobs [(:external_id job)]))]
     (if-not (nil? curr-state)
       (when (de-job-status-changed job curr-state)
-        (jp/update-job-by-internal-id
+        (jp/update-job
          (:id job)
          {:status   (:status curr-state)
           :end-date (get-end-date curr-state)
           :deleted  (:deleted curr-state false)}))
-      (jp/update-job-by-internal-id (:id job) {:deleted true}))))
+      (jp/update-job (:id job) {:deleted true}))))
 
 (defn get-de-job-params
   [job-id]

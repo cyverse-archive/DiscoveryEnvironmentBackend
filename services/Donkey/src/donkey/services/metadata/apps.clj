@@ -407,6 +407,7 @@
 
 (defn- sync-job-status
   [job]
+  (log/spy :warn job)
   (try+
    (log/debug "synchronizing the job status for" (:id job))
    (.syncJobStatus (get-app-lister "" (:username job)) job)
@@ -415,7 +416,10 @@
 
 (defn sync-job-statuses
   []
-  (dorun (map sync-job-status (jp/list-incomplete-jobs))))
+  (try+
+   (dorun (map sync-job-status (jp/list-incomplete-jobs)))
+   (catch Object e
+     (log/error e "error while obtaining the lsit of jobs to synchronize."))))
 
 (defn- log-already-deleted-jobs
   [ids]
