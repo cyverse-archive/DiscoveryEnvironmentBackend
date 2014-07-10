@@ -393,13 +393,14 @@
 
 (defn update-de-job-status
   [id status end-date]
-  (update-job-status {:id       id
+  (update-job-status {:id       (UUID/fromString id)
                       :status   status
                       :end-date end-date}))
 
 (defn update-agave-job-status
   [uuid status end-time]
-  (let [{:keys [username] :as job} (jp/get-job-by-id (UUID/fromString uuid))]
+  (let [uuid                       (UUID/fromString uuid)
+        {:keys [username] :as job} (jp/get-job-by-id uuid)]
     (service/assert-found job "job" uuid)
     (service/assert-valid (= jp/agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
     (.updateJobStatus (get-app-lister "" username) username job status end-time)))

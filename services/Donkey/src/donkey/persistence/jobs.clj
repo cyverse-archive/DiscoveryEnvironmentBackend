@@ -267,7 +267,7 @@
                                                  :deleted         deleted
                                                  :job_name        name
                                                  :job_description description}))
-                 (where {:external_id id})))))
+                 (where {:id id})))))
   ([id status end-date]
      (update-job id {:status   status
                      :end-date end-date})))

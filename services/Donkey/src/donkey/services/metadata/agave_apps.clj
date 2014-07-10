@@ -48,7 +48,7 @@
                 :app-description    (:analysis_details job)
                 :app-wiki-url       (:wiki_url job)
                 :result-folder-path (:resultfolderid job)
-                :start-date         (db/timestamp-from-str (str (:startdate job)))
+                :start-date         (determine-start-time job)
                 :username           (:username current-user)
                 :status             (:status job)}))
 
@@ -57,7 +57,7 @@
   (jp/save-job-step {:job-id          job-id
                      :step-number     1
                      :external-id     (:id job)
-                     :start-date      (db/timestamp-from-str (str (:startdate job)))
+                     :start-date      (determine-start-time job)
                      :status          (:status job)
                      :job-type        jp/agave-job-type
                      :app-step-number 1}))
@@ -74,8 +74,8 @@
         job    (.submitJob agave-client (assoc submission :callbackUrl cb-url))]
     (store-agave-job id job)
     (store-job-step id job)
-    (dn/send-agave-job-status-update (:shortUsername current-user) job)
-    {:id         id
+    (dn/send-agave-job-status-update (:shortUsername current-user) (assoc job :id id))
+    {:id         (str id)
      :name       (:name job)
      :status     (:status job)
      :start-date (time-utils/millis-from-str (str (:startdate job)))}))

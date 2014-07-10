@@ -15,7 +15,7 @@
   (case status
     "Failed"    (db/timestamp-from-str now_date)
     "Completed" (db/timestamp-from-str completion_date)
-                nil))
+    nil))
 
 (defn- store-submitted-de-job
   [job-id job]
@@ -43,11 +43,12 @@
 
 (defn submit-job
   [workspace-id submission]
-  (let [job-id (UUID/randomUUID)
-        job    (metadactyl/submit-job workspace-id submission)]
+  (let [job-id     (UUID/randomUUID)
+        submission (assoc submission :uuid (str job-id))
+        job        (metadactyl/submit-job workspace-id submission)]
     (store-submitted-de-job job-id job)
     (store-job-step job-id job)
-    {:id         job-id
+    {:id         (str job-id)
      :name       (:name job)
      :status     (:status job)
      :start-date (time-utils/millis-from-str (str (:startdate job)))}))
@@ -55,10 +56,10 @@
 (defn format-de-job
   [de-apps job]
   (let [app (de-apps (:analysis_id job) {})]
-   (assoc job
-     :startdate    (str (or (db/millis-from-timestamp (:startdate job)) 0))
-     :enddate      (str (or (db/millis-from-timestamp (:enddate job)) 0))
-     :app_disabled (:disabled app false))))
+    (assoc job
+      :startdate    (str (or (db/millis-from-timestamp (:startdate job)) 0))
+      :enddate      (str (or (db/millis-from-timestamp (:enddate job)) 0))
+      :app_disabled (:disabled app false))))
 
 (defn load-de-job-states
   [de-jobs]
