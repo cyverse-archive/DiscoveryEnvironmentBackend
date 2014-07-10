@@ -181,6 +181,38 @@
               [:t.name               :job_type]
               [:j.app_wiki_url       :wiki_url])))
 
+(defn- job-step-base-query
+  "The base query used for retrieving job step information from the database."
+  []
+  (-> (select* [:job_steps :s])
+      (join [:job_types :t] {:s.job_type_id :t.id})
+      (fields [:s.job_id          :job-id]
+              [:s.step_number     :step-number]
+              [:s.external_id     :external-id]
+              [:s.start_date      :start-date]
+              [:s.end_date        :end-date]
+              [:s.status          :status]
+              [:t.name            :job-type]
+              [:s.app_step_number :app-step-number])))
+
+(defn get-job-step
+  "Retrieves a single job step from the database."
+  [job-id external-id]
+  (first
+   (with-db db/de
+     (select (job-step-base-query)
+             (where {:s.job_id      job-id
+                     :s.external_id external-id})))))
+
+(defn get-max-step-number
+  "Gets the maximum step number for a job."
+  [job-id]
+  (with-db db/de
+    ((comp :max-step first)
+     (select :job_steps
+             (aggregate (max :step_number) :max-step)
+             (where {:job_id job-id})))))
+
 (defn list-jobs
   "Gets a list of jobs satisfying a query."
   [username row-limit row-offset sort-field sort-order filter]
@@ -271,6 +303,17 @@
   ([id status end-date]
      (update-job id {:status   status
                      :end-date end-date})))
+
+(defn update-job-step
+  "Updates an existing job step in the database."
+  [job-id external-id status end-date]
+  (when (or status end-date)
+    (with-db db/de
+      (update :job_steps
+              (set-fields (remove-nil-values {:status   status
+                                              :end_date end-date}))
+              (where {:job_id      job-id
+                      :external_id external-id})))))
 
 (defn list-incomplete-jobs
   []

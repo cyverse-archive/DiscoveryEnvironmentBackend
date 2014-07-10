@@ -65,7 +65,7 @@
 (defn- build-callback-url
   [id]
   (str (assoc (curl/url (config/agave-callback-base) (str id))
-         :query "status=${JOB_STATUS}&job=${JOB_ID}&end-time=${JOB_END_TIME}")))
+         :query "status=${JOB_STATUS}&external-id=${JOB_ID}&end-time=${JOB_END_TIME}")))
 
 (defn submit-agave-job
   [agave-client submission]
@@ -111,23 +111,50 @@
    (catch [:status 400] _ (not-found-fn id))
    (catch Object _ (service/request-failure "lookup for HPC job" id))))
 
+(def ^:private complete-status "Completed")
+(def ^:private failed-status "Failed")
+
 (defn- is-complete?
   [status]
-  (#{"Failed" "Completed"} status))
+  (#{failed-status complete-status} status))
 
-(defn update-agave-job-status
-  [agave username {:keys [startdate] :as prev-job-info} status end-time]
-  (let [status       (.translateJobStatus agave status)
-        username     (string/replace username #"@.*" "")
-        end-time     (when (is-complete? status) (db/timestamp-from-str end-time))
+(defn- get-job-status
+  [step-number max-step-number prev-status status]
+  (let [first-step? (= step-number 1)
+        last-step?  (= step-number max-step-number)
+        failed?     (= status failed-status)
+        complete?   (is-complete? status)]
+    (cond failed?                           failed-status
+          (and first-step? (not complete?)) status
+          (and last-step? complete?)        status
+          :else                             prev-status)))
+
+(defn- update-job-step-status
+  [{:keys [job-id external-id status]} new-status end-time]
+  (when-not (= status new-status)
+    (jp/update-job-step job-id external-id new-status end-time)))
+
+(defn- update-job-status
+  [username {:keys [startdate] :as job} {:keys [step-number]} max-step-number status end-time]
+  (let [prev-status  (:status job)
+        job-status   (get-job-status step-number max-step-number prev-status status)
+        end-time     (when (is-complete? job-status) end-time)
         end-millis   (when-not (nil? end-time) (str (.getTime end-time)))
         start-millis (when-not (nil? startdate) (str (.getTime startdate)))]
-    (when-not (= status (:status prev-job-info))
-      (jp/update-job (:id prev-job-info) status end-time)
-      (dn/send-agave-job-status-update username (assoc prev-job-info
-                                                  :status    status
+    (when-not (= job-status prev-status)
+      (jp/update-job (:id job) job-status end-time)
+      (dn/send-agave-job-status-update username (assoc job
+                                                  :status    job-status
                                                   :enddate   end-millis
                                                   :startdate start-millis)))))
+
+(defn update-agave-job-status
+  [agave username job job-step max-step-number status end-time]
+  (let [status       (.translateJobStatus agave status)
+        username     (string/replace username #"@.*" "")
+        end-time     (when (is-complete? status) (db/timestamp-from-str end-time))]
+    (update-job-step-status job-step status end-time)
+    (update-job-status username job job-step max-step-number status end-time)))
 
 (defn- agave-job-status-changed
   [job curr-state]

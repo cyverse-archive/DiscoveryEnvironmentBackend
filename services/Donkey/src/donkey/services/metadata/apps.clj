@@ -57,12 +57,14 @@
     (remove nil? (map (partial format-job de-apps agave-apps) jobs))))
 
 (defn- update-job-status
-  ([{:keys [id status end-date deleted]}]
-     (jp/update-job id {:status   status
-                        :end-date (db/timestamp-from-str (str end-date))
-                        :deleted  deleted}))
-  ([agave username prev-job-info status end-time]
-     (aa/update-agave-job-status agave username prev-job-info status end-time)))
+  ([{:keys [id status end-date]}]
+     (let [uuid     (UUID/fromString id)
+           end-date (db/timestamp-from-str (str end-date))]
+       (jp/update-job-step uuid id status end-date)
+       (jp/update-job uuid status end-date)))
+  ([agave username job job-step status end-time]
+     (let [max-step-number (jp/get-max-step-number (:id job))]
+       (aa/update-agave-job-status agave username job job-step max-step-number status end-time))))
 
 (defn- unrecognized-job-type
   [job-type]
@@ -121,7 +123,7 @@
   (countJobs [_ filter])
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
-  (updateJobStatus [_ username prev-status status end-time])
+  (updateJobStatus [_ username job job-step status end-time])
   (getJobParams [_ job-id])
   (getAppRerunInfo [_ job-id]))
 ;; AppLister
@@ -178,7 +180,7 @@
     (when (= (:job_type job) jp/de-job-type)
       (da/sync-de-job-status job)))
 
-  (updateJobStatus [_ username prev-status status end-time]
+  (updateJobStatus [_ username job job-step status end-time]
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "HPC_JOBS_DISABLED"}))
 
@@ -273,8 +275,8 @@
                    {:process-de-job    da/sync-de-job-status
                     :process-agave-job sync-agave})))
 
-  (updateJobStatus [_ username prev-job-info status end-time]
-    (update-job-status agave-client username prev-job-info status end-time))
+  (updateJobStatus [_ username job job-step status end-time]
+    (update-job-status agave-client username job job-step status end-time))
 
   (getJobParams [_ job-id]
     (process-job agave-client job-id
@@ -393,21 +395,22 @@
 
 (defn update-de-job-status
   [id status end-date]
-  (update-job-status {:id       (UUID/fromString id)
+  (update-job-status {:id       id
                       :status   status
                       :end-date end-date}))
 
 (defn update-agave-job-status
-  [uuid status end-time]
+  [uuid status end-time external-id]
   (let [uuid                       (UUID/fromString uuid)
+        job-step                   (jp/get-job-step uuid external-id)
         {:keys [username] :as job} (jp/get-job-by-id uuid)]
     (service/assert-found job "job" uuid)
+    (service/assert-found job-step "job step" (str uuid "/" external-id))
     (service/assert-valid (= jp/agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
-    (.updateJobStatus (get-app-lister "" username) username job status end-time)))
+    (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)))
 
 (defn- sync-job-status
   [job]
-  (log/spy :warn job)
   (try+
    (log/debug "synchronizing the job status for" (:id job))
    (.syncJobStatus (get-app-lister "" (:username job)) job)
