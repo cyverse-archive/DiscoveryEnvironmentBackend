@@ -443,7 +443,7 @@
 
 (defn- validate-job-existence
   [id]
-  (when-not (jp/get-job-by-external-id id)
+  (when-not (jp/get-job-by-id id)
     (service/not-found "job" id)))
 
 (defn- validate-job-update
@@ -456,7 +456,8 @@
 
 (defn update-job
   [id body]
-  (let [body (service/decode-json body)]
+  (let [id   (UUID/fromString id)
+        body (service/decode-json body)]
     (validate-job-existence id)
     (validate-job-update body)
     (jp/update-job id body)))
