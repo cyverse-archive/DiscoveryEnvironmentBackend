@@ -31,7 +31,7 @@
       (do
         (log/info "Failed to find elaisticsearch. Retrying...")
         (Thread/sleep 1000)
-        (recur url)))))
+        (recur props)))))
 
 
 (defn- init-irods
