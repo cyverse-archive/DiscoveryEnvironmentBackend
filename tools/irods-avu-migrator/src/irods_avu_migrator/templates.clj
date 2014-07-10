@@ -3,7 +3,7 @@
   (:require [irods-avu-migrator.db :as db]
             [taoensso.timbre :as timbre :refer [log warn]]
             [kameleon.uuids :as uuids]
-            [korma.db :refer [with-db]]))
+            [korma.db :refer [with-db transaction]]))
 
 (def template-attrs (atom {}))
 
@@ -69,11 +69,13 @@
         :target_type (raw "'data'"))))
 
 (defn- add-metadata-avus
-  [ipc-uuid avus]
-  (let [target-id (uuids/uuidify ipc-uuid)
-        fmt-avu (partial fmt-icat-avu target-id)]
+  [target-id template-id avus]
+  (let [fmt-avu (partial fmt-icat-avu target-id)
+        fmt-template-instance (comp (partial hash-map :template_id template-id, :avu_id) :id)]
     (with-db db/metadata
-      (insert :avus (values (map fmt-avu avus))))))
+      (transaction
+       (insert :avus (values (map fmt-avu avus)))
+       (insert :template_instances (values (map fmt-template-instance avus)))))))
 
 (defn- remove-irods-avus
   [data-id avu-ids]
@@ -84,15 +86,15 @@
 
 (defn- icat->metadata-avu
   [avu]
-  [(:attribute avu) avu])
+  [(:attribute avu) (assoc avu :id (uuids/uuid))])
 
 (defn- convert-data-item-template-avus
   [{:keys [template_id meta_id data_id]}]
   (let [avus (into {} (map icat->metadata-avu (get-item-avus data_id)))
         ipc-uuid (:value (avus "ipc_UUID"))
         avus (remove nil? (map #(avus %) (@template-attrs template_id)))]
-    (add-metadata-avus ipc-uuid avus)
-    (remove-irods-avus data_id (map :meta_id avus))))
+    (add-metadata-avus (uuids/uuidify ipc-uuid) (uuids/uuidify template_id) avus)
+    (remove-irods-avus data_id (conj (map :meta_id avus) meta_id))))
 
 (defn- template-id->template-attrs
   [template-id]
