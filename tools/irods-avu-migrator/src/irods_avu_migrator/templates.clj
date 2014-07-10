@@ -77,24 +77,19 @@
        (insert :avus (values (map fmt-avu avus)))
        (insert :template_instances (values (map fmt-template-instance avus)))))))
 
-(defn- remove-irods-avus
-  [data-id avu-ids]
-  (warn "Removing ICAT object_id" data-id "AVUs:" avu-ids)
-  (with-db db/icat
-    (delete :r_objt_metamap (where {:object_id data-id
-                                    :meta_id [in avu-ids]}))))
-
 (defn- icat->metadata-avu
   [avu]
   [(:attribute avu) (assoc avu :id (uuids/uuid))])
 
-(defn- convert-data-item-template-avus
+(defn- import-data-item-template-avus
   [{:keys [template_id meta_id data_id]}]
   (let [avus (into {} (map icat->metadata-avu (get-item-avus data_id)))
         ipc-uuid (:value (avus "ipc_UUID"))
         avus (remove nil? (map #(avus %) (@template-attrs template_id)))]
-    (add-metadata-avus (uuids/uuidify ipc-uuid) (uuids/uuidify template_id) avus)
-    (remove-irods-avus data_id (conj (map :meta_id avus) meta_id))))
+    (warn "Importing AVUs from template" template_id "(meta_id" meta_id ")"
+          "to target" ipc-uuid "(object_id" data_id ")")
+    (warn "AVU meta_ids:" (map :meta_id avus))
+    (add-metadata-avus (uuids/uuidify ipc-uuid) (uuids/uuidify template_id) avus)))
 
 (defn- template-id->template-attrs
   [template-id]
@@ -104,8 +99,8 @@
   []
   (reset! template-attrs (into {} (map template-id->template-attrs (get-metadata-template-ids)))))
 
-(defn convert-template-avus
+(defn import-template-avus
   [options]
   (let [template-avus (concat (get-folder-template-avus) (get-file-template-avus))]
     (load-template-attrs)
-    (dorun (map convert-data-item-template-avus template-avus))))
+    (dorun (map import-data-item-template-avus template-avus))))

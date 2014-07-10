@@ -1,7 +1,6 @@
 (ns irods-avu-migrator.core
   (:gen-class)
-  (:use [irods-avu-migrator.ipc-units]
-        [irods-avu-migrator.templates])
+  (:use [irods-avu-migrator.templates])
   (:require [irods-avu-migrator.db :as db]
             [common-cli.version :as version]
             [common-cli.core :as ccli]
@@ -92,5 +91,4 @@
 
     (configure-logging options)
     (db/connect-dbs options)
-    (convert-ipc-units options)
-    (convert-template-avus options)))
+    (import-template-avus options)))
