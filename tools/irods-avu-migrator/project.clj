@@ -17,6 +17,5 @@
   :uberjar-name "irods-avu-migrator.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.3.1"]
-                 [com.taoensso/timbre "3.1.6"]
                  [org.iplantc/common-cli "3.1.9"]
                  [org.iplantc/kameleon "3.1.9"]])

@@ -1,7 +1,6 @@
 (ns irods-avu-migrator.templates
   (:use [korma.core])
   (:require [irods-avu-migrator.db :as db]
-            [taoensso.timbre :as timbre :refer [log warn]]
             [kameleon.uuids :as uuids]
             [korma.db :refer [with-db transaction]]))
 
@@ -86,9 +85,11 @@
   (let [avus (into {} (map icat->metadata-avu (get-item-avus data_id)))
         ipc-uuid (:value (avus "ipc_UUID"))
         avus (remove nil? (map #(avus %) (@template-attrs template_id)))]
-    (warn "Importing AVUs from template" template_id "(meta_id" meta_id ")"
-          "to target" ipc-uuid "(object_id" data_id ")")
-    (warn "AVU meta_ids:" (map :meta_id avus))
+    (println "Importing AVUs from template" template_id
+             (str "(meta_id " meta_id ")")
+             "to target" ipc-uuid
+             (str "(object_id " data_id ")"))
+    (println "AVU meta_ids:" (map :meta_id avus))
     (add-metadata-avus (uuids/uuidify ipc-uuid) (uuids/uuidify template_id) avus)))
 
 (defn- template-id->template-attrs

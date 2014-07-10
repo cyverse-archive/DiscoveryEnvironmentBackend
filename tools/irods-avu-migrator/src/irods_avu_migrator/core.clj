@@ -4,9 +4,7 @@
   (:require [irods-avu-migrator.db :as db]
             [common-cli.version :as version]
             [common-cli.core :as ccli]
-            [clojure.tools.cli :as cli]
-            [taoensso.timbre :as timbre]
-            [taoensso.timbre.appenders.rotor :as rotor]))
+            [clojure.tools.cli :as cli]))
 
 (def base-options
   [["-v" "--version"]
@@ -52,16 +50,6 @@
    :group-id "org.iplantc"
    :art-id "irods-avu-migrator"})
 
-(defn- configure-logging
-  [options]
-  (timbre/set-config! [:appenders :rotor]
-                      {:enabled? true
-                       :async? false
-                       :max-messages-per-msecs nil
-                       :fn rotor/appender-fn})
-  (timbre/set-config! [:shared-appender-config :rotor]
-                      {:path (:log-file options)}))
-
 (defn -main
   [& args]
   (let [cmd      (first args)
@@ -89,6 +77,5 @@
      (not (:icat-user options))
      (ccli/exit 1 "You must specify an --icat-user"))
 
-    (configure-logging options)
     (db/connect-dbs options)
     (import-template-avus options)))
