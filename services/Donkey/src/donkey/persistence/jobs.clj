@@ -334,13 +334,13 @@
   [ids]
   (with-db db/de
     (select [:jobs :j]
-            (fields [:j.external_id :id]
-                    [:j.deleted     :deleted])
-            (where {:j.external_id [in ids]}))))
+            (fields [:j.id      :id]
+                    [:j.deleted :deleted])
+            (where {:j.id [in ids]}))))
 
 (defn delete-jobs
   [ids]
   (with-db db/de
     (update :jobs
             (set-fields {:deleted true})
-            (where {:external_id [in ids]}))))
+            (where {:id [in ids]}))))

@@ -436,7 +436,7 @@
   [body]
   (let [body (service/decode-json body)
         _    (validate-map body {:executions vector?})
-        ids  (set (:executions body))]
+        ids  (set (map #(UUID/fromString %) (:executions body)))]
     (log-already-deleted-jobs ids)
     (jp/delete-jobs ids)
     (service/success-response)))
