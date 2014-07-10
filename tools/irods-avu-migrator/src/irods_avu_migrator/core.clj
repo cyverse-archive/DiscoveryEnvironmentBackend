@@ -8,9 +8,7 @@
 
 (def base-options
   [["-v" "--version"]
-   ["-h" "--help"]
-   ["-l" "--log-file PATH/TO/FILE" "The path to a file for logging."
-    :default "/var/log/iplant/irods-avu-migrator.log"]])
+   ["-h" "--help"]])
 
 (def db-options
   [["-d" "--db-host HOST" "The hostname for the DE database"]
