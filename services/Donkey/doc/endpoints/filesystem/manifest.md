@@ -20,7 +20,6 @@ __Response Body__:
         "preview":"file\/preview?user=johnw&path=\/iplant\/home\/johnw\/LICENSE.txt",
         "urls" : [],
         "info-type" : "<an info type or empty string>"
-        "mime-type" : "<a valid filetype>"
     }
 
 The urls field will contain some or none of the following:
