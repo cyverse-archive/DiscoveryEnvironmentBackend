@@ -2,7 +2,8 @@
   (:gen-class)
   (:use [korma.core]
         [slingshot.slingshot :only [throw+ try+]])
-  (:require [clojure.string :as string]
+  (:require [cheshire.core :as cheshire]
+            [clojure.string :as string]
             [clojure.tools.cli :as cli]
             [clojure-commons.error-codes :as ce]
             [job-migrator.config :as config]
@@ -32,7 +33,9 @@
                        :app_description    (:app-description job)
                        :app_wiki_url       (:app-wiki-url job)
                        :result_folder_path (:result-folder-path job)})
-          (where {:id (:id job)})))
+          (where {:id (:id job)}))
+  (exec-raw ["UPDATE jobs SET submission = CAST ( ? AS json ) WHERE id = ?"
+             [(cast Object (cheshire/encode (:job-submission job))) (:id job)]]))
 
 (defn- delete-job [job-id]
   (update :jobs
@@ -65,7 +68,8 @@
       :app-id             app-id
       :app-description    (:analysis_description job-state)
       :app-wiki-url       (get-app-wiki-url app-id)
-      :result-folder-path (:output_dir job-state))))
+      :result-folder-path (:output_dir job-state)
+      :job-submission     (osm/get-job-submission external-id))))
 
 (defn- get-access-token
   [{:keys [api-name] :as server-info} username]
@@ -89,7 +93,8 @@
        :app-id             (:analysis_id job-state)
        :app-description    (:analysis_details job-state)
        :app-wiki-url       (:wiki_url job-state)
-       :result-folder-path (:resultfolderid job-state)))
+       :result-folder-path (:resultfolderid job-state)
+       :job-submission     (.regenerateJobSubmission agave external-id)))
    (catch Object e
      (println e)
      (println "WARNING: deleting job" id)
@@ -103,4 +108,4 @@
 (defn -main [& args]
   (config/load-config-from-file (get-config-path args))
   (db/define-database)
-  (dorun (map (comp add-new-job-fields get-new-job-fields) (take 5 (list-jobs)))))
+  (dorun (map (comp add-new-job-fields get-new-job-fields) (list-jobs))))

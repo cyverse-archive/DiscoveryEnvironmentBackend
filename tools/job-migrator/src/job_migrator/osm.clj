@@ -13,3 +13,14 @@
       (:objects)
       (first)
       (:state)))
+
+(defn get-job-submission [job-id]
+  (-> (str (curl/url (config/osm-base-url) (config/osm-job-request-bucket) "query"))
+      (http/post {:body         (cheshire/encode {:state.jobUuid job-id})
+                  :content-type :json
+                  :as           :json})
+      (:body)
+      (:objects)
+      (first)
+      (:state)
+      (:experiment)))
