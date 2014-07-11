@@ -7,6 +7,13 @@
             [common-cli.core :as ccli]
             [clojure.tools.cli :as cli]))
 
+(def commands
+  #{"import-template-avus"
+    "remove-template-avus"
+    "delete-ipc-user-units"
+    "--version"
+    "--help"})
+
 (def base-options
   [["-v" "--version"]
    ["-h" "--help"]])
@@ -49,26 +56,42 @@
    :group-id "org.iplantc"
    :art-id "irods-avu-migrator"})
 
+(defn- command
+  [cmd options]
+  (case cmd
+    "import-template-avus" (import-template-avus options)
+    "remove-template-avus" (remove-template-avus options)
+    "delete-ipc-user-units" (convert-ipc-units options)))
+
+(defn- commands-help
+  []
+  (println "Command must be one of:" commands)
+  (println "Each command has its own --help."))
+
 (defn -main
   [& args]
+  (when-not (contains? commands (first args))
+    (commands-help)
+    (System/exit 1))
+
   (let [cmd      (first args)
+        cmd-args (rest args)
         {:keys [desc app-name group-id art-id]}    app-info
-        {:keys [options arguments errors summary]} (cli/parse-opts args options)]
+        {:keys [options arguments errors summary]} (cli/parse-opts cmd-args options)]
     (cond
-     (= cmd "--version")
+     (= cmd "--help")
+     (do
+       (commands-help)
+       (System/exit 0))
+
+     (or (= cmd "--version") (:version options))
      (ccli/exit 0 (version/version-info group-id art-id))
 
      (:help options)
      (ccli/exit 0 (ccli/usage desc app-name summary))
 
-     (:version options)
-     (ccli/exit 0 (version/version-info group-id art-id))
-
      errors
      (ccli/exit 1 (ccli/error-msg errors))
-
-     (not (:db-host options))
-     (ccli/exit 1 "You must specify a --db-host.")
 
      (not (:icat-host options))
      (ccli/exit 1 "You must specify an --icat-host.")
@@ -76,6 +99,5 @@
      (not (:icat-user options))
      (ccli/exit 1 "You must specify an --icat-user"))
 
-    (db/connect-dbs options)
-    (convert-ipc-units options)
-    (convert-template-avus options)))
+    (command cmd options)))
+

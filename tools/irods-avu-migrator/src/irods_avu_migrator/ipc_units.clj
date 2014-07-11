@@ -13,5 +13,8 @@
 
 (defn convert-ipc-units
   [options]
-  (remove-irods-ipc-units))
+  (println "Setting AVU units ipc_user_unit_tag to NULL")
+  (db/connect-icat options)
+  (remove-irods-ipc-units)
+  (println "Done setting AVU units ipc_user_unit_tag to NULL"))
 
