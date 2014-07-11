@@ -74,7 +74,7 @@
 
 (defn- process-job
   ([agave-client job-id processing-fns]
-     (process-job agave-client job-id (jp/get-job-by-external-id job-id) processing-fns))
+     (process-job agave-client job-id (jp/get-job-by-id (UUID/fromString job-id)) processing-fns))
   ([agave-client job-id job {:keys [process-agave-job process-de-job preprocess-job]
                              :or {preprocess-job identity}}]
      (condp = (:job_type job)

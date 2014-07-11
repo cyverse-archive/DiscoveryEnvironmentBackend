@@ -175,11 +175,13 @@
 
 (defn get-agave-app-rerun-info
   [agave job-id]
-  (service/assert-found (.getAppRerunInfo agave job-id) "HPC job" job-id))
+  (let [external-id (:external_id (jp/get-job-by-id job-id))]
+    (service/assert-found (.getAppRerunInfo agave external-id) "HPC job" external-id)))
 
 (defn get-agave-job-params
   [agave job-id]
-  (service/assert-found (.getJobParams agave job-id) "HPC job" job-id))
+  (let [external-id (:external_id (jp/get-job-by-id job-id))]
+    (service/assert-found (.getJobParams agave external-id) "HPC job" external-id)))
 
 (defn search-apps
   [agave-client search-term def-result]

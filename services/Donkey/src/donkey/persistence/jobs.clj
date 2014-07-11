@@ -44,7 +44,7 @@
   (case field
     "analysis_name" (sqlfn :lower :j.app_name)
     "name" (sqlfn :lower :j.job_name)
-    "id" (sqlfn :lower :j.external_id)
+    "id" (sqlfn :lower :j.id)
     (keyword (str "j." field))))
 
 (defn- filter-map->where-clause
@@ -179,6 +179,7 @@
               [:j.status             :status]
               [:u.username           :username]
               [:t.name               :job_type]
+              [:s.external_id        :external_id]
               [:j.app_wiki_url       :wiki_url])))
 
 (defn- job-step-base-query
@@ -245,15 +246,6 @@
                     :jt.name           [in job-types]
                     :j.job_description nil}))))
 
-(defn set-job-description
-  "Sets the description of a job. This function expects a single vector containing the
-   external job ID and the description as an argument."
-  [[id description]]
-  (with-db db/de
-    (update :jobs
-            (set-fields {:job_description description})
-            (where {:external_id id}))))
-
 (defn- add-job-type-clause
   "Adds a where clause for a set of job types if the set of job types provided is not nil
    or empty."
@@ -263,30 +255,11 @@
     (where query {:jt.name [in job-types]})
     query))
 
-(defn get-external-job-ids
-  "Gets a list of external job identifiers satisfying a query."
-  [username {:keys [job-types]}]
-  (with-db db/de
-    (->> (-> (select* [:jobs :j])
-             (join [:users :u] {:j.user_id :u.id})
-             (join [:job_types :jt] {:j.job_type_id :jt.id})
-             (fields [:j.external_id :id])
-             (where {:u.username username})
-             (add-job-type-clause job-types)
-             (select))
-         (map :id))))
-
 (defn get-job-by-id
   "Gets a single job by its internal identifier."
   [id]
   (with-db db/de
     (first (select (job-base-query) (where {:j.id id})))))
-
-(defn get-job-by-external-id
-  "Gets a single job by its external identifier."
-  [id]
-  (with-db db/de
-    (first (select (job-base-query) (where {:j.external_id id})))))
 
 (defn update-job
   "Updates an existing job in the database."
