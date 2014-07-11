@@ -1,6 +1,7 @@
 (ns irods-avu-migrator.core
   (:gen-class)
-  (:use [irods-avu-migrator.templates])
+  (:use [irods-avu-migrator.ipc-units]
+        [irods-avu-migrator.templates])
   (:require [irods-avu-migrator.db :as db]
             [common-cli.version :as version]
             [common-cli.core :as ccli]
@@ -76,4 +77,5 @@
      (ccli/exit 1 "You must specify an --icat-user"))
 
     (db/connect-dbs options)
-    (import-template-avus options)))
+    (convert-ipc-units options)
+    (convert-template-avus options)))
