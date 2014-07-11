@@ -16,5 +16,6 @@ CREATE TABLE jobs (
     end_date timestamp,
     status character varying(64) NOT NULL,
     deleted boolean DEFAULT FALSE NOT NULL,
-    user_id bigint NOT NULL
+    user_id bigint NOT NULL,
+    submission json
 );
