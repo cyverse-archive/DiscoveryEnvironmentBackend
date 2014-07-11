@@ -18,7 +18,6 @@ UPDATE app_category_group SET child_category_id =
 DELETE FROM workspace WHERE root_category_id IS NULL;
 
 -- Add NOT NULL constraints on foreign key columns.
-ALTER TABLE ONLY workspace ALTER COLUMN root_category_id SET NOT NULL;
 ALTER TABLE ONLY app_category_app ALTER COLUMN app_category_id SET NOT NULL;
 ALTER TABLE ONLY suggested_groups ALTER COLUMN app_category_id SET NOT NULL;
 ALTER TABLE ONLY app_category_group ALTER COLUMN parent_category_id SET NOT NULL;
