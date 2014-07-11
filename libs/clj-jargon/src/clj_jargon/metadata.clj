@@ -376,3 +376,18 @@
     (mapv
      #(.getCollectionName %)
      (.findDomainByMetadataQuery (:collectionAO cm) query))))
+
+
+(defn list-everything-with-attr-value
+  "Generates a sequence of all collections and data objects with a given attribute having a given
+   value.
+
+   Parameters:
+     cm    - the connected jargon context
+     attr  - the name of the attribute
+     value - the value of the attribute
+
+   Returns:
+     It returns a sequence of collections and data object paths."
+  [cm attr value]
+  (concat (list-collections-with-attr-value cm attr value) (list-files-with-avu cm attr := value)))

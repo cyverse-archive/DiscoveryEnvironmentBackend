@@ -20,9 +20,7 @@
       :path \"/path/to/file/or/folder\"}
   for the UUID passed in. Looks in the ipc_UUID AVU for the UUID."
   [cm user uuid]
-  (let [folders (list-collections-with-attr-value cm uuid-attr uuid)
-        files   (list-files-with-avu cm uuid-attr := uuid)
-        results (concat folders files)]
+  (let [results (list-everything-with-attr-value cm uuid-attr uuid)]
     (when (empty? results)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :uuid uuid}))
