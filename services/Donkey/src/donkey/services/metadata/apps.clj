@@ -1,6 +1,7 @@
 (ns donkey.services.metadata.apps
   (:use [clojure-commons.validators :only [validate-map]]
         [donkey.auth.user-attributes :only [current-user]]
+        [donkey.util :only [is-uuid?]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [cemerick.url :as curl]
@@ -12,20 +13,13 @@
             [donkey.persistence.jobs :as jp]
             [donkey.persistence.oauth :as op]
             [donkey.services.metadata.agave-apps :as aa]
+            [donkey.services.metadata.combined-apps :as ca]
             [donkey.services.metadata.de-apps :as da]
             [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.util.service :as service]
             [mescal.de :as agave])
   (:import [java.util UUID]))
-
-(def ^:private uuid-regexes
-  [#"^\p{XDigit}{8}(?:-\p{XDigit}{4}){3}-\p{XDigit}{12}$"
-   #"^[at]\p{XDigit}{32}"])
-
-(defn- is-uuid?
-  [id]
-  (some #(re-find % id) uuid-regexes))
 
 (defn- count-de-jobs
   [filter]
@@ -257,9 +251,7 @@
     (aa/add-workflow-templates agave-client (metadactyl/copy-workflow app-id)))
 
   (submitJob [_ workspace-id submission]
-    (if (is-uuid? (:analysis_id submission))
-      (da/submit-job workspace-id submission)
-      (aa/submit-agave-job agave-client submission)))
+    (ca/submit-job agave-client workspace-id submission))
 
   (countJobs [_ filter]
     (count-jobs filter))

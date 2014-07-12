@@ -48,3 +48,15 @@
             (join [:transformation_activity :app]
                   {:app.hid :tts.transformation_task_id})
             (where {:app.id app-id}))))
+
+(defn load-app-steps
+  [app-id]
+  (with-db db/de
+    (select [:transformation_activity :a]
+            (join [:transformation_task_steps :tts] {:a.hid :tts.transformation_task_id})
+            (join [:transformation_steps :ts] {:tts.transformation_step_id :ts.id})
+            (join [:transformations :tx] {:ts.transformation_id :tx.id})
+            (fields [:ts.name :step_name]
+                    [:tx.template_id :template_id]
+                    [:tx.external_app_id :external_app_id])
+            (where {:a.id app-id}))))
