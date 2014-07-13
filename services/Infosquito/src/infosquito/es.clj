@@ -12,18 +12,6 @@
 
 ;; FUNCTIONS THAT SHOULD BE IN clojurewerkz.elastisch.rest
 
-
-(defn- cer_post-text
-  [^String uri &{:keys [body] :as options}]
-  (io! (json/decode (:body (http/post uri (merge options {:accept :json}))) 
-                    true)))
-        
-
-(defn- cer_scroll-url
-  []
-  (cer/url-with-path "_search" "scroll"))
-
-
 ; This is how clojurewerkz.elastisch.rest.bulk/bulk-index should have been implemented
 (defn- bulk-index
   "generates the content for a bulk insert operation, but allows an _id to be provided"
@@ -35,28 +23,23 @@
 ;;
 
 
-(defrecord ^{:private true} Indexer []
+(defrecord ^{:private true} Indexer [es]
   Indexes
   
   (delete [_ index type id]
-    (cerd/delete index type id))
+    (cerd/delete es index type id))
   
   (exists? [_ index]
-    (ceri/exists? index))
+    (ceri/exists? es index))
   
   (put [_ index type id doc-map]
-    (cerd/put index type id doc-map))
+    (cerd/put es index type id doc-map))
 
   (put-bulk [_ index type docs]
-    (bulk/bulk-with-index-and-type index type (bulk-index docs)))
-
-  (scroll [_ scroll-id keep-alive-time]
-    (cer_post-text (cer_scroll-url)
-                   :query-params {:scroll keep-alive-time} 
-                   :body         scroll-id))
+    (bulk/bulk-with-index-and-type es index type (bulk-index docs)))
 
   (search-all-types [_ index params]
-    (apply cerd/search-all-types index (flatten (vec params)))))
+    (apply cerd/search-all-types es index (flatten (vec params)))))
   
 
 (defn mk-indexer
@@ -64,9 +47,8 @@
     :connection-refused - This is thrown if a connection cannot be established
       to Elastic Search"
   [es-url]
-  (ss/try+ 
-    (cer/connect! es-url)
-    (->Indexer)
+  (ss/try+
+    (->Indexer (cer/connect es-url))
     (catch ConnectException e
       (ss/throw+ {:type :connection-refused 
                   :msg (str "Cannot connect to Elastic Search. " 

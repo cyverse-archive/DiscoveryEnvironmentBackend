@@ -11,19 +11,19 @@
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :aot [infosquito.core]
   :main infosquito.core
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [postgresql "9.1-901.jdbc4"]
-                 [org.clojure/java.jdbc "0.2.3"]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [postgresql "9.1-901-1.jdbc4"]
+                 [org.clojure/java.jdbc "0.2.3"] ; This needs to be held back until infosquito gets adapted
                  [org.clojure/tools.cli "0.3.1"]
-                 [org.clojure/tools.logging "0.2.6"]
+                 [org.clojure/tools.logging "0.3.0"]
                  [cheshire "5.3.1"]
-                 [clj-time "0.6.0"]
-                 [clojurewerkz/elastisch "1.4.0"]
-                 [com.novemberain/langohr "2.3.2"]
+                 [clj-time "0.7.0"]
+                 [clojurewerkz/elastisch "2.0.0"]
+                 [com.novemberain/langohr "2.11.0"]
                  [slingshot "0.10.3"]
+                 [me.raynes/fs "1.4.6"]
                  [org.iplantc/clojure-commons "3.1.9"]
-                 [org.iplantc/common-cli "3.1.9"]
-                 [me.raynes/fs "1.4.4"]]
+                 [org.iplantc/common-cli "3.1.9"]]
   :profiles {:dev {:resource-paths ["dev-resources"]}}
   :plugins [[org.iplantc/lein-iplant-rpm "3.1.9"]]
   :iplant-rpm {:summary      "infosquito"

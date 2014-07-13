@@ -292,7 +292,8 @@
   (log/debug "indexing" entry-type (map :path entries))
   (letfn [(log-failures [bulk-result]
             (doseq [{result :index} (:items bulk-result)]
-              (when-not (:ok result) (log/error "failed to index" (:_type result) (:_id result)))))]
+              (when (not= 200 (:status result))
+                (log/error "failed to index" (:_type result) (:_id result)))))]
     (try
       (->> (map (partial mk-index-doc entry-type) entries)
            (filter has-id?)
@@ -347,29 +348,23 @@
   (log/info "data object indexing complete"))
 
 
-(def ^:private file-existence-query
-  (str "SELECT count(*) FROM r_data_main d "
-       "JOIN r_coll_main c ON d.coll_id = c.coll_id "
-       "WHERE c.coll_name = ? "
-       "AND d.data_name = ?"))
+(def ^:private existence-query
+  (str "SELECT count(*)"
+       "  FROM r_objt_metamap"
+       "  WHERE meta_id IN (SELECT meta_id"
+       "                      FROM r_meta_main"
+       "                      WHERE meta_attr_name = 'ipc_UUID' AND meta_attr_value = ?)"))
 
 
 (defn file-exists?
-  [path]
-  (let [dir-path  (string/replace path #"/[^/]+$" "")
-        file-name (string/replace path #"^.*/" "")]
-    (sql/with-query-results rs [file-existence-query dir-path file-name]
-      ((comp pos? :count first) rs))))
-
-
-(def ^:private folder-existence-query
-  (str "SELECT count(*) FROM r_coll_main "
-       "WHERE coll_name = ?"))
+  [uuid]
+  (sql/with-query-results rs [existence-query uuid]
+    ((comp pos? :count first) rs)))
 
 
 (defn folder-exists?
-  [path]
-  (sql/with-query-results rs [folder-existence-query path]
+  [uuid]
+  (sql/with-query-results rs [existence-query uuid]
     ((comp pos? :count first) rs)))
 
 
