@@ -27,34 +27,44 @@
   [id]
   (some #(re-find % id) uuid-regexes))
 
-(defn- count-jobs-of-types
-  [job-types filter]
-  (jp/count-jobs (:username current-user) job-types filter))
+(defn- count-de-jobs
+  [filter]
+  (jp/count-de-jobs (:username-current-user) filter))
+
+(defn- count-jobs
+  [filter]
+  (jp/count-jobs (:username current-user) filter))
 
 (defn- format-job
-  [de-states de-apps agave-states {:keys [id] :as job}]
+  [de-apps agave-apps {app-id :analysis_id :as job}]
   (if (= (:job_type job) jp/agave-job-type)
-    (aa/format-agave-job job (agave-states id))
-    (da/format-de-job de-states de-apps job)))
+    (aa/format-agave-job agave-apps job)
+    (da/format-de-job de-apps job)))
+
+(defn- extract-app-ids
+  [jobs]
+  (set (map :analysis_id jobs)))
 
 (defn- list-all-jobs
   [agave limit offset sort-field sort-order filter]
-  (let [user         (:username current-user)
-        types        [jp/de-job-type jp/agave-job-type]
-        jobs         (jp/list-jobs-of-types user limit offset sort-field sort-order filter types)
-        grouped-jobs (group-by :job_type jobs)
-        de-states    (da/load-de-job-states (grouped-jobs jp/de-job-type []))
-        de-apps      (da/load-app-details (map :analysis_id de-states))
-        agave-states (aa/load-agave-job-states agave (grouped-jobs jp/agave-job-type []))]
-    (remove nil? (map (partial format-job de-states de-apps agave-states) jobs))))
+  (let [user          (:username current-user)
+        jobs          (jp/list-jobs user limit offset sort-field sort-order filter)
+        grouped-jobs  (group-by :job_type jobs)
+        de-app-ids    (extract-app-ids (grouped-jobs jp/de-job-type))
+        de-apps       (da/load-app-details de-app-ids)
+        agave-app-ids (extract-app-ids (grouped-jobs jp/agave-job-type))
+        agave-apps    (aa/load-app-details agave agave-app-ids)]
+    (remove nil? (map (partial format-job de-apps agave-apps) jobs))))
 
 (defn- update-job-status
-  ([{:keys [id status end-date deleted]}]
-     (jp/update-job id {:status   status
-                        :end-date (db/timestamp-from-str (str end-date))
-                        :deleted  deleted}))
-  ([agave username prev-job-info status end-time]
-     (aa/update-agave-job-status agave username prev-job-info status end-time)))
+  ([{:keys [id status end-date]}]
+     (let [uuid     (UUID/fromString id)
+           end-date (db/timestamp-from-str (str end-date))]
+       (jp/update-job-step uuid id status end-date)
+       (jp/update-job uuid status end-date)))
+  ([agave username job job-step status end-time]
+     (let [max-step-number (jp/get-max-step-number (:id job))]
+       (aa/update-agave-job-status agave username job job-step max-step-number status end-time))))
 
 (defn- unrecognized-job-type
   [job-type]
@@ -64,7 +74,7 @@
 
 (defn- process-job
   ([agave-client job-id processing-fns]
-     (process-job agave-client job-id (jp/get-job-by-external-id job-id) processing-fns))
+     (process-job agave-client job-id (jp/get-job-by-id (UUID/fromString job-id)) processing-fns))
   ([agave-client job-id job {:keys [process-agave-job process-de-job preprocess-job]
                              :or {preprocess-job identity}}]
      (condp = (:job_type job)
@@ -113,9 +123,7 @@
   (countJobs [_ filter])
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
-  (populateJobsTable [_])
-  (removeDeletedJobs [_])
-  (updateJobStatus [_ username prev-status status end-time])
+  (updateJobStatus [_ username job job-step status end-time])
   (getJobParams [_ job-id])
   (getAppRerunInfo [_ job-id]))
 ;; AppLister
@@ -160,10 +168,10 @@
     (metadactyl/copy-workflow app-id))
 
   (submitJob [_ workspace-id submission]
-    (da/store-submitted-de-job (metadactyl/submit-job workspace-id submission)))
+    (da/submit-job workspace-id submission))
 
   (countJobs [_ filter]
-    (count-jobs-of-types [jp/de-job-type] filter))
+    (count-de-jobs filter))
 
   (listJobs [_ limit offset sort-field sort-order filter]
     (da/list-de-jobs limit offset sort-field sort-order filter))
@@ -172,13 +180,7 @@
     (when (= (:job_type job) jp/de-job-type)
       (da/sync-de-job-status job)))
 
-  (populateJobsTable [_]
-    (dorun (map da/store-de-job (osm/list-jobs))))
-
-  (removeDeletedJobs [_]
-    (da/remove-deleted-de-jobs))
-
-  (updateJobStatus [_ username prev-status status end-time]
+  (updateJobStatus [_ username job job-step status end-time]
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "HPC_JOBS_DISABLED"}))
 
@@ -256,11 +258,11 @@
 
   (submitJob [_ workspace-id submission]
     (if (is-uuid? (:analysis_id submission))
-      (da/store-submitted-de-job (metadactyl/submit-job workspace-id submission))
+      (da/submit-job workspace-id submission)
       (aa/submit-agave-job agave-client submission)))
 
   (countJobs [_ filter]
-    (count-jobs-of-types [jp/de-job-type jp/agave-job-type] filter))
+    (count-jobs filter))
 
   (listJobs [_ limit offset sort-field sort-order filter]
     (if (user-has-access-token?)
@@ -273,16 +275,8 @@
                    {:process-de-job    da/sync-de-job-status
                     :process-agave-job sync-agave})))
 
-  (populateJobsTable [_]
-    (dorun (map da/store-de-job (osm/list-jobs))))
-
-  (removeDeletedJobs [_]
-    (da/remove-deleted-de-jobs)
-    (when (user-has-access-token?)
-      (aa/remove-deleted-agave-jobs agave-client)))
-
-  (updateJobStatus [_ username prev-job-info status end-time]
-    (update-job-status agave-client username prev-job-info status end-time))
+  (updateJobStatus [_ username job job-step status end-time]
+    (update-job-status agave-client username job job-step status end-time))
 
   (getJobParams [_ job-id]
     (process-job agave-client job-id
@@ -327,13 +321,6 @@
      (if (config/agave-enabled)
        (get-de-hpc-app-lister state-info username)
        (DeOnlyAppLister.))))
-
-(defn- populate-jobs-table
-  [app-lister]
-  (let [username (:username current-user)]
-    (transaction
-     (when (zero? (jp/count-all-jobs username))
-       (.populateJobsTable app-lister)))))
 
 (defn get-only-app-groups
   []
@@ -401,8 +388,6 @@
         sort-order (keyword sort-order)
         app-lister (get-app-lister)
         filter     (when-not (nil? filter) (service/decode-json filter))]
-    (populate-jobs-table app-lister)
-    (.removeDeletedJobs app-lister)
     (service/success-response
      {:analyses  (.listJobs app-lister limit offset sort-field sort-order filter)
       :timestamp (str (System/currentTimeMillis))
@@ -415,11 +400,14 @@
                       :end-date end-date}))
 
 (defn update-agave-job-status
-  [uuid status end-time]
-  (let [{:keys [username] :as job} (jp/get-job-by-id (UUID/fromString uuid))]
+  [uuid status end-time external-id]
+  (let [uuid                       (UUID/fromString uuid)
+        job-step                   (jp/get-job-step uuid external-id)
+        {:keys [username] :as job} (jp/get-job-by-id uuid)]
     (service/assert-found job "job" uuid)
+    (service/assert-found job-step "job step" (str uuid "/" external-id))
     (service/assert-valid (= jp/agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
-    (.updateJobStatus (get-app-lister "" username) username job status end-time)))
+    (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)))
 
 (defn- sync-job-status
   [job]
@@ -431,7 +419,10 @@
 
 (defn sync-job-statuses
   []
-  (dorun (map sync-job-status (jp/list-incomplete-jobs))))
+  (try+
+   (dorun (map sync-job-status (jp/list-incomplete-jobs)))
+   (catch Object e
+     (log/error e "error while obtaining the lsit of jobs to synchronize."))))
 
 (defn- log-already-deleted-jobs
   [ids]
@@ -445,14 +436,14 @@
   [body]
   (let [body (service/decode-json body)
         _    (validate-map body {:executions vector?})
-        ids  (set (:executions body))]
+        ids  (set (map #(UUID/fromString %) (:executions body)))]
     (log-already-deleted-jobs ids)
     (jp/delete-jobs ids)
     (service/success-response)))
 
 (defn- validate-job-existence
   [id]
-  (when-not (jp/get-job-by-external-id id)
+  (when-not (jp/get-job-by-id id)
     (service/not-found "job" id)))
 
 (defn- validate-job-update
@@ -465,7 +456,8 @@
 
 (defn update-job
   [id body]
-  (let [body (service/decode-json body)]
+  (let [id   (UUID/fromString id)
+        body (service/decode-json body)]
     (validate-job-existence id)
     (validate-job-update body)
     (jp/update-job id body)))

@@ -84,7 +84,6 @@
        (map (juxt :id identity))
        (into {})))
 
-
 (defn format-deployed-component-for-app
   [{path :deploymentPath :as app}]
   {:attribution ""

@@ -355,38 +355,40 @@
 
 ;; TEMPLATES
 
-(defn find-existing-metadata-template-avu
-  "Finds an existing AVU by ID or attribute, and by target_id and owner_id."
+(defn avu->where-clause
+  "Formats an AVU map for use in a select query where-clause."
   [{avu-id :id, :as avu}]
   (let [id-key (if avu-id :id :attribute)]
-    (korma/with-db db/metadata
+    (-> (select-keys avu [id-key :target_id])
+        (assoc :target_type (->enum-val "data")))))
+
+(defn find-existing-metadata-template-avu
+  "Finds an existing AVU by ID or attribute, and by target_id."
+  [avu]
+  (korma/with-db db/metadata
       (first
-       (select :avus
-               (where (-> (select-keys avu [id-key :target_id :owner_id])
-                          (assoc :target_type (->enum-val "data")))))))))
+       (select :avus (where (avu->where-clause avu))))))
 
 (defn get-avus-for-metadata-template
   "Gets AVUs for the given Metadata Template."
-  [user-id data-id template-id]
+  [data-id template-id]
   (korma/with-db db/metadata
     (select :avus
             (join [:template_instances :t]
                   {:t.avu_id :avus.id})
             (where {:t.template_id template-id
                     :avus.target_id data-id
-                    :avus.target_type (->enum-val "data")
-                    :avus.owner_id user-id}))))
+                    :avus.target_type (->enum-val "data")}))))
 
 (defn get-metadata-template-ids
   "Finds Metadata Template IDs associated with the given user's data item."
-  [user-id data-id]
+  [data-id]
   (korma/with-db db/metadata
     (select [:template_instances :t]
             (fields :template_id)
             (join :avus {:t.avu_id :avus.id})
             (where {:avus.target_id data-id
-                    :avus.target_type (->enum-val "data")
-                    :avus.owner_id user-id})
+                    :avus.target_type (->enum-val "data")})
             (group :template_id))))
 
 (defn remove-avu-template-instances
@@ -409,17 +411,22 @@
 
 (defn add-metadata-template-avus
   "Adds the given AVUs to the Metadata database."
-  [avus]
-  (korma/with-db db/metadata
-    (insert :avus (values (map #(assoc % :target_type (->enum-val "data")) avus)))))
+  [user-id avus]
+  (let [fmt-avu #(assoc %
+                   :created_by user-id
+                   :modified_by user-id
+                   :target_type (->enum-val "data"))]
+    (korma/with-db db/metadata
+      (insert :avus (values (map fmt-avu avus))))))
 
 (defn update-avu
-  "Updates the attribute, value, unit, and modified_on fields of the given AVU."
-  [avu]
+  "Updates the attribute, value, unit, modified_by, and modified_on fields of the given AVU."
+  [user-id avu]
   (korma/with-db db/metadata
     (update :avus
             (set-fields (-> (select-keys avu [:attribute :value :unit])
-                            (assoc :modified_on (sqlfn now))))
+                            (assoc :modified_by user-id
+                                   :modified_on (sqlfn now))))
             (where (select-keys avu [:id])))))
 
 (defn remove-avus
@@ -436,21 +443,20 @@
 
 (defn remove-data-item-template-instances
   "Removes all Metadata Template AVU associations from the given data item."
-  [user-id data-id]
+  [data-id]
   (let [avu-id-select (-> (select* :avus)
                           (fields :id)
                           (where {:target_id data-id
-                                  :target_type (->enum-val "data")
-                                  :owner_id user-id}))]
+                                  :target_type (->enum-val "data")}))]
     (korma/with-db db/metadata
     (delete :template_instances (where {:avu_id [in (subselect avu-id-select)]})))))
 
 (defn set-template-instances
   "Associates the given AVU IDs with the given Metadata Template ID,
    removing all other Metadata Template ID associations."
-  [user-id data-id template-id avu-ids]
+  [data-id template-id avu-ids]
   (korma/with-db db/metadata
     (korma/transaction
-     (remove-data-item-template-instances user-id data-id)
+     (remove-data-item-template-instances data-id)
      (add-template-instances template-id avu-ids))))
 

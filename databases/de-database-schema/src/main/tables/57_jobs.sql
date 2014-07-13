@@ -5,15 +5,17 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE jobs (
     id uuid NOT NULL,
-    external_id character varying(40) NOT NULL,
     job_name character varying(255) NOT NULL,
     job_description text DEFAULT '',
     app_name character varying(255),
+    app_id character varying(255),
+    app_wiki_url text,
+    app_description text,
+    result_folder_path text,
     start_date timestamp,
     end_date timestamp,
     status character varying(64) NOT NULL,
     deleted boolean DEFAULT FALSE NOT NULL,
-    job_type_id bigint REFERENCES job_types(id) NOT NULL,
     user_id bigint NOT NULL,
-    PRIMARY KEY (id)
+    submission json
 );

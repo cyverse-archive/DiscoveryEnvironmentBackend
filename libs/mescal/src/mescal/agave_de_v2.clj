@@ -89,3 +89,8 @@
 (defn translate-job-status
   [status]
   (jobs/translate-job-status status))
+
+(defn regenerate-job-submission
+  [agave job-id]
+  (when-let [job (.listJob agave job-id)]
+    (jobs/regenerate-job-submission agave job)))

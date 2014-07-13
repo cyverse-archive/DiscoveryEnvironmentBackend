@@ -106,3 +106,30 @@
 (defn translate-job-status
   [status]
   (get job-status-translations status))
+
+(defn get-regeneration-preprocessors
+  [agave]
+  {:inputs     #(.irodsFilePath agave %)
+   :parameters identity})
+
+(defn- regenerate-group-config
+  [preprocessor kvs]
+  (map (fn [[k v]] [k (preprocessor v)]) kvs))
+
+(defn- regenerate-job-config
+  [agave job]
+  (let [preprocessor-for (get-regeneration-preprocessors agave)]
+    (->> (keys preprocessor-for)
+         (mapcat (fn [group] (regenerate-group-config (preprocessor-for group) (job group))))
+         (into {}))))
+
+(defn regenerate-job-submission
+  [agave job]
+  {:analysis_id          (:appId job)
+   :name                 (:name job)
+   :debug                false
+   :notify               false
+   :output_dir           (get-result-folder-id agave job)
+   :create_output_subdir true
+   :description          ""
+   :config               (regenerate-job-config agave job)})
