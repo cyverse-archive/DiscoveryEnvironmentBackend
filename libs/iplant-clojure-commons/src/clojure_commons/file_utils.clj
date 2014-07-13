@@ -31,7 +31,7 @@
 
    Returns: New version of 'path' with the trailing slash removed."
   [path]
-  (.replaceAll path "/$" ""))
+  (when path (.replaceAll path "/$" "")))
 
 (defn basename
   "Returns the basename of 'path'.
@@ -58,7 +58,7 @@
    Returns:
      String containing the dirname of path."
   [path]
-  (.getParent (file path)))
+  (when path (.getParent (file path))))
 
 (defn add-trailing-slash
   "Adds a trailing slash to 'input-string' if it doesn't already have one."
