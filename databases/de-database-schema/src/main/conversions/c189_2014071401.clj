@@ -1,13 +1,21 @@
-SET search_path = public, pg_catalog;
+(ns facepalm.c189-2014071401
+  (:use [korma.core]
+        [kameleon.core]))
 
---
--- A view containing the top-level information needed for the analysis listing
--- service.
---
-CREATE VIEW analysis_listing AS
+(def ^:private version
+  "The destination database version."
+  "1.8.0:20140714.01")
+
+(defn- redefine-analysis-listing-view
+  "Redefines the analysis listing view to correct a problem with the incorrect number of steps
+   being reported for some apps."
+  []
+  (println "\t* adding the template_count column to the analysis_listing view")
+  (exec-raw "DROP VIEW analysis_listing")
+  (exec-raw "CREATE VIEW analysis_listing AS
     SELECT analysis.hid,
            analysis.id,
-           analysis."name",
+           analysis.name,
            analysis.description,
            integration.integrator_name,
            integration.integrator_email,
@@ -45,7 +53,7 @@ CREATE VIEW analysis_listing AS
          LEFT JOIN tool_types tt ON dc.tool_type_id = tt.id
     GROUP BY analysis.hid,
              analysis.id,
-             analysis."name",
+             analysis.name,
              analysis.description,
              integration.integrator_name,
              integration.integrator_email,
@@ -53,4 +61,10 @@ CREATE VIEW analysis_listing AS
              analysis.edited_date,
              analysis.wikiurl,
              analysis.deleted,
-             analysis.disabled;
+             analysis.disabled"))
+
+(defn convert
+  "Performs the database conversion."
+  []
+  (println "Performing conversion for" version)
+  (redefine-analysis-listing-view))

@@ -254,8 +254,8 @@
   (pk :hid)
   (entity-fields :id :name :description :integrator_name :integrator_email
                  :integration_date :edited_date :wikiurl :average_rating
-                 :is_public :step_count :component_count :deleted :disabled
-                 :overall_job_type)
+                 :is_public :step_count :component_count :template_count
+                 :deleted :disabled :overall_job_type)
   (has-many deployed_component_listing {:fk :analysis_id})
   (has-many ratings {:fk :transformation_activity_id}))
 

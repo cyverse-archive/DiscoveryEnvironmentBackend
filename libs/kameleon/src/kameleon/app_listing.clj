@@ -130,6 +130,7 @@
                                 :is_public
                                 :step_count
                                 :component_count
+                                :template_count
                                 :deleted
                                 :disabled
                                 :overall_job_type)
