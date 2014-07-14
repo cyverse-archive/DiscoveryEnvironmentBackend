@@ -240,15 +240,18 @@
    Parameters:
      owner       - The user name of the owner of the new tag.
      value       - The value of the tag. It must be no more than 255 characters.
-     description - The description of the tag. If nil, an empty string will be inserted."
+     description - The description of the tag. If nil, an empty string will be inserted.
+
+   Returns:
+     It returns the new tag."
   [owner value description]
   (let [description (if description description "")]
-    (korma/with-db db/metadata
-      (insert :tags
-        (values {:value       value
-                 :description description
-                 :owner_id    owner})))
-    nil))
+    (-> (korma/with-db db/metadata
+          (insert :tags
+            (values {:value       value
+                     :description description
+                     :owner_id    owner})))
+      (select-keys [:id :value :description]))))
 
 (defn update-user-tag
   "Updates a user tag's description and/or value.
