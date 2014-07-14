@@ -93,10 +93,11 @@ $ curl \
                 "dateCreated": 1381325224090,
                 "dateModified": 1384998366001,
                 "fileSize": 13225,
-                "id": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
+                "id": "6278f8e0-121f-4ce6-a15f-1083cfad6de5",
                 "label": "read1_10k.fq",
                 "fileType": null,
                 "metadata": [],
+                "path": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
                 "permission" : "own",
                 "userPermissions": [
                     {
@@ -119,7 +120,7 @@ $ curl \
                 "dateModified": 1384998366001,
                 "fileSize": 14016,
                 "fileType": null,
-                "id": "/iplant/home/rods/analyses/ft_01251621-2013-10-09-13-28-05.602/read1_10k.fq",
+                "id": "acaeb63d-8e84-412d-89a2-716a6a4dda7e",
                 "label": "read1_10k.fq",
                 "metadata": [
                     {
@@ -128,6 +129,7 @@ $ curl \
                         "value": "red"
                     }
                 ],
+                "path": "/iplant/home/rods/analyses/ft_01251621-2013-10-09-13-28-05.602/read1_10k.fq",
                 "permission": "write",
                 "userPermissions": [
                     {
@@ -244,9 +246,10 @@ $ curl \
                 "dateModified": 1381325224090,
                 "fileSize": 13225,
                 "fileType": null,
-                "id": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
+                "id": "6278f8e0-121f-4ce6-a15f-1083cfad6de5",
                 "label": "read1_10k.fq",
                 "metadata": [],
+                "path": "/iplant/home/rods/analyses/fc_01300857-2013-10-09-13-27-04.090/read1_10k.fq",
                 "permission": "own",
                 "userPermissions": [
                     {
@@ -269,7 +272,7 @@ $ curl \
                 "dateModified": 1381325285000,
                 "fileSize": 14016,
                 "fileType": null,
-                "id": "/iplant/home/rods/analyses/ft_01251621-2013-10-09-13-28-05.602/read1_10k.fq",
+                "id": "acaeb63d-8e84-412d-89a2-716a6a4dda7e",
                 "label": "read1_10k.fq",
                 "metadata": [
                     {
@@ -278,6 +281,7 @@ $ curl \
                         "value": "red"
                     }
                 ],
+                "path": "/iplant/home/rods/analyses/ft_01251621-2013-10-09-13-28-05.602/read1_10k.fq",
                 "permission": "write",
                 "userPermissions": [
                     {
