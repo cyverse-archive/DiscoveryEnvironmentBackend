@@ -1,7 +1,8 @@
 (ns donkey.persistence.metadata
   (:use korma.core)
   (:require [korma.db :as korma]
-            [donkey.util.db :as db]))
+            [donkey.util.db :as db])
+  (:import [java.util UUID]))
 
 
 (defn- ->enum-val
