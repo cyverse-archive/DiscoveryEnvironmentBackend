@@ -124,11 +124,11 @@
    Returns:
      It returns true if the give target has been marked as a favorite, otherwise it returns false.
      It also returns false if the user or target doesn't exist."
-  [user target-id]
+  [user ^UUID target-id]
   (-> (korma/with-db db/metadata
         (select :favorites
           (aggregate (count :*) :cnt)
-          (where {:target_id (java.util.UUID/fromString target-id) :owner_id user})))
+          (where {:target_id target-id :owner_id user})))
     first :cnt pos?))
 
 (defn select-favorites-of-type

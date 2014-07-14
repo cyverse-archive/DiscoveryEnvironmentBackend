@@ -46,7 +46,7 @@
   (let [base-map {:id            uuid
                   :path          full_path
                   :label         base_name
-                  :isFavorite    (meta/is-favorite? user uuid)
+                  :isFavorite    (meta/is-favorite? user (UUID/fromString uuid))
                   :filter        (or (should-filter? user full_path)
                                      (should-filter? user base_name))
                   :file-size     data_size
@@ -121,7 +121,7 @@
           :id               uuid
           :path             path
           :label            (id->label cm user path)
-          :isFavorite       (meta/is-favorite? user uuid)
+          :isFavorite       (meta/is-favorite? user (UUID/fromString uuid))
           :filter           (should-filter? user path)
           :permission       (permission-for cm user path)
           :hasSubDirs       true
@@ -153,7 +153,7 @@
           :id            uuid
           :path          path
           :label         (id->label cm user path)
-          :isFavorite    (meta/is-favorite? user uuid)
+          :isFavorite    (meta/is-favorite? user (UUID/fromString uuid))
           :filter        (should-filter? user path)
           :permisssion   (permission-for cm user path)
           :hasSubDirs    true
