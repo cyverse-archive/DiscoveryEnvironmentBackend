@@ -30,7 +30,7 @@
   :resource-paths []
   :profiles {:dev {:dependencies   [[midje "1.6.3"]]
                    :resource-paths ["dev-resource"]}}
-  :plugins [[org.iplantc/lein-iplant-rpm "3.1.8"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.1.9"]]
   :iplant-rpm {:summary      "dewey"
                :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
                :config-files ["log4j.properties"]
