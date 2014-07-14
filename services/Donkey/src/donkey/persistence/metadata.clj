@@ -212,8 +212,8 @@
   [owner value-glob & [max-results]]
   (let [query  (-> (select* :tags)
                  (fields :id :value :description)
-                 (where {:owner_id owner
-                         :value    [like value-glob]}))
+                 (where (and {:owner_id owner}
+                             (raw (str "lower(value) like lower('" value-glob "')")))))
         query' (if max-results
                  (-> query (limit max-results))
                  query)]
