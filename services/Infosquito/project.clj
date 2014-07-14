@@ -27,7 +27,7 @@
   :profiles {:dev {:resource-paths ["dev-resources"]}}
   :plugins [[org.iplantc/lein-iplant-rpm "3.1.9"]]
   :iplant-rpm {:summary      "infosquito"
-               :dependencies ["iplant-service-config >= 0.1.0-5"]
+               :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
                :config-files ["log4j.properties"]
                :config-path  "conf"}
   :repositories [["sonatype-nexus-snapshots"
