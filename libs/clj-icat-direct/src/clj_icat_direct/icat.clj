@@ -154,8 +154,10 @@
   (if-not (contains? sort-orders sort-order)
     (throw (Exception. (str "Invalid sort-order " sort-order))))
 
-  (let [sc    (get sort-columns sort-column)
-        so    (get sort-orders sort-order)
-        query (format (:paged-uuid-listing q/queries) (q/prepare-text-set uuids) sc so)
-        p     (partial add-permission user)]
-    (map p (run-query-string query user zone limit offset))))
+  (if (empty? uuids)
+    []
+    (let [sc    (get sort-columns sort-column)
+          so    (get sort-orders sort-order)
+          query (format (:paged-uuid-listing q/queries) (q/prepare-text-set uuids) sc so)
+          p     (partial add-permission user)]
+      (map p (run-query-string query user zone limit offset)))))
