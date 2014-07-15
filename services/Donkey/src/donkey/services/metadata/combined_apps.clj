@@ -99,7 +99,7 @@
   "Determines the type of a job step."
   [job-step]
   (assoc job-step
-    :job_type (if (nil? (:external_app_id job-step)) jp/agave-job-type jp/de-job-type)))
+    :job_type (if (nil? (:external_app_id job-step)) jp/de-job-type jp/agave-job-type)))
 
 (defn- load-job-steps
   "Loads the app steps from the database, grouping consecutive DE steps into a single step."
@@ -153,7 +153,7 @@
 
 (defn- is-de-job-step?
   [job-step]
-  (= (:job_type job-step) jp/de-job-type))
+  (= (:job-type job-step) jp/de-job-type))
 
 (defn- record-step-submission
   [external-id job-info job-step]
