@@ -56,7 +56,8 @@
             (join [:transformation_task_steps :tts] {:a.hid :tts.transformation_task_id})
             (join [:transformation_steps :ts] {:tts.transformation_step_id :ts.id})
             (join [:transformations :tx] {:ts.transformation_id :tx.id})
-            (fields [:ts.name :step_name]
+            (fields [:ts.id :step_id]
+                    [:ts.name :step_name]
                     [:tx.template_id :template_id]
                     [:tx.external_app_id :external_app_id])
             (where {:a.id app-id}))))
@@ -67,3 +68,11 @@
    (with-db db/de
      (select [:transformation_activity :a]
              (where {:id app-id})))))
+
+(defn load-target-step-mappings
+  [step-id]
+  (with-db db/de
+    (select [:input_output_mapping :iom]
+            (join [:dataobject_mapping :dom] {:iom.hid :dom.mapping_id})
+            (fields [:dom.input :input_id])
+            (where {:iom.target step-id}))))

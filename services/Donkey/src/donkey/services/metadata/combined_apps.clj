@@ -7,6 +7,7 @@
             [clojure.string :as string]
             [clojure-commons.error-codes :as ce]
             [clojure-commons.file-utils :as ft]
+            [donkey.clients.metadactyl :as metadactyl]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
             [donkey.services.metadata.agave-apps :as aa]
@@ -15,6 +16,67 @@
             [donkey.util.db :as db]
             [donkey.util.service :as service])
   (:import [java.util UUID]))
+
+(defn- remove-mapped-inputs
+  [mapped-props group]
+  (assoc group :properties (remove (comp mapped-props :id) (:properties group))))
+
+(defn- reformat-group
+  [app-name step-name group]
+  (assoc group
+    :name       (str app-name " - " (:name group))
+    :label      (str app-name " - " (:label group))
+    :properties (mapv (fn [prop] (assoc prop :id (str step-name "_" (:id prop))))
+                      (:properties group))))
+
+(defn- get-agave-groups
+  [agave step external-app-id]
+  (let [app          (.getApp agave external-app-id)
+        mapped-props (set (map :input_id (ap/load-target-step-mappings (:step_id step))))]
+    (->> (:groups app)
+         (map (partial remove-mapped-inputs mapped-props))
+         (remove (comp empty? :properties))
+         (map (partial reformat-group (:name app) (:step_name step)))
+         (doall))))
+
+(defn- get-combined-groups
+  [agave app-id metadactyl-groups]
+  (loop [acc               []
+         metadactyl-groups metadactyl-groups
+         [step & steps]    (ap/load-app-steps app-id)
+         step-number       1]
+    (let [before-current-step #(< (:step_number %) step-number)
+          external-app-id     (:external_app_id step)]
+      (cond
+       ;; We're out of steps.
+       (nil? step)
+       acc
+
+       ;; The current step is an Agave step.
+       external-app-id
+       (recur (concat acc (get-agave-groups agave step external-app-id))
+              metadactyl-groups
+              steps
+              (inc step-number))
+
+       ;; The current step is a DE step.
+       :else
+       (recur (concat acc (take-while before-current-step metadactyl-groups))
+              (drop-while before-current-step metadactyl-groups)
+              steps
+              (inc step-number))))))
+
+(defn- get-combined-app
+  [agave app-id]
+  (let [metadactyl-app (metadactyl/get-app app-id)]
+    (assoc metadactyl-app
+      :groups (get-combined-groups agave app-id (:groups metadactyl-app)))))
+
+(defn get-app
+  [agave app-id]
+  (if (util/is-uuid? app-id)
+    (get-combined-app agave app-id)
+    (.getApp agave app-id)))
 
 (defn- current-timestamp
   []

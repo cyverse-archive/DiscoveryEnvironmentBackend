@@ -225,9 +225,7 @@
                :reason     "HPC apps cannot be rated"})))
 
   (getApp [_ app-id]
-    (if (is-uuid? app-id)
-      (metadactyl/get-app app-id)
-      (.getApp agave-client app-id)))
+    (ca/get-app agave-client app-id))
 
   (getAppDeployedComponents [_ app-id]
     (if (is-uuid? app-id)
@@ -353,7 +351,8 @@
 
 (defn get-app
   [app-id]
-  (service/success-response (.getApp (get-app-lister) app-id)))
+  #_(service/success-response (.getApp (get-app-lister) app-id))
+  (.getApp (get-app-lister) app-id))
 
 (defn get-deployed-components-in-app
   [app-id]
