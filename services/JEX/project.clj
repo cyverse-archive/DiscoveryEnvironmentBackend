@@ -1,4 +1,4 @@
-(defproject org.iplantc/jex "3.1.9"
+(defproject org.iplantc/jex "3.2.0"
   :description "A backend job execution service that submits jobs to Condor."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -15,11 +15,11 @@
                  [cheshire "5.0.1"]
                  [compojure "1.0.1"]
                  [ring/ring-jetty-adapter "1.0.1"]
-                 [org.iplantc/clojure-commons "3.1.9"]
+                 [org.iplantc/clojure-commons "3.2.0"]
                  [slingshot "0.10.3"]
                  [me.raynes/fs "1.4.4"]
-                 [org.iplantc/common-cli "3.1.9"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.1.9"]
+                 [org.iplantc/common-cli "3.2.0"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.2.0"]
             [lein-midje "3.1.1"]]
   :iplant-rpm {:summary "jex",
                :runuser "condor"

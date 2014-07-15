@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/irods-avu-migrator "3.1.9"
+(defproject org.iplantc/irods-avu-migrator "3.2.0"
   :description "DE tool for migrating AVU metadata from iRODS to PostgreSQL."
   :url "https://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend"
   :license {:name "BSD"}
@@ -17,5 +17,5 @@
   :uberjar-name "irods-avu-migrator.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.3.1"]
-                 [org.iplantc/common-cli "3.1.9"]
-                 [org.iplantc/kameleon "3.1.9"]])
+                 [org.iplantc/common-cli "3.2.0"]
+                 [org.iplantc/kameleon "3.2.0"]])
