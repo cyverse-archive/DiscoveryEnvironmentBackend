@@ -50,25 +50,30 @@ public class UiAnalysisMarshaler {
         return json;
     }
 
+    // TODO: get this working with the placeholder values.
     private JSONArray marshalAnalysisPropertyGroups(final TransformationActivity analysis) throws JSONException {
         JSONArray result = new JSONArray();
+        int stepNumber = 0;
         for (TransformationStep step : analysis.getSteps()) {
-            marshalStepPropertyGroups(result, analysis, step);
+            stepNumber++;
+            if (step.getTemplateId() != null) {
+                marshalStepPropertyGroups(result, analysis, step, stepNumber);
+            }
         }
         return result;
     }
 
-    private void marshalStepPropertyGroups(JSONArray result, TransformationActivity analysis, TransformationStep step)
-            throws JSONException {
+    private void marshalStepPropertyGroups(JSONArray result, TransformationActivity analysis, TransformationStep step,
+            int stepNumber) throws JSONException {
         Template template = loadTemplate(step.getTemplateId());
         String groupNamePrefix = getGroupNamePrefixForStep(analysis, step);
         for (PropertyGroup group : template.getPropertyGroups()) {
-            JsonUtils.putIfNotNull(result, marshalPropertyGroup(analysis, step, group, groupNamePrefix));
+            JsonUtils.putIfNotNull(result, marshalPropertyGroup(analysis, step, group, groupNamePrefix, stepNumber));
         }
     }
 
     private JSONObject marshalPropertyGroup(TransformationActivity analysis, TransformationStep step,
-            PropertyGroup group, String groupNamePrefix) throws JSONException {
+            PropertyGroup group, String groupNamePrefix, int stepNumber) throws JSONException {
         JSONObject json = null;
         JSONArray props = marshalProperties(analysis, step, group.getProperties());
         if (props.length() != 0) {
@@ -78,6 +83,7 @@ public class UiAnalysisMarshaler {
             json.put("label", groupNamePrefix + group.getLabel());
             json.put("type", group.getGroupType());
             json.put("properties", props);
+            json.put("step_number", stepNumber);
         }
         return json;
     }

@@ -39,7 +39,7 @@
       (db/now)))
 
 (defn- store-agave-job
-  [job-id job]
+  [job-id job submission]
   (jp/save-job {:id                 job-id
                 :job-name           (:name job)
                 :description        (:description job)
@@ -50,7 +50,8 @@
                 :result-folder-path (:resultfolderid job)
                 :start-date         (determine-start-time job)
                 :username           (:username current-user)
-                :status             (:status job)}))
+                :status             (:status job)}
+               submission))
 
 (defn- store-job-step
   [job-id job]
@@ -72,13 +73,18 @@
   (let [id     (UUID/randomUUID)
         cb-url (build-callback-url id)
         job    (.submitJob agave-client (assoc submission :callbackUrl cb-url))]
-    (store-agave-job id job)
+    (store-agave-job id job submission)
     (store-job-step id job)
     (dn/send-agave-job-status-update (:shortUsername current-user) (assoc job :id id))
     {:id         (str id)
      :name       (:name job)
      :status     (:status job)
      :start-date (time-utils/millis-from-str (str (:startdate job)))}))
+
+(defn submit-job-step
+  [agave-client job-info job-step submission]
+  (let [cb-url (build-callback-url (:id job-info))]
+     (:id (.submitJob agave-client (assoc submission :callbackUrl cb-url)))))
 
 (defn- determine-display-timestamp
   [k job state]

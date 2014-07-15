@@ -150,8 +150,8 @@
 (defn- format-app
   "Formats certain app fields into types more suitable for the client."
   [app]
-  (-> (assoc app :can_run (= (:step_count app) (:component_count app)))
-      (dissoc :component_count)
+  (-> (assoc app :can_run (= (:template_count app) (:component_count app)))
+      (dissoc :component_count :template_count)
       (format-app-timestamps)
       (format-app-ratings)
       (format-app-pipeline-eligibility)

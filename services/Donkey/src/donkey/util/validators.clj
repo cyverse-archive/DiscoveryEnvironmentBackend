@@ -47,5 +47,3 @@
   (try+
     (UUID/fromString uuid-txt)
     (catch IllegalArgumentException _ (throw+ {:error_code ERR_NOT_FOUND}))))
-
-

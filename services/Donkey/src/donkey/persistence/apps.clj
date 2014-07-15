@@ -60,3 +60,10 @@
                     [:tx.template_id :template_id]
                     [:tx.external_app_id :external_app_id])
             (where {:a.id app-id}))))
+
+(defn load-app-info
+  [app-id]
+  (first
+   (with-db db/de
+     (select [:transformation_activity :a]
+             (where {:id app-id})))))

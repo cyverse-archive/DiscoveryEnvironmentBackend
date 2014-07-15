@@ -21,7 +21,7 @@
     nil))
 
 (defn- store-submitted-de-job
-  [job-id job]
+  [job-id job submission]
   (jp/save-job {:id                 job-id
                 :job-name           (:name job)
                 :description        (:description job)
@@ -49,12 +49,18 @@
   (let [job-id     (UUID/randomUUID)
         submission (assoc submission :uuid (str job-id))
         job        (metadactyl/submit-job workspace-id submission)]
-    (store-submitted-de-job job-id job)
+    (store-submitted-de-job job-id job submission)
     (store-job-step job-id job)
     {:id         (str job-id)
      :name       (:name job)
      :status     (:status job)
      :start-date (time-utils/millis-from-str (str (:startdate job)))}))
+
+(defn submit-job-step
+  [workspace-id job-info job-step submission]
+  (->> (assoc submission :uuid (str (:id job-info)))
+       (metadactyl/submit-job workspace-id)
+       (:id)))
 
 (defn format-de-job
   [de-apps job]

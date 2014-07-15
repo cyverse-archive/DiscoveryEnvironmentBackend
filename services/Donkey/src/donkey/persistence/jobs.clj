@@ -4,9 +4,10 @@
   (:use [clojure-commons.core :only [remove-nil-values]]
         [kameleon.queries :only [get-user-id]]
         [korma.core]
-        [korma.db :only [with-db]]
+        [korma.db :only [transaction with-db]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure.tools.logging :as log]
+  (:require [cheshire.core :as cheshire]
+            [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [donkey.util.db :as db])
   (:import [java.util UUID]))
@@ -59,43 +60,67 @@
     query
     (where query (apply or (map filter-map->where-clause filter)))))
 
-(defn save-job
+(defn- save-job-submission
+  "Associated a job submission with a saved job in the database."
+  [job-id submission]
+  (exec-raw "UPDATE jobs SET submission = CAST ( ? AS json ) WHERE id = ?"
+            [(cast Object (cheshire/encode submission)) job-id]))
+
+(defn- save-job*
   "Saves information about a job in the database."
   [{:keys [id job-name description app-id app-name app-description app-wiki-url result-folder-path
            start-date end-date status deleted username]}]
+  (let [user-id (get-user-id username)]
+    (insert :jobs
+            (values (remove-nil-values
+                     {:id                 id
+                      :job_name           job-name
+                      :job_description    description
+                      :app_id             app-id
+                      :app_name           app-name
+                      :app_description    app-description
+                      :app_wiki_url       app-wiki-url
+                      :result_folder_path result-folder-path
+                      :start_date         start-date
+                      :end_date           end-date
+                      :status             status
+                      :deleted            deleted
+                      :user_id            user-id})))))
+
+(defn save-job
+  "Saves information about a job in the database."
+  [job-info submission]
   (with-db db/de
-    (let [user-id (get-user-id username)]
-      (insert :jobs
-              (values (remove-nil-values
-                       {:id                 id
-                        :job_name           job-name
-                        :job_description    description
-                        :app_id             app-id
-                        :app_name           app-name
-                        :app_description    app-description
-                        :app_wiki_url       app-wiki-url
-                        :result_folder_path result-folder-path
-                        :start_date         start-date
-                        :end_date           end-date
-                        :status             status
-                        :deleted            deleted
-                        :user_id            user-id}))))))
+    (save-job* job-info)
+    (save-job-submission (:id job-info) submission)))
+
+(defn- save-job-step*
+  "Saves a single job step in the database."
+  [{:keys [job-id step-number external-id start-date end-date status job-type app-step-number]}]
+  (let [job-type-id (get-job-type-id job-type)]
+    (insert :job_steps
+            (values (remove-nil-values
+                     {:job_id job-id
+                      :step_number     step-number
+                      :external_id     external-id
+                      :start_date      start-date
+                      :end_date        end-date
+                      :status          status
+                      :job_type_id     job-type-id
+                      :app_step_number app-step-number})))))
 
 (defn save-job-step
   "Saves a single job step in the database."
-  [{:keys [job-id step-number external-id start-date end-date status job-type app-step-number]}]
+  [job-step]
+  (with-db db/de (save-job-step* job-step)))
+
+(defn save-multistep-job
+  [job-info job-steps submission]
   (with-db db/de
-    (let [job-type-id (get-job-type-id job-type)]
-      (insert :job_steps
-              (values (remove-nil-values
-                       {:job_id job-id
-                        :step_number     step-number
-                        :external_id     external-id
-                        :start_date      start-date
-                        :end_date        end-date
-                        :status          status
-                        :job_type_id     job-type-id
-                        :app_step_number app-step-number}))))))
+    (transaction
+     (save-job* job-info)
+     (save-job-submission (:id job-info) submission)
+     (dorun (map save-job-step* job-steps)))))
 
 (defn- agave-job-subselect
   []
@@ -120,7 +145,6 @@
   (with-db db/de
     ((comp :count first) (select (count-jobs-base username)))))
 
-;; TODO: split the job type detection into a separate step
 (defn count-jobs
   "Counts the number of undeleted jobs in the database for a user."
   [username filter]
@@ -129,7 +153,6 @@
      (select (add-job-query-filter-clause (count-jobs-base username) filter)
              (where {:j.deleted false})))))
 
-;; TODO: split the job type detection into a separate step.
 (defn count-de-jobs
   "Counts the number of undeleted DE jobs int he database for a user."
   [username filter]
@@ -158,7 +181,7 @@
     :enddate       :j.end_date
     :status        :j.status))
 
-;; TODO: split the job type query out inot a separate query.
+;; TODO: split the job type query out into a separate query.
 (defn- job-base-query
   "The base query used for retrieving job information from the database."
   []
@@ -282,6 +305,19 @@
   ([id status end-date]
      (update-job id {:status   status
                      :end-date end-date})))
+
+(defn update-job-step-number
+  "Updates an existing job step in the database using the job ID and the step number as keys."
+  [job-id step-number {:keys [external-id status end-date start-date]}]
+  (when (or external-id status end-date start-date)
+    (with-db db/de
+      (update :job_steps
+              (set-fields (remove-nil-values {:external_id external-id
+                                              :status      status
+                                              :end_date    end-date
+                                              :start_date  start-date}))
+              (where {:job_id      job-id
+                      :step_number step-number})))))
 
 (defn update-job-step
   "Updates an existing job step in the database."
