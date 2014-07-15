@@ -50,7 +50,6 @@ public class UiAnalysisMarshaler {
         return json;
     }
 
-    // TODO: get this working with the placeholder values.
     private JSONArray marshalAnalysisPropertyGroups(final TransformationActivity analysis) throws JSONException {
         JSONArray result = new JSONArray();
         int stepNumber = 0;
