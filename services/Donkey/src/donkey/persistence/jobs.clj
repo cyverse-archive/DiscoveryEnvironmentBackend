@@ -63,8 +63,8 @@
 (defn- save-job-submission
   "Associated a job submission with a saved job in the database."
   [job-id submission]
-  (exec-raw "UPDATE jobs SET submission = CAST ( ? AS json ) WHERE id = ?"
-            [(cast Object (cheshire/encode submission)) job-id]))
+  (exec-raw ["UPDATE jobs SET submission = CAST ( ? AS json ) WHERE id = ?"
+             [(cast Object (cheshire/encode submission)) job-id]]))
 
 (defn- save-job*
   "Saves information about a job in the database."

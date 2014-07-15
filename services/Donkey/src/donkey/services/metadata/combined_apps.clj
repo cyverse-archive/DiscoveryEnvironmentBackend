@@ -132,12 +132,12 @@
 (defn- build-job-save-info
   [result-folder-path job-id app-info submission]
   {:id                 job-id
-   :job-name           {:name submission}
-   :description        {:description submission}
-   :app-id             {:id app-info}
-   :app-name           {:name app-info}
-   :app-description    {:description app-info}
-   :app-wiki-url       {:wikiurl app-info}
+   :job-name           (:name submission)
+   :description        (:description submission)
+   :app-id             (:id app-info)
+   :app-name           (:name app-info)
+   :app-description    (:description app-info)
+   :app-wiki-url       (:wikiurl app-info)
    :result-folder-path result-folder-path
    :start-date         (db/now)
    :status             "Submitted"
@@ -153,7 +153,7 @@
 
 (defn- is-de-job-step?
   [job-step]
-  (= (:job_type job-step) (jp/de-job-type)))
+  (= (:job_type job-step) jp/de-job-type))
 
 (defn- record-step-submission
   [external-id job-info job-step]
