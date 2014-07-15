@@ -5,6 +5,7 @@
   (:require [clj-time.core :as t]
             [clj-time.format :as tf]
             [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [clojure-commons.file-utils :as ft]
             [donkey.clients.metadactyl :as metadactyl]
@@ -45,7 +46,7 @@
          metadactyl-groups metadactyl-groups
          [step & steps]    (ap/load-app-steps app-id)
          step-number       1]
-    (let [before-current-step #(< (:step_number %) step-number)
+    (let [before-current-step #(<= (:step_number %) step-number)
           external-app-id     (:external_app_id step)]
       (cond
        ;; We're out of steps.
@@ -140,7 +141,7 @@
    :result-folder-path result-folder-path
    :start-date         (db/now)
    :status             "Submitted"
-   :user-id            (:username current-user)})
+   :username           (:username current-user)})
 
 (defn- build-job-step-save-info
   [job-id job-step]
