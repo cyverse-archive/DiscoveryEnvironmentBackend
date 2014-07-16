@@ -32,7 +32,7 @@
                u.zone_name  \"zone\",
                t.token_name \"permission\"
           FROM r_objt_access AS a
-            LEFT JOIN r_user_main AS u ON a.user_id = u.user_id
+            JOIN r_user_main AS u ON a.user_id = u.user_id
             LEFT JOIN r_tokn_main AS t ON a.access_type_id = t.token_id
           WHERE a.object_id in (" (fmt-query-list entry-ids) ")"))
 
