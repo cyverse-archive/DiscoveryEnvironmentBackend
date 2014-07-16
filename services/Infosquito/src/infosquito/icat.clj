@@ -293,7 +293,7 @@
   (letfn [(log-failures [bulk-result]
             (doseq [{result :index} (:items bulk-result)]
               (when (not= 200 (:status result))
-                (log/error "failed to index" (:_type result) (:_id result)))))]
+                (log/error "failed to index" (:_id result) "-" result))))]
     (try
       (->> (map (partial mk-index-doc entry-type) entries)
            (filter has-id?)
