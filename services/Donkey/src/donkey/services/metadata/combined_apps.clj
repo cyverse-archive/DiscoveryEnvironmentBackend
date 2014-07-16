@@ -190,4 +190,4 @@
   (let [app-id (:analysis_id submission)]
     (if (util/is-uuid? app-id)
       (submit-de-job agave workspace-id app-id submission)
-      (aa/submit-agave-job agave app-id))))
+      (aa/submit-agave-job agave submission))))
