@@ -33,7 +33,7 @@
         (map? v)        [(update-param-value prop (normalize-list-selection v))]
         :else           [(update-param-value prop v)]))
 
-(defn- format-property-values-response
+(defn format-property-values-response
   "Normalizes the values in the output for the property value service."
   [output]
   (update-in output [:parameters] (partial mapcat normalize-property-value)))

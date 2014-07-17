@@ -1,5 +1,5 @@
-(ns metadactyl.translations.property-values-test
-  (:use [metadactyl.translations.property-values]
+(ns donkey.translations.property-values-test
+  (:use [donkey.services.metadata.property-values]
         [clojure.test]))
 
 (deftest string-value
@@ -20,6 +20,6 @@
           {:parameters [{:param_value ["foo" "bar" "baz"]}]}))))
 
 (deftest object-value
-  (is (= {:parameters [{:param_value {:value {:foo "bar" :baz "quux"}}}]}
+  (is (= {:parameters [{:param_value {:value {:value "" :display "" :foo "bar" :baz "quux"}}}]}
          (format-property-values-response
           {:parameters [{:param_value {:foo "bar" :baz "quux"}}]}))))
