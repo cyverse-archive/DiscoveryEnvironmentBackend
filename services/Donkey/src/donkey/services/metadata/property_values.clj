@@ -1,6 +1,10 @@
 (ns donkey.services.metadata.property-values
+  (:use [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as ce]
             [donkey.persistence.apps :as ap]
+            [donkey.persistence.jobs :as jp]
+            [donkey.services.metadata.agave-apps :as agave-apps]
             [donkey.util.service :as service]))
 
 (def property-types-to-omit #{"Info"})
@@ -53,34 +57,67 @@
     ""
     value))
 
-(defn- format-job-param-value
-  [config param]
-  (if-let [config-value (get config (keyword (get-full-param-id param)))]
-    (if (or (sequential? config-value) (map? config-value))
-      config-value
-      (str config-value))
-    (blank->empty-str (:default_value param))))
+(defn- format-config-value
+  [config-value]
+  (if (or (sequential? config-value) (map? config-value))
+    config-value
+    (str config-value)))
 
-(defn- format-job-param
+(defn- format-job-param-value
+  [config config-key default-value]
+  (if-let [config-value (config-key config)]
+    (format-config-value config-value)
+    default-value))
+
+(defn- format-de-job-param
   [config param]
-  (let [param_id (:id param)
-        value (format-job-param-value config param)]
+  (let [full-param-id (get-full-param-id param)
+        value (format-job-param-value config
+                                      (keyword full-param-id)
+                                      (blank->empty-str (:default_value param)))]
     {:param_type (:type param)
      :data_format (blank->empty-str (:data_format param))
      :info_type (blank->empty-str (:info_type param))
      :is_visible (:is_visible param true)
-     :param_id param_id
-     :full_param_id (get-full-param-id param)
+     :param_id (:id param)
+     :full_param_id full-param-id
      :param_value value
      :is_default_value (= value (:default_value param))
      :param_name (:label param)}))
 
+(defn- format-agave-job-param
+  [config step-name param]
+  (format-de-job-param config
+                       (assoc param
+                         :step_name step-name
+                         :is_visible (:isVisible param true))))
+
+(defn- format-agave-job-params
+  [agave-client config step-name external-id]
+  (let [app (.getApp agave-client external-id)
+        params (mapcat :properties (:groups app))]
+    (map (partial format-agave-job-param config step-name) params)))
+
+(defn- get-agave-job-params
+  [agave-client job-id config step-name external-id]
+  (when-not agave-client
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "HPC_JOBS_DISABLED"}))
+  (if-let [agave-params (not-empty (:parameters (agave-apps/get-agave-job-params agave-client job-id)))]
+    agave-params
+    (format-agave-job-params agave-client config step-name external-id)))
+
+(defn- format-job-param
+  [agave-client job-id config results param]
+  (if-let [external-id (:external_app_id param)]
+    (concat results (get-agave-job-params agave-client job-id config (:step_name param) external-id))
+    (conj results (format-de-job-param config param))))
+
 (defn format-job-params
-  [job]
-  (let [app-id (:app_id job)
-        params (remove omit-param? (ap/get-app-properties app-id))
-        config (:config (service/decode-json (.getValue (:submission job))))]
+  [agave-client app-id job-id config]
+  (let [params (remove omit-param? (ap/get-app-properties app-id))
+        params (reduce (partial format-job-param agave-client job-id config) [] params)]
     (format-property-values-response
      {:analysis_id app-id
-      :parameters (map (partial format-job-param config) params)})))
+      :parameters params})))
 

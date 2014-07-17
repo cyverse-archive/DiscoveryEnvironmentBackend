@@ -15,6 +15,7 @@
             [donkey.services.metadata.agave-apps :as aa]
             [donkey.services.metadata.combined-apps :as ca]
             [donkey.services.metadata.de-apps :as da]
+            [donkey.util :as util]
             [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.util.service :as service]
@@ -71,11 +72,11 @@
      (process-job agave-client job-id (jp/get-job-by-id (UUID/fromString job-id)) processing-fns))
   ([agave-client job-id job {:keys [process-agave-job process-de-job preprocess-job]
                              :or {preprocess-job identity}}]
-     (condp = (:job_type job)
-       nil               (service/not-found "job" job-id)
-       jp/de-job-type    (process-de-job (preprocess-job job))
-       jp/agave-job-type (process-agave-job agave-client (preprocess-job job))
-       (unrecognized-job-type (:job_type job)))))
+   (when-not job
+     (service/not-found "job" job-id))
+   (if (util/is-uuid? (:analysis_id job))
+     (process-de-job (preprocess-job job))
+     (process-agave-job agave-client (preprocess-job job)))))
 
 (defn- agave-authorization-uri
   [state-info]
@@ -179,10 +180,10 @@
              :reason     "HPC_JOBS_DISABLED"}))
 
   (getJobParams [_ job-id]
-    (da/get-de-job-params job-id))
+    (ca/get-job-params nil (jp/get-job-by-id (UUID/fromString job-id))))
 
   (getAppRerunInfo [_ job-id]
-    (da/get-de-app-rerun-info job-id)))
+    (ca/get-app-rerun-info nil (jp/get-job-by-id (UUID/fromString job-id)))))
 ;; DeOnlyAppLister
 
 (deftype DeHpcAppLister [agave-client user-has-access-token?]
@@ -270,15 +271,13 @@
 
   (getJobParams [_ job-id]
     (process-job agave-client job-id
-                 {:process-de-job    da/get-de-job-params
-                  :process-agave-job aa/get-agave-job-params
-                  :preprocess-job    :id}))
+                 {:process-de-job    (partial ca/get-job-params agave-client)
+                  :process-agave-job aa/get-agave-job-params}))
 
   (getAppRerunInfo [_ job-id]
     (process-job agave-client job-id
-                 {:process-de-job    da/get-de-app-rerun-info
-                  :process-agave-job aa/get-agave-app-rerun-info
-                  :preprocess-job    :id})))
+                 {:process-de-job    (partial ca/get-app-rerun-info agave-client)
+                  :process-agave-job aa/get-agave-app-rerun-info})))
 ;; DeHpcAppLister
 
 (defn- has-access-token

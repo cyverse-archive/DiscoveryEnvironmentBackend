@@ -211,12 +211,6 @@
   (POST "/update-app-labels" [:as {body :body}]
         (ce/trap "update-app-labels" #(app-metadata/relabel-app body)))
 
-  (GET "/analysis-rerun-info/:job-id" [job-id]
-       (trap #(get-app-rerun-info job-id)))
-
-  (GET "/app-rerun-info/:job-id" [job-id]
-       (trap #(get-new-app-rerun-info job-id)))
-
   (GET "/get-app-description/:app-id" [app-id]
        (trap #(get-app-description app-id)))
 

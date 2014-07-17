@@ -282,13 +282,7 @@
   "Gets a single job by its internal identifier."
   [id]
   (with-db db/de
-    (first (select (job-base-query) (where {:j.id id})))))
-
-(defn get-job-submission
-  "Gets a job's submission json and app ID by its internal identifier."
-  [id]
-  (with-db db/de
-    (first (select :jobs (fields :app_id :submission) (where {:id id})))))
+    (first (select (job-base-query) (fields :submission) (where {:j.id id})))))
 
 (defn update-job
   "Updates an existing job in the database."
@@ -338,6 +332,7 @@
             (join [:job_steps :s] {:j.id :s.job_id})
             (join [:job_types :t] {:s.job_type_id :t.id})
             (fields [:j.id          :id]
+                    [:j.app_id      :analysis_id]
                     [:s.external_id :external_id]
                     [:j.status      :status]
                     [:u.username    :username]

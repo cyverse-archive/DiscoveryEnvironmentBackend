@@ -263,14 +263,6 @@
       (.setIrodsHome (string/replace (irods-home) #"/$" "")))))
 
 (register-bean
-  (defbean property-value-service
-    "Services to retrieve property values for jobs that have previously been
-     submitted."
-    (doto (PropertyValueService.)
-      (.setSessionFactory (session-factory))
-      (.setOsmClient (osm-job-request-client)))))
-
-(register-bean
  (defbean ui-app-service
    "Services to retrieve apps in the format expected by the UI."
    (doto (UiAnalysisService.)
@@ -564,38 +556,6 @@
            :body   (cheshire/encode {:success false
                                      :reason  msg
                                      :apps    (map :name bad-apps)})}))))
-
-(defn- get-unformatted-app-rerun-info
-  "Obtains an analysis representation with the property values from a previous experiment
-   plugged into the appropriate properties. The analysis representation is left in a Clojure
-   data structure so that further processing can be done prior to serialization."
-  [job-id]
-  (let [values        (cheshire/decode (.getPropertyValues (property-value-service) job-id) true)
-        app           (cheshire/decode (get-app (:analysis_id values)) true)
-        pval-to-entry #(vector (:full_param_id %) (:param_value %))
-        values        (into {} (map pval-to-entry (:parameters values)))
-        update-prop   #(let [id (:id %)]
-                         (if (contains? values id)
-                           (assoc % :value (values id))
-                           %))
-        update-props  #(map update-prop %)
-        update-group  #(update-in % [:properties] update-props)
-        update-groups #(map update-group %)]
-    (update-in app [:groups] update-groups)))
-
-(defn get-app-rerun-info
-  "Obtains analysis JSON with the property values from a previous experiment
-   plugged into the appropriate properties."
-  [job-id]
-  (success-response (get-unformatted-app-rerun-info job-id)))
-
-(defn get-new-app-rerun-info
-  "Obtains analysis JSON in the new format required by the DE with the property values from a
-   previous experiment plugged into the appropriate properties."
-  [job-id]
-  (-> (get-unformatted-app-rerun-info job-id)
-      (app-meta-tx/template-internal-to-external)
-      (success-response)))
 
 (defn list-reference-genomes
   "Lists the reference genomes in the database."

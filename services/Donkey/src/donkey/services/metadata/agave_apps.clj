@@ -180,13 +180,13 @@
         :deleted    (nil? curr-state)}))))
 
 (defn get-agave-app-rerun-info
-  [agave job-id]
-  (let [external-id (:external_id (jp/get-job-by-id job-id))]
+  [agave job]
+  (let [external-id (:external_id job)]
     (service/assert-found (.getAppRerunInfo agave external-id) "HPC job" external-id)))
 
 (defn get-agave-job-params
-  [agave job-id]
-  (let [external-id (:external_id (jp/get-job-by-id job-id))]
+  [agave job]
+  (let [external-id (:external_id job)]
     (service/assert-found (.getJobParams agave external-id) "HPC job" external-id)))
 
 (defn search-apps

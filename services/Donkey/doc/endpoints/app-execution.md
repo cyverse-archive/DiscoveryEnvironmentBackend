@@ -19,10 +19,10 @@ information.
 
 Secured Endpoint: GET /secured/get-property-values/{job-id}
 
-This service is used to obtain the property values that were passed to a
-previously submitted job. For DE jobs, this service delegates to the metadactyl
-endpoint, GET /get-property-values/{job-id}. For Agave jobs, the information in
-the response body is obtained from various Agave endpoints.
+This service is used to obtain the property values that were passed to a previously submitted job.
+For Agave jobs, the information in the response body is obtained from various Agave endpoints.
+For DE jobs, the information in the response body is obtained from DE app info
+and a potential combination of Agave app info (in the case of pipelines including Agave apps).
 
 The response body is in the following format:
 
@@ -131,9 +131,9 @@ possibly with some tweaked values. The UI uses this service to obtain analysis
 information in the same format as the `/app/{analysis-id}` service with the
 property values from a specific job plugged in.
 
-For DE jobs, this service delegates to the metadactyl endpoint,
-`/app-rerun-info/{job-id}`. For Agave jobs, this service obtains the information
-that it needs from various services in Agave.
+For Agave jobs, the information in the response body is obtained from various Agave endpoints.
+For DE jobs, the information in the response body is obtained from DE app info
+and a potential combination of Agave app info (in the case of pipelines including Agave apps).
 
 Here's an example:
 

@@ -1,14 +1,11 @@
 (ns donkey.services.metadata.de-apps
   (:use [clojure-commons.validators :only [validate-map]]
-        [donkey.auth.user-attributes :only [current-user]]
-        [slingshot.slingshot :only [throw+ try+]])
+        [donkey.auth.user-attributes :only [current-user]])
   (:require [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as ce]
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.osm :as osm]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
-            [donkey.services.metadata.property-values :as property-values]
             [donkey.util.db :as db]
             [donkey.util.time :as time-utils])
   (:import [java.util UUID]))
@@ -108,14 +105,3 @@
           :deleted  (:deleted curr-state false)}))
       (jp/update-job (:id job) {:deleted true}))))
 
-(defn get-de-job-params
-  [job-id]
-  (let [job (jp/get-job-submission job-id)]
-    (when-not (:submission job)
-      (throw+ {:error_code ce/ERR_NOT_FOUND
-               :reason     "Job submission values could not be found."}))
-    (property-values/format-job-params job)))
-
-(defn get-de-app-rerun-info
-  [job-id]
-  (metadactyl/get-app-rerun-info job-id))

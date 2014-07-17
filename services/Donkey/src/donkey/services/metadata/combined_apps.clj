@@ -13,6 +13,7 @@
             [donkey.persistence.jobs :as jp]
             [donkey.services.metadata.agave-apps :as aa]
             [donkey.services.metadata.de-apps :as da]
+            [donkey.services.metadata.property-values :as property-values]
             [donkey.util :as util]
             [donkey.util.db :as db]
             [donkey.util.service :as service])
@@ -32,6 +33,9 @@
 
 (defn- get-agave-groups
   [agave step external-app-id]
+  (when-not agave
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "HPC_JOBS_DISABLED"}))
   (let [app          (.getApp agave external-app-id)
         mapped-props (set (map :input_id (ap/load-target-step-mappings (:step_id step))))]
     (->> (:groups app)
@@ -77,7 +81,10 @@
   [agave app-id]
   (if (util/is-uuid? app-id)
     (get-combined-app agave app-id)
-    (.getApp agave app-id)))
+    (if agave
+      (.getApp agave app-id)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "HPC_JOBS_DISABLED"}))))
 
 (defn- current-timestamp
   []
@@ -191,3 +198,30 @@
     (if (util/is-uuid? app-id)
       (submit-de-job agave workspace-id app-id submission)
       (aa/submit-agave-job agave submission))))
+
+(defn- get-job-submission-config
+  [job]
+  (:config (service/decode-json (.getValue (:submission job)))))
+
+(defn get-job-params
+  [agave-client job]
+  (property-values/format-job-params agave-client
+                                     (:analysis_id job)
+                                     (:id job)
+                                     (get-job-submission-config job)))
+
+(defn get-app-rerun-info
+  "Updates an app with the parameter values from a previous experiment plugged into the appropriate
+   parameters."
+  [agave-client job]
+  (let [app (get-app agave-client (:analysis_id job))
+        values (get-job-submission-config job)
+        update-prop   #(let [id (keyword (:id %))]
+                         (if (contains? values id)
+                           (assoc % :value (values id))
+                           %))
+        update-props  #(map update-prop %)
+        update-group  #(update-in % [:properties] update-props)
+        update-groups #(map update-group %)]
+    (update-in app [:groups] update-groups)))
+
