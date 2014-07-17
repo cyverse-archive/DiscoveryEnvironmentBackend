@@ -114,18 +114,6 @@
   (jp/update-job-step (:id job) (:external-id job-step) status end-time)
   (jp/update-job (:id job) status end-time))
 
-(defn get-de-job-params
-  [job-id]
-  (let [job (jp/get-job-submission job-id)]
-    (when-not (:submission job)
-      (throw+ {:error_code ce/ERR_NOT_FOUND
-               :reason     "Job submission values could not be found."}))
-    (property-values/format-job-params job)))
-
-(defn get-de-app-rerun-info
-  [job-id]
-  (metadactyl/get-app-rerun-info job-id))
-
 (defn send-job-status-notification
   "This function currently does nothing because job status update notifications are currently
    handled by the notification agent directly."
