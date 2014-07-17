@@ -230,7 +230,8 @@
   [username row-limit row-offset sort-field sort-order filter]
   (with-db db/de
     (select (add-job-query-filter-clause (job-base-query) filter)
-            (where {:j.deleted  false})
+            (where {:j.deleted  false
+                    :u.username username})
             (where (not (sqlfn exists (agave-job-subselect))))
             (order sort-field sort-order)
             (offset (nil-if-zero row-offset))
