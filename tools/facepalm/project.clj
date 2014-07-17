@@ -12,7 +12,7 @@
       ""))
 
 
-(defproject org.iplantc/facepalm "4.0.0"
+(defproject org.iplantc/facepalm "3.1.7"
   :description "Command-line utility for DE database managment."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -34,14 +34,14 @@
                  [fleet "0.9.5"]
                  [korma "0.3.0-RC5"]
                  [me.raynes/fs "1.4.5"]
-                 [org.iplantc/clojure-commons "4.0.0"]
-                 [org.iplantc/kameleon "4.0.0"]
+                 [org.iplantc/clojure-commons "3.1.7"]
+                 [org.iplantc/kameleon "3.1.7"]
                  [postgresql "9.0-801.jdbc4"]
                  [me.raynes/fs "1.4.4"]
                  [slingshot "0.10.3"]
                  [clj-http "0.6.3"]]
-  :plugins [[org.iplantc/lein-iplant-cmdtar "4.0.0"]
-            [org.iplantc/lein-iplant-rpm "4.0.0"]
+  :plugins [[org.iplantc/lein-iplant-cmdtar "3.1.7"]
+            [org.iplantc/lein-iplant-rpm "3.1.7"]
             [lein-marginalia "0.7.1"]]
   :iplant-rpm {:summary "Facepalm"
                :type :command}
