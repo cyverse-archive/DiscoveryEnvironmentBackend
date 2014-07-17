@@ -43,7 +43,7 @@
   [res]
   (->> (:items res)
        (map :delete)
-       (remove #(= 200 (:status %)))
+       (remove #(and (>= 200 (:status %)) (< 300 (:status %))))
        (map (fn [{id :_id type :_type}] (log-failure type id)))
        (dorun)))
 

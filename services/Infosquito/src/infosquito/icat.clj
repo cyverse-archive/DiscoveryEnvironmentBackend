@@ -292,7 +292,8 @@
   (log/debug "indexing" entry-type (map :path entries))
   (letfn [(log-failures [bulk-result]
             (doseq [{result :index} (:items bulk-result)]
-              (when (not= 200 (:status result))
+              (when (or (< (:status result) 200)
+                        (>= (:status result 300)))
                 (log/error "failed to index" (:_id result) "-" result))))]
     (try
       (->> (map (partial mk-index-doc entry-type) entries)
