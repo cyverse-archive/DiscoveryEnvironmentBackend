@@ -287,6 +287,12 @@
   (throw+ {:error_code ce/ERR_NOT_FOUND
            :message    (string/join " " [desc id "not found"])}))
 
+(defn not-unique
+  "Throws an exception indicating that multiple objects were found when only one was expected."
+  [desc id]
+  (throw+ {:error_code ce/ERR_NOT_UNIQUE
+           :message    (string/join " " [desc id "not unique"])}))
+
 (defn assert-found
   "Asserts that an object to modify or retrieve was found."
   [obj desc id]

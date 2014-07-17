@@ -140,6 +140,11 @@
   (when-not (= status new-status)
     (jp/update-job-step job-id external-id new-status end-time)))
 
+(defn send-job-status-notification
+  [{:keys [username stardate] :as job} job-step status end-time]
+  (let [username   (string/replace username #"@.*" "")
+        end-millis (when-not (nil? end-time))]))
+
 (defn- update-job-status
   [username {:keys [startdate] :as job} {:keys [step-number]} max-step-number status end-time]
   (let [prev-status  (:status job)

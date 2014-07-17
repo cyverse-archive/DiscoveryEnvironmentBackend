@@ -13,6 +13,7 @@
             [donkey.persistence.jobs :as jp]
             [donkey.services.metadata.agave-apps :as aa]
             [donkey.services.metadata.de-apps :as da]
+            [donkey.services.metadata.util :as mu]
             [donkey.services.metadata.property-values :as property-values]
             [donkey.util :as util]
             [donkey.util.db :as db]
@@ -225,3 +226,34 @@
         update-groups #(map update-group %)]
     (update-in app [:groups] update-groups)))
 
+(defn- translate-job-status
+  "Translates an Agave status code to something more consistent with the DE's status codes."
+  [agave {:keys [job-type]} status]
+  (if (= jp/agave-job-type job-type)
+    (.translateJobStatus agave status)
+    status))
+
+(defn send-job-status-notification
+  "Sends notification of a job status change."
+  [job job-step status end-time]
+  (if (is-de-job-step? job-step)
+    (da/send-job-status-notification job job-step status end-time)
+    (aa/send-job-status-notification job job-step status end-time)))
+
+(defn update-job-status
+  "Updates the status of a job. The job may have multiple steps, so the overall job status is only
+   only changed when first step changes to any status up to Running, the last step changes to any
+   status after Running, or the status of any step changes to Failed."
+  [agave username job job-step status end-time]
+  (let [{job-id :id}                      job
+        {:keys [external-id step-number]} job-step
+        max-step                          (jp/get-max-step-number job-id)
+        first-step?                       (= step-number 1)
+        last-step?                        (= step-number max-step)
+        status                            (translate-job-status agave job-step status)]
+    (when-not (= status (:status job-step))
+      (jp/update-job-step job-id external-id status end-time)
+      (when (or (and first-step? (mu/not-completed? status))
+                (and last-step? (mu/is-completed? status)))
+        (jp/update-job job-id status end-time)
+        (send-job-status-notification job job-step status end-time)))))

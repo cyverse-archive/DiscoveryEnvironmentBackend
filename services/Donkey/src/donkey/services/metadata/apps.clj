@@ -176,8 +176,7 @@
       (da/sync-de-job-status job)))
 
   (updateJobStatus [_ username job job-step status end-time]
-    (throw+ {:error_code ce/ERR_BAD_REQUEST
-             :reason     "HPC_JOBS_DISABLED"}))
+    (da/update-job-status username job job-step status end-time))
 
   (getJobParams [_ job-id]
     (ca/get-job-params nil (jp/get-job-by-id (UUID/fromString job-id))))
@@ -267,7 +266,7 @@
                     :process-agave-job sync-agave})))
 
   (updateJobStatus [_ username job job-step status end-time]
-    (update-job-status agave-client username job job-step status end-time))
+    (ca/update-job-status agave-client username job job-step status end-time))
 
   (getJobParams [_ job-id]
     (process-job agave-client job-id
@@ -382,20 +381,39 @@
       :timestamp (str (System/currentTimeMillis))
       :total     (.countJobs app-lister filter)})))
 
+(defn- get-unique-job-step
+  "Gest a unique job step for an external ID. An exception is thrown if no job step
+   is found or if multiple job steps are found."
+  [external-id]
+  (let [job-steps (jp/get-job-steps-by-external-id external-id)]
+    (when (empty? job-steps)
+      (service/not-found "job step" external-id))
+    (when (> (count job-steps) 1)
+      (service/not-unique "job step" external-id))
+    (first job-steps)))
+
 (defn update-de-job-status
-  [id status end-date]
-  (update-job-status {:id       id
-                      :status   status
-                      :end-date end-date}))
+  "Updates the job status. Important note: this function currently assumes that the
+   external identifier is unique."
+  [external-id status end-date]
+  (let [job-step                   (get-unique-job-step external-id)
+        {:keys [username] :as job} (jp/get-job-by-id (:job-id job-step))
+        end-date                   (db/timestamp-from-str end-date)]
+    (service/assert-found job "job" (:job-id job-step))
+    (.updateJobStatus (get-app-lister "" username) username job job-step status end-date)))
 
 (defn update-agave-job-status
   [uuid status end-time external-id]
+  (log/spy :warn uuid)
+  (log/spy :warn status)
+  (log/spy :warn end-time)
+  (log/spy :warn external-id)
   (let [uuid                       (UUID/fromString uuid)
         job-step                   (jp/get-job-step uuid external-id)
-        {:keys [username] :as job} (jp/get-job-by-id uuid)]
+        {:keys [username] :as job} (jp/get-job-by-id uuid)
+        end-time                   (db/timestamp-from-str end-time)]
     (service/assert-found job "job" uuid)
     (service/assert-found job-step "job step" (str uuid "/" external-id))
-    (service/assert-valid (= jp/agave-job-type (:job_type job)) "job" uuid "is not an HPC job")
     (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)))
 
 (defn- sync-job-status

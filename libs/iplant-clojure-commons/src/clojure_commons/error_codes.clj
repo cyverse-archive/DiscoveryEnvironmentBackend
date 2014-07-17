@@ -40,6 +40,7 @@
 (deferr ERR_ILLEGAL_ARGUMENT)
 (deferr ERR_BAD_REQUEST)
 (deferr ERR_NOT_FOUND)
+(deferr ERR_NOT_UNIQUE)
 (deferr ERR_UNAVAILABLE)
 (deferr ERR_TOO_MANY_RESULTS)
 (deferr ERR_TEMPORARILY_MOVED)
@@ -54,6 +55,7 @@
    ERR_MISSING_QUERY_PARAMETER            400
    ERR_NOT_OWNER                          403
    ERR_NOT_FOUND                          404
+   ERR_NOT_UNIQUE                         400
    ERR_CONFLICTING_QUERY_PARAMETER_VALUES 409
    ERR_REQUEST_BODY_TOO_LARGE             413
    ERR_TEMPORARILY_MOVED                  302})

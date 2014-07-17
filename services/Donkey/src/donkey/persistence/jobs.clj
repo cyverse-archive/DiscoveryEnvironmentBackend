@@ -227,6 +227,13 @@
              (where {:s.job_id      job-id
                      :s.external_id external-id})))))
 
+(defn get-job-steps-by-external-id
+  "Retrieves all of the job steps with an external identifier."
+  [external-id]
+  (with-db db/de
+    (select (job-step-base-query)
+            (where {:s.external_id external-id}))))
+
 (defn get-max-step-number
   "Gets the maximum step number for a job."
   [job-id]

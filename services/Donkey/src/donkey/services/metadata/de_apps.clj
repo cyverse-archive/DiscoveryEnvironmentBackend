@@ -6,6 +6,8 @@
             [donkey.clients.osm :as osm]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
+            [donkey.services.metadata.property-values :as property-values]
+            [donkey.services.metadata.util :as mu]
             [donkey.util.db :as db]
             [donkey.util.time :as time-utils])
   (:import [java.util UUID]))
@@ -13,8 +15,8 @@
 (defn- get-end-date
   [{:keys [status completion_date now_date]}]
   (case status
-    "Failed"    (db/timestamp-from-str now_date)
-    "Completed" (db/timestamp-from-str completion_date)
+    mu/failed-status    (db/timestamp-from-str now_date)
+    mu/completed-status (db/timestamp-from-str completion_date)
     nil))
 
 (defn- store-submitted-de-job
@@ -105,3 +107,26 @@
           :deleted  (:deleted curr-state false)}))
       (jp/update-job (:id job) {:deleted true}))))
 
+(defn update-job-status
+  "Updates the status of a job. If this function is called then Agave jobs are disabled, so
+   there will always be only one job step."
+  [username job job-step status end-time]
+  (jp/update-job-step (:id job) (:external-id job-step) status end-time)
+  (jp/update-job (:id job) status end-time))
+
+(defn get-de-job-params
+  [job-id]
+  (let [job (jp/get-job-submission job-id)]
+    (when-not (:submission job)
+      (throw+ {:error_code ce/ERR_NOT_FOUND
+               :reason     "Job submission values could not be found."}))
+    (property-values/format-job-params job)))
+
+(defn get-de-app-rerun-info
+  [job-id]
+  (metadactyl/get-app-rerun-info job-id))
+
+(defn send-job-status-notification
+  "This function currently does nothing because job status update notifications are currently
+   handled by the notification agent directly."
+  [job job-step status end-time])
