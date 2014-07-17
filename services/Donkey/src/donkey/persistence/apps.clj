@@ -63,9 +63,9 @@
             (join [:transformation_task_steps :tts] {:a.hid :tts.transformation_task_id})
             (join [:transformation_steps :ts] {:tts.transformation_step_id :ts.id})
             (join [:transformations :tx] {:ts.transformation_id :tx.id})
-            (fields [:ts.id :step_id]
-                    [:ts.name :step_name]
-                    [:tx.template_id :template_id]
+            (fields [:ts.id              :step_id]
+                    [:ts.name            :step_name]
+                    [:tx.template_id     :template_id]
                     [:tx.external_app_id :external_app_id])
             (where {:a.id app-id}))))
 
@@ -80,6 +80,11 @@
   [step-id]
   (with-db db/de
     (select [:input_output_mapping :iom]
+            (join [:transformation_steps :source] {:iom.source :source.id})
+            (join [:transformation_steps :target] {:iom.target :target.id})
             (join [:dataobject_mapping :dom] {:iom.hid :dom.mapping_id})
-            (fields [:dom.input :input_id])
+            (fields [:dom.input    :input_id]
+                    [:target.name  :target_name]
+                    [:dom.output   :output_id]
+                    [:source.name  :source_name])
             (where {:iom.target step-id}))))

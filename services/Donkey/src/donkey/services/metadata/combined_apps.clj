@@ -2,7 +2,8 @@
   (:use [donkey.auth.user-attributes :only [current-user]]
         [korma.db]
         [slingshot.slingshot :only [throw+]])
-  (:require [clj-time.core :as t]
+  (:require [cheshire.core :as cheshire]
+            [clj-time.core :as t]
             [clj-time.format :as tf]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
@@ -11,6 +12,7 @@
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
+            [donkey.persistence.workspaces :as wp]
             [donkey.services.metadata.agave-apps :as aa]
             [donkey.services.metadata.de-apps :as da]
             [donkey.services.metadata.util :as mu]
@@ -31,12 +33,15 @@
     :label      (str app-name " - " (:label group))
     :properties (mapv (fn [prop] (assoc prop :id (str step-name "_" (:id prop))))
                       (:properties group))))
+(defn- assert-agave-enabled
+  [agave]
+  (when-not agave
+    (throw+ {:error_code ce/ERR_BAD_REQUEST
+             :reason     "HPC_JOBS_DISABLED"})))
 
 (defn- get-agave-groups
   [agave step external-app-id]
-  (when-not agave
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     "HPC_JOBS_DISABLED"}))
+  (assert-agave-enabled agave)
   (let [app          (.getApp agave external-app-id)
         mapped-props (set (map :input_id (ap/load-target-step-mappings (:step_id step))))]
     (->> (:groups app)
@@ -240,6 +245,26 @@
     (da/send-job-status-notification job job-step status end-time)
     (aa/send-job-status-notification job job-step status end-time)))
 
+
+;; TODO: implement me.
+(defn- add-mapped-inputs
+  "Adds the mapped inputs to the job submission for the next step."
+  [agave job submission mapped-inputs app-steps])
+
+(defn- submit-next-step
+  "Submits the next step in a job pipeline."
+  [agave username job {:keys [job-id step-number] :as job-step}]
+  (let [next-step-number (inc step-number)
+        next-step        (jp/get-job-step-number job-id next-step-number)
+        app-step-number  (:app-step-number next-step)
+        app-steps        (ap/load-app-steps (:analysis_id job))
+        next-app-step    (nth app-steps (dec app-step-number))
+        mapped-inputs    (ap/load-target-step-mappings (:step_id next-app-step))
+        submission       (cheshire/decode (:submission job) true)
+        submission       (add-mapped-inputs agave job submission mapped-inputs app-steps)
+        workspace-id     (:id (wp/workspace-for-user username))]
+    (submit-job-step agave workspace-id job next-step submission)))
+
 (defn update-job-status
   "Updates the status of a job. The job may have multiple steps, so the overall job status is only
    only changed when first step changes to any status up to Running, the last step changes to any
@@ -254,6 +279,9 @@
     (when-not (= status (:status job-step))
       (jp/update-job-step job-id external-id status end-time)
       (when (or (and first-step? (mu/not-completed? status))
-                (and last-step? (mu/is-completed? status)))
+                (and last-step? (mu/is-completed? status))
+                (= status mu/failed-status))
         (jp/update-job job-id status end-time)
-        (send-job-status-notification job job-step status end-time)))))
+        (send-job-status-notification job job-step status end-time))
+      (when (and (not last-step?) (= status mu/completed-status))
+        (submit-next-step agave username job job-step)))))

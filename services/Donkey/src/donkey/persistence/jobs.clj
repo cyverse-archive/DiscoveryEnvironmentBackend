@@ -320,6 +320,15 @@
               (where {:job_id      job-id
                       :step_number step-number})))))
 
+(defn get-job-step-number
+  "Retrieves a job step from the database by its step number."
+  [job-id step-number]
+  (first
+   (with-db db/de
+     (select (job-step-base-query)
+             (where {:s.job_id      job-id
+                     :s.step_number step-number})))))
+
 (defn update-job-step
   "Updates an existing job step in the database."
   [job-id external-id status end-date]
