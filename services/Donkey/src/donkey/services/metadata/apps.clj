@@ -404,10 +404,6 @@
 
 (defn update-agave-job-status
   [uuid status end-time external-id]
-  (log/spy :warn uuid)
-  (log/spy :warn status)
-  (log/spy :warn end-time)
-  (log/spy :warn external-id)
   (let [uuid                       (UUID/fromString uuid)
         job-step                   (jp/get-job-step uuid external-id)
         {:keys [username] :as job} (jp/get-job-by-id uuid)

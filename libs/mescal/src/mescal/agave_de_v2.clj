@@ -94,3 +94,12 @@
   [agave job-id]
   (when-let [job (.listJob agave job-id)]
     (jobs/regenerate-job-submission agave job)))
+
+(defn get-default-output-name
+  [agave app-id output-id]
+  (some->> (.getApp agave app-id)
+           (:outputs)
+           (filter (comp (partial = output-id) :id))
+           (first)
+           (:value)
+           (:default)))

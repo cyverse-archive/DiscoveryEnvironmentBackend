@@ -56,6 +56,27 @@
                   {:info_type.hid :d.info_type})
             (where {:app.id app-id}))))
 
+(defn- default-output-name-base-query
+  []
+  (-> (select* [:template :t])
+      (join [:template_property_group :tpg] {:t.hid :tpg.template_id})
+      (join [:property_group :pg] {:tpg.property_group_id :pg.hid})
+      (join [:property_group_property :pgp] {:pg.hid :pgp.property_group_id})
+      (join [:property :p] {:pgp.property_id :p.hid})
+      (join [:dataobjects :d] {:p.dataobject_id :d.hid})
+      (join [:property_type :pt] {:p.property_type :pt.hid})
+      (fields [:d.name :default_value])
+      (where {:pt.name "Output"})))
+
+(defn get-default-output-name
+  [template-id property-id]
+  (with-db db/de
+    (some->> (select (default-output-name-base-query)
+                     (where {:t.id template-id
+                             :p.id property-id}))
+             (first)
+             (:default_value))))
+
 (defn load-app-steps
   [app-id]
   (with-db db/de
@@ -84,7 +105,9 @@
             (join [:transformation_steps :target] {:iom.target :target.id})
             (join [:dataobject_mapping :dom] {:iom.hid :dom.mapping_id})
             (fields [:dom.input    :input_id]
+                    [:target.id    :target_id]
                     [:target.name  :target_name]
                     [:dom.output   :output_id]
+                    [:source.id    :source_id]
                     [:source.name  :source_name])
             (where {:iom.target step-id}))))

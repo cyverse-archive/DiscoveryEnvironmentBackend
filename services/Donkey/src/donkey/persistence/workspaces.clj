@@ -10,5 +10,7 @@
    (with-db db/de
      (select [:workspace :w]
              (join [:users :u] {:w.user_id :u.id})
-             (fields :w.*)
+             (fields :w.id
+                     :w.root_analysis_group_id
+                     :w.is_public)
              (where {:u.username username})))))

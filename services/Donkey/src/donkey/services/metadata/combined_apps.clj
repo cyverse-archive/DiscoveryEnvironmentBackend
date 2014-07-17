@@ -2,8 +2,7 @@
   (:use [donkey.auth.user-attributes :only [current-user]]
         [korma.db]
         [slingshot.slingshot :only [throw+]])
-  (:require [cheshire.core :as cheshire]
-            [clj-time.core :as t]
+  (:require [clj-time.core :as t]
             [clj-time.format :as tf]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
@@ -177,10 +176,15 @@
                               :start-date  (db/now)}))
 
 (defn- submit-job-step
-  [agave workspace-id job-info job-step submission]
+  [agave workspace-id job-info {:keys [app-step-number] :as job-step} submission]
   (doto (if (is-de-job-step? job-step)
-          (da/submit-job-step workspace-id job-info job-step submission)
-          (aa/submit-job-step agave job-info job-step submission))
+          (da/submit-job-step workspace-id job-info job-step
+                              (assoc submission :starting_step app-step-number))
+          (let [app-steps  (ap/load-app-steps (:app-id job-info))
+                curr-step  (nth app-steps (dec app-step-number))
+                app-id     (:external_app_id curr-step)
+                submission (assoc submission :analysis_id app-id)]
+            (aa/submit-job-step agave job-info job-step submission)))
     (record-step-submission job-info job-step)))
 
 (defn- submit-de-job
@@ -245,11 +249,36 @@
     (da/send-job-status-notification job job-step status end-time)
     (aa/send-job-status-notification job job-step status end-time)))
 
+(defn- get-default-output-name
+  "Determines the default name of a job output."
+  [agave source-id output-id app-steps]
+  (let [step (first (filter #(= source-id (:step_id %)) app-steps))]
+    (if (:external_app_id step)
+      (.getDefaultOutputName agave (:external_app_id step) output-id)
+      (ap/get-default-output-name (:template_id step) output-id))))
 
-;; TODO: implement me.
+(defn- get-input-path
+  "Determines the path of a mapped input."
+  [agave job config app-steps input]
+  (let [source-id        (:source_id input)
+        source-name      (:source_name input)
+        output-id        (:output_id input)
+        config-output-id (str source-name "_" output-id)]
+    (if-let [prop-value (get config config-output-id)]
+      (ft/path-join (:resultfolderid job) prop-value)
+      (ft/path-join (:resultfolderid job)
+                    (get-default-output-name agave source-id output-id app-steps)))))
+
 (defn- add-mapped-inputs
   "Adds the mapped inputs to the job submission for the next step."
-  [agave job submission mapped-inputs app-steps])
+  [agave job submission app-steps mapped-inputs]
+  (update-in submission [:config]
+             (fn [config]
+               (reduce (fn [config input]
+                         (assoc config
+                           (str (:target_name input) "_" (:input_id input))
+                           (get-input-path agave job config app-steps input)))
+                       config mapped-inputs))))
 
 (defn- submit-next-step
   "Submits the next step in a job pipeline."
@@ -260,8 +289,8 @@
         app-steps        (ap/load-app-steps (:analysis_id job))
         next-app-step    (nth app-steps (dec app-step-number))
         mapped-inputs    (ap/load-target-step-mappings (:step_id next-app-step))
-        submission       (cheshire/decode (:submission job) true)
-        submission       (add-mapped-inputs agave job submission mapped-inputs app-steps)
+        submission       (service/decode-json (.getValue (:submission job)))
+        submission       (add-mapped-inputs agave job submission app-steps mapped-inputs)
         workspace-id     (:id (wp/workspace-for-user username))]
     (submit-job-step agave workspace-id job next-step submission)))
 
@@ -282,6 +311,6 @@
                 (and last-step? (mu/is-completed? status))
                 (= status mu/failed-status))
         (jp/update-job job-id status end-time)
-        (send-job-status-notification job job-step status end-time))
-      (when (and (not last-step?) (= status mu/completed-status))
-        (submit-next-step agave username job job-step)))))
+        (send-job-status-notification job job-step status end-time)))
+    (when (and (not last-step?) (= status mu/completed-status))
+      (submit-next-step agave username job job-step))))

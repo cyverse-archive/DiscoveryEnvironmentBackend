@@ -285,11 +285,16 @@
     (where query {:jt.name [in job-types]})
     query))
 
+;; HACK ALERT: an extra copy of hte app ID is being retrieved to resolve a field naming
+;; inconsistency.
 (defn get-job-by-id
   "Gets a single job by its internal identifier."
   [id]
   (with-db db/de
-    (first (select (job-base-query) (fields :submission) (where {:j.id id})))))
+    (first (select (job-base-query)
+                   (fields :submission
+                           [:app_id :app-id])
+                   (where {:j.id id})))))
 
 (defn update-job
   "Updates an existing job in the database."
