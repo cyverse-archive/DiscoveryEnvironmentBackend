@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/proboscis "3.1.7"
+(defproject org.iplantc/proboscis "3.2.0"
   :description "A utility for creating an ElasticSearch index and its mappings for Infosquito."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD License"
@@ -21,13 +21,13 @@
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/tools.cli "0.2.2"]
-                 [cheshire "5.2.0"]
-                 [clojurewerkz/elastisch "1.2.0"]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [org.clojure/tools.cli "0.3.1"]
+                 [cheshire "5.3.1"]
+                 [clojurewerkz/elastisch "2.0.0"]
                  [slingshot "0.10.3"]]
   :resource-paths ["config"]
-  :plugins [[org.iplantc/lein-iplant-cmdtar "3.1.7"]]
+  :plugins [[org.iplantc/lein-iplant-cmdtar "3.2.0"]]
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
   :deploy-repositories [["sonatype-nexus-staging"

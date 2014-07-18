@@ -6,54 +6,60 @@
             [donkey.clients.osm :as osm]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
-            [donkey.util.db :as db]))
-
-(def ^:private de-job-validation-map
-  "The validation map to use for DE jobs."
-  {:name            string?
-   :uuid            string?
-   :analysis_id     string?
-   :analysis_name   string?
-   :submission_date #(or (string? %) (number? %))
-   :status          string?})
+            [donkey.util.db :as db]
+            [donkey.util.time :as time-utils])
+  (:import [java.util UUID]))
 
 (defn- get-end-date
   [{:keys [status completion_date now_date]}]
   (case status
     "Failed"    (db/timestamp-from-str now_date)
     "Completed" (db/timestamp-from-str completion_date)
-                nil))
+    nil))
 
-(defn store-de-job
-  [job]
-  (validate-map job de-job-validation-map)
-  (jp/save-job (:uuid job) (:name job) jp/de-job-type (:username current-user) (:status job)
-               :description (or (:description job) "")
-               :app-name    (:analysis_name job)
-               :start-date  (db/timestamp-from-str (str (:submission_date job)))
-               :end-date    (get-end-date job)
-               :deleted     (:deleted job)))
+(defn- store-submitted-de-job
+  [job-id job]
+  (jp/save-job {:id                 job-id
+                :job-name           (:name job)
+                :description        (:description job)
+                :app-id             (:analysis_id job)
+                :app-name           (:analysis_name job)
+                :app-description    (:analysis_details job)
+                :app-wiki-url       (:wiki_url job)
+                :result-folder-path (:resultfolderid job)
+                :start-date         (db/timestamp-from-str (str (:startdate job)))
+                :username           (:username current-user)
+                :status             (:status job)}))
 
-(defn store-submitted-de-job
-  [job]
-  (jp/save-job (:id job) (:name job) jp/de-job-type (:username current-user) (:status job)
-               :description (:description job)
-               :app-name    (:analysis_name job)
-               :start-date  (db/timestamp-from-str (str (:startdate job)))))
+(defn- store-job-step
+  [job-id job]
+  (jp/save-job-step {:job-id          job-id
+                     :step-number     1
+                     :external-id     (:id job)
+                     :start-date      (db/timestamp-from-str (str (:startdate job)))
+                     :status          (:status job)
+                     :job-type        jp/de-job-type
+                     :app-step-number 1}))
+
+(defn submit-job
+  [workspace-id submission]
+  (let [job-id     (UUID/randomUUID)
+        submission (assoc submission :uuid (str job-id))
+        job        (metadactyl/submit-job workspace-id submission)]
+    (store-submitted-de-job job-id job)
+    (store-job-step job-id job)
+    {:id         (str job-id)
+     :name       (:name job)
+     :status     (:status job)
+     :start-date (time-utils/millis-from-str (str (:startdate job)))}))
 
 (defn format-de-job
-  [states de-apps job]
-  (let [state (states (:id job) {})
-        app   (de-apps (:analysis_id state) {})]
-   (assoc job
-     :startdate        (str (or (db/millis-from-timestamp (:startdate job)) 0))
-     :enddate          (str (or (db/millis-from-timestamp (:enddate job)) 0))
-     :analysis_id      (:analysis_id state)
-     :analysis_details (:description app)
-     :wiki_url         (:wikiurl app "")
-     :app_disabled     (:disabled app false)
-     :description      (or (:description job) (:description state))
-     :resultfolderid   (:output_dir state))))
+  [de-apps job]
+  (let [app (de-apps (:analysis_id job) {})]
+    (assoc job
+      :startdate    (str (or (db/millis-from-timestamp (:startdate job)) 0))
+      :enddate      (str (or (db/millis-from-timestamp (:enddate job)) 0))
+      :app_disabled (:disabled app false))))
 
 (defn load-de-job-states
   [de-jobs]
@@ -71,15 +77,9 @@
 (defn list-de-jobs
   [limit offset sort-field sort-order filter]
   (let [user    (:username current-user)
-        jobs    (jp/list-jobs-of-types user limit offset sort-field sort-order filter
-                                       [jp/de-job-type])
-        states  (load-de-job-states jobs)
-        de-apps (load-app-details (map :analysis_id states))]
-    (mapv (partial format-de-job states de-apps) jobs)))
-
-(defn remove-deleted-de-jobs
-  "This function currently does nothing; the DE is notified any time one if its jobs is deleted."
-  [])
+        jobs    (jp/list-de-jobs user limit offset sort-field sort-order filter)
+        de-apps (load-app-details (map :analysis_id jobs))]
+    (mapv (partial format-de-job de-apps) jobs)))
 
 (defn- de-job-status-changed
   [job curr-state]
@@ -92,12 +92,12 @@
   (let [curr-state (first (osm/get-jobs [(:external_id job)]))]
     (if-not (nil? curr-state)
       (when (de-job-status-changed job curr-state)
-        (jp/update-job-by-internal-id
+        (jp/update-job
          (:id job)
          {:status   (:status curr-state)
           :end-date (get-end-date curr-state)
           :deleted  (:deleted curr-state false)}))
-      (jp/update-job-by-internal-id (:id job) {:deleted true}))))
+      (jp/update-job (:id job) {:deleted true}))))
 
 (defn get-de-job-params
   [job-id]

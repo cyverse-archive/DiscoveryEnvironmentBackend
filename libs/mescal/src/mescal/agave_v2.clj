@@ -157,16 +157,29 @@
       (build-path (get-default-root-dir base-url token-info-fn timeout)
                   (string/replace file-url (files-base-regex base-url) "")))))
 
-(defn is-http-url?
+(defn agave-url-to-path
+  [base-url token-info-fn timeout file-url]
+  (when-not (string/blank? file-url)
+    (when-let [storage-system (second (re-find #"agave://([^/]+)" file-url))]
+      (build-path (get-root-dir base-url token-info-fn timeout storage-system)
+                  (string/replace file-url #"agave://[^/]+" "")))))
+
+(defn- http-url?
   [url]
   (re-find #"^https?://" url))
+
+(defn- agave-url?
+  [url]
+  (re-find #"^agave://" url))
 
 (defn agave-to-irods-path
   [base-url token-info-fn timeout storage-system file-url]
   (when-not (string/blank? file-url)
-    (if (is-http-url? file-url)
-      (file-url-to-path base-url token-info-fn timeout file-url)
-      (build-path (get-root-dir base-url token-info-fn timeout storage-system) file-url))))
+    (cond
+     (http-url? file-url)  (file-url-to-path base-url token-info-fn timeout file-url)
+     (agave-url? file-url) (agave-url-to-path base-url token-info-fn timeout file-url)
+     :else                 (-> (get-root-dir base-url token-info-fn timeout storage-system)
+                               (build-path file-url)))))
 
 (defn irods-to-agave-path
   [base-url token-info-fn timeout storage-system irods-path]

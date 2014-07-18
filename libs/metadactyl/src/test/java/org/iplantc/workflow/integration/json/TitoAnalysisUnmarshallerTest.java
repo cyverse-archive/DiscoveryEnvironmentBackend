@@ -1,12 +1,17 @@
 package org.iplantc.workflow.integration.json;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import junit.framework.Assert;
+import org.iplantc.persistence.dto.step.TransformationStep;
 import org.iplantc.workflow.core.Rating;
 import org.iplantc.workflow.core.TransformationActivity;
 import org.iplantc.workflow.dao.mock.MockDaoFactory;
 import org.iplantc.workflow.mock.MockWorkspaceInitializer;
 import org.iplantc.workflow.service.UserService;
+import org.iplantc.workflow.util.JsonTestDataImporter;
+import org.iplantc.workflow.util.UnitTestUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,8 +37,11 @@ public class TitoAnalysisUnmarshallerTest {
     @Before
     public void init() {
         initializeUserService();
-        
-        unmarshaller = new TitoAnalysisUnmarshaller(new MockDaoFactory(), null);
+
+        MockDaoFactory mockDaoFactory = new MockDaoFactory();
+        mockDaoFactory.getTemplateDao().save(UnitTestUtils.createTemplate("template"));
+
+        unmarshaller = new TitoAnalysisUnmarshaller(mockDaoFactory, null);
         unmarshaller.setWorkspaceInitializer(new MockWorkspaceInitializer(userService));
     }
     
@@ -98,6 +106,28 @@ public class TitoAnalysisUnmarshallerTest {
         Assert.assertNotNull(unmarshaller.getWorkspaceInitializer().getWorkspace(unmarshaller.getDaoFactory(), "ipctest"));
     }
 
+    @Test
+    public void shouldUnmarshalAnalysisWithExternalSteps() throws IOException, JSONException {
+        JSONObject json = JsonTestDataImporter.getTestJSONObject("analysis_with_external_steps");
+        TransformationActivity analysis = unmarshaller.fromJson(json);
+
+        List<TransformationStep> steps = analysis.getSteps();
+        Assert.assertEquals(2, steps.size());
+
+        TransformationStep firstStep = steps.get(0);
+        Assert.assertEquals("stepid", firstStep.getGuid());
+        Assert.assertEquals("stepname", firstStep.getName());
+        Assert.assertEquals("stepdescription", firstStep.getDescription());
+        Assert.assertEquals("templateid", firstStep.getTransformation().getTemplate_id());
+        Assert.assertNull(firstStep.getTransformation().getExternalAppId());
+
+        TransformationStep secondStep = steps.get(1);
+        Assert.assertEquals("otherstepid", secondStep.getGuid());
+        Assert.assertEquals("otherstepname", secondStep.getName());
+        Assert.assertEquals("otherstepdescription", secondStep.getDescription());
+        Assert.assertNull(secondStep.getTransformation().getTemplate_id());
+        Assert.assertEquals("externalappid", secondStep.getTransformation().getExternalAppId());
+    }
     /**
      * Creates a JSON object representing an analysis.
      * 

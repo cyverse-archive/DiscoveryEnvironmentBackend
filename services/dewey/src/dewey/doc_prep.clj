@@ -63,7 +63,8 @@
   "Formats a file entry for indexing.
 
    Parameters:
-     id - The index id of the file (its path).
+     id - The UUID associated with the file
+     path - The path to the file.
      acl - The file ACL in the form of a list of UserFilePermission objects.
      creator - The file's creator as map with :name and :zone keys.
      date-created - The time when the file was created as a String or Date object.
@@ -71,10 +72,10 @@
      metadata - A list of AVU triples in the form produced by the clj-jargon library.
      file-size - The size of the file in bytes.
      file-type - The media type of the file."
-  [id acl creator date-created date-modified metadata file-size file-type]
+  [id path acl creator date-created date-modified metadata file-size file-type]
   {:id              id
-   :path            id
-   :label           (file/basename id)
+   :path            path
+   :label           (file/basename path)
    :userPermissions (format-acl acl)
    :creator         (format-user creator)
    :dateCreated     (format-time date-created)
@@ -88,16 +89,17 @@
   "Formats a folder entry for indexing.
 
    Parameters:
-     id - The index id of the folder (its path).
+     id - The UUID associated with folder
+     path - The path to the folder.
      acl - The folder ACL in the form of a list of UserFilePermission objects.
      creator - The folder's creator as map with :name and :zone keys.
      date-created - The time when the folder was created as a String or Date object.
      date-modified - The time when the folder was last modified as a String or Date object.
      metadata - A list of AVU triples in the form produced by the clj-jargon library."
-  [id acl creator date-created date-modified metadata]
+  [id path acl creator date-created date-modified metadata]
   {:id              id
-   :path            id
-   :label           (file/basename id)
+   :path            path
+   :label           (file/basename path)
    :userPermissions (format-acl acl)
    :creator         (format-user creator)
    :dateCreated     (format-time date-created)

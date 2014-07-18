@@ -215,12 +215,14 @@ $ curl -s "http://by-tor:8888/secured/edit-workflow/2751855E-BFA5-472D-B34D-1D07
             ],
             "steps": [
                 {
+                    "app_type": "...",
                     "template_id": "...",
                     "description": "...",
                     "name": "step_1_...",
                     "id": "..."
                 },
                 {
+                    "app_type": "...",
                     "template_id": "...",
                     "description": "...",
                     "name": "step_2_...",
@@ -314,11 +316,13 @@ $ curl -s "http://by-tor:8888/secured/copy-workflow/2751855E-BFA5-472D-B34D-1D07
             ],
             "steps": [
                 {
+                    "app_type": "...",
                     "template_id": "...",
                     "description": "...",
                     "name": "step_1_..."
                 },
                 {
+                    "app_type": "...",
                     "template_id": "...",
                     "description": "...",
                     "name": "step_2_..."

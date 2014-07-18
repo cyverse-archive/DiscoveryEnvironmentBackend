@@ -14,22 +14,22 @@
 (def ^:private index "data")
 
 (defn- seed-item-seq
-  [item-type props]
+  [es item-type props]
   ; The scan search type does not return any results with its first call, unlike all the other
   ; search types. A second call is needed to kick off the sequence.
-  (let [res (esd/search index (name item-type)
+  (let [res (esd/search es index (name item-type)
               :query       (q/match-all)
               :fields      ["_id"]
               :search_type "scan"
               :scroll      "1m"
               :size        (cfg/get-es-scroll-size props))]
     (if (resp/any-hits? res)
-      (esd/scroll (:_scroll_id res) :scroll "1m")
+      (esd/scroll es (:_scroll_id res) :scroll "1m")
       res)))
 
 (defn- item-seq
-  [item-type props]
-  (esd/scroll-seq (seed-item-seq item-type props)))
+  [es item-type props]
+  (esd/scroll-seq es (seed-item-seq es item-type props)))
 
 (defn- log-deletion
   [item-type item]
@@ -43,16 +43,16 @@
   [res]
   (->> (:items res)
        (map :delete)
-       (filter (complement resp/ok?))
+       (remove #(and (>= 200 (:status %)) (< 300 (:status %))))
        (map (fn [{id :_id type :_type}] (log-failure type id)))
        (dorun)))
 
 (defn- delete-items
-  [item-type items]
+  [es item-type items]
   (dorun (map (partial log-deletion item-type) items))
   (try
     (let [req (bulk/bulk-delete items)
-          res (bulk/bulk-with-index-and-type index (:name item-type) req :refresh true)]
+          res (bulk/bulk-with-index-and-type es index (:name item-type) req :refresh true)]
       (log-failures res))
     (catch Throwable t
       (dorun (map (partial log-failure (name item-type)) (map :id items))))))
@@ -65,27 +65,30 @@
       keep?)))
 
 (defn- purge-deleted-items
-  [item-type keep? props]
+  [es item-type keep? props]
   (log/info "purging non-existent" (name item-type) "entries")
-  (->> (item-seq item-type props)
+  (->> (item-seq es item-type props)
        (mapcat (comp (notifier (cfg/notify-enabled? props) (cfg/get-notify-count props)) vector))
        (remove (comp (retention-logger item-type keep?) :_id))
        (partition-all (cfg/get-index-batch-size props))
-       (map (partial delete-items item-type))
+       (map (partial delete-items es item-type))
        (dorun))
   (log/info (name item-type) "entry purging complete"))
 
-(def ^:private purge-deleted-files (partial purge-deleted-items :file icat/file-exists?))
+(defn- purge-deleted-files
+  [es props]
+  (purge-deleted-items es :file icat/file-exists? props))
 
 (defn- purge-deleted-folders
-  [props]
+  [es props]
   (let [index-base (cfg/get-base-collection props)]
-    (purge-deleted-items :folder
+    (purge-deleted-items es
+                         :folder
                          #(and (index/indexable? index-base %) (icat/folder-exists? %))
                          props)))
 
 (defn purge-index
   [props]
-  (esr/connect! (cfg/get-es-url props))
-  (purge-deleted-files props)
-  (purge-deleted-folders props))
+  (let [es (esr/connect (cfg/get-es-url props))]
+    (purge-deleted-files es props)
+    (purge-deleted-folders es props)))

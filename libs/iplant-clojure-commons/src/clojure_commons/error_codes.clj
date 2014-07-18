@@ -24,7 +24,6 @@
 (deferr ERR_NOT_AUTHORIZED)
 (deferr ERR_MISSING_QUERY_PARAMETER)
 (deferr ERR_MISSING_FORM_FIELD)
-(deferr ERR_NOT_AUTHORIZED)
 (deferr ERR_BAD_QUERY_PARAMETER)
 (deferr ERR_INCOMPLETE_DELETION)
 (deferr ERR_INCOMPLETE_MOVE)
@@ -44,15 +43,22 @@
 (deferr ERR_UNAVAILABLE)
 (deferr ERR_TOO_MANY_RESULTS)
 (deferr ERR_TEMPORARILY_MOVED)
+(deferr ERR_REQUEST_BODY_TOO_LARGE)
+(deferr ERR_CONFLICTING_QUERY_PARAMETER_VALUES)
 
 (def ^:private http-status-for
-  {ERR_ILLEGAL_ARGUMENT  400
-   ERR_INVALID_JSON      400
-   ERR_BAD_REQUEST       400
-   ERR_NOT_FOUND         404
-   ERR_TEMPORARILY_MOVED 302})
+  {ERR_ILLEGAL_ARGUMENT                   400
+   ERR_INVALID_JSON                       400
+   ERR_BAD_REQUEST                        400
+   ERR_BAD_QUERY_PARAMETER                400
+   ERR_MISSING_QUERY_PARAMETER            400
+   ERR_NOT_OWNER                          403
+   ERR_NOT_FOUND                          404
+   ERR_CONFLICTING_QUERY_PARAMETER_VALUES 409
+   ERR_REQUEST_BODY_TOO_LARGE             413
+   ERR_TEMPORARILY_MOVED                  302})
 
-(defn- get-http-status
+(defn get-http-status
   [err-code]
   (get http-status-for err-code 500))
 

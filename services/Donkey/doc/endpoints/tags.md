@@ -113,6 +113,39 @@ human readable explanation of the failure.
 }
 ```
 
+## Delete a tag
+
+`DELETE /secured/tags/user/{tag-id}`
+
+This endpoint allows a user tag to be deleted, detaching it from all metadata.  `tag-id` is the UUID
+of the tag to delete.
+
+### Request
+
+A request to this endpoint requires no parameters beyond the `proxyToken` authentication parameter.
+The user that owns the tag is determined from the authentication. Any additional parameters will be
+ignored.
+
+### Response
+
+| Status Code | Cause |
+| ----------- | ----- |
+| 200         | The tag was successfully deleted |
+| 404         | `tag-id` wasn't a UUID of a tag owned by the authenticated user |
+
+The response will be a JSON document with a `"success"` field indicating whether or not the request
+succeeded. If `"success"` is `false`, a `"reason"` field will exist as well, providing a short,
+human readable explanation of the failure.
+
+### Example
+
+```
+? curl -X DELETE localhost/secured/tags/user/7cd71660-fe1a-11e3-89ea-23963e1ca21b?proxyToken=fake-token
+```
+```json
+{ "success" : true }
+```
+
 ## Suggest a tag
 
 `GET /secured/tags/suggestions`

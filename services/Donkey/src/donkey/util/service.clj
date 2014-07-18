@@ -92,13 +92,24 @@
   ([retval]
     (donkey-response retval 200)))
 
+(defn create-response
+  "Generates a 201 response indicating that a new resource has been created. Optionally, a JSON
+   document may be included and will form part of the response body."
+  ([]
+    (create-response {}))
+  ([retval]
+    (donkey-response retval 201)))
+
 (defn failure-response [e]
   (log/error e "bad request")
   (donkey-response e 400))
 
-(defn error-response [e]
-  (log/error e "internal error")
-  (donkey-response e 500))
+(defn error-response
+  ([e]
+    (error-response e 500))
+  ([e status]
+    (when (>= status 500) (log/error e "internal error"))
+    (donkey-response e status)))
 
 (defn invalid-arg-response [arg val reason]
   {:status       400

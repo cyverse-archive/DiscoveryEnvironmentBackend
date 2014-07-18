@@ -27,8 +27,7 @@
 (defn ipc-avu?
   "Returns a truthy value if the AVU map passed in is reserved for the DE's use."
   [avu]
-  (or (re-find ipc-regex (:attr avu))
-      (re-find ipc-regex (:unit avu))))
+  (re-find ipc-regex (:attr avu)))
 
 (defn authorized-avus
   "Validation to make sure the AVUs aren't system AVUs. Throws a slingshot error
@@ -42,10 +41,9 @@
   "Returns the metadata for a path. Passes all AVUs to (fix-unit).
    AVUs with a unit matching IPCSYSTEM are filtered out."
   [cm path]
-  (let [ipc-regex #"(?i)^ipc"]
-    (filterv
-     #(not= (:unit %) IPCSYSTEM)
-     (map fix-unit (get-metadata cm (ft/rm-last-slash path))))))
+  (remove
+   ipc-avu?
+   (map fix-unit (get-metadata cm (ft/rm-last-slash path)))))
 
 (defn- reserved-unit
   "Turns a blank unit into a reserved unit."
@@ -101,6 +99,7 @@
       (throw+ {:error_code ERR_INVALID_JSON}))
     (validators/path-exists cm path)
     (validators/path-writeable cm user path)
+    (authorized-avus [avu-map])
     {:path (common-metadata-set cm path avu-map)
      :user user}))
 
@@ -144,6 +143,8 @@
     (validators/user-exists cm user)
     (validators/path-exists cm path)
     (validators/path-writeable cm user path)
+    (authorized-avus (:delete adds-dels))
+    (authorized-avus (:add adds-dels))
     (let [new-path (ft/rm-last-slash path)]
       (doseq [del (:delete adds-dels)]
         (let [attr  (:attr del)
@@ -165,6 +166,7 @@
     (validators/user-exists cm user)
     (validators/path-exists cm path)
     (validators/path-writeable cm user path)
+    (authorized-avus [{:attr attr :value value :unit ""}])
     (delete-metadata cm path attr value)
     {:path path :user user}))
 

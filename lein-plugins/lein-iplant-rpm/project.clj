@@ -1,4 +1,4 @@
-(defproject org.iplantc/lein-iplant-rpm "3.1.7"
+(defproject org.iplantc/lein-iplant-rpm "3.2.0"
   :eval-in-leiningen true
   :description "Leiningen Plugin for generating RPMs for Clojure projects."
   :url "http://www.iplantcollaborative.org"
@@ -15,8 +15,6 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [fleet "0.9.5"]]
   :repositories {"iplantCollaborative"
-                 "http://projects.iplantcollaborative.org/archiva/repository/internal/"}
-  :repositories [["sonatype-nexus-snapshots"
-                  {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
+                 "http://katic.iplantcollaborative.org/archiva/repository/internal/"}
   :deploy-repositories [["sonatype-nexus-staging"
                          {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]])

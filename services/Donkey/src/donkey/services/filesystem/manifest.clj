@@ -16,6 +16,7 @@
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]
+            [donkey.services.filesystem.stat :refer [detect-content-type]]
             [donkey.services.garnish.irods :as filetypes]
             [ring.util.codec :as cdc])
   (:import [org.apache.tika Tika]))
@@ -25,10 +26,6 @@
 (defn- preview-url
   [user path]
   (str "file/preview?user=" (cdc/url-encode user) "&path=" (cdc/url-encode path)))
-
-(defn- content-type
-  [cm path]
-  (.detect (Tika.) (input-stream cm path)))
 
 (defn- extract-tree-urls
   [cm fpath]
@@ -62,10 +59,9 @@
 (defn- manifest-map
   [cm user path]
   {:action       "manifest"
-   :content-type (content-type cm path)
+   :content-type (detect-content-type cm path)
    :urls         (extract-urls cm path)
    :info-type    (filetypes/get-types cm user path)
-   :mime-type    (.detect (Tika.) (input-stream cm path))
    :preview      (preview-url user path)})
 
 (defn- manifest

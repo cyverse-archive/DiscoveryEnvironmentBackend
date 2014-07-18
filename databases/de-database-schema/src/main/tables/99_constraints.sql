@@ -290,13 +290,6 @@ ALTER TABLE ONLY job_types
     PRIMARY KEY (id);
 
 --
--- Primary Key for the jobs table.
---
-ALTER TABLE ONLY jobs
-    ADD CONSTRAINT jobs_pkey
-    PRIMARY KEY (id);
-
---
 -- Primary Key for the metadata_value_types table.
 --
 ALTER TABLE ONLY metadata_value_types
@@ -858,22 +851,6 @@ ALTER TABLE ONLY logins
     REFERENCES users(id);
 
 --
--- Foreign key constraint for the user_id field of the jobs table.
---
-ALTER TABLE ONLY jobs
-    ADD CONSTRAINT jobs_user_id_fkey
-    FOREIGN KEY (user_id)
-    REFERENCES users(id);
-
---
--- Foreign key constraint for the job_type_id field of the jobs table.
---
-ALTER TABLE ONLY jobs
-    ADD CONSTRAINT jobs_job_type_id_fkey
-    FOREIGN KEY (job_type_id)
-    REFERENCES job_types(id);
-
---
 -- Foreign key constraint for the value_type_id field of the metadata_attributes table.
 --
 ALTER TABLE ONLY metadata_attributes
@@ -976,3 +953,57 @@ ALTER TABLE ONLY access_tokens
     ADD CONSTRAINT access_tokens_user_id_fkey
     FOREIGN KEY (user_id)
     REFERENCES users(id);
+
+--
+-- The primary key for the authorization_requests table.
+--
+ALTER TABLE ONLY authorization_requests
+    ADD CONSTRAINT authorization_requests_pkey
+    PRIMARY KEY (id);
+
+--
+-- Foreign key constraint for the user_id column of the authorization_requests
+-- table.
+--
+ALTER TABLE ONLY authorization_requests
+    ADD CONSTRAINT authorization_requests_user_id_fkey
+    FOREIGN KEY (user_id)
+    REFERENCES users(id);
+
+--
+-- The primary key for the jobs table.
+--
+ALTER TABLE ONLY jobs
+    ADD CONSTRAINT jobs_pkey
+    PRIMARY KEY (id);
+
+--
+-- Foreign key constraint for the user_id field of the jobs table.
+--
+ALTER TABLE ONLY jobs
+    ADD CONSTRAINT jobs_user_id_fkey
+    FOREIGN KEY (user_id)
+    REFERENCES users(id);
+
+--
+-- The primary key for the job_steps table.
+--
+ALTER TABLE ONLY job_steps
+    ADD CONSTRAINT job_steps_pkey
+    PRIMARY KEY (job_id, step_number);
+
+--
+-- Foreign key constraint for the job_id field of the job_steps table.
+--
+ALTER TABLE ONLY job_steps
+    ADD CONSTRAINT job_steps_job_id_fkey
+    FOREIGN KEY (job_id)
+    REFERENCES jobs(id);
+
+--
+-- Foreign key constraint for the type_type_id field of the job_steps table.
+--
+ALTER TABLE ONLY job_steps
+    ADD CONSTRAINT job_steps_job_type_id_fkey
+    FOREIGN KEY (job_type_id)
+    REFERENCES job_types(id);

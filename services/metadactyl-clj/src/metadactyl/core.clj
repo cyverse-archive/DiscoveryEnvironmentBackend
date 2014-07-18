@@ -145,7 +145,7 @@
   (GET "/validate-analysis-for-pipelines/:app-id" [app-id]
        (trap #(validate-app-for-pipelines app-id)))
 
-  (GET "/analysis-data-objects/:app-id" [app-id]
+  (GET "/apps/:app-id/data-objects" [app-id]
        (trap #(get-data-objects-for-app app-id)))
 
   (POST "/categorize-analyses" [:as {body :body}]

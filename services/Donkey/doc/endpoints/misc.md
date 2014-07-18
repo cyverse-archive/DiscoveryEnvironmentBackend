@@ -97,14 +97,14 @@ $ curl -s "http://by-tor:8888/secured/logout?proxyToken=$(cas-ticket)&ip-address
 
 Secured Endpoint: POST /secured/sessions
 
-This service can be used to save arbitrary user session information. The post
-body is stored as-is and can be retrieved by sending an HTTP GET request to the
-same URL.
+This service can be used to save arbitrary JSON user session information. The
+post body is stored as-is and can be retrieved by sending an HTTP GET request
+to the same URL.
 
 Here's an example:
 
 ```
-$ curl -sd data "http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)"
+$ curl -sd '{"foo":"bar"}' "http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)"
 ```
 
 ## Retrieving User Session Data
@@ -118,7 +118,7 @@ Here's an example:
 
 ```
 $ curl "http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)"
-data
+{"foo":"bar"}
 ```
 
 ## Removing User Session Data
@@ -133,14 +133,14 @@ state.
 Here's an example:
 
 ```
-$ curl -XDELETE "http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "success": true
-}
+$ curl -XDELETE "http://by-tor:8888/secured/sessions?proxyToken=$(cas-ticket)"
 ```
 
+Check the HTTP status of the response to tell if it succeeded. It should return
+a status in the 200 range.
+
 An attempt to remove session data that doesn't already exist will be silently
-ignored.
+ignored and return a 200 range HTTP status code.
 
 ## Saving User Preferences
 
@@ -148,15 +148,37 @@ Secured Endpoint: POST /secured/preferences
 
 This service can be used to save arbitrary user preferences. The body must contain
 all of the preferences for the user; any key-value pairs that are missing will be
-removed from the preferences. Please note that the "defaultOutputDir" and the 
+removed from the preferences. Please note that the "defaultOutputDir" and the
 "systemDefaultOutputDir" will always be present, even if not included in the
 JSON passed in.
 
 Example:
 
 ```
-$ curl -sd data "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)"
-data
+$ curl -sd '{"appsKBShortcut":"A","rememberLastPath":true,"closeKBShortcut":"Q","defaultOutputFolder":{"id":"/iplant/home/wregglej/analyses","path":"/iplant/home/wregglej/analyses"},"dataKBShortcut":"D","systemDefaultOutputDir":{"id":"/iplant/home/wregglej/analyses","path":"/iplant/home/wregglej/analyses"},"saveSession":true,"enableEmailNotification":true,"lastPathId":"/iplant/home/wregglej","notificationKBShortcut":"N","defaultFileSelectorPath":"/iplant/home/wregglej","analysisKBShortcut":"Y"}' "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)" | squiggles
+{
+    "preferences": {
+        "analysisKBShortcut": "Y",
+        "appsKBShortcut": "A",
+        "closeKBShortcut": "Q",
+        "dataKBShortcut": "D",
+        "defaultFileSelectorPath": "/iplant/home/wregglej",
+        "defaultOutputFolder": {
+            "id": "/iplant/home/wregglej/analyses",
+            "path": "/iplant/home/wregglej/analyses"
+        },
+        "enableEmailNotification": true,
+        "lastPathId": "/iplant/home/wregglej",
+        "notificationKBShortcut": "N",
+        "rememberLastPath": true,
+        "saveSession": true,
+        "systemDefaultOutputDir": {
+            "id": "/iplant/home/wregglej/analyses",
+            "path": "/iplant/home/wregglej/analyses"
+        }
+    },
+    "success": true
+}
 ```
 
 ## Retrieving User Preferences
@@ -168,27 +190,45 @@ This service can be used to retrieve a user's preferences.
 Example:
 
 ```
-$ curl -s "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)"
-data
+$ curl -s "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)" | squiggles
+{
+    "analysisKBShortcut": "Y",
+    "appsKBShortcut": "A",
+    "closeKBShortcut": "Q",
+    "dataKBShortcut": "D",
+    "defaultFileSelectorPath": "/iplant/home/test",
+    "defaultOutputFolder": {
+        "id": "/iplant/home/test/analyses",
+        "path": "/iplant/home/test/analyses"
+    },
+    "enableEmailNotification": true,
+    "lastPathId": "/iplant/home/test",
+    "notificationKBShortcut": "N",
+    "rememberLastPath": true,
+    "saveSession": true,
+    "systemDefaultOutputDir": {
+        "id": "/iplant/home/test/analyses",
+        "path": "/iplant/home/test/analyses"
+    }
+}
 ```
 
 ## Removing User Preferences
 
 Secured Endpoint: DELETE /secured/preferences
 
-This service can be used to remove a user's preferences. 
+This service can be used to remove a user's preferences.
 
-Please note that the "defaultOutputDir" and the "systemDefaultOutputDir" will 
+Please note that the "defaultOutputDir" and the "systemDefaultOutputDir" will
 still be present in the preferences after a deletion.
 
 Example:
 
 ```
 $ curl -X DELETE "http://by-tor:8888/secured/preferences?proxyToken=$(cas-ticket)"
-{
-    "success" : true
-}
 ```
+
+Check the HTTP status code of the response to determine success. It should be in the 200 range.
 
 An attempt to remove preference data that doesn't already exist will be silently
 ignored.

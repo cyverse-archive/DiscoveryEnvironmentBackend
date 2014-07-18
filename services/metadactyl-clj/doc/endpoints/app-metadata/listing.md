@@ -483,7 +483,7 @@ $ curl -s http://by-tor:8888/get-all-analysis-ids | python -mjson.tool
 
 ## Listing Data Objects in an Analysis
 
-*Unsecured Endpoint:* GET /analysis-data-objects/{analysis-id}
+*Unsecured Endpoint:* GET /apps/{app-id}/data-objects
 
 When a pipeline is being created, the UI needs to know what types of files are
 consumed by and what types of files are produced by each analysis in the
@@ -805,6 +805,7 @@ The response body for this service is in the following format:
     "template_count": "number-of-analyses-in-group-and-descendents",
     "templates": [
         {
+            "app_type": "app-type-id",
             "can_favor": "analysis-can-favor-flag",
             "can_rate": "analysis-can-rate-flag",
             "can_run": "analysis-can-run-flag",
@@ -845,6 +846,7 @@ $ curl -s "http://by-tor:8888/secured/get-analyses-in-group/6A1B9EBD-4950-4F3F-9
     "template_count": 100,
     "templates": [
         {
+            "app_type": "DE",
             "can_favor": true,
             "can_rate": true,
             "can_run": true,

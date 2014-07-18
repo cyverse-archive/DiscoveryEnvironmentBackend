@@ -66,12 +66,6 @@
   (let [url (build-metadactyl-unprotected-url req "validate-analysis-for-pipelines" app-id)]
     (forward-get url req)))
 
-(defn get-data-objects-for-app
-  "A service used to list the data objects in an app."
-  [req app-id]
-  (let [url (build-metadactyl-unprotected-url req "analysis-data-objects" app-id)]
-    (forward-get url req)))
-
 (defn categorize-apps
   "A service used to recategorize apps."
   [req]
@@ -417,22 +411,10 @@
    (build-metadactyl-secured-url req "edit-app" app-id)
    req))
 
-(defn edit-workflow
-  "This service makes a workflow available for editing in the client."
-  [req app-id]
-  (let [url (build-metadactyl-secured-url req "edit-workflow" app-id)]
-    (forward-get url req)))
-
 (defn copy-app
   "This service makes a copy of an app available in Tito for editing."
   [req app-id]
   (let [url (build-metadactyl-secured-url req "copy-template" app-id)]
-    (forward-get url req)))
-
-(defn copy-workflow
-  "This service makes a copy of a workflow available for editing in the client."
-  [req app-id]
-  (let [url (build-metadactyl-secured-url req "copy-workflow" app-id)]
     (forward-get url req)))
 
 (defn update-template-secured

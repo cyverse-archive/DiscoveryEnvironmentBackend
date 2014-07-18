@@ -39,6 +39,9 @@ public class Transformation implements Serializable {
 	/** The id of the template which gave origin to this transformation. */
 	private String template_id;
 	private String description;
+
+    /** The id of the external app that performs this transformation. */
+    private String externalAppId;
 	
 	/** Maps the property name to the value entered by the user for each property. */
 	private Map<String, String> propertyValues;
@@ -87,6 +90,10 @@ public class Transformation implements Serializable {
 	public String getTemplate_id() {
 		return template_id;
 	}
+
+    @Column(name = "external_app_id", nullable = true)
+    public String getExternalAppId() { return externalAppId; }
+    public void setExternalAppId(String externalAppId) { this.externalAppId = externalAppId; }
 
 	public void setTemplate_id(String template_id) {
 		this.template_id = template_id;

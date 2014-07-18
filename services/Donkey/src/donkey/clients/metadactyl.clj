@@ -92,6 +92,30 @@
       (:body)
       (service/decode-json)))
 
+(defn list-app-data-objects
+  [app-id]
+  (-> (client/get (unsecured-url "apps" app-id "data-objects")
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn edit-workflow
+  [app-id]
+  (-> (client/get (secured-url "edit-workflow" app-id)
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn copy-workflow
+  [app-id]
+  (-> (client/get (secured-url "copy-workflow" app-id)
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
 (defn submit-job
   [workspace-id submission]
   (-> (client/put (secured-url "workspaces" workspace-id "newexperiment")

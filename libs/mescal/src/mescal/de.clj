@@ -9,6 +9,7 @@
   (searchApps [_ search-term])
   (getApp [_ app-id])
   (getAppDetails [_ app-id])
+  (listAppDataObjects [_ app-id])
   (getAppDeployedComponent [_ app-id])
   (submitJob [_ submission])
   (listJobs [_] [_ job-ids])
@@ -16,7 +17,8 @@
   (listJobIds [_])
   (getJobParams [_ job-id])
   (getAppRerunInfo [_ job-id])
-  (translateJobStatus [_ status]))
+  (translateJobStatus [_ status])
+  (regenerateJobSubmission [_ job-id]))
 
 (deftype DeAgaveClientV2 [agave jobs-enabled?]
   DeAgaveClient
@@ -30,6 +32,8 @@
     (v2/get-app agave app-id))
   (getAppDetails [_ app-id]
     (v2/get-app-details agave app-id))
+  (listAppDataObjects [_ app-id]
+    (v2/list-app-data-objects agave app-id))
   (getAppDeployedComponent [_ app-id]
     (v2/get-app-deployed-component agave app-id))
   (submitJob [_ submission]
@@ -47,7 +51,9 @@
   (getAppRerunInfo [_ job-id]
     (v2/get-app-rerun-info agave job-id))
   (translateJobStatus [_ status]
-    (v2/translate-job-status status)))
+    (v2/translate-job-status status))
+  (regenerateJobSubmission [_ job-id]
+    (v2/regenerate-job-submission agave job-id)))
 
 (defn de-agave-client-v2
   [base-url storage-system token-info-fn jobs-enabled? & {:keys [timeout] :or {timeout 5000}}]

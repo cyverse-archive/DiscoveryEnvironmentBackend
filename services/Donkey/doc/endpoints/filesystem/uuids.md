@@ -30,29 +30,27 @@ __Response__:
             "date-created": 1.399049686e+12,
             "date-modified": 1.399049686e+12,
             "file-size": 176,
-            "id": "/iplant/home/wregglej/boo.newick",
+            "id": "0e66f708-df8a-11e3-bfa5-6abdce5a08d5",
             "info-type": "newick",
             "label": "boo.newick",
             "mime-type": "text/plain",
             "path": "/iplant/home/wregglej/boo.newick",
             "permission": "own",
             "share-count": 0,
-            "type": "file",
-            "uuid": "0e66f708-df8a-11e3-bfa5-6abdce5a08d5"
+            "type": "file"
         },
         {
             "date-created": 1.398113126e+12,
             "date-modified": 1.398113126e+12,
             "file-size": 2461,
-            "id": "/iplant/home/wregglej/iplant.sh",
+            "id": "0d98745a-df8a-11e3-bfa5-6abdce5a08d5",
             "info-type": "bash",
             "label": "iplant.sh",
             "mime-type": "application/x-sh",
             "path": "/iplant/home/wregglej/iplant.sh",
             "permission": "own",
             "share-count": 1,
-            "type": "file",
-            "uuid": "0d98745a-df8a-11e3-bfa5-6abdce5a08d5"
+            "type": "file"
         }
     ]
 }
@@ -100,29 +98,27 @@ __Response__:
             "date-created": 1.399049686e+12,
             "date-modified": 1.399049686e+12,
             "file-size": 176,
-            "id": "/iplant/home/wregglej/boo.newick",
+            "id": "0e66f708-df8a-11e3-bfa5-6abdce5a08d5",
             "info-type": "newick",
             "label": "boo.newick",
             "mime-type": "text/plain",
             "path": "/iplant/home/wregglej/boo.newick",
             "permission": "own",
             "share-count": 0,
-            "type": "file",
-            "uuid": "0e66f708-df8a-11e3-bfa5-6abdce5a08d5"
+            "type": "file"
         },
         {
             "date-created": 1.398113126e+12,
             "date-modified": 1.398113126e+12,
             "file-size": 2461,
-            "id": "/iplant/home/wregglej/iplant.sh",
+            "id": "0d98745a-df8a-11e3-bfa5-6abdce5a08d5",
             "info-type": "bash",
             "label": "iplant.sh",
             "mime-type": "application/x-sh",
             "path": "/iplant/home/wregglej/iplant.sh",
             "permission": "own",
             "share-count": 1,
-            "type": "file",
-            "uuid": "0d98745a-df8a-11e3-bfa5-6abdce5a08d5"
+            "type": "file" 
         }
     ]
 }

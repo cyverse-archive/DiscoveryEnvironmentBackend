@@ -155,7 +155,7 @@
       (format-app-timestamps)
       (format-app-ratings)
       (format-app-pipeline-eligibility)
-      (assoc :can_favor true :can_rate true)))
+      (assoc :can_favor true :can_rate true :app_type "DE")))
 
 (defn- list-apps-in-virtual-group
   "Formats a listing for a virtual group."

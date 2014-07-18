@@ -44,7 +44,7 @@ Here are the fields that describe a filesystem entry.
 
 | Field           | Type   | Description |
 | --------------- | ------ | ----------- |
-| id              | string | the logical path to the entry |
+| id              | string | the UUID of the entry |
 | path            | string | the logical path to the entry |
 | permission      | string | the aggregated [access level](#permission) of the client |
 | userPermissions | array  | an array of [permission records](#permission-record) identifying the permissions users have on this entry |
@@ -56,7 +56,7 @@ Here are the fields that describe a filesystem entry.
 
 ```json
 {
-    "id"              : "/iplant/home/tedgin/an-entry",
+    "id"              : "deadbeef-dead-beef-dead-beefdeadbeef",
     "path"            : "/iplant/home/tedgin/an-entry",
     "permission"      : "own",
     "userPermissions" : [
@@ -91,7 +91,7 @@ describe a file.
 
 ```json
 {
-    "id"              : "/iplant/home/tedgin/a.file",
+    "id"              : ""deadbeef-dead-beef-dead-beefdeadbeef"",
     "path"            : "/iplant/home/tedgin/an.file",
     "permission"      : "own",
     "userPermissions" : [
@@ -139,7 +139,7 @@ describe a folder.
 
 ```json
 {
-    "id"              : "/iplant/home/tedgin/a-folder",
+    "id"              : ""deadbeef-dead-beef-dead-beefdeadbeef"",
     "path"            : "/iplant/home/tedgin/a-folder",
     "permission"      : "own",
     "userPermissions" : [

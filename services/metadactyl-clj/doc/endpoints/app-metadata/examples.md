@@ -136,6 +136,7 @@
                     "description": "Muscle-3.8.31",
                     "id": "F052C71C-FD5A-4DB0-8BC8-A82CF0E5B775",
                     "name": "step_1_9B41C9E4-5031-4A49-B1CB-C471335DF16E",
+                    "app_type": "DE",
                     "template_ref": "Muscle-3.8.31"
                 },
                 {
@@ -143,6 +144,7 @@
                     "description": "Ninja",
                     "id": "E3259BB6-E403-4253-9F7D-8485C3CCCC09",
                     "name": "step_2_2A6B165E-416C-2EDD-1DF4-036EB7D0684F",
+                    "app_type": "DE",
                     "template_ref": "Ninja"
                 }
             ],

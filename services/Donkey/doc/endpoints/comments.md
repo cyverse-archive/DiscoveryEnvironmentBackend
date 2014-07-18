@@ -29,7 +29,7 @@ This endpoint allows an authenticated user to post a comment on any accessible f
 ### Request
 
 A request to this endpoint requires no parameters beyond the `proxyToken` authentication parameter.
-The user that owns the favorite is determined from the authentication.  Any additional parameters
+The user that owns the comment is determined from the authentication.  Any additional parameters
 will be ignored.
 
 The request body will be a JSON document (media type `application/json`) containing a `comment`
@@ -81,7 +81,7 @@ file or folder. `entry-id` is the UUID associated with the file or folder.
 ### Request
 
 A request to this endpoint requires no parameters beyond the `proxyToken` authentication parameter.
-The user that owns the favorite is determined from the authentication.  Any additional parameters
+The user that owns the comment is determined from the authentication.  Any additional parameters
 will be ignored.
 
 Any attached request body will be ignored.

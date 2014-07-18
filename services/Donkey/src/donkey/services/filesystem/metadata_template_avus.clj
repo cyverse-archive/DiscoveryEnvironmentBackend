@@ -28,36 +28,33 @@
 
 (defn- get-metadata-template-avus
   "Gets a map containing AVUs for the given Metadata Template and the template's ID."
-  [user-id data-id template-id]
-  (let [avus (persistence/get-avus-for-metadata-template user-id data-id template-id)]
+  [data-id template-id]
+  (let [avus (persistence/get-avus-for-metadata-template data-id template-id)]
     {:template_id template-id
      :avus (map format-avu avus)}))
 
 (defn- metadata-template-list
   "Lists all Metadata Template AVUs for the given user's data item."
-  [user-id data-id]
-  (let [template-ids (persistence/get-metadata-template-ids user-id data-id)]
-    {:user user-id
-     :data_id data-id
-     :templates (map (comp (partial get-metadata-template-avus user-id data-id) :template_id)
+  [data-id]
+  (let [template-ids (persistence/get-metadata-template-ids data-id)]
+    {:data_id data-id
+     :templates (map (comp (partial get-metadata-template-avus data-id) :template_id)
                      template-ids)}))
 
 (defn- metadata-template-avu-list
   "Lists AVUs for the given Metadata Template on the given user's data item."
-  [user-id data-id template-id]
-  (assoc (get-metadata-template-avus user-id data-id template-id)
-    :user user-id
+  [data-id template-id]
+  (assoc (get-metadata-template-avus data-id template-id)
     :data_id data-id))
 
 (defn- find-existing-metadata-template-avu
   "Formats the given AVU for adding or updating.
    If the AVU already exists, the result will contain its ID."
-  [user-id data-id avu]
+  [data-id avu]
   (let [avu (-> (select-keys avu [:value :unit])
                 (assoc
                   :id (when (:id avu) (UUID/fromString (:id avu)))
                   :target_id data-id
-                  :owner_id user-id
                   :attribute (:attr avu)))
         existing-avu (persistence/find-existing-metadata-template-avu avu)]
     (if existing-avu
@@ -67,19 +64,18 @@
 (defn- set-metadata-template-avus
   "Adds or Updates AVUs associated with a Metadata Template for the given user's data item."
   [user-id data-id template-id {avus :avus}]
-  (let [avus (map (partial find-existing-metadata-template-avu user-id data-id) avus)
+  (let [avus (map (partial find-existing-metadata-template-avu data-id) avus)
         existing-avus (filter :id avus)
         new-avus (map #(assoc % :id (UUID/randomUUID)) (remove :id avus))
         avus (concat existing-avus new-avus)
         filter-avu-keys #(select-keys % [:id :attr :value :unit])]
     (transaction
      (when (seq existing-avus)
-       (dorun (map persistence/update-avu existing-avus)))
+       (dorun (map (partial persistence/update-avu user-id) existing-avus)))
      (when (seq new-avus)
-       (persistence/add-metadata-template-avus new-avus))
-     (dorun (persistence/add-template-instances template-id (map :id avus))))
-    {:user user-id
-     :data_id data-id
+       (persistence/add-metadata-template-avus user-id new-avus))
+     (dorun (persistence/set-template-instances data-id template-id (map :id avus))))
+    {:data_id data-id
      :template_id template-id
      :avus (map (comp filter-avu-keys format-avu) avus)}))
 
@@ -87,8 +83,7 @@
   "Removes the given Metadata Template AVU association for the given user's data item."
   [user-id data-id template-id avu-id]
   (let [avu {:id avu-id
-             :target_id data-id
-             :owner_id user-id}
+             :target_id data-id}
         existing-avu (persistence/find-existing-metadata-template-avu avu)]
     (if existing-avu
       (transaction
@@ -101,7 +96,7 @@
 (defn- remove-metadata-template-avus
   "Removes AVUs associated with the given Metadata Template for the given user's data item."
   [user-id data-id template-id]
-  (let [avu-ids (map :id (persistence/get-avus-for-metadata-template user-id data-id template-id))]
+  (let [avu-ids (map :id (persistence/get-avus-for-metadata-template data-id template-id))]
     (transaction
      (persistence/remove-avu-template-instances template-id avu-ids)
      (persistence/remove-avus avu-ids))
@@ -109,12 +104,11 @@
 
 (defn do-metadata-template-avu-list
   "Lists AVUs associated with a Metadata Template for the given user's data item."
-  ([{user :user} data-id]
-   (metadata-template-list user (UUID/fromString data-id)))
+  ([params data-id]
+   (metadata-template-list (UUID/fromString data-id)))
 
-  ([{user :user} data-id template-id]
-   (metadata-template-avu-list user
-                               (UUID/fromString data-id)
+  ([params data-id template-id]
+   (metadata-template-avu-list (UUID/fromString data-id)
                                (UUID/fromString template-id))))
 
 (with-pre-hook! #'do-metadata-template-avu-list
@@ -148,7 +142,7 @@
       (validators/user-exists cm (:user params))
       (let [user (:user params)
             path (:path (uuids/path-for-uuid cm user data-id))]
-        (validators/path-readable cm user path)))))
+        (validators/path-writeable cm user path)))))
 
 (with-post-hook! #'do-set-metadata-template-avus (log-func "do-set-metadata-template-avus"))
 
@@ -174,7 +168,7 @@
       (validators/user-exists cm (:user params))
       (let [user (:user params)
             path (:path (uuids/path-for-uuid cm user data-id))]
-        (validators/path-readable cm user path)))))
+        (validators/path-writeable cm user path)))))
 
 (with-post-hook! #'do-remove-metadata-template-avus (log-func "do-remove-metadata-template-avus"))
 

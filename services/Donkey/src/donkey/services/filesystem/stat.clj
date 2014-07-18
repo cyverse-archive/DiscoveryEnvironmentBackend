@@ -7,6 +7,7 @@
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [is-dir? stat]]
         [clj-jargon.item-ops :only [input-stream]]
+        [clj-jargon.metadata :only [get-attribute]]
         [clj-jargon.permissions :only [list-user-perms permission-for owns?]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
@@ -41,12 +42,20 @@
     (merge stat-map {:share-count (count-shares cm user path)})
     stat-map))
 
+(defn detect-content-type
+  [cm path]
+  (let [path-type (.detect (Tika.) (ft/basename path))]
+    (if (or (= path-type "application/octet-stream")
+            (= path-type "text/plain"))
+      (.detect (Tika.) (input-stream cm path))
+      path-type)))
+
 (defn- merge-type-info
   [stat-map cm user path]
   (if-not (is-dir? cm path)
     (-> stat-map
       (merge {:info-type (filetypes/get-types cm user path)})
-      (merge {:mime-type (.detect (Tika.) (input-stream cm path))}))
+      (merge {:mime-type (detect-content-type cm path)}))
     stat-map))
 
 (defn path-is-dir?
@@ -59,11 +68,12 @@
   [cm user stat]
   (let [path (:path stat)]
     (-> stat
-      (assoc :label      (id->label cm user path)
-             :permission (permission-for cm user path))
-      (merge-type-info cm user path)
-      (merge-shares cm user path)
-      (merge-counts cm user path))))
+        (assoc :id (:value (first (get-attribute cm path "ipc_UUID")))
+               :label      (id->label cm user path)
+               :permission (permission-for cm user path))
+        (merge-type-info cm user path)
+        (merge-shares cm user path)
+        (merge-counts cm user path))))
 
 (defn path-stat
   [cm user path]

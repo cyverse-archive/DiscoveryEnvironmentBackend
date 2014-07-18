@@ -29,6 +29,9 @@
    (GET "/app-details/:app-id" [app-id]
         (trap #(apps/get-app-details app-id)))
 
+   (GET "/apps/:app-id/data-objects" [app-id]
+        (trap #(apps/list-app-data-objects app-id)))
+
    (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
         (trap #(apps/submit-job workspace-id body)))
 
@@ -80,14 +83,14 @@
    (GET "/edit-app/:app-id" [app-id :as req]
         (trap #(edit-app-new-format req app-id)))
 
-   (GET "/edit-workflow/:app-id" [app-id :as req]
-        (trap #(edit-workflow req app-id)))
+   (GET "/edit-workflow/:app-id" [app-id]
+        (trap #(apps/edit-workflow app-id)))
 
    (GET "/copy-template/:app-id" [app-id :as req]
         (trap #(copy-app req app-id)))
 
-   (GET "/copy-workflow/:app-id" [app-id :as req]
-        (trap #(copy-workflow req app-id)))
+   (GET "/copy-workflow/:app-id" [app-id]
+        (trap #(apps/copy-workflow app-id)))
 
    (PUT "/update-template" [:as req]
         (trap #(update-template-secured req)))
@@ -153,9 +156,6 @@
 
    (GET "/validate-analysis-for-pipelines/:app-id" [app-id :as req]
         (trap #(validate-app-for-pipelines req app-id)))
-
-   (GET "/analysis-data-objects/:app-id" [app-id :as req]
-        (trap #(get-data-objects-for-app req app-id)))
 
    (POST "/categorize-analyses" [:as req]
          (trap #(categorize-apps req)))

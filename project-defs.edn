@@ -405,7 +405,7 @@
   :archive? true}
 
  "Panopticon"
- {:type     :tool
+ {:type     :service
   :path     "services/Panopticon"
   :build    :lein
   :rpm?     true
@@ -426,9 +426,9 @@
   :language :clojure
   :archive? true}
 
- "riak-migrator"
+ "job-migrator"
  {:type     :tool
-  :path     "tools/riak-migrator"
+  :path     "tools/job-migrator"
   :build    :lein
   :rpm?     false
   :tarball? false
@@ -453,6 +453,17 @@
   :path     "tools/filetool"
   :build    :lein
   :rpm?     true
+  :tarball? false
+  :uberjar? true
+  :install? false
+  :language :clojure
+  :archive? true}
+
+ "irods-avu-migrator"
+ {:type     :tool
+  :path     "tools/irods-avu-migrator"
+  :build    :lein
+  :rpm?     false
   :tarball? false
   :uberjar? true
   :install? false

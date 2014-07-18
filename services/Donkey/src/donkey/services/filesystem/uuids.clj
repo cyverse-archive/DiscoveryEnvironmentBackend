@@ -20,9 +20,7 @@
       :path \"/path/to/file/or/folder\"}
   for the UUID passed in. Looks in the ipc_UUID AVU for the UUID."
   [cm user uuid]
-  (let [folders (list-collections-with-attr-value cm uuid-attr uuid)
-        files   (list-files-with-avu cm uuid-attr := uuid)
-        results (concat folders files)]
+  (let [results (list-everything-with-attr-value cm uuid-attr uuid)]
     (when (empty? results)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :uuid uuid}))
@@ -51,12 +49,11 @@
     (->> {:date-created  (* 1000 (Long/valueOf (:create_ts entry)))
           :date-modified (* 1000 (Long/valueOf (:modify_ts entry)))
           :file-size     (:data_size entry)
-          :id            path
+          :id            (:uuid entry)
           :path          path
           :type          (case (:type entry)
                            "collection" :dir
-                           "dataobject" :file)
-          :uuid          (:uuid entry)}
+                           "dataobject" :file)}
       (stat/decorate-stat cm user))))
 
 (defn paths-for-uuids-paged
@@ -98,3 +95,25 @@
   (validate-map body {:paths sequential?})
   (json/encode {:paths (uuids-for-paths (:user params) (:paths body))}))
 
+(defn uuid-accessible?
+  "Indicates if a filesystem entry is readble by a given user.
+
+   Parameters:
+     cm - The open Jargon context for the filesystem
+     user - the authenticated name of the user
+     entry-id the UUID of the filesystem entry"
+  [cm user entry-id]
+  (let [entry-path (:path (path-for-uuid cm user (str entry-id)))]
+    (and entry-path (is-readable? cm user entry-path))))
+
+(defn validate-uuid-accessible
+  "Throws an exception if the given entry is not accessible to the given user.
+
+   Parameters:
+     cm - The open Jargon context for the filesystem
+     user - the authenticated name of the user
+     entry-id - the UUID of the filesystem entry"
+  [cm user entry-id]
+  (user-exists cm user)
+  (if-not (uuid-accessible? cm user entry-id)
+    (throw+ {:error_code ERR_NOT_FOUND :uuid entry-id})))

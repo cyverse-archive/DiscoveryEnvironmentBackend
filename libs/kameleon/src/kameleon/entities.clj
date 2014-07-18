@@ -92,7 +92,7 @@
 
 ;; Transformations applied to steps within an app.
 (defentity transformations
-  (entity-fields :name :description :template_id))
+  (entity-fields :name :description :template_id :external_app_id))
 
 ;; A table that maps outputs from one step to inputs to another set.  Two
 ;; entities are associated with a single table here for convenience.  when I

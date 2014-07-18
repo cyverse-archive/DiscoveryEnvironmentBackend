@@ -16,19 +16,22 @@
 
 
 (defn- init-es
+  "Establishes a connection to elasticsearch"
   [props]
-  (let [url    (URL. "http" (get props "dewey.es.host") (Integer. (get props "dewey.es.port")) "")
-        found? (try
-                 (es/connect! (str url))
-                 (log/info "Found elasticsearch")
-                 true
-                 (catch Exception e
-                   (log/debug e)
-                   (log/info "Failed to find elasticsearch. Retrying...")
-                   false))]
-    (when-not found?
-      (Thread/sleep 1000)
-      (recur props))))
+  (let [url  (URL. "http" (get props "dewey.es.host") (Integer. (get props "dewey.es.port")) "")
+        conn (try
+               (es/connect(str url))
+               (catch Exception e
+                 (log/debug e)
+                 nil))]
+    (if conn
+      (do
+        (log/info "Found elasticsearch")
+        conn)
+      (do
+        (log/info "Failed to find elaisticsearch. Retrying...")
+        (Thread/sleep 1000)
+        (recur props)))))
 
 
 (defn- init-irods
@@ -43,7 +46,7 @@
 
 
 (defn- listen
-  [props irods-cfg]
+  [props irods-cfg es]
   (let [attached? (try
                     (amq/attach-to-exchange (get props "dewey.amqp.host")
                                             (Integer. (get props "dewey.amqp.port"))
@@ -52,7 +55,7 @@
                                             (get props "dewey.amqp.exchange.name")
                                             (Boolean. (get props "dewey.amqp.exchange.durable"))
                                             (Boolean. (get props "dewey.amqp.exchange.auto-delete"))
-                                            (partial curation/consume-msg irods-cfg)
+                                            (partial curation/consume-msg irods-cfg es)
                                             "data-object.#"
                                             "collection.#")
                     (log/info "Attached to the AMQP broker.")
@@ -63,7 +66,7 @@
                       false))]
     (when-not attached?
       (Thread/sleep 1000)
-      (recur props irods-cfg))))
+      (recur props irods-cfg es))))
 
 
 (defn- listen-for-status
@@ -90,9 +93,8 @@
 (defn- run
   [props-loader]
   (let [props (update-props props-loader (Properties.))]
-   (init-es props)
-   (listen-for-status props)
-   (listen props (init-irods props))))
+    (listen-for-status props)
+    (listen props (init-irods props) (init-es props))))
 
 
 (def svc-info

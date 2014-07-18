@@ -1,223 +1,267 @@
 (ns dewey.curation
   "This namespace contains the logic for handling change messages from iRODS."
   (:use [slingshot.slingshot :only [try+]])
-  (:require [clojure.string :as string]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
+            [clj-jargon.init :as irods]
             [clojure-commons.file-utils :as file]
+            [dewey.entity :as entity]
             [dewey.indexing :as indexing]
-            [dewey.repo :as repo]
             [dewey.util :as util])
-  (:import [org.irods.jargon.core.exception FileNotFoundException]
-           [org.irods.jargon.core.query CollectionAndDataObjectListingEntry]))
+  (:import [java.util UUID]
+           [org.irods.jargon.core.exception FileNotFoundException]))
 
 
-(defmulti ^{:private true} indexable? #(type %2))
-
-(defmethod indexable? String
-  [irods path]
-  (let [base       (file/path-join "/" (.zone irods))
-        home       (file/path-join base "home")
-        trash      (file/path-join base "trash")
-        home-trash (file/path-join trash "home")]
-    (and (not= base path)
-         (not= home path)
-         (not= trash path)
-         (not= home-trash path)
-         (not= home (file/dirname path))
-         (not= home-trash (file/dirname path)))))
-
-(defmethod indexable? CollectionAndDataObjectListingEntry
-  [irods entry]
-  (indexable? irods (.getFormattedAbsolutePath entry)))
+(defn- extract-entity-id
+  [msg]
+  (log/trace "extract-entity-id called")
+  (UUID/fromString (:entity msg)))
 
 
-(defn- update-or-remove
-  [entity-type entity updater]
-  (log/trace "(update-or-remove" entity-type entity "<updater>)")
-  (try
-    (updater entity)
-    (catch FileNotFoundException _
-      (indexing/remove-entity entity-type entity)
-      (throw))))
+(defn- indexable?
+  [entity]
+  (log/trace "indexible? called")
+  (if-let [path (entity/path entity)]
+    (let [parent-path (file/dirname path)
+          base        (file/path-join "/" (entity/zone entity))
+          home        (file/path-join base "home")
+          trash       (file/path-join base "trash")
+          home-trash  (file/path-join trash "home")]
+      (and (not= home parent-path)
+           (not= home-trash parent-path)
+           (not= home-trash path)
+           (not= trash path)
+           (not= home path)
+           (not= base path)
+           (not= "/" path)))
+    false))
 
 
-(defn- update-parent-modify-time
-  [irods entity-path]
-  (let [parent-path (util/get-parent-path entity-path)]
-    (when (and (indexable? irods parent-path) (.exists? irods parent-path))
-      (if (indexing/entity-indexed? :collection parent-path)
-        (update-or-remove :collection
-                          parent-path
-                          (partial indexing/update-collection-modify-time irods))
-        (indexing/index-collection irods parent-path)))))
-
-
-(defn- rename-entry
-  [irods entity-type old-path new-path index-entity]
-  (indexing/remove-entity entity-type old-path)
-  (when (indexable? irods new-path)
-    (index-entity irods new-path))
-  (update-parent-modify-time irods old-path)
-  (when-not (= (util/get-parent-path old-path) (util/get-parent-path new-path))
-    (update-parent-modify-time irods new-path)))
+(defn- apply-or-remove
+  [irods es entity-type entity-id op]
+  (log/trace "apply-or-remove <irods> <es>" entity-type entity-id "<op> called")
+  (if-let [entity (entity/lookup-entity irods entity-type entity-id)]
+    (when (or (= type :data-object) (indexable? entity)) (op entity))
+    (indexing/remove-entity es entity-type entity-id)))
 
 
 ; This function is recursive and could blow the stack if a collection tree is deep, like 500 or more
 ; levels deep.  This is unlikely in iRODS due to the 2700 character path length restriction.
 (defn- crawl-collection
-  [irods coll-path coll-op obj-op]
-  (letfn [(rec-coll-op [coll]
-            (coll-op irods coll)
-            (crawl-collection irods (.getFormattedAbsolutePath coll) coll-op obj-op))]
-    (doall (map (partial obj-op irods) (.data-objects-in irods coll-path)))
-    (doall (map rec-coll-op (.collections-in irods coll-path)))))
+  [top-coll coll-op obj-op]
+  (log/trace "crawl-collection called")
+  (letfn [(rec-coll-op [coll] (log/trace "rec-coll-op called")
+                              (coll-op coll)
+                              (crawl-collection coll coll-op obj-op))]
+    (doall (map obj-op (entity/child-data-objects top-coll)))
+    (doall (map rec-coll-op (entity/child-collections top-coll)))))
 
 
-(defn- reindex-metadata
-  [irods entity-type path index-entity]
-  (if (indexing/entity-indexed? entity-type path)
-    (update-or-remove entity-type path (partial indexing/update-metadata irods entity-type))
-    (index-entity irods path)))
+(defn- update-or-index
+  [es entity update index]
+  (if (indexing/entity-indexed? es entity)
+    (update es entity)
+    (index es entity)))
+
+
+(defn- update-or-index-collection
+  [es coll update]
+  (update-or-index es coll update indexing/index-collection))
+
+
+(defn- update-or-index-data-object
+  [es obj update]
+  (update-or-index es obj update indexing/index-data-object))
+
+
+; The entity needs to be passed by path, because the entity may not exist in iRODS anymore.
+(defn- update-parent-modify-time
+  [irods es child-path]
+  (log/trace "update-parent-modify-time <irods> <es>" child-path "called")
+  (when-let [parent-path (util/get-parent-path child-path)]
+    (if-let [parent (entity/lookup-entity irods parent-path)]
+      (when (indexable? parent)
+        (update-or-index-collection es parent indexing/update-collection-modify-time))
+      (do
+        (indexing/remove-entities-like es parent-path)
+        (recur irods es parent-path)))))
 
 
 (defn- reindex-collection-metadata
-  [irods path]
-  (reindex-metadata irods :collection path indexing/index-collection))
+  [es coll]
+  (update-or-index-collection es coll indexing/update-metadata))
 
 
 (defn- reindex-data-obj-metadata
-  [irods path]
-  (reindex-metadata irods :data-object path indexing/index-data-object))
-
-
-(defn- update-acl
-  [irods entity-type entity index-entity]
-  (if (indexing/entity-indexed? entity-type entity)
-    (update-or-remove entity-type entity (partial indexing/update-acl irods entity-type))
-    (index-entity irods entity)))
+  [es obj]
+  (update-or-index-collection es obj indexing/update-metadata))
 
 
 (defn- update-collection-acl
-  [irods coll]
-  (when (indexable? irods coll)
-    (update-acl irods :collection coll indexing/index-collection)))
+  [es coll]
+  (update-or-index-collection es coll indexing/update-acl))
 
 
 (defn- update-data-object-acl
-  [irods obj]
-  (update-acl irods :data-object obj indexing/index-data-object))
+  [es obj]
+  (update-or-index-data-object es obj indexing/update-acl))
+
+
+(defn- update-collection-path
+  [irods es coll new-path]
+  (log/trace "update-collection-path called")
+  (letfn [(update-child-coll-path [_ child]
+            (log/trace "update-child-coll-path")
+            (indexing/update-path es child (entity/path child) (entity/modification-time child)))
+
+          (update-child-obj-path [_ child]
+            (log/trace "update-child-obj-path")
+            (indexing/update-path es child (entity/path child)))
+
+          (update-child-coll [child]
+            (log/trace "update-child-coll called")
+            (when (indexable? child) (update-or-index-collection es child update-child-coll-path)))
+
+          (update-child-obj [child]
+            (log/trace "update-child-obj called")
+            (update-or-index-collection es child update-child-obj-path))]
+    (update-or-index-collection es coll #(indexing/update-path %1 %2 new-path))
+    (update-parent-modify-time irods es new-path)
+    (crawl-collection coll update-child-coll update-child-obj)))
 
 
 (defn- index-collection-handler
-  [irods msg]
-  (let [collection (:entity msg)]
-    (when (indexable? irods collection)
-      (indexing/index-collection irods collection))
-    (update-parent-modify-time irods collection)))
+  [irods es msg]
+  (log/trace "index-collection-handler called")
+  (let [index (partial indexing/index-collection es)
+        id    (extract-entity-id msg)]
+    (apply-or-remove irods es :collection id index)
+    (update-parent-modify-time irods es (:path msg))))
 
 
 (defn- index-data-object-handler
-  [irods msg]
-  (indexing/index-data-object irods (:entity msg)
-    :creator   (:creator msg)
-    :file-size (:size msg)
-    :file-type (:type msg))
-  (update-parent-modify-time irods (:entity msg)))
+  [irods es msg]
+  (let [index (fn [obj] (indexing/index-data-object es obj
+                          :creator   (:creator msg)
+                          :file-size (:size msg)
+                          :file-type (:type msg)))
+        id    (extract-entity-id msg)]
+    (apply-or-remove irods es :data-object id index)
+    (update-parent-modify-time irods es (:path msg))))
 
 
 (defn- reindex-collection-metadata-handler
-  [irods msg]
-  (when (indexable? irods (:entity msg))
-    (reindex-collection-metadata irods (:entity msg))))
+  [irods es msg]
+  (let [reindex (partial reindex-collection-metadata es)
+        id      (extract-entity-id msg)]
+    (apply-or-remove irods es :collection id reindex)))
 
 
 (defn- reinidex-coll-dest-metadata-handler
-  [irods msg]
-  (when (indexable? irods (:destination msg))
-    (reindex-collection-metadata irods (:destination msg))))
+  [irods es msg]
+  (let [reindex (partial reindex-collection-metadata es)
+        dest-id (UUID/fromString (:destination msg))]
+    (apply-or-remove irods es :collection dest-id reindex)))
 
 
 (defn- reindex-data-object-handler
-  [irods msg]
-  (let [path (:entity msg)]
-    (if (indexing/entity-indexed? :data-object path)
-      (update-or-remove :data-object path #(indexing/update-data-object irods % (:size msg)))
-      (indexing/index-data-object irods path
-        :file-size (:size msg)
-        :file-type (:type msg)))))
+  [irods es msg]
+  (let [reindex (fn [obj] (update-or-index es
+                                           obj
+                                           #(indexing/update-data-object %1 %2 (:size msg))
+                                           #(indexing/index-data-object %1 %2
+                                              :file-size (:size msg)
+                                              :file-type (:type msg))))
+        id      (extract-entity-id msg)]
+    (apply-or-remove irods es :data-object id reindex)))
 
 
 (defn- reindex-data-object-metadata-handler
-  [irods msg]
-  (reindex-data-obj-metadata irods (:entity msg)))
+  [irods es msg]
+  (let [reindex (partial reindex-data-obj-metadata es)
+        id      (extract-entity-id msg)]
+    (apply-or-remove irods es :data-object id reindex)))
 
 
 (defn- reinidex-obj-dest-metadata-handler
-  [irods msg]
-  (reindex-data-obj-metadata irods (:destination msg)))
+  [irods es msg]
+  (let [reindex (partial reindex-data-obj-metadata es)
+        dest-id (UUID/fromString (:destination msg))]
+    (apply-or-remove irods es :data-object dest-id reindex)))
 
 
 (defn- reindex-multiobject-metadata-handler
-  [irods msg]
+  [irods es msg]
   (let [coll-path   (file/dirname (:pattern msg))
         obj-pattern (util/sql-glob->regex (file/basename (:pattern msg)))]
-    (doseq [obj (.data-objects-in irods coll-path)]
-      (when (re-matches obj-pattern (.getNodeLabelDisplayValue obj))
-        (reindex-data-obj-metadata irods obj)))))
-
-
-(defn- rename-collection-handler
-  [irods msg]
-  (let [old-path (:entity msg)
-        new-path (:new-path msg)]
-    (rename-entry irods :collection old-path new-path indexing/index-collection)
-    (indexing/remove-entities-like (file/path-join old-path "*"))
-    (crawl-collection irods
-                      new-path
-                      #(when (indexable? %1 %2) (indexing/index-collection %1 %2))
-                      indexing/index-data-object)))
-
-
-(defn- rename-data-object-handler
-  [irods msg]
-  (rename-entry irods :data-object (:entity msg) (:new-path msg) indexing/index-data-object))
+    (if-let [coll (entity/lookup-entity irods coll-path)]
+      (doseq [obj (entity/child-data-objects-like coll obj-pattern)]
+        (reindex-data-obj-metadata es obj))
+      (do
+        (indexing/remove-entities-like es coll-path)
+        (update-parent-modify-time irods es coll-path)))))
 
 
 (defn- rm-collection-handler
-  [irods msg]
-  (indexing/remove-entity :collection (:entity msg))
-  (update-parent-modify-time irods (:entity msg)))
+  [irods es msg]
+  (indexing/remove-entity es :collection (extract-entity-id msg))
+  (update-parent-modify-time irods es (:path msg)))
 
 
 (defn- rm-data-object-handler
-  [irods msg]
-  (indexing/remove-entity :data-object (:entity msg))
-  (update-parent-modify-time irods (:entity msg)))
+  [irods es msg]
+  (indexing/remove-entity es :data-object (extract-entity-id msg))
+  (update-parent-modify-time irods es (:path msg)))
 
 
 (defn- update-collection-acl-handler
-  [irods msg]
+  [irods es msg]
+  (log/trace "update-collection-acl-handler called")
   (when (contains? msg :permission)
-    (update-collection-acl irods (:entity msg))
-    (when (:recursive msg)
-      (crawl-collection irods (:entity msg) update-collection-acl update-data-object-acl))))
+    (let [update (fn [coll] (update-collection-acl es coll)
+                            (when (:recursive msg)
+                              (crawl-collection coll
+                                                (partial update-collection-acl es)
+                                                (partial update-data-object-acl es))))
+          id     (extract-entity-id msg)]
+      (apply-or-remove irods es :collection id update))))
+
+
+(defn- update-collection-path-handler
+  [irods es msg]
+  (log/trace "update-collection-path-handler called")
+  (let [update (fn [coll] (update-collection-path irods es coll (:new-path msg)))
+        id     (extract-entity-id msg)]
+    (apply-or-remove irods es :collection id update)
+    (update-parent-modify-time irods es (:old-path msg))))
 
 
 (defn- update-data-object-acl-handler
-  [irods msg]
-  (update-data-object-acl irods (:entity msg)))
+  [irods es msg]
+  (let [update (partial update-data-object-acl es)
+        id     (extract-entity-id msg)]
+    (apply-or-remove irods es :data-object id update)))
+
+
+(defn- update-data-object-path-handler
+  [irods es msg]
+  (log/trace "update-data-object-path-handler called")
+  (let [update (fn [obj]
+                 (update-or-index-data-object es obj #(indexing/update-path %1 %2 (:new-path msg)))
+                 (update-parent-modify-time irods es (:new-path msg)))
+        id     (extract-entity-id msg)]
+    (apply-or-remove irods es :data-object id update)
+    (update-parent-modify-time irods es (:old-path msg))))
 
 
 (defn- update-data-object-sys-meta-handler
-  [irods msg]
-  (let [path   (:entity msg)
-        update (fn [entity] (indexing/update-data-object irods
-                                                         entity
-                                                         (.data-object-size irods entity)
-                                                         (.data-object-type irods entity)))]
-    (if (indexing/entity-indexed? :data-object path)
-      (update-or-remove :data-object path update)
-      (indexing/index-data-object irods path))))
+  [irods es msg]
+  (let [update (fn [_ obj]
+                 (indexing/update-data-object es obj (entity/size obj) (entity/media-type obj)))
+        apply  (fn [obj]
+                 (update-or-index-data-object es obj update)
+                 (indexing/index-data-object es obj))
+        id     (extract-entity-id msg)]
+    (apply-or-remove irods es :data-object id apply)))
 
 
 (defn- resolve-consumer
@@ -232,11 +276,10 @@
     "collection.metadata.rm"       reindex-collection-metadata-handler
     "collection.metadata.rmw"      reindex-collection-metadata-handler
     "collection.metadata.set"      reindex-collection-metadata-handler
-    "collection.mv"                rename-collection-handler
+    "collection.mv"                update-collection-path-handler
     "collection.rm"                rm-collection-handler
     "data-object.acl.mod"          update-data-object-acl-handler
     "data-object.add"              index-data-object-handler
-    "data-object.cp"               index-data-object-handler
     "data-object.metadata.add"     reindex-data-object-metadata-handler
     "data-object.metadata.adda"    reindex-data-object-metadata-handler
     "data-object.metadata.addw"    reindex-multiobject-metadata-handler
@@ -246,7 +289,7 @@
     "data-object.metadata.rmw"     reindex-data-object-metadata-handler
     "data-object.metadata.set"     reindex-data-object-metadata-handler
     "data-object.mod"              reindex-data-object-handler
-    "data-object.mv"               rename-data-object-handler
+    "data-object.mv"               update-data-object-path-handler
     "data-object.rm"               rm-data-object-handler
     "data-object.sys-metadata.mod" update-data-object-sys-meta-handler
                                    nil))
@@ -258,17 +301,19 @@
 
    Parameters:
      irods-cfg   - An irods configuration map for an initialized clj-jargon library.
+     es          - elasticsearch connection
      routing-key - The routing key particular to the received message.
      msg         - The change message.
 
    Throws:
      It throws any exception perculating up from below."
-  [irods-cfg routing-key msg]
+  [irods-cfg es routing-key msg]
   (log/debug "received message:  routing key =" routing-key ", message =" msg)
   (if-let [consume (resolve-consumer routing-key)]
     (try+
-      (repo/do-with-irods irods-cfg #(consume % msg))
+      (irods/with-jargon irods-cfg [irods]
+        (consume irods es msg))
       (catch FileNotFoundException _
-        (log/info "Attempted to index and non-existent iRODS entity. Most likely it was deleted"
-                  "after this index message was created.")))
+        (log/info "Attempted to index a non-existent iRODS entity. Most likely it was deleted after"
+                  "this index message was created.")))
     (log/warn (str "unknown routing key" routing-key "received with message" msg))))

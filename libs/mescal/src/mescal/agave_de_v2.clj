@@ -41,6 +41,10 @@
   [agave app-id]
   (apps/format-app-details (.getApp agave app-id)))
 
+(defn list-app-data-objects
+  [agave app-id]
+  (apps/format-app-data-objects (.getApp agave app-id)))
+
 (defn get-app-deployed-component
   [agave app-id]
   (apps/format-deployed-component-for-app (.getApp agave app-id)))
@@ -85,3 +89,8 @@
 (defn translate-job-status
   [status]
   (jobs/translate-job-status status))
+
+(defn regenerate-job-submission
+  [agave job-id]
+  (when-let [job (.listJob agave job-id)]
+    (jobs/regenerate-job-submission agave job)))
