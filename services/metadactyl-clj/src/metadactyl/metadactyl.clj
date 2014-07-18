@@ -36,6 +36,7 @@
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [metadactyl.translations.app-metadata :as app-meta-tx]
+            [metadactyl.translations.property-values :as prop-value-tx]
             [metadactyl.workspace :as ws]))
 
 (defn- get-property-type-validator
@@ -564,6 +565,14 @@
            :body   (cheshire/encode {:success false
                                      :reason  msg
                                      :apps    (map :name bad-apps)})}))))
+
+(defn get-property-values
+  "Gets the property values for a previously submitted job."
+  [job-id]
+  (-> (.getPropertyValues (property-value-service) job-id)
+      (cheshire/decode true)
+      (prop-value-tx/format-property-values-response)
+      (cheshire/encode)))
 
 (defn- get-unformatted-app-rerun-info
   "Obtains an analysis representation with the property values from a previous experiment

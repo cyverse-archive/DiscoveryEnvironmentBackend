@@ -262,12 +262,6 @@
   (with-db db/de
     (first (select (job-base-query) (where {:j.id id})))))
 
-(defn get-job-submission
-  "Gets a job's submission json and app ID by its internal identifier."
-  [id]
-  (with-db db/de
-    (first (select :jobs (fields :app_id :submission) (where {:id id})))))
-
 (defn update-job
   "Updates an existing job in the database."
   ([id {:keys [status end-date deleted name description]}]
