@@ -211,7 +211,11 @@
 
 (defn- get-job-submission-config
   [job]
-  (:config (service/decode-json (.getValue (:submission job)))))
+  (let [submission (:submission job)]
+    (when-not submission
+      (throw+ {:error_code ce/ERR_NOT_FOUND
+               :reason     "Job submission values could not be found."}))
+    (:config (service/decode-json (.getValue submission)))))
 
 (defn get-job-params
   [agave-client job]
