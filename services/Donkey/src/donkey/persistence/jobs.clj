@@ -35,7 +35,7 @@
   (case field
     "analysis_name" ['like (sqlfn :lower (str "%" value "%"))]
     "name" ['like (sqlfn :lower (str "%" value "%"))]
-    "id" (sqlfn :lower value)
+    "id" (UUID/fromString value)
     value))
 
 (defn- filter-field->where-field
@@ -44,7 +44,6 @@
   (case field
     "analysis_name" (sqlfn :lower :j.app_name)
     "name" (sqlfn :lower :j.job_name)
-    "id" (sqlfn :lower :j.id)
     (keyword (str "j." field))))
 
 (defn- filter-map->where-clause
