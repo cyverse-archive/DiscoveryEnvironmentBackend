@@ -209,7 +209,8 @@
   (load-sql-file "conversions/c200_2014042401/tables/67_access_tokens.sql")
   (println "\t* updating the authorization_requests table")
   (load-sql-file "conversions/c200_2014042401/tables/68_authorization_requests.sql")
-  )
+  (println "\t* updating the job_steps table")
+  (load-sql-file "conversions/c200_2014042401/tables/69_job_steps.sql"))
 
 
 ;; Update new UUID columns.
