@@ -25,12 +25,6 @@
   {:inputs     (params-for config (app :inputs) #(.agaveUrl agave %))
    :parameters (params-for config (app :parameters))})
 
-(defn- archive-path
-  [agave {job-name :name output-directory :outputDirectory}]
-  (let [job-name  (string/replace job-name #"\s" "_")
-        timestamp (tf/unparse timestamp-formatter (t/now))]
-    (.agaveFilePath agave (str output-directory "/" job-name "-" timestamp))))
-
 (def ^:private submitted "Submitted")
 (def ^:private running "Running")
 (def ^:private failed "Failed")
@@ -65,7 +59,7 @@
          :name          (:name submission)
          :appId         (:analysis_id submission)
          :archive       true
-         :archivePath   (archive-path agave submission)
+         :archivePath   (.agaveFilePath agave (:outputDirectory submission))
          :archiveSystem (.storageSystem agave)
          :notifications (job-notifications (:callbackUrl submission)))
        (remove-vals nil?)))

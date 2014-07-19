@@ -30,26 +30,47 @@
   [filter]
   (jp/count-jobs (:username current-user) filter))
 
-(defn- format-job
-  [de-apps agave-apps {app-id :analysis_id :as job}]
-  (if (= (:job_type job) jp/agave-job-type)
-    (aa/format-agave-job agave-apps job)
-    (da/format-de-job de-apps job)))
+(defn- job-timestamp
+  [timestamp]
+  (str (or (db/millis-from-timestamp timestamp) 0)))
 
-(defn- extract-app-ids
-  [jobs]
-  (set (map :analysis_id jobs)))
+(defn- format-job
+  [app-tables job]
+  {:analysis_details (:app-description job)
+   :analysis_id      (:app-id job)
+   :analysis_name    (:app-name job)
+   :description      (:description job)
+   :enddate          (job-timestamp (:end-date job))
+   :id               (:id job)
+   :name             (:job-name job)
+   :resultfolderid   (:result-folder-path job)
+   :startdate        (job-timestamp (:start-date job))
+   :status           (:status job)
+   :username         (:username job)
+   :deleted          (:deleted job)
+   :wiki_url         (:app-wiki-url job)
+   :app_disabled     (:disabled (first (remove nil? (map #(% (:app-id job)) app-tables))))})
+
+(defn- load-app-details
+  [agave jobs]
+  [(->> (filter (fn [{:keys [job-type]}] (= jp/de-job-type job-type)) jobs)
+        (map :app-id)
+        (da/load-app-details))
+   (aa/load-app-details agave)])
 
 (defn- list-all-jobs
   [agave limit offset sort-field sort-order filter]
-  (let [user          (:username current-user)
-        jobs          (jp/list-jobs user limit offset sort-field sort-order filter)
-        grouped-jobs  (group-by :job_type jobs)
-        de-app-ids    (extract-app-ids (grouped-jobs jp/de-job-type))
-        de-apps       (da/load-app-details de-app-ids)
-        agave-app-ids (extract-app-ids (grouped-jobs jp/agave-job-type))
-        agave-apps    (aa/load-app-details agave agave-app-ids)]
-    (remove nil? (map (partial format-job de-apps agave-apps) jobs))))
+  (let [user       (:username current-user)
+        jobs       (jp/list-jobs user limit offset sort-field sort-order filter)
+        app-tables (load-app-details agave jobs)]
+    (remove nil? (map (partial format-job app-tables) jobs))))
+
+(defn- list-de-jobs
+  [limit offset sort-field sort-order filter]
+  (let [user       (:username current-user)
+        jobs       (jp/list-de-jobs user limit offset sort-field sort-order filter)
+        app-tables [(da/load-app-details (map :analysis_id jobs))]]
+    (mapv (partial format-job app-tables) jobs)))
 
 (defn- update-job-status
   ([{:keys [id status end-date]}]
@@ -72,11 +93,11 @@
      (process-job agave-client job-id (jp/get-job-by-id (UUID/fromString job-id)) processing-fns))
   ([agave-client job-id job {:keys [process-agave-job process-de-job preprocess-job]
                              :or {preprocess-job identity}}]
-   (when-not job
-     (service/not-found "job" job-id))
-   (if (util/is-uuid? (:analysis_id job))
-     (process-de-job (preprocess-job job))
-     (process-agave-job agave-client (preprocess-job job)))))
+     (when-not job
+       (service/not-found "job" job-id))
+     (if (util/is-uuid? (:analysis_id job))
+       (process-de-job (preprocess-job job))
+       (process-agave-job agave-client (preprocess-job job)))))
 
 (defn- agave-authorization-uri
   [state-info]
@@ -169,7 +190,7 @@
     (count-de-jobs filter))
 
   (listJobs [_ limit offset sort-field sort-order filter]
-    (da/list-de-jobs limit offset sort-field sort-order filter))
+    (list-de-jobs limit offset sort-field sort-order filter))
 
   (syncJobStatus [_ job]
     (when (= (:job_type job) jp/de-job-type)
@@ -257,7 +278,7 @@
   (listJobs [_ limit offset sort-field sort-order filter]
     (if (user-has-access-token?)
       (list-all-jobs agave-client limit offset sort-field sort-order filter)
-      (da/list-de-jobs limit offset sort-field sort-order filter)))
+      (list-de-jobs limit offset sort-field sort-order filter)))
 
   (syncJobStatus [_ job]
     (let [sync-agave (add-predicate user-has-access-token? aa/sync-agave-job-status)]

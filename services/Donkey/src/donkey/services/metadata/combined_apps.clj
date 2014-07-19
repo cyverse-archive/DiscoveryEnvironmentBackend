@@ -2,9 +2,7 @@
   (:use [donkey.auth.user-attributes :only [current-user]]
         [korma.db]
         [slingshot.slingshot :only [throw+]])
-  (:require [clj-time.core :as t]
-            [clj-time.format :as tf]
-            [clojure.string :as string]
+  (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [clojure-commons.file-utils :as ft]
@@ -91,15 +89,6 @@
       (throw+ {:error_code ce/ERR_BAD_REQUEST
                :reason     "HPC_JOBS_DISABLED"}))))
 
-(defn- current-timestamp
-  []
-  (tf/unparse (tf/formatter "yyyy-MM-dd-HH-mm-ss.S") (t/now)))
-
-(defn- job-name-to-path
-  "Converts a job name to a string suitable for inclusion in a path."
-  [path]
-  (string/replace path #"[\s@]" "_"))
-
 (defn- app-step-partitioner
   "Partitions app steps into units of execution. Each external app step has to run by itself.
    Consecutive DE app steps can be combined into a single step."
@@ -132,14 +121,6 @@
     (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
              :reason     (str "app " app-id " has no steps")}))
   steps)
-
-(defn- build-result-folder-path
-  [submission]
-  (let [build-path (comp ft/rm-last-slash ft/path-join)]
-    (if (:create_output_subdir submission)
-      (build-path (:output_dir submission)
-                  (str (job-name-to-path (:name submission)) "-" (current-timestamp)))
-      (build-path (:output_dir submission)))))
 
 (defn- build-job-save-info
   [result-folder-path job-id app-info submission]
@@ -178,12 +159,15 @@
 (defn- submit-job-step
   [agave workspace-id job-info {:keys [app-step-number] :as job-step} submission]
   (doto (if (is-de-job-step? job-step)
-          (da/submit-job-step workspace-id job-info job-step
-                              (assoc submission :starting_step app-step-number))
+          (let [output-dir (:result-folder-path job-info)
+                submission (assoc (mu/update-submission-result-folder submission output-dir)
+                             :starting_step app-step-number)]
+            (da/submit-job-step workspace-id job-info job-step submission))
           (let [app-steps  (ap/load-app-steps (:app-id job-info))
-                curr-step  (nth app-steps (dec app-step-number))
-                app-id     (:external_app_id curr-step)
-                submission (assoc submission :analysis_id app-id)]
+                app-id     (:external_app_id (nth app-steps (dec app-step-number)))
+                output-dir (:result-folder-path job-info)
+                submission (assoc (mu/update-submission-result-folder submission output-dir)
+                             :analysis_id app-id)]
             (aa/submit-job-step agave job-info job-step submission)))
     (record-step-submission job-info job-step)))
 
@@ -191,9 +175,10 @@
   "Submits a DE job to the remote system. A DE job is a job using any app defined in the DE
    database, which may consist of Agave steps, DE steps or both."
   [agave workspace-id app-id submission]
+  (log/spy :warn submission)
   (let [app-info  (service/assert-found (ap/load-app-info app-id) "app" app-id)
         job-id    (UUID/randomUUID)
-        job-info  (build-job-save-info (build-result-folder-path submission)
+        job-info  (build-job-save-info (mu/build-result-folder-path submission)
                                        job-id app-info submission)
         job-steps (map (partial build-job-step-save-info job-id)
                        (validate-job-steps app-id (load-job-steps app-id)))]
@@ -220,7 +205,7 @@
 (defn get-job-params
   [agave-client job]
   (property-values/format-job-params agave-client
-                                     (:analysis_id job)
+                                     (:app-id job)
                                      (:id job)
                                      (get-job-submission-config job)))
 
@@ -228,7 +213,7 @@
   "Updates an app with the parameter values from a previous experiment plugged into the appropriate
    parameters."
   [agave-client job]
-  (let [app (get-app agave-client (:analysis_id job))
+  (let [app (get-app agave-client (:app-id job))
         values (get-job-submission-config job)
         update-prop   #(let [id (keyword (:id %))]
                          (if (contains? values id)
@@ -269,8 +254,8 @@
         output-id        (:output_id input)
         config-output-id (str source-name "_" output-id)]
     (if-let [prop-value (get config config-output-id)]
-      (ft/path-join (:resultfolderid job) prop-value)
-      (ft/path-join (:resultfolderid job)
+      (ft/path-join (:result-folder-path job) prop-value)
+      (ft/path-join (:result-folder-path job)
                     (get-default-output-name agave source-id output-id app-steps)))))
 
 (defn- add-mapped-inputs
@@ -290,7 +275,7 @@
   (let [next-step-number (inc step-number)
         next-step        (jp/get-job-step-number job-id next-step-number)
         app-step-number  (:app-step-number next-step)
-        app-steps        (ap/load-app-steps (:analysis_id job))
+        app-steps        (ap/load-app-steps (:app-id job))
         next-app-step    (nth app-steps (dec app-step-number))
         mapped-inputs    (ap/load-target-step-mappings (:step_id next-app-step))
         submission       (service/decode-json (.getValue (:submission job)))

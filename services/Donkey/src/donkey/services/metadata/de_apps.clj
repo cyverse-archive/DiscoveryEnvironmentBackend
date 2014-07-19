@@ -61,14 +61,6 @@
        (metadactyl/submit-job workspace-id)
        (:id)))
 
-(defn format-de-job
-  [de-apps job]
-  (let [app (de-apps (:analysis_id job) {})]
-    (assoc job
-      :startdate    (str (or (db/millis-from-timestamp (:startdate job)) 0))
-      :enddate      (str (or (db/millis-from-timestamp (:enddate job)) 0))
-      :app_disabled (:disabled app false))))
-
 (defn load-de-job-states
   [de-jobs]
   (if-not (empty? de-jobs)
@@ -82,30 +74,9 @@
   (into {} (map (juxt :id identity)
                 (ap/load-app-details ids))))
 
-(defn list-de-jobs
-  [limit offset sort-field sort-order filter]
-  (let [user    (:username current-user)
-        jobs    (jp/list-de-jobs user limit offset sort-field sort-order filter)
-        de-apps (load-app-details (map :analysis_id jobs))]
-    (mapv (partial format-de-job de-apps) jobs)))
-
-(defn- de-job-status-changed
-  [job curr-state]
-  (or (not= (:status job) (:status curr-state))
-      ((complement nil?) (get-end-date curr-state))
-      (:deleted curr-state)))
-
+;; TODO: implement me
 (defn sync-de-job-status
-  [job]
-  (let [curr-state (first (osm/get-jobs [(:external_id job)]))]
-    (if-not (nil? curr-state)
-      (when (de-job-status-changed job curr-state)
-        (jp/update-job
-         (:id job)
-         {:status   (:status curr-state)
-          :end-date (get-end-date curr-state)
-          :deleted  (:deleted curr-state false)}))
-      (jp/update-job (:id job) {:deleted true}))))
+  [job])
 
 (defn update-job-status
   "Updates the status of a job. If this function is called then Agave jobs are disabled, so

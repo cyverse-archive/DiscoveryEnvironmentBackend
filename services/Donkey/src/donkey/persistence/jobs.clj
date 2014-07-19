@@ -35,8 +35,8 @@
   [field value]
   (case field
     "analysis_name" ['like (sqlfn :lower (str "%" value "%"))]
-    "name" ['like (sqlfn :lower (str "%" value "%"))]
-    "id" (UUID/fromString value)
+    "name"          ['like (sqlfn :lower (str "%" value "%"))]
+    "id"            (sqlfn :lower value)
     value))
 
 (defn- filter-field->where-field
@@ -44,7 +44,8 @@
   [field]
   (case field
     "analysis_name" (sqlfn :lower :j.app_name)
-    "name" (sqlfn :lower :j.job_name)
+    "name"          (sqlfn :lower :j.job_name)
+    "id"            (sqlfn :lower :j.id)
     (keyword (str "j." field))))
 
 (defn- filter-map->where-clause
@@ -181,28 +182,23 @@
     :enddate       :j.end_date
     :status        :j.status))
 
-;; TODO: split the job type query out into a separate query.
 (defn- job-base-query
   "The base query used for retrieving job information from the database."
   []
-  (-> (select* [:jobs :j])
-      (join [:users :u] {:j.user_id :u.id})
-      (join [:job_steps :s] {:j.id :s.job_id})
-      (join [:job_types :t] {:s.job_type_id :t.id})
-      (fields [:j.app_description    :analysis_details]
-              [:j.app_id             :analysis_id]
-              [:j.app_name           :analysis_name]
+  (-> (select* [:job_listings :j])
+      (fields [:j.app_description    :app-description]
+              [:j.app_id             :app-id]
+              [:j.app_name           :app-name]
               [:j.job_description    :description]
-              [:j.end_date           :enddate]
+              [:j.end_date           :end-date]
               [:j.id                 :id]
-              [:j.job_name           :name]
-              [:j.result_folder_path :resultfolderid]
-              [:j.start_date         :startdate]
+              [:j.job_name           :job-name]
+              [:j.result_folder_path :result-folder-path]
+              [:j.start_date         :start-date]
               [:j.status             :status]
-              [:u.username           :username]
-              [:t.name               :job_type]
-              [:s.external_id        :external_id]
-              [:j.app_wiki_url       :wiki_url])))
+              [:j.username           :username]
+              [:j.app_wiki_url       :app-wiki-url]
+              [:j.job_type           :job-type])))
 
 (defn- job-step-base-query
   "The base query used for retrieving job step information from the database."
@@ -249,8 +245,8 @@
   (with-db db/de
     (select (add-job-query-filter-clause (job-base-query) filter)
             (where {:j.deleted  false
-                    :u.username username})
-            (order sort-field sort-order)
+                    :j.username username})
+            (order (translate-sort-field sort-field) sort-order)
             (offset (nil-if-zero row-offset))
             (limit (nil-if-zero row-limit)))))
 
@@ -260,21 +256,11 @@
   (with-db db/de
     (select (add-job-query-filter-clause (job-base-query) filter)
             (where {:j.deleted  false
-                    :u.username username})
+                    :j.username username})
             (where (not (sqlfn exists (agave-job-subselect))))
-            (order sort-field sort-order)
+            (order (translate-sort-field sort-field) sort-order)
             (offset (nil-if-zero row-offset))
             (limit (nil-if-zero row-limit)))))
-
-(defn list-jobs-with-null-descriptions
-  "Lists jobs with null description fields."
-  [username job-types]
-  (with-db db/de
-    (select (job-base-query)
-            (where {:j.deleted         false
-                    :u.username        username
-                    :jt.name           [in job-types]
-                    :j.job_description nil}))))
 
 (defn- add-job-type-clause
   "Adds a where clause for a set of job types if the set of job types provided is not nil
@@ -285,15 +271,12 @@
     (where query {:jt.name [in job-types]})
     query))
 
-;; HACK ALERT: an extra copy of hte app ID is being retrieved to resolve a field naming
-;; inconsistency.
 (defn get-job-by-id
   "Gets a single job by its internal identifier."
   [id]
   (with-db db/de
     (first (select (job-base-query)
-                   (fields :submission
-                           [:app_id :app-id])
+                   (fields :submission)
                    (where {:j.id id})))))
 
 (defn update-job
