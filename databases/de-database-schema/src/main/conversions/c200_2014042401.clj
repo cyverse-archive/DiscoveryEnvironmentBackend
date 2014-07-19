@@ -5,8 +5,8 @@
         [korma.db :only [with-db]])
   (:require [clojure.tools.logging :as log]
             [facepalm.core :as migrator]
-            [me.raynes.fs :as fs])
-  (:import [java.util UUID]))
+            [kameleon.uuids :as uuids]
+            [me.raynes.fs :as fs]))
 
 ;; TODO file_parameters, template_input, template_output, validator conversions.
 
@@ -99,6 +99,27 @@
   (println "\t* dropping old views...")
   (load-sql-file "conversions/c200_2014042401/drop_views.sql"))
 
+(defn- add-agave-task
+  [{:keys [id external_app_id]}]
+  (println "\t* adding agave task for" external_app_id)
+  (let [task-id (uuids/uuid)]
+    (insert :tasks (values {:id task-id
+                            :id_v187 (str task-id)
+                            :name external_app_id
+                            :external_app_id external_app_id}))
+    (update :transformations_v187
+            (set-fields {:template_id (subselect :tasks
+                                                 (fields :id_v187)
+                                                 (where {:id task-id}))})
+            (where {:id id}))))
+
+(defn- add-agave-step-tasks
+  []
+  (let [agave-steps (select :transformations_v187
+                            (fields :id :external_app_id)
+                            (where (raw "template_id IS NULL")))]
+    (dorun (map add-agave-task agave-steps))))
+
 ;; Rename or add new tables and columns.
 (defn- run-table-conversions
   "Loads and runs SQL files containing table and column conversions."
@@ -113,6 +134,8 @@
   (load-sql-file "conversions/c200_2014042401/tables/03_tools.sql")
   (println "\t* updating the template table to tasks")
   (load-sql-file "conversions/c200_2014042401/tables/04_tasks.sql")
+  (println "\t* adding agave step tasks")
+  (add-agave-step-tasks)
   (println "\t* updating the transformation_activity table to apps")
   (load-sql-file "conversions/c200_2014042401/tables/05_apps.sql")
   (println "\t* updating the transformation_task_steps table to app_steps")
