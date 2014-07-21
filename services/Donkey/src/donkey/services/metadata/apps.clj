@@ -421,7 +421,12 @@
         {:keys [username] :as job} (jp/get-job-by-id (:job-id job-step))
         end-date                   (db/timestamp-from-str end-date)]
     (service/assert-found job "job" (:job-id job-step))
-    (.updateJobStatus (get-app-lister "" username) username job job-step status end-date)))
+    (try+
+     (.updateJobStatus (get-app-lister "" username) username job job-step status end-date)
+     (catch Object o
+       (let [msg (str "DE job status update failed for " external-id)]
+         (log/warn o msg)
+         (throw+))))))
 
 (defn update-agave-job-status
   [uuid status end-time external-id]
@@ -431,7 +436,12 @@
         end-time                   (db/timestamp-from-str end-time)]
     (service/assert-found job "job" uuid)
     (service/assert-found job-step "job step" (str uuid "/" external-id))
-    (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)))
+    (try+
+     (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)
+     (catch Object o
+       (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
+         (log/warn o msg)
+         (throw+))))))
 
 (defn- sync-job-status
   [job]

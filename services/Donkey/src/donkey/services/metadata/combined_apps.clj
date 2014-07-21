@@ -163,11 +163,12 @@
                 submission (assoc (mu/update-submission-result-folder submission output-dir)
                              :starting_step app-step-number)]
             (da/submit-job-step workspace-id job-info job-step submission))
-          (let [app-steps  (ap/load-app-steps (:app-id job-info))
-                app-id     (:external_app_id (nth app-steps (dec app-step-number)))
-                output-dir (:result-folder-path job-info)
-                submission (assoc (mu/update-submission-result-folder submission output-dir)
-                             :analysis_id app-id)]
+          (let [app-steps     (ap/load-app-steps (:app-id job-info))
+                curr-app-step (nth app-steps (dec app-step-number))
+                output-dir    (:result-folder-path job-info)
+                submission    (assoc (mu/update-submission-result-folder submission output-dir)
+                                :analysis_id (:external_app_id curr-app-step)
+                                :paramPrefix (:step_name curr-app-step))]
             (aa/submit-job-step agave job-info job-step submission)))
     (record-step-submission job-info job-step)))
 
@@ -265,7 +266,7 @@
              (fn [config]
                (reduce (fn [config input]
                          (assoc config
-                           (str (:target_name input) "_" (:input_id input))
+                           (keyword (str (:target_name input) "_" (:input_id input)))
                            (get-input-path agave job config app-steps input)))
                        config mapped-inputs))))
 
