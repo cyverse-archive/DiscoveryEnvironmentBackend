@@ -8,7 +8,7 @@
             [kameleon.uuids :as uuids]
             [me.raynes.fs :as fs]))
 
-;; TODO file_parameters, template_input, template_output, validator conversions.
+;; TODO file_parameters, template_input, template_output conversions.
 
 (def ^:private version
   "The destination database version."
