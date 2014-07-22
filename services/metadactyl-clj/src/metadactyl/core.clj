@@ -2,7 +2,6 @@
   (:gen-class)
   (:use [clojure.java.io :only [file]]
         [clojure-commons.query-params :only [wrap-query-params]]
-        [compojure.core]
         [metadactyl.app-categorization]
         [metadactyl.app-listings]
         [metadactyl.app-validation :only [app-publishable?]]
@@ -16,7 +15,9 @@
         [metadactyl.zoidberg]
         [ring.middleware keyword-params nested-params]
         [slingshot.slingshot :only [throw+]])
-  (:require [compojure.route :as route]
+  (:require [compojure.api.sweet :refer :all]
+            [compojure.core :refer [GET PUT POST]]
+            [compojure.route :as route]
             [compojure.handler :as handler]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
@@ -26,7 +27,7 @@
             [common-cli.core :as ccli]
             [me.raynes.fs :as fs]))
 
-(defroutes secured-routes
+(defroutes* secured-routes
   (GET "/bootstrap" [:as {params :params headers :headers}]
        (ce/trap "bootstrap" #(throw+ '("bootstrap" (:ip-address params) (headers "user-agent")))))
 
@@ -127,7 +128,7 @@
 
   (route/not-found (unrecognized-path-response)))
 
-(defroutes metadactyl-routes
+(defroutes* metadactyl-routes
   (GET "/" []
        "Welcome to Metadactyl!\n")
 
@@ -239,9 +240,6 @@
   (POST "/arg-preview" [:as {body :body}]
         (ce/trap "arg-preview" #(app-metadata/preview-command-line body)))
 
-  (context "/secured" [:as {params :params}]
-           (store-current-user secured-routes params))
-
   (route/not-found (unrecognized-path-response)))
 
 (defn- init-service
@@ -294,8 +292,20 @@
       wrap-keyword-params
       wrap-query-params))
 
-(def app
-  (site-handler metadactyl-routes))
+(defapi app
+  (swagger-ui "/api-ui" )
+  (swagger-docs "/api/api-docs"
+                :title "Metadactyl API"
+                :description "Documentation for the Metadactyl REST API"
+                :apiVersion "0.0.2")
+  (swaggered "unsecured"
+             :description "Discovery Environment App endpoints."
+             (site-handler metadactyl-routes))
+  (swaggered "secured"
+             :description "Secured Discovery Environment App endpoints."
+             (site-handler
+              (context "/secured" [:as {params :params}]
+                       (store-current-user secured-routes params)))))
 
 (def svc-info
   {:desc "Framework for hosting DiscoveryEnvironment metadata services."

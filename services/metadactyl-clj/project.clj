@@ -26,6 +26,8 @@
                  [com.cemerick/url "0.1.1"]
                  [compojure "1.1.7"]
                  [medley "0.1.5"]
+                 [metosin/compojure-api "0.14.0"]
+                 [metosin/ring-swagger-ui "2.0.17"]
                  [org.iplantc/clojure-commons "4.0.0"]
                  [org.iplantc/kameleon "4.0.0"]
                  [org.iplantc/common-cli "4.0.0"]
