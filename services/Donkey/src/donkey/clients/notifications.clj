@@ -54,7 +54,7 @@
      (notificationagent-url relative-url {}))
   ([relative-url query]
      (build-url-with-query (notificationagent-base-url)
-       (add-current-user-to-map query) relative-url)))
+                           (add-current-user-to-map query) relative-url)))
 
 (defn send-notification
   "Sends a notification to a user."
@@ -97,9 +97,9 @@
                           :email          true
                           :email_template "tool_request_submitted"
                           :payload        (assoc tool-req
-                                                 :email_address (:email user-details)
-                                                 :toolname      (:name tool-req)
-                                                 :comments      comments)})
+                                            :email_address (:email user-details)
+                                            :toolname      (:name tool-req)
+                                            :comments      comments)})
       (catch Exception e
         (log/warn e "unable to send tool request submission notification for" tool-req)))))
 
@@ -126,13 +126,13 @@
 
 (defn send-agave-job-status-update
   "Sends notification of an Agave job status update to the user."
-  [username job-info]
+  [username {job-name :name :as job-info}]
   (try
     (send-notification
      {:type           "analysis"
       :user           username
-      :subject        (str (:name job-info) " status changed.")
-      :message        (str (:name job-info) " " (string/lower-case (:status job-info)))
+      :subject        (str job-name " status changed.")
+      :message        (str job-name " " (string/lower-case (:status job-info)))
       :email          (if (#{"Completed" "Failed"} (:status job-info)) true false)
       :email-template "analysis_status_change"
       :payload        (assoc job-info

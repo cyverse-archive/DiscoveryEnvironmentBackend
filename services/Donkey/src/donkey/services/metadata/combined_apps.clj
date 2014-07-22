@@ -176,7 +176,6 @@
   "Submits a DE job to the remote system. A DE job is a job using any app defined in the DE
    database, which may consist of Agave steps, DE steps or both."
   [agave workspace-id app-id submission]
-  (log/spy :warn submission)
   (let [app-info  (service/assert-found (ap/load-app-info app-id) "app" app-id)
         job-id    (UUID/randomUUID)
         job-info  (build-job-save-info (mu/build-result-folder-path submission)
@@ -231,13 +230,6 @@
   (if (= jp/agave-job-type job-type)
     (.translateJobStatus agave status)
     status))
-
-(defn send-job-status-notification
-  "Sends notification of a job status change."
-  [job job-step status end-time]
-  (if (is-de-job-step? job-step)
-    (da/send-job-status-notification job job-step status end-time)
-    (aa/send-job-status-notification job job-step status end-time)))
 
 (defn- get-default-output-name
   "Determines the default name of a job output."
@@ -294,6 +286,7 @@
         max-step                          (jp/get-max-step-number job-id)
         first-step?                       (= step-number 1)
         last-step?                        (= step-number max-step)
+        orig-status                       status
         status                            (translate-job-status agave job-step status)]
     (when-not (= status (:status job-step))
       (jp/update-job-step job-id external-id status end-time)
@@ -301,6 +294,6 @@
                 (and last-step? (mu/is-completed? status))
                 (= status mu/failed-status))
         (jp/update-job job-id status end-time)
-        (send-job-status-notification job job-step status end-time)))
-    (when (and (not last-step?) (= status mu/completed-status))
-      (submit-next-step agave username job job-step))))
+        (mu/send-job-status-notification job job-step status end-time))
+      (when (and (not last-step?) (= status mu/completed-status))
+        (submit-next-step agave username job job-step)))))

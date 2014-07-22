@@ -2,7 +2,10 @@
   (:require [clj-time.core :as t]
             [clj-time.format :as tf]
             [clojure.string :as string]
-            [clojure-commons.file-utils :as ft]))
+            [clojure.tools.logging :as log]
+            [clojure-commons.file-utils :as ft]
+            [donkey.clients.notifications :as dn]
+            [donkey.util.db :as db]))
 
 (def failed-status "Failed")
 (def completed-status "Completed")
@@ -39,3 +42,35 @@
   (assoc submission
     :outputDirectory      result-folder-path
     :create_output_subdir false))
+
+(defn- job-timestamp
+  [timestamp]
+  (str (or (db/millis-from-timestamp timestamp) 0)))
+
+(defn format-job
+  [app-tables job]
+  {:analysis_details (:app-description job)
+   :analysis_id      (:app-id job)
+   :analysis_name    (:app-name job)
+   :description      (:description job)
+   :enddate          (job-timestamp (:end-date job))
+   :id               (:id job)
+   :name             (:job-name job)
+   :resultfolderid   (:result-folder-path job)
+   :startdate        (job-timestamp (:start-date job))
+   :status           (:status job)
+   :username         (:username job)
+   :deleted          (:deleted job)
+   :wiki_url         (:app-wiki-url job)
+   :app_disabled     (:disabled (first (remove nil? (map #(% (:app-id job)) app-tables))))})
+
+(defn send-job-status-notification
+  "Sends a job status change notification."
+  [{:keys [username startdate] :as job} job-step status end-time]
+  (let [username     (string/replace username #"@.*" "")
+        end-millis   (db/timestamp-str end-time)
+        start-millis (db/timestamp-str startdate)]
+    (dn/send-agave-job-status-update username (assoc (format-job [] job)
+                                                :status    status
+                                                :enddate   end-millis
+                                                :startdate start-millis))))

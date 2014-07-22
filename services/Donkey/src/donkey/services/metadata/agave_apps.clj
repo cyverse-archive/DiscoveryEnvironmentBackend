@@ -136,19 +136,13 @@
   (when-not (= status new-status)
     (jp/update-job-step job-id external-id new-status end-time)))
 
-;; TODO: implement me
-(defn send-job-status-notification
-  [{:keys [username stardate] :as job} job-step status end-time]
-  (let [username   (string/replace username #"@.*" "")
-        end-millis (when-not (nil? end-time))]))
-
 (defn- update-job-status
   [username {:keys [startdate] :as job} {:keys [step-number]} max-step-number status end-time]
   (let [prev-status  (:status job)
         job-status   (get-job-status step-number max-step-number prev-status status)
         end-time     (when (is-complete? job-status) end-time)
-        end-millis   (when-not (nil? end-time) (str (.getTime end-time)))
-        start-millis (when-not (nil? startdate) (str (.getTime startdate)))]
+        end-millis   (db/timestamp-str end-time)
+        start-millis (db/timestamp-str startdate)]
     (when-not (= job-status prev-status)
       (jp/update-job (:id job) job-status end-time)
       (dn/send-agave-job-status-update username (assoc job

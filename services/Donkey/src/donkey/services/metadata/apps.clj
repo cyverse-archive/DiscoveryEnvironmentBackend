@@ -15,6 +15,7 @@
             [donkey.services.metadata.agave-apps :as aa]
             [donkey.services.metadata.combined-apps :as ca]
             [donkey.services.metadata.de-apps :as da]
+            [donkey.services.metadata.util :as mu]
             [donkey.util :as util]
             [donkey.util.config :as config]
             [donkey.util.db :as db]
@@ -30,27 +31,6 @@
   [filter]
   (jp/count-jobs (:username current-user) filter))
 
-(defn- job-timestamp
-  [timestamp]
-  (str (or (db/millis-from-timestamp timestamp) 0)))
-
-(defn- format-job
-  [app-tables job]
-  {:analysis_details (:app-description job)
-   :analysis_id      (:app-id job)
-   :analysis_name    (:app-name job)
-   :description      (:description job)
-   :enddate          (job-timestamp (:end-date job))
-   :id               (:id job)
-   :name             (:job-name job)
-   :resultfolderid   (:result-folder-path job)
-   :startdate        (job-timestamp (:start-date job))
-   :status           (:status job)
-   :username         (:username job)
-   :deleted          (:deleted job)
-   :wiki_url         (:app-wiki-url job)
-   :app_disabled     (:disabled (first (remove nil? (map #(% (:app-id job)) app-tables))))})
-
 (defn- load-app-details
   [agave jobs]
   [(->> (filter (fn [{:keys [job-type]}] (= jp/de-job-type job-type)) jobs)
@@ -63,14 +43,14 @@
   (let [user       (:username current-user)
         jobs       (jp/list-jobs user limit offset sort-field sort-order filter)
         app-tables (load-app-details agave jobs)]
-    (remove nil? (map (partial format-job app-tables) jobs))))
+    (remove nil? (map (partial mu/format-job app-tables) jobs))))
 
 (defn- list-de-jobs
   [limit offset sort-field sort-order filter]
   (let [user       (:username current-user)
         jobs       (jp/list-de-jobs user limit offset sort-field sort-order filter)
         app-tables [(da/load-app-details (map :analysis_id jobs))]]
-    (mapv (partial format-job app-tables) jobs)))
+    (mapv (partial mu/format-job app-tables) jobs)))
 
 (defn- update-job-status
   ([{:keys [id status end-date]}]

@@ -82,10 +82,7 @@
   "Updates the status of a job. If this function is called then Agave jobs are disabled, so
    there will always be only one job step."
   [username job job-step status end-time]
-  (jp/update-job-step (:id job) (:external-id job-step) status end-time)
-  (jp/update-job (:id job) status end-time))
-
-(defn send-job-status-notification
-  "This function currently does nothing because job status update notifications are currently
-   handled by the notification agent directly."
-  [job job-step status end-time])
+  (when-not (= (:status job-step) status)
+    (jp/update-job-step (:id job) (:external-id job-step) status end-time)
+    (jp/update-job (:id job) status end-time)
+    (mu/send-job-status-notification job job-step status end-time)))
