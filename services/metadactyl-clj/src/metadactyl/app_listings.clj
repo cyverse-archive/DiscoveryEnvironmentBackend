@@ -30,7 +30,7 @@
    :description    ""
    :workspace_id   workspace-id
    :is_public      false
-   :template_count (count-public-apps-by-user (.getEmail current-user))})
+   :template_count (count-public-apps-by-user (:email current-user))})
 
 (defn list-my-public-apps
   "Lists the public apps belonging to the user with the given workspace."
@@ -38,7 +38,7 @@
   (list-public-apps-by-user
    workspace
    (workspace-favorites-app-group-index)
-   (.getEmail current-user)
+   (:email current-user)
    params))
 
 (def ^:private virtual-group-fns
@@ -56,7 +56,7 @@
     (let [virtual-groups (format-virtual-groups workspace-id)
           actual-count   (count-apps-in-group-for-user
                            (:id group)
-                           (.getEmail current-user))]
+                           (:email current-user))]
       (-> group
           (update-in [:groups] concat virtual-groups)
           (assoc :template_count actual-count)))))
@@ -75,7 +75,7 @@
 (defn get-only-app-groups
   "Retrieves the list of app groups that are visible to a user."
   ([]
-     (-> (.getUsername current-user)
+     (-> (:username current-user)
          (get-or-create-workspace)
          (:id)
          (get-only-app-groups)))
@@ -169,7 +169,7 @@
   "Counts the number of apps in an app group, including virtual app groups that may be included."
   [{root-group-hid :root_analysis_group_id} {:keys [hid id] :as app-group}]
   (if (= root-group-hid hid)
-    (count-apps-in-group-for-user id (.getEmail current-user))
+    (count-apps-in-group-for-user id (:email current-user))
     (count-apps-in-group-for-user id)))
 
 (defn- get-apps-in-group
@@ -177,7 +177,7 @@
   [{root-group-hid :root_analysis_group_id :as workspace} {:keys [hid id]} params]
   (let [faves-index (workspace-favorites-app-group-index)]
     (if (= root-group-hid hid)
-      (get-apps-in-group-for-user id workspace faves-index params (.getEmail current-user))
+      (get-apps-in-group-for-user id workspace faves-index params (:email current-user))
       (get-apps-in-group-for-user id workspace faves-index params))))
 
 (defn- list-apps-in-real-group
@@ -196,7 +196,7 @@
   "This service lists all of the apps in an app group and all of its
    descendents."
   [app-group-id params]
-  (let [workspace (get-or-create-workspace (.getUsername current-user))]
+  (let [workspace (get-or-create-workspace (:username current-user))]
     (cheshire/encode
      (or (list-apps-in-virtual-group workspace app-group-id params)
          (list-apps-in-real-group workspace app-group-id params)))))
@@ -206,7 +206,7 @@
    groups, based on a search term."
   [params]
   (let [search_term (curl/url-decode (:search params))
-        workspace (get-or-create-workspace (.getUsername current-user))
+        workspace (get-or-create-workspace (:username current-user))
         total (count-search-apps-for-user search_term (:id workspace))
         search_results (search-apps-for-user
                         search_term

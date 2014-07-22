@@ -118,13 +118,13 @@
        (throw+ '("replace-reference-genomes" (slurp body))))
 
   (PUT "/tool-request" [:as {body :body}]
-       (submit-tool-request (.getUsername current-user) body))
+       (submit-tool-request (:username current-user) body))
 
   (POST "/tool-request" [:as {body :body}]
-        (update-tool-request (config/uid-domain) (.getUsername current-user) body))
+        (update-tool-request (config/uid-domain) (:username current-user) body))
 
   (GET "/tool-requests" [:as {:keys [params]}]
-       (list-tool-requests (assoc params :username (.getUsername current-user))))
+       (list-tool-requests (assoc params :username (:username current-user))))
 
   (route/not-found (unrecognized-path-response)))
 

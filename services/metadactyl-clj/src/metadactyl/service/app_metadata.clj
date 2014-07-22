@@ -41,12 +41,12 @@
   (when (empty? (:analysis_ids req))
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "no analysis identifiers provided"}))
-  (when (and (nil? (.getUsername current-user)) (not (:root_deletion_request req)))
+  (when (and (nil? (:username current-user)) (not (:root_deletion_request req)))
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "no username provided for non-root deletion request"}))
   (dorun (map validate-app-existence (:analysis_ids req)))
   (when-not (:root_deletion_request req)
-    (dorun (map (partial validate-app-ownership (.getUsername current-user)) (:analysis_ids req)))))
+    (dorun (map (partial validate-app-ownership (:username current-user)) (:analysis_ids req)))))
 
 (defn permanently-delete-apps
   "This service removes apps from the database rather than merely marking them as deleted."
