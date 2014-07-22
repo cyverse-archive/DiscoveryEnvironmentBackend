@@ -9,12 +9,13 @@
         [metadactyl.beans]
         [metadactyl.collaborators]
         [metadactyl.kormadb]
-        [metadactyl.metadactyl]
+        [metadactyl.metadata.element-listings :only [list-elements]]
         [metadactyl.metadata.tool-requests]
-        [metadactyl.user :only [current-user]]
+        [metadactyl.user :only [current-user store-current-user]]
         [metadactyl.util.service]
         [metadactyl.zoidberg]
-        [ring.middleware keyword-params nested-params])
+        [ring.middleware keyword-params nested-params]
+        [slingshot.slingshot :only [throw+]])
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
             [clojure.tools.logging :as log]
@@ -27,25 +28,25 @@
 
 (defroutes secured-routes
   (GET "/bootstrap" [:as {params :params headers :headers}]
-       (ce/trap "bootstrap" #(bootstrap (:ip-address params) (headers "user-agent"))))
+       (ce/trap "bootstrap" #(throw+ '("bootstrap" (:ip-address params) (headers "user-agent")))))
 
   (GET "/logout" [:as {params :params}]
-       (ce/trap "logout" #(logout params)))
+       (ce/trap "logout" #(throw+ '("logout" params))))
 
   (GET "/template/:app-id" [app-id]
-       (get-app app-id))
+       (throw+ '("get-app" app-id)))
 
   (GET "/app/:app-id" [app-id]
-       (ce/trap "app" #(get-app-new-format app-id)))
+       (ce/trap "app" #(throw+ '("get-app-new-format" app-id))))
 
   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
-       (run-experiment body workspace-id))
+       (throw+ '("run-experiment" body workspace-id)))
 
   (POST "/rate-analysis" [:as {body :body}]
-        (rate-app body))
+        (throw+ '("rate-app" body)))
 
   (POST "/delete-rating" [:as {body :body}]
-        (delete-rating body))
+        (throw+ '("delete-rating" body)))
 
   (GET "/search-analyses" [:as {params :params}]
        (search-apps params))
@@ -58,37 +59,37 @@
        (list-apps-in-group app-group-id params))
 
   (GET "/get-components-in-analysis/:app-id" [app-id]
-       (list-deployed-components-in-app app-id))
+       (throw+ '("list-deployed-components-in-app" app-id)))
 
   (POST "/update-favorites" [:as {body :body}]
-        (update-favorites body))
+        (throw+ '("update-favorites" body)))
 
   (GET "/edit-template/:app-id" [app-id]
-       (edit-app app-id))
+       (throw+ '("edit-app" app-id)))
 
   (GET "/edit-app/:app-id" [app-id]
-       (edit-app-new-format app-id))
+       (throw+ '("edit-app-new-format" app-id)))
 
   (GET "/edit-workflow/:app-id" [app-id]
        (edit-workflow app-id))
 
   (GET "/copy-template/:app-id" [app-id]
-       (copy-app app-id))
+       (throw+ '("copy-app" app-id)))
 
   (GET "/copy-workflow/:app-id" [app-id]
        (copy-workflow app-id))
 
   (PUT "/update-template" [:as {body :body}]
-       (trap #(update-template-secured body)))
+       (trap #(throw+ '("update-template-secured" body))))
 
   (PUT "/update-app" [:as {body :body}]
-       (ce/trap "update-app" #(update-app-secured body)))
+       (ce/trap "update-app" #(throw+ '("update-app-secured" body))))
 
   (POST "/update-workflow" [:as {body :body}]
-        (trap #(update-workflow body)))
+        (trap #(throw+ '("update-workflow" body))))
 
   (POST "/make-analysis-public" [:as {body :body}]
-        (trap #(make-app-public body)))
+        (trap #(throw+ '("make-app-public" body))))
 
   (GET "/is-publishable/:app-id" [app-id]
        (ce/trap "is-publishable"
@@ -110,10 +111,10 @@
         (remove-collaborators params (slurp body)))
 
   (GET "/reference-genomes" []
-       (list-reference-genomes))
+       (throw+ '("list-reference-genomes")))
 
   (PUT "/reference-genomes" [:as {body :body}]
-       (replace-reference-genomes (slurp body)))
+       (throw+ '("replace-reference-genomes" (slurp body))))
 
   (PUT "/tool-request" [:as {body :body}]
        (submit-tool-request (.getUsername current-user) body))
@@ -131,37 +132,37 @@
        "Welcome to Metadactyl!\n")
 
   (GET "/get-workflow-elements/:element-type" [element-type :as {params :params}]
-       (trap #(get-workflow-elements element-type params)))
+       (trap #(success-response (list-elements element-type params))))
 
   (GET "/search-deployed-components/:search-term" [search-term]
-       (trap #(search-deployed-components search-term)))
+       (trap #(throw+ '("search-deployed-components" search-term))))
 
   (GET "/get-all-analysis-ids" []
        (trap #(get-all-app-ids)))
 
   (POST "/delete-categories" [:as {body :body}]
-        (trap #(delete-categories body)))
+        (trap #(throw+ '("delete-categories" body))))
 
   (GET "/validate-analysis-for-pipelines/:app-id" [app-id]
-       (trap #(validate-app-for-pipelines app-id)))
+       (trap #(throw+ '("validate-app-for-pipelines" app-id))))
 
   (GET "/apps/:app-id/data-objects" [app-id]
-       (trap #(get-data-objects-for-app app-id)))
+       (trap #(throw+ '("get-data-objects-for-app" app-id))))
 
   (POST "/categorize-analyses" [:as {body :body}]
         (trap #(categorize-apps body)))
 
   (GET "/get-analysis-categories/:category-set" [category-set]
-       (trap #(get-app-categories category-set)))
+       (trap #(throw+ '("get-app-categories" category-set))))
 
   (POST "/can-export-analysis" [:as {body :body}]
-        (trap #(can-export-app body)))
+        (trap #(throw+ '("can-export-app" body))))
 
   (POST "/add-analysis-to-group" [:as {body :body}]
-        (trap #(add-app-to-group body)))
+        (trap #(throw+ '("add-app-to-group" body))))
 
   (GET "/get-analysis/:app-id" [app-id]
-       (trap #(get-app app-id)))
+       (trap #(throw+ '("get-app" app-id))))
 
   (GET "/analysis-details/:app-id" [app-id]
        (trap #(get-app-details app-id)))
@@ -170,55 +171,55 @@
        (trap #(get-public-app-groups)))
 
   (GET "/list-analysis/:app-id" [app-id]
-       (list-app app-id))
+       (throw+ '("list-app" app-id)))
 
   (GET "/export-template/:template-id" [template-id]
-       (trap #(export-template template-id)))
+       (trap #(throw+ '("export-template" template-id))))
 
   (GET "/export-workflow/:app-id" [app-id]
-       (trap #(export-workflow app-id)))
+       (trap #(throw+ '("export-workflow" app-id))))
 
   (POST "/export-deployed-components" [:as {body :body}]
-        (trap #(export-deployed-components body)))
+        (trap #(throw+ '("export-deployed-components" body))))
 
   (POST "/preview-template" [:as {body :body}]
-        (trap #(preview-template body)))
+        (trap #(throw+ '("preview-template" body))))
 
   (POST "/preview-workflow" [:as {body :body}]
-        (trap #(preview-workflow body)))
+        (trap #(throw+ '("preview-workflow" body))))
 
   (POST "/update-template" [:as {body :body}]
-        (trap #(update-template body)))
+        (trap #(throw+ '("update-template" body))))
 
   (POST "/force-update-workflow" [:as {body :body params :params}]
-        (trap #(force-update-workflow body params)))
+        (trap #(throw+ '("force-update-workflow" body params))))
 
   (POST "/update-workflow" [:as {body :body}]
-        (trap #(update-workflow body)))
+        (trap #(throw+ '("update-workflow" body))))
 
   (POST "/import-template" [:as {body :body}]
-        (trap #(import-template body)))
+        (trap #(throw+ '("import-template" body))))
 
   (POST "/import-workflow" [:as {body :body}]
-        (trap #(import-workflow body)))
+        (trap #(throw+ '("import-workflow" body))))
 
   (POST "/import-tools" [:as {body :body}]
-        (trap #(import-tools body)))
+        (trap #(throw+ '("import-tools" body))))
 
   (POST "/update-analysis" [:as {body :body}]
-        (trap #(update-app body)))
+        (trap #(throw+ '("update-app" body))))
 
   (POST "/update-app-labels" [:as {body :body}]
         (ce/trap "update-app-labels" #(app-metadata/relabel-app body)))
 
   (GET "/get-property-values/:job-id" [job-id]
-       (trap #(get-property-values job-id)))
+       (trap #(throw+ '("get-property-values" job-id))))
 
   (GET "/analysis-rerun-info/:job-id" [job-id]
-       (trap #(get-app-rerun-info job-id)))
+       (trap #(throw+ '("get-app-rerun-info" job-id))))
 
   (GET "/app-rerun-info/:job-id" [job-id]
-       (trap #(get-new-app-rerun-info job-id)))
+       (trap #(throw+ '("get-new-app-rerun-info" job-id))))
 
   (GET "/get-app-description/:app-id" [app-id]
        (trap #(get-app-description app-id)))

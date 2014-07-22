@@ -4,12 +4,7 @@
         [kameleon.core]
         [kameleon.entities]
         [kameleon.queries :only [property-types-for-tool-type]])
-  (:require [clojure.string :as string])
-  (:import [org.iplantc.persistence.dto.components DeployedComponent]
-           [org.iplantc.workflow MissingDeployedComponentException
-            UnknownDeployedComponentException]
-           [org.iplantc.workflow.integration.validation
-            UnsupportedPropertyTypeException]))
+  (:require [clojure.string :as string]))
 
 (defn- get-tool-type-from-database
   "Gets the tool type for the deployed component with the given identifier from
@@ -27,12 +22,13 @@
   (first (select deployed_components
                  (where {:id component-id}))))
 
+;; FIXME
 (defn- get-tool-type-from-registry
   "Gets the tool type for the deployed component with the given identifier from
    the given registry."
   [registry component-id]
   (when-not (nil? registry)
-    (let [components (.getRegisteredObjects registry DeployedComponent)
+    (let [components (throw+ "Reimplement: (.getRegisteredObjects registry DeployedComponent)")
           component  (first (filter #(= component-id (.getId %)) components))
           tool-type  (when-not (nil? component) (.getToolType component))]
       (when-not (nil? tool-type)
@@ -50,24 +46,26 @@
   [{tool-type-id :id}]
   (map :name (property-types-for-tool-type tool-type-id)))
 
+;; FIXME
 (defn validate-template-property-types
   "Validates the property types in a template that is being imported."
   [template registry]
   (when-let [tool-type (get-tool-type registry (.getComponent template))]
     (let [valid-ptypes (into #{} (get-valid-ptype-names tool-type))
           properties   (mapcat #(.getProperties %) (.getPropertyGroups template))]
-      (dorun (map #(throw (UnsupportedPropertyTypeException. % (:name tool-type)))
+      (dorun (map #(throw+ {:type ::UnsupportedPropertyTypeException :property-type % :name (:name tool-type)})
                   (filter #(nil? (valid-ptypes %))
                           (map #(.getPropertyTypeName %) properties)))))))
 
+;; FIXME
 (defn validate-template-deployed-component
   "Validates a deployed component that is associated with a template."
   [template]
   (let [component-id (.getComponent template)]
    (when (string/blank? component-id)
-     (throw (MissingDeployedComponentException. (.getId template))))
+     (throw+ {:type ::MissingDeployedComponentException :template-id (.getId template)}))
    (when (nil? (get-deployed-component-from-database component-id))
-     (throw (UnknownDeployedComponentException. component-id)))))
+     (throw+ {:type ::UnknownDeployedComponentException :component-id component-id}))))
 
 (defn- template-ids-for-app
   "Get the list of template IDs associated with an app."

@@ -2,7 +2,6 @@
   (:use [korma.core]
         [kameleon.core]
         [kameleon.entities]
-        [metadactyl.metadactyl :only [update-workflow-from-json]]
         [metadactyl.user :only [current-user]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
@@ -249,13 +248,14 @@
     (cheshire/encode {:analyses [analysis]
                       :templates templates})))
 
+;; FIXME
 (defn copy-workflow
   "This service makes a copy of a workflow available in Tito for editing."
   [app-id]
   (let [analysis (get-analysis app-id)
         analysis (convert-analysis-to-copy analysis)
         workflow-json (cheshire/encode {:analyses [analysis]})
-        update-response (update-workflow-from-json workflow-json)
+        update-response (throw+ '("update-workflow-from-json" workflow-json))
         workflow-copy (cheshire/decode update-response true)
         analysis-id (first (:analyses workflow-copy))]
     (edit-workflow analysis-id)))
