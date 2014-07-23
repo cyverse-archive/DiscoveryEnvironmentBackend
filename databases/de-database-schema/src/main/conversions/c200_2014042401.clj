@@ -313,6 +313,18 @@
   (println "\t* adding rating_listing view...")
   (load-sql-file "views/05_rating_listing.sql"))
 
+(defn- reload-functions
+  []
+  (println "\t* adding app_category_hierarchy_ids function...")
+  (exec-raw "DROP FUNCTION IF EXISTS app_group_hierarchy_ids(bigint)")
+  (load-sql-file "functions/01_app_category_hierarchy_ids.sql")
+  (println "\t* reloading app_count function...")
+  (exec-raw "DROP FUNCTION IF EXISTS app_count(bigint)")
+  (load-sql-file "functions/02_app_count.sql")
+  (println "\t* adding app_category_hierarchy function...")
+  (exec-raw "DROP FUNCTION IF EXISTS analysis_group_hierarchy(bigint)")
+  (load-sql-file "functions/03_app_category_hierarchy.sql"))
+
 (defn convert
   "Performs the database conversion."
   []
@@ -324,4 +336,5 @@
   (drop-all-constraints)
   (drop-obsolete-tables)
   (re-add-constraints)
-  (add-new-views))
+  (add-new-views)
+  (reload-functions))
