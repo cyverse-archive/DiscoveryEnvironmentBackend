@@ -15,10 +15,10 @@
 
 (defn- get-all-group-ids-subselect
   "Gets a subselect that fetches the template_group and its subgroup IDs with
-   the stored procedure APP_GROUP_HIERARCHY_IDS."
+   the stored procedure app_category_hierarchy_ids."
   [app_group_id]
   (subselect
-    (sqlfn :app_group_hierarchy_ids
+    (sqlfn :app_category_hierarchy_ids
            (get-group-hid-subselect app_group_id))))
 
 (defn- get-fav-group-id-subselect
@@ -177,10 +177,10 @@
 (defn- get-public-group-ids-subselect
   "Gets a subselect that fetches the workspace template_group ID, public root
    group IDs, and their subgroup IDs with the stored procedure
-   APP_GROUP_HIERARCHY_IDS."
+   app_category_hierarchy_ids."
   [workspace_id]
   (let [root_app_ids (get-visible-root-app-group-ids workspace_id)
-        select-ids-fn #(str "SELECT * FROM APP_GROUP_HIERARCHY_IDS(" % ")")
+        select-ids-fn #(str "SELECT * FROM app_category_hierarchy_ids(" % ")")
         union_select_ids (str/join
                            " UNION "
                            (map select-ids-fn root_app_ids))]

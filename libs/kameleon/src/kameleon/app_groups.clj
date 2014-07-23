@@ -12,7 +12,7 @@
 (defn get-app-group-hierarchy
   "Gets the app group hierarchy rooted at the node with the given identifier."
   [root-id]
-  (select (sqlfn :analysis_group_hierarchy root-id)))
+  (select (sqlfn :app_category_hierarchy root-id)))
 
 (defn- get-root-app-group-ids
   "Gets the internal identifiers for all app groups associated with workspaces
