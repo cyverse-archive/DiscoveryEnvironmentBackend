@@ -30,6 +30,7 @@
         xsd-type (first (filter (partial re-matches #"xs:.*") ontology))
         regex    (get-in param [:value :validator]) ]
     (cond
-     (= type "number") (number-type-for xsd-type)
-     (= type "string") (string-type-for xsd-type)
-     (= type "bool")   "Flag")))
+     (= type "number")       (number-type-for xsd-type)
+     (= type "string")       (string-type-for xsd-type)
+     (#{"bool" "flag"} type) "Flag"
+     :else                   "Text")))
