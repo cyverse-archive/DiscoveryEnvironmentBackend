@@ -6,7 +6,8 @@
             [clj-jargon.permissions :as perms]
             [clj-jargon.paging :as paging]
             [taoensso.timbre :as timbre]
-            [common-cfg.cfg :as cfg]))
+            [common-cfg.cfg :as cfg]
+            [clojure.string :as string]))
 
 (timbre/refer-timbre)
 
@@ -29,6 +30,74 @@
 
 (def range-regex #"\s*(bytes)\s*=\s*([0-9]+)\s*\-\s*([0-9]+)\s*$")
 (def unbound-range-regex #"\s*(bytes)\s*=\s*([0-9]+)\s*\-\s*$")
+
+(defn contains-bytes-string?
+  "Returns true if the header starts with 'bytes'."
+  [header]
+  (let [trimmed-header (string/trim header)]
+    (.startsWith trimmed-header "bytes")))
+
+(defn trim-equals
+  "Returns a string with the leading equals sign trimmed off. The
+   entire header is trimmed of leading and trailing whitespace as a result."
+  [header]
+  (let [trimmed-header (string/trim header)]
+    (if (.startsWith trimmed-header "=")
+      (string/replace-first trimmed-header "=" "")
+      trimmed-header)))
+
+(defn multiple-ranges?
+  "Returns true if the header field specifies multiple ranges."
+  [header]
+  (not= (.indexOf header ",") -1))
+
+(defn extract-byte-ranges
+  "Returns a vector of tuples."
+  [header]
+  (re-seq #"[0-9]*\s*-\s*[0-9]*" header))
+
+(defn categorize-ranges
+  "Categorize ranges based on whether they're a bounded range, an unbounded
+   range, or a single byte request. The return value will be in the format:
+       {
+           :range \"rangestring\"
+           :kind \"kind string\"
+       }
+   Values for :kind can be 'bounded', 'unbounded', or 'byte'."
+  [ranges]
+  (let [mapify     (fn [range kind] {:range range :kind kind})
+        bounded?   (fn [range] (re-seq #"[0-9]+\s*-\s*[0-9]+" range))
+        unbounded? (fn [range] (re-seq #"[0-9]+\s*-\s*" range))
+        end-byte?  (fn [range] (re-seq #"\s*-\s*[0-9]+" range))
+        range-kind (fn [range]
+                     (cond
+                      (bounded? range)   "bounded"
+                      (unbounded? range) "unbounded"
+                      (end-byte? range)  "byte"
+                      :else              "unknown"))]
+    (map #(mapify %1 (range-kind %1)) ranges)))
+
+(defn parse-ranges
+  "Parses ranges based on type. A range of type will have an :lower and :upper field added,
+   a range of type unbounded will have a :lower field and no :upper field. A field of :byte
+   will have a :lower and :upper bound that is set to the same value. An unknown range will
+   not have any fields added.
+
+   The input should be a seq of maps returned by (categorize-ranges)."
+  [ranges]
+  (let [upper          (fn [range] (last (re-seq #"[0-9]+" (:range range))))
+        lower          (fn [range] (first (re-seq #"[0-9]+" (:range range))))
+        extract-byte   (fn [range] (first (re-seq #"\s*-\s*[0-9]+" (:range range))))          
+        bounded-type   (fn [range] (assoc range :upper (upper range) :lower (lower range)))
+        unbounded-type (fn [range] (assoc range :lower (lower range)))
+        byte-type      (fn [range] (assoc range :upper (extract-byte range) :lower (extract-byte range)))
+        delegate       (fn [range]
+                         (case (:kind range)
+                           "bounded"   (bounded-type range)
+                           "unbounded" (unbounded-type range)
+                           "byte"      (byte-type range)
+                           range))]
+    (map delegate ranges)))
 
 (defn valid-range?
   [req]
