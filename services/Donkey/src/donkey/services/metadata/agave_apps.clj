@@ -11,6 +11,7 @@
             [clojure-commons.error-codes :as ce]
             [donkey.clients.notifications :as dn]
             [donkey.persistence.jobs :as jp]
+            [donkey.services.metadata.util :as mu]
             [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.util.time :as time-utils]
@@ -18,10 +19,9 @@
   (:import [java.util UUID]))
 
 (defn load-app-details
-  [agave app-ids]
+  [agave]
   (->> (.listApps agave)
        (:templates)
-       (filter (comp (set app-ids) :id))
        (map (juxt :id identity))
        (into {})))
 
@@ -39,7 +39,7 @@
       (db/now)))
 
 (defn- store-agave-job
-  [job-id job]
+  [job-id job submission]
   (jp/save-job {:id                 job-id
                 :job-name           (:name job)
                 :description        (:description job)
@@ -50,7 +50,8 @@
                 :result-folder-path (:resultfolderid job)
                 :start-date         (determine-start-time job)
                 :username           (:username current-user)
-                :status             (:status job)}))
+                :status             (:status job)}
+               submission))
 
 (defn- store-job-step
   [job-id job]
@@ -69,10 +70,13 @@
 
 (defn submit-agave-job
   [agave-client submission]
-  (let [id     (UUID/randomUUID)
-        cb-url (build-callback-url id)
-        job    (.submitJob agave-client (assoc submission :callbackUrl cb-url))]
-    (store-agave-job id job)
+  (let [id         (UUID/randomUUID)
+        cb-url     (build-callback-url id)
+        output-dir (mu/build-result-folder-path submission)
+        job        (.submitJob agave-client
+                               (assoc (mu/update-submission-result-folder submission output-dir)
+                                 :callbackUrl cb-url))]
+    (store-agave-job id job submission)
     (store-job-step id job)
     (dn/send-agave-job-status-update (:shortUsername current-user) (assoc job :id id))
     {:id         (str id)
@@ -80,18 +84,16 @@
      :status     (:status job)
      :start-date (time-utils/millis-from-str (str (:startdate job)))}))
 
+(defn submit-job-step
+  [agave-client job-info job-step submission]
+  (let [cb-url (build-callback-url (:id job-info))]
+     (:id (.submitJob agave-client (assoc submission :callbackUrl cb-url)))))
+
 (defn- determine-display-timestamp
   [k job state]
   (cond (not (string/blank? (k state))) (k state)
         (not (nil? (k job)))            (str (.getTime (k job)))
         :else                           "0"))
-
-(defn format-agave-job
-  [agave-apps {app-id :analysis_id :as job}]
-  (assoc job
-    :startdate    (str (or (db/millis-from-timestamp (:startdate job)) 0))
-    :enddate      (str (or (db/millis-from-timestamp (:enddate job)) 0))
-    :app_disabled (get-in agave-apps [app-id :disabled] true)))
 
 (defn load-agave-job-states
   [agave agave-jobs]
@@ -139,8 +141,8 @@
   (let [prev-status  (:status job)
         job-status   (get-job-status step-number max-step-number prev-status status)
         end-time     (when (is-complete? job-status) end-time)
-        end-millis   (when-not (nil? end-time) (str (.getTime end-time)))
-        start-millis (when-not (nil? startdate) (str (.getTime startdate)))]
+        end-millis   (db/timestamp-str end-time)
+        start-millis (db/timestamp-str startdate)]
     (when-not (= job-status prev-status)
       (jp/update-job (:id job) job-status end-time)
       (dn/send-agave-job-status-update username (assoc job
@@ -156,31 +158,18 @@
     (update-job-step-status job-step status end-time)
     (update-job-status username job job-step max-step-number status end-time)))
 
-(defn- agave-job-status-changed
-  [job curr-state]
-  (or (nil? curr-state)
-      (not= (:status job) (:status curr-state))
-      ((complement string/blank?) (:enddate curr-state))))
-
+;; TODO: reimplement me.
 (defn sync-agave-job-status
-  [agave job]
-  (let [curr-state (get-agave-job agave (:external_id job) (constantly nil))]
-    (when (agave-job-status-changed job curr-state)
-      (jp/update-job
-       (:id job)
-       {:status     (:status curr-state)
-        :start-date (db/timestamp-from-str (str (:startdate curr-state)))
-        :end-date   (db/timestamp-from-str (str (:enddate curr-state)))
-        :deleted    (nil? curr-state)}))))
+  [agave job])
 
 (defn get-agave-app-rerun-info
-  [agave job-id]
-  (let [external-id (:external_id (jp/get-job-by-id job-id))]
+  [agave job]
+  (let [external-id (:external_id job)]
     (service/assert-found (.getAppRerunInfo agave external-id) "HPC job" external-id)))
 
 (defn get-agave-job-params
-  [agave job-id]
-  (let [external-id (:external_id (jp/get-job-by-id job-id))]
+  [agave job]
+  (let [external-id (:external_id job)]
     (service/assert-found (.getJobParams agave external-id) "HPC job" external-id)))
 
 (defn search-apps

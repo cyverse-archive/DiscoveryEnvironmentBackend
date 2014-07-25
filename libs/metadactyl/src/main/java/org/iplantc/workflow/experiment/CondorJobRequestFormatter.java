@@ -111,7 +111,12 @@ public class CondorJobRequestFormatter implements JobRequestFormatter {
 
         JSONArray stepArray = new JSONArray();
 
-        for (TransformationStep currentStep : steps) {
+        int startingStep = experiment.optInt("starting_step", 1) - 1;
+        for (int stepNumber = startingStep; stepNumber < steps.size(); stepNumber++) {
+            TransformationStep currentStep = steps.get(stepNumber);
+            if (currentStep.getTemplateId() == null) {
+                break;
+            }
             JSONObject step1 = new JSONObject();
 
             stderrFilename = null;

@@ -117,11 +117,19 @@ public class FapiJobRequestFormatter implements JobRequestFormatter {
     private Object formatSteps(TransformationActivity analysis) {
         JSONArray steps = new JSONArray();
         Map<String, List<String>> propertyValues = new HashMap<String, List<String>>();
-        for (TransformationStep step : analysis.getSteps()) {
+        int startingStep = experiment.optInt("startingStep", 1) - 1;
+
+        for (int stepNumber = startingStep; stepNumber < analysis.getSteps().size(); stepNumber++) {
+            TransformationStep step = analysis.getSteps().get(stepNumber);
+            if (step.getTemplateId() == null) {
+                break;
+            }
+
             FapiStepFormatter formatter = new FapiStepFormatter(daoFactory, JOB_TYPE, userDetails.getShortUsername(),
                     experiment, analysis, step, propertyValues, irodsHome);
             steps.add(formatter.formatStep());
         }
+
         return steps;
     }
 

@@ -27,6 +27,7 @@ CREATE VIEW app_listing AS
            ) AS is_public,
            COUNT(steps.*) AS step_count,
            COUNT(t.tool_id) AS tool_count,
+           COUNT(t.id) AS template_count,
            apps.deleted,
            apps.disabled,
            CASE WHEN COUNT(DISTINCT tt.name) = 0 THEN 'unknown'

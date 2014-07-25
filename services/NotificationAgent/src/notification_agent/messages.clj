@@ -32,13 +32,13 @@
    DE expects."
   [uuid state & {:keys [seen deleted] :or {seen false deleted false}}]
   (-> state
-    (assoc-in [:message :id] uuid)
-    (opt-update-in [:message :timestamp] fix-timestamp)
-    (opt-update-in [:payload :startdate] fix-timestamp)
-    (opt-update-in [:payload :enddate] fix-timestamp)
-    (dissoc :email_request)
-    (assoc :seen seen :deleted deleted)
-    (assoc :type (string/replace (or (:type state) "") #"_" " "))))
+      (assoc-in [:message :id] uuid)
+      (opt-update-in [:message :timestamp] fix-timestamp)
+      (opt-update-in [:payload :startdate] fix-timestamp)
+      (opt-update-in [:payload :enddate] fix-timestamp)
+      (dissoc :email_request)
+      (assoc :seen seen :deleted deleted)
+      (assoc :type (string/replace (or (:type state) "") #"_" " "))))
 
 (defn- send-email-request
   "Sends an e-mail request to the iPlant e-mail service."
@@ -66,12 +66,15 @@
     (catch IOException e
       (log/error e "unable to send message to" url))))
 
-(defn- send-msg
+(defn send-msg
   "Forwards a message to zero or more recipients."
-  [msg]
-  (let [recipients (notification-recipients)]
-    (log/debug "forwarding message to" (count recipients) "recipients")
-    (dorun (map #(send-msg-to-recipient % msg) recipients))))
+  ([uuid msg]
+     (let [recipients (notification-recipients)
+           msg        (cheshire/encode (reformat-message uuid msg))]
+       (log/debug "forwarding message to" (count recipients) "recipients")
+       (dorun (map #(send-msg-to-recipient % msg) recipients))))
+  ([msg]
+     (send-msg nil msg)))
 
 (defn persist-and-send-msg
   "Persists a message in the OSM and sends it to any receivers and returns
@@ -82,7 +85,7 @@
     (log/debug "UUID of persisted message:" uuid)
     (when-not (nil? email-request)
       (send-email-request uuid email-request))
-    (send-msg (cheshire/encode (reformat-message uuid msg)))))
+    (send-msg uuid msg)))
 
 (defn- optional-insert-system-args
   [msg]

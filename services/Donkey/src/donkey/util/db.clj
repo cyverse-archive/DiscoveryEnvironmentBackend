@@ -54,3 +54,9 @@
   "Returns a timestamp representing the current date and time."
   []
   (Timestamp. (System/currentTimeMillis)))
+
+(defn timestamp-str
+  "Returns a string containing the number of milliseconds since the epoch for a timestamp."
+  [timestamp]
+  (when-not (nil? timestamp)
+    (str (.getTime timestamp))))

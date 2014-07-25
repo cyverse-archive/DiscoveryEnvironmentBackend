@@ -6,6 +6,8 @@
             [donkey.clients.osm :as osm]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
+            [donkey.services.metadata.property-values :as property-values]
+            [donkey.services.metadata.util :as mu]
             [donkey.util.db :as db]
             [donkey.util.time :as time-utils])
   (:import [java.util UUID]))
@@ -13,12 +15,12 @@
 (defn- get-end-date
   [{:keys [status completion_date now_date]}]
   (case status
-    "Failed"    (db/timestamp-from-str now_date)
-    "Completed" (db/timestamp-from-str completion_date)
+    mu/failed-status    (db/timestamp-from-str now_date)
+    mu/completed-status (db/timestamp-from-str completion_date)
     nil))
 
 (defn- store-submitted-de-job
-  [job-id job]
+  [job-id job submission]
   (jp/save-job {:id                 job-id
                 :job-name           (:name job)
                 :description        (:description job)
@@ -46,20 +48,18 @@
   (let [job-id     (UUID/randomUUID)
         submission (assoc submission :uuid (str job-id))
         job        (metadactyl/submit-job workspace-id submission)]
-    (store-submitted-de-job job-id job)
+    (store-submitted-de-job job-id job submission)
     (store-job-step job-id job)
     {:id         (str job-id)
      :name       (:name job)
      :status     (:status job)
      :start-date (time-utils/millis-from-str (str (:startdate job)))}))
 
-(defn format-de-job
-  [de-apps job]
-  (let [app (de-apps (:analysis_id job) {})]
-    (assoc job
-      :startdate    (str (or (db/millis-from-timestamp (:startdate job)) 0))
-      :enddate      (str (or (db/millis-from-timestamp (:enddate job)) 0))
-      :app_disabled (:disabled app false))))
+(defn submit-job-step
+  [workspace-id job-info job-step submission]
+  (->> (assoc submission :uuid (str (:id job-info)))
+       (metadactyl/submit-job workspace-id)
+       (:id)))
 
 (defn load-de-job-states
   [de-jobs]
@@ -74,35 +74,15 @@
   (into {} (map (juxt :id identity)
                 (ap/load-app-details ids))))
 
-(defn list-de-jobs
-  [limit offset sort-field sort-order filter]
-  (let [user    (:username current-user)
-        jobs    (jp/list-de-jobs user limit offset sort-field sort-order filter)
-        de-apps (load-app-details (map :analysis_id jobs))]
-    (mapv (partial format-de-job de-apps) jobs)))
-
-(defn- de-job-status-changed
-  [job curr-state]
-  (or (not= (:status job) (:status curr-state))
-      ((complement nil?) (get-end-date curr-state))
-      (:deleted curr-state)))
-
+;; TODO: implement me
 (defn sync-de-job-status
-  [job]
-  (let [curr-state (first (osm/get-jobs [(:external_id job)]))]
-    (if-not (nil? curr-state)
-      (when (de-job-status-changed job curr-state)
-        (jp/update-job
-         (:id job)
-         {:status   (:status curr-state)
-          :end-date (get-end-date curr-state)
-          :deleted  (:deleted curr-state false)}))
-      (jp/update-job (:id job) {:deleted true}))))
+  [job])
 
-(defn get-de-job-params
-  [job-id]
-  (metadactyl/get-property-values job-id))
-
-(defn get-de-app-rerun-info
-  [job-id]
-  (metadactyl/get-app-rerun-info job-id))
+(defn update-job-status
+  "Updates the status of a job. If this function is called then Agave jobs are disabled, so
+   there will always be only one job step."
+  [username job job-step status end-time]
+  (when-not (= (:status job-step) status)
+    (jp/update-job-step (:id job) (:external-id job-step) status end-time)
+    (jp/update-job (:id job) status end-time)
+    (mu/send-job-status-notification job job-step status end-time)))

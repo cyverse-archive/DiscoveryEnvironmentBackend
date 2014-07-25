@@ -24,13 +24,13 @@
 
 (defn- format-my-public-apps-group
   "Formats the virtual group for the user's public apps."
-  [workspace-id]
+  [workspace-id params]
   {:id             :my-public-apps
    :name           "My public apps"
    :description    ""
    :workspace_id   workspace-id
    :is_public      false
-   :template_count (count-public-apps-by-user (:email current-user))})
+   :template_count (count-public-apps-by-user (:email current-user) params)})
 
 (defn list-my-public-apps
   "Lists the public apps belonging to the user with the given workspace."
@@ -47,16 +47,17 @@
 
 (defn- format-virtual-groups
   "Formats any virtual groups that should appear in a user's workspace."
-  [workspace-id]
-  (map (fn [[_ {f :format-group}]] (f workspace-id)) virtual-group-fns))
+  [workspace-id params]
+  (map (fn [[_ {f :format-group}]] (f workspace-id params)) virtual-group-fns))
 
 (defn- add-virtual-groups
-  [group workspace-id]
+  [group workspace-id params]
   (if current-user
-    (let [virtual-groups (format-virtual-groups workspace-id)
+    (let [virtual-groups (format-virtual-groups workspace-id params)
           actual-count   (count-apps-in-group-for-user
                            (:id group)
-                           (:email current-user))]
+                           (:email current-user)
+                           params)]
       (-> group
           (update-in [:groups] concat virtual-groups)
           (assoc :template_count actual-count)))))
@@ -64,30 +65,30 @@
 (defn- format-app-group-hierarchy
   "Formats the app group hierarchy rooted at the app group with the given
    identifier."
-  [user-workspace-id {root-id :root_analysis_group_id workspace-id :id}]
-  (let [groups (get-app-group-hierarchy root-id)
+  [user-workspace-id params {root-id :root_analysis_group_id workspace-id :id}]
+  (let [groups (get-app-group-hierarchy root-id params)
         root   (first (filter #(= root-id (:hid %)) groups))
         result (add-subgroups root groups)]
     (if (= user-workspace-id workspace-id)
-      (add-virtual-groups result workspace-id)
+      (add-virtual-groups result workspace-id params)
       result)))
 
 (defn get-only-app-groups
   "Retrieves the list of app groups that are visible to a user."
-  ([]
+  ([params]
      (-> (:username current-user)
          (get-or-create-workspace)
          (:id)
-         (get-only-app-groups)))
-  ([workspace-id]
-     (let [workspaces   (get-visible-workspaces workspace-id)]
+         (get-only-app-groups params)))
+  ([workspace-id params]
+     (let [workspaces (get-visible-workspaces workspace-id)]
        (cheshire/encode
-        {:groups (map (partial format-app-group-hierarchy workspace-id) workspaces)}))))
+        {:groups (map (partial format-app-group-hierarchy workspace-id params) workspaces)}))))
 
 (defn get-public-app-groups
   "Retrieves the list of app groups that are visible to all users. TODO: refactor me."
-  []
-  (get-only-app-groups -1))
+  [params]
+  (get-only-app-groups -1 params))
 
 (defn- validate-app-pipeline-eligibility
   "Validates an App for pipeline eligibility, throwing a slingshot stone ."
@@ -150,8 +151,8 @@
 (defn- format-app
   "Formats certain app fields into types more suitable for the client."
   [app]
-  (-> (assoc app :can_run (= (:step_count app) (:component_count app)))
-      (dissoc :component_count)
+  (-> (assoc app :can_run (= (:template_count app) (:component_count app)))
+      (dissoc :component_count :template_count)
       (format-app-timestamps)
       (format-app-ratings)
       (format-app-pipeline-eligibility)
@@ -162,15 +163,15 @@
   [workspace group-id params]
   (let [group-key (keyword group-id)]
     (when-let [format-fns (group-key virtual-group-fns)]
-      (assoc ((:format-group format-fns) (:id workspace))
+      (assoc ((:format-group format-fns) (:id workspace) params)
         :templates (map format-app ((:format-listing format-fns) workspace params))))))
 
 (defn- count-apps-in-group
   "Counts the number of apps in an app group, including virtual app groups that may be included."
-  [{root-group-hid :root_analysis_group_id} {:keys [hid id] :as app-group}]
+  [{root-group-hid :root_analysis_group_id} {:keys [hid id] :as app-group} params]
   (if (= root-group-hid hid)
-    (count-apps-in-group-for-user id (:email current-user))
-    (count-apps-in-group-for-user id)))
+    (count-apps-in-group-for-user id (:email current-user) params)
+    (count-apps-in-group-for-user id params)))
 
 (defn- get-apps-in-group
   "Gets the apps in an app group, including virtual app groups that may be included."
@@ -185,7 +186,7 @@
   [workspace app_group_id params]
   (let [app_group      (get-app-group app_group_id)
         root_group_hid (:root_analysis_group_id workspace)
-        total          (count-apps-in-group workspace app_group)
+        total          (count-apps-in-group workspace app_group params)
         apps_in_group  (get-apps-in-group workspace app_group params)
         apps_in_group  (map format-app apps_in_group)]
     (assoc app_group
@@ -207,7 +208,7 @@
   [params]
   (let [search_term (curl/url-decode (:search params))
         workspace (get-or-create-workspace (:username current-user))
-        total (count-search-apps-for-user search_term (:id workspace))
+        total (count-search-apps-for-user search_term (:id workspace) params)
         search_results (search-apps-for-user
                         search_term
                         workspace

@@ -30,36 +30,6 @@
   [state]
   (re-matches #"(?i)\s*(?:completed|failed)\s*" (:status state)))
 
-(defn- format-email-request
-  "Formats an e-mail request that can be sent to the iPlant e-mail service."
-  [email state]
-  {:to        email
-   :template  (email-template)
-   :subject   (str (get-descriptive-job-name state) " status changed.")
-   :from-addr (email-from-address)
-   :from-name (email-from-name)
-   :values    {:analysisname          (:name state)
-               :analysisstatus        (:status state)
-               :analysisstartdate     (format-timestamp (:submission_date state))
-               :analysisresultsfolder (:output_dir state)
-               :analysisdescription   (:description state)}})
-
-(defn- email-requested
-  "Determines if e-mail notifications were requested for a job.  The 'notify'
-   element in the job state indicates whether or not e-mail notifications were
-   requested, which is the case if the 'notify' element is both present and
-   true."
-  [state]
-  (:notify state false))
-
-(defn- add-email-request
-  "Includes an e-mail request in a notificaiton message if e-mail
-   notifications were requested."
-  [msg {addr :email :as state}]
-  (if (and (email-enabled) (email-requested state) (valid-email-addr addr))
-    (assoc msg :email_request (format-email-request addr state))
-    msg))
-
 (defn- state-to-msg
   "Converts an object representing a job state to a notification message."
   [state]
@@ -88,7 +58,7 @@
    returns the state object."
   [state]
   (log/debug "job" (:uuid state) "just completed")
-  (persist-and-send-msg (add-email-request (state-to-msg state) state)))
+  (send-msg (state-to-msg state)))
 
 (defn- update-state-fields
   "Updates fields in the state that can be overridden in the DE database."
@@ -108,7 +78,7 @@
   (let [state (update-state-fields state)]
     (if (job-completed? state)
       (handle-completed-job state)
-      (persist-and-send-msg (state-to-msg state)))
+      (send-msg (state-to-msg state)))
     (db/update-notification-status (:uuid state) (:status state))))
 
 (defn- job-status-changed?

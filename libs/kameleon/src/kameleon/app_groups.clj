@@ -1,13 +1,14 @@
 (ns kameleon.app-groups
   (:use [kameleon.entities]
+        [kameleon.queries :only [add-agave-pipeline-where-clause]]
         [korma.core]
         [slingshot.slingshot :only [throw+]])
   (:require [kameleon.uuids :refer [uuid]]))
 
 (defn get-app-group-hierarchy
   "Gets the app group hierarchy rooted at the node with the given identifier."
-  [root-id]
-  (select (sqlfn :app_category_hierarchy root-id)))
+  [root-id {:keys [agave-enabled] :or {agave-enabled "false"}}]
+  (select (sqlfn :app_category_hierarchy root-id (Boolean/parseBoolean agave-enabled))))
 
 (defn get-visible-workspaces
   "Gets the list of workspaces that are visible to the user with the given workspace

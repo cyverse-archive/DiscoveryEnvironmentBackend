@@ -67,10 +67,7 @@
   (cond
    (map? (:groups template))        (get-property-groups (:groups template))
    (sequential? (:groups template)) (:groups template)
-   (nil? (:groups template))        (throw+ {:error_code ce/ERR_INVALID_JSON
-                                             :detail     :MISSING_PROPERTY_GROUP_LIST})
-   :else                            (throw+ {:error_code ce/ERR_INVALID_JSON
-                                             :detail     :INVALID_PROPERTY_GROUP_LIST})))
+   :else                            []))
 
 (defn data-obj-type-for
   [prop-type orig-data-obj-type]

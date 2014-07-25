@@ -52,8 +52,8 @@
   (GET "/search-analyses" [:as {params :params}]
        (search-apps params))
 
-  (GET "/app-groups" []
-       (trap #(get-only-app-groups)))
+  (GET "/app-groups" [:as {params :params}]
+       (trap #(get-only-app-groups params)))
 
   (GET "/get-analyses-in-group/:app-group-id"
        [app-group-id :as {params :params}]
@@ -168,8 +168,8 @@
   (GET "/analysis-details/:app-id" [app-id]
        (trap #(get-app-details app-id)))
 
-  (GET "/public-app-groups" []
-       (trap #(get-public-app-groups)))
+  (GET "/public-app-groups" [:as {params :params}]
+       (trap #(get-public-app-groups params)))
 
   (GET "/list-analysis/:app-id" [app-id]
        (throw+ '("list-app" app-id)))
@@ -212,15 +212,6 @@
 
   (POST "/update-app-labels" [:as {body :body}]
         (ce/trap "update-app-labels" #(app-metadata/relabel-app body)))
-
-  (GET "/get-property-values/:job-id" [job-id]
-       (trap #(throw+ '("get-property-values" job-id))))
-
-  (GET "/analysis-rerun-info/:job-id" [job-id]
-       (trap #(throw+ '("get-app-rerun-info" job-id))))
-
-  (GET "/app-rerun-info/:job-id" [job-id]
-       (trap #(throw+ '("get-new-app-rerun-info" job-id))))
 
   (GET "/get-app-description/:app-id" [app-id]
        (trap #(get-app-description app-id)))

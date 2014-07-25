@@ -10,26 +10,26 @@
 (def ^:private timestamp-formatter
   (tf/formatter "yyyy-MM-dd-HH-mm-ss.S"))
 
+(defn- add-param-prefix
+  [prefix param]
+  (if-not (string/blank? prefix)
+    (keyword (str prefix "_" (name param)))
+    param))
+
 (defn- params-for
-  ([config app-section]
-     (params-for config app-section identity))
-  ([config app-section preprocessing-fn]
-     (let [get-param-val (comp preprocessing-fn config)]
+  ([config param-prefix app-section]
+     (params-for config param-prefix app-section identity))
+  ([config param-prefix app-section preprocessing-fn]
+     (let [get-param-val (comp preprocessing-fn config (partial add-param-prefix param-prefix))]
        (->> (map (comp keyword :id) app-section)
             (map (juxt identity get-param-val))
             (into {})
             (remove-vals nil?)))))
 
 (defn- prepare-params
-  [agave app config]
-  {:inputs     (params-for config (app :inputs) #(.agaveUrl agave %))
-   :parameters (params-for config (app :parameters))})
-
-(defn- archive-path
-  [agave {job-name :name output-directory :outputDirectory}]
-  (let [job-name  (string/replace job-name #"\s" "_")
-        timestamp (tf/unparse timestamp-formatter (t/now))]
-    (.agaveFilePath agave (str output-directory "/" job-name "-" timestamp))))
+  [agave app param-prefix config]
+  {:inputs     (params-for config param-prefix (app :inputs) #(.agaveUrl agave %))
+   :parameters (params-for config param-prefix (app :parameters))})
 
 (def ^:private submitted "Submitted")
 (def ^:private running "Running")
@@ -61,11 +61,11 @@
 
 (defn prepare-submission
   [agave app submission]
-  (->> (assoc (prepare-params agave app (:config submission))
+  (->> (assoc (prepare-params agave app (:paramPrefix submission) (:config submission))
          :name          (:name submission)
          :appId         (:analysis_id submission)
          :archive       true
-         :archivePath   (archive-path agave submission)
+         :archivePath   (.agaveFilePath agave (:outputDirectory submission))
          :archiveSystem (.storageSystem agave)
          :notifications (job-notifications (:callbackUrl submission)))
        (remove-vals nil?)))
