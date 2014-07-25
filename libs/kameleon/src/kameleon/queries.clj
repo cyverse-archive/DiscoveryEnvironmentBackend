@@ -333,6 +333,6 @@
   [query {agave-enabled? :agave-enabled :or {agave-enaled? "false"}}]
   (let [agave-enabled? (Boolean/parseBoolean agave-enabled?)]
     (if-not agave-enabled?
-      (where query {:step_count :template_count})
+      (where query {:step_count :task_count})
       query)))
 

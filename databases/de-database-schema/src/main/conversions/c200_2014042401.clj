@@ -311,7 +311,9 @@
   (println "\t* adding tool_listing view...")
   (load-sql-file "views/04_tool_listing.sql")
   (println "\t* adding rating_listing view...")
-  (load-sql-file "views/05_rating_listing.sql"))
+  (load-sql-file "views/05_rating_listing.sql")
+  (println "\t* adding job_listing view...")
+  (load-sql-file "views/06_job_listing.sql"))
 
 (defn- reload-functions
   []
@@ -320,9 +322,11 @@
   (load-sql-file "functions/01_app_category_hierarchy_ids.sql")
   (println "\t* reloading app_count function...")
   (exec-raw "DROP FUNCTION IF EXISTS app_count(bigint)")
+  (exec-raw "DROP FUNCTION IF EXISTS app_count(bigint, boolean)")
   (load-sql-file "functions/02_app_count.sql")
   (println "\t* adding app_category_hierarchy function...")
   (exec-raw "DROP FUNCTION IF EXISTS analysis_group_hierarchy(bigint)")
+  (exec-raw "DROP FUNCTION IF EXISTS analysis_group_hierarchy(bigint, boolean)")
   (load-sql-file "functions/03_app_category_hierarchy.sql"))
 
 (defn convert

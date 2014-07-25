@@ -123,7 +123,7 @@
                                 :is_public
                                 :step_count
                                 :tool_count
-                                :template_count
+                                :task_count
                                 :deleted
                                 :disabled
                                 :overall_job_type)

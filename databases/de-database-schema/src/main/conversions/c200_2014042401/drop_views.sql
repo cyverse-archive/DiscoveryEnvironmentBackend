@@ -8,4 +8,5 @@ DROP VIEW analysis_job_types;
 DROP VIEW analysis_listing;
 DROP VIEW deployed_component_listing;
 DROP VIEW rating_listing;
+DROP VIEW job_listings;
 
