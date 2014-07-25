@@ -150,19 +150,19 @@
    the workspace with its new group ID."
   [workspace_id root_app_group_id]
   (update workspace
-          (set-fields {:root_analysis_group_id root_app_group_id})
+          (set-fields {:root_category_id root_app_group_id})
           (where {:id workspace_id})))
 
-(defn property-types-for-tool-type
-  "Lists the valid property types for the tool type with the given identifier."
+(defn parameter-types-for-tool-type
+  "Lists the valid parameter types for the tool type with the given identifier."
   ([tool-type-id]
-     (property-types-for-tool-type (select* property_type) tool-type-id))
+     (parameter-types-for-tool-type (select* parameter_types) tool-type-id))
   ([base-query tool-type-id]
      (select base-query
-             (join :tool_type_property_type
-                   {:tool_type_property_type.property_type_id
-                    :property_type.hid})
-             (where {:tool_type_property_type.tool_type_id tool-type-id}))))
+             (join :tool_type_parameter_type
+                   {:tool_type_parameter_type.parameter_type_id
+                    :parameter_types.id})
+             (where {:tool_type_parameter_type.tool_type_id tool-type-id}))))
 
 (defn get-tool-type-by-name
   "Searches for the tool type with the given name."
@@ -173,11 +173,11 @@
 (defn get-tool-type-by-component-id
   "Searches for the tool type associated with the given deployed component."
   [component-id]
-  (first (select deployed_components
+  (first (select tools
                  (fields :tool_types.id :tool_types.name :tool_types.label
                          :tool_types.description)
                  (join tool_types)
-                 (where {:deployed_components.id component-id}))))
+                 (where {:tools.id component-id}))))
 
 (defn get-or-create-user
   "Gets a user from the database, creating the user if necessary."
@@ -199,27 +199,23 @@
   []
   (:id (get-or-create-user "<public>")))
 
-(defn get-templates-for-app
-  "Retrieves the list of templates associated with an app."
-  [app-hid]
-  (select [:transformation_activity :a]
-          (fields :t.hid :t.id :t.name :t.description :t.label :t.type :t.component_id)
-          (join [:transformation_task_steps :tts]
-                {:a.hid :tts.transformation_task_id})
-          (join [:transformation_steps :ts]
-                {:tts.transformation_step_id :ts.id})
-          (join [:transformations :tx]
-                {:ts.transformation_id :tx.id})
-          (join [:template :t]
-                {:tx.template_id :t.id})
-          (where {:a.hid app-hid})))
+(defn get-tasks-for-app
+  "Retrieves the list of tasks associated with an app."
+  [app-id]
+  (select [:apps :a]
+          (fields :t.id :t.external_app_id :t.name :t.description :t.label :t.tool_id)
+          (join [:app_steps :step]
+                {:a.id :step.app_id})
+          (join [:tasks :t]
+                {:step.task_id :t.id})
+          (where {:a.id app-id})))
 
 (defn get-tool-request-details
   "Obtains detailed information about a tool request."
   [uuid]
   (first
    (select [:tool_requests :tr]
-           (fields :tr.uuid
+           (fields :tr.id
                    [:requestor.username :submitted_by]
                    :tr.phone
                    [:tr.tool_name :name]
@@ -238,7 +234,7 @@
                  {:tr.requestor_id :requestor.id})
            (join [:tool_architectures :architecture]
                  {:tr.tool_architecture_id :architecture.id})
-           (where {:tr.uuid uuid}))))
+           (where {:tr.id uuid}))))
 
 (defn get-tool-request-history
   "Obtains detailed information about the history of a tool request."
@@ -254,7 +250,7 @@
                 {:trs.updater_id :updater.id})
           (join [:tool_request_status_codes :trsc]
                 {:trs.tool_request_status_code_id :trsc.id})
-          (where {:tr.uuid uuid})
+          (where {:tr.id uuid})
           (order :trs.date_assigned :ASC)))
 
 (defn- remove-nil-values
@@ -271,7 +267,7 @@
   "Creates a subselect query that can be used to list tool requests."
   [user]
   (subselect [:tool_requests :tr]
-             (fields [:tr.uuid :uuid]
+             (fields [:tr.id :id]
                      [:tr.tool_name :name]
                      [:tr.version :version]
                      [:trsc.name :status]
@@ -297,12 +293,12 @@
   (let [status-clause (if (nil? statuses) nil ['in statuses])]
     (select
      [(subselect [(list-tool-requests-subselect user) :req]
-                 (fields :uuid :name :version :requested_by
+                 (fields :id :name :version :requested_by
                          [(sqlfn :first :status_date) :date_submitted]
                          [(sqlfn :last :status) :status]
                          [(sqlfn :last :status_date) :date_updated]
                          [(sqlfn :last :updated_by) :updated_by])
-                 (group :uuid :name :version :requested_by)
+                 (group :id :name :version :requested_by)
                  (order (or sort-field :date_submitted) (or sort-order :ASC))
                  (limit row-limit)
                  (offset row-offset))
@@ -330,5 +326,5 @@
   (update :logins
           (set-fields {:logout_time (sqlfn :now)})
           (where {:user_id                                       (get-user-id username)
-                  :ip_address                                    ip-address
-                  (sqlfn :date_trunc "milliseconds" :login_time) (Timestamp. login-time)})))
+                  :ip_address                                    ip-address})
+          (where {(sqlfn :date_trunc "milliseconds" :login_time) (Timestamp. login-time)})))
