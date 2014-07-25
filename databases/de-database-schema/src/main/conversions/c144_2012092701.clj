@@ -1,7 +1,6 @@
 (ns facepalm.c144-2012092701
   (:use [korma.core]
-        [kameleon.core]
-        [kameleon.entities :only [property_type tool_types]])
+        [kameleon.core])
   (:require [clojure.string :as string]))
 
 (def ^:private version
@@ -19,7 +18,7 @@
   [job_type_name]
   ""
   (subselect
-    tool_types
+    :tool_types
     (fields [:tool_types.id :tool_type_id])
     (where {:tool_types.name job_type_name})))
 
@@ -28,7 +27,7 @@
   []
   (println "\t* adding property type for hierarchical list selector")
   (let [tree_selection_type_id 20]
-    (insert property_type
+    (insert :property_type
             (values {:hid           tree_selection_type_id
                      :id            "548A55C2-53FE-40A5-AD38-033F79C8C0AB"
                      :name          "TreeSelection"

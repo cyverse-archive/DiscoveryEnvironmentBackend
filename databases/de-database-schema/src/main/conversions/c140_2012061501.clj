@@ -1,7 +1,6 @@
 (ns facepalm.c140-2012061501
   (:use [korma.core]
-        [kameleon.core]
-        [kameleon.entities :only [transformation_steps]]))
+        [kameleon.core]))
 
 (def ^:private version
   "The destination database version."
@@ -12,7 +11,7 @@
    'description' columns in the transformation_steps table."
   []
   (println "\t* trimming fields in transformation_steps table")
-  (update transformation_steps
+  (update :transformation_steps
           (set-fields {:name        (sqlfn trim :name)
                        :guid        (sqlfn trim :guid)
                        :description (sqlfn trim :description)})))

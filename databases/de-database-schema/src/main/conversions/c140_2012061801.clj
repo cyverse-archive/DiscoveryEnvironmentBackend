@@ -1,7 +1,6 @@
 (ns facepalm.c140-2012061801
   (:use [korma.core]
         [kameleon.core]
-        [kameleon.entities :only [integration_data genome_reference]]
         [kameleon.queries :only [get-public-user-id]]))
 
 (def ^:private version
@@ -136,7 +135,7 @@
   (exec-raw "TRUNCATE genome_reference;")
   (let [public-user-id (get-public-user-id)
         field-names    [:uuid :name :path :created_by :last_modified_by]]
-    (insert genome_reference
+    (insert :genome_reference
             (values (->> genome-reference-values
                          (map #(conj % public-user-id public-user-id))
                          (map #(zipmap field-names %)))))))
