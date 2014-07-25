@@ -20,18 +20,25 @@
   [& components]
   (str (apply curl/url (config/metadactyl-base-url) components)))
 
+(defn- add-agave-enabled-flag
+  ([]
+     (add-agave-enabled-flag {}))
+  ([params]
+     (assoc params :agave-enabled (str (config/agave-enabled)))))
+
 (defn get-only-app-groups
   []
-  (-> (client/get (secured-url "app-groups")
-                  {:query-params (secured-params)
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
+  (let [params {:agave-enabled (str (config/agave-enabled))}]
+    (-> (client/get (secured-url "app-groups")
+                    {:query-params (secured-params (add-agave-enabled-flag))
+                     :as           :stream})
+        (:body)
+        (service/decode-json))))
 
 (defn apps-in-group
   [group-id & [params]]
   (-> (client/get (secured-url "get-analyses-in-group" group-id)
-                  {:query-params (secured-params params)
+                  {:query-params (secured-params (add-agave-enabled-flag params))
                    :as           :stream})
       (:body)
       (service/decode-json)))
@@ -39,7 +46,7 @@
 (defn search-apps
   [search-term]
   (-> (client/get (secured-url "search-analyses")
-                  {:query-params (secured-params {:search search-term})
+                  {:query-params (secured-params (add-agave-enabled-flag {:search search-term}))
                    :as           :stream})
       (:body)
       (service/decode-json)))

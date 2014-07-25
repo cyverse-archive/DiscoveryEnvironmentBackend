@@ -1,5 +1,6 @@
 (ns kameleon.app-groups
   (:use [kameleon.entities]
+        [kameleon.queries :only [add-agave-pipeline-where-clause]]
         [korma.core]
         [slingshot.slingshot :only [throw+]])
   (:import [java.util UUID]))
@@ -11,8 +12,8 @@
 
 (defn get-app-group-hierarchy
   "Gets the app group hierarchy rooted at the node with the given identifier."
-  [root-id]
-  (select (sqlfn :analysis_group_hierarchy root-id)))
+  [root-id {:keys [agave-enabled] :or {agave-enabled "false"}}]
+  (select (sqlfn :analysis_group_hierarchy root-id (Boolean/parseBoolean agave-enabled))))
 
 (defn- get-root-app-group-ids
   "Gets the internal identifiers for all app groups associated with workspaces

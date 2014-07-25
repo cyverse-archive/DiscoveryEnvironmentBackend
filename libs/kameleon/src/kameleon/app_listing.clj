@@ -82,22 +82,23 @@
 (defn- get-app-count-base-query
   "Returns a base query for counting the total number of apps in the
    analysis_listing table."
-  []
+  [query-opts]
   (->
     (select* analysis_listing)
     (fields (raw "count(DISTINCT analysis_listing.id) AS total"))
-    (where {:deleted false})))
+    (where {:deleted false})
+    (add-agave-pipeline-where-clause query-opts)))
 
 (defn count-apps-in-group-for-user
   "Counts all of the apps in an app group and all of its descendents."
-  ([app-group-id]
+  ([app-group-id query-opts]
     ((comp :total first)
-      (-> (get-app-count-base-query)
+      (-> (get-app-count-base-query query-opts)
         (add-app-group-where-clause app-group-id)
         (select))))
-  ([app-group-id email]
+  ([app-group-id email query-opts]
     ((comp :total first)
-      (-> (get-app-count-base-query)
+      (-> (get-app-count-base-query query-opts)
         (add-app-group-plus-public-apps-where-clause app-group-id email)
         (select)))))
 
@@ -158,6 +159,7 @@
     ;; Add limits and sorting, if required, and return the query
     (->
       listing_query
+      (add-agave-pipeline-where-clause query_opts)
       (add-query-limit row_limit)
       (add-query-offset row_offset)
       (add-query-sorting sort_field sort_dir))))
@@ -230,9 +232,9 @@
 (defn count-search-apps-for-user
   "Counts App search results that contain search_term in their name or
    description, in all public groups and groups under the given workspace_id."
-  [search_term workspace_id]
+  [search_term workspace_id params]
   (let [count_query (add-search-where-clauses
-                      (get-app-count-base-query)
+                      (get-app-count-base-query params)
                       search_term
                       workspace_id)]
     (:total (first (select count_query)))))
@@ -258,12 +260,13 @@
 
 (defn count-public-apps-by-user
   "Counts the number of apps integrated by a user."
-  [email]
+  [email params]
   ((comp :count first)
    (-> (select* analysis_listing)
        (aggregate (count :*) :count)
        (where {:deleted false})
        (add-public-apps-by-user-where-clause email)
+       (add-agave-pipeline-where-clause params)
        (select))))
 
 (defn list-public-apps-by-user

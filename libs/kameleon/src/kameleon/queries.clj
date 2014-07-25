@@ -40,7 +40,7 @@
   [select_query offset_val]
   (if (>= offset_val 0)
     (-> select_query
-      (offset offset_val))
+        (offset offset_val))
     select_query))
 
 (defn add-query-limit
@@ -49,7 +49,7 @@
   [select_query limit_val]
   (if (> limit_val 0)
     (-> select_query
-      (limit limit_val))
+        (limit limit_val))
     select_query))
 
 (defn add-query-sorting
@@ -332,3 +332,10 @@
           (where {:user_id                                       (get-user-id username)
                   :ip_address                                    ip-address
                   (sqlfn :date_trunc "milliseconds" :login_time) (Timestamp. login-time)})))
+
+(defn add-agave-pipeline-where-clause
+  [query {agave-enabled? :agave-enabled :or {agave-enaled? "false"}}]
+  (let [agave-enabled? (Boolean/parseBoolean agave-enabled?)]
+    (if-not agave-enabled?
+      (where query {:step_count :template_count})
+      query)))

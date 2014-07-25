@@ -50,8 +50,8 @@
   (GET "/search-analyses" [:as {params :params}]
        (search-apps params))
 
-  (GET "/app-groups" []
-       (trap #(get-only-app-groups)))
+  (GET "/app-groups" [:as {params :params}]
+       (trap #(get-only-app-groups params)))
 
   (GET "/get-analyses-in-group/:app-group-id"
        [app-group-id :as {params :params}]
@@ -166,8 +166,8 @@
   (GET "/analysis-details/:app-id" [app-id]
        (trap #(get-app-details app-id)))
 
-  (GET "/public-app-groups" []
-       (trap #(get-public-app-groups)))
+  (GET "/public-app-groups" [:as {params :params}]
+       (trap #(get-public-app-groups params)))
 
   (GET "/list-analysis/:app-id" [app-id]
        (list-app app-id))

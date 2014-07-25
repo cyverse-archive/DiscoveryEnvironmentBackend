@@ -32,7 +32,7 @@
   "Loads an app group hierarchy from the database and returns it in
    hierarchical format."
   [root-id]
-  (let [app-groups (get-app-group-hierarchy root-id)
+  (let [app-groups (get-app-group-hierarchy root-id {})
         root       (first (filter #(= (:hid %) root-id) app-groups))]
     (build-hierarchy root app-groups)))
 
