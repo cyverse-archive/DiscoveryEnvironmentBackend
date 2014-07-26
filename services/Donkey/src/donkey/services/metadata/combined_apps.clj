@@ -1,7 +1,7 @@
 (ns donkey.services.metadata.combined-apps
   (:use [donkey.auth.user-attributes :only [current-user]]
         [korma.db]
-        [slingshot.slingshot :only [throw+]])
+        [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
@@ -18,6 +18,8 @@
             [donkey.util.db :as db]
             [donkey.util.service :as service])
   (:import [java.util UUID]))
+
+(declare submit-next-step)
 
 (defn- remove-mapped-inputs
   [mapped-props group]
@@ -263,20 +265,6 @@
                            (get-input-path agave job config app-steps input)))
                        config mapped-inputs))))
 
-(defn- submit-next-step
-  "Submits the next step in a job pipeline."
-  [agave username job {:keys [job-id step-number] :as job-step}]
-  (let [next-step-number (inc step-number)
-        next-step        (jp/get-job-step-number job-id next-step-number)
-        app-step-number  (:app-step-number next-step)
-        app-steps        (ap/load-app-steps (:app-id job))
-        next-app-step    (nth app-steps (dec app-step-number))
-        mapped-inputs    (ap/load-target-step-mappings (:step_id next-app-step))
-        submission       (service/decode-json (.getValue (:submission job)))
-        submission       (add-mapped-inputs agave job submission app-steps mapped-inputs)
-        workspace-id     (:id (wp/workspace-for-user username))]
-    (submit-job-step agave workspace-id job next-step submission)))
-
 (defn update-job-status
   "Updates the status of a job. The job may have multiple steps, so the overall job status is only
    only changed when first step changes to any status up to Running, the last step changes to any
@@ -297,6 +285,25 @@
         (mu/send-job-status-notification job job-step status end-time))
       (when (and (not last-step?) (= status mu/completed-status))
         (submit-next-step agave username job job-step)))))
+
+(defn- submit-next-step
+  "Submits the next step in a job pipeline."
+  [agave username job {:keys [job-id step-number] :as job-step}]
+  (let [next-step-number (inc step-number)
+        next-step        (jp/get-job-step-number job-id next-step-number)
+        app-step-number  (:app-step-number next-step)
+        app-steps        (ap/load-app-steps (:app-id job))
+        next-app-step    (nth app-steps (dec app-step-number))
+        mapped-inputs    (ap/load-target-step-mappings (:step_id next-app-step))
+        submission       (service/decode-json (.getValue (:submission job)))
+        submission       (add-mapped-inputs agave job submission app-steps mapped-inputs)
+        workspace-id     (:id (wp/workspace-for-user username))]
+    (try+
+      (submit-job-step agave workspace-id job next-step submission)
+      (catch Object o
+        (log/warn (str "unable to submit the next step in job " (:id job)))
+        (update-job-status agave username job next-step mu/failed-status (db/now))
+        (throw+)))))
 
 (defn- find-first-incomplete-job-step
   "Finds the first incomplete job step associated with a job. Nil is returned if the job has no
