@@ -52,16 +52,6 @@
         app-tables [(da/load-app-details (map :analysis_id jobs))]]
     (mapv (partial mu/format-job app-tables) jobs)))
 
-(defn- update-job-status
-  ([{:keys [id status end-date]}]
-     (let [uuid     (UUID/fromString id)
-           end-date (db/timestamp-from-str (str end-date))]
-       (jp/update-job-step uuid id status end-date)
-       (jp/update-job uuid status end-date)))
-  ([agave username job job-step status end-time]
-     (let [max-step-number (jp/get-max-step-number (:id job))]
-       (aa/update-agave-job-status agave username job job-step max-step-number status end-time))))
-
 (defn- unrecognized-job-type
   [job-type]
   (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT

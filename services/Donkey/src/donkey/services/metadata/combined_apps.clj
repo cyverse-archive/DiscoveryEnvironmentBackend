@@ -329,7 +329,7 @@
       (let [status   (:status step-status)
             end-date (db/timestamp-from-str (:enddate step-status))]
         (update-job-status agave username job step status end-date))
-      (update-job-status agave username job mu/failed-status (db/now)))
+      (update-job-status agave username job step mu/failed-status (db/now)))
 
     ;; We didn't find an incomplete step to update.
     (let [steps         (jp/list-job-steps id)
