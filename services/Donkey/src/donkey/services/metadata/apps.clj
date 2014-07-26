@@ -25,7 +25,7 @@
 
 (defn- count-de-jobs
   [filter]
-  (jp/count-de-jobs (:username-current-user) filter))
+  (jp/count-de-jobs (:username current-user) filter))
 
 (defn- count-jobs
   [filter]
@@ -75,7 +75,7 @@
                              :or {preprocess-job identity}}]
      (when-not job
        (service/not-found "job" job-id))
-     (if (util/is-uuid? (:analysis_id job))
+     (if (util/is-uuid? (:app-id job))
        (process-de-job (preprocess-job job))
        (process-agave-job agave-client (preprocess-job job)))))
 
@@ -173,8 +173,7 @@
     (list-de-jobs limit offset sort-field sort-order filter))
 
   (syncJobStatus [_ job]
-    (when (= (:job_type job) jp/de-job-type)
-      (da/sync-de-job-status job)))
+    (da/sync-job-status job))
 
   (updateJobStatus [_ username job job-step status end-time]
     (da/update-job-status username job job-step status end-time))
@@ -261,10 +260,9 @@
       (list-de-jobs limit offset sort-field sort-order filter)))
 
   (syncJobStatus [_ job]
-    (let [sync-agave (add-predicate user-has-access-token? aa/sync-agave-job-status)]
-      (process-job agave-client (:id job) job
-                   {:process-de-job    da/sync-de-job-status
-                    :process-agave-job sync-agave})))
+    (if (user-has-access-token?)
+      (ca/sync-job-status agave-client job)
+      (da/sync-job-status job)))
 
   (updateJobStatus [_ username job job-step status end-time]
     (ca/update-job-status agave-client username job job-step status end-time))
@@ -397,31 +395,35 @@
   "Updates the job status. Important note: this function currently assumes that the
    external identifier is unique."
   [external-id status end-date]
-  (let [job-step                   (get-unique-job-step external-id)
-        {:keys [username] :as job} (jp/get-job-by-id (:job-id job-step))
-        end-date                   (db/timestamp-from-str end-date)]
-    (service/assert-found job "job" (:job-id job-step))
-    (try+
-     (.updateJobStatus (get-app-lister "" username) username job job-step status end-date)
-     (catch Object o
-       (let [msg (str "DE job status update failed for " external-id)]
-         (log/warn o msg)
-         (throw+))))))
+  (if (= status mu/submitted-status)
+    (service/success-response)
+    (let [job-step                   (get-unique-job-step external-id)
+          {:keys [username] :as job} (jp/get-job-by-id (:job-id job-step))
+          end-date                   (db/timestamp-from-str end-date)]
+      (service/assert-found job "job" (:job-id job-step))
+      (try+
+       (.updateJobStatus (get-app-lister "" username) username job job-step status end-date)
+       (catch Object o
+         (let [msg (str "DE job status update failed for " external-id)]
+           (log/warn o msg)
+           (throw+)))))))
 
 (defn update-agave-job-status
   [uuid status end-time external-id]
-  (let [uuid                       (UUID/fromString uuid)
-        job-step                   (jp/get-job-step uuid external-id)
-        {:keys [username] :as job} (jp/get-job-by-id uuid)
-        end-time                   (db/timestamp-from-str end-time)]
-    (service/assert-found job "job" uuid)
-    (service/assert-found job-step "job step" (str uuid "/" external-id))
-    (try+
-     (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)
-     (catch Object o
-       (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
-         (log/warn o msg)
-         (throw+))))))
+  (if (= status mu/submitted-status)
+    (service/success-response)
+    (let [uuid                       (UUID/fromString uuid)
+          job-step                   (jp/get-job-step uuid external-id)
+          {:keys [username] :as job} (jp/get-job-by-id uuid)
+          end-time                   (db/timestamp-from-str end-time)]
+      (service/assert-found job "job" uuid)
+      (service/assert-found job-step "job step" (str uuid "/" external-id))
+      (try+
+       (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)
+       (catch Object o
+         (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
+           (log/warn o msg)
+           (throw+)))))))
 
 (defn- sync-job-status
   [job]
@@ -436,7 +438,7 @@
   (try+
    (dorun (map sync-job-status (jp/list-incomplete-jobs)))
    (catch Object e
-     (log/error e "error while obtaining the lsit of jobs to synchronize."))))
+     (log/error e "error while obtaining the list of jobs to synchronize."))))
 
 (defn- log-already-deleted-jobs
   [ids]

@@ -25,3 +25,7 @@
   (map :state
        ((comp :objects service/decode-json)
         (osm/query (osm-jobs-client) {:state.uuid {"$in" ids}}))))
+
+(defn get-job
+  [id]
+  (first (get-jobs [id])))

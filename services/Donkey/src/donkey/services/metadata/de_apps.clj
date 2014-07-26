@@ -9,6 +9,7 @@
             [donkey.services.metadata.property-values :as property-values]
             [donkey.services.metadata.util :as mu]
             [donkey.util.db :as db]
+            [donkey.util.service :as service]
             [donkey.util.time :as time-utils])
   (:import [java.util UUID]))
 
@@ -31,7 +32,8 @@
                 :result-folder-path (:resultfolderid job)
                 :start-date         (db/timestamp-from-str (str (:startdate job)))
                 :username           (:username current-user)
-                :status             (:status job)}))
+                :status             (:status job)}
+               submission))
 
 (defn- store-job-step
   [job-id job]
@@ -74,9 +76,11 @@
   (into {} (map (juxt :id identity)
                 (ap/load-app-details ids))))
 
-;; TODO: implement me
-(defn sync-de-job-status
-  [job])
+(defn get-job-step-status
+  [id]
+  (when-let [step (osm/get-job id)]
+    {:status  (:status step)
+     :enddate (:completion_date step)}))
 
 (defn update-job-status
   "Updates the status of a job. If this function is called then Agave jobs are disabled, so
@@ -86,3 +90,14 @@
     (jp/update-job-step (:id job) (:external-id job-step) status end-time)
     (jp/update-job (:id job) status end-time)
     (mu/send-job-status-notification job job-step status end-time)))
+
+(defn sync-job-status
+  [{:keys [id] :as job}]
+  (let [steps     (jp/list-job-steps id)
+        _         (assert (= 1 (count steps)))
+        step      (first steps)
+        step-info (get-job-step-status (:external-id step))
+        status    (:status step-info)
+        end-time  (db/timestamp-from-str (:enddate step-info))]
+    (jp/update-job-step-number id 1 {status status :end-time end-time})
+    (jp/update-job id status end-time)))

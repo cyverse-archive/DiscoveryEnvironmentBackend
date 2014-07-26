@@ -77,8 +77,9 @@
 (defn- get-combined-app
   [agave app-id]
   (let [metadactyl-app (metadactyl/get-app app-id)]
-    (assoc metadactyl-app
-      :groups (get-combined-groups agave app-id (:groups metadactyl-app)))))
+    (->> (map (fn [g n] (assoc g :step_number n)) (:groups metadactyl-app) (iterate inc 1))
+         (get-combined-groups agave app-id)
+         (assoc metadactyl-app :groups))))
 
 (defn get-app
   [agave app-id]
@@ -228,7 +229,7 @@
   "Translates an Agave status code to something more consistent with the DE's status codes."
   [agave {:keys [job-type]} status]
   (if (= jp/agave-job-type job-type)
-    (.translateJobStatus agave status)
+    (or (.translateJobStatus agave status) status)
     status))
 
 (defn- get-default-output-name
@@ -286,7 +287,6 @@
         max-step                          (jp/get-max-step-number job-id)
         first-step?                       (= step-number 1)
         last-step?                        (= step-number max-step)
-        orig-status                       status
         status                            (translate-job-status agave job-step status)]
     (when-not (= status (:status job-step))
       (jp/update-job-step job-id external-id status end-time)
@@ -297,3 +297,35 @@
         (mu/send-job-status-notification job job-step status end-time))
       (when (and (not last-step?) (= status mu/completed-status))
         (submit-next-step agave username job job-step)))))
+
+(defn- find-first-incomplete-job-step
+  "Finds the first incomplete job step associated with a job. Nil is returned if the job has no
+   incomplete steps."
+  [job-id]
+  (->> (jp/list-job-steps job-id)
+       (remove (comp mu/is-completed? :status))
+       (first)))
+
+(defn- get-job-step-status
+  [agave {:keys [job-type external-id]}]
+  (if (= job-type jp/agave-job-type)
+    (select-keys (.listJob agave external-id) [:status :enddate])
+    (da/get-job-step-status external-id)))
+
+(defn sync-job-status
+  "Synchronizes the status of a job with the remote system."
+  [agave {:keys [id username] :as job}]
+  (if-let [step (find-first-incomplete-job-step id)]
+
+    ;; We found an incomplete step to update.
+    (if-let [step-status (get-job-step-status agave step)]
+      (let [status   (:status step-status)
+            end-date (db/timestamp-from-str (:enddate step-status))]
+        (update-job-status agave username job step status end-date))
+      (update-job-status agave username job mu/failed-status (db/now)))
+
+    ;; We didn't find an incomplete step to update.
+    (let [steps         (jp/list-job-steps id)
+          all-complete? (every? mu/is-completed? (map :status steps))
+          status        (if all-complete? mu/completed-status mu/failed-status)]
+      (jp/update-job id {:status status :end-date (db/now)}))))

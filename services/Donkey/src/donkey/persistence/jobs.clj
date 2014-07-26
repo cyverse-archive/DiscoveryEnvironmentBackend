@@ -331,18 +331,15 @@
 (defn list-incomplete-jobs
   []
   (with-db db/de
-    (select [:jobs :j]
-            (join [:users :u] {:j.user_id :u.id})
-            (join [:job_steps :s] {:j.id :s.job_id})
-            (join [:job_types :t] {:s.job_type_id :t.id})
-            (fields [:j.id          :id]
-                    [:j.app_id      :analysis_id]
-                    [:s.external_id :external_id]
-                    [:j.status      :status]
-                    [:u.username    :username]
-                    [:t.name        :job_type])
+    (select (job-base-query)
             (where {:j.deleted  false
                     :j.end_date nil}))))
+
+(defn list-job-steps
+  [job-id]
+  (with-db db/de
+    (select (job-step-base-query)
+            (where {:job_id job-id}))))
 
 (defn list-jobs-to-delete
   [ids]

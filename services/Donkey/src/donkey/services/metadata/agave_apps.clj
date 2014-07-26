@@ -158,10 +158,6 @@
     (update-job-step-status job-step status end-time)
     (update-job-status username job job-step max-step-number status end-time)))
 
-;; TODO: reimplement me.
-(defn sync-agave-job-status
-  [agave job])
-
 (defn get-agave-app-rerun-info
   [agave job]
   (let [external-id (:external_id job)]
