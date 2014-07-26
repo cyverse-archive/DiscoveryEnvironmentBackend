@@ -20,6 +20,8 @@ DELETE FROM collaborators WHERE id IN (
 ALTER TABLE ONLY collaborators RENAME COLUMN id TO id_v187;
 ALTER TABLE ONLY collaborators RENAME COLUMN user_id TO user_id_v187;
 ALTER TABLE ONLY collaborators RENAME COLUMN collaborator_id TO collaborator_id_v187;
+ALTER TABLE ONLY collaborators ALTER COLUMN user_id_v187 DROP NOT NULL;
+ALTER TABLE ONLY collaborators ALTER COLUMN collaborator_id_v187 DROP NOT NULL;
 ALTER TABLE ONLY collaborators ADD COLUMN user_id UUID;
 ALTER TABLE ONLY collaborators ADD COLUMN collaborator_id UUID;
 

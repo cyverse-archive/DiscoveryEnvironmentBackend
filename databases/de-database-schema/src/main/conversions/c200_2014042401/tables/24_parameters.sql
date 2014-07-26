@@ -4,6 +4,7 @@ SET search_path = public, pg_catalog;
 -- Renames the existing property table to parameters and adds updated columns.
 --
 ALTER TABLE property RENAME TO parameters;
+
 ALTER TABLE ONLY parameters RENAME COLUMN hid TO hid_v187;
 ALTER TABLE ONLY parameters RENAME COLUMN defalut_value TO defalut_value_v187;
 ALTER TABLE ONLY parameters RENAME COLUMN property_type TO property_type_v187;

@@ -5,6 +5,7 @@ SET search_path = public, pg_catalog;
 -- rename orderd?
 --
 ALTER TABLE dataobjects RENAME TO file_parameters;
+
 ALTER TABLE ONLY file_parameters RENAME COLUMN hid TO hid_v187;
 ALTER TABLE ONLY file_parameters RENAME COLUMN id TO id_v187;
 ALTER TABLE ONLY file_parameters RENAME COLUMN info_type TO info_type_v187;

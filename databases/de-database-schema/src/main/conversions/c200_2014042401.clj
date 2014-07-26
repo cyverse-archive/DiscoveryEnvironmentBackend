@@ -52,47 +52,8 @@
         EXECUTE 'ALTER TABLE ' || quote_ident(r.nspname) || '.' || quote_ident(r.relname) ||
                 ' DROP CONSTRAINT ' || quote_ident(r.conname) || ';';
       END LOOP;
-    END$$;"))
-
-;; Dropped sequences
-;; template_group_id_seq
-;; workspace_id_seq
-;; deployed_component_id_seq
-;; template_id_seq
-;; transformation_activity_id_seq
-;; transformation_steps_id_seq
-;; transformations_id_seq
-;; integration_data_id_seq
-;; ratings_id_seq
-;; data_formats_id_seq
-;; dataobjects_id_seq
-;; deployed_component_data_files_id_seq
-;; info_type_id_seq
-;; input_output_mapping_id_seq
-;; multiplicity_id_seq
-;; notification_id_seq
-;; notification_set_id_seq
-;; property_id_seq
-;; property_group_id_seq
-;; property_type_id_seq
-;; users_id_seq
-;; rule_id_seq
-;; rule_subtype_id_seq
-;; rule_type_id_seq
-;; transformation_activity_references_id_seq
-;; transformation_values_id_seq
-;; validator_id_seq
-;; value_type_id_seq
-;; version_id_seq;
-;; genome_ref_id_seq;
-;; collaborators_id_seq;
-;; data_source_id_seq;
-;; tool_types_id_seq
-;; tool_architectures_id_seq
-;; tool_requests_id_seq
-;; tool_request_statuses_id_seq
-;; tool_request_status_codes_id_seq
-;; job_types_id_seq
+    END$$;")
+  (load-sql-file "conversions/c200_2014042401/drop_constraints.sql"))
 
 (defn- drop-views
   []

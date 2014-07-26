@@ -5,7 +5,9 @@ SET search_path = public, pg_catalog;
 --
 ALTER TABLE ONLY tool_requests RENAME COLUMN id TO id_v187;
 ALTER TABLE ONLY tool_requests RENAME COLUMN requestor_id TO requestor_id_v187;
+ALTER TABLE ONLY tool_requests ALTER COLUMN requestor_id_v187 DROP NOT NULL;
 ALTER TABLE ONLY tool_requests RENAME COLUMN tool_architecture_id TO tool_architecture_id_v187;
+ALTER TABLE ONLY tool_requests ALTER COLUMN tool_architecture_id_v187 DROP NOT NULL;
 ALTER TABLE ONLY tool_requests RENAME COLUMN deployed_component_id TO deployed_component_id_v187;
 ALTER TABLE ONLY tool_requests RENAME COLUMN uuid TO id;
 ALTER TABLE ONLY tool_requests ALTER COLUMN id SET DEFAULT uuid_generate_v1();

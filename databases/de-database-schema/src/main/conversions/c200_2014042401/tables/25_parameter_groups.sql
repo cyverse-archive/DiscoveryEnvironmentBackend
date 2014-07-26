@@ -4,6 +4,7 @@ SET search_path = public, pg_catalog;
 -- Renames the existing property_group table to parameter_groups and adds updated columns.
 --
 ALTER TABLE property_group RENAME TO parameter_groups;
+
 ALTER TABLE ONLY parameter_groups RENAME COLUMN hid TO hid_v187;
 ALTER TABLE ONLY parameter_groups RENAME COLUMN group_type TO group_type_v187;
 ALTER TABLE ONLY parameter_groups
