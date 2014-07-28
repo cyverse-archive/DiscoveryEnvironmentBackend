@@ -28,9 +28,6 @@
   (and (contains? req :headers)
        (contains? (:headers req) "range")))
 
-(def range-regex #"\s*(bytes)\s*=\s*([0-9]+)\s*\-\s*([0-9]+)\s*$")
-(def unbound-range-regex #"\s*(bytes)\s*=\s*([0-9]+)\s*\-\s*$")
-
 (defn contains-bytes-string?
   "Returns true if the header starts with 'bytes'."
   [header]
@@ -44,6 +41,15 @@
   (let [trimmed-header (string/trim header)]
     (if (.startsWith trimmed-header "=")
       (string/replace-first trimmed-header "=" "")
+      trimmed-header)))
+
+(defn trim-bytes
+  "Returns a string with the leading 'bytes=' trimmed off. The entire header is trimmed
+   of leading and trailing whitespace as a result."
+  [header]
+  (let [trimmed-header (string/trim header)]
+    (if (.startsWith trimmed-header "bytes")
+      (string/replace-first trimmed-header "bytes" "")
       trimmed-header)))
 
 (defn multiple-ranges?
@@ -73,7 +79,7 @@
                      (cond
                       (bounded? range)   "bounded"
                       (unbounded? range) "unbounded"
-                      (end-byte? range)  "byte"
+                      (end-byte? range)  "unbounded-negative"
                       :else              "unknown"))]
     (map #(mapify %1 (range-kind %1)) ranges)))
 
@@ -90,50 +96,27 @@
         extract-byte   (fn [range] (first (re-seq #"\s*-\s*[0-9]+" (:range range))))          
         bounded-type   (fn [range] (assoc range :upper (upper range) :lower (lower range)))
         unbounded-type (fn [range] (assoc range :lower (lower range)))
+        unbounded-neg  (fn [range] (assoc range :lower (extract-byte range)))
         byte-type      (fn [range] (assoc range :upper (extract-byte range) :lower (extract-byte range)))
         delegate       (fn [range]
                          (case (:kind range)
                            "bounded"   (bounded-type range)
                            "unbounded" (unbounded-type range)
+                           "unbounded-negative" (unbounded-neg range)
                            "byte"      (byte-type range)
                            range))]
     (map delegate ranges)))
 
-(defn valid-range?
+(defn extract-ranges
+  "Parses the range header and returns a list of ranges. The returned value will be the
+   same as (parse-ranges)."
   [req]
-  (let [range-header (get-in req [:headers "range"])]
-    (or (re-seq range-regex range-header)
-        (re-seq unbound-range-regex range-header))))
-
-(defn bound-range?
-  [range-header]
-  (re-seq range-regex range-header))
-
-(defn unbound-range?
-  [range-header]
-  (re-seq unbound-range-regex range-header))
-
-(defn- extract-bound-range
-  [range-header]
-  (let [range-matches (re-matches range-regex range-header)]
-    [(Long/parseLong (nth range-matches 2)) (Long/parseLong (nth range-matches 3))]))
-
-(defn- extract-unbound-range
-  [range-header]
-  (let [range-matches (re-matches unbound-range-regex range-header)]
-    [(Long/parseLong (nth range-matches 2))]))
-
-(defn extract-range
-  [req]
-  (let [range-header (get-in req [:headers "range"])]
-    (cond
-     (bound-range? range-header)
-     (do (debug "detected bounded range")
-       (extract-bound-range range-header))
-
-     (unbound-range? range-header)
-     (do (debug "detected unbounded range")
-       (extract-unbound-range range-header)))))
+  (-> (get-in req [:headers "range"])
+      (trim-bytes)
+      (trim-equals)
+      (extract-byte-ranges)
+      (categorize-ranges)
+      (parse-ranges)))
 
 (defmacro validated
   [cm filepath & body]
@@ -192,15 +175,9 @@
   (info "Handling GET request for" (:uri req))
   (info "\n" (cfg/pprint-to-string req))
   (try
-   (cond
-    (and (range-request? req) (valid-range? req))
-    (do (debug "extracted range:" (extract-range req))
-      (serve-range (:uri req) (extract-range req)))
-
-    (and (range-request? req) (not (valid-range? req)))
-    (-> (response "Invalid range request.") (status 500))
-
-    :else
+   (if (range-request? req)
+    (do (debug "extracted range:" (extract-ranges req))
+      (serve-range (:uri req) (extract-ranges req)))
     (serve (:uri req)))
     (catch Exception e
       (warn e))))
