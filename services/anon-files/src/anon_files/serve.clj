@@ -100,10 +100,17 @@
         byte-type      (fn [range] (assoc range :upper (extract-byte range) :lower (extract-byte range)))
         delegate       (fn [range]
                          (case (:kind range)
-                           "bounded"   (bounded-type range)
-                           "unbounded" (unbounded-type range)
-                           "unbounded-negative" (unbounded-neg range)
-                           "byte"      (byte-type range)
+                           "bounded"
+                           (bounded-type range)
+
+                           "unbounded"
+                           (unbounded-type range)
+
+                           "unbounded-negative"
+                           (unbounded-neg range)
+
+                           "byte"
+                           (byte-type range)
                            range))]
     (map delegate ranges)))
 
@@ -145,10 +152,8 @@
     "Content-Length" (str (info/file-size cm filepath))}))
 
 (defn serve
-  [filepath]
-  (init/with-jargon (jargon-cfg) [cm]
-    (validated cm filepath
-      (ops/input-stream cm filepath))))
+  [cm filepath]
+  (validated cm filepath (ops/input-stream cm filepath)))
 
 (defn- range-body
   [cm filepath start-byte end-byte]
@@ -158,29 +163,135 @@
 
 (defn range-response
   [cm filepath start-byte end-byte]
-  {:status   200
+  {:status   206
    :body    (range-body cm filepath start-byte end-byte)
    :headers (file-header cm filepath start-byte end-byte)})
 
+(defn not-satisfiable-response
+  [cm filepath]
+  {:status 416
+   :body "The requested range is not satisfiable."
+   :headers {"Accept-Ranges" "bytes"
+             "Content-Range" (str "bytes */" (info/file-size cm filepath))}})
+
+(defn handle-bounded-request
+  [cm filepath range]
+  (let [lower     (Integer/parseInt (:lower range))
+        upper     (Integer/parseInt (:upper range))
+        file-size (info/file-size cm filepath)]
+    (cond
+     (> lower upper)
+     (not-satisfiable-response cm filepath)
+
+     (> upper file-size)
+     (not-satisfiable-response cm filepath)
+
+     (> lower file-size)
+     (not-satisfiable-response cm filepath)
+
+     (= lower upper)
+     (range-response cm filepath lower (inc lower))
+
+     :else
+     (range-response cm filepath lower upper))))
+
+(defn handle-unbounded-request
+  [cm filepath range]
+  (let [file-size (info/file-size cm filepath)
+        lower     (Integer/parseInt (:lower range))
+        upper     file-size]
+    (cond
+     (> lower upper)
+     (not-satisfiable-response cm filepath)
+
+     (> upper file-size)
+     (not-satisfiable-response cm filepath)
+
+     (> lower file-size)
+     (not-satisfiable-response cm filepath)
+
+     (= lower upper)
+     (range-response cm filepath lower (inc lower))
+
+     :else
+     (range-response cm filepath lower upper))))
+
+(defn handle-unbounded-negative-request
+  [cm filepath range]
+  (let [file-size (info/file-size cm filepath)
+        lower     (+ file-size (- (Integer/parseInt (:lower range)) 1))
+        upper     (- file-size 1)]
+    (cond
+     (> lower upper)
+     (not-satisfiable-response cm filepath)
+
+     (> upper file-size)
+     (not-satisfiable-response cm filepath)
+
+     (> lower file-size)
+     (not-satisfiable-response cm filepath)
+
+     (= lower upper)
+     (range-response cm filepath lower (inc lower))
+
+     :else
+     (range-response cm filepath lower upper))))
+
+(defn handle-byte-request
+  [cm filepath range]
+  (let [file-size (info/file-size cm filepath)
+        lower     (Integer/parseInt (:lower range))
+        upper     (+ (Integer/parseInt (:lower range)) 1)]
+    (cond
+     (> lower upper)
+     (not-satisfiable-response cm filepath)
+     
+     (> upper file-size)
+     (not-satisfiable-response cm filepath)
+
+     (> lower file-size)
+     (not-satisfiable-response cm filepath)
+     
+     (= lower upper)
+     (range-response cm filepath lower (inc lower))
+     
+     :else
+     (range-response cm filepath lower upper))))
+
 (defn serve-range
-  [filepath [start-byte end-byte]]
-  (init/with-jargon (jargon-cfg) [cm]
-    (validated cm filepath
-      (if (nil? end-byte)
-       (range-response cm filepath start-byte (info/file-size cm filepath))
-       (range-response cm filepath start-byte end-byte)))))
+  [cm filepath range]
+  (validated
+   cm filepath
+   (case (:kind range)
+     "bounded"
+     (handle-bounded-request cm filepath range)
+
+     "unbounded"
+     (handle-unbounded-request cm filepath range)
+
+     "unbounded-negative"
+     (handle-unbounded-negative-request cm filepath range)
+
+     "byte"
+     (handle-byte-request cm filepath range)
+
+     (serve cm filepath))))
 
 (defn handle-request
   [req]
   (info "Handling GET request for" (:uri req))
   (info "\n" (cfg/pprint-to-string req))
-  (try
-   (if (range-request? req)
-    (do (debug "extracted range:" (extract-ranges req))
-      (serve-range (:uri req) (extract-ranges req)))
-    (serve (:uri req)))
-    (catch Exception e
-      (warn e))))
+  (init/with-jargon (jargon-cfg) [cm]
+    (try
+      (if (range-request? req)
+        (let [ranges   (extract-ranges req)
+              filepath (:uri req)]
+          (if-not ranges
+            (not-satisfiable-response cm filepath)
+            (serve-range cm filepath (first ranges))))
+        (serve (:uri req)))
+      (catch Exception e
+        (warn e)))))
 
 (defn handle-head-request
   [req]

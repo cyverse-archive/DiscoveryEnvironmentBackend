@@ -62,9 +62,11 @@
            {:range "-1" :kind "unbounded-negative" :lower "-1"}))))
 
 (deftest test-extract-headers
-  (is (= (extract-ranges {:headers {"range" "byte=0-20"}})
+  (is (= (extract-ranges {:headers {"range" "bytes=0-20"}})
          '({:range "0-20" :lower "0" :upper "20" :kind "bounded"})))
-  (is (= (extract-ranges {:headers {"range" "byte=20-"}})
+  (is (= (extract-ranges {:headers {"range" "bytes=20-"}})
          '({:range "20-" :lower "20" :kind "unbounded"})))
-  (is (= (extract-ranges {:headers {"range" "byte=-10"}})
-         '({:range "-10" :kind "unbounded-negative" :lower "-10"}))))
+  (is (= (extract-ranges {:headers {"range" "bytes=-10"}})
+         '({:range "-10" :kind "unbounded-negative" :lower "-10"})))
+  (is (= (extract-ranges {:headers {"range" "bytes=20"}})
+         '())))
