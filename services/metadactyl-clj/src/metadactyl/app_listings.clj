@@ -15,11 +15,11 @@
 
 (defn- add-subgroups
   [group groups]
-  (let [subgroups (filter #(= (:hid group) (:parent_hid %)) groups)
+  (let [subgroups (filter #(= (:id group) (:parent_id %)) groups)
         subgroups (map #(add-subgroups % groups) subgroups)
         result    (if (empty? subgroups) group (assoc group :groups subgroups))
         result    (assoc result :template_count (:app_count group))
-        result    (dissoc result :app_count :parent_hid :hid)]
+        result    (dissoc result :app_count :parent_id)]
     result))
 
 (defn- format-my-public-apps-group
@@ -65,9 +65,9 @@
 (defn- format-app-group-hierarchy
   "Formats the app group hierarchy rooted at the app group with the given
    identifier."
-  [user-workspace-id params {root-id :root_analysis_group_id workspace-id :id}]
+  [user-workspace-id params {root-id :root_category_id workspace-id :id}]
   (let [groups (get-app-group-hierarchy root-id params)
-        root   (first (filter #(= root-id (:hid %)) groups))
+        root   (first (filter #(= root-id (:id %)) groups))
         result (add-subgroups root groups)]
     (if (= user-workspace-id workspace-id)
       (add-virtual-groups result workspace-id params)

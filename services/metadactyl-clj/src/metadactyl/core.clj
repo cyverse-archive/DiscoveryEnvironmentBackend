@@ -21,6 +21,8 @@
             [compojure.handler :as handler]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
+            [metadactyl.routes.apps :refer :all]
+            [metadactyl.routes.params :refer :all]
             [metadactyl.service.app-metadata :as app-metadata]
             [metadactyl.util.config :as config]
             [ring.adapter.jetty :as jetty]
@@ -51,9 +53,6 @@
 
   (GET "/search-analyses" [:as {params :params}]
        (search-apps params))
-
-  (GET "/app-groups" [:as {params :params}]
-       (trap #(get-only-app-groups params)))
 
   (GET "/get-analyses-in-group/:app-group-id"
        [app-group-id :as {params :params}]
@@ -287,8 +286,12 @@
                  :title "Metadactyl API"
                  :description "Documentation for the Metadactyl REST API"
                  :apiVersion "0.0.2")
-   (swaggered "unsecured"
+   (swaggered "apps"
               :description "Discovery Environment App endpoints."
+              (context "/apps" [:as {params :params}]
+                       (store-current-user apps params)))
+   (swaggered "unsecured"
+              :description "Unsecured Discovery Environment App endpoints."
               metadactyl-routes)
    (swaggered "secured"
               :description "Secured Discovery Environment App endpoints."
