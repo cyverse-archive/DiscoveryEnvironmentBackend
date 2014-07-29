@@ -281,7 +281,7 @@
   (middlewares
    [wrap-keyword-params
     wrap-query-params]
-   (swagger-ui "/api-ui")
+   (swagger-ui "/api")
    (swagger-docs "/api/api-docs"
                  :title "Metadactyl API"
                  :description "Documentation for the Metadactyl REST API"

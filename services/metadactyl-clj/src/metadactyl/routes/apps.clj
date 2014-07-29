@@ -11,7 +11,7 @@
   (context "/categories" []
            (GET* "/" []
                  :query [params SecuredQueryParams]
-                 :summary "Listing App Categories"
+                 :summary "List App Categories"
                  :notes "This service is used by the DE to obtain the list of app categories that
                  are visible to the user. This list includes app categories that are in the user's
                  workspace along with any app categories that are in a workspace that is marked as
