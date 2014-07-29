@@ -221,8 +221,8 @@
 (defn- load-app-details
   "Retrieves the details for a single app."
   [app-id]
-  (first (select transformation_activity
-                 (with transformation_activity_references)
+  (first (select apps
+                 (with app_references)
                  (where {:id app-id}))))
 
 (defn- load-deployed-components
@@ -314,4 +314,4 @@
 (defn get-app-description
   "This service obtains the description of an app."
   [app-id]
-  (:description (first (select transformation_activity (where {:id app-id}))) ""))
+  (:description (first (select apps (where {:id app-id}))) ""))

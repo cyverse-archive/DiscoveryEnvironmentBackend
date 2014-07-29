@@ -1,7 +1,7 @@
 (ns metadactyl.metadata.analyses
   (:use [clj-time.core :only [default-time-zone]]
         [clj-time.format :only [formatter parse]]
-        [kameleon.entities :only [transformation_activity workspace]]
+        [kameleon.entities :only [apps workspace]]
         [korma.core]
         [metadactyl.util.config :only [osm-base-url osm-jobs-bucket]]
         [metadactyl.util.conversions :only [to-long]]
@@ -80,7 +80,7 @@
   [app-ids]
   (into {}
         (map #(vector (:id %) %)
-             (select transformation_activity
+             (select apps
                      (fields :id :description :wikiurl :disabled)
                      (where {:id [in app-ids]})))))
 

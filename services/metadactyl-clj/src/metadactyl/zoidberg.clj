@@ -39,7 +39,7 @@
   "Verifies that an analysis has not been made public."
   [analysis]
   (let [analysis-id (:analysis_id analysis)
-        app (first (select analysis_listing
+        app (first (select app_listing
                            (fields :is_public)
                            (where {:id analysis-id})))]
     (if (:is_public app)
@@ -69,9 +69,9 @@
 (defn- get-templates
   "Fetches a list of templates for the given IDs with their inputs and outputs."
   [template-ids]
-  (select template
-          (with-dataobjects inputs)
-          (with-dataobjects outputs)
+  (select tasks
+          (with-dataobjects input_mapping)
+          (with-dataobjects output_mapping)
           (fields :hid
                   :id
                   :name
@@ -98,7 +98,7 @@
    source/target mapping IDs and step names."
   [app-id]
   (map (comp fix-template-id add-app-type)
-   (select transformation_steps
+   (select app_steps
            (with input_mapping
                  (join [:transformation_steps :source_step]
                        {:input_mapping.source :source_step.id})
@@ -224,7 +224,7 @@
 (defn- get-analysis
   "Fetches an analysis with the given app ID."
   [app-id]
-  (let [analysis (select transformation_activity
+  (let [analysis (select apps
                          (fields [:id :analysis_id]
                                  [:name :analysis_name]
                                  :description

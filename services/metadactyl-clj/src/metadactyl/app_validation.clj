@@ -3,14 +3,14 @@
         [korma.core]
         [kameleon.core]
         [kameleon.entities]
-        [kameleon.queries :only [property-types-for-tool-type]])
+        [kameleon.queries :only [parameter-types-for-tool-type]])
   (:require [clojure.string :as string]))
 
 (defn- get-tool-type-from-database
   "Gets the tool type for the deployed component with the given identifier from
    the database."
   [component-id]
-  (first (select deployed_components
+  (first (select tools
                  (fields :tool_types.id :tool_types.name)
                  (join tool_types)
                  (where {:id component-id}))))
@@ -19,7 +19,7 @@
   "Gets the deployed component for the deployed component with the given identifer
    from the database."
   [component-id]
-  (first (select deployed_components
+  (first (select tools
                  (where {:id component-id}))))
 
 ;; FIXME
@@ -44,7 +44,7 @@
 (defn- get-valid-ptype-names
   "Gets the valid property type names for a given tool type."
   [{tool-type-id :id}]
-  (map :name (property-types-for-tool-type tool-type-id)))
+  (map :name (parameter-types-for-tool-type tool-type-id)))
 
 ;; FIXME
 (defn validate-template-property-types

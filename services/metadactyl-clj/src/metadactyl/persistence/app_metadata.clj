@@ -11,7 +11,7 @@
   [app-id]
   (assert-not-nil
    [:app-id app-id]
-   (first (select transformation_activity
+   (first (select apps
                   (where {:id app-id})))))
 
 (defn update-app-labels

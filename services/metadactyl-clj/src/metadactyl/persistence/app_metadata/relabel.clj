@@ -1,7 +1,7 @@
 (ns metadactyl.persistence.app-metadata.relabel
   "Persistence layer for app metadata."
   (:use [kameleon.entities]
-        [kameleon.queries :only [get-templates-for-app]]
+        [kameleon.queries :only [get-tasks-for-app]]
         [korma.core]
         [medley.core :only [remove-vals]]
         [metadactyl.util.conversions :only [long->timestamp]]
@@ -16,8 +16,8 @@
 (defn- get-single-template-for-app
   "Retrieves the template from a single-step app. An exception will be thrown if the app doesn't
    have exactly one step."
-  [app-hid]
-  (let [templates (get-templates-for-app app-hid)]
+  [app-id]
+  (let [templates (get-tasks-for-app app-id)]
     (when (not= 1 (count templates))
       (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
                :reason     :NOT_SINGLE_STEP_APP
@@ -118,7 +118,7 @@
   "Updates the labels in a data object."
   ([hid label description]
      (when hid
-       (update data_object
+       (update file_parameters
                (set-fields
                 (remove-nil-vals
                  {:name        label
@@ -134,7 +134,7 @@
   "Updates the labels in a property."
   [group-id {:keys [id name description label arguments] :as prop}]
   (let [{:keys [hid dataobject_id type]} (get-property-in-group group-id id)]
-    (update property
+    (update parameters
             (set-fields
              (remove-nil-vals
               {:name        name
@@ -149,7 +149,7 @@
   "Updates the labels in a property group."
   [template-hid {:keys [id name description label] :as group}]
   (let [hid (:hid (get-property-group-in-template template-hid id))]
-    (update property_group
+    (update parameter_groups
             (set-fields
              (remove-nil-vals
               {:name        name
@@ -161,7 +161,7 @@
 (defn- update-template-labels
   "Updates the labels in a template."
   [req template-hid]
-  (update template
+  (update tasks
           (set-fields
            (remove-nil-vals
             {:name        (:name req)
@@ -173,7 +173,7 @@
 (defn update-app-labels
   "Updates the labels in an app."
   [req app-hid]
-  (update transformation_activity
+  (update apps
           (set-fields
            (remove-nil-vals
             {:name             (:name req)

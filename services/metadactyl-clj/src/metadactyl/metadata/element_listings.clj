@@ -10,9 +10,9 @@
   "Creates the base query used to list property types for the metadata element
    listing service."
   []
-  (-> (select* property_type)
-      (fields :property_type.hid :property_type.id :property_type.name
-              [:value_type.name :value_type] :property_type.description)
+  (-> (select* parameter_types)
+      (fields :parameter_types.id :parameter_types.name
+              [:value_type.name :value_type] :parameter_types.description)
       (join value_type)
       (where {:deprecated false})
       (order :display_order)))
@@ -65,15 +65,15 @@
   "Obtains a listing of deployed components for the metadata element listing service."
   [_]
   {:components
-   (select deployed_components
-           (fields [:deployed_components.id :id]
-                   [:deployed_components.name :name]
-                   [:deployed_components.description :description]
-                   [:deployed_components.hid :hid]
-                   [:deployed_components.location :location]
+   (select tools
+           (fields [:tools.id :id]
+                   [:tools.name :name]
+                   [:tools.description :description]
+                   [:tools.hid :hid]
+                   [:tools.location :location]
                    [:tool_types.name :type]
-                   [:deployed_components.version :version]
-                   [:deployed_components.attribution :attribution])
+                   [:tools.version :version]
+                   [:tools.attribution :attribution])
            (join tool_types))})
 
 (defn- list-info-types
@@ -98,7 +98,7 @@
     {:property_types
      (if (nil? tool-type-id)
        (select (base-property-type-query))
-       (property-types-for-tool-type (base-property-type-query) tool-type-id))}))
+       (parameter-types-for-tool-type (base-property-type-query) tool-type-id))}))
 
 (defn- list-rule-types
   "Obtains the list of rule types for the metadata element listing service."
