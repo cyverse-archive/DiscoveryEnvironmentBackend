@@ -79,7 +79,7 @@
 (defn- get-combined-app
   [agave app-id]
   (let [metadactyl-app (metadactyl/get-app app-id)]
-    (->> (map (fn [g n] (assoc g :step_number n)) (:groups metadactyl-app) (iterate inc 1))
+    (->> (:groups metadactyl-app)
          (get-combined-groups agave app-id)
          (assoc metadactyl-app :groups))))
 
