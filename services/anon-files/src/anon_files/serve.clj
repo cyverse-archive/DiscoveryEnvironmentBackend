@@ -1,5 +1,6 @@
 (ns anon-files.serve
-  (:use [ring.util.response])
+  (:use [ring.util.response]
+        [ring.util.time])
   (:require [clj-jargon.init :as init]
             [clj-jargon.item-ops :as ops]
             [clj-jargon.item-info :as info]
@@ -143,10 +144,13 @@
      :else
      ~@body))
 
+
 (defn- file-header
   ([cm filepath start-byte end-byte]
-   {"Accept-Ranges" "bytes"
-    "Content-Length" (str (- end-byte start-byte))})
+     {"Accept-Ranges" "bytes"
+      "Cache-Control" "no-cache"
+      "ETag" (str "W/" (info/lastmod-date cm filepath))
+      "Content-Length" (str (- end-byte start-byte))})
   ([cm filepath]
    {"Accept-Ranges" "bytes"
     "Content-Length" (str (info/file-size cm filepath))}))
