@@ -278,23 +278,20 @@
      (config/load-config-from-file cfg-path)
      (init-service)))
 
-(defn site-handler [routes]
-  (-> routes
-      wrap-keyword-params
-      wrap-query-params))
-
 (defapi app
-  (swagger-ui "/api-ui" )
-  (swagger-docs "/api/api-docs"
-                :title "Metadactyl API"
-                :description "Documentation for the Metadactyl REST API"
-                :apiVersion "0.0.2")
-  (swaggered "unsecured"
-             :description "Discovery Environment App endpoints."
-             (site-handler metadactyl-routes))
-  (swaggered "secured"
-             :description "Secured Discovery Environment App endpoints."
-             (site-handler
+  (middlewares
+   [wrap-keyword-params
+    wrap-query-params]
+   (swagger-ui "/api-ui")
+   (swagger-docs "/api/api-docs"
+                 :title "Metadactyl API"
+                 :description "Documentation for the Metadactyl REST API"
+                 :apiVersion "0.0.2")
+   (swaggered "unsecured"
+              :description "Discovery Environment App endpoints."
+              metadactyl-routes)
+   (swaggered "secured"
+              :description "Secured Discovery Environment App endpoints."
               (context "/secured" [:as {params :params}]
                        (store-current-user secured-routes params)))))
 
