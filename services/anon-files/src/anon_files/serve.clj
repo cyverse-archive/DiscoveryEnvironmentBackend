@@ -144,16 +144,22 @@
      :else
      ~@body))
 
+(defn- base-file-header
+  [cm filepath]
+  {"Accept-Ranges"    "bytes"
+   "Cache-Control"    "no-cache"
+   "ETag"             (str "W/" (info/lastmod-date cm filepath))
+   "Expires"          "0"
+   "Vary"             "*"
+   "Content-Location" filepath})
 
 (defn- file-header
   ([cm filepath start-byte end-byte]
-     {"Accept-Ranges" "bytes"
-      "Cache-Control" "no-cache"
-      "ETag" (str "W/" (info/lastmod-date cm filepath))
-      "Content-Length" (str (- end-byte start-byte))})
+     (merge (base-file-header cm filepath)
+            {"Content-Length" (str (- end-byte start-byte))}))
   ([cm filepath]
-   {"Accept-Ranges" "bytes"
-    "Content-Length" (str (info/file-size cm filepath))}))
+     (merge (base-file-header cm filepath)
+            {"Content-Length" (str (info/file-size cm filepath))})))
 
 (defn serve
   [cm filepath]
