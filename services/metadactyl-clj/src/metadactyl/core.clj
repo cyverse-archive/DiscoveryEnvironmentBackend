@@ -167,9 +167,6 @@
   (GET "/analysis-details/:app-id" [app-id]
        (trap #(get-app-details app-id)))
 
-  (GET "/public-app-groups" [:as {params :params}]
-       (trap #(get-public-app-groups params)))
-
   (GET "/list-analysis/:app-id" [app-id]
        (throw+ '("list-app" app-id)))
 

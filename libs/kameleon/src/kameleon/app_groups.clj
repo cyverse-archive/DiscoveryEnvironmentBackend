@@ -14,8 +14,7 @@
   "Gets the list of workspaces that are visible to the user with the given workspace
    identifier."
   [workspace-id]
-  (mapcat (fn [condition] (select workspace (where condition)))
-          [{:id workspace-id} {:is_public true}]))
+  (select workspace (where (or {:is_public true} {:id workspace-id}))))
 
 (defn get-visible-root-app-group-ids
   "Gets the list of internal root app group identifiers that are visible to the

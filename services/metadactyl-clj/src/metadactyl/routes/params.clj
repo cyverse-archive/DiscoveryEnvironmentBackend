@@ -8,3 +8,7 @@
    (s/optional-key :first-name) String
    (s/optional-key :last-name)  String})
 
+(s/defschema CategoryListingParams
+  (merge SecuredQueryParams
+         {:public Boolean}))
+

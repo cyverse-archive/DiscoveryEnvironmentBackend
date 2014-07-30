@@ -85,10 +85,12 @@
        (cheshire/encode
         {:groups (map (partial format-app-group-hierarchy workspace-id params) workspaces)}))))
 
-(defn get-public-app-groups
+(defn get-app-groups
   "Retrieves the list of app groups that are visible to all users. TODO: refactor me."
-  [params]
-  (get-only-app-groups -1 params))
+  [{:keys [public] :as params}]
+  (if public
+    (get-only-app-groups nil params)
+    (get-only-app-groups params)))
 
 (defn- validate-app-pipeline-eligibility
   "Validates an App for pipeline eligibility, throwing a slingshot stone ."
