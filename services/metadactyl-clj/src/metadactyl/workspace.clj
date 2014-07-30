@@ -15,9 +15,9 @@
     (map-indexed
       (fn [index name]
         (add-subgroup
-          (:root_analysis_group_id workspace)
+          (:root_category_id workspace)
           index
-          (:hid (create-app-group (:id workspace) name))))
+          (:id (create-app-group (:id workspace) {:name name}))))
       (cheshire/decode (workspace-default-app-groups) true))))
 
 (defn- create-workspace-with-default-app-groups
@@ -28,11 +28,11 @@
         workspace_id (:id new-workspace)
         root_app_group (create-app-group
                          workspace_id
-                         (workspace-root-app-group))
-        root_analysis_group_id (:hid root_app_group)
+                         {:name (workspace-root-app-group)})
+        root-app-group-id (:id root_app_group)
         new-workspace (set-workspace-root-app-group
                         workspace_id
-                        root_analysis_group_id)]
+                        root-app-group-id)]
     (create-default-workspace-subgroups new-workspace)
     new-workspace))
 

@@ -43,7 +43,7 @@
    workspace_id and name, and returns a map of the group with its id."
   ([workspace-id m]
      (create-app-group workspace-id (:name m) m))
-  ([workspace-id name {:keys [id description] :or {:id (uuid)}}]
+  ([workspace-id name {:keys [id description] :or {id (uuid)}}]
      (insert app_categories (values {:id           id
                                      :workspace_id workspace-id
                                      :description  description
