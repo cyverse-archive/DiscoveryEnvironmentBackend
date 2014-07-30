@@ -186,7 +186,11 @@
         job-steps (map (partial build-job-step-save-info job-id)
                        (validate-job-steps app-id (load-job-steps app-id)))]
     (jp/save-multistep-job job-info job-steps submission)
-    (submit-job-step agave workspace-id job-info (first job-steps) submission)))
+    (submit-job-step agave workspace-id job-info (first job-steps) submission)
+    {:id         job-id
+     :name       (:job-name job-info)
+     :status     (:status job-info)
+     :start-date (db/millis-from-timestamp (:start-date job-info))}))
 
 (defn submit-job
   "Submits a job for execution. The job may run exclusively in Agave, exclusively in the DE, or it
