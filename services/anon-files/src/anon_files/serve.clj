@@ -184,16 +184,25 @@
    :headers {"Accept-Ranges" "bytes"
              "Content-Range" (str "bytes */" (info/file-size cm filepath))}})
 
+(defn calc-lower
+  [lower-val]
+  (if-not (pos? lower-val)
+    0
+    lower-val))
+
+(defn calc-upper
+  [upper-val file-size]
+  (if (> upper-val file-size)
+    file-size
+    upper-val))
+
 (defn handle-bounded-request
   [cm filepath range]
-  (let [lower     (Integer/parseInt (:lower range))
-        upper     (Integer/parseInt (:upper range))
-        file-size (info/file-size cm filepath)]
+  (let [file-size (info/file-size cm filepath)
+        lower     (calc-lower (Integer/parseInt (:lower range)))
+        upper     (calc-upper (Integer/parseInt (:upper range)) file-size)]
     (cond
      (> lower upper)
-     (not-satisfiable-response cm filepath)
-
-     (> upper file-size)
      (not-satisfiable-response cm filepath)
 
      (> lower file-size)
@@ -208,13 +217,10 @@
 (defn handle-unbounded-request
   [cm filepath range]
   (let [file-size (info/file-size cm filepath)
-        lower     (Integer/parseInt (:lower range))
+        lower     (calc-lower (Integer/parseInt (:lower range)))
         upper     file-size]
     (cond
      (> lower upper)
-     (not-satisfiable-response cm filepath)
-
-     (> upper file-size)
      (not-satisfiable-response cm filepath)
 
      (> lower file-size)
@@ -229,13 +235,10 @@
 (defn handle-unbounded-negative-request
   [cm filepath range]
   (let [file-size (info/file-size cm filepath)
-        lower     (+ file-size (- (Integer/parseInt (:lower range)) 1))
-        upper     (- file-size 1)]
+        lower     (calc-lower (+ file-size (- (Integer/parseInt (:lower range)) 1)))
+        upper     (calc-upper (- file-size 1) file-size)]
     (cond
      (> lower upper)
-     (not-satisfiable-response cm filepath)
-
-     (> upper file-size)
      (not-satisfiable-response cm filepath)
 
      (> lower file-size)
@@ -250,15 +253,12 @@
 (defn handle-byte-request
   [cm filepath range]
   (let [file-size (info/file-size cm filepath)
-        lower     (Integer/parseInt (:lower range))
-        upper     (+ (Integer/parseInt (:lower range)) 1)]
+        lower     (calc-lower (Integer/parseInt (:lower range)))
+        upper     (calc-upper (+ (Integer/parseInt (:lower range)) 1) file-size)]
     (cond
      (> lower upper)
      (not-satisfiable-response cm filepath)
      
-     (> upper file-size)
-     (not-satisfiable-response cm filepath)
-
      (> lower file-size)
      (not-satisfiable-response cm filepath)
      
