@@ -54,10 +54,6 @@
   (GET "/search-analyses" [:as {params :params}]
        (search-apps params))
 
-  (GET "/get-analyses-in-group/:app-group-id"
-       [app-group-id :as {params :params}]
-       (list-apps-in-group app-group-id params))
-
   (GET "/get-components-in-analysis/:app-id" [app-id]
        (throw+ '("list-deployed-components-in-app" app-id)))
 

@@ -102,8 +102,8 @@
   [workspace favorites_group_index query_opts]
   (let [user_id (:user_id workspace)
         workspace_root_group_id (:root_category_id workspace)
-        row_offset (try (Integer/parseInt (:offset query_opts)) (catch Exception e 0))
-        row_limit (try (Integer/parseInt (:limit query_opts)) (catch Exception e -1))
+        row_offset (or (:offset query_opts) 0)
+        row_limit (or (:limit query_opts) -1)
         sort_field (keyword (or (:sortField query_opts) (:sortfield query_opts)))
         sort_dir (keyword (or (:sortDir query_opts) (:sortdir query_opts)))
 

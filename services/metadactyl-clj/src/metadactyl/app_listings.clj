@@ -18,7 +18,7 @@
   (let [subgroups (filter #(= (:id group) (:parent_id %)) groups)
         subgroups (map #(add-subgroups % groups) subgroups)
         result    (if (empty? subgroups) group (assoc group :groups subgroups))
-        result    (assoc result :template_count (:app_count group))
+        result    (assoc result :task_count (:app_count group))
         result    (dissoc result :app_count :parent_id)]
     result))
 
@@ -30,7 +30,7 @@
    :description    ""
    :workspace_id   workspace-id
    :is_public      false
-   :template_count (count-public-apps-by-user (:email current-user) params)})
+   :task_count (count-public-apps-by-user (:email current-user) params)})
 
 (defn list-my-public-apps
   "Lists the public apps belonging to the user with the given workspace."
@@ -60,7 +60,7 @@
                            params)]
       (-> group
           (update-in [:groups] concat virtual-groups)
-          (assoc :template_count actual-count)))))
+          (assoc :task_count actual-count)))))
 
 (defn- format-app-group-hierarchy
   "Formats the app group hierarchy rooted at the app group with the given
@@ -153,8 +153,8 @@
 (defn- format-app
   "Formats certain app fields into types more suitable for the client."
   [app]
-  (-> (assoc app :can_run (= (:template_count app) (:component_count app)))
-      (dissoc :component_count :template_count)
+  (-> (assoc app :can_run (= (:task_count app) (:tool_count app)))
+      (dissoc :tool_count :task_count)
       (format-app-timestamps)
       (format-app-ratings)
       (format-app-pipeline-eligibility)
@@ -164,22 +164,22 @@
   "Formats a listing for a virtual group."
   [workspace group-id params]
   (let [group-key (keyword group-id)]
-    (when-let [format-fns (group-key virtual-group-fns)]
+    (when-let [format-fns (virtual-group-fns group-key)]
       (assoc ((:format-group format-fns) (:id workspace) params)
         :templates (map format-app ((:format-listing format-fns) workspace params))))))
 
 (defn- count-apps-in-group
   "Counts the number of apps in an app group, including virtual app groups that may be included."
-  [{root-group-hid :root_analysis_group_id} {:keys [hid id] :as app-group} params]
-  (if (= root-group-hid hid)
+  [{root-group-id :root_category_id} {:keys [id] :as app-group} params]
+  (if (= root-group-id id)
     (count-apps-in-group-for-user id (:email current-user) params)
     (count-apps-in-group-for-user id params)))
 
 (defn- get-apps-in-group
   "Gets the apps in an app group, including virtual app groups that may be included."
-  [{root-group-hid :root_analysis_group_id :as workspace} {:keys [hid id]} params]
+  [{root-group-id :root_category_id :as workspace} {:keys [id]} params]
   (let [faves-index (workspace-favorites-app-group-index)]
-    (if (= root-group-hid hid)
+    (if (= root-group-id id)
       (get-apps-in-group-for-user id workspace faves-index params (:email current-user))
       (get-apps-in-group-for-user id workspace faves-index params))))
 
@@ -187,12 +187,11 @@
   "This service lists all of the apps in a real app group and all of its descendents."
   [workspace app_group_id params]
   (let [app_group      (get-app-group app_group_id)
-        root_group_hid (:root_analysis_group_id workspace)
         total          (count-apps-in-group workspace app_group params)
         apps_in_group  (get-apps-in-group workspace app_group params)
         apps_in_group  (map format-app apps_in_group)]
     (assoc app_group
-      :template_count total
+      :task_count total
       :templates apps_in_group)))
 
 (defn list-apps-in-group
@@ -217,7 +216,7 @@
                         (workspace-favorites-app-group-index)
                         params)
         search_results (map format-app search_results)]
-    (cheshire/encode {:template_count total
+    (cheshire/encode {:task_count total
                       :templates search_results})))
 
 (defn- load-app-details
