@@ -8,8 +8,8 @@
 (defn json?
   "Returns true if a string is JSON."
   [json-string]
-  (if (try 
-        (cheshire/decode json-string) 
+  (if (try
+        (cheshire/decode json-string)
         (catch Exception e false))
     true
     false))

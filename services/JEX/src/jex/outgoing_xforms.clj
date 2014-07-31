@@ -19,4 +19,3 @@
    to clean stuff up before dumping information into the OSM."
   [outgoing-map]
   (filter-map outgoing-map))
-
