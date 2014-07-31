@@ -200,8 +200,19 @@
   [cm filepath range]
   (let [file-size (info/file-size cm filepath)
         lower     (calc-lower (Integer/parseInt (:lower range)))
-        upper     (calc-upper (Integer/parseInt (:upper range)) file-size)]
+        upper     (calc-upper (Integer/parseInt (:upper range)) file-size)
+        num-bytes (inc (- upper lower))]
+    (warn
+     "File information:\n"
+     "File Path:" filepath "\n"
+     "File Size:" file-size "\n"
+     "Lower Bound:" lower "\n"
+     "Upper Bound:" upper "\n"
+     "Number bytes:" num-bytes "\n")
     (cond
+     (> num-bytes Integer/MAX_VALUE)
+     (not-satisfiable-response cm filepath)
+     
      (> lower upper)
      (not-satisfiable-response cm filepath)
 
@@ -218,8 +229,19 @@
   [cm filepath range]
   (let [file-size (info/file-size cm filepath)
         lower     (calc-lower (Integer/parseInt (:lower range)))
-        upper     file-size]
+        upper     file-size
+        num-bytes (inc (- upper lower))]
+    (warn
+     "File information:\n"
+     "File Path:" filepath "\n"
+     "File Size:" file-size "\n"
+     "Lower Bound:" lower "\n"
+     "Upper Bound:" upper "\n"
+     "Number bytes:" num-bytes "\n")
     (cond
+     (> num-bytes Integer/MAX_VALUE)
+     (not-satisfiable-response cm filepath)
+     
      (> lower upper)
      (not-satisfiable-response cm filepath)
 
@@ -236,8 +258,19 @@
   [cm filepath range]
   (let [file-size (info/file-size cm filepath)
         lower     (calc-lower (+ file-size (- (Integer/parseInt (:lower range)) 1)))
-        upper     (calc-upper (- file-size 1) file-size)]
+        upper     (calc-upper (- file-size 1) file-size)
+        num-bytes (inc (- upper lower))]
+    (warn
+     "File information:\n"
+     "File Path:" filepath "\n"
+     "File Size:" file-size "\n"
+     "Lower Bound:" lower "\n"
+     "Upper Bound:" upper "\n"
+     "Number bytes:" num-bytes "\n")
     (cond
+     (> num-bytes Integer/MAX_VALUE)
+     (not-satisfiable-response cm filepath)
+     
      (> lower upper)
      (not-satisfiable-response cm filepath)
 
@@ -254,8 +287,19 @@
   [cm filepath range]
   (let [file-size (info/file-size cm filepath)
         lower     (calc-lower (Integer/parseInt (:lower range)))
-        upper     (calc-upper (+ (Integer/parseInt (:lower range)) 1) file-size)]
+        upper     (calc-upper (+ (Integer/parseInt (:lower range)) 1) file-size)
+        num-bytes (inc (- upper lower))]
+    (warn
+     "File information:\n"
+     "File Path:" filepath "\n"
+     "File Size:" file-size "\n"
+     "Lower Bound:" lower "\n"
+     "Upper Bound:" upper "\n"
+     "Number bytes:" num-bytes "\n")
     (cond
+     (> num-bytes Integer/MAX_VALUE)
+     (not-satisfiable-response cm filepath)
+     
      (> lower upper)
      (not-satisfiable-response cm filepath)
      
@@ -299,7 +343,7 @@
           (if-not ranges
             (not-satisfiable-response cm filepath)
             (serve-range cm filepath (first ranges))))
-        (serve (:uri req)))
+        (serve cm (:uri req)))
       (catch Exception e
         (warn e)))))
 
@@ -309,6 +353,6 @@
   (info "\n" (cfg/pprint-to-string req))
   (init/with-jargon (jargon-cfg) [cm]
     (validated cm (:uri req)
-      {:status 200
-       :body ""
-       :headers (file-header cm (:uri req))})))
+               {:status 200
+                :body ""
+                :headers (file-header cm (:uri req))})))
