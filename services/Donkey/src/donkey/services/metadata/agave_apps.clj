@@ -67,10 +67,12 @@
         output-dir (mu/build-result-folder-path submission)
         job        (.submitJob agave-client
                                (assoc (mu/update-submission-result-folder submission output-dir)
-                                 :callbackUrl cb-url))]
+                                 :callbackUrl cb-url))
+        username   (:shortUsername current-user)
+        email      (:email current-user)]
     (store-agave-job id job submission)
     (store-job-step id job)
-    (dn/send-agave-job-status-update (:shortUsername current-user) (assoc job :id id))
+    (dn/send-job-status-update username email (assoc job :id id))
     {:id         (str id)
      :name       (:name job)
      :status     (:status job)

@@ -3,6 +3,7 @@
         [donkey.auth.user-attributes :only [current-user]])
   (:require [clojure.tools.logging :as log]
             [donkey.clients.metadactyl :as metadactyl]
+            [donkey.clients.notifications :as dn]
             [donkey.clients.osm :as osm]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
@@ -49,9 +50,12 @@
   [workspace-id submission]
   (let [job-id     (UUID/randomUUID)
         submission (assoc submission :uuid (str job-id))
-        job        (metadactyl/submit-job workspace-id submission)]
+        job        (metadactyl/submit-job workspace-id submission)
+        username   (:shortUsername current-user)
+        email      (:email current-user)]
     (store-submitted-de-job job-id job submission)
     (store-job-step job-id job)
+    (dn/send-job-status-update username email (assoc job :id job-id))
     {:id         (str job-id)
      :name       (:name job)
      :status     (:status job)

@@ -3,7 +3,7 @@
         [donkey.util.config]
         [donkey.util.transformers]
         [donkey.auth.user-attributes]
-        [donkey.services.user-info :only [get-user-details]]
+        [donkey.clients.user-info :only [get-user-details]]
         [donkey.services.fileio.actions :only [upload]]
         [donkey.util.email]
         [donkey.util.service]

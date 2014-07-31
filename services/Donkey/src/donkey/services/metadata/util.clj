@@ -1,10 +1,12 @@
 (ns donkey.services.metadata.util
+  (:use [donkey.auth.user-attributes :only [current-user]])
   (:require [clj-time.core :as t]
             [clj-time.format :as tf]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [donkey.clients.notifications :as dn]
+            [donkey.clients.user-info :as du]
             [donkey.util.db :as db]))
 
 (def failed-status "Failed")
@@ -64,13 +66,20 @@
    :wiki_url         (:app-wiki-url job)
    :app_disabled     (:disabled (first (remove nil? (map #(% (:app-id job)) app-tables))))})
 
+(defn- get-email-address
+  [username]
+  (if current-user
+    (:email current-user)
+    (:email (du/get-user-details username))))
+
 (defn send-job-status-notification
   "Sends a job status change notification."
   [{:keys [username startdate] :as job} job-step status end-time]
   (let [username     (string/replace username #"@.*" "")
         end-millis   (db/timestamp-str end-time)
-        start-millis (db/timestamp-str startdate)]
-    (dn/send-agave-job-status-update username (assoc (format-job [] job)
+        start-millis (db/timestamp-str startdate)
+        email        (get-email-address username)]
+    (dn/send-job-status-update username email (assoc (format-job [] job)
                                                 :status    status
                                                 :enddate   end-millis
                                                 :startdate start-millis))))

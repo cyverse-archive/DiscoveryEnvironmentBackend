@@ -31,7 +31,7 @@
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [cheshire "5.3.1"]
                  [clj-http "0.9.1"]
-                 [clj-time "0.7.0"]
+                 [clj-time "0.8.0"]
                  [com.cemerick/url "0.1.1"]
                  [ring "1.2.2"]
                  [compojure "1.1.7"]
