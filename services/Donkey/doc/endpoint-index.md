@@ -6,6 +6,7 @@
 * [POST /admin/filesystem/index](endpoints/filesystem/search.md#endpoint)
 * [POST /arg-preview](endpoints/updated-app-metadata.md#previewing-command-line-arguments)
 * [POST /callbacks/agave-job/{job-uuid}](endpoints/callbacks.md#receiving-agave-job-status-updates)
+* [POST /callbacks/de-job](endpoints/callbacks.md#receiving-de-job-status-updates)
 * [POST /callbacks/notification](endpoints/callbacks.md#receiving-de-notifications)
 * [POST /can-export-analysis](endpoints/app-metadata.md#determining-if-an-analysis-can-be-exported)
 * [POST /categorize-analyses](endpoints/app-metadata.md#categorizing-analyses)
