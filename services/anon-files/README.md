@@ -84,6 +84,26 @@ If you installed anon-files through an RPM, make sure the config file is at /etc
 
     sudo /sbin/service anon-files start
 
+## Downloading files
+
+anon-files supports downloading files either all at once or by byte ranges. The caller must already know the path to the file inside iRODS; the path in iRODS corresponds to the path in the URI.
+
+anon-files does not currently support request pre-conditions or multiple byte ranges per request.
+
+If the lower bound on a request is greater than the file's size, anon-files will return a 416 status code as defined in http://tools.ietf.org/html/rfc7233.
+
+If the upper bound on a range request is greater than the file size, then the returned data will go up to the end of the file and have a status of 206.
+
+If a range request consists of a single negative value, then it is used as a negative index into the content and the range is interpreted as being from that point to the end of the content.
+
+    curl -H "Range: bytes=-10" http://localhost:8080/path/to/file
+
+If a range request consists of a single positive value, then the range header is ignored and the entire content is downloaded. A single value is not enough information to determine what is wanted from the client, but the RFC implies that it shouldn't be treated as an error (unless I'm missing something, which is likely). To download a single byte from the content, perform a request like the following:
+
+    curl -H "Range: bytes=10-10" http://localhost:8080/path/to/file
+
+A successful ranged request will return the requested byte range and have a 206 status code. A requested range that is unsatisfiable (for instance, the lower bound is higher than the file size) will have a status code of 416.
+
 
 ## License
 
