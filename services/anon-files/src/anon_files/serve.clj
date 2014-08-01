@@ -156,7 +156,7 @@
 (defn- file-header
   ([cm filepath start-byte end-byte]
      (merge (base-file-header cm filepath)
-            {"Content-Length" (str (- end-byte start-byte))}))
+            {"Content-Length" (str (inc (- end-byte start-byte)))}))
   ([cm filepath]
      (merge (base-file-header cm filepath)
             {"Content-Length" (str (info/file-size cm filepath))})))
@@ -196,13 +196,9 @@
     file-size
     upper-val))
 
-(defn handle-bounded-request
-  [cm filepath range]
-  (let [file-size (info/file-size cm filepath)
-        lower     (calc-lower (Integer/parseInt (:lower range)))
-        upper     (calc-upper (Integer/parseInt (:upper range)) file-size)
-        num-bytes (inc (- upper lower))]
-    (warn
+(defn- handle-range-request
+  [cm filepath file-size lower upper num-bytes]
+  (warn
      "File information:\n"
      "File Path:" filepath "\n"
      "File Size:" file-size "\n"
@@ -220,10 +216,18 @@
      (not-satisfiable-response cm filepath)
 
      (= lower upper)
-     (range-response cm filepath lower (inc lower))
+     (range-response cm filepath lower upper)
 
      :else
-     (range-response cm filepath lower upper))))
+     (range-response cm filepath lower upper)))
+
+(defn handle-bounded-request
+  [cm filepath range]
+  (let [file-size (info/file-size cm filepath)
+        lower     (calc-lower (Integer/parseInt (:lower range)))
+        upper     (calc-upper (Integer/parseInt (:upper range)) file-size)
+        num-bytes (inc (- upper lower))]
+    (handle-range-request cm filepath file-size lower upper num-bytes)))
 
 (defn handle-unbounded-request
   [cm filepath range]
@@ -231,28 +235,7 @@
         lower     (calc-lower (Integer/parseInt (:lower range)))
         upper     file-size
         num-bytes (inc (- upper lower))]
-    (warn
-     "File information:\n"
-     "File Path:" filepath "\n"
-     "File Size:" file-size "\n"
-     "Lower Bound:" lower "\n"
-     "Upper Bound:" upper "\n"
-     "Number bytes:" num-bytes "\n")
-    (cond
-     (> num-bytes Integer/MAX_VALUE)
-     (not-satisfiable-response cm filepath)
-     
-     (> lower upper)
-     (not-satisfiable-response cm filepath)
-
-     (> lower file-size)
-     (not-satisfiable-response cm filepath)
-
-     (= lower upper)
-     (range-response cm filepath lower (inc lower))
-
-     :else
-     (range-response cm filepath lower upper))))
+    (handle-range-request cm filepath file-size lower upper num-bytes)))
 
 (defn handle-unbounded-negative-request
   [cm filepath range]
@@ -260,28 +243,7 @@
         lower     (calc-lower (+ file-size (- (Integer/parseInt (:lower range)) 1)))
         upper     (calc-upper (- file-size 1) file-size)
         num-bytes (inc (- upper lower))]
-    (warn
-     "File information:\n"
-     "File Path:" filepath "\n"
-     "File Size:" file-size "\n"
-     "Lower Bound:" lower "\n"
-     "Upper Bound:" upper "\n"
-     "Number bytes:" num-bytes "\n")
-    (cond
-     (> num-bytes Integer/MAX_VALUE)
-     (not-satisfiable-response cm filepath)
-     
-     (> lower upper)
-     (not-satisfiable-response cm filepath)
-
-     (> lower file-size)
-     (not-satisfiable-response cm filepath)
-
-     (= lower upper)
-     (range-response cm filepath lower (inc lower))
-
-     :else
-     (range-response cm filepath lower upper))))
+    (handle-range-request cm filepath file-size lower upper num-bytes)))
 
 (defn handle-byte-request
   [cm filepath range]
@@ -289,28 +251,7 @@
         lower     (calc-lower (Integer/parseInt (:lower range)))
         upper     (calc-upper (+ (Integer/parseInt (:lower range)) 1) file-size)
         num-bytes (inc (- upper lower))]
-    (warn
-     "File information:\n"
-     "File Path:" filepath "\n"
-     "File Size:" file-size "\n"
-     "Lower Bound:" lower "\n"
-     "Upper Bound:" upper "\n"
-     "Number bytes:" num-bytes "\n")
-    (cond
-     (> num-bytes Integer/MAX_VALUE)
-     (not-satisfiable-response cm filepath)
-     
-     (> lower upper)
-     (not-satisfiable-response cm filepath)
-     
-     (> lower file-size)
-     (not-satisfiable-response cm filepath)
-     
-     (= lower upper)
-     (range-response cm filepath lower (inc lower))
-     
-     :else
-     (range-response cm filepath lower upper))))
+    (handle-range-request cm filepath file-size lower upper num-bytes)))
 
 (defn serve-range
   [cm filepath range]
@@ -331,19 +272,25 @@
 
      (serve cm filepath))))
 
+(defn log-headers
+  [response]
+  (warn "Response map:\n" (dissoc response :body))
+  response)
+
 (defn handle-request
   [req]
   (info "Handling GET request for" (:uri req))
   (info "\n" (cfg/pprint-to-string req))
   (init/with-jargon (jargon-cfg) [cm]
     (try
-      (if (range-request? req)
-        (let [ranges   (extract-ranges req)
-              filepath (:uri req)]
-          (if-not ranges
-            (not-satisfiable-response cm filepath)
-            (serve-range cm filepath (first ranges))))
-        (serve cm (:uri req)))
+      (log-headers
+       (if (range-request? req)
+         (let [ranges   (extract-ranges req)
+               filepath (:uri req)]
+           (if-not ranges
+             (not-satisfiable-response cm filepath)
+             (serve-range cm filepath (first ranges))))
+         (serve cm (:uri req))))
       (catch Exception e
         (warn e)))))
 
@@ -352,7 +299,8 @@
   (info "Handling head request for" (:uri req))
   (info "\n" (cfg/pprint-to-string req))
   (init/with-jargon (jargon-cfg) [cm]
-    (validated cm (:uri req)
-               {:status 200
-                :body ""
-                :headers (file-header cm (:uri req))})))
+    (log-headers
+     (validated cm (:uri req)
+                {:status 200
+                 :body ""
+                 :headers (file-header cm (:uri req))}))))
