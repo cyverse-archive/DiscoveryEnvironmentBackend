@@ -8,7 +8,9 @@
             [clojurewerkz.elastisch.rest :as esr]
             [clojurewerkz.elastisch.rest.index :as esi]))
 
-(def ^:private mapping-files ["mappings/data/file.json" "mappings/data/folder.json"])
+(def ^:private mapping-files
+  ["mappings/data/file.json" "mappings/data/folder.json" "mappings/data/tag.json"])
+
 (def ^:private settings-file "settings.json")
 
 (def ^:private index "data")
