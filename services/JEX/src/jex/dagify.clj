@@ -5,7 +5,7 @@
   (:require [jex.config :as cfg])
   (:import [java.io File]))
 
-(defn irods-config 
+(defn irods-config
   []
   (str "porklock.irods-host = " (cfg/irods-host) "\n"
        "porklock.irods-port = " (cfg/irods-port) "\n"
@@ -23,13 +23,13 @@
 (defn script-output
   "Returns the path to the log containing the Condor logging
    from out on the execution nodes."
-  [script-dir] 
+  [script-dir]
   (ut/path-join script-dir "logs" "script-output.log"))
 
-(defn script-error 
+(defn script-error
   "Returns the path to the error log containing the Condor error
    logging from out on the execution nodes."
-  [script-dir] 
+  [script-dir]
   (ut/path-join script-dir "logs" "script-error.log"))
 
 (defn script-log
@@ -53,7 +53,7 @@
     :as analysis-map}]
   (str
    "universe = vanilla\n"
-   "executable = /bin/bash\n" 
+   "executable = /bin/bash\n"
    "arguments = \"" script-path "\"\n"
    "output = " (script-output working_dir) "\n"
    "error = " (script-error working_dir) "\n"
@@ -105,7 +105,7 @@
   (let [job-uuid  (:uuid analysis-map)
         job-dir   (str "iplant-de-jobs/" (:username analysis-map) "/" job-uuid)
         irods-cfg (irods-config-path analysis-map)]
-    (str 
+    (str
      "#!/bin/bash\n"
      "readonly IPLANT_USER=" (:username analysis-map) "\n"
      "export IPLANT_USER\n"
@@ -127,7 +127,7 @@
   "Creates the local directory where the iplant.sh and iplant.cmd files get
    written out to."
   [{script-dir :working_dir :as analysis-map}]
-  (let [dag-log-dir (ut/path-join script-dir "logs")]                     
+  (let [dag-log-dir (ut/path-join script-dir "logs")]
     (log/info (str "Creating submission directories: " dag-log-dir))
     (if-not (.mkdirs (File. dag-log-dir))
       (log/warn (str "Failed to create directory: " dag-log-dir)))

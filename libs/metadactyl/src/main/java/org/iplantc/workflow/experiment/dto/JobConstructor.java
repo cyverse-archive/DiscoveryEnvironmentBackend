@@ -45,6 +45,7 @@ public class JobConstructor {
         job.setWorkspaceId(experimentJson.getString("workspace_id"));
         job.setOutputDir(SfJsonUtils.optString(experimentJson, "", "outputDirectory", "output_dir"));
         job.setCreateOutputSubdir(experimentJson.optBoolean("create_output_subdir", true));
+        job.setCallback(experimentJson.optString("callback"));
     }
 
     /**

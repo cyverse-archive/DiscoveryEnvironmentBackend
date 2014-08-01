@@ -1,29 +1,33 @@
 (ns donkey.services.callbacks
   "Service implementations for receiving callbacks from external services."
-  (:use [donkey.util.service :only [decode-json parse-form]])
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
             [donkey.services.metadata.apps :as apps]
             [donkey.util.service :as service]))
 
-(defn- update-de-job-status
-  [msg]
-  (let [{:keys [id status enddate]} (:payload msg)]
-    (apps/update-de-job-status id status enddate)))
-
 (def ^:private notification-actions
   "Maps notification action codes to notifications."
-  {:job_status_change update-de-job-status})
+  {})
 
 (defn receive-notification
   "Receives callbacks from the notification agent."
   [body]
-  (let [msg       (decode-json body)
+  (let [msg       (service/decode-json body)
         action    (keyword (get-in msg [:payload :action]))
         action-fn (notification-actions action)]
-    (when-not (nil? action-fn)
+    (when action-fn
       (action-fn msg))
     (service/success-response)))
+
+(defn receive-de-job-status-update
+  "Receives notification from the OSM that a job status has changed."
+  [body]
+  (let [{:keys [state]}       (service/decode-json body)
+        {:keys [status uuid]} state
+        end-date              (:completion_date state)]
+    (service/assert-valid uuid "no job UUID provided")
+    (service/assert-valid status "no status provided")
+    (apps/update-de-job-status uuid status end-date)))
 
 (defn receive-agave-job-status-update
   "Receives notification from Agave that a job status has changed."

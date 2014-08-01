@@ -2,6 +2,7 @@
 
 * [Callback Endpoints](#callback-endpoints)
     * [Receiving DE Notifications](#receiving-de-notifications)
+    * [Receiving DE Job Status Updates](#receiving-de-job-status-updates)
     * [Receiving Agave Job Status Updates](#receiving-agave-job-status-updates)
     * [Obtaining OAuth Authorization Codes](#obtaining-oauth-authorization-codes)
 
@@ -56,83 +57,89 @@ This service currently ignores any notifications that are not job status update
 notifications. When it receives a job status update notification, it stores
 updated information about the job status in the database.
 
+## Receiving DE Job Status Updates
+
+Unsecured Endpoint: POST /callbacks/de-job
+
+This endpoint was introduced to provide cleaner support for pipelines that
+contain both Agave and DE job steps. Allowing the job status update to go
+through the notification agent could potentially have caused a nasty
+notification cycle, which would cause spurious errors to be logged. The request
+body for this endpoint is the job state information stored in the OSM. This
+service retrieves three fields from the state information:
+
+<table border="1">
+    <thead>
+        <tr><th>Field</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>uuid</td>
+            <td>The identifier assigned to the job step.</td>
+        </tr>
+        <tr>
+            <td>status</td>
+            <td>The current job status.</td>
+        </tr>
+        <tr>
+            <td>completion_date</td>
+            <td>The time that the job finished or failed.</td>
+        </tr>
+    </tbody>
+</table>
+
+This service works by performing the following steps:
+
+1. Looking up the job step in the database. Note that the job step ID should be
+   unique.
+2. Looking up the job in the database using foreign key in the job step.
+3. Checking the job step status to see if it changed.
+4. Assuming the status changed, updating the job step in the database.
+5. If the status of the entire pipeline changed, updating the job itself and
+   sending a notification.
+
 ## Receiving Agave Job Status Updates
 
 Unsecured Endpoint: POST /callbacks/agave-job/{job-uuid}
 
-Understanding this endpoint requires a bit of background information. Submitting
-jobs to Agave with a callback request poses kind of a chicken-and-egg problem
-for the DE. The DE needs to be able to associate each specific callback URL with
-a single Agave job. The easiest way to do that is to place the job identifier in
-the URL so that we can use it to look up the local job status information. In
-order for Agave to perform callbacks, however, it's necessary to send the
-callback URL in the job request and the DE doesn't know the Agave job ID until
-it gets the response from the job submission request.
+This endpoint receives job status update notifications from Agave. Agave can
+provide more information in its callback requests than the foundation API could,
+so there is no longer a need to query the remote system for the current job
+status. Instead the job status information is passed in query parameters:
 
-The DE gets around this problem by associating every job with both an internal
-ID and an external ID. Either the internal ID or the external ID can be used to
-look up a job status record in the database. The UUID in the callback URL is the
-internal ID in the DE database.
+<table border="1">
+    <thead>
+        <tr><th>Parameter</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>external-id</td>
+            <td>The identifier assigned to the job by Agave.</td>
+        </tr>
+        <tr>
+            <td>status</td>
+            <td>The current job status.</td>
+        </tr>
+        <tr>
+            <td>end-time</td>
+            <td>The time that the job finished or failed.</td>
+        </tr>
+    </tbody>
+</table>
 
-The status update notifications from Agave are fundamentally different from the
-ones sent by the notification agent. A callback from Agave only indicates _that_
-the job status has changed; it doesn't provide information about _how_ the job
-status changed. For that, the DE has to contact Agave in order to retrieve the
-current job status. For this reason, this service ignores the request body.
-Agave does send a request body for this service call, a URL-encoded form
-containing a single success indicator, but the request body isn't required.
+With the introduction of support for pipelines containing both DE and Agave job
+steps, each job that is submitted to either Agave or the JEX is now treated as a
+step on a (possibly single-step) pipeline. Because of that, the external ID is
+now associated with a job step rather than the job as a whole. This service
+works by performing the following steps:
 
-When this endpoint receives a request, it first looks up the UUID in the
-database. Assuming a corresponding job was found, the service then retrieves the
-external job identifier (that is, the Agave job identifier) from the job record
-and uses it to retrieve the job status information from Agave. Assuming that the
-information is successfully retrieved from Agave, the status information is
-extracted and the job record in the database is updated.
-
-Here's an example of a successful service call:
-
-```
-$ curl -sd '' http://by-tor:8888/callbacks/agave-job/bd4c266f-11db-475b-a359-d667593b5906 | python -mjson.tool
-{
-    "success": true
-}
-```
-
-This service will fail if the given UUID can't be found or if the Agave job
-associated with the UUID can't be retrieved. Here's an example of the case where
-the UUID can't be found:
-
-```
-$ curl -sd '' http://by-tor:8888/callbacks/agave-job/bd4c266f-11db-475b-a359-d667593b5905 | python -mjson.tool
-{
-    "error_code": "ERR_NOT_FOUND",
-    "message": "job bd4c266f-11db-475b-a359-d667593b5905 not found",
-    "success": false
-}
-```
-
-Here's an example of the case where the corresponding Agave job isn't readable
-by the user that's associated with the job in the database:
-
-```
-$ curl -sd '' http://by-tor:8888/callbacks/agave-job/bd4c266f-11db-475b-a359-d667593b5906 | python -mjson.tool
-{
-    "error_code": "ERR_REQUEST_FAILED",
-    "message": "lookup for HPC job 30900",
-    "success": false
-}
-```
-
-Here's an example of the case where the Agave job can't be found:
-
-```
-$ curl -sd '' http://bt-tor:31325/callbacks/agave-job/bd4c266f-11db-475b-a359-d667593b5906 | python -mjson.tool
-{
-    "error_code": "ERR_NOT_FOUND",
-    "message": "HPC job 99999 not found",
-    "success": false
-}
-```
+1. Looking up the job in the database using the job UUID in the URL path.
+2. Looking up the job step in the database using the external ID in the query
+   string.
+3. Checking the status to see if it changed.
+4. Assuming the status changed, updating the job step in the database.
+5. If the status of the entire pipeline changed, updating the job itself and
+   sending a notification.
 
 ## Obtaining OAuth Authorization Codes
 

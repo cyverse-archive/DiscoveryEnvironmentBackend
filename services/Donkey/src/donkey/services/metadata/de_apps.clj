@@ -1,7 +1,8 @@
 (ns donkey.services.metadata.de-apps
   (:use [clojure-commons.validators :only [validate-map]]
         [donkey.auth.user-attributes :only [current-user]])
-  (:require [clojure.tools.logging :as log]
+  (:require [cemerick.url :as curl]
+            [clojure.tools.logging :as log]
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.notifications :as dn]
             [donkey.clients.osm :as osm]
@@ -9,6 +10,7 @@
             [donkey.persistence.jobs :as jp]
             [donkey.services.metadata.property-values :as property-values]
             [donkey.services.metadata.util :as mu]
+            [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.util.service :as service]
             [donkey.util.time :as time-utils])
@@ -46,10 +48,20 @@
                      :job-type        jp/de-job-type
                      :app-step-number 1}))
 
+(defn- de-job-callback-url
+  []
+  (str (curl/url (config/donkey-base-url) "callbacks" "de-job")))
+
+(defn- prepare-submission
+  [submission job-id]
+  (assoc submission
+    :uuid     (str job-id)
+    :callback (de-job-callback-url)))
+
 (defn submit-job
   [workspace-id submission]
   (let [job-id     (UUID/randomUUID)
-        submission (assoc submission :uuid (str job-id))
+        submission (prepare-submission submission job-id)
         job        (metadactyl/submit-job workspace-id submission)
         username   (:shortUsername current-user)
         email      (:email current-user)]
@@ -63,7 +75,7 @@
 
 (defn submit-job-step
   [workspace-id job-info job-step submission]
-  (->> (assoc submission :uuid (str (:id job-info)))
+  (->> (prepare-submission submission (UUID/randomUUID))
        (metadactyl/submit-job workspace-id)
        (:id)))
 

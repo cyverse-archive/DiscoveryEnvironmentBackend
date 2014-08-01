@@ -74,10 +74,10 @@
 
 (defn send-job-status-notification
   "Sends a job status change notification."
-  [{:keys [username startdate] :as job} job-step status end-time]
+  [{:keys [username start-date] :as job} job-step status end-time]
   (let [username     (string/replace username #"@.*" "")
         end-millis   (db/timestamp-str end-time)
-        start-millis (db/timestamp-str startdate)
+        start-millis (db/timestamp-str start-date)
         email        (get-email-address username)]
     (dn/send-job-status-update username email (assoc (format-job [] job)
                                                 :status    status

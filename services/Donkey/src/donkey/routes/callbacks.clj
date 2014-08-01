@@ -11,7 +11,10 @@
    [config/app-routes-enabled]
 
    (POST "/notification" [:as {body :body}]
-         (trap #(svc/receive-notification body)))))
+         (trap #(svc/receive-notification body)))
+
+   (POST "/de-job" [:as {body :body}]
+         (trap #(svc/receive-de-job-status-update body)))))
 
 (defn- agave-callback-routes-enabled
   "Determines if Agave callback routes should be enabled."

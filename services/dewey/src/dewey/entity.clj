@@ -1,6 +1,7 @@
 (ns dewey.entity
   "This provides a uniform interface for accessing iRODS files and folders."
-  (:require [clj-jargon.item-info :as info]
+  (:require [clojure.tools.logging :as log]
+            [clj-jargon.item-info :as info]
             [clj-jargon.lazy-listings :as lazy]
             [clj-jargon.metadata :as metadata])
   (:import [java.util UUID]
@@ -8,14 +9,25 @@
            [org.irods.jargon.core.query CollectionAndDataObjectListingEntry]))
 
 
+(defn- lookup-base
+  [irods path]
+  (try
+    (.getCollectionAndDataObjectListingEntryAtGivenAbsolutePath (:lister irods) path)
+    (catch FileNotFoundException _)))
+
+
 (defn- mk-entity
-  [irods base]
-  (when base
-    {:irods irods
-     :id    (-> (metadata/get-attribute irods (.getFormattedAbsolutePath base) "ipc_UUID")
-              first
-              :value)
-     :base  base}))
+  ([irods base]
+   (when base
+     (let [path (.getFormattedAbsolutePath base)
+           id   (-> (metadata/get-attribute irods path "ipc_UUID") first :value)]
+       (if id
+         (mk-entity irods base id)
+         (log/info path "doesn't appear to have a UUID. It may have just been renamed.")))))
+  ([irods base id]
+   {:irods irods
+    :id    id
+    :base  base}))
 
 
 (defn lookup-entity
@@ -30,11 +42,7 @@
              It returns a representation of the entity suitable for use in this namespace. It
              returns nil if the entity doesn't exist."}
    (when path
-     (when-let [base (try
-                       (.getCollectionAndDataObjectListingEntryAtGivenAbsolutePath (:lister irods)
-                                                                                   path)
-                       (catch FileNotFoundException _))]
-       (mk-entity irods base))))
+     (mk-entity irods (lookup-base irods path))))
 
   ([irods type id]
    ^{:doc "Retrieves an entity from iRODS.
@@ -52,7 +60,7 @@
                                                                                     "ipc_UUID"
                                                                                     id))
                      :data-object (first (metadata/list-files-with-avu irods "ipc_UUID" := id)))]
-     (lookup-entity irods path))))
+     (mk-entity irods (lookup-base irods path) id))))
 
 
 (defn id

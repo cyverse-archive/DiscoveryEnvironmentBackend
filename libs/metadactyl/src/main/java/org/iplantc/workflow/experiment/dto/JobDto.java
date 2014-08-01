@@ -31,6 +31,8 @@ public class JobDto {
   private String outputDir;
   private boolean createOutputSubdir;
 
+  private String callback;
+
   /**
    * Creates a new JobDto.
    */
@@ -158,11 +160,19 @@ public class JobDto {
   }
 
   public boolean getCreateOutputSubdir() {
-      return createOutputSubdir;
+    return createOutputSubdir;
   }
 
   public void setCreateOutputSubdir(boolean createOutputSubdir) {
-      this.createOutputSubdir = createOutputSubdir;
+    this.createOutputSubdir = createOutputSubdir;
+  }
+
+  public String getCallback() {
+    return this.callback;
+  }
+
+  public void setCallback(String callback) {
+    this.callback = callback;
   }
 
   public JSONObject toJson() {
