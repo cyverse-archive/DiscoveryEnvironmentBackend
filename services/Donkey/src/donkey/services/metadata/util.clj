@@ -6,7 +6,6 @@
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [donkey.clients.notifications :as dn]
-            [donkey.clients.user-info :as du]
             [donkey.util.db :as db]))
 
 (def failed-status "Failed")
@@ -66,19 +65,13 @@
    :wiki_url         (:app-wiki-url job)
    :app_disabled     (:disabled (first (remove nil? (map #(% (:app-id job)) app-tables))))})
 
-(defn- get-email-address
-  [username]
-  (if current-user
-    (:email current-user)
-    (:email (du/get-user-details username))))
-
 (defn send-job-status-notification
   "Sends a job status change notification."
   [{:keys [username start-date] :as job} job-step status end-time]
   (let [username     (string/replace username #"@.*" "")
         end-millis   (db/timestamp-str end-time)
         start-millis (db/timestamp-str start-date)
-        email        (get-email-address username)]
+        email        (:email current-user)]
     (dn/send-job-status-update username email (assoc (format-job [] job)
                                                 :status    status
                                                 :enddate   end-millis

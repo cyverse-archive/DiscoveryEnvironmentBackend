@@ -1,6 +1,6 @@
 (ns donkey.services.metadata.apps
   (:use [clojure-commons.validators :only [validate-map]]
-        [donkey.auth.user-attributes :only [current-user]]
+        [donkey.auth.user-attributes :only [current-user with-directory-user]]
         [donkey.util :only [is-uuid?]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+ try+]])
@@ -391,12 +391,13 @@
           {:keys [username] :as job} (jp/get-job-by-id (:job-id job-step))
           end-date                   (db/timestamp-from-str end-date)]
       (service/assert-found job "job" (:job-id job-step))
-      (try+
-       (.updateJobStatus (get-app-lister "" username) username job job-step status end-date)
-       (catch Object o
-         (let [msg (str "DE job status update failed for " external-id)]
-           (log/warn o msg)
-           (throw+)))))))
+      (with-directory-user [username]
+        (try+
+         (.updateJobStatus (get-app-lister "" username) username job job-step status end-date)
+         (catch Object o
+           (let [msg (str "DE job status update failed for " external-id)]
+             (log/warn o msg)
+             (throw+))))))))
 
 (defn update-agave-job-status
   [uuid status end-time external-id]
@@ -408,20 +409,22 @@
           end-time                   (db/timestamp-from-str end-time)]
       (service/assert-found job "job" uuid)
       (service/assert-found job-step "job step" (str uuid "/" external-id))
-      (try+
-       (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)
-       (catch Object o
-         (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
-           (log/warn o msg)
-           (throw+)))))))
+      (with-directory-user [username]
+        (try+
+         (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)
+         (catch Object o
+           (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
+             (log/warn o msg)
+             (throw+))))))))
 
 (defn- sync-job-status
   [job]
-  (try+
-   (log/debug "synchronizing the job status for" (:id job))
-   (.syncJobStatus (get-app-lister "" (:username job)) job)
-   (catch Object e
-     (log/error e "unable to sync the job status for job" (:id job)))))
+  (with-directory-user [(:username job)]
+    (try+
+     (log/debug "synchronizing the job status for" (:id job))
+     (.syncJobStatus (get-app-lister "" (:username job)) job)
+     (catch Object e
+       (log/error e "unable to sync the job status for job" (:id job))))))
 
 (defn sync-job-statuses
   []

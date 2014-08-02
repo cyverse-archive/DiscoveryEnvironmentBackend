@@ -1,12 +1,14 @@
 (ns donkey.auth.user-attributes
   (:use [donkey.util.config])
   (:require [clj-cas.cas-proxy-auth :as cas]
-            [clojure.tools.logging :as log]))
+            [clojure.string :as string]
+            [clojure.tools.logging :as log]
+            [donkey.clients.user-info :as du]))
 
 (def
   ^{:doc "The authenticated user or nil if the service is unsecured."
     :dynamic true}
-   current-user nil)
+  current-user nil)
 
 (defn user-from-attributes
   "Creates a map of values from user attributes stored in the request by
@@ -20,6 +22,18 @@
    :firstName     (get user-attributes "firstName")
    :lastName      (get user-attributes "lastName")
    :principal     (get user-attributes "principal")})
+
+(defn user-from-user-info
+  "Creates a map of values from user attributes retrieved from the user info service."
+  [username]
+  (let [short-username (string/replace username #"@.*" "")
+        user-info      (du/get-user-details short-username)]
+    {:username      username
+     :password      nil
+     :email         (:email user-info)
+     :shortUsername short-username
+     :firstName     (:firstname user-info)
+     :lastName      (:lastname user-info)}))
 
 (defn fake-user-from-attributes
   "Creates a real map of fake values for a user base on environment variables."
@@ -37,10 +51,10 @@
    validate-cas-proxy-ticket stores in the request."
   [handler cas-server-fn server-name-fn pgt-callback-base-fn pgt-callback-path-fn]
   (cas/validate-cas-proxy-ticket
-    (fn [request]
-      (binding [current-user (user-from-attributes request)]
-        (handler request)))
-    cas-server-fn server-name-fn pgt-callback-base-fn pgt-callback-path-fn))
+   (fn [request]
+     (binding [current-user (user-from-attributes request)]
+       (handler request)))
+   cas-server-fn server-name-fn pgt-callback-base-fn pgt-callback-path-fn))
 
 (defn fake-store-current-user
   "Fake storage of a user"
@@ -59,4 +73,11 @@
    for debugging in the REPL."
   [[user] & body]
   `(binding [current-user (user-from-attributes {:user-attributes ~user})]
+     (do ~@body)))
+
+(defmacro with-directory-user
+  "Performs a task with user information for the given username bound to current-user. This
+   macro is used for callback endpoints."
+  [[username] & body]
+  `(binding [current-user (user-from-user-info ~username)]
      (do ~@body)))
