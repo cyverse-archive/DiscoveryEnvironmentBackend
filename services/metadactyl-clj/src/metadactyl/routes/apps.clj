@@ -14,10 +14,11 @@
                  :query [params CategoryListingParams]
                  :summary "List App Categories"
                  :notes "This service is used by the DE to obtain the list of app categories that
-                 are visible to the user. This list includes any app categories that are in a
-                 workspace that is marked as public in the database. If the 'public' parameter is
-                 not set to 'true', then app categories that are in the user's workspace are
-                 included as well."
+                 are visible to the user. If the 'public' parameter is set to 'true', then only app
+                 categories that are in a workspace that is marked as public in the database are
+                 returned. If the 'public' parameter is set to 'false', then only app categories
+                 that are in the user's workspace are returned. If the 'public' parameter is not
+                 set, then both public and the user's private categories are returned."
                  (service/trap #(get-app-groups params)))
 
            (GET* "/:category-id" [category-id]

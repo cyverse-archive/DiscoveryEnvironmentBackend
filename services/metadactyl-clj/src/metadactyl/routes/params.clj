@@ -26,7 +26,7 @@
 
 (s/defschema CategoryListingParams
   (merge SecuredQueryParams
-         {:public Boolean}))
+         {(s/optional-key :public) Boolean}))
 
 (s/defschema AppListingParams
   (merge SecuredQueryParams PagingParams))

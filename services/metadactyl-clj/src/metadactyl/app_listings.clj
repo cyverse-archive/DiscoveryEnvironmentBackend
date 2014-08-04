@@ -73,24 +73,34 @@
       (add-virtual-groups result workspace-id params)
       result)))
 
-(defn get-only-app-groups
+(defn get-workspace-app-groups
+  "Retrieves the list of the current user's workspace app groups."
+  [params]
+  (let [workspace (get-or-create-workspace (:username current-user))
+        workspace-id (:id workspace)]
+    (cheshire/encode {:groups (format-app-group-hierarchy workspace-id params workspace)})))
+
+(defn get-visible-app-groups
   "Retrieves the list of app groups that are visible to a user."
   ([params]
      (-> (:username current-user)
          (get-or-create-workspace)
          (:id)
-         (get-only-app-groups params)))
+         (get-visible-app-groups params)))
   ([workspace-id params]
      (let [workspaces (get-visible-workspaces workspace-id)]
        (cheshire/encode
         {:groups (map (partial format-app-group-hierarchy workspace-id params) workspaces)}))))
 
 (defn get-app-groups
-  "Retrieves the list of app groups that are visible to all users. TODO: refactor me."
+  "Retrieves the list of app groups that are visible to all users, the current user's app groups, or
+   both, depending on the :public param."
   [{:keys [public] :as params}]
-  (if public
-    (get-only-app-groups nil params)
-    (get-only-app-groups params)))
+  (if (contains? params :public)
+    (if-not public
+      (get-workspace-app-groups params)
+      (get-visible-app-groups nil params))
+    (get-visible-app-groups params)))
 
 (defn- validate-app-pipeline-eligibility
   "Validates an App for pipeline eligibility, throwing a slingshot stone ."
