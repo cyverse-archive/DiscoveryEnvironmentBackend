@@ -4,7 +4,6 @@
   (:use [clojure-commons.core :only [remove-nil-values]]
         [kameleon.queries :only [get-user-id]]
         [korma.core]
-        [korma.db :only [transaction with-db]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
@@ -90,9 +89,8 @@
 (defn save-job
   "Saves information about a job in the database."
   [job-info submission]
-  (with-db db/de
-    (save-job* job-info)
-    (save-job-submission (:id job-info) submission)))
+  (save-job* job-info)
+  (save-job-submission (:id job-info) submission))
 
 (defn- save-job-step*
   "Saves a single job step in the database."
@@ -112,15 +110,13 @@
 (defn save-job-step
   "Saves a single job step in the database."
   [job-step]
-  (with-db db/de (save-job-step* job-step)))
+  (save-job-step* job-step))
 
 (defn save-multistep-job
   [job-info job-steps submission]
-  (with-db db/de
-    (transaction
-     (save-job* job-info)
-     (save-job-submission (:id job-info) submission)
-     (dorun (map save-job-step* job-steps)))))
+  (save-job* job-info)
+  (save-job-submission (:id job-info) submission)
+  (dorun (map save-job-step* job-steps)))
 
 (defn- agave-job-subselect
   []
@@ -142,34 +138,30 @@
 (defn count-all-jobs
   "Counts the total number of jobs in the database for a user."
   [username]
-  (with-db db/de
-    ((comp :count first) (select (count-jobs-base username)))))
+  ((comp :count first) (select (count-jobs-base username))))
 
 (defn count-jobs
   "Counts the number of undeleted jobs in the database for a user."
   [username filter]
-  (with-db db/de
-    ((comp :count first)
-     (select (add-job-query-filter-clause (count-jobs-base username) filter)
-             (where {:j.deleted false})))))
+  ((comp :count first)
+   (select (add-job-query-filter-clause (count-jobs-base username) filter)
+           (where {:j.deleted false}))))
 
 (defn count-de-jobs
   "Counts the number of undeleted DE jobs int he database for a user."
   [username filter]
-  (with-db db/de
-    ((comp :count first)
-     (select (add-job-query-filter-clause (count-jobs-base username) filter)
-             (where {:j.deleted false})
-             (where (not (sqlfn exists (agave-job-subselect))))))))
+  ((comp :count first)
+   (select (add-job-query-filter-clause (count-jobs-base username) filter)
+           (where {:j.deleted false})
+           (where (not (sqlfn exists (agave-job-subselect)))))))
 
 (defn count-null-descriptions
   "Counts the number of undeleted jobs with null descriptions in the database."
   [username]
-  (with-db db/de
-    ((comp :count first)
-     (select (count-jobs-base username)
-             (where {:j.deleted         false
-                     :j.job_description nil})))))
+  ((comp :count first)
+   (select (count-jobs-base username)
+           (where {:j.deleted         false
+                   :j.job_description nil}))))
 
 (defn- translate-sort-field
   "Translates the sort field sent to get-jobs to a value that can be used in the query."
@@ -217,49 +209,44 @@
   "Retrieves a single job step from the database."
   [job-id external-id]
   (first
-   (with-db db/de
-     (select (job-step-base-query)
-             (where {:s.job_id      job-id
-                     :s.external_id external-id})))))
+   (select (job-step-base-query)
+           (where {:s.job_id      job-id
+                   :s.external_id external-id}))))
 
 (defn get-job-steps-by-external-id
   "Retrieves all of the job steps with an external identifier."
   [external-id]
-  (with-db db/de
-    (select (job-step-base-query)
-            (where {:s.external_id external-id}))))
+  (select (job-step-base-query)
+          (where {:s.external_id external-id})))
 
 (defn get-max-step-number
   "Gets the maximum step number for a job."
   [job-id]
-  (with-db db/de
-    ((comp :max-step first)
-     (select :job_steps
-             (aggregate (max :step_number) :max-step)
-             (where {:job_id job-id})))))
+  ((comp :max-step first)
+   (select :job_steps
+           (aggregate (max :step_number) :max-step)
+           (where {:job_id job-id}))))
 
 (defn list-jobs
   "Gets a list of jobs satisfying a query."
   [username row-limit row-offset sort-field sort-order filter]
-  (with-db db/de
-    (select (add-job-query-filter-clause (job-base-query) filter)
-            (where {:j.deleted  false
-                    :j.username username})
-            (order (translate-sort-field sort-field) sort-order)
-            (offset (nil-if-zero row-offset))
-            (limit (nil-if-zero row-limit)))))
+  (select (add-job-query-filter-clause (job-base-query) filter)
+          (where {:j.deleted  false
+                  :j.username username})
+          (order (translate-sort-field sort-field) sort-order)
+          (offset (nil-if-zero row-offset))
+          (limit (nil-if-zero row-limit))))
 
 (defn list-de-jobs
   "Gets a list of jobs that contain only DE steps."
   [username row-limit row-offset sort-field sort-order filter]
-  (with-db db/de
-    (select (add-job-query-filter-clause (job-base-query) filter)
-            (where {:j.deleted  false
-                    :j.username username})
-            (where (not (sqlfn exists (agave-job-subselect))))
-            (order (translate-sort-field sort-field) sort-order)
-            (offset (nil-if-zero row-offset))
-            (limit (nil-if-zero row-limit)))))
+  (select (add-job-query-filter-clause (job-base-query) filter)
+          (where {:j.deleted  false
+                  :j.username username})
+          (where (not (sqlfn exists (agave-job-subselect))))
+          (order (translate-sort-field sort-field) sort-order)
+          (offset (nil-if-zero row-offset))
+          (limit (nil-if-zero row-limit))))
 
 (defn- add-job-type-clause
   "Adds a where clause for a set of job types if the set of job types provided is not nil
@@ -273,23 +260,21 @@
 (defn get-job-by-id
   "Gets a single job by its internal identifier."
   [id]
-  (with-db db/de
-    (first (select (job-base-query)
-                   (fields :submission)
-                   (where {:j.id id})))))
+  (first (select (job-base-query)
+                 (fields :submission)
+                 (where {:j.id id}))))
 
 (defn update-job
   "Updates an existing job in the database."
   ([id {:keys [status end-date deleted name description]}]
      (when (or status end-date deleted name description)
-       (with-db db/de
-         (update :jobs
-                 (set-fields (remove-nil-values {:status          status
-                                                 :end_date        end-date
-                                                 :deleted         deleted
-                                                 :job_name        name
-                                                 :job_description description}))
-                 (where {:id id})))))
+       (update :jobs
+               (set-fields (remove-nil-values {:status          status
+                                               :end_date        end-date
+                                               :deleted         deleted
+                                               :job_name        name
+                                               :job_description description}))
+               (where {:id id}))))
   ([id status end-date]
      (update-job id {:status   status
                      :end-date end-date})))
@@ -298,59 +283,52 @@
   "Updates an existing job step in the database using the job ID and the step number as keys."
   [job-id step-number {:keys [external-id status end-date start-date]}]
   (when (or external-id status end-date start-date)
-    (with-db db/de
-      (update :job_steps
-              (set-fields (remove-nil-values {:external_id external-id
-                                              :status      status
-                                              :end_date    end-date
-                                              :start_date  start-date}))
-              (where {:job_id      job-id
-                      :step_number step-number})))))
+    (update :job_steps
+            (set-fields (remove-nil-values {:external_id external-id
+                                            :status      status
+                                            :end_date    end-date
+                                            :start_date  start-date}))
+            (where {:job_id      job-id
+                    :step_number step-number}))))
 
 (defn get-job-step-number
   "Retrieves a job step from the database by its step number."
   [job-id step-number]
   (first
-   (with-db db/de
-     (select (job-step-base-query)
-             (where {:s.job_id      job-id
-                     :s.step_number step-number})))))
+   (select (job-step-base-query)
+           (where {:s.job_id      job-id
+                   :s.step_number step-number}))))
 
 (defn update-job-step
   "Updates an existing job step in the database."
   [job-id external-id status end-date]
   (when (or status end-date)
-    (with-db db/de
-      (update :job_steps
-              (set-fields (remove-nil-values {:status   status
-                                              :end_date end-date}))
-              (where {:job_id      job-id
-                      :external_id external-id})))))
+    (update :job_steps
+            (set-fields (remove-nil-values {:status   status
+                                            :end_date end-date}))
+            (where {:job_id      job-id
+                    :external_id external-id}))))
 
 (defn list-incomplete-jobs
   []
-  (with-db db/de
-    (select (job-base-query)
-            (where {:j.deleted  false
-                    :j.end_date nil}))))
+  (select (job-base-query)
+          (where {:j.deleted  false
+                  :j.end_date nil})))
 
 (defn list-job-steps
   [job-id]
-  (with-db db/de
-    (select (job-step-base-query)
-            (where {:job_id job-id}))))
+  (select (job-step-base-query)
+          (where {:job_id job-id})))
 
 (defn list-jobs-to-delete
   [ids]
-  (with-db db/de
-    (select [:jobs :j]
-            (fields [:j.id      :id]
-                    [:j.deleted :deleted])
-            (where {:j.id [in ids]}))))
+  (select [:jobs :j]
+          (fields [:j.id      :id]
+                  [:j.deleted :deleted])
+          (where {:j.id [in ids]})))
 
 (defn delete-jobs
   [ids]
-  (with-db db/de
-    (update :jobs
-            (set-fields {:deleted true})
-            (where {:id [in ids]}))))
+  (update :jobs
+          (set-fields {:deleted true})
+          (where {:id [in ids]})))
