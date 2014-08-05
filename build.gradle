@@ -106,10 +106,6 @@ project(':facepalm') {
 
 }
 
-project(':proboscis') { 
-
-}
-
 project(':filetool') { 
 
 }
