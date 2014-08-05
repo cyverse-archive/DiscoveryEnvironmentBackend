@@ -1,6 +1,0 @@
-/target
-*.jar
-*.class
-/.lein-*
-/.nrepl-port
-

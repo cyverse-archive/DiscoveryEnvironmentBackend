@@ -459,17 +459,6 @@
   :language :clojure
   :archive? true}
 
- "irods-avu-migrator"
- {:type     :tool
-  :path     "tools/irods-avu-migrator"
-  :build    :lein
-  :rpm?     false
-  :tarball? false
-  :uberjar? true
-  :install? false
-  :language :clojure
-  :archive? true}
-
  "proboscis"
  {:type     :tool
   :path     "tools/proboscis"
