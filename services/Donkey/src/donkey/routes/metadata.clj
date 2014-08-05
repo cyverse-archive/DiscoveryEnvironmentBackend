@@ -6,8 +6,7 @@
         [donkey.util])
   (:require [clojure-commons.error-codes :as ce]
             [donkey.util.config :as config]
-            [donkey.services.metadata.apps :as apps]
-            [donkey.services.jex :as jex]))
+            [donkey.services.metadata.apps :as apps]))
 
 (defn secured-metadata-routes
   []
@@ -50,8 +49,8 @@
    (GET "/app-rerun-info/:job-id" [job-id]
         (trap #(apps/get-app-rerun-info job-id)))
 
-   (DELETE "/stop-analysis/:uuid" [uuid :as req]
-           (trap #(jex/stop-analysis req uuid)))
+   (DELETE "/stop-analysis/:uuid" [uuid]
+           (trap #(apps/stop-job uuid)))
 
    (POST "/rate-analysis" [:as {body :body}]
          (trap #(apps/rate-app body)))

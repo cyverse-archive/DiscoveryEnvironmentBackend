@@ -8,12 +8,13 @@
             [donkey.clients.notifications :as dn]
             [donkey.util.db :as db]))
 
+(def canceled-status "Canceled")
 (def failed-status "Failed")
 (def completed-status "Completed")
 (def submitted-status "Submitted")
 (def idle-status "Idle")
 (def running-status "Running")
-(def completed-status-codes #{failed-status completed-status})
+(def completed-status-codes #{canceled-status failed-status completed-status})
 
 (defn- current-timestamp
   []

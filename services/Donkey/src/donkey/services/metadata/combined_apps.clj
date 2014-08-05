@@ -6,6 +6,7 @@
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [clojure-commons.file-utils :as ft]
+            [donkey.clients.jex :as jex]
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
@@ -32,11 +33,11 @@
     :label      (str app-name " - " (:label group))
     :properties (mapv (fn [prop] (assoc prop :id (str step-name "_" (:id prop))))
                       (:properties group))))
+
 (defn- assert-agave-enabled
   [agave]
   (when-not agave
-    (throw+ {:error_code ce/ERR_BAD_REQUEST
-             :reason     "HPC_JOBS_DISABLED"})))
+    (service/bad-request "HPC_JOBS_DISABLED")))
 
 (defn- get-agave-groups
   [agave step external-app-id]
@@ -280,15 +281,17 @@
         first-step?                       (= step-number 1)
         last-step?                        (= step-number max-step)
         status                            (translate-job-status agave job-step status)]
-    (when-not (= status (:status job-step))
-      (jp/update-job-step job-id external-id status end-time)
-      (when (or (and first-step? (mu/not-completed? status))
-                (and last-step? (mu/is-completed? status))
-                (= status mu/failed-status))
-        (jp/update-job job-id status end-time)
-        (mu/send-job-status-notification job job-step status end-time))
-      (when (and (not last-step?) (= status mu/completed-status))
-        (submit-next-step agave username job job-step)))))
+    (if (mu/is-completed? (:status job))
+      (log/warn (str "received a job status update for completed or canceled job, " job-id))
+      (when-not (= status (:status job-step))
+        (jp/update-job-step job-id external-id status end-time)
+        (when (or (and first-step? (mu/not-completed? status))
+                  (and last-step? (mu/is-completed? status))
+                  (= status mu/failed-status))
+          (jp/update-job job-id status end-time)
+          (mu/send-job-status-notification job job-step status end-time))
+        (when (and (not last-step?) (= status mu/completed-status))
+          (submit-next-step agave username job job-step))))))
 
 (defn- submit-next-step
   "Submits the next step in a job pipeline."
@@ -303,11 +306,11 @@
         submission       (add-mapped-inputs agave job submission app-steps mapped-inputs)
         workspace-id     (:id (wp/workspace-for-user username))]
     (try+
-      (submit-job-step agave workspace-id job next-step submission)
-      (catch Object o
-        (log/warn (str "unable to submit the next step in job " (:id job)))
-        (update-job-status agave username job next-step mu/failed-status (db/now))
-        (throw+)))))
+     (submit-job-step agave workspace-id job next-step submission)
+     (catch Object o
+       (log/warn (str "unable to submit the next step in job " (:id job)))
+       (update-job-status agave username job next-step mu/failed-status (db/now))
+       (throw+)))))
 
 (defn- find-first-incomplete-job-step
   "Finds the first incomplete job step associated with a job. Nil is returned if the job has no
@@ -340,3 +343,28 @@
           all-complete? (every? mu/is-completed? (map :status steps))
           status        (if all-complete? mu/completed-status mu/failed-status)]
       (jp/update-job id {:status status :end-date (db/now)}))))
+
+(defn- stop-job-step
+  "Stops an individual step in a job."
+  [agave job-id {:keys [external-id job-type]}]
+  (when-not (string/blank? external-id)
+    (if (= job-type jp/de-job-type)
+      (jex/stop-job external-id)
+      (when-not (nil? agave) (.stopJob agave external-id)))
+    (jp/update-job-step job-id external-id mu/canceled-status (db/now))))
+
+(defn stop-job
+  "Stops a job. This function updates the database first in order to minimize the risk of a race
+   condition; subsequent job steps should not be submitted once a job has been stopped. After the
+   database has been updated, it calls the appropriate execution host to stop the currently running
+   job step if one exists."
+  ([job-id]
+     (stop-job nil job-id))
+  ([agave job-id]
+     (jp/update-job job-id mu/canceled-status (db/now))
+     (try+
+      (stop-job-step agave job-id (find-first-incomplete-job-step job-id))
+      (catch Throwable t
+        (log/warn t "unable to cancel the most recent step of job, " job-id))
+      (catch Object o
+        (log/warn "unable to cancel the most recent step of job, " job-id)))))
