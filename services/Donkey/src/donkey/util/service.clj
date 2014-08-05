@@ -285,13 +285,25 @@
   "Throws an exception indicating that an object wasn't found."
   [desc id]
   (throw+ {:error_code ce/ERR_NOT_FOUND
-           :message    (string/join " " [desc id "not found"])}))
+           :reason     (string/join " " [desc id "not found"])}))
+
+(defn not-owner
+  "Throws an exception indicating that the user isn't permitted to perform the requested option."
+  [desc id]
+  (throw+ {:error_code ce/ERR_NOT_OWNER
+           :reason     (str "authenticated user doesn't own " desc ", " id)}))
 
 (defn not-unique
   "Throws an exception indicating that multiple objects were found when only one was expected."
   [desc id]
   (throw+ {:error_code ce/ERR_NOT_UNIQUE
-           :message    (string/join " " [desc id "not unique"])}))
+           :reason     (string/join " " [desc id "not unique"])}))
+
+(defn bad-request
+  "Throws an exception indicating that the incoming request is invalid."
+  [reason]
+  (throw+ {:error_code ce/ERR_BAD_REQUEST
+           :reason     reason}))
 
 (defn assert-found
   "Asserts that an object to modify or retrieve was found."

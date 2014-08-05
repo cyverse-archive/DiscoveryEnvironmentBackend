@@ -117,7 +117,7 @@ public class FapiJobRequestFormatter implements JobRequestFormatter {
     private Object formatSteps(TransformationActivity analysis) {
         JSONArray steps = new JSONArray();
         Map<String, List<String>> propertyValues = new HashMap<String, List<String>>();
-        int startingStep = experiment.optInt("startingStep", 1) - 1;
+        int startingStep = experiment.optInt("starting_step", 1) - 1;
 
         for (int stepNumber = startingStep; stepNumber < analysis.getSteps().size(); stepNumber++) {
             TransformationStep step = analysis.getSteps().get(stepNumber);

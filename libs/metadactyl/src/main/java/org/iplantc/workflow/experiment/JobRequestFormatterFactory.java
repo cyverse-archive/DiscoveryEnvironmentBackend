@@ -71,17 +71,17 @@ public class JobRequestFormatterFactory {
      * @throws WorkflowException if the appropriate formatter can't be determined.
      */
     public JobRequestFormatter getFormatter(JSONObject experiment) {
-        String firstComponentType = determineFirstComponentType(experiment);
+        String componentType = determineComponentType(experiment);
         JobRequestFormatter formatter = null;
-        if (StringUtils.equals(firstComponentType, "executable")) {
+        if (StringUtils.equals(componentType, "executable")) {
             formatter = new CondorJobRequestFormatter(daoFactory, urlAssembler, userDetails, experiment);
         }
-        else if (StringUtils.equals(firstComponentType, "fAPI")) {
+        else if (StringUtils.equals(componentType, "fAPI")) {
             formatter = new FapiJobRequestFormatter(daoFactory, userDetails, experiment, jobNameUniquenessEnsurer,
                     irodsHome);
         }
         else {
-            throw new WorkflowException("unrecognized component type: " + firstComponentType);
+            throw new WorkflowException("unrecognized component type: " + componentType);
         }
         return formatter;
     }
@@ -92,9 +92,11 @@ public class JobRequestFormatterFactory {
      * @param experiment the experiment being submitted.
      * @return the deployed component type.
      */
-    private String determineFirstComponentType(JSONObject experiment) {
-        TransformationActivity analysis = findAnalysis(experiment.getString("analysis_id"));
-        Template template = findTemplate(analysis);
+    private String determineComponentType(JSONObject experiment) {
+        String analysisId = experiment.getString("analysis_id");
+        int startingStep = experiment.optInt("starting_step", 1) - 1;
+        TransformationActivity analysis = findAnalysis(analysisId);
+        Template template = findTemplate(analysis, startingStep);
         DeployedComponent component = findDeployedComponent(template);
         return component.getType();
     }
@@ -134,13 +136,15 @@ public class JobRequestFormatterFactory {
      * Finds the template for the given analysis, throwing an exception if the template can't be found.
      *
      * @param analysis the analysis.
+     * @param stepNumber the index of the step to check.
      * @return the template.
      * @throws WorkflowException if the template can't be found.
      */
-    private Template findTemplate(TransformationActivity analysis) {
-        Template template = findTemplateForAnalysis(analysis);
+    private Template findTemplate(TransformationActivity analysis, int stepNumber) {
+        Template template = findTemplateForAnalysisStep(analysis, stepNumber);
         if (template == null) {
-            throw new WorkflowException("no tempalte found for analysis, " + analysis.getId());
+            String msg = "no template found for analysis, " + analysis.getId() + ", step number, " + stepNumber;
+            throw new WorkflowException(msg);
         }
         return template;
     }
@@ -149,13 +153,14 @@ public class JobRequestFormatterFactory {
      * Finds the template for the given analysis, returning null if the template can't be found.
      *
      * @param analysis the analysis.
+     * @param stepNumber the index of the step to check.
      * @return the template or null if the template can't be found.
      */
-    private Template findTemplateForAnalysis(TransformationActivity analysis) {
+    private Template findTemplateForAnalysisStep(TransformationActivity analysis, int stepNumber) {
         Template template = null;
         List<TransformationStep> steps = analysis.getSteps();
         if (steps != null && !steps.isEmpty()) {
-            TransformationStep step = steps.get(0);
+            TransformationStep step = steps.get(stepNumber);
             if (step != null) {
                 template = findTemplateForTransformationStep(step);
             }

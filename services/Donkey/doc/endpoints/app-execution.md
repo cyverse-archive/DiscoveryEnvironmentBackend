@@ -470,7 +470,7 @@ no-op; no error will be thrown. If the update is successful, the job listing
 will be included in the response body. Here's an example:
 
 ```
-$ curl -sX PATCH "http://services-2:31325/secured/analysis/2725F72B-2EC9-4FB8-BF72-05136B5D71F4?proxyToken=$(cas-ticket)" -d '
+$ curl -sX PATCH "http://by-tor:8888/secured/analysis/2725F72B-2EC9-4FB8-BF72-05136B5D71F4?proxyToken=$(cas-ticket)" -d '
 {
     "description": "One word! Two words! Three! Three words! Ah, ah, ah!",
     "name": "obsessive_word_count"
@@ -496,7 +496,47 @@ $ curl -sX PATCH "http://services-2:31325/secured/analysis/2725F72B-2EC9-4FB8-BF
 
 Secured Endpoint: DELETE /secured/stop-analysis/{job-id}
 
-Delegates to JEX: DELETE /stop/{job-id}
+This service stops a running analysis or pipeline. The `job-id` component of
+the URL is the primary key from the `jobs` table in the DE database, which is
+also the job identifier included in the analysis listing. An error will occur if
+the job is not found, the currently authenticated user is not the one who
+submitted the job or if the job is already in one of the completed statuses
+(`Completed`, `Failed` or `Canceled`).
 
-This endpoint is a passthrough to the JEX endpoint, `/stop/{job-id}`. Please see
-the JEX documentation for more details.
+Assuming the job is found and is not in one of the completed statuses, the
+service sets the job status to `Canceled` then searches for the first incomplete
+step associated with the job. If no incomplete step is found then the service
+calls either the JEX or Agave to stop the currently running step. Note that
+failure to cancel a job step does not cause the service to return an
+error. Finally, the status of the job step is set to `Canceled` in the
+database.
+
+One of the edge cases to consider here is a potential race condition between
+this service and the completion of the currently running job step. The risk of a
+race condition is minimized here by changing the job status to `Canceled` before
+attempting to cancel the most recently submitted job step. This allows the job
+status update service to detect when a job has been marked as canceled and abort
+before submitting the next step in the pipeline.
+
+If an error occurs then the response body for this service is in the standard
+error format. Otherwise, the response body contains a success indicator along
+with the job identifier. Here's an example of a successful service call:
+
+```
+$ curl -X DELETE -s "http://by-tor:8888/secured/stop-analysis/21dada70-acc3-4967-9c3f-73133e56724a?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "id": "21dada70-acc3-4967-9c3f-73133e56724a",
+    "success": true
+}
+```
+
+Here's an example of an unsuccessful service call:
+
+```
+$ curl -X DELETE -s "http://by-tor:8888/secured/stop-analysis/21dada70-acc3-4967-9c3f-73133e56724a?proxyToken=$(cas-ticket)" | python -mjson.tool
+{
+    "error_code": "ERR_BAD_REQUEST",
+    "reason": "job, 21dada70-acc3-4967-9c3f-73133e56724a, is already completed or canceled",
+    "success": false
+}
+```

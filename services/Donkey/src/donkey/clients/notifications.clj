@@ -126,7 +126,7 @@
         (log/warn e "unable to send tool request update notification for" tool-req)))))
 
 (defn send-job-status-update
-  "Sends notification of an Agave job status update to the user."
+  "Sends notification of an Agave or DE job status update to the user."
   [username email-address {job-name :name :as job-info}]
   (try
     (send-notification

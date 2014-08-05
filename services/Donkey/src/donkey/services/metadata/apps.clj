@@ -1,6 +1,6 @@
 (ns donkey.services.metadata.apps
   (:use [clojure-commons.validators :only [validate-map]]
-        [donkey.auth.user-attributes :only [current-user]]
+        [donkey.auth.user-attributes :only [current-user with-directory-user]]
         [donkey.util :only [is-uuid?]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+ try+]])
@@ -110,6 +110,7 @@
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
   (updateJobStatus [_ username job job-step status end-time])
+  (stopJob [_ job-id])
   (getJobParams [_ job-id])
   (getAppRerunInfo [_ job-id]))
 ;; AppLister
@@ -167,6 +168,9 @@
 
   (updateJobStatus [_ username job job-step status end-time]
     (da/update-job-status username job job-step status end-time))
+
+  (stopJob [_ job-id]
+    (ca/stop-job job-id))
 
   (getJobParams [_ job-id]
     (ca/get-job-params nil (jp/get-job-by-id (UUID/fromString job-id))))
@@ -256,6 +260,9 @@
 
   (updateJobStatus [_ username job job-step status end-time]
     (ca/update-job-status agave-client username job job-step status end-time))
+
+  (stopJob [_ job-id]
+    (ca/stop-job agave-client job-id))
 
   (getJobParams [_ job-id]
     (process-job agave-client job-id
@@ -391,12 +398,13 @@
           {:keys [username] :as job} (jp/get-job-by-id (:job-id job-step))
           end-date                   (db/timestamp-from-str end-date)]
       (service/assert-found job "job" (:job-id job-step))
-      (try+
-       (.updateJobStatus (get-app-lister "" username) username job job-step status end-date)
-       (catch Object o
-         (let [msg (str "DE job status update failed for " external-id)]
-           (log/warn o msg)
-           (throw+)))))))
+      (with-directory-user [username]
+        (try+
+         (.updateJobStatus (get-app-lister "" username) username job job-step status end-date)
+         (catch Object o
+           (let [msg (str "DE job status update failed for " external-id)]
+             (log/warn o msg)
+             (throw+))))))))
 
 (defn update-agave-job-status
   [uuid status end-time external-id]
@@ -408,20 +416,22 @@
           end-time                   (db/timestamp-from-str end-time)]
       (service/assert-found job "job" uuid)
       (service/assert-found job-step "job step" (str uuid "/" external-id))
-      (try+
-       (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)
-       (catch Object o
-         (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
-           (log/warn o msg)
-           (throw+)))))))
+      (with-directory-user [username]
+        (try+
+         (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)
+         (catch Object o
+           (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
+             (log/warn o msg)
+             (throw+))))))))
 
 (defn- sync-job-status
   [job]
-  (try+
-   (log/debug "synchronizing the job status for" (:id job))
-   (.syncJobStatus (get-app-lister "" (:username job)) job)
-   (catch Object e
-     (log/error e "unable to sync the job status for job" (:id job)))))
+  (with-directory-user [(:username job)]
+    (try+
+     (log/debug "synchronizing the job status for" (:id job))
+     (.syncJobStatus (get-app-lister "" (:username job)) job)
+     (catch Object e
+       (log/error e "unable to sync the job status for job" (:id job))))))
 
 (defn sync-job-statuses
   []
@@ -467,6 +477,19 @@
     (validate-job-existence id)
     (validate-job-update body)
     (jp/update-job id body)))
+
+(defn stop-job
+  [id]
+  (let [id  (UUID/fromString id)
+        job (jp/get-job-by-id id)]
+    (when-not job
+      (service/not-found "job" id))
+    (when-not (= (:username job) (:username current-user))
+      (service/not-owner "job" id))
+    (when (mu/is-completed? (:status job))
+      (service/bad-request (str "job, " id ", is already completed or canceled")))
+    (.stopJob (get-app-lister) id)
+    (service/success-response {:id (str id)})))
 
 (defn get-property-values
   [job-id]

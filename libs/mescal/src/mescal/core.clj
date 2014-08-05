@@ -9,6 +9,7 @@
   (submitJob [_ submission])
   (listJobs [_] [_ job-ids])
   (listJob [_ job-id])
+  (stopJob [_ job-id])
   (fileDownloadUrl [_ file-path])
   (fileListingUrl [_ file-path])
   (agaveUrl [_ file-path])
@@ -39,6 +40,9 @@
   (listJob [_ job-id]
     (v2/check-access-token token-info-fn timeout)
     (v2/list-job base-url token-info-fn timeout job-id))
+  (stopJob [_ job-id]
+    (v2/check-access-token token-info-fn timeout)
+    (v2/stop-job base-url token-info-fn timeout job-id))
   (fileDownloadUrl [_ file-path]
     (v2/check-access-token token-info-fn timeout)
     (v2/file-path-to-url "media" base-url token-info-fn timeout storage-system file-path))
