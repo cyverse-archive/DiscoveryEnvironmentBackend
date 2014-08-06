@@ -31,3 +31,7 @@
 (s/defschema AppListingParams
   (merge SecuredQueryParams PagingParams))
 
+(s/defschema AppSearchParams
+  (merge AppListingParams
+         {:search String}))
+

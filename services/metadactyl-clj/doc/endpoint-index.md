@@ -44,7 +44,6 @@
 * [GET /secured/reference-genomes](endpoints/reference-genomes.md#exporting-reference-genomes)
 * [PUT /secured/reference-genomes](endpoints/reference-genomes.md#importing-reference-genomes)
 * [POST /secured/remove-collaborators](endpoints/collaborators.md#removing-collaborators)
-* [GET /secured/search-analyses](endpoints/app-metadata/listing.md#searching-for-analyses)
 * [GET /secured/template/{analysis-id}](endpoints/app-metadata/information.md#getting-analyses-in-the-json-format-required-by-the-de)
 * [PUT /secured/tool-request](endpoints/app-metadata/tool-requests.md#requesting-tool-installation)
 * [GET /secured/tool-requests](endpoints/app-metadata/tool-requests.md#listing-tool-requests)

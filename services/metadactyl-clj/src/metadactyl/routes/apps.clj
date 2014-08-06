@@ -1,6 +1,8 @@
 (ns metadactyl.routes.apps
   (:require [kameleon.uuids :as uuid]
-            [metadactyl.app-listings :refer [get-app-groups list-apps-in-group]]
+            [metadactyl.app-listings :refer [get-app-groups
+                                             list-apps-in-group
+                                             search-apps]]
             [metadactyl.routes.params :refer :all]
             [metadactyl.util.service :as service]
             [compojure.api.sweet :refer :all]
@@ -9,6 +11,14 @@
             [schema.core :as s]))
 
 (defroutes* apps
+  (GET* "/" []
+        :query [params AppSearchParams]
+        :summary "Search Apps"
+        :notes "This service allows users to search for Apps based on a part of the App name or
+        description. The response body contains a \"templates\" array that is in the same format as
+        the \"templates\" array in the /apps/categories/:category-id endpoint response."
+        (search-apps params))
+
   (context "/categories" []
            (GET* "/" []
                  :query [params CategoryListingParams]

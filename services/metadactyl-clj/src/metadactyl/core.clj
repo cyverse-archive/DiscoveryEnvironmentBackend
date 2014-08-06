@@ -51,9 +51,6 @@
   (POST "/delete-rating" [:as {body :body}]
         (throw+ '("delete-rating" body)))
 
-  (GET "/search-analyses" [:as {params :params}]
-       (search-apps params))
-
   (GET "/get-components-in-analysis/:app-id" [app-id]
        (throw+ '("list-deployed-components-in-app" app-id)))
 

@@ -8,7 +8,6 @@
     * [Listing Analysis Groups](#listing-analysis-groups)
     * [Listing Individual Analyses](#listing-individual-analyses)
     * [Listing Deployed Components in an Analysis](#listing-deployed-components-in-an-analysis)
-    * [Searching for Analyses](#searching-for-analyses)
 
 # App Metadata Listing Services
 
@@ -691,49 +690,6 @@ $ curl -s "http://by-tor:8888/secured/get-components-in-analysis/0BA04303-F0CB-4
             "name": "phyml",
             "type": "executable",
             "version": ""
-        }
-    ]
-}
-```
-
-## Searching for Analyses
-
-*Secured Endpoint:* GET /secured/search-analyses
-
-This service allows users to search for analyses based on a part of the analysis
-name or description. The response body contains a "templates" array that is in
-the same format as the "templates" array in the /secured/get-analyses-in-group
-endpoint response (see the next section):
-
-```json
-{
-    "templates": [
-        {
-            "id": "analysis-id",
-            "description": "analysis-description",
-            "name": "analysis-name",
-            "group_id": "analysis-group-id",
-            "group_name": "analysis-group-name",
-            ...
-        },
-        ...
-    ]
-}
-```
-
-Here's an example:
-
-```
-$ curl -s "http://by-tor:8888/secured/search-analyses?user=snow-dog&email=sd@example.org&search=ranger" | python -mjson.tool
-{
-    "templates": [
-        {
-            "id": "9D221848-1D12-4A31-8E93-FA069EEDC151",
-            "name": "Ranger",
-            "description": "Some Description",
-            "group_id": "99F2E2FE-9931-4154-ADDB-28386027B19F",
-            "group_name": "Some Group Name",
-            ...
         }
     ]
 }
