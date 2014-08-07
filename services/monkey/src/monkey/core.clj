@@ -2,6 +2,8 @@
   (:gen-class)
   (:use [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
+            [clojurewerkz.elastisch.rest :as es]
+            [korma.db :as db]
             [me.raynes.fs :as fs]
             [clojure-commons.config :as cfg]
             [common-cli.core :as cli]
@@ -32,7 +34,13 @@
 
 
 (defn- reindex
-  [props])
+  [props]
+  (let [es   (es/connect (str (props/es-url props)))
+        tags (db/postgres {:host     (props/tags-host props)
+                           :port     (props/tags-port props)
+                           :db       (props/tags-db props)
+                           :user     (props/tags-user props)
+                           :password (props/tags-password props)})])
 
 
 (defn- listen

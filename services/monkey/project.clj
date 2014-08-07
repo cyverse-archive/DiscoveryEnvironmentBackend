@@ -8,6 +8,8 @@
   :main monkey.core
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.0"]
+                 [clojurewerkz/elastisch "2.0.0"]
+                 [korma "0.3.0"]
                  [me.raynes/fs "1.4.6"]
                  [slingshot "0.10.3"]
                  [org.iplantc/clojure-commons "3.2.2"]
