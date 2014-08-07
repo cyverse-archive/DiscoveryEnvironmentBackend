@@ -4,12 +4,6 @@
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/dewey.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/dewey.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/dewey.git"}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :aot [dewey.core]
   :main dewey.core
   :dependencies [[org.clojure/clojure "1.6.0"]

@@ -3,12 +3,6 @@
   :url "https://github.com/iPlantCollaborativeOpenSource/Donkey"
   :license {:name "BSD Standard License"
             :url "http://www.iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/Donkey.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/Donkey.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/Donkey.git"}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/tools.logging "0.2.6"]

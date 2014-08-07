@@ -3,12 +3,6 @@
   :url "http://github.com/iPlantCollaborativeOpenSource/clj-icat-direct/"
   :license {:name "BSD Standard License"
             :url "http://www.iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/clj-icat-direct.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/clj-icat-direct.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/clj-icat-direct.git"}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
