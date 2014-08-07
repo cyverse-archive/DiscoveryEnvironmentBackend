@@ -5,7 +5,6 @@
             [me.raynes.fs :as fs]
             [clojure-commons.config :as cfg]
             [common-cli.core :as cli]
-            [monkey.actions :as actions]
             [monkey.props :as props]))
 
 
@@ -32,6 +31,14 @@
     @p))
 
 
+(defn- reindex
+  [props])
+
+
+(defn- listen
+  [props])
+
+
 (defn -main
   [& args]
   (let [{:keys [options _ _ _]} (cli/handle-args svc-info args (fn [] cli-options))]
@@ -41,5 +48,5 @@
       (cli/exit 1 "The config file is not readable."))
     (let [props (load-config-from-file (:config options))]
       (if (:reindex options)
-        (actions/reindex props)
-        (actions/listen props)))))
+        (reindex props)
+        (listen props)))))
