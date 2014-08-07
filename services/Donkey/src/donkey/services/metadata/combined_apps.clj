@@ -34,14 +34,9 @@
     :properties (mapv (fn [prop] (assoc prop :id (str step-name "_" (:id prop))))
                       (:properties group))))
 
-(defn- assert-agave-enabled
-  [agave]
-  (when-not agave
-    (service/bad-request "HPC_JOBS_DISABLED")))
-
 (defn- get-agave-groups
   [agave step external-app-id]
-  (assert-agave-enabled agave)
+  (mu/assert-agave-enabled agave)
   (let [app          (.getApp agave external-app-id)
         mapped-props (set (map :input_id (ap/load-target-step-mappings (:step_id step))))]
     (->> (:groups app)
@@ -88,10 +83,8 @@
   [agave app-id]
   (if (util/is-uuid? app-id)
     (get-combined-app agave app-id)
-    (if agave
-      (.getApp agave app-id)
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     "HPC_JOBS_DISABLED"}))))
+    (do (mu/assert-agave-enabled agave)
+        (.getApp agave app-id))))
 
 (defn- app-step-partitioner
   "Partitions app steps into units of execution. Each external app step has to run by itself.
@@ -366,5 +359,5 @@
       (stop-job-step agave job-id (find-first-incomplete-job-step job-id))
       (catch Throwable t
         (log/warn t "unable to cancel the most recent step of job, " job-id))
-      (catch Object o
+      (catch Object _
         (log/warn "unable to cancel the most recent step of job, " job-id)))))

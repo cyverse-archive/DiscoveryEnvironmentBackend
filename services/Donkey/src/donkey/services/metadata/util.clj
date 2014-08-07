@@ -6,7 +6,8 @@
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [donkey.clients.notifications :as dn]
-            [donkey.util.db :as db]))
+            [donkey.util.db :as db]
+            [donkey.util.service :as service]))
 
 (def canceled-status "Canceled")
 (def failed-status "Failed")
@@ -25,6 +26,11 @@
   (completed-status-codes job-status))
 
 (def not-completed? (complement is-completed?))
+
+(defn assert-agave-enabled
+  [agave]
+  (when-not agave
+    (service/bad-request "HPC_JOBS_DISABLED")))
 
 (defn- job-name-to-path
   "Converts a job name to a string suitable for inclusion in a path."

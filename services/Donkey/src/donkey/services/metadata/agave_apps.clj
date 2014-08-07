@@ -84,14 +84,12 @@
      (:id (.submitJob agave-client (assoc submission :callbackUrl cb-url)))))
 
 (defn get-agave-app-rerun-info
-  [agave job]
-  (let [external-id (:external_id job)]
-    (service/assert-found (.getAppRerunInfo agave external-id) "HPC job" external-id)))
+  [agave {:keys [external-id]}]
+  (service/assert-found (.getAppRerunInfo agave external-id) "HPC job" external-id))
 
 (defn get-agave-job-params
-  [agave job]
-  (let [external-id (:external_id job)]
-    (service/assert-found (.getJobParams agave external-id) "HPC job" external-id)))
+  [agave {:keys [external-id]}]
+  (service/assert-found (.getJobParams agave external-id) "HPC job" external-id))
 
 (defn search-apps
   [agave-client search-term def-result]
