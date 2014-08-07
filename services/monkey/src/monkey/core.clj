@@ -40,7 +40,7 @@
                            :port     (props/tags-port props)
                            :db       (props/tags-db props)
                            :user     (props/tags-user props)
-                           :password (props/tags-password props)})])
+                           :password (props/tags-password props)})]))
 
 
 (defn- listen
