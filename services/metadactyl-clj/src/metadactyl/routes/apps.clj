@@ -3,6 +3,8 @@
             [metadactyl.app-listings :refer [get-app-groups
                                              list-apps-in-group
                                              search-apps]]
+            [metadactyl.zoidberg :refer [edit-app
+                                         copy-app]]
             [metadactyl.routes.params :refer :all]
             [metadactyl.util.service :as service]
             [compojure.api.sweet :refer :all]
@@ -18,6 +20,20 @@
         description. The response body contains a \"templates\" array that is in the same format as
         the \"templates\" array in the /apps/categories/:category-id endpoint response."
         (search-apps params))
+
+  (GET* "/:app-id/ui" [app-id]
+        :query [params SecuredQueryParams]
+        :summary "Make an App Available for Editing"
+        :notes "The DE uses this service to obtain the App description JSON so that it can be
+        edited. The App must have been integrated by the requesting user, and it must not already be
+        public."
+        (edit-app (uuid/uuidify app-id)))
+
+  (POST* "/:app-id/copy" [app-id]
+         :query [params SecuredQueryParams]
+         :summary "Make a Copy of an App Available for Editing"
+         :notes "This service can be used to make a copy of an App in the user's workspace."
+         (copy-app (uuid/uuidify app-id)))
 
   (context "/categories" []
            (GET* "/" []

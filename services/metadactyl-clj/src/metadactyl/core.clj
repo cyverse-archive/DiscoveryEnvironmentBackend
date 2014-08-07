@@ -63,14 +63,8 @@
   (GET "/edit-app/:app-id" [app-id]
        (throw+ '("edit-app-new-format" app-id)))
 
-  (GET "/edit-workflow/:app-id" [app-id]
-       (edit-workflow app-id))
-
   (GET "/copy-template/:app-id" [app-id]
        (throw+ '("copy-app" app-id)))
-
-  (GET "/copy-workflow/:app-id" [app-id]
-       (copy-workflow app-id))
 
   (PUT "/update-template" [:as {body :body}]
        (trap #(throw+ '("update-template-secured" body))))
