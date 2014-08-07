@@ -8,7 +8,6 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [postgresql "9.1-901-1.jdbc4"]
                  [org.clojure/java.jdbc "0.2.3"] ; This needs to be held back until infosquito gets adapted
-                 [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/tools.logging "0.3.0"]
                  [cheshire "5.3.1"]
                  [clj-time "0.7.0"]
