@@ -531,8 +531,7 @@
 (defn get-property-values
   [job-id]
   (with-db db/de
-    (.getJobParams (get-app-lister) job-id)
-    #_(service/success-response (.getJobParams (get-app-lister) job-id))))
+    (service/success-response (.getJobParams (get-app-lister) job-id))))
 
 (defn get-app-rerun-info
   [job-id]

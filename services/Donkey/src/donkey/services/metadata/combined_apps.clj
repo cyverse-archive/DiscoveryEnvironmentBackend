@@ -214,11 +214,13 @@
   "Updates an app with the parameter values from a previous experiment plugged into the appropriate
    parameters."
   [agave-client job]
-  (let [app (get-app agave-client (:app-id job))
-        values (get-job-submission-config job)
+  (let [app           (get-app agave-client (:app-id job))
+        values        (get-job-submission-config job)
         update-prop   #(let [id (keyword (:id %))]
                          (if (contains? values id)
-                           (assoc % :value (values id))
+                           (assoc %
+                             :value        (values id)
+                             :defaultValue (values id))
                            %))
         update-props  #(map update-prop %)
         update-group  #(update-in % [:properties] update-props)
