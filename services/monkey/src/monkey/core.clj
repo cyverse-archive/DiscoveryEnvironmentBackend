@@ -23,10 +23,13 @@
    ["-h" "--help" "show help and exit"]])
 
 
-;; TODO implement
 (defn- load-config-from-file
   [cfg-path]
-  {})
+  (let [p (ref nil)]
+    (cfg/load-config-from-file cfg-path p)
+    (when-not (props/validate @p #(log/error "configuration setting" % "is undefined"))
+      (throw+ "The configuration parameters are invalid."))
+    @p))
 
 
 (defn -main
