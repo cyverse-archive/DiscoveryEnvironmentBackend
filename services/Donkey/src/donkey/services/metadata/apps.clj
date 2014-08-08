@@ -58,16 +58,19 @@
            :argument   "job_type"
            :value      job-type}))
 
+(defn- get-first-job-step
+  [{:keys [id]}]
+  (service/assert-found (jp/get-job-step-number id 1) "first step in job" id))
+
 (defn- process-job
   ([agave-client job-id processing-fns]
      (process-job agave-client job-id (jp/get-job-by-id (UUID/fromString job-id)) processing-fns))
-  ([agave-client job-id job {:keys [process-agave-job process-de-job preprocess-job]
-                             :or {preprocess-job identity}}]
+  ([agave-client job-id job {:keys [process-agave-job process-de-job]}]
      (when-not job
        (service/not-found "job" job-id))
-     (if (util/is-uuid? (:app-id job))
-       (process-de-job (preprocess-job job))
-       (process-agave-job agave-client (preprocess-job job)))))
+     (if (= jp/de-job-type (:job-type job))
+       (process-de-job job)
+       (process-agave-job agave-client (get-first-job-step job)))))
 
 (defn- agave-authorization-uri
   [state-info]

@@ -5,14 +5,6 @@
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
 
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/kifshare.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/kifshare.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/kifshare.git"}
-
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
-
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/core.memoize "0.5.3"]

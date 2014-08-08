@@ -3,12 +3,6 @@
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/filetool.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/filetool.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/filetool.git"}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :main porklock.core
   :aot [porklock.core]
   :classifiers [["javadoc" :javadoc]

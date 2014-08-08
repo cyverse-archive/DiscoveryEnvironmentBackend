@@ -3,12 +3,6 @@
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/iplant-email.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/iplant-email.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/iplant-email.git"}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.iplantc/clojure-commons "3.2.2"]
                  [org.clojure/tools.logging "0.2.3"]

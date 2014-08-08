@@ -3,18 +3,11 @@
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/facepalm.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/facepalm.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/facepalm.git"}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :aot [infosquito.core]
   :main infosquito.core
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [postgresql "9.1-901-1.jdbc4"]
                  [org.clojure/java.jdbc "0.2.3"] ; This needs to be held back until infosquito gets adapted
-                 [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/tools.logging "0.3.0"]
                  [cheshire "5.3.1"]
                  [clj-time "0.7.0"]

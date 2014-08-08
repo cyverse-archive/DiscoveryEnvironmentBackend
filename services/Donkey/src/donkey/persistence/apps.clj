@@ -97,17 +97,29 @@
      (select [:transformation_activity :a]
              (where {:id app-id})))))
 
+(defn- mapping-base-query
+  []
+  (-> (select* [:input_output_mapping :iom])
+      (join [:transformation_steps :source] {:iom.source :source.id})
+      (join [:transformation_steps :target] {:iom.target :target.id})
+      (join [:dataobject_mapping :dom] {:iom.hid :dom.mapping_id})
+      (fields [:dom.input    :input_id]
+              [:target.id    :target_id]
+              [:target.name  :target_name]
+              [:dom.output   :output_id]
+              [:source.id    :source_id]
+              [:source.name  :source_name])))
+
 (defn load-target-step-mappings
   [step-id]
   (with-db db/de
-    (select [:input_output_mapping :iom]
-            (join [:transformation_steps :source] {:iom.source :source.id})
-            (join [:transformation_steps :target] {:iom.target :target.id})
-            (join [:dataobject_mapping :dom] {:iom.hid :dom.mapping_id})
-            (fields [:dom.input    :input_id]
-                    [:target.id    :target_id]
-                    [:target.name  :target_name]
-                    [:dom.output   :output_id]
-                    [:source.id    :source_id]
-                    [:source.name  :source_name])
+    (select (mapping-base-query)
             (where {:iom.target step-id}))))
+
+(defn load-app-mappings
+  [app-id]
+  (with-db db/de
+    (select (mapping-base-query)
+            (join [:transformation_task_steps :tts] {:iom.target :tts.transformation_step_id})
+            (join [:transformation_activity :a] {:tts.transformation_task_id :a.hid})
+            (where {:a.id app-id}))))
