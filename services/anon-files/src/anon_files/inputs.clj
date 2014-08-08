@@ -5,39 +5,6 @@
         [clj-jargon.paging])
   (:import [java.io InputStream]))
 
-(def default-chunk-size 4000000)
-
-(defn get-chunk-size
-  [file-size]
-  (loop [fsize file-size
-         csize default-chunk-size]
-    (if (< fsize csize)
-      fsize
-      csize)))
-
-(defn get-num-chunks
-  [chunk-size file-size]
-  (int (Math/floor (/ file-size chunk-size))))
-
-(defn get-remainder-bytes
-  [chunk-size file-size]
-  (mod file-size chunk-size))
-
-(defn drop-bytes
-  [istream num-bytes]
-  (let [fsize      (if-not (pos? num-bytes) 1 num-bytes)
-        csize      (get-chunk-size fsize)
-        num-chunks (get-num-chunks csize fsize)
-        remainder  (get-remainder-bytes csize fsize)]
-    (let [buf (byte-array csize)]
-      (doseq [iter (range num-chunks)]
-        (println "Dropping chunk " iter)
-        (.read istream buf 0 csize)))
-    (if (pos? remainder)
-      (let [buf (byte-array remainder)]
-        (.read istream buf 0 remainder)))
-    istream))
-
 (defn chunk-stream
   [cm filepath start-byte end-byte]
   (let [raf (.instanceIRODSRandomAccessFile (:fileFactory cm) filepath)
