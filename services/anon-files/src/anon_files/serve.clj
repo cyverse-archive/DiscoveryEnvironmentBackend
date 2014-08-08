@@ -346,6 +346,8 @@
   (init/with-jargon (jargon-cfg) [cm]
     (log-headers
      (validated cm (:uri req)
-                {:status 200
-                 :body ""
-                 :headers (file-header cm (:uri req))}))))
+                (let [lastmod (info/lastmod-date cm (:uri req))
+                      filesize (info/file-size cm (:uri req))]
+                  {:status 200
+                   :body ""
+                   :headers (file-header (:uri req) lastmod 0 (dec filesize))})))))
