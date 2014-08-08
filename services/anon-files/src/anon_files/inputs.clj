@@ -4,7 +4,7 @@
         [clj-jargon.item-info])
   (:import [java.io InputStream]))
 
-(def default-chunk-size 4096)
+(def default-chunk-size 4000000)
 
 (defn get-chunk-size
   [file-size]
@@ -30,6 +30,7 @@
         remainder  (get-remainder-bytes csize fsize)]
     (let [buf (byte-array csize)]
       (doseq [iter (range num-chunks)]
+        (println "Dropping chunk " iter)
         (.read istream buf 0 csize)))
     (if (pos? remainder)
       (let [buf (byte-array remainder)]

@@ -215,9 +215,6 @@
      "Upper Bound:" upper "\n"
      "Number bytes:" num-bytes "\n")
   (cond
-   (> num-bytes Integer/MAX_VALUE)
-   (not-satisfiable-response file-size)
-   
    (> lower upper)
    (not-satisfiable-response file-size)
 
@@ -235,8 +232,8 @@
   (let [file-size (info/file-size cm filepath)
         retval {:file-size file-size
                 :lastmod   (info/lastmod-date cm filepath)
-                :lower     (calc-lower (Integer/parseInt (:lower range)))
-                :upper     (calc-upper (Integer/parseInt (:upper range)) file-size)}]
+                :lower     (calc-lower (Long/parseLong (:lower range)))
+                :upper     (calc-upper (Long/parseLong (:upper range)) file-size)}]
     (assoc retval :num-bytes (inc (- (:upper retval) (:lower retval))))))
 
 (defn unbounded-request-info
@@ -244,7 +241,7 @@
   (let [file-size (info/file-size cm filepath)
         retval {:file-size file-size
                 :lastmod   (info/lastmod-date cm filepath)
-                :lower     (calc-lower (Integer/parseInt (:lower range)))
+                :lower     (calc-lower (Long/parseLong (:lower range)))
                 :upper     (dec file-size)}]
     (assoc retval :num-bytes (inc (- (:upper retval) (:lower retval))))))
 
@@ -253,7 +250,7 @@
   (let [file-size (info/file-size cm filepath)
         retval {:file-size file-size
                 :lastmod   (info/lastmod-date cm filepath)
-                :lower     (calc-lower (+ file-size (- (Integer/parseInt (:lower range)) 1)))
+                :lower     (calc-lower (+ file-size (- (Long/parseLong (:lower range)) 1)))
                 :upper     (calc-upper (- file-size 1) file-size)}]
     (assoc retval :num-bytes (inc (- (:upper retval) (:lower retval))))))
 
@@ -262,8 +259,8 @@
   (let [file-size (info/file-size cm filepath)
         retval {:file-size file-size
                 :lastmod   (info/lastmod-date cm filepath)
-                :lower     (calc-lower (Integer/parseInt (:lower range)))
-                :upper     (calc-upper (+ (Integer/parseInt (:lower range)) 1) file-size)}]
+                :lower     (calc-lower (Long/parseLong (:lower range)))
+                :upper     (calc-upper (+ (Long/parseLong (:lower range)) 1) file-size)}]
     (assoc retval :num-bytes (inc (- (:upper retval) (:lower retval))))))
 
 (defn normal-request-info
@@ -325,17 +322,17 @@
   (info "Handling GET request for" (:uri req))
   (info "\n" (cfg/pprint-to-string req))
   (try
-    (log-headers
-     (if (range-request? req)
+    (if (range-request? req)
+      (log-headers
        (let [info     (get-req-info req)
              body     (anon-input-stream (:uri req) (:filesize info) info)]
          (if (map? body)
            body
            {:status  206
             :body    body
-            :headers (file-header (:uri req) (:lastmod info) (:lower info) (:upper info))}))
-       (init/with-jargon (jargon-cfg) [cm]
-         (serve cm (:uri req)))))
+            :headers (file-header (:uri req) (:lastmod info) (:lower info) (:upper info))})))
+      (init/with-jargon (jargon-cfg) [cm]
+        (serve cm (:uri req))))
     (catch Exception e
       (warn e))))
 
