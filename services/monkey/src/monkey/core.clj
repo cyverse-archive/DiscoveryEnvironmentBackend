@@ -2,12 +2,13 @@
   (:gen-class)
   (:use [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
-            [clojurewerkz.elastisch.rest :as es]
-            [korma.db :as db]
             [me.raynes.fs :as fs]
             [clojure-commons.config :as cfg]
             [common-cli.core :as cli]
-            [monkey.props :as props]))
+            [monkey.actions :as actions]
+            [monkey.index :as index]
+            [monkey.props :as props]
+            [monkey.tags :as tags]))
 
 
 (def ^{:private true :const true} svc-info
@@ -35,12 +36,7 @@
 
 (defn- reindex
   [props]
-  (let [es   (es/connect (str (props/es-url props)))
-        tags (db/postgres {:host     (props/tags-host props)
-                           :port     (props/tags-port props)
-                           :db       (props/tags-db props)
-                           :user     (props/tags-user props)
-                           :password (props/tags-password props)})]))
+  (actions/sync-index (index/mk-index props) (tags/mk-tags props)))
 
 
 (defn- listen
