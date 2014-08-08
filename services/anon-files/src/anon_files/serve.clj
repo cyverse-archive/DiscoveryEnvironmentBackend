@@ -182,9 +182,8 @@
 
 (defn- range-body
   [cm filepath start-byte end-byte]
-  (let [istream (ops/input-stream cm filepath)]
-    (if (>= (- end-byte start-byte) 0)
-      (inputs/chunk-stream istream start-byte end-byte))))
+  (if (>= (- end-byte start-byte) 0)
+    (inputs/chunk-stream cm filepath start-byte end-byte)))
 
 (defn not-satisfiable-response
   [filesize]
