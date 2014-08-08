@@ -84,7 +84,7 @@
        (ss/try+
         (let [retval# (do ~@body)]
           (cond
-           (instance? IRODSFileInputStream retval#) (proxy-input-stream-return ~cm-sym retval#)
+           (instance? java.io.InputStream retval#) (proxy-input-stream-return ~cm-sym retval#)
            ~auto-close                              (clean-return ~cm-sym retval#)
            :else                                    (dirty-return ~cm-sym retval#)))
         (catch Object o1#

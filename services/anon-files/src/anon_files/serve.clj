@@ -8,7 +8,8 @@
             [clj-jargon.paging :as paging]
             [taoensso.timbre :as timbre]
             [common-cfg.cfg :as cfg]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [anon-files.inputs :as inputs]))
 
 (timbre/refer-timbre)
 
@@ -126,6 +127,23 @@
       (categorize-ranges)
       (parse-ranges)))
 
+(defn valid?
+  [cm filepath]
+  (cond
+   (not (info/exists? cm filepath))
+   (do (warn "[anon-files]" filepath "does not exist.")
+       false)
+   
+   (not (info/is-file? cm filepath))
+   (do (warn "[anon-files]" filepath "is not a file.")
+       false)
+   
+   (not (perms/is-readable? cm (:anon-user @cfg/cfg) filepath))
+   (do (warn "[anon-files]" filepath "is not readable.")
+       false)
+   
+   :else true))
+
 (defmacro validated
   [cm filepath & body]
   `(cond
@@ -145,21 +163,18 @@
      ~@body))
 
 (defn- base-file-header
-  [cm filepath]
+  [filepath lastmod]
   {"Accept-Ranges"    "bytes"
    "Cache-Control"    "no-cache"
-   "ETag"             (str "W/" (info/lastmod-date cm filepath))
+   "ETag"             (str "W/" lastmod)
    "Expires"          "0"
    "Vary"             "*"
    "Content-Location" filepath})
 
 (defn- file-header
-  ([cm filepath start-byte end-byte]
-     (merge (base-file-header cm filepath)
-            {"Content-Length" (str (inc (- end-byte start-byte)))}))
-  ([cm filepath]
-     (merge (base-file-header cm filepath)
-            {"Content-Length" (str (info/file-size cm filepath))})))
+  ([filepath lastmod start-byte end-byte]
+     (merge (base-file-header filepath lastmod)
+            {"Content-Length" (str (inc (- end-byte start-byte)))})))
 
 (defn serve
   [cm filepath]
@@ -167,22 +182,16 @@
 
 (defn- range-body
   [cm filepath start-byte end-byte]
-  (if (pos? (- end-byte start-byte))
-    (java.io.ByteArrayInputStream.
-     (paging/read-at-position cm filepath start-byte (- end-byte start-byte) false))))
-
-(defn range-response
-  [cm filepath start-byte end-byte]
-  {:status   206
-   :body    (range-body cm filepath start-byte end-byte)
-   :headers (file-header cm filepath start-byte end-byte)})
+  (let [istream (ops/input-stream cm filepath)]
+    (if (>= (- end-byte start-byte) 0)
+      (inputs/chunk-stream istream start-byte end-byte))))
 
 (defn not-satisfiable-response
-  [cm filepath]
-  {:status 416
-   :body "The requested range is not satisfiable."
+  [filesize]
+  {:status  416
+   :body    "The requested range is not satisfiable."
    :headers {"Accept-Ranges" "bytes"
-             "Content-Range" (str "bytes */" (info/file-size cm filepath))}})
+             "Content-Range" (str "bytes */" filesize)}})
 
 (defn calc-lower
   [lower-val]
@@ -205,94 +214,130 @@
      "Lower Bound:" lower "\n"
      "Upper Bound:" upper "\n"
      "Number bytes:" num-bytes "\n")
-    (cond
-     (> num-bytes Integer/MAX_VALUE)
-     (not-satisfiable-response cm filepath)
-     
-     (> lower upper)
-     (not-satisfiable-response cm filepath)
+  (cond
+   (> num-bytes Integer/MAX_VALUE)
+   (not-satisfiable-response file-size)
+   
+   (> lower upper)
+   (not-satisfiable-response file-size)
 
-     (> lower file-size)
-     (not-satisfiable-response cm filepath)
+   (> lower file-size)
+   (not-satisfiable-response file-size)
 
-     (= lower upper)
-     (range-response cm filepath lower upper)
+   (= lower upper)
+   (range-body cm filepath lower upper)
 
-     :else
-     (range-response cm filepath lower upper)))
+   :else
+   (range-body cm filepath lower upper)))
 
-(defn handle-bounded-request
+(defn bounded-request-info
   [cm filepath range]
   (let [file-size (info/file-size cm filepath)
-        lower     (calc-lower (Integer/parseInt (:lower range)))
-        upper     (calc-upper (Integer/parseInt (:upper range)) file-size)
-        num-bytes (inc (- upper lower))]
-    (handle-range-request cm filepath file-size lower upper num-bytes)))
+        retval {:file-size file-size
+                :lastmod   (info/lastmod-date cm filepath)
+                :lower     (calc-lower (Integer/parseInt (:lower range)))
+                :upper     (calc-upper (Integer/parseInt (:upper range)) file-size)}]
+    (assoc retval :num-bytes (inc (- (:upper retval) (:lower retval))))))
 
-(defn handle-unbounded-request
+(defn unbounded-request-info
   [cm filepath range]
   (let [file-size (info/file-size cm filepath)
-        lower     (calc-lower (Integer/parseInt (:lower range)))
-        upper     file-size
-        num-bytes (inc (- upper lower))]
-    (handle-range-request cm filepath file-size lower upper num-bytes)))
+        retval {:file-size file-size
+                :lastmod   (info/lastmod-date cm filepath)
+                :lower     (calc-lower (Integer/parseInt (:lower range)))
+                :upper     (dec file-size)}]
+    (assoc retval :num-bytes (inc (- (:upper retval) (:lower retval))))))
 
-(defn handle-unbounded-negative-request
+(defn unbounded-negative-info
   [cm filepath range]
   (let [file-size (info/file-size cm filepath)
-        lower     (calc-lower (+ file-size (- (Integer/parseInt (:lower range)) 1)))
-        upper     (calc-upper (- file-size 1) file-size)
-        num-bytes (inc (- upper lower))]
-    (handle-range-request cm filepath file-size lower upper num-bytes)))
+        retval {:file-size file-size
+                :lastmod   (info/lastmod-date cm filepath)
+                :lower     (calc-lower (+ file-size (- (Integer/parseInt (:lower range)) 1)))
+                :upper     (calc-upper (- file-size 1) file-size)}]
+    (assoc retval :num-bytes (inc (- (:upper retval) (:lower retval))))))
 
-(defn handle-byte-request
+(defn byte-request-info
   [cm filepath range]
   (let [file-size (info/file-size cm filepath)
-        lower     (calc-lower (Integer/parseInt (:lower range)))
-        upper     (calc-upper (+ (Integer/parseInt (:lower range)) 1) file-size)
-        num-bytes (inc (- upper lower))]
+        retval {:file-size file-size
+                :lastmod   (info/lastmod-date cm filepath)
+                :lower     (calc-lower (Integer/parseInt (:lower range)))
+                :upper     (calc-upper (+ (Integer/parseInt (:lower range)) 1) file-size)}]
+    (assoc retval :num-bytes (inc (- (:upper retval) (:lower retval))))))
+
+(defn normal-request-info
+  [cm filepath range]
+  (let [filesize (info/file-size cm filepath)]
+    {:file-size filesize
+     :lastmod   (info/lastmod-date cm filepath)
+     :lower     0
+     :upper     (dec filesize)
+     :num-bytes filesize}))
+
+(defn make-request
+  [cm filepath info]
+  (let [file-size (:file-size info)
+        lower     (:lower info)
+        upper     (:upper info)
+        num-bytes (:num-bytes info)]    
     (handle-range-request cm filepath file-size lower upper num-bytes)))
 
-(defn serve-range
+(defn request-info
   [cm filepath range]
-  (validated
-   cm filepath
-   (case (:kind range)
-     "bounded"
-     (handle-bounded-request cm filepath range)
+  (case (:kind range)
+    "bounded"
+    (bounded-request-info cm filepath range)
 
-     "unbounded"
-     (handle-unbounded-request cm filepath range)
+    "unbounded"
+    (unbounded-request-info cm filepath range)
 
-     "unbounded-negative"
-     (handle-unbounded-negative-request cm filepath range)
+    "unbounded-negative"
+    (unbounded-negative-info cm filepath range)
 
-     "byte"
-     (handle-byte-request cm filepath range)
+    "byte"
+    (byte-request-info cm filepath range)
 
-     (serve cm filepath))))
+    (normal-request-info cm filepath range)))
 
 (defn log-headers
   [response]
   (warn "Response map:\n" (dissoc response :body))
   response)
 
+(defn anon-input-stream
+  [filepath filesize info]
+  (init/with-jargon (jargon-cfg) [cm]
+    (if-not range
+      (not-satisfiable-response filesize)
+      (make-request cm filepath info))))
+
+(defn get-req-info
+  [req]
+  (init/with-jargon (jargon-cfg) [cm]
+    (if-not (valid? cm (:uri req))
+      (throw (Exception. "Bad")))
+    (let [range (first (extract-ranges req))]
+      (request-info cm (:uri req) range))))
+
 (defn handle-request
   [req]
   (info "Handling GET request for" (:uri req))
   (info "\n" (cfg/pprint-to-string req))
-  (init/with-jargon (jargon-cfg) [cm]
-    (try
-      (log-headers
-       (if (range-request? req)
-         (let [ranges   (extract-ranges req)
-               filepath (:uri req)]
-           (if-not ranges
-             (not-satisfiable-response cm filepath)
-             (serve-range cm filepath (first ranges))))
-         (serve cm (:uri req))))
-      (catch Exception e
-        (warn e)))))
+  (try
+    (log-headers
+     (if (range-request? req)
+       (let [info     (get-req-info req)
+             body     (anon-input-stream (:uri req) (:filesize info) info)]
+         (if (map? body)
+           body
+           {:status  206
+            :body    body
+            :headers (file-header (:uri req) (:lastmod info) (:lower info) (:upper info))}))
+       (init/with-jargon (jargon-cfg) [cm]
+         (serve cm (:uri req)))))
+    (catch Exception e
+      (warn e))))
 
 (defn handle-head-request
   [req]

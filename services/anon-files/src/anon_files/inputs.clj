@@ -24,19 +24,22 @@
 
 (defn drop-bytes
   [istream num-bytes]
-  (let [csize      (get-chunk-size num-bytes)
-        num-chunks (get-num-chunks csize num-bytes)
-        remainder  (get-remainder-bytes csize num-bytes)]
+  (let [fsize      (if-not (pos? num-bytes) 1 num-bytes)
+        csize      (get-chunk-size fsize)
+        num-chunks (get-num-chunks csize fsize)
+        remainder  (get-remainder-bytes csize fsize)]
     (let [buf (byte-array csize)]
       (doseq [iter (range num-chunks)]
         (.read istream buf 0 csize)))
-    (let [buf (byte-array remainder)]
-      (.read istream buf 0 remainder))
+    (if (pos? remainder)
+      (let [buf (byte-array remainder)]
+        (.read istream buf 0 remainder)))
     istream))
 
 (defn chunk-stream
   [istream start-byte end-byte]
-  (drop-bytes istream start-byte)
+  (if (pos? start-byte)
+    (drop-bytes istream start-byte))
   (let [location (atom start-byte)]
     (proxy [java.io.InputStream] []
       (available [] (.available istream))
@@ -45,7 +48,7 @@
       (read
         ([]
            (let [new-loc (inc @location)]
-             (if (< new-loc end-byte)
+             (if (<= new-loc end-byte)
                (let [bufsize 1
                      buf     (byte-array bufsize)]
                  (.read istream buf 0 bufsize)
@@ -53,7 +56,7 @@
                  (first buf))
                -1)))
         ([b]
-           (if (< @location end-byte)
+           (if (<= @location end-byte)
              (let [diff       (inc (- end-byte @location))
                    len        (if (> (count b) diff)
                                 diff
@@ -63,7 +66,7 @@
                bytes-read)
              -1))
         ([b off len]
-           (if (< @location end-byte)
+           (if (<= @location end-byte)
              (let [diff (inc (- end-byte @location))
                    len (if (> len diff)
                          diff
