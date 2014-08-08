@@ -13,4 +13,5 @@
                  [me.raynes/fs "1.4.6"]
                  [slingshot "0.10.3"]
                  [org.iplantc/clojure-commons "3.2.3"]
-                 [org.iplantc/common-cli "3.2.3"]])
+                 [org.iplantc/common-cli "3.2.3"]]
+  :profiles {:dev {:resource-paths ["conf/test"]}})
