@@ -2,7 +2,8 @@
   "This namespace implements the Indexes protocol where elastisch library is used to interface with
    the search index."
   (:require [clojurewerkz.elastisch.rest :as es]
-            [monkey.props :as props]))
+            [monkey.props :as props])
+  (:import [clojure.lang PersistentArrayMap]))
 
 
 (defprotocol Indexes
@@ -21,5 +22,5 @@
 
    Returns:
      It returns the object."
-  [props]
+  [^PersistentArrayMap props]
   (->Index (es/connect (str (props/es-url props)))))

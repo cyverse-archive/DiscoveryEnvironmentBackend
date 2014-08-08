@@ -1,7 +1,9 @@
 (ns monkey.props
   "This namespace holds all of the logic for managing configuration values."
-  (:require [clojure.set :as set])
-  (:import [java.net URL]))
+  (:require [clojure.set :as set]
+            [clojure.tools.logging :as log])
+  (:import [java.net URL]
+           [clojure.lang PersistentArrayMap]))
 
 
 (def ^{:private true :const true} prop-names
@@ -13,7 +15,7 @@
     "monkey.tags.password"})
 
 
-(defn es-url
+(defn ^URL es-url
   "Returns the elasticsearch base URL.
 
    Parameters:
@@ -21,11 +23,11 @@
 
    Returns:
      It returns the elasticsearch base URL."
-  [props]
+  [^PersistentArrayMap props]
   (URL. (get props "monkey.es.url")))
 
 
-(defn tags-host
+(defn ^String tags-host
   "Returns the tags database host
 
    Parameters:
@@ -33,11 +35,11 @@
 
    Returns:
      It returns the domain name of the host of the tags database."
-  [props]
+  [^PersistentArrayMap props]
   (get props "monkey.tags.host"))
 
 
-(defn tags-port
+(defn ^Integer tags-port
   "Returns the tags database port
 
    Parameters:
@@ -45,11 +47,11 @@
 
    Returns:
      It returns the port the tags database listens on."
-  [props]
+  [^PersistentArrayMap props]
   (Integer/parseInt (get props "monkey.tags.port")))
 
 
-(defn tags-db
+(defn ^String tags-db
   "Returns the name of the tags database
 
    Parameters:
@@ -57,11 +59,11 @@
 
    Returns:
      It returns the name of the tags database"
-  [props]
+  [^PersistentArrayMap props]
   (get props "monkey.tags.db"))
 
 
-(defn tags-user
+(defn ^String tags-user
   "Returns the username authorized to access the tags database.
 
    Parameters:
@@ -69,11 +71,11 @@
 
    Returns:
      It returns the authorized username."
-   [props]
+   [^PersistentArrayMap props]
   (get props "monkey.tags.user"))
 
 
-(defn tags-password
+(defn ^String tags-password
   "returns the password used to authenticate the authorized user
 
    Parameters:
@@ -81,25 +83,23 @@
 
    Returns:
      It returns the password"
-  [props]
+  [^PersistentArrayMap props]
   (get props "monkey.tags.password"))
 
 
-(defn validate
+(defn ^Boolean validate
   "Validates the configuration. We don't want short-circuit evaluation in this case because
    logging all missing configuration settings is helpful.
 
    Parameters:
      props       - The property map to validate
-     log-missing - The function used to log invalid properties. It accepts the name of the missing
-                   property as its only argument.
 
    Returns:
      It returns true if all of the required parameters are present and false otherwise."
-  [props log-missing]
+  [^PersistentArrayMap props]
   (let [missing-props (set/difference prop-names (set (keys props)))
         all-present   (empty? missing-props)]
     (when-not all-present
       (doseq [missing-prop missing-props]
-        (log-missing missing-prop)))
+        (log/error "configuration setting" missing-prop "is undefined")))
     all-present))

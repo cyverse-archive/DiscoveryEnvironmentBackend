@@ -1,6 +1,8 @@
 (ns monkey.actions
   "This namespace contains the top-level tasks monkey performs. They are intended to be independent
-   of the actual index, tags database and message queue implementations.")
+   of the actual index, tags database and message queue implementations."
+  (:import [monkey.index Indexes]
+           [monkey.tags ViewsTags]))
 
 
 (defn- purge-deleted
@@ -18,6 +20,6 @@
    Parameters:
      index - the object that interacts with the search index
      tags  - the object that interacts with the tags database"
-  [index tags]
+  [^Indexes index ^ViewsTags tags]
   (purge-deleted)
   (reindex))

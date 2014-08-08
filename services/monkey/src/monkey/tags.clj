@@ -2,7 +2,8 @@
   "This namespace implements the ViewTags protocol for interacting with the tags data store through
    Korma."
   (:require [korma.db :as db]
-            [monkey.props :as props]))
+            [monkey.props :as props])
+  (:import [clojure.lang PersistentArrayMap]))
 
 
 (defprotocol ViewsTags
@@ -14,7 +15,7 @@
 
 
 (defn ^ViewsTags mk-tags
-  [props]
+  [^PersistentArrayMap props]
   (->Tags (db/postgres {:host     (props/tags-host props)
                         :port     (props/tags-port props)
                         :db       (props/tags-db props)

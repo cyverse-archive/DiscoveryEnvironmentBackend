@@ -1,8 +1,7 @@
 (ns monkey.core
   (:gen-class)
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [clojure.tools.logging :as log]
-            [me.raynes.fs :as fs]
+  (:require [me.raynes.fs :as fs]
             [clojure-commons.config :as cfg]
             [common-cli.core :as cli]
             [monkey.actions :as actions]
@@ -29,7 +28,7 @@
   [cfg-path]
   (let [p (ref nil)]
     (cfg/load-config-from-file cfg-path p)
-    (when-not (props/validate @p #(log/error "configuration setting" % "is undefined"))
+    (when-not (props/validate @p)
       (throw+ "The configuration parameters are invalid."))
     @p))
 
