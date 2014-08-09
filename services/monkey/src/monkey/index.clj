@@ -2,8 +2,10 @@
   "This namespace implements the Indexes protocol where elastisch library is used to interface with
    the search index."
   (:gen-class)
-  (:require [clojurewerkz.elastisch.query :as query]
+  (:require [clojure.tools.logging :as log]
+            [clojurewerkz.elastisch.query :as query]
             [clojurewerkz.elastisch.rest :as es]
+            [clojurewerkz.elastisch.rest.bulk :as bulk]
             [clojurewerkz.elastisch.rest.document :as doc]
             [clojurewerkz.elastisch.rest.response :as resp]
             [monkey.props :as props])
@@ -23,6 +25,20 @@
       res)))
 
 
+(defn- log-failure
+  [id]
+  (log/warn "Unable to remove the indexed document for the tag" id))
+
+
+(defn- log-failures
+  [res]
+  (let [fails (->> (:items res)
+                (map :delete)
+                (remove #(and (>= 200 (:status %)) (< 300 (:status %)))))]
+    (doseq [fail fails]
+      (log-failure (:id fail)))))
+
+
 (defprotocol Indexes
   "This protocol defines the operations needed to interact with the data search index."
 
@@ -39,10 +55,13 @@
   (all-tags [_]
     (map :_id (doc/scroll-seq es (init-tag-seq props es))))
 
-
   (remove-tags [_ ids]
-    ;; TODO implement
-    ))
+    (try
+      (log-failures (bulk/bulk-with-index-and-type es "data" "tags" (bulk/bulk-delete ids)))
+      (catch Throwable t
+        (log/debug t "Failed to remove tags")
+        (doseq [id ids]
+          (log-failure id))))))
 
 
 (defn ^Indexes mk-index
