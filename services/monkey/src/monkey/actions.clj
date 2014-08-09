@@ -18,7 +18,9 @@
 
 (defn- remove-batch
   [monkey batch]
-  ;; TODO log the tags being deleted at trace level
+  (when (log/enabled? "trace")
+    (doseq [tag batch]
+      (log/trace "removing the document for tag" tag "from the search index")))
   (index/remove-tags (:index monkey) batch))
 
 
