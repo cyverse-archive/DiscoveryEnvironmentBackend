@@ -7,12 +7,28 @@
 
 
 (def ^{:private true :const true} prop-names
-  #{"monkey.es.url"
+  #{"monkey.es.batch-size"
+    "monkey.es.url"
+    "monkey.es.scroll-size"
+    "monkey.es.scroll-timeout"
     "monkey.tags.host"
     "monkey.tags.port"
     "monkey.tags.db"
     "monkey.tags.user"
-    "monkey.tags.password"})
+    "monkey.tags.password"
+    "monkey.tags.batch-size"})
+
+
+(defn ^Integer es-batch-size
+  "Returns the indexing bulk operations batch size.
+
+   Parameters:
+     props - the property map to use
+
+   Returns:
+     the number of documents to handle at once in a bulk indexing operation"
+  [^PersistentArrayMap props]
+  (Integer/parseInt (get props "monkey.es.batch-size")))
 
 
 (defn ^URL es-url
@@ -25,6 +41,31 @@
      It returns the elasticsearch base URL."
   [^PersistentArrayMap props]
   (URL. (get props "monkey.es.url")))
+
+
+(defn ^Integer es-scroll-size
+  "Returns the number of documents to retrieve at a time when scrolling through an elasticsearch
+   result set.
+
+   Parameters:
+     props - the property map to use
+
+   Returns:
+     It returns the scroll size"
+  [^PersistentArrayMap props]
+  (Integer/parseInt (get props "monkey.es.scroll-size")))
+
+
+(defn ^String es-scroll-timeout
+  "Returns the unitted timeout value for a scroll.
+
+   Parameters:
+     props - the property map to use
+
+   Returns:
+     It returns the scroll timeout"
+  [^PersistentArrayMap props]
+  (get props "monkey.es.scroll-timeout"))
 
 
 (defn ^String tags-host
@@ -87,12 +128,24 @@
   (get props "monkey.tags.password"))
 
 
+(defn ^Integer tags-batch-size
+  "Returns the tags inspection bulk operations batch size.
+
+   Parameters:
+     props - the property map to use
+
+   Returns:
+     the number of tags to handle at once in a bulk inspection operation"
+  [^PersistentArrayMap props]
+  (Integer/parseInt (get props "monkey.tags.batch-size")))
+
+
 (defn ^Boolean validate
   "Validates the configuration. We don't want short-circuit evaluation in this case because
    logging all missing configuration settings is helpful.
 
    Parameters:
-     props       - The property map to validate
+     props - The property map to validate
 
    Returns:
      It returns true if all of the required parameters are present and false otherwise."

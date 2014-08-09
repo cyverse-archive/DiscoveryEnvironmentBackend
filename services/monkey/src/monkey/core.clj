@@ -35,7 +35,7 @@
 
 (defn- reindex
   [props]
-  (actions/sync-index (index/mk-index props) (tags/mk-tags props)))
+  (actions/sync-index (actions/mk-monkey props (index/mk-index props) (tags/mk-tags props))))
 
 
 (defn- listen

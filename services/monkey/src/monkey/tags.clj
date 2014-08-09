@@ -1,17 +1,26 @@
 (ns monkey.tags
   "This namespace implements the ViewTags protocol for interacting with the tags data store through
    Korma."
+  (:gen-class)
   (:require [korma.db :as db]
             [monkey.props :as props])
-  (:import [clojure.lang PersistentArrayMap]))
+  (:import [java.util UUID]
+           [clojure.lang ISeq PersistentArrayMap]))
 
 
 (defprotocol ViewsTags
-  "This protocol defines the read-only operations needed to interact with the tag database.")
+  "This protocol defines the read-only operations needed to interact with the tag database."
+
+  (^ISeq filter-missing [_ ^Iseq ids]
+    "Indicates whether or not a tag with the given id is in the database."))
 
 
 (deftype ^{:private true} Tags [db]
-  ViewsTags)
+  ViewsTags
+
+  (filter-missing [_ ids]
+    ;; TODO implement
+    []))
 
 
 (defn ^ViewsTags mk-tags
