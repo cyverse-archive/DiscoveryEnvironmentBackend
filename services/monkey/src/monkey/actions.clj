@@ -45,30 +45,17 @@
     (remove-from-index monkey)))
 
 
-(defn- all-tags
-  [monkey]
-  ;; TODO implement
-  [])
-
-
-(defn- create-tag-docs
-  [monkey tags]
-  ;; TODO implement
-  [])
-
-
 (defn- index-tags
   [monkey tag-docs]
-  ;; TODO implement
-  )
+  ;; TODO Log progress the way infosquito does
+  (doseq [batch (partition-all (props/es-batch-size (:props monkey)) tag-docs)]
+    (index/index-batch (:index monkey) batch)))
 
 
 (defn- reindex
   [monkey]
   (log/info "reindexing tags into the search index")
-  (->> (all-tags monkey)
-    (create-tag-docs monkey)
-    (index-tags monkey)))
+  (index-tags monkey (tags/all-tags (:tags monkey))))
 
 
 (defn ^PersistentArrayMap mk-monkey

@@ -14,29 +14,34 @@
 
 (defn- init-tag-seq
   [props es]
-  (let [res (doc/search es "data" "tags"
+  (let [res (doc/search es (props/es-index props) (props/es-tag-type props)
               :query       (query/match-all)
               :fields      ["_id"]
               :search_type "scan"
               :scroll      (props/es-scroll-timeout props)
               :size        (props/es-scroll-size props))]
     (if (resp/any-hits? res)
-      (doc/scroll es (:_scroll_id res) :scroll "1m")
+      (doc/scroll es (:_scroll_id res) :scroll (props/es-scroll-timeout props))
       res)))
 
 
-(defn- log-failure
-  [id]
-  (log/warn "Unable to remove the indexed document for the tag" id))
-
-
 (defn- log-failures
-  [res]
+  [res op log-failure]
   (let [fails (->> (:items res)
-                (map :delete)
+                (map op)
                 (remove #(and (>= 200 (:status %)) (< 300 (:status %)))))]
     (doseq [fail fails]
       (log-failure (:id fail)))))
+
+
+(defn- log-index-failure
+  [id]
+  (log/warn "Unable to index the document for the tag" id))
+
+
+(defn- log-remove-failure
+  [id]
+  (log/warn "Unable to remove the indexed document for the tag" id))
 
 
 (defprotocol Indexes
@@ -44,6 +49,9 @@
 
   (^ISeq all-tags [_]
     "returns a sequence of all of the ids for the tag documents in the search index")
+
+  (index-tags [_ ^ISeq tags]
+    "adds the provided tag documents to the search index")
 
   (remove-tags [_ ^ISeq ids]
     "Removes the tags with the provided ids from the search index"))
@@ -55,13 +63,29 @@
   (all-tags [_]
     (map :_id (doc/scroll-seq es (init-tag-seq props es))))
 
+  (index-tags [_ tags]
+    (try
+      (let [resp (bulk/bulk-with-index-and-type es
+                                                (props/es-index props)
+                                                (props/es-tag-type props)
+                                                (bulk/bulk-index tags))]
+        (log-failures resp :index log-index-failure))
+      (catch Throwable t
+        (log/debug t "failed to index tags")
+        (doseq [tag tags]
+          (log-index-failure (:id tag))))))
+
   (remove-tags [_ ids]
     (try
-      (log-failures (bulk/bulk-with-index-and-type es "data" "tags" (bulk/bulk-delete ids)))
+      (let [resp (bulk/bulk-with-index-and-type es
+                                                (props/es-index props)
+                                                (props/es-tag-type props)
+                                                (bulk/bulk-delete ids))]
+        (log-failures resp :delete log-remove-failure))
       (catch Throwable t
-        (log/debug t "Failed to remove tags")
+        (log/debug t "failed to remove tags")
         (doseq [id ids]
-          (log-failure id))))))
+          (log-remove-failure id))))))
 
 
 (defn ^Indexes mk-index

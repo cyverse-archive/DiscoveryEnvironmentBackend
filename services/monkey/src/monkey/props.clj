@@ -7,8 +7,10 @@
 
 
 (def ^{:private true :const true} prop-names
-  #{"monkey.es.batch-size"
-    "monkey.es.url"
+  #{"monkey.es.url"
+    "monkey.es.index"
+    "monkey.es.tag-type"
+    "monkey.es.batch-size"
     "monkey.es.scroll-size"
     "monkey.es.scroll-timeout"
     "monkey.tags.host"
@@ -41,6 +43,30 @@
      It returns the elasticsearch base URL."
   [^PersistentArrayMap props]
   (URL. (get props "monkey.es.url")))
+
+
+(defn ^String es-index
+  "Returns the index in elasticsearch where the tags are indexed.
+
+   Parameters:
+     props - the property map to use
+
+   Returns:
+     the name of the index"
+  [^PersistentArrayMap props]
+  (get props "monkey.es.index"))
+
+
+(defn ^String es-tag-type
+  "returns the elasticsearch mapping type for a tag
+
+   Parameters:
+     props - the property map to use
+
+   Returns:
+     the tag mapping type"
+  [^PersistentArrayMap props]
+  (get props "monkey.es.tag-type"))
 
 
 (defn ^Integer es-scroll-size
