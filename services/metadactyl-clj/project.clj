@@ -19,12 +19,12 @@
   :pom-addition [:developers
                  [:developer
                   [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
-  :dependencies [[org.clojure/clojure "1.5.1"]
+  :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.2.6"]
                  [cheshire "5.3.1"]
                  [clj-time "0.7.0"]
                  [com.cemerick/url "0.1.1"]
-                 [compojure "1.1.7"]
+                 [compojure "1.1.8"]
                  [medley "0.1.5"]
                  [metosin/compojure-api "0.14.0"]
                  [metosin/ring-swagger-ui "2.0.17"]
@@ -32,7 +32,7 @@
                  [org.iplantc/kameleon "4.0.0"]
                  [org.iplantc/common-cli "4.0.0"]
                  [me.raynes/fs "1.4.5"]
-                 [korma "0.3.0-RC5"]
+                 [korma "0.3.2"]
                  [ring "1.2.2"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [slingshot "0.10.3"]]
