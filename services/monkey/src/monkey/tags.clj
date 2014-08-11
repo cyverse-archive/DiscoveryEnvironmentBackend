@@ -2,10 +2,25 @@
   "This namespace implements the ViewTags protocol for interacting with the tags data store through
    Korma."
   (:gen-class)
+  (:use korma.core)
   (:require [korma.db :as db]
             [monkey.props :as props])
   (:import [java.util UUID]
            [clojure.lang ISeq PersistentArrayMap]))
+
+
+(defentity target
+  (table (subselect :attached_tags
+           (where {:target_type (raw "'data'")
+                   :detached_on nil}))
+         :targets)
+  (entity-fields :target_id :target_type))
+
+
+(defentity tag
+  (table :tags)
+  (entity-fields :id :value :description :owner_id :created_on :modified_on)
+  (has-many target {:fk :tag_id}))
 
 
 (defprotocol ViewsTags
@@ -22,8 +37,8 @@
   ViewsTags
 
   (all-tags [_]
-    ;; TODO implement
-    [])
+    (db/with-db db
+      (select tag (with-batch target))))
 
   (filter-missing [_ ids]
     ;; TODO implement

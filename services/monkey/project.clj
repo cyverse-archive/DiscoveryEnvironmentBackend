@@ -6,7 +6,8 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :aot [monkey.index monkey.tags monkey.core]
   :main monkey.core
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[postgresql "9.1-901-1.jdbc4"]
+                 [org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.0"]
                  [clojurewerkz/elastisch "2.0.0"]
                  [korma "0.3.0"]
