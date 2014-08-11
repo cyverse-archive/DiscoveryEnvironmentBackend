@@ -9,7 +9,7 @@
            [clojure.lang ISeq PersistentArrayMap]))
 
 
-(defentity target
+(defentity ^{:private true} target
   (table (subselect :attached_tags
            (where {:target_type (raw "'data'")
                    :detached_on nil}))
@@ -17,7 +17,7 @@
   (entity-fields :target_id :target_type))
 
 
-(defentity tag
+(defentity ^{:private true} tag
   (table :tags)
   (entity-fields :id :value :description :owner_id :created_on :modified_on)
   (has-many target {:fk :tag_id}))
@@ -41,8 +41,10 @@
       (select tag (with-batch target))))
 
   (filter-missing [_ ids]
-    ;; TODO implement
-    []))
+    (db/with-db db
+      (select tag
+        (fields :id)
+        (where {:id [in ids]})))))
 
 
 (defn ^ViewsTags mk-tags
