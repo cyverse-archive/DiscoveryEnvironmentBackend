@@ -10,13 +10,20 @@
            [monkey.tags ViewsTags]))
 
 
-(defn- all-tags
+(defn- indexed-tags
   [monkey]
   ;; TODO Log progress the way infosquito does
   (index/all-tags (:index monkey)))
 
 
-(defn- remove-batch
+(defn- filter-missing-tags
+  [monkey tag-ids]
+  (->> (partition-all (props/tags-batch-size (:props monkey)) tag-ids)
+    (map (partial tags/filter-missing (:tags monkey)))
+    lazy-cat))
+
+
+(defn- remove-tag-batch
   [monkey batch]
   (when (log/enabled? "trace")
     (doseq [tag batch]
@@ -24,21 +31,44 @@
   (index/remove-tags (:index monkey) batch))
 
 
+(defn- remove-from-index
+  [monkey tag-ids]
+  (doseq [batch (partition-all (props/es-batch-size (:props monkey)) tag-ids)]
+    (remove-tag-batch monkey batch)))
+
+
 (defn- purge-missing-tags
   [monkey]
   (log/info "purging non-existent tags from search index")
-  (let [props (:props monkey)]
-    (->> (all-tags monkey)
-      (partition-all (props/tags-batch-size props))
-      (map (partial tags/filter-missing (:tags monkey)))
-      lazy-cat
-      (partition-all (props/es-batch-size props))
-      (map (partial remove-batch monkey))
-      dorun)))
+  (->> (indexed-tags monkey)
+    (filter-missing-tags monkey)
+    (remove-from-index monkey)))
+
+
+(defn- all-tags
+  [monkey]
+  ;; TODO implement
+  [])
+
+
+(defn- create-tag-docs
+  [monkey tags]
+  ;; TODO implement
+  [])
+
+
+(defn- index-tags
+  [monkey tag-docs]
+  ;; TODO implement
+  )
 
 
 (defn- reindex
-  [])
+  [monkey]
+  (log/info "reindexing tags into the search index")
+  (->> (all-tags monkey)
+    (create-tag-docs monkey)
+    (index-tags monkey)))
 
 
 (defn ^PersistentArrayMap mk-monkey
@@ -67,4 +97,4 @@
      monkey - the monkey used"
   [^PersistentArrayMap monkey]
   (purge-missing-tags monkey)
-  (reindex))
+  (reindex monkey))
