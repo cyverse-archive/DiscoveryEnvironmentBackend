@@ -232,7 +232,8 @@
         retval {:file-size file-size
                 :lastmod   (info/lastmod-date cm filepath)
                 :lower     (calc-lower (Long/parseLong (:lower range)))
-                :upper     (calc-upper (Long/parseLong (:upper range)) file-size)}]
+                :upper     (calc-upper (Long/parseLong (:upper range)) file-size)
+                :kind      (:kind range)}]
     (assoc retval :num-bytes (inc (- (:upper retval) (:lower retval))))))
 
 (defn unbounded-request-info
@@ -241,7 +242,8 @@
         retval {:file-size file-size
                 :lastmod   (info/lastmod-date cm filepath)
                 :lower     (calc-lower (Long/parseLong (:lower range)))
-                :upper     (dec file-size)}]
+                :upper     (dec file-size)
+                :kind      (:kind range)}]
     (assoc retval :num-bytes (inc (- (:upper retval) (:lower retval))))))
 
 (defn unbounded-negative-info
@@ -250,7 +252,8 @@
         retval {:file-size file-size
                 :lastmod   (info/lastmod-date cm filepath)
                 :lower     (calc-lower (+ file-size (- (Long/parseLong (:lower range)) 1)))
-                :upper     (calc-upper (- file-size 1) file-size)}]
+                :upper     (calc-upper (- file-size 1) file-size)
+                :kind      (:kind range)}]
     (assoc retval :num-bytes (inc (- (:upper retval) (:lower retval))))))
 
 (defn byte-request-info
@@ -259,7 +262,8 @@
         retval {:file-size file-size
                 :lastmod   (info/lastmod-date cm filepath)
                 :lower     (calc-lower (Long/parseLong (:lower range)))
-                :upper     (calc-upper (+ (Long/parseLong (:lower range)) 1) file-size)}]
+                :upper     (calc-upper (+ (Long/parseLong (:lower range)) 1) file-size)
+                :kind      (:kind range)}]
     (assoc retval :num-bytes (inc (- (:upper retval) (:lower retval))))))
 
 (defn normal-request-info
@@ -269,7 +273,8 @@
      :lastmod   (info/lastmod-date cm filepath)
      :lower     0
      :upper     (dec filesize)
-     :num-bytes filesize}))
+     :num-bytes filesize
+     :kind      (:kind range)}))
 
 (defn make-request
   [cm filepath info]
@@ -295,6 +300,23 @@
     (byte-request-info cm filepath range)
 
     (normal-request-info cm filepath range)))
+
+(defn content-range-str
+  [kind lower upper]
+  (case kind
+    "bounded"
+    (str "bytes " lower "-" upper)
+
+    "unbounded"
+    (str "bytes " lower "-")
+
+    "unbounded-negative"
+    (str "bytes " lower "-")
+
+    "byte"
+    (str "bytes " lower "-" upper)
+
+    (str "bytes " lower "-" upper)))
 
 (defn log-headers
   [response]
@@ -329,7 +351,8 @@
            body
            {:status  206
             :body    body
-            :headers (file-header (:uri req) (:lastmod info) (:lower info) (:upper info))})))
+            :headers (assoc (file-header (:uri req) (:lastmod info) (:lower info) (:upper info))
+                       "Content-Range" (content-range-str (:kind info) (:lower info) (:upper info)))})))
       (init/with-jargon (jargon-cfg) [cm]
         (serve cm (:uri req))))
     (catch Exception e
