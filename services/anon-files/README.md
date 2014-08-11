@@ -104,6 +104,15 @@ If a range request consists of a single positive value, then the range header is
 
 A successful ranged request will return the requested byte range and have a 206 status code. A requested range that is unsatisfiable (for instance, the lower bound is higher than the file size) will have a status code of 416.
 
+Byte range requests will have the following HTTP headers in the response:
+* Content-Range (see http://tools.ietf.org/html/rfc7233 for more info)
+* Content-Length (see http://tools.ietf.org/html/rfc7233 for more info)
+* Accept-Ranges (always set to bytes)
+* Cache-Control (this will always be set to no-cache)
+* ETag (we're using a weak ETag based on the last modified date)
+* Expires (always set to 0)
+* Vary (always set to *)
+* Content-Location (the path to the file in iRODS)
 
 ## License
 
