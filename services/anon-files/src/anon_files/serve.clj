@@ -302,21 +302,25 @@
     (normal-request-info cm filepath range)))
 
 (defn content-range-str
-  [kind lower upper]
-  (case kind
-    "bounded"
-    (str "bytes " lower "-" upper)
+  [info]
+  (let [kind  (:kind info)
+        lower (:lower info)
+        upper (:upper info)
+        filesize (:file-size info)]
+    (case kind
+      "bounded"
+      (str "bytes " lower "-" upper "/" filesize)
 
-    "unbounded"
-    (str "bytes " lower "-")
+      "unbounded"
+      (str "bytes " lower "-" "/" filesize)
 
-    "unbounded-negative"
-    (str "bytes " lower "-")
+      "unbounded-negative"
+      (str "bytes " lower "-" "/" filesize)
 
-    "byte"
-    (str "bytes " lower "-" upper)
+      "byte"
+      (str "bytes " lower "-" upper "/" filesize)
 
-    (str "bytes " lower "-" upper)))
+      (str "bytes " lower "-" upper "/" filesize))))
 
 (defn log-headers
   [response]
@@ -352,7 +356,7 @@
            {:status  206
             :body    body
             :headers (assoc (file-header (:uri req) (:lastmod info) (:lower info) (:upper info))
-                       "Content-Range" (content-range-str (:kind info) (:lower info) (:upper info)))})))
+                       "Content-Range" (content-range-str info))})))
       (init/with-jargon (jargon-cfg) [cm]
         (serve cm (:uri req))))
     (catch Exception e
