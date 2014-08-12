@@ -58,7 +58,7 @@
                  numbers are different then this flag is set to `false`. The idea is that every
                  step in the analysis has to have, at the very least, a deployed component
                  associated with it in order to run successfully."
-                 (service/trap #(list-apps-in-group category-id params)))
+                 (service/trap #(list-apps-in-group category-id params))))
 
-           (route/not-found (service/unrecognized-path-response))))
+  (route/not-found (service/unrecognized-path-response)))
 
