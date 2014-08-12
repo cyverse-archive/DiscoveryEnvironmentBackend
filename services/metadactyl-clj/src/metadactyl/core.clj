@@ -26,8 +26,10 @@
             [metadactyl.service.app-metadata :as app-metadata]
             [metadactyl.util.config :as config]
             [ring.adapter.jetty :as jetty]
+            [ring.swagger.schema :as ss]
             [common-cli.core :as ccli]
-            [me.raynes.fs :as fs]))
+            [me.raynes.fs :as fs])
+  (:import [java.util UUID]))
 
 (defroutes* secured-routes
   (GET "/bootstrap" [:as {params :params headers :headers}]
