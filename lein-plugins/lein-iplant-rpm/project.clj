@@ -1,4 +1,4 @@
-(defproject org.iplantc/lein-iplant-rpm "3.2.2"
+(defproject org.iplantc/lein-iplant-rpm "3.2.3"
   :eval-in-leiningen true
   :description "Leiningen Plugin for generating RPMs for Clojure projects."
   :url "http://www.iplantcollaborative.org"
