@@ -54,6 +54,7 @@
   (str
    "universe = vanilla\n"
    "executable = /bin/bash\n"
+   "rank = mips\n"
    "arguments = \"" script-path "\"\n"
    "output = " (script-output working_dir) "\n"
    "error = " (script-error working_dir) "\n"
