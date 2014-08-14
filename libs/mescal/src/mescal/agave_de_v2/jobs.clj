@@ -57,7 +57,9 @@
 
 (defn- job-notifications
   [callback-url]
-  (map (fn [status] {:url callback-url :event status}) (keys job-status-translations)))
+  [{:url        callback-url
+    :event      "*"
+    :persistent true}])
 
 (defn prepare-submission
   [agave app submission]
