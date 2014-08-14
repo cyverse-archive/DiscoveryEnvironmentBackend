@@ -42,32 +42,28 @@
   (verify-ownership app)
   (verify-app-not-public app))
 
+(defn- with-task-params
+  "Includes a list of related file parameters in the query's result set,
+   with fields required by the client."
+  [query task-param-entity]
+  (with query task-param-entity
+    (join data_formats {:data_format :data_formats.id})
+    (fields :id
+            :name
+            :description
+            :required
+            [:data_formats.name :format])))
+
 (defn- get-tasks
   "Fetches a list of tasks for the given IDs with their inputs and outputs."
   [task-ids]
   (select tasks
-          (with parameter_groups
-                (with parameters
-                      (fields [:value_type.name :value_type]
-                              :required)
-                      (join parameter_types)
-                      (join value_type {:value_type.id :parameter_types.value_type_id})
-                      (where (in :value_type.name ["Input", "Output"]))
-                      (with file_parameters
-                            (join data_formats {:data_format :data_formats.id})
-                            (fields :id :name :description [:data_formats.name :format]))))
           (fields :id
                   :name
                   :description)
+          (with-task-params inputs)
+          (with-task-params outputs)
           (where (in :id task-ids))))
-
-(defn- format-task
-  [task]
-  (let [input-output-params (group-by :value_type (mapcat :parameters (:parameter_groups task)))]
-    (-> task
-        (assoc :inputs (input-output-params "Input")
-               :outputs (input-output-params "Output"))
-        (dissoc :parameter_groups))))
 
 (defn- add-app-type
   [step]
@@ -212,7 +208,7 @@
         _  (verify-app-editable app)
         app (format-app app)
         task-ids (:tasks app)
-        tasks (map format-task (get-tasks task-ids))
+        tasks (get-tasks task-ids)
         app (dissoc app :tasks)]
     (cheshire/encode {:analyses [app]
                       :templates tasks})))

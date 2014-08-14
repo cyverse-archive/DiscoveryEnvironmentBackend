@@ -274,7 +274,9 @@
   (println "\t* adding rating_listing view...")
   (load-sql-file "views/05_rating_listing.sql")
   (println "\t* adding job_listing view...")
-  (load-sql-file "views/06_job_listing.sql"))
+  (load-sql-file "views/06_job_listing.sql")
+  (println "\t* adding task_param_listing view...")
+  (load-sql-file "views/07_task_param_listing.sql"))
 
 (defn- reload-functions
   []

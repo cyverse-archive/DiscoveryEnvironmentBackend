@@ -2,9 +2,10 @@
   (:use [korma.core]))
 
 (declare users collaborator requestor workspace app_categories apps app_references integration_data
-         tools tool_test_data_files output_mapping input_mapping tasks info_type data_formats
-         multiplicity parameter_groups parameters parameter_types value_type validation_rules
-         rule_type rule_subtype app_category_listing app_listing tool_listing ratings collaborators
+         tools tool_test_data_files output_mapping input_mapping tasks inputs outputs
+         task_parameters info_type data_formats multiplicity parameter_groups parameters
+         parameter_types value_type validation_rules rule_type rule_subtype app_category_listing
+         app_listing tool_listing ratings collaborators
          genome_reference created_by last_modified_by data_source tool_types
          tool_request_status_codes tool_architectures tool_requests
          tool_request_statuses)
@@ -85,7 +86,20 @@
 
 ;; A task defines an interface to a tool that can be called.
 (defentity tasks
-  (has-many parameter_groups {:fk :task_id}))
+  (has-many parameter_groups {:fk :task_id})
+  (has-many inputs {:fk :task_id})
+  (has-many outputs {:fk :task_id})
+  (has-many task_parameters {:fk :task_id}))
+
+;; Input and output definitions. Once again, multiple entities are associated
+;; with the same table to allow us to define multiple relationships between
+;; the same two tables.
+(defentity inputs
+  (table (subselect :task_param_listing (where {:value_type "Input"})) :inputs))
+(defentity outputs
+  (table (subselect :task_param_listing (where {:value_type "Output"})) :outputs))
+(defentity task_parameters
+  (table :task_param_listing :task_parameters))
 
 ;; File parameters.
 (defentity file_parameters
