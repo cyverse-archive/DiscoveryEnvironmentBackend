@@ -59,12 +59,16 @@
   [& {:keys [get-default] :or {get-default get-default-param-value}}]
   (param-formatter (constantly "Output") get-default))
 
+(defn- format-params
+  [formatter-fn params]
+  (map formatter-fn (sort-by #(get-in % [:value :order] 0) params)))
+
 (defn format-groups
   [app]
   (remove nil?
-          [(format-group "Inputs" (map (input-param-formatter) (:inputs app)))
-           (format-group "Parameters" (map (opt-param-formatter) (:parameters app)))
-           (format-group "Outputs" (map (output-param-formatter) (:outputs app)))]))
+          [(format-group "Inputs" (format-params (input-param-formatter) (:inputs app)))
+           (format-group "Parameters" (format-params (opt-param-formatter) (:parameters app)))
+           (format-group "Outputs" (format-params (output-param-formatter) (:outputs app)))]))
 
 (defn format-app
   ([app group-format-fn]
