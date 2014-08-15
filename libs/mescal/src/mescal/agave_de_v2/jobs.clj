@@ -29,7 +29,7 @@
 (defn- prepare-params
   [agave app param-prefix config]
   {:inputs     (params-for config param-prefix (app :inputs) #(.agaveUrl agave %))
-   :parameters (params-for config param-prefix (app :parameters))})
+   :parameters (params-for config param-prefix (app :parameters) #(if (map? %) (:value %) %))})
 
 (def ^:private submitted "Submitted")
 (def ^:private running "Running")

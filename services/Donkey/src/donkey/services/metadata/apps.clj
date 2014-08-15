@@ -419,7 +419,7 @@
   [external-id status end-date]
   (with-db db/de
     (transaction
-     (if (= status mu/submitted-status)
+     (if (= status jp/submitted-status)
        (service/success-response)
        (let [job-step                   (get-unique-job-step external-id)
              {:keys [username] :as job} (jp/get-job-by-id (:job-id job-step))
@@ -437,7 +437,7 @@
   [uuid status end-time external-id]
   (with-db db/de
     (transaction
-     (if (= status mu/submitted-status)
+     (if (= status jp/submitted-status)
        (service/success-response)
        (let [uuid                       (UUID/fromString uuid)
              job-step                   (jp/get-job-step uuid external-id)

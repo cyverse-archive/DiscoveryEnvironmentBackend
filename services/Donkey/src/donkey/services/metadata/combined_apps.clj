@@ -282,10 +282,10 @@
         (jp/update-job-step job-id external-id status end-time)
         (when (or (and first-step? (mu/not-completed? status))
                   (and last-step? (mu/is-completed? status))
-                  (= status mu/failed-status))
+                  (= status jp/failed-status))
           (jp/update-job job-id status end-time)
           (mu/send-job-status-notification job job-step status end-time))
-        (when (and (not last-step?) (= status mu/completed-status))
+        (when (and (not last-step?) (= status jp/completed-status))
           (submit-next-step agave username job job-step))))))
 
 (defn- submit-next-step
@@ -304,7 +304,7 @@
      (submit-job-step agave workspace-id job next-step submission)
      (catch Object o
        (log/warn (str "unable to submit the next step in job " (:id job)))
-       (update-job-status agave username job next-step mu/failed-status (db/now))
+       (update-job-status agave username job next-step jp/failed-status (db/now))
        (throw+)))))
 
 (defn- find-first-incomplete-job-step
@@ -331,12 +331,12 @@
       (let [status   (:status step-status)
             end-date (db/timestamp-from-str (:enddate step-status))]
         (update-job-status agave username job step status end-date))
-      (update-job-status agave username job step mu/failed-status (db/now)))
+      (update-job-status agave username job step jp/failed-status (db/now)))
 
     ;; We didn't find an incomplete step to update.
     (let [steps         (jp/list-job-steps id)
           all-complete? (every? mu/is-completed? (map :status steps))
-          status        (if all-complete? mu/completed-status mu/failed-status)]
+          status        (if all-complete? jp/completed-status jp/failed-status)]
       (jp/update-job id {:status status :end-date (db/now)}))))
 
 (defn- stop-job-step
@@ -346,7 +346,7 @@
     (if (= job-type jp/de-job-type)
       (jex/stop-job external-id)
       (when-not (nil? agave) (.stopJob agave external-id)))
-    (jp/update-job-step job-id external-id mu/canceled-status (db/now))))
+    (jp/update-job-step job-id external-id jp/canceled-status (db/now))))
 
 (defn stop-job
   "Stops a job. This function updates the database first in order to minimize the risk of a race
@@ -356,7 +356,7 @@
   ([job-id]
      (stop-job nil job-id))
   ([agave job-id]
-     (jp/update-job job-id mu/canceled-status (db/now))
+     (jp/update-job job-id jp/canceled-status (db/now))
      (try+
       (stop-job-step agave job-id (find-first-incomplete-job-step job-id))
       (catch Throwable t

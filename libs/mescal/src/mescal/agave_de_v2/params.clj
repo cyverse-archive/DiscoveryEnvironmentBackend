@@ -23,6 +23,11 @@
    (= xsd-type "xs:boolean") "Flag"
    :else                     "Text"))
 
+(def ^:private boolean-types
+  #{"bool" "boolean" "flag"})
+
+(def enumeration "enumeration")
+
 (defn get-param-type
   [param]
   (let [type     (get-in param [:value :type])
@@ -30,7 +35,8 @@
         xsd-type (first (filter (partial re-matches #"xs:.*") ontology))
         regex    (get-in param [:value :validator]) ]
     (cond
-     (= type "number")       (number-type-for xsd-type)
-     (= type "string")       (string-type-for xsd-type)
-     (#{"bool" "flag"} type) "Flag"
-     :else                   "Text")))
+     (= type "number")    (number-type-for xsd-type)
+     (= type "string")    (string-type-for xsd-type)
+     (boolean-types type) "Flag"
+     (= type enumeration) "TextSelection"
+     :else                "Text")))

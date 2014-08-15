@@ -14,6 +14,14 @@
 (def de-job-type "DE")
 (def agave-job-type "Agave")
 
+(def canceled-status "Canceled")
+(def failed-status "Failed")
+(def completed-status "Completed")
+(def submitted-status "Submitted")
+(def idle-status "Idle")
+(def running-status "Running")
+(def completed-status-codes #{canceled-status failed-status completed-status})
+
 (defn- nil-if-zero
   "Returns nil if the argument value is zero."
   [v]
@@ -312,8 +320,8 @@
 (defn list-incomplete-jobs
   []
   (select (job-base-query)
-          (where {:j.deleted  false
-                  :j.end_date nil})))
+          (where {:j.deleted false
+                  :j.status  [not-in completed-status-codes]})))
 
 (defn list-job-steps
   [job-id]
