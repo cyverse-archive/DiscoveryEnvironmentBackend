@@ -1,8 +1,8 @@
 (ns mescal.agave-de-v2.apps
-  (:use [mescal.agave-de-v2.app-listings :only [get-app-name]]
-        [mescal.agave-de-v2.params :only [get-param-type enumeration]])
+  (:use [mescal.agave-de-v2.app-listings :only [get-app-name]])
   (:require [clojure.string :as string]
             [mescal.agave-de-v2.constants :as c]
+            [mescal.agave-de-v2.params :as mp]
             [mescal.util :as util]))
 
 (defn- get-boolean
@@ -43,37 +43,22 @@
   (fn [param]
     (format-param get-type get-value get-args param)))
 
-(defn- format-enum-element
-  [default-value enum-element]
-  (let [[enum-value label] (first enum-element)]
-    {:display   label
-     :id        (name enum-value)
-     :isDefault (= enum-value default-value)
-     :name      ""
-     :value     (name enum-value)}))
-
-(defn- find-enum-element
-  [enum-value enumeration-list]
-  (let [enum-value (keyword enum-value)]
-    (first (filter (fn [m] (let [[k _] (first m)] (= k enum-value)))
-                   enumeration-list))))
-
 (defn- get-default-enum-value
   [{{enum-values :enum_values default :default} :value :as param}]
   (let [default (first default)]
-    (when-let [default-elem (find-enum-element default enum-values)]
-      (format-enum-element default default-elem))))
+    (when-let [default-elem (mp/find-enum-element default enum-values)]
+      (mp/format-enum-element default default-elem))))
 
 (defn- get-default-param-value
   [param]
-  (if (= (get-in param [:value :type]) enumeration)
+  (if (mp/enum-param? param)
     (get-default-enum-value param)
     (get-in param [:value :default])))
 
 (defn- get-param-args
-  [{{enum-values :enum_values default :default type :type} :value}]
-  (if (= type enumeration)
-    (map (partial format-enum-element (first default)) enum-values)
+  [{{enum-values :enum_values default :default} :value :as param}]
+  (if (mp/enum-param? param)
+    (map (partial mp/format-enum-element (first default)) enum-values)
     []))
 
 (defn- input-param-formatter
@@ -82,7 +67,7 @@
 
 (defn- opt-param-formatter
   [& {:keys [get-default] :or {get-default get-default-param-value}}]
-  (param-formatter get-param-type get-default get-param-args))
+  (param-formatter mp/get-param-type get-default get-param-args))
 
 (defn- output-param-formatter
   [& {:keys [get-default] :or {get-default get-default-param-value}}]
@@ -170,10 +155,9 @@
 (defn- format-rerun-value
   [p v]
   (when p
-    (let [type (get-in p [:value :type])]
-      (if (= type enumeration)
-        (format-enum-element v (find-enum-element v (get-in p [:value :enum_values])))
-        v))))
+    (if (mp/enum-param? p)
+      (mp/format-enum-element v (mp/find-enum-element v (get-in p [:value :enum_values])))
+      v)))
 
 (defn- app-rerun-value-getter
   [job k]

@@ -1,6 +1,6 @@
 (ns mescal.agave-de-v2.params)
 
- (defn- number-type-for
+(defn- number-type-for
   [xsd-type]
   (cond
    (= xsd-type "xs:decimal")       "Double"
@@ -40,3 +40,23 @@
      (boolean-types type) "Flag"
      (= type enumeration) "TextSelection"
      :else                "Text")))
+
+(defn format-enum-element
+  [default-value enum-element]
+  (when enum-element
+    (let [[enum-value label] (first enum-element)]
+      {:display   label
+       :id        (name enum-value)
+       :isDefault (= (name enum-value) default-value)
+       :name      ""
+       :value     (name enum-value)})))
+
+(defn find-enum-element
+  [enum-value enumeration-list]
+  (let [enum-value (keyword enum-value)]
+    (first (filter (fn [m] (let [[k _] (first m)] (= k enum-value)))
+                   enumeration-list))))
+
+(defn enum-param?
+  [param]
+  (= enumeration (get-in param [:value :type])))
