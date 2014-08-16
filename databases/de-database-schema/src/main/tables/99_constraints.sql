@@ -333,7 +333,7 @@ ALTER TABLE ONLY input_output_mapping
 ALTER TABLE ONLY input_output_mapping
     ADD CONSTRAINT input_output_mapping_input_fkey
     FOREIGN KEY (input)
-    REFERENCES file_parameters(id);
+    REFERENCES parameters(id);
 
 --
 -- Name: input_output_mapping_output_fkey; Type: FK CONSTRAINT; Schema: public;
@@ -342,7 +342,7 @@ ALTER TABLE ONLY input_output_mapping
 ALTER TABLE ONLY input_output_mapping
     ADD CONSTRAINT input_output_mapping_output_fkey
     FOREIGN KEY (output)
-    REFERENCES file_parameters(id);
+    REFERENCES parameters(id);
 
 --
 -- Name: app_categories_workspace_id_fk; Type: FK CONSTRAINT; Schema:
