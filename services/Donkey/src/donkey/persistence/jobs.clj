@@ -272,6 +272,58 @@
                  (fields :submission)
                  (where {:j.id id}))))
 
+(defn- lock-job*
+  "Retrieves a job by its internal identifier, placing a lock on the row."
+  [id]
+  (-> (select* [:jobs :j])
+      (join :inner [:users :u] {:j.user_id :u.id})
+      (fields [:j.app_description    :app-description]
+              [:j.app_id             :app-id]
+              [:j.app_name           :app-name]
+              [:j.job_description    :description]
+              [:j.end_date           :end-date]
+              [:j.id                 :id]
+              [:j.job_name           :job-name]
+              [:j.result_folder_path :result-folder-path]
+              [:j.start_date         :start-date]
+              [:j.status             :status]
+              [:u.username           :username]
+              [:j.app_wiki_url       :app-wiki-url]
+              [:j.submission         :submission])
+      (where {:j.id id})
+      (#(str (as-sql %) " for update"))
+      (#(exec-raw [% [id]] :results))
+      (first)))
+
+(defn- distinct-job-step-types
+  "Obtains the list of distinct job step types associated with a job."
+  [job-id]
+  (map :job-type (select [:job_steps :s]
+                         (join [:job_types :t] {:s.job_type_id :t.id})
+                         (fields [:t.name :job-type])
+                         (modifier "DISTINCT")
+                         (where {:s.job_id job-id}))))
+
+(defn determine-job-type
+  "Determines the type of a job in the database."
+  [job-id]
+  (let [job-step-types (distinct-job-step-types job-id)]
+    (if (<= (count job-step-types) 1) (first job-step-types) de-job-type)))
+
+(defn lock-job
+  "Retrieves a job by its internal identifier, placing a lock on the row. For update queries
+   can't be used in conjunction with a group-by clause, so we have to use a separate query to
+   determine the overall job type.
+
+   In most cases the MVCC behavior provided by Postgres is sufficient to ensure that the system
+   stays in a consistent state. The one case where it isn't sufficient is when the status of
+   a job is being updated. The reason the MVCC behavior doesn't work in thsi case is because a
+   status update trigger another job in the case of a pipeline. Because of this, we need to ensure
+   that only one thread is preparing to update a job status at any given time."
+  [id]
+  (if-let [job (lock-job* id)]
+    (assoc job :job-type (determine-job-type id))))
+
 (defn update-job
   "Updates an existing job in the database."
   ([id {:keys [status end-date deleted name description]}]

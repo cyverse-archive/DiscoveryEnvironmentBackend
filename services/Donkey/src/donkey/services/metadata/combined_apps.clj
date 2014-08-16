@@ -267,8 +267,8 @@
 
 (defn update-job-status
   "Updates the status of a job. The job may have multiple steps, so the overall job status is only
-   only changed when first step changes to any status up to Running, the last step changes to any
-   status after Running, or the status of any step changes to Failed."
+   changed when first step changes to any status up to Running, the last step changes to any status
+   after Running, or the status of any step changes to Failed."
   [agave username job job-step status end-time]
   (let [{job-id :id}                      job
         {:keys [external-id step-number]} job-step
@@ -278,7 +278,7 @@
         status                            (translate-job-status agave job-step status)]
     (if (mu/is-completed? (:status job))
       (log/warn (str "received a job status update for completed or canceled job, " job-id))
-      (when-not (= status (:status job-step))
+      (when-not (or (= jp/submitted-status status) (= (:status job-step) status))
         (jp/update-job-step job-id external-id status end-time)
         (when (or (and first-step? (mu/not-completed? status))
                   (and last-step? (mu/is-completed? status))

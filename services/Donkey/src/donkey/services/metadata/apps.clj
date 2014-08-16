@@ -422,7 +422,7 @@
      (if (= status jp/submitted-status)
        (service/success-response)
        (let [job-step                   (get-unique-job-step external-id)
-             {:keys [username] :as job} (jp/get-job-by-id (:job-id job-step))
+             {:keys [username] :as job} (jp/lock-job (:job-id job-step))
              end-date                   (db/timestamp-from-str end-date)]
          (service/assert-found job "job" (:job-id job-step))
          (with-directory-user [username]
@@ -437,21 +437,19 @@
   [uuid status end-time external-id]
   (with-db db/de
     (transaction
-     (if (= status jp/submitted-status)
-       (service/success-response)
-       (let [uuid                       (UUID/fromString uuid)
-             job-step                   (jp/get-job-step uuid external-id)
-             {:keys [username] :as job} (jp/get-job-by-id uuid)
-             end-time                   (db/timestamp-from-str end-time)]
-         (service/assert-found job "job" uuid)
-         (service/assert-found job-step "job step" (str uuid "/" external-id))
-         (with-directory-user [username]
-           (try+
-            (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)
-            (catch Object o
-              (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
-                (log/warn o msg)
-                (throw+))))))))))
+     (let [uuid                       (UUID/fromString uuid)
+           job-step                   (jp/get-job-step uuid external-id)
+           {:keys [username] :as job} (jp/lock-job uuid)
+           end-time                   (db/timestamp-from-str end-time)]
+       (service/assert-found job "job" uuid)
+       (service/assert-found job-step "job step" (str uuid "/" external-id))
+       (with-directory-user [username]
+         (try+
+          (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)
+          (catch Object o
+            (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
+              (log/warn o msg)
+              (throw+)))))))))
 
 (defn- sync-job-status
   [job]
@@ -459,7 +457,8 @@
     (try+
      (log/debug "synchronizing the job status for" (:id job))
      (transaction
-      (.syncJobStatus (get-app-lister "" (:username job)) job))
+      (let [job (jp/lock-job (:id job))]
+        (.syncJobStatus (get-app-lister "" (:username job)) job)))
      (catch Object e
        (log/error e "unable to sync the job status for job" (:id job))))))
 
