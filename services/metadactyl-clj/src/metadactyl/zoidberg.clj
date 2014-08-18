@@ -48,10 +48,13 @@
   [query task-param-entity]
   (with query task-param-entity
     (join data_formats {:data_format :data_formats.id})
+    (join :parameter_values {:parameter_values.parameter_id :id})
     (fields :id
             :name
+            :label
             :description
             :required
+            :parameter_values.value
             [:data_formats.name :format])))
 
 (defn- get-tasks

@@ -7,6 +7,7 @@ CREATE VIEW task_param_listing AS
     SELECT t.id AS task_id,
            p.id,
            p.name,
+           p.label,
            p.description,
            p.ordering,
            p.required,
