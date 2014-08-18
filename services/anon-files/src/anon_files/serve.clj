@@ -369,8 +369,16 @@
   (init/with-jargon (jargon-cfg) [cm]
     (log-headers
      (validated cm (:uri req)
-                (let [info (get-req-info req)]
-                  {:status 200
-                   :body ""
-                   :headers (assoc (file-header (:uri req) (:lastmod info) (:lower info) (:upper info))
-                              "Content-Range" (content-range-str info))})))))
+                (if (range-request? req)
+                  (let [info (get-req-info req)]
+                    {:status  200
+                     :body    ""
+                     :headers (assoc (file-header (:uri req) (:lastmod info) (:lower info) (:upper info))
+                                "Content-Length" "0"
+                                "Content-Range"  (content-range-str info))})
+                  (let [lastmod  (info/lastmod-date cm (:uri req))
+                        filesize (info/file-size cm (:uri req))]
+                    {:status 200
+                     :body ""
+                     :headers (assoc (file-header (:uri req) lastmod 0 (dec filesize))
+                                "Content-Length" "0")}))))))
