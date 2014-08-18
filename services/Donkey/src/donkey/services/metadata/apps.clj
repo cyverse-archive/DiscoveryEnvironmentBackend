@@ -455,7 +455,7 @@
   [job]
   (with-directory-user [(:username job)]
     (try+
-     (log/debug "synchronizing the job status for" (:id job))
+     (log/warn "synchronizing the job status for" (:id job))
      (transaction
       (let [job (jp/lock-job (:id job))]
         (.syncJobStatus (get-app-lister "" (:username job)) job)))
@@ -464,11 +464,13 @@
 
 (defn sync-job-statuses
   []
+  (log/warn "synchronizing job statuses")
   (with-db db/de
     (try+
      (dorun (map sync-job-status (jp/list-incomplete-jobs)))
      (catch Object e
-       (log/error e "error while obtaining the list of jobs to synchronize.")))))
+       (log/error e "error while obtaining the list of jobs to synchronize."))))
+  (log/warn "done syncrhonizing job statuses"))
 
 (defn- log-already-deleted-jobs
   [ids]
