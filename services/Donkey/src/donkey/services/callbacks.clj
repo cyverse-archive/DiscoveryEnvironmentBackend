@@ -33,6 +33,6 @@
 (defn receive-agave-job-status-update
   "Receives notification from Agave that a job status has changed."
   [uuid {:keys [status external-id end-time]}]
-  (log/info (str "received a status update for Agave job " external-id ": status= " status))
+  (log/info (str "received a status update for Agave job " external-id ": status = " status))
   (apps/update-agave-job-status uuid status end-time external-id)
   (service/success-response))
