@@ -8,6 +8,12 @@ ALTER TABLE dataobjects RENAME TO file_parameters;
 
 ALTER TABLE ONLY file_parameters RENAME COLUMN hid TO hid_v187;
 ALTER TABLE ONLY file_parameters RENAME COLUMN id TO id_v187;
+ALTER TABLE ONLY file_parameters RENAME COLUMN name TO name_v187;
+ALTER TABLE ONLY file_parameters RENAME COLUMN label TO label_v187;
+ALTER TABLE ONLY file_parameters RENAME COLUMN description TO description_v187;
+ALTER TABLE ONLY file_parameters RENAME COLUMN orderd TO orderd_v187;
+ALTER TABLE ONLY file_parameters RENAME COLUMN switch TO switch_v187;
+ALTER TABLE ONLY file_parameters RENAME COLUMN required TO required_v187;
 ALTER TABLE ONLY file_parameters RENAME COLUMN info_type TO info_type_v187;
 ALTER TABLE ONLY file_parameters RENAME COLUMN data_format TO data_format_v187;
 ALTER TABLE ONLY file_parameters RENAME COLUMN multiplicity TO multiplicity_v187;

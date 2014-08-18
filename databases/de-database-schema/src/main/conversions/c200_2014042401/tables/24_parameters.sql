@@ -27,5 +27,8 @@ WITH dups AS (SELECT id, COUNT(hid_v187) FROM parameters GROUP BY id)
     WHERE id IN (SELECT id FROM dups WHERE count > 1);
 
 UPDATE parameters SET required = true WHERE id IN
-    (SELECT p.id FROM parameters p LEFT JOIN validator_v187 v ON v.hid = p.validator_v187 WHERE v.required = true);
+    (SELECT p.id FROM parameters p
+     LEFT JOIN validator_v187 v ON v.hid = p.validator_v187
+     LEFT JOIN file_parameters f ON f.id = p.file_parameter_id
+     WHERE v.required = true OR f.required_v187 = true);
 

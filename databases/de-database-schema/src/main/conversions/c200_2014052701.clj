@@ -89,11 +89,18 @@
 (defn- convert-defalut-values
   []
   (println "\t* migrating parameter defalut values to parameter_values...")
-    (exec-raw "INSERT INTO parameter_values (parameter_id, value, is_default)
-              (SELECT p.id AS parameter_id, defalut_value_v187 AS value, TRUE AS is_default
-               FROM parameters p
-               LEFT JOIN parameter_types pt ON pt.id = p.parameter_type
-               WHERE CHAR_LENGTH(defalut_value_v187) > 0 AND pt.name NOT LIKE '%Selection')"))
+  (exec-raw "INSERT INTO parameter_values (parameter_id, value, is_default)
+            (SELECT p.id AS parameter_id, defalut_value_v187 AS value, TRUE AS is_default
+             FROM parameters p
+             LEFT JOIN parameter_types pt ON pt.id = p.parameter_type
+             WHERE CHAR_LENGTH(defalut_value_v187) > 0 AND pt.name NOT LIKE '%Selection')")
+  (exec-raw "INSERT INTO parameter_values (parameter_id, value, is_default)
+            (SELECT p.id AS parameter_id, f.name_v187 AS value, TRUE AS is_default
+             FROM task_param_listing tp
+             LEFT JOIN parameter_values pv ON tp.id = pv.parameter_id
+             LEFT JOIN parameters p ON p.id = tp.id
+             LEFT JOIN file_parameters f ON f.id = p.file_parameter_id
+             WHERE value_type = 'Output' AND CHAR_LENGTH(f.name_v187) > 0 AND pv.value IS NULL)"))
 
 (defn convert
   "Performs the database conversion."
