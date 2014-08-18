@@ -374,11 +374,9 @@
                     {:status  200
                      :body    ""
                      :headers (assoc (file-header (:uri req) (:lastmod info) (:lower info) (:upper info))
-                                "Content-Length" "0"
                                 "Content-Range"  (content-range-str info))})
                   (let [lastmod  (info/lastmod-date cm (:uri req))
                         filesize (info/file-size cm (:uri req))]
                     {:status 200
                      :body ""
-                     :headers (assoc (file-header (:uri req) lastmod 0 (dec filesize))
-                                "Content-Length" "0")}))))))
+                     :headers (file-header (:uri req) lastmod 0 (dec filesize))}))))))
