@@ -351,6 +351,16 @@
             (where {:job_id      job-id
                     :step_number step-number}))))
 
+(defn cancel-job-step-numbers
+  "Marks a job step as canceled in the database."
+  [job-id step-numbers]
+  (update :job_steps
+          (set-fields {:status     canceled-status
+                       :start_date (sqlfn coalesce :start_date (sqlfn now))
+                       :end_date   (sqlfn now)})
+          (where {:job_id      job-id
+                  :step_number [in step-numbers]})))
+
 (defn get-job-step-number
   "Retrieves a job step from the database by its step number."
   [job-id step-number]
@@ -378,7 +388,8 @@
 (defn list-job-steps
   [job-id]
   (select (job-step-base-query)
-          (where {:job_id job-id})))
+          (where {:job_id job-id})
+          (order :step_number)))
 
 (defn list-jobs-to-delete
   [ids]

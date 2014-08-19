@@ -307,13 +307,11 @@
        (update-job-status agave username job next-step jp/failed-status (db/now))
        (throw+)))))
 
-(defn- find-first-incomplete-job-step
-  "Finds the first incomplete job step associated with a job. Nil is returned if the job has no
-   incomplete steps."
+(defn- find-incomplete-job-steps
+  "Finds the list of incomplete job steps associated with a job. An empty list is returned if the
+   job has no incomplete steps."
   [job-id]
-  (->> (jp/list-job-steps job-id)
-       (remove (comp mu/is-completed? :status))
-       (first)))
+  (remove (comp mu/is-completed? :status) (jp/list-job-steps job-id)))
 
 (defn- get-job-step-status
   [agave {:keys [job-type external-id]}]
@@ -324,7 +322,7 @@
 (defn sync-job-status
   "Synchronizes the status of a job with the remote system."
   [agave {:keys [id username] :as job}]
-  (if-let [step (find-first-incomplete-job-step id)]
+  (if-let [step (first (find-incomplete-job-steps id))]
 
     ;; We found an incomplete step to update.
     (if-let [step-status (get-job-step-status agave step)]
@@ -341,12 +339,13 @@
 
 (defn- stop-job-step
   "Stops an individual step in a job."
-  [agave job-id {:keys [external-id job-type]}]
-  (when-not (string/blank? external-id)
-    (if (= job-type jp/de-job-type)
-      (jex/stop-job external-id)
-      (when-not (nil? agave) (.stopJob agave external-id)))
-    (jp/update-job-step job-id external-id jp/canceled-status (db/now))))
+  [agave job-id [& steps]]
+  (let [{:keys [external-id job-type]} (first steps)]
+    (when-not (string/blank? external-id)
+      (if (= job-type jp/de-job-type)
+        (jex/stop-job external-id)
+        (when-not (nil? agave) (.stopJob agave external-id)))
+      (jp/cancel-job-step-numbers job-id (mapv :step-number steps)))))
 
 (defn stop-job
   "Stops a job. This function updates the database first in order to minimize the risk of a race
@@ -358,7 +357,7 @@
   ([agave job-id]
      (jp/update-job job-id jp/canceled-status (db/now))
      (try+
-      (stop-job-step agave job-id (find-first-incomplete-job-step job-id))
+      (stop-job-step agave job-id (find-incomplete-job-steps job-id))
       (catch Throwable t
         (log/warn t "unable to cancel the most recent step of job, " job-id))
       (catch Object _
