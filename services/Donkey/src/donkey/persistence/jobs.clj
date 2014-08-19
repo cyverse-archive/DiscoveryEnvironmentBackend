@@ -22,6 +22,14 @@
 (def running-status "Running")
 (def completed-status-codes #{canceled-status failed-status completed-status})
 
+(def job-status-order
+  {submitted-status 1
+   idle-status      2
+   running-status   3
+   completed-status 4
+   failed-status    4
+   canceled-status  4})
+
 (defn- nil-if-zero
   "Returns nil if the argument value is zero."
   [v]
@@ -203,7 +211,7 @@
   "The base query used for retrieving job step information from the database."
   []
   (-> (select* [:job_steps :s])
-      (join [:job_types :t] {:s.job_type_id :t.id})
+      (join :inner [:job_types :t] {:s.job_type_id :t.id})
       (fields [:s.job_id          :job-id]
               [:s.step_number     :step-number]
               [:s.external_id     :external-id]
@@ -311,18 +319,36 @@
     (if (<= (count job-step-types) 1) (first job-step-types) de-job-type)))
 
 (defn lock-job
-  "Retrieves a job by its internal identifier, placing a lock on the row. For update queries
+  "Retrieves a job by its internal identifier, placing a lock on the row. For-update queries
    can't be used in conjunction with a group-by clause, so we have to use a separate query to
    determine the overall job type.
 
    In most cases the MVCC behavior provided by Postgres is sufficient to ensure that the system
    stays in a consistent state. The one case where it isn't sufficient is when the status of
-   a job is being updated. The reason the MVCC behavior doesn't work in thsi case is because a
-   status update trigger another job in the case of a pipeline. Because of this, we need to ensure
-   that only one thread is preparing to update a job status at any given time."
+   a job is being updated. The reason the MVCC behavior doesn't work in this case is because a
+   status update trigger a notification or another job in the case of a pipeline. Because of this,
+   we need to ensure that only one thread is preparing to update a job status at any given time.
+
+   Important note: in cases where both the job and the job step need to be locked, the job step
+   should be locked first."
   [id]
   (if-let [job (lock-job* id)]
     (assoc job :job-type (determine-job-type id))))
+
+(defn lock-job-step
+  "Retrieves a job step by its associated job identifier and external job identifier. The lock on
+   the job step is required in the same case and for the same reason as the lock on the job. Please
+   see the documentation for lock-job for more details.
+
+   Important note: in cases where both the job and the job step need to be locked, the job step
+   should be locked first."
+  [job-id external-id]
+  (-> (job-step-base-query)
+      (where {:s.job_id      job-id
+              :s.external_id external-id})
+      (#(str (as-sql %) " for update"))
+      (#(exec-raw [% [job-id external-id]] :results))
+      (first)))
 
 (defn update-job
   "Updates an existing job in the database."
