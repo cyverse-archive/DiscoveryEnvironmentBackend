@@ -5,10 +5,10 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/tools.logging "0.2.6"]
-                 [korma "0.3.0-RC5"]
-                 [postgresql "9.0-801.jdbc4"]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [org.clojure/tools.logging "0.3.0"]
+                 [korma "0.3.3"]
+                 [postgresql "9.1-901-1.jdbc4"]
                  [slingshot "0.10.3"]]
   :plugins [[lein-marginalia "0.7.1"]]
   :manifest {"db-version" "2.0.0:20140902.01"}
