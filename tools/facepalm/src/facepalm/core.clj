@@ -14,6 +14,7 @@
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clj-http.client :as client]
+            [clojure-commons.config :as cfg]
             [facepalm.conversions :as cnv]
             [kameleon.pgpass :as pgpass]
             [me.raynes.fs :as fs])
@@ -33,6 +34,10 @@
   "The handler for the update mode."
   [opts]
   (update-database opts))
+
+(def ^:private default-cfg-dir
+  "The service configuration file directory"
+  "/etc/iplant/de")
 
 (def ^:private default-jenkins-base
   "The base URL used to connect to Jenkins."
@@ -100,6 +105,8 @@
         :default default-jenkins-artifact-path]
        ["--qa-drop-base" "The base URL to use for the QA drops."
         :default default-qa-drop-base]
+       ["--cfg-dir" "The location of the service configuration files."
+        :default default-cfg-dir]
        ["--debug" "Enable debugging." :default false :flag true]))
 
 (defn- pump
@@ -364,13 +371,23 @@
     (dorun (map (partial incompatible-database-conversion compatible-version)
                 (remove #(<= (compare % compatible-version) 0) versions)))))
 
+(defn- load-cfg
+  [opts cfg-name]
+  (let [props (ref nil)]
+    (cfg/load-config-from-file (:cfg-dir opts) cfg-name props)
+    @props))
+
 (defn- do-conversion
-  "Performs a databae conversion and updates the database version."
-  [new-version]
-  (transaction
-   ((@conversions new-version))
-   (insert version
-           (values {:version new-version}))))
+  "Performs a database conversion and updates the database version."
+  [opts new-version]
+  (let [convert   (@conversions new-version)
+        extra-cfg (:cfg-file (meta convert))]
+    (transaction
+      (if extra-cfg
+        (convert (load-cfg opts extra-cfg))
+        (convert))
+      (insert version
+              (values {:version new-version})))))
 
 (defn- update-database
   "Converts the database schema from one DE version to another."
@@ -382,7 +399,7 @@
     (let [versions (get-update-versions (get-current-db-version) (:version opts))]
       (validate-update-versions versions)
       (try+
-       (dorun (map do-conversion versions))
+       (dorun (map (partial do-conversion opts) versions))
        (catch Exception e
          (log-next-exception e)
          (throw+))))))
