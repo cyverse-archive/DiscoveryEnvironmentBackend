@@ -7,6 +7,9 @@
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]))
 
+(def ^:private default-content-type-header
+  {"Content-Type" "application/json; charset=utf-8"})
+
 (defn empty-response []
   {:status 200})
 
@@ -15,7 +18,7 @@
      (charset
       {:status       200
        :body         (cheshire/encode (merge {:success true} map))
-       :content-type :json}
+       :headers default-content-type-header}
       "UTF-8"))
   ([]
      (success-response {})))
@@ -25,7 +28,7 @@
   (charset
    {:status       400
     :body         (cheshire/encode {:success false :reason (.getMessage e)})
-    :content-type :json}
+    :headers default-content-type-header}
    "UTF-8"))
 
 (defn slingshot-failure-response [m]
@@ -35,7 +38,7 @@
     :body         (cheshire/encode (assoc (dissoc m :type)
                                      :code    (upper-case (name (or (:type m) (:code m))))
                                      :success false))
-    :content-type :json}
+    :headers default-content-type-header}
    "UTF-8"))
 
 (defn forbidden-response [e]
@@ -47,7 +50,7 @@
   (charset
    {:status 500
     :body (cheshire/encode {:success false :reason (.getMessage e)})
-    :content-type :json}
+    :headers default-content-type-header}
    "UTF-8"))
 
 (defn unrecognized-path-response []
@@ -78,8 +81,7 @@
 (defn prepare-forwarded-request
   "Prepares a request to be forwarded to a remote service."
   [request body]
-  {:content-type (get-in request [:headers :content-type])
-   :headers (dissoc (:headers request) "content-length" "content-type")
+  {:headers (dissoc (:headers request) "content-length")
    :body body})
 
 (defn parse-json

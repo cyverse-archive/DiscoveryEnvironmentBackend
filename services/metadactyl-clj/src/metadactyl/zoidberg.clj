@@ -5,7 +5,8 @@
         [metadactyl.user :only [current-user]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
-            [clojure-commons.error-codes :as cc-errs]))
+            [clojure-commons.error-codes :as cc-errs]
+            [metadactyl.util.service :as service]))
 
 (defn- get-implementor-details
   "Gets an implementor object with details from the current-user, needed to save
@@ -213,8 +214,8 @@
         task-ids (:tasks app)
         tasks (get-tasks task-ids)
         app (dissoc app :tasks)]
-    (cheshire/encode {:analyses [app]
-                      :templates tasks})))
+    (service/success-response {:analyses [app]
+                               :templates tasks})))
 
 ;; FIXME
 (defn copy-app

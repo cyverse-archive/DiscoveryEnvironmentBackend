@@ -11,7 +11,8 @@
         [metadactyl.workspace])
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [metadactyl.util.service :as service]))
 
 (defn- add-subgroups
   [group groups]
@@ -78,7 +79,7 @@
   [params]
   (let [workspace (get-or-create-workspace (:username current-user))
         workspace-id (:id workspace)]
-    (cheshire/encode {:groups (format-app-group-hierarchy workspace-id params workspace)})))
+    {:groups (format-app-group-hierarchy workspace-id params workspace)}))
 
 (defn get-visible-app-groups
   "Retrieves the list of app groups that are visible to a user."
@@ -89,18 +90,18 @@
          (get-visible-app-groups params)))
   ([workspace-id params]
      (let [workspaces (get-visible-workspaces workspace-id)]
-       (cheshire/encode
-        {:groups (map (partial format-app-group-hierarchy workspace-id params) workspaces)}))))
+       {:groups (map (partial format-app-group-hierarchy workspace-id params) workspaces)})))
 
 (defn get-app-groups
   "Retrieves the list of app groups that are visible to all users, the current user's app groups, or
    both, depending on the :public param."
   [{:keys [public] :as params}]
-  (if (contains? params :public)
-    (if-not public
-      (get-workspace-app-groups params)
-      (get-visible-app-groups nil params))
-    (get-visible-app-groups params)))
+  (service/success-response
+    (if (contains? params :public)
+      (if-not public
+        (get-workspace-app-groups params)
+        (get-visible-app-groups nil params))
+      (get-visible-app-groups params))))
 
 (defn- validate-app-pipeline-eligibility
   "Validates an App for pipeline eligibility, throwing a slingshot stone ."
@@ -209,7 +210,7 @@
    descendents."
   [app-group-id params]
   (let [workspace (get-or-create-workspace (:username current-user))]
-    (cheshire/encode
+    (service/success-response
      (or (list-apps-in-virtual-group workspace app-group-id params)
          (list-apps-in-real-group workspace app-group-id params)))))
 
@@ -226,8 +227,8 @@
                         (workspace-favorites-app-group-index)
                         params)
         search_results (map format-app search_results)]
-    (cheshire/encode {:task_count total
-                      :templates search_results})))
+    (service/success-response {:task_count total
+                               :templates search_results})))
 
 (defn- load-app-details
   "Retrieves the details for a single app."
