@@ -1,11 +1,11 @@
 (ns mescal.agave-de-v2.job-params
-  (:use [mescal.agave-de-v2.params :only [get-param-type]])
-  (:require [mescal.util :as util]))
+  (:require [mescal.agave-de-v2.params :as mp]
+            [mescal.util :as util]))
 
 (defn- format-param-value
   [get-val get-default get-type get-format get-info-type param]
-  (let [default   (str (get-default))
-        param-val (str (get-val))]
+  (let [default   (get-default)
+        param-val (get-val)]
     {:data_format      (get-format)
      :full_param_id    (:id param)
      :info_type        (get-info-type)
@@ -16,13 +16,20 @@
      :param_type       (get-type param)
      :param_value      {:value param-val}}))
 
-(defn- get-param-value
-  [param-values param]
-  (param-values (keyword (:id param)) ""))
-
 (defn- get-default-param-value
   [param]
-  (:defaultValue param ""))
+  (let [{{default :default enum-values :enum_values} :value} param]
+    (if (mp/enum-param? param)
+      (mp/format-enum-element (first default) (mp/find-enum-element (first default) enum-values))
+      default)))
+
+(defn- get-param-value
+  [param-values param]
+  (when-let [param-value (param-values (keyword (:id param)) "")]
+    (if (mp/enum-param? param)
+      (let [{{default :default enum-values :enum_values} :value} param]
+        (mp/format-enum-element (first default) (mp/find-enum-element param-value enum-values)))
+      param-value)))
 
 (defn- format-input-param-value
   [agave param-values param]
@@ -37,7 +44,7 @@
   [param-values param]
   (format-param-value #(get-param-value param-values param)
                       #(get-default-param-value param)
-                      get-param-type
+                      mp/get-param-type
                       (constantly "")
                       (constantly "")
                       param))

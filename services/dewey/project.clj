@@ -1,4 +1,4 @@
-(defproject org.iplantc/dewey "3.2.3"
+(defproject org.iplantc/dewey "3.2.4"
   :description "This is a RabbitMQ client responsible for keeping an elasticsearch index
                 synchronized with an iRODS repository using messages produced by iRODS."
   :url "http://www.iplantcollaborative.org"
@@ -17,14 +17,14 @@
                  [ring/ring-core "1.3.0"]
                  [ring/ring-jetty-adapter "1.3.0"]
                  [slingshot "0.10.3"]
-                 [org.iplantc/clj-jargon "3.2.3"]
-                 [org.iplantc/clojure-commons "3.2.3"]
-                 [org.iplantc/common-cli "3.2.3"]
+                 [org.iplantc/clj-jargon "3.2.4"]
+                 [org.iplantc/clojure-commons "3.2.4"]
+                 [org.iplantc/common-cli "3.2.4"]
                  [me.raynes/fs "1.4.6"]]
   :resource-paths []
   :profiles {:dev {:dependencies   [[midje "1.6.3"]]
                    :resource-paths ["dev-resource"]}}
-  :plugins [[org.iplantc/lein-iplant-rpm "3.2.3"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.2.4"]]
   :iplant-rpm {:summary      "dewey"
                :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
                :config-files ["log4j.properties"]

@@ -19,8 +19,8 @@
 (defn- get-end-date
   [{:keys [status completion_date now_date]}]
   (case status
-    mu/failed-status    (db/timestamp-from-str now_date)
-    mu/completed-status (db/timestamp-from-str completion_date)
+    jp/failed-status    (db/timestamp-from-str now_date)
+    jp/completed-status (db/timestamp-from-str completion_date)
     nil))
 
 (defn- store-submitted-de-job

@@ -12,7 +12,7 @@
 (def ^:private default-repositories
   {"central" "http://repo1.maven.org/maven2"
    "clojars" "http://clojars.org/repo/"
-   "iplant"  "http://projects.iplantcollaborative.org/archiva/repository/internal/"})
+   "iplant"  "http://katic.iplantcollaborative.org/archiva/repository/internal/"})
 
 (defn- drop-extension
   [fname]
@@ -97,7 +97,7 @@
 
 (defn load-dependencies
   []
-  (let [f (fs/file dependency-filename)]
+  (let [f (fs/file "conversions" dependency-filename)]
     (when (.isFile f)
       (let [{:keys [dependencies repositories]} (load-dependency-file f)]
         (add-dependencies :coordinates dependencies

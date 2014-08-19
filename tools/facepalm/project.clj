@@ -3,28 +3,28 @@
 ;; changes need to be recorded in the version number.  Please increment the
 ;; minor version number rather than the release number for minor changes.
 
-(defproject org.iplantc/facepalm "3.2.3"
+(defproject org.iplantc/facepalm "3.2.4"
   :description "Command-line utility for DE database managment."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/tools.cli "0.2.1"]
-                 [org.clojure/tools.logging "0.2.3"]
-                 [cheshire "5.2.0"]
-                 [com.cemerick/pomegranate "0.0.13"]
-                 [fleet "0.9.5"]
-                 [korma "0.3.0-RC5"]
-                 [me.raynes/fs "1.4.5"]
-                 [org.iplantc/clojure-commons "3.2.3"]
-                 [org.iplantc/kameleon "3.2.3"]
-                 [postgresql "9.0-801.jdbc4"]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [org.clojure/tools.cli "0.3.1"]
+                 [org.clojure/tools.logging "0.3.0"]
+                 [cheshire "5.3.1"]
+                 [com.cemerick/pomegranate "0.3.0"]
+                 [fleet "0.10.1"]
+                 [korma "0.3.3"]
+                 [me.raynes/fs "1.4.6"]
+                 [org.iplantc/clojure-commons "3.2.4"]
+                 [org.iplantc/kameleon "3.2.4"]
+                 [postgresql "9.1-901-1.jdbc4"]
                  [slingshot "0.10.3"]
-                 [clj-http "0.6.3"]]
-  :plugins [[org.iplantc/lein-iplant-cmdtar "3.2.3"]
-            [org.iplantc/lein-iplant-rpm "3.2.3"]
+                 [clj-http "1.0.0"]]
+  :plugins [[org.iplantc/lein-iplant-cmdtar "3.2.4"]
+            [org.iplantc/lein-iplant-rpm "3.2.4"]
             [lein-marginalia "0.7.1"]]
   :iplant-rpm {:summary "Facepalm"
                :type :command}

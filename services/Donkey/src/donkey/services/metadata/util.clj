@@ -6,16 +6,9 @@
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [donkey.clients.notifications :as dn]
+            [donkey.persistence.jobs :as jp]
             [donkey.util.db :as db]
             [donkey.util.service :as service]))
-
-(def canceled-status "Canceled")
-(def failed-status "Failed")
-(def completed-status "Completed")
-(def submitted-status "Submitted")
-(def idle-status "Idle")
-(def running-status "Running")
-(def completed-status-codes #{canceled-status failed-status completed-status})
 
 (defn- current-timestamp
   []
@@ -23,7 +16,7 @@
 
 (defn is-completed?
   [job-status]
-  (completed-status-codes job-status))
+  (jp/completed-status-codes job-status))
 
 (def not-completed? (complement is-completed?))
 
