@@ -113,7 +113,7 @@
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
   (updateJobStatus [_ username job job-step status end-time])
-  (stopJob [_ job-id])
+  (stopJob [_ job])
   (getJobParams [_ job-id])
   (getAppRerunInfo [_ job-id]))
 ;; AppLister
@@ -172,8 +172,8 @@
   (updateJobStatus [_ username job job-step status end-time]
     (da/update-job-status username job job-step status end-time))
 
-  (stopJob [_ job-id]
-    (ca/stop-job job-id))
+  (stopJob [_ job]
+    (ca/stop-job job))
 
   (getJobParams [_ job-id]
     (ca/get-job-params nil (jp/get-job-by-id (UUID/fromString job-id))))
@@ -264,8 +264,8 @@
   (updateJobStatus [_ username job job-step status end-time]
     (ca/update-job-status agave-client username job job-step status end-time))
 
-  (stopJob [_ job-id]
-    (ca/stop-job agave-client job-id))
+  (stopJob [_ job]
+    (ca/stop-job agave-client job))
 
   (getJobParams [_ job-id]
     (process-job agave-client job-id
@@ -525,7 +525,7 @@
          (service/not-owner "job" id))
        (when (mu/is-completed? (:status job))
          (service/bad-request (str "job, " id ", is already completed or canceled")))
-       (.stopJob (get-app-lister) id)
+       (.stopJob (get-app-lister) job)
        (service/success-response {:id (str id)})))))
 
 (defn get-property-values
