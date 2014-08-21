@@ -3,6 +3,8 @@
   (:require [cheshire.core :as cheshire])
   (:import [java.util UUID]))
 
+(declare insert-tree-value)
+
 (def ^:private version
   "The destination database version."
   "2.0.0:20140527.01")
@@ -18,6 +20,12 @@
                      :description (:description arg)
                      :label (:display arg)}))))
 
+(defn- insert-tree-items
+  [parameter_id item_id items]
+  (dorun (map #(insert-tree-value parameter_id item_id %1 %2)
+              items
+              (range))))
+
 (defn- insert-tree-value
   [parameter_id parent_id item display_order]
   (let [item_id (UUID/randomUUID)]
@@ -31,14 +39,8 @@
                      :value (:value item)
                      :description (:description item)
                      :label (:display item)}))
-    (dorun
-     (map #(insert-tree-value parameter_id item_id %1 %2)
-          (:arguments item)
-          (range)))
-    (dorun
-     (map #(insert-tree-value parameter_id item_id %1 %2)
-          (:groups item)
-          (range)))))
+    (insert-tree-items parameter_id item_id (:arguments item))
+    (insert-tree-items parameter_id item_id (:groups item))))
 
 (defn- insert-tree-selection-values
   [{:keys [argument_value parameter_id]}]
@@ -49,10 +51,8 @@
                      :parameter_id parameter_id
                      :is_default (or (:isSingleSelect arg) false)
                      :name (:selectionCascade arg)}))
-    (dorun
-     (map #(insert-tree-value parameter_id root_id %1 %2)
-          (:groups arg)
-          (range)))))
+    (insert-tree-items parameter_id root_id (:arguments arg))
+    (insert-tree-items parameter_id root_id (:groups arg))))
 
 (defn- convert-selection-values
   []
