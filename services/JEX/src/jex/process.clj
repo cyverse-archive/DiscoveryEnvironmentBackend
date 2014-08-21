@@ -41,8 +41,8 @@
 (defn create-osm-record
   "Creates a new record in the OSM, associates the notification-url with it as a
    callback, and returns the OSM document ID in a string."
-  [osm-client]
-  (let [notif-url (cfg/notif-url)
+  [output-map osm-client]
+  (let [notif-url (or (:callback output-map) (cfg/notif-url))
         doc-id    (osm/save-object osm-client {})
         result    (osm/add-callback osm-client doc-id "on_update" notif-url)]
     (log/warn result)
@@ -171,7 +171,7 @@
   "Pushes out the analysis map to OSM after marking it as Failed."
   [output-map]
   (let [osm-client (osm/create (cfg/osm-url) (cfg/osm-coll))
-        doc-id     (create-osm-record osm-client)]
+        doc-id     (create-osm-record output-map osm-client)]
     (osm/update-object osm-client doc-id (assoc output-map :status "Failed"))
     doc-id))
 
@@ -180,7 +180,7 @@
    point."
   [output-map]
   (let [osm-client (osm/create (cfg/osm-url) (cfg/osm-coll))
-        doc-id     (create-osm-record osm-client)]
+        doc-id     (create-osm-record output-map osm-client)]
     (osm/update-object osm-client doc-id output-map)
     doc-id))
 

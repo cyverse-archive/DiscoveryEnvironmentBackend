@@ -10,7 +10,6 @@
         [donkey.util.transformers :only [add-current-user-to-map]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [donkey.services.fileio.actions :as actions]
-            [donkey.services.fileio.controllers :as fileio]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.stat :as stat]
             [donkey.util.config :as config]

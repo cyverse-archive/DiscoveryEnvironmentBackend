@@ -155,8 +155,8 @@
 
 (defn- prompt-for-password
   "Prompts the user for a password."
-  []
-  (print "Password: ")
+  [user]
+  (print user "password: ")
   (flush)
   (.. System console readPassword))
 
@@ -169,17 +169,17 @@
     (if (nil? password)
       (if (nil? (System/console))
         (no-password-supplied host port database user)
-        (prompt-for-password))
+        (prompt-for-password user))
       password)))
 
 (defn- define-db
   "Defines the database connection settings."
   [{:keys [host port database user admin-user]}]
-  (let [db-spec {:classname "org.postgresql.Driver"
-                 :subprotocol "postgresql"
-                 :subname (str "//" host ":" port "/" database)}
-        password (get-password host port database user)
-        admin-password (pgpass/get-password host port database admin-user)]
+  (let [db-spec        {:classname   "org.postgresql.Driver"
+                        :subprotocol "postgresql"
+                        :subname     (str "//" host ":" port "/" database)}
+        password       (get-password host port database user)
+        admin-password (get-password host port database admin-user)]
     (when admin-password
       (reset! admin-db-spec
               (postgres (assoc db-spec

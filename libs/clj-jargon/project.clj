@@ -1,18 +1,12 @@
-(defproject org.iplantc/clj-jargon "3.2.0"
+(defproject org.iplantc/clj-jargon "3.2.4"
   :description "Clojure API on top of iRODS's jargon-core."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/kameleon.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/kameleon.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/kameleon.git"}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.iplantc/clojure-commons "3.2.0"]
+                 [org.iplantc/clojure-commons "3.2.4"]
                  [org.slf4j/slf4j-api "1.7.5"]
                  [org.slf4j/slf4j-log4j12 "1.7.5"]
                  [org.irods.jargon/jargon-core "3.3.1.1"

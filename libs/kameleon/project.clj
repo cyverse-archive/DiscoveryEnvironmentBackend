@@ -1,14 +1,8 @@
-(defproject org.iplantc/kameleon "3.2.0"
+(defproject org.iplantc/kameleon "3.2.4"
   :description "Library for interacting with backend relational databases."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/kameleon.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/kameleon.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/kameleon.git"}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]

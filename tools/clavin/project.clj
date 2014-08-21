@@ -7,26 +7,20 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/clavin "3.2.0"
+(defproject org.iplantc/clavin "3.2.4"
   :description "A command-line tool for loading service configurations."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/Clavin.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/Clavin.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/Clavin.git"}
   :manifest {"Git-Ref" ~(git-ref)}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :dependencies [[org.antlr/stringtemplate "4.0.2"]
                  [org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.cli "0.2.1"]
                  [medley "0.1.5"]
                  [me.raynes/fs "1.4.4"]
-                 [org.iplantc/clojure-commons "3.2.0"]]
-  :plugins [[org.iplantc/lein-iplant-cmdtar "3.2.0"]
-            [org.iplantc/lein-iplant-rpm "3.2.0"]]
+                 [org.iplantc/clojure-commons "3.2.4"]]
+  :plugins [[org.iplantc/lein-iplant-cmdtar "3.2.4"]
+            [org.iplantc/lein-iplant-rpm "3.2.4"]]
   :iplant-rpm {:summary "Clavin"
                :type :command
                :provides "iplant-clavin"}

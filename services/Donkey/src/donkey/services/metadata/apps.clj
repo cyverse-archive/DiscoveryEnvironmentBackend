@@ -1,8 +1,8 @@
 (ns donkey.services.metadata.apps
   (:use [clojure-commons.validators :only [validate-map]]
-        [donkey.auth.user-attributes :only [current-user]]
+        [donkey.auth.user-attributes :only [current-user with-directory-user]]
         [donkey.util :only [is-uuid?]]
-        [korma.db :only [transaction]]
+        [korma.db :only [transaction with-db]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [cemerick.url :as curl]
             [clojure.string :as string]
@@ -25,7 +25,7 @@
 
 (defn- count-de-jobs
   [filter]
-  (jp/count-de-jobs (:username-current-user) filter))
+  (jp/count-de-jobs (:username current-user) filter))
 
 (defn- count-jobs
   [filter]
@@ -52,32 +52,25 @@
         app-tables [(da/load-app-details (map :analysis_id jobs))]]
     (mapv (partial mu/format-job app-tables) jobs)))
 
-(defn- update-job-status
-  ([{:keys [id status end-date]}]
-     (let [uuid     (UUID/fromString id)
-           end-date (db/timestamp-from-str (str end-date))]
-       (jp/update-job-step uuid id status end-date)
-       (jp/update-job uuid status end-date)))
-  ([agave username job job-step status end-time]
-     (let [max-step-number (jp/get-max-step-number (:id job))]
-       (aa/update-agave-job-status agave username job job-step max-step-number status end-time))))
-
 (defn- unrecognized-job-type
   [job-type]
   (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
            :argument   "job_type"
            :value      job-type}))
 
+(defn- get-first-job-step
+  [{:keys [id]}]
+  (service/assert-found (jp/get-job-step-number id 1) "first step in job" id))
+
 (defn- process-job
   ([agave-client job-id processing-fns]
      (process-job agave-client job-id (jp/get-job-by-id (UUID/fromString job-id)) processing-fns))
-  ([agave-client job-id job {:keys [process-agave-job process-de-job preprocess-job]
-                             :or {preprocess-job identity}}]
+  ([agave-client job-id job {:keys [process-agave-job process-de-job]}]
      (when-not job
        (service/not-found "job" job-id))
-     (if (util/is-uuid? (:analysis_id job))
-       (process-de-job (preprocess-job job))
-       (process-agave-job agave-client (preprocess-job job)))))
+     (if (= jp/de-job-type (:job-type job))
+       (process-de-job job)
+       (process-agave-job agave-client (get-first-job-step job)))))
 
 (defn- agave-authorization-uri
   [state-info]
@@ -120,6 +113,7 @@
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
   (updateJobStatus [_ username job job-step status end-time])
+  (stopJob [_ job])
   (getJobParams [_ job-id])
   (getAppRerunInfo [_ job-id]))
 ;; AppLister
@@ -173,11 +167,13 @@
     (list-de-jobs limit offset sort-field sort-order filter))
 
   (syncJobStatus [_ job]
-    (when (= (:job_type job) jp/de-job-type)
-      (da/sync-de-job-status job)))
+    (da/sync-job-status job))
 
   (updateJobStatus [_ username job job-step status end-time]
     (da/update-job-status username job job-step status end-time))
+
+  (stopJob [_ job]
+    (ca/stop-job job))
 
   (getJobParams [_ job-id]
     (ca/get-job-params nil (jp/get-job-by-id (UUID/fromString job-id))))
@@ -261,13 +257,15 @@
       (list-de-jobs limit offset sort-field sort-order filter)))
 
   (syncJobStatus [_ job]
-    (let [sync-agave (add-predicate user-has-access-token? aa/sync-agave-job-status)]
-      (process-job agave-client (:id job) job
-                   {:process-de-job    da/sync-de-job-status
-                    :process-agave-job sync-agave})))
+    (if (user-has-access-token?)
+      (ca/sync-job-status agave-client job)
+      (da/sync-job-status job)))
 
   (updateJobStatus [_ username job job-step status end-time]
     (ca/update-job-status agave-client username job job-step status end-time))
+
+  (stopJob [_ job]
+    (ca/stop-job agave-client job))
 
   (getJobParams [_ job-id]
     (process-job agave-client job-id
@@ -313,57 +311,77 @@
 
 (defn get-only-app-groups
   []
-  (service/success-response (.listAppGroups (get-app-lister "type=apps"))))
+  (with-db db/de
+    (transaction
+     (service/success-response (.listAppGroups (get-app-lister "type=apps"))))))
 
 (defn apps-in-group
   [group-id params]
-  (-> (get-app-lister (str "type=apps&app-category=" group-id))
-      (.listApps group-id params)
-      (service/success-response)))
+  (with-db db/de
+    (transaction
+     (-> (get-app-lister (str "type=apps&app-category=" group-id))
+         (.listApps group-id params)
+         (service/success-response)))))
 
 (defn search-apps
   [{search-term :search}]
   (when (string/blank? search-term)
     (throw+ {:error_code ce/ERR_MISSING_QUERY_PARAMETER
              :param      :search}))
-  (service/success-response (.searchApps (get-app-lister) search-term)))
+  (with-db db/de
+    (transaction
+     (service/success-response (.searchApps (get-app-lister) search-term)))))
 
 (defn update-favorites
   [body]
-  (let [request (service/decode-json body)]
-    (.updateFavorites (get-app-lister)
-                      (service/required-field request :analysis_id)
-                      (service/required-field request :user_favorite))))
+  (with-db db/de
+    (transaction
+     (let [request (service/decode-json body)]
+       (.updateFavorites (get-app-lister)
+                         (service/required-field request :analysis_id)
+                         (service/required-field request :user_favorite))))))
 
 (defn rate-app
   [body]
-  (let [request (service/decode-json body)]
-    (.rateApp (get-app-lister)
-              (service/required-field request :analysis_id)
-              (service/required-field request :rating)
-              (service/required-field request :comment_id))))
+  (with-db db/de
+    (transaction
+     (let [request (service/decode-json body)]
+       (.rateApp (get-app-lister)
+                 (service/required-field request :analysis_id)
+                 (service/required-field request :rating)
+                 (service/required-field request :comment_id))))))
 
 (defn delete-rating
   [body]
-  (let [request (service/decode-json body)]
-    (.deleteRating (get-app-lister) (service/required-field request :analysis_id))))
+  (with-db db/de
+    (transaction
+     (let [request (service/decode-json body)]
+       (.deleteRating (get-app-lister) (service/required-field request :analysis_id))))))
 
 (defn get-app
   [app-id]
-  (service/success-response (.getApp (get-app-lister) app-id)))
+  (with-db db/de
+    (transaction
+     (service/success-response (.getApp (get-app-lister) app-id)))))
 
 (defn get-deployed-components-in-app
   [app-id]
-  (service/success-response (.getAppDeployedComponents (get-app-lister) app-id)))
+  (with-db db/de
+    (transaction
+     (service/success-response (.getAppDeployedComponents (get-app-lister) app-id)))))
 
 (defn get-app-details
   [app-id]
-  (service/success-response (.getAppDetails (get-app-lister) app-id)))
+  (with-db db/de
+    (transaction
+     (service/success-response (.getAppDetails (get-app-lister) app-id)))))
 
 (defn submit-job
   [workspace-id body]
-  (service/success-response
-   (.submitJob (get-app-lister) workspace-id (service/decode-json body))))
+  (with-db db/de
+    (transaction
+     (service/success-response
+      (.submitJob (get-app-lister) workspace-id (service/decode-json body))))))
 
 (defn list-jobs
   [{:keys [limit offset sort-field sort-order filter]
@@ -371,16 +389,18 @@
            offset     "0"
            sort-field :startdate
            sort-order :desc}}]
-  (let [limit      (Long/parseLong limit)
-        offset     (Long/parseLong offset)
-        sort-field (keyword sort-field)
-        sort-order (keyword sort-order)
-        app-lister (get-app-lister)
-        filter     (when-not (nil? filter) (service/decode-json filter))]
-    (service/success-response
-     {:analyses  (.listJobs app-lister limit offset sort-field sort-order filter)
-      :timestamp (str (System/currentTimeMillis))
-      :total     (.countJobs app-lister filter)})))
+  (with-db db/de
+    (transaction
+     (let [limit      (Long/parseLong limit)
+           offset     (Long/parseLong offset)
+           sort-field (keyword sort-field)
+           sort-order (keyword sort-order)
+           app-lister (get-app-lister)
+           filter     (when-not (nil? filter) (service/decode-json filter))]
+       (service/success-response
+        {:analyses  (.listJobs app-lister limit offset sort-field sort-order filter)
+         :timestamp (str (System/currentTimeMillis))
+         :total     (.countJobs app-lister filter)})))))
 
 (defn- get-unique-job-step
   "Gest a unique job step for an external ID. An exception is thrown if no job step
@@ -397,46 +417,59 @@
   "Updates the job status. Important note: this function currently assumes that the
    external identifier is unique."
   [external-id status end-date]
-  (let [job-step                   (get-unique-job-step external-id)
-        {:keys [username] :as job} (jp/get-job-by-id (:job-id job-step))
-        end-date                   (db/timestamp-from-str end-date)]
-    (service/assert-found job "job" (:job-id job-step))
-    (try+
-     (.updateJobStatus (get-app-lister "" username) username job job-step status end-date)
-     (catch Object o
-       (let [msg (str "DE job status update failed for " external-id)]
-         (log/warn o msg)
-         (throw+))))))
+  (with-db db/de
+    (transaction
+     (if (= status jp/submitted-status)
+       (service/success-response)
+       (let [job-step                   (get-unique-job-step external-id)
+             job-step                   (jp/lock-job-step (:job-id job-step) external-id)
+             {:keys [username] :as job} (jp/lock-job (:job-id job-step))
+             end-date                   (db/timestamp-from-str end-date)]
+         (service/assert-found job "job" (:job-id job-step))
+         (with-directory-user [username]
+           (try+
+            (.updateJobStatus (get-app-lister "" username) username job job-step status end-date)
+            (catch Object o
+              (let [msg (str "DE job status update failed for " external-id)]
+                (log/warn o msg)
+                (throw+))))))))))
 
 (defn update-agave-job-status
   [uuid status end-time external-id]
-  (let [uuid                       (UUID/fromString uuid)
-        job-step                   (jp/get-job-step uuid external-id)
-        {:keys [username] :as job} (jp/get-job-by-id uuid)
-        end-time                   (db/timestamp-from-str end-time)]
-    (service/assert-found job "job" uuid)
-    (service/assert-found job-step "job step" (str uuid "/" external-id))
-    (try+
-     (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)
-     (catch Object o
-       (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
-         (log/warn o msg)
-         (throw+))))))
+  (with-db db/de
+    (transaction
+     (let [uuid                       (UUID/fromString uuid)
+           job-step                   (jp/lock-job-step uuid external-id)
+           {:keys [username] :as job} (jp/lock-job uuid)
+           end-time                   (db/timestamp-from-str end-time)]
+       (service/assert-found job "job" uuid)
+       (service/assert-found job-step "job step" (str uuid "/" external-id))
+       (with-directory-user [username]
+         (try+
+          (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)
+          (catch Object o
+            (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
+              (log/warn o msg)
+              (throw+)))))))))
 
 (defn- sync-job-status
   [job]
-  (try+
-   (log/debug "synchronizing the job status for" (:id job))
-   (.syncJobStatus (get-app-lister "" (:username job)) job)
-   (catch Object e
-     (log/error e "unable to sync the job status for job" (:id job)))))
+  (with-directory-user [(:username job)]
+    (try+
+     (log/warn "synchronizing the job status for" (:id job))
+     (transaction (.syncJobStatus (get-app-lister "" (:username job)) job))
+     (catch Object e
+       (log/error e "unable to sync the job status for job" (:id job))))))
 
 (defn sync-job-statuses
   []
-  (try+
-   (dorun (map sync-job-status (jp/list-incomplete-jobs)))
-   (catch Object e
-     (log/error e "error while obtaining the lsit of jobs to synchronize."))))
+  (log/warn "synchronizing job statuses")
+  (with-db db/de
+    (try+
+     (dorun (map sync-job-status (jp/list-incomplete-jobs)))
+     (catch Object e
+       (log/error e "error while obtaining the list of jobs to synchronize."))))
+  (log/warn "done syncrhonizing job statuses"))
 
 (defn- log-already-deleted-jobs
   [ids]
@@ -448,12 +481,14 @@
 
 (defn delete-jobs
   [body]
-  (let [body (service/decode-json body)
-        _    (validate-map body {:executions vector?})
-        ids  (set (map #(UUID/fromString %) (:executions body)))]
-    (log-already-deleted-jobs ids)
-    (jp/delete-jobs ids)
-    (service/success-response)))
+  (with-db db/de
+    (transaction
+     (let [body (service/decode-json body)
+           _    (validate-map body {:executions vector?})
+           ids  (set (map #(UUID/fromString %) (:executions body)))]
+       (log-already-deleted-jobs ids)
+       (jp/delete-jobs ids)
+       (service/success-response)))))
 
 (defn- validate-job-existence
   [id]
@@ -470,28 +505,50 @@
 
 (defn update-job
   [id body]
-  (let [id   (UUID/fromString id)
-        body (service/decode-json body)]
-    (validate-job-existence id)
-    (validate-job-update body)
-    (jp/update-job id body)))
+  (with-db db/de
+    (transaction
+     (let [id   (UUID/fromString id)
+           body (service/decode-json body)]
+       (validate-job-existence id)
+       (validate-job-update body)
+       (jp/update-job id body)))))
+
+(defn stop-job
+  [id]
+  (with-db db/de
+    (transaction
+     (let [id  (UUID/fromString id)
+           job (jp/get-job-by-id id)]
+       (when-not job
+         (service/not-found "job" id))
+       (when-not (= (:username job) (:username current-user))
+         (service/not-owner "job" id))
+       (when (mu/is-completed? (:status job))
+         (service/bad-request (str "job, " id ", is already completed or canceled")))
+       (.stopJob (get-app-lister) job)
+       (service/success-response {:id (str id)})))))
 
 (defn get-property-values
   [job-id]
-  (service/success-response (.getJobParams (get-app-lister) job-id)))
+  (with-db db/de
+    (service/success-response (.getJobParams (get-app-lister) job-id))))
 
 (defn get-app-rerun-info
   [job-id]
-  (service/success-response (.getAppRerunInfo (get-app-lister) job-id)))
+  (with-db db/de
+    (service/success-response (.getAppRerunInfo (get-app-lister) job-id))))
 
 (defn list-app-data-objects
   [app-id]
-  (service/success-response (.listAppDataObjects (get-app-lister) app-id)))
+  (with-db db/de
+    (service/success-response (.listAppDataObjects (get-app-lister) app-id))))
 
 (defn edit-workflow
   [app-id]
-  (service/success-response (.editWorkflow (get-app-lister) app-id)))
+  (with-db db/de
+    (service/success-response (.editWorkflow (get-app-lister) app-id))))
 
 (defn copy-workflow
   [app-id]
-  (service/success-response (.copyWorkflow (get-app-lister) app-id)))
+  (with-db db/de
+    (service/success-response (.copyWorkflow (get-app-lister) app-id))))

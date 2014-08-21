@@ -1,5 +1,6 @@
 (ns donkey.services.metadata.favorites
-  (:require [clojure.set :as set]
+  (:require [clojure.tools.logging :as log]
+            [clojure.set :as set]
             [cheshire.core :as json]
             [clj-jargon.init :as fs]
             [donkey.auth.user-attributes :as user]
@@ -65,6 +66,20 @@
       (svc/success-response))
     (svc/donkey-response {} 404))))
 
+
+(defn- compute-total
+  "Computes the total number of favorites. If there are no favorites in the data store, but the
+   total hasn't been reached, an error as logged and the data store accumulated total is returned."
+  [uuids limit offset fav-page]
+  (let [total      (count uuids)
+        page-size  (count fav-page)
+        page-accum (+ offset page-size)]
+    (if (and (> limit page-size) (> total page-accum))
+      (do
+        (log/error "The metadata has favorites that are not in the data store.")
+        page-accum)
+      total)))
+
 (defn list-favorite-data-with-stat
   "Returns a listing of a user's favorite data, including stat information about it. This endpoint
    is intended to help with paginating.
@@ -84,8 +99,9 @@
         limit        (Long/valueOf limit)
         offset       (Long/valueOf offset)
         uuids        (db/select-favorites-of-type user "data")
-        attach-total (fn [favs] (assoc favs :total (count uuids)))]
-    (->> (uuids/paths-for-uuids-paged user col ord limit offset uuids)
+        fav-page     (uuids/paths-for-uuids-paged user col ord limit offset uuids)
+        attach-total (fn [favs] (assoc favs :total (compute-total uuids limit offset fav-page)))]
+    (->> fav-page
       (format-favorites)
       attach-total
       (hash-map :filesystem)

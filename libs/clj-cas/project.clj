@@ -1,14 +1,8 @@
-(defproject org.iplantc/clj-cas "3.2.0"
+(defproject org.iplantc/clj-cas "3.2.4"
   :description "A CAS Client library written in Clojure."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/clj-cas.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/clj-cas.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/clj-cas.git"}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]

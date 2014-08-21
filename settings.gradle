@@ -55,8 +55,6 @@ project(':de-base-services-pom').projectDir = new File( rootProject.projectDir, 
 // Tools Subtrees
 include(':facepalm')
 project(':facepalm').projectDir = new File( rootProject.projectDir, facepalmPrefix )
-include(':proboscis')
-project(':proboscis').projectDir = new File( rootProject.projectDir, proboscisPrefix )
 include(':filetool')
 project(':filetool').projectDir = new File( rootProject.projectDir, filetoolPrefix )
 include(':clavin')

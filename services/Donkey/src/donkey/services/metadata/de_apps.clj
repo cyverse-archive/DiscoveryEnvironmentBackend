@@ -1,22 +1,26 @@
 (ns donkey.services.metadata.de-apps
   (:use [clojure-commons.validators :only [validate-map]]
         [donkey.auth.user-attributes :only [current-user]])
-  (:require [clojure.tools.logging :as log]
+  (:require [cemerick.url :as curl]
+            [clojure.tools.logging :as log]
             [donkey.clients.metadactyl :as metadactyl]
+            [donkey.clients.notifications :as dn]
             [donkey.clients.osm :as osm]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
             [donkey.services.metadata.property-values :as property-values]
             [donkey.services.metadata.util :as mu]
+            [donkey.util.config :as config]
             [donkey.util.db :as db]
+            [donkey.util.service :as service]
             [donkey.util.time :as time-utils])
   (:import [java.util UUID]))
 
 (defn- get-end-date
   [{:keys [status completion_date now_date]}]
   (case status
-    mu/failed-status    (db/timestamp-from-str now_date)
-    mu/completed-status (db/timestamp-from-str completion_date)
+    jp/failed-status    (db/timestamp-from-str now_date)
+    jp/completed-status (db/timestamp-from-str completion_date)
     nil))
 
 (defn- store-submitted-de-job
@@ -31,7 +35,8 @@
                 :result-folder-path (:resultfolderid job)
                 :start-date         (db/timestamp-from-str (str (:startdate job)))
                 :username           (:username current-user)
-                :status             (:status job)}))
+                :status             (:status job)}
+               submission))
 
 (defn- store-job-step
   [job-id job]
@@ -43,13 +48,26 @@
                      :job-type        jp/de-job-type
                      :app-step-number 1}))
 
+(defn- de-job-callback-url
+  []
+  (str (curl/url (config/donkey-base-url) "callbacks" "de-job")))
+
+(defn- prepare-submission
+  [submission job-id]
+  (assoc submission
+    :uuid     (str job-id)
+    :callback (de-job-callback-url)))
+
 (defn submit-job
   [workspace-id submission]
   (let [job-id     (UUID/randomUUID)
-        submission (assoc submission :uuid (str job-id))
-        job        (metadactyl/submit-job workspace-id submission)]
+        submission (prepare-submission submission job-id)
+        job        (metadactyl/submit-job workspace-id submission)
+        username   (:shortUsername current-user)
+        email      (:email current-user)]
     (store-submitted-de-job job-id job submission)
     (store-job-step job-id job)
+    (dn/send-job-status-update username email (assoc job :id job-id))
     {:id         (str job-id)
      :name       (:name job)
      :status     (:status job)
@@ -57,7 +75,7 @@
 
 (defn submit-job-step
   [workspace-id job-info job-step submission]
-  (->> (assoc submission :uuid (str (:id job-info)))
+  (->> (prepare-submission submission (UUID/randomUUID))
        (metadactyl/submit-job workspace-id)
        (:id)))
 
@@ -74,9 +92,11 @@
   (into {} (map (juxt :id identity)
                 (ap/load-app-details ids))))
 
-;; TODO: implement me
-(defn sync-de-job-status
-  [job])
+(defn get-job-step-status
+  [id]
+  (when-let [step (osm/get-job id)]
+    {:status  (:status step)
+     :enddate (:completion_date step)}))
 
 (defn update-job-status
   "Updates the status of a job. If this function is called then Agave jobs are disabled, so
@@ -86,3 +106,14 @@
     (jp/update-job-step (:id job) (:external-id job-step) status end-time)
     (jp/update-job (:id job) status end-time)
     (mu/send-job-status-notification job job-step status end-time)))
+
+(defn sync-job-status
+  [{:keys [id] :as job}]
+  (let [steps     (jp/list-job-steps id)
+        _         (assert (= 1 (count steps)))
+        step      (first steps)
+        step-info (get-job-step-status (:external-id step))
+        status    (:status step-info)
+        end-time  (db/timestamp-from-str (:enddate step-info))]
+    (jp/update-job-step-number id 1 {status status :end-time end-time})
+    (jp/update-job id status end-time)))

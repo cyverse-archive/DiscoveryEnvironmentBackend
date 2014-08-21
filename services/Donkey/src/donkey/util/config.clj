@@ -678,6 +678,16 @@
   [props config-valid configs]
   "donkey.pgp.key-password")
 
+(cc/defprop-str donkey-base-url
+  "The Donkey base URL, which is used to build callback URLs for other DE components."
+  [props config-valid configs]
+  "donkey.base-url")
+
+(cc/defprop-int donkey-job-status-poll-interval
+  "The job status polling interval in minutes."
+  [props config-valid configs]
+  "donkey.jobs.poll-interval")
+
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []

@@ -7,19 +7,13 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/dewey "3.2.0"
+(defproject org.iplantc/dewey "3.2.4"
   :description "This is a RabbitMQ client responsible for keeping an elasticsearch index
                 synchronized with an iRODS repository using messages produced by iRODS."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/dewey.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/dewey.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/dewey.git"}
   :manifest {"Git-Ref" ~(git-ref)}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :aot [dewey.core]
   :main dewey.core
   :dependencies [[org.clojure/clojure "1.6.0"]
@@ -33,14 +27,14 @@
                  [ring/ring-core "1.3.0"]
                  [ring/ring-jetty-adapter "1.3.0"]
                  [slingshot "0.10.3"]
-                 [org.iplantc/clj-jargon "3.2.0"]
-                 [org.iplantc/clojure-commons "3.2.0"]
-                 [org.iplantc/common-cli "3.2.0"]
+                 [org.iplantc/clj-jargon "3.2.4"]
+                 [org.iplantc/clojure-commons "3.2.4"]
+                 [org.iplantc/common-cli "3.2.4"]
                  [me.raynes/fs "1.4.6"]]
   :resource-paths []
   :profiles {:dev {:dependencies   [[midje "1.6.3"]]
                    :resource-paths ["dev-resource"]}}
-  :plugins [[org.iplantc/lein-iplant-rpm "3.2.0"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.2.4"]]
   :iplant-rpm {:summary      "dewey"
                :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
                :config-files ["log4j.properties"]

@@ -1,6 +1,5 @@
 (ns donkey.services.user-info
-  (:use [cemerick.url :only [url]]
-        [clojure.string :only [split blank?]]
+  (:use [clojure.string :only [split blank?]]
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
@@ -8,44 +7,17 @@
         [byte-streams]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
-            [clj-http.client :as client]
             [clojurewerkz.welle.core :as wc]
             [clojurewerkz.welle.kv :as kv]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.clients.user-info :as uc]
             [clojure.tools.logging :as log]
             [ring.util.response :as rsp]))
-
-(defn- user-search-url
-  "Builds a URL that can be used to perform a specific type of user search."
-  [type search-string]
-  (str (url (userinfo-base-url) "users" type search-string)))
-
-(defn- extract-range
-  "Extracts a range of results from a list of results."
-  [start end results]
-  (let [max-count (- end start)]
-    (if (> (count results) max-count)
-      (take max-count (drop start results))
-      results)))
-
-(defn- search
-  "Performs a user search and returns the results as a vector of maps."
-  [type search-string start end]
-  (let [res (client/get (user-search-url type search-string)
-                        {:insecure? true
-                         :throw-exceptions false
-                         :headers {"range" (str "records=" start "-" end)}
-                         :basic-auth [(userinfo-key) (userinfo-secret)]})
-        status (:status res)]
-    (when-not (#{200 206 404} status)
-      (throw (Exception. (str "user info service returned status " status))))
-    {:users (extract-range start end (:users (cheshire/decode (:body res) true)))
-     :truncated (= status 206)}))
 
 (def
   ^{:private true
     :doc "The list of functions to use in a generalized search."}
-  search-fns [(partial search "name") (partial search "email")])
+  search-fns [(partial uc/search "name") (partial uc/search "email")])
 
 (defn- remove-duplicates
   "Removes duplicate user records from the merged search results.  We use
@@ -91,30 +63,6 @@
            truncated (if (some :truncated results) true false)]
        (cheshire/encode {:users users :truncated truncated}))))
 
-(defn- empty-user-info
-  "Returns an empty user-info record for the given username."
-  [username]
-  {:email     ""
-   :firstname ""
-   :id        "-1"
-   :lastname  ""
-   :username  username})
-
-(defn get-user-details
-  "Performs a user search for a single username."
-  [username]
-  (try
-    (let [info (first (filter #(= (:username %) username)
-                              (:users (search "username" username 0 100))))]
-      (if (nil? info)
-        (do
-          (log/warn (str "no user info found for username '" username "'"))
-          (empty-user-info username))
-        info))
-    (catch Exception e
-      (log/error e (str "username search for '" username "' failed"))
-      (empty-user-info username))))
-
 (defn- add-user-info
   "Adds the information for a single user to a user-info lookup result."
   [result [username user-info]]
@@ -127,7 +75,7 @@
    element is the username and the second element is either the user info or nil
    if the user doesn't exist."
   [username]
-  (->> (search "username" username 0 100)
+  (->> (uc/search "username" username 0 100)
        (:users)
        (filter #(= (:username %) username))
        (first)

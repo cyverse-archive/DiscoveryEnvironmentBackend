@@ -5,6 +5,7 @@
             [clj-time.format :as tf]
             [clojure.string :as string]
             [mescal.agave-de-v2.app-listings :as app-listings]
+            [mescal.agave-de-v2.job-params :as params]
             [mescal.util :as util]))
 
 (def ^:private timestamp-formatter
@@ -29,7 +30,7 @@
 (defn- prepare-params
   [agave app param-prefix config]
   {:inputs     (params-for config param-prefix (app :inputs) #(.agaveUrl agave %))
-   :parameters (params-for config param-prefix (app :parameters))})
+   :parameters (params-for config param-prefix (app :parameters) #(if (map? %) (:value %) %))})
 
 (def ^:private submitted "Submitted")
 (def ^:private running "Running")
@@ -57,7 +58,9 @@
 
 (defn- job-notifications
   [callback-url]
-  (map (fn [status] {:url callback-url :event status}) (keys job-status-translations)))
+  [{:url        callback-url
+    :event      "*"
+    :persistent true}])
 
 (defn prepare-submission
   [agave app submission]
@@ -107,29 +110,17 @@
   [status]
   (get job-status-translations status))
 
-(defn get-regeneration-preprocessors
-  [agave]
-  {:inputs     #(.irodsFilePath agave %)
-   :parameters identity})
-
-(defn- regenerate-group-config
-  [preprocessor kvs]
-  (map (fn [[k v]] [k (preprocessor v)]) kvs))
-
-(defn- regenerate-job-config
-  [agave job]
-  (let [preprocessor-for (get-regeneration-preprocessors agave)]
-    (->> (keys preprocessor-for)
-         (mapcat (fn [group] (regenerate-group-config (preprocessor-for group) (job group))))
-         (into {}))))
-
 (defn regenerate-job-submission
   [agave job]
-  {:analysis_id          (:appId job)
-   :name                 (:name job)
-   :debug                false
-   :notify               false
-   :output_dir           (get-result-folder-id agave job)
-   :create_output_subdir true
-   :description          ""
-   :config               (regenerate-job-config agave job)})
+  (let [app-id     (:appId job)
+        app        (.getApp agave app-id)
+        job-params (:parameters (params/format-params agave job app-id app))
+        cfg-entry  (juxt (comp keyword :param_id) (comp :value :param_value))]
+    {:analysis_id          app-id
+     :name                 (:name job)
+     :debug                false
+     :notify               false
+     :output_dir           (get-result-folder-id agave job)
+     :create_output_subdir true
+     :description          ""
+     :config               (into {} (map cfg-entry job-params))}))

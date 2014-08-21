@@ -1,15 +1,9 @@
-(defproject org.iplantc/lein-iplant-rpm "3.2.0"
+(defproject org.iplantc/lein-iplant-rpm "3.2.4"
   :eval-in-leiningen true
   :description "Leiningen Plugin for generating RPMs for Clojure projects."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/lein-iplant-rpm.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/lein-iplant-rpm.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/lein-iplant-rpm.git"}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]

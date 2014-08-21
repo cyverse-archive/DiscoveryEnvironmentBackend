@@ -25,14 +25,6 @@
        (map (juxt :id identity))
        (into {})))
 
-(def ^:private agave-job-validation-map
-  "The validation map to use for Agave jobs."
-  {:name          string?
-   :analysis_name string?
-   :id            string?
-   :startdate     string?
-   :status        string?})
-
 (defn- determine-start-time
   [job]
   (or (db/timestamp-from-str (str (:startdate job)))
@@ -75,10 +67,12 @@
         output-dir (mu/build-result-folder-path submission)
         job        (.submitJob agave-client
                                (assoc (mu/update-submission-result-folder submission output-dir)
-                                 :callbackUrl cb-url))]
+                                 :callbackUrl cb-url))
+        username   (:shortUsername current-user)
+        email      (:email current-user)]
     (store-agave-job id job submission)
     (store-job-step id job)
-    (dn/send-agave-job-status-update (:shortUsername current-user) (assoc job :id id))
+    (dn/send-job-status-update username email (assoc job :id id))
     {:id         (str id)
      :name       (:name job)
      :status     (:status job)
@@ -89,88 +83,13 @@
   (let [cb-url (build-callback-url (:id job-info))]
      (:id (.submitJob agave-client (assoc submission :callbackUrl cb-url)))))
 
-(defn- determine-display-timestamp
-  [k job state]
-  (cond (not (string/blank? (k state))) (k state)
-        (not (nil? (k job)))            (str (.getTime (k job)))
-        :else                           "0"))
-
-(defn load-agave-job-states
-  [agave agave-jobs]
-  (if-not (empty? agave-jobs)
-    (try+
-     (->> (.listJobs agave (map :id agave-jobs))
-          (map (juxt :id identity))
-          (into {}))
-     (catch [:error_code ce/ERR_UNAVAILABLE] _ {}))
-    {}))
-
-(defn get-agave-job
-  [agave id not-found-fn]
-  (try+
-   (not-empty (.listJob agave id))
-   (catch [:status 404] _ (not-found-fn id))
-   (catch [:status 400] _ (not-found-fn id))
-   (catch Object _ (service/request-failure "lookup for HPC job" id))))
-
-(def ^:private complete-status "Completed")
-(def ^:private failed-status "Failed")
-
-(defn- is-complete?
-  [status]
-  (#{failed-status complete-status} status))
-
-(defn- get-job-status
-  [step-number max-step-number prev-status status]
-  (let [first-step? (= step-number 1)
-        last-step?  (= step-number max-step-number)
-        failed?     (= status failed-status)
-        complete?   (is-complete? status)]
-    (cond failed?                           failed-status
-          (and first-step? (not complete?)) status
-          (and last-step? complete?)        status
-          :else                             prev-status)))
-
-(defn- update-job-step-status
-  [{:keys [job-id external-id status]} new-status end-time]
-  (when-not (= status new-status)
-    (jp/update-job-step job-id external-id new-status end-time)))
-
-(defn- update-job-status
-  [username {:keys [startdate] :as job} {:keys [step-number]} max-step-number status end-time]
-  (let [prev-status  (:status job)
-        job-status   (get-job-status step-number max-step-number prev-status status)
-        end-time     (when (is-complete? job-status) end-time)
-        end-millis   (db/timestamp-str end-time)
-        start-millis (db/timestamp-str startdate)]
-    (when-not (= job-status prev-status)
-      (jp/update-job (:id job) job-status end-time)
-      (dn/send-agave-job-status-update username (assoc job
-                                                  :status    job-status
-                                                  :enddate   end-millis
-                                                  :startdate start-millis)))))
-
-(defn update-agave-job-status
-  [agave username job job-step max-step-number status end-time]
-  (let [status       (.translateJobStatus agave status)
-        username     (string/replace username #"@.*" "")
-        end-time     (when (is-complete? status) (db/timestamp-from-str end-time))]
-    (update-job-step-status job-step status end-time)
-    (update-job-status username job job-step max-step-number status end-time)))
-
-;; TODO: reimplement me.
-(defn sync-agave-job-status
-  [agave job])
-
 (defn get-agave-app-rerun-info
-  [agave job]
-  (let [external-id (:external_id job)]
-    (service/assert-found (.getAppRerunInfo agave external-id) "HPC job" external-id)))
+  [agave {:keys [external-id]}]
+  (service/assert-found (.getAppRerunInfo agave external-id) "HPC job" external-id))
 
 (defn get-agave-job-params
-  [agave job]
-  (let [external-id (:external_id job)]
-    (service/assert-found (.getJobParams agave external-id) "HPC job" external-id)))
+  [agave {:keys [external-id]}]
+  (service/assert-found (.getJobParams agave external-id) "HPC job" external-id))
 
 (defn search-apps
   [agave-client search-term def-result]

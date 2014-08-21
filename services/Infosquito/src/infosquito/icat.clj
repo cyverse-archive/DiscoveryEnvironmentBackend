@@ -256,9 +256,10 @@
 
 (defn- split-uuid-from
   [metadata]
-  (let [grp (group-by #(= "ipc_UUID" (:attribute %)) metadata)]
-    [(-> (get grp true) first :value)
-     (get grp false)]))
+  (let [grp      (group-by #(= "ipc_UUID" (:attribute %)) metadata)
+        id       (-> (get grp true) first :value)
+        metadata (get grp false)]
+    [id (if metadata metadata [])]))
 
 
 (defn- mk-index-doc
@@ -293,7 +294,7 @@
   (letfn [(log-failures [bulk-result]
             (doseq [{result :index} (:items bulk-result)]
               (when (or (< (:status result) 200)
-                        (>= (:status result 300)))
+                        (>= (:status result) 300))
                 (log/error "failed to index" (:_id result) "-" result))))]
     (try
       (->> (map (partial mk-index-doc entry-type) entries)

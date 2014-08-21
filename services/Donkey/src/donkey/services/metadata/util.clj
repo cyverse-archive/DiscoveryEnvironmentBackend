@@ -1,18 +1,14 @@
 (ns donkey.services.metadata.util
+  (:use [donkey.auth.user-attributes :only [current-user]])
   (:require [clj-time.core :as t]
             [clj-time.format :as tf]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [donkey.clients.notifications :as dn]
-            [donkey.util.db :as db]))
-
-(def failed-status "Failed")
-(def completed-status "Completed")
-(def submitted-status "Submitted")
-(def idle-status "Idle")
-(def running-status "Running")
-(def completed-status-codes #{failed-status completed-status})
+            [donkey.persistence.jobs :as jp]
+            [donkey.util.db :as db]
+            [donkey.util.service :as service]))
 
 (defn- current-timestamp
   []
@@ -20,9 +16,14 @@
 
 (defn is-completed?
   [job-status]
-  (completed-status-codes job-status))
+  (jp/completed-status-codes job-status))
 
 (def not-completed? (complement is-completed?))
+
+(defn assert-agave-enabled
+  [agave]
+  (when-not agave
+    (service/bad-request "HPC_JOBS_DISABLED")))
 
 (defn- job-name-to-path
   "Converts a job name to a string suitable for inclusion in a path."
@@ -66,11 +67,12 @@
 
 (defn send-job-status-notification
   "Sends a job status change notification."
-  [{:keys [username startdate] :as job} job-step status end-time]
+  [{:keys [username start-date] :as job} job-step status end-time]
   (let [username     (string/replace username #"@.*" "")
         end-millis   (db/timestamp-str end-time)
-        start-millis (db/timestamp-str startdate)]
-    (dn/send-agave-job-status-update username (assoc (format-job [] job)
+        start-millis (db/timestamp-str start-date)
+        email        (:email current-user)]
+    (dn/send-job-status-update username email (assoc (format-job [] job)
                                                 :status    status
                                                 :enddate   end-millis
                                                 :startdate start-millis))))

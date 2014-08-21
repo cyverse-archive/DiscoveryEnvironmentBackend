@@ -1,14 +1,8 @@
-(defproject org.iplantc/clojure-commons "3.2.0"
+(defproject org.iplantc/clojure-commons "3.2.4"
   :description "Common Utilities for Clojure Projects"
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :scm {:connection "scm:git:git@github.com:iPlantCollaborativeOpenSource/iplant-clojure-commons.git"
-        :developerConnection "scm:git:git@github.com:iPlantCollaborativeOpenSource/iplant-clojure-commons.git"
-        :url "git@github.com:iPlantCollaborativeOpenSource/iplant-clojure-commons.git"}
-  :pom-addition [:developers
-                 [:developer
-                  [:url "https://github.com/orgs/iPlantCollaborativeOpenSource/teams/iplant-devs"]]]
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]

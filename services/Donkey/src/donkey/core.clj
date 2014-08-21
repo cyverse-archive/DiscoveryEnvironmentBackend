@@ -32,10 +32,10 @@
   (:require [compojure.route :as route]
             [clojure.tools.logging :as log]
             [ring.adapter.jetty :as jetty]
-            [donkey.services.metadata.apps :as apps]
             [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.services.fileio.controllers :as fileio]
+            [donkey.tasks :as tasks]
             [donkey.util.messaging :as messages]
             [donkey.util.icat :as icat]
             [donkey.util.anon :as anon]
@@ -148,7 +148,7 @@
   (messages/messaging-initialization)
   (icat/configure-icat)
   (start-nrepl)
-  (future (apps/sync-job-statuses)))
+  (tasks/schedule-tasks))
 
 (defn repl-init
   []
@@ -193,5 +193,5 @@
     (messages/messaging-initialization)
     (icat/configure-icat)
     (anon/create-anon-user)
-    (future (apps/sync-job-statuses))
+    (tasks/schedule-tasks)
     (jetty/run-jetty app {:port (config/listen-port)})))

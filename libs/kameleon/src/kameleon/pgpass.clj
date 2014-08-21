@@ -7,7 +7,7 @@
   [search entry]
   (letfn [(matches [nm]
             (let [e (str (get entry nm))
-                  s (get search nm)]
+                  s (str (get search nm))]
               (or (= e "*") (= e s))))]
     (every? matches [:host :port :db :user])))
 

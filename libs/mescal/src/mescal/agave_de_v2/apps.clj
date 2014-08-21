@@ -1,8 +1,8 @@
 (ns mescal.agave-de-v2.apps
-  (:use [mescal.agave-de-v2.app-listings :only [get-app-name]]
-        [mescal.agave-de-v2.params :only [get-param-type]])
+  (:use [mescal.agave-de-v2.app-listings :only [get-app-name]])
   (:require [clojure.string :as string]
             [mescal.agave-de-v2.constants :as c]
+            [mescal.agave-de-v2.params :as mp]
             [mescal.util :as util]))
 
 (defn- get-boolean
@@ -25,8 +25,8 @@
   {:required (get-boolean (get-in input [:value :required]) false)})
 
 (defn- format-param
-  [get-type get-value param]
-  {:arguments    []
+  [get-type get-value get-args param]
+  {:arguments    (get-args param)
    :defaultValue (get-value param)
    :description  (get-in param [:details :description])
    :id           (:id param)
@@ -39,32 +39,50 @@
    :validators   []})
 
 (defn- param-formatter
-  [get-type get-value]
+  [get-type get-value get-args]
   (fn [param]
-    (format-param get-type get-value param)))
+    (format-param get-type get-value get-args param)))
+
+(defn- get-default-enum-value
+  [{{enum-values :enum_values default :default} :value :as param}]
+  (let [default (first default)]
+    (when-let [default-elem (mp/find-enum-element default enum-values)]
+      (mp/format-enum-element default default-elem))))
 
 (defn- get-default-param-value
   [param]
-  (get-in param [:value :default]))
+  (if (mp/enum-param? param)
+    (get-default-enum-value param)
+    (get-in param [:value :default])))
+
+(defn- get-param-args
+  [{{enum-values :enum_values default :default} :value :as param}]
+  (if (mp/enum-param? param)
+    (map (partial mp/format-enum-element (first default)) enum-values)
+    []))
 
 (defn- input-param-formatter
   [& {:keys [get-default] :or {get-default (constantly "")}}]
-  (param-formatter (constantly "FileInput") get-default))
+  (param-formatter (constantly "FileInput") get-default (constantly [])))
 
 (defn- opt-param-formatter
   [& {:keys [get-default] :or {get-default get-default-param-value}}]
-  (param-formatter get-param-type get-default))
+  (param-formatter mp/get-param-type get-default get-param-args))
 
 (defn- output-param-formatter
   [& {:keys [get-default] :or {get-default get-default-param-value}}]
-  (param-formatter (constantly "Output") get-default))
+  (param-formatter (constantly "Output") get-default (constantly [])))
+
+(defn- format-params
+  [formatter-fn params]
+  (map formatter-fn (sort-by #(get-in % [:value :order] 0) params)))
 
 (defn format-groups
   [app]
   (remove nil?
-          [(format-group "Inputs" (map (input-param-formatter) (:inputs app)))
-           (format-group "Parameters" (map (opt-param-formatter) (:parameters app)))
-           (format-group "Outputs" (map (output-param-formatter) (:outputs app)))]))
+          [(format-group "Inputs" (format-params (input-param-formatter) (:inputs app)))
+           (format-group "Parameters" (format-params (opt-param-formatter) (:parameters app)))
+           (format-group "Outputs" (format-params (output-param-formatter) (:outputs app)))]))
 
 (defn format-app
   ([app group-format-fn]
@@ -134,11 +152,18 @@
    :name    (get-app-name app)
    :outputs (map (comp add-data-object (output-param-formatter)) (:outputs app))})
 
+(defn- format-rerun-value
+  [p v]
+  (when p
+    (if (mp/enum-param? p)
+      (mp/format-enum-element v (mp/find-enum-element v (get-in p [:value :enum_values])))
+      v)))
+
 (defn- app-rerun-value-getter
   [job k]
   (let [values (job k)]
     (fn [p]
-      (or (values (keyword (:id p)))
+      (or (format-rerun-value p (values (keyword (:id p))))
           (get-default-param-value p)))))
 
 (defn- format-groups-for-rerun

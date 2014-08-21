@@ -1,11 +1,12 @@
 (ns donkey.services.metadata.combined-apps
   (:use [donkey.auth.user-attributes :only [current-user]]
         [korma.db]
-        [slingshot.slingshot :only [throw+]])
+        [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [clojure-commons.file-utils :as ft]
+            [donkey.clients.jex :as jex]
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
@@ -19,6 +20,8 @@
             [donkey.util.service :as service])
   (:import [java.util UUID]))
 
+(declare submit-next-step)
+
 (defn- remove-mapped-inputs
   [mapped-props group]
   (assoc group :properties (remove (comp mapped-props :id) (:properties group))))
@@ -30,15 +33,10 @@
     :label      (str app-name " - " (:label group))
     :properties (mapv (fn [prop] (assoc prop :id (str step-name "_" (:id prop))))
                       (:properties group))))
-(defn- assert-agave-enabled
-  [agave]
-  (when-not agave
-    (throw+ {:error_code ce/ERR_BAD_REQUEST
-             :reason     "HPC_JOBS_DISABLED"})))
 
 (defn- get-agave-groups
   [agave step external-app-id]
-  (assert-agave-enabled agave)
+  (mu/assert-agave-enabled agave)
   (let [app          (.getApp agave external-app-id)
         mapped-props (set (map :input_id (ap/load-target-step-mappings (:step_id step))))]
     (->> (:groups app)
@@ -77,17 +75,16 @@
 (defn- get-combined-app
   [agave app-id]
   (let [metadactyl-app (metadactyl/get-app app-id)]
-    (assoc metadactyl-app
-      :groups (get-combined-groups agave app-id (:groups metadactyl-app)))))
+    (->> (:groups metadactyl-app)
+         (get-combined-groups agave app-id)
+         (assoc metadactyl-app :groups))))
 
 (defn get-app
   [agave app-id]
   (if (util/is-uuid? app-id)
     (get-combined-app agave app-id)
-    (if agave
-      (.getApp agave app-id)
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     "HPC_JOBS_DISABLED"}))))
+    (do (mu/assert-agave-enabled agave)
+        (.getApp agave app-id))))
 
 (defn- app-step-partitioner
   "Partitions app steps into units of execution. Each external app step has to run by itself.
@@ -183,7 +180,12 @@
         job-steps (map (partial build-job-step-save-info job-id)
                        (validate-job-steps app-id (load-job-steps app-id)))]
     (jp/save-multistep-job job-info job-steps submission)
-    (submit-job-step agave workspace-id job-info (first job-steps) submission)))
+    (submit-job-step agave workspace-id job-info (first job-steps) submission)
+    (mu/send-job-status-notification job-info (first job-steps) jp/submitted-status nil)
+    {:id         job-id
+     :name       (:job-name job-info)
+     :status     (:status job-info)
+     :start-date (db/millis-from-timestamp (:start-date job-info))}))
 
 (defn submit-job
   "Submits a job for execution. The job may run exclusively in Agave, exclusively in the DE, or it
@@ -213,11 +215,13 @@
   "Updates an app with the parameter values from a previous experiment plugged into the appropriate
    parameters."
   [agave-client job]
-  (let [app (get-app agave-client (:app-id job))
-        values (get-job-submission-config job)
+  (let [app           (get-app agave-client (:app-id job))
+        values        (get-job-submission-config job)
         update-prop   #(let [id (keyword (:id %))]
                          (if (contains? values id)
-                           (assoc % :value (values id))
+                           (assoc %
+                             :value        (values id)
+                             :defaultValue (values id))
                            %))
         update-props  #(map update-prop %)
         update-group  #(update-in % [:properties] update-props)
@@ -228,7 +232,7 @@
   "Translates an Agave status code to something more consistent with the DE's status codes."
   [agave {:keys [job-type]} status]
   (if (= jp/agave-job-type job-type)
-    (.translateJobStatus agave status)
+    (or (.translateJobStatus agave status) status)
     status))
 
 (defn- get-default-output-name
@@ -262,6 +266,34 @@
                            (get-input-path agave job config app-steps input)))
                        config mapped-inputs))))
 
+(defn- status-follows?
+  "Determines whether or not the new job status follows the old job status."
+  [new-status old-status]
+  (> (jp/job-status-order new-status) (jp/job-status-order old-status)))
+
+(defn update-job-status
+  "Updates the status of a job. The job may have multiple steps, so the overall job status is only
+   changed when first step changes to any status up to Running, the last step changes to any status
+   after Running, or the status of any step changes to Failed."
+  [agave username job job-step status end-time]
+  (let [{job-id :id}                      job
+        {:keys [external-id step-number]} job-step
+        max-step                          (jp/get-max-step-number job-id)
+        first-step?                       (= step-number 1)
+        last-step?                        (= step-number max-step)
+        status                            (translate-job-status agave job-step status)]
+    (if (mu/is-completed? (:status job))
+      (log/warn (str "received a job status update for completed or canceled job, " job-id))
+      (when (status-follows? status (:status job-step))
+        (jp/update-job-step job-id external-id status end-time)
+        (when (or (and first-step? (mu/not-completed? status))
+                  (and last-step? (mu/is-completed? status))
+                  (= status jp/failed-status))
+          (jp/update-job job-id status end-time)
+          (mu/send-job-status-notification job job-step status end-time))
+        (when (and (not last-step?) (= status jp/completed-status))
+          (submit-next-step agave username job job-step))))))
+
 (defn- submit-next-step
   "Submits the next step in a job pipeline."
   [agave username job {:keys [job-id step-number] :as job-step}]
@@ -274,26 +306,70 @@
         submission       (service/decode-json (.getValue (:submission job)))
         submission       (add-mapped-inputs agave job submission app-steps mapped-inputs)
         workspace-id     (:id (wp/workspace-for-user username))]
-    (submit-job-step agave workspace-id job next-step submission)))
+    (try+
+     (submit-job-step agave workspace-id job next-step submission)
+     (catch Object o
+       (log/warn (str "unable to submit the next step in job " (:id job)))
+       (update-job-status agave username job next-step jp/failed-status (db/now))
+       (throw+)))))
 
-(defn update-job-status
-  "Updates the status of a job. The job may have multiple steps, so the overall job status is only
-   only changed when first step changes to any status up to Running, the last step changes to any
-   status after Running, or the status of any step changes to Failed."
-  [agave username job job-step status end-time]
-  (let [{job-id :id}                      job
-        {:keys [external-id step-number]} job-step
-        max-step                          (jp/get-max-step-number job-id)
-        first-step?                       (= step-number 1)
-        last-step?                        (= step-number max-step)
-        orig-status                       status
-        status                            (translate-job-status agave job-step status)]
-    (when-not (= status (:status job-step))
-      (jp/update-job-step job-id external-id status end-time)
-      (when (or (and first-step? (mu/not-completed? status))
-                (and last-step? (mu/is-completed? status))
-                (= status mu/failed-status))
-        (jp/update-job job-id status end-time)
-        (mu/send-job-status-notification job job-step status end-time))
-      (when (and (not last-step?) (= status mu/completed-status))
-        (submit-next-step agave username job job-step)))))
+(defn- find-incomplete-job-steps
+  "Finds the list of incomplete job steps associated with a job. An empty list is returned if the
+   job has no incomplete steps."
+  [job-id]
+  (remove (comp mu/is-completed? :status) (jp/list-job-steps job-id)))
+
+(defn- get-job-step-status
+  [agave {:keys [job-type external-id]}]
+  (if (= job-type jp/agave-job-type)
+    (select-keys (.listJob agave external-id) [:status :enddate])
+    (da/get-job-step-status external-id)))
+
+(defn sync-job-status
+  "Synchronizes the status of a job with the remote system."
+  [agave {:keys [id username] :as job}]
+  (if-let [step (first (find-incomplete-job-steps id))]
+
+    ;; We found an incomplete step to update.
+    (if-let [step-status (get-job-step-status agave step)]
+      (let [step     (jp/lock-job-step id (:external-id step))
+            job      (jp/lock-job id)
+            status   (:status step-status)
+            end-date (db/timestamp-from-str (:enddate step-status))]
+        (update-job-status agave username job step status end-date))
+      (let [job (jp/lock-job id)]
+        (update-job-status agave username job step jp/failed-status (db/now))))
+
+    ;; We didn't find an incomplete step to update.
+    (let [_             (jp/lock-job id)
+          steps         (jp/list-job-steps id)
+          all-complete? (every? mu/is-completed? (map :status steps))
+          status        (if all-complete? jp/completed-status jp/failed-status)]
+      (jp/update-job id {:status status :end-date (db/now)}))))
+
+(defn- stop-job-step
+  "Stops an individual step in a job."
+  [agave {:keys [id] :as job} [& steps]]
+  (let [{:keys [external-id job-type] :as step} (first steps)]
+    (when-not (string/blank? external-id)
+      (if (= job-type jp/de-job-type)
+        (jex/stop-job external-id)
+        (when-not (nil? agave) (.stopJob agave external-id)))
+      (jp/cancel-job-step-numbers id (mapv :step-number steps))
+      (mu/send-job-status-notification job step jp/canceled-status (db/now)))))
+
+(defn stop-job
+  "Stops a job. This function updates the database first in order to minimize the risk of a race
+   condition; subsequent job steps should not be submitted once a job has been stopped. After the
+   database has been updated, it calls the appropriate execution host to stop the currently running
+   job step if one exists."
+  ([job]
+     (stop-job nil job))
+  ([agave {:keys [id] :as job}]
+     (jp/update-job id jp/canceled-status (db/now))
+     (try+
+      (stop-job-step agave job (find-incomplete-job-steps id))
+      (catch Throwable t
+        (log/warn t "unable to cancel the most recent step of job, " id))
+      (catch Object _
+        (log/warn "unable to cancel the most recent step of job, " id)))))

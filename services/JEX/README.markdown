@@ -17,6 +17,7 @@ Input
 The JEX's "/" endpoint takes JSON in the following format (keep in mind this is simplistic):
 
     {
+        "callback": "http://example.org/specified-callback",
         "execution_target" : "condor",
         "analysis_id" : "ac37ced41d82346f68d1b27b56830526c",
         "name" : "jex_example",
@@ -98,6 +99,8 @@ The JEX's "/" endpoint takes JSON in the following format (keep in mind this is 
         ]
     }
 
+If the "callback" field is not present in the request JSON then a default callback URL will be used instead. The default callback URL is currently the `/job-status` endpoint in the notification agent.
+
 If the "environment" field is present in a step map, then the key will be used as the environment variable and the value will be the value the environment variable is set to, wrapped in double-quotes. For example this map:
 
     {
@@ -122,7 +125,7 @@ An error will result in a 500 HTTP error code and a stack-trace wrapped in JSON:
         "message" : "Error message",
         "stack-trace" : "stacktrace here"
     }
-    
+
 An error can also result in JSON in the following format along with a 500 status code:
 
     {
