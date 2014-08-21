@@ -4,8 +4,8 @@
 (declare users collaborator requestor workspace app_categories apps app_references integration_data
          tools tool_test_data_files output_mapping input_mapping tasks inputs outputs
          task_parameters info_type data_formats multiplicity parameter_groups parameters
-         parameter_types value_type validation_rules rule_type rule_subtype app_category_listing
-         app_listing tool_listing ratings collaborators
+         parameter_values parameter_types value_type validation_rules validation_rule_arguments
+         rule_type rule_subtype app_category_listing app_listing tool_listing ratings collaborators
          genome_reference created_by last_modified_by data_source tool_types
          tool_request_status_codes tool_architectures tool_requests
          tool_request_statuses)
@@ -123,11 +123,15 @@
 
 ;; A single parameter.
 (defentity parameters
+  (has-many parameter_values {:fk :parameter_id})
+  (has-many validation_rules {:fk :parameter_id})
   (belongs-to file_parameters {:fk :file_parameter_id})
   (belongs-to parameter_types {:fk :parameter_type})
   (many-to-many tool_types :tool_type_parameter_type
                 {:lfk :parameter_type_id
                  :rfk :tool_type_id}))
+
+(defentity parameter_values)
 
 ;; The type of a single parameter.
 (defentity parameter_types
@@ -143,7 +147,7 @@
 
 ;; Validation Rules are used to describe individual validation steps for a parameter.
 (defentity validation_rules
-  (belongs-to parameters {:fk :parameter_id})
+  (has-many validation_rule_arguments {:fk :rule_id})
   (belongs-to rule_type {:fk :rule_type}))
 
 ;; Rule types indicate the validation method to use.
@@ -155,6 +159,7 @@
 
 ;; Rule arguments will have to be handled in code until Korma can be enhanced
 ;; to accept composite primary keys.
+(defentity validation_rule_arguments)
 
 ;; Rule subtypes are used to distinguish different flavors of values that
 ;; rules can be applied to.  For example, Number value types are segregated

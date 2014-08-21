@@ -1,9 +1,10 @@
 (ns metadactyl.routes.apps
+  (:use [metadactyl.zoidberg :only [edit-app
+                                    copy-app
+                                    edit-workflow]])
   (:require [metadactyl.app-listings :refer [get-app-groups
                                              list-apps-in-group
                                              search-apps]]
-            [metadactyl.zoidberg :refer [edit-app
-                                         copy-app]]
             [metadactyl.routes.params :refer :all]
             [metadactyl.util.service :as service]
             [compojure.api.sweet :refer :all]
@@ -34,6 +35,22 @@
          :query [params SecuredQueryParams]
          :summary "Make a Copy of an App Available for Editing"
          :notes "This service can be used to make a copy of an App in the user's workspace."
+         (service/trap #(copy-app app-id)))
+
+  (GET* "/:app-id/pipeline-ui" []
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :summary "Make a Pipeline Available for Editing"
+        :notes "The DE uses this service to obtain the Pipeline description JSON so that it can be
+        edited. The Pipeline must have been integrated by the requesting user, and it must not
+        already be public."
+        (service/trap #(edit-workflow app-id)))
+
+  (POST* "/:app-id/copy-pipeline" []
+         :path-params [app-id :- AppIdPathParam]
+         :query [params SecuredQueryParams]
+         :summary "Make a Copy of a Pipeline Available for Editing"
+         :notes "This service can be used to make a copy of a Pipeline in the user's workspace."
          (service/trap #(copy-app app-id)))
 
   (context "/categories" []
