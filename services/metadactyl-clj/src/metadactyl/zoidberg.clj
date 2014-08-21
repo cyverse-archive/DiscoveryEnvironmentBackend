@@ -99,7 +99,8 @@
                    :t.description
                    :task_id
                    :t.external_app_id)
-           (where {:app.id app-id}))))
+           (where {:app.id app-id})
+           (order :step :ASC))))
 
 (defn- format-step
   "Formats step fields for the client."
