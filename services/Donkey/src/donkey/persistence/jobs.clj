@@ -284,7 +284,6 @@
   "Retrieves a job by its internal identifier, placing a lock on the row."
   [id]
   (-> (select* [:jobs :j])
-      (join :inner [:users :u] {:j.user_id :u.id})
       (fields [:j.app_description    :app-description]
               [:j.app_id             :app-id]
               [:j.app_name           :app-name]
@@ -295,7 +294,6 @@
               [:j.result_folder_path :result-folder-path]
               [:j.start_date         :start-date]
               [:j.status             :status]
-              [:u.username           :username]
               [:j.app_wiki_url       :app-wiki-url]
               [:j.submission         :submission])
       (where {:j.id id})
@@ -312,16 +310,26 @@
                          (modifier "DISTINCT")
                          (where {:s.job_id job-id}))))
 
-(defn determine-job-type
+(defn- determine-job-type
   "Determines the type of a job in the database."
   [job-id]
   (let [job-step-types (distinct-job-step-types job-id)]
     (if (<= (count job-step-types) 1) (first job-step-types) de-job-type)))
 
+(defn- determine-job-username
+  "Determines the username of the user who submitted a job."
+  [job-id]
+  ((comp :username first)
+   (select [:jobs :j]
+           (join [:users :u] {:j.user_id :u.id})
+           (fields [:u.username :username])
+           (where {:j.id job-id}))))
+
 (defn lock-job
   "Retrieves a job by its internal identifier, placing a lock on the row. For-update queries
    can't be used in conjunction with a group-by clause, so we have to use a separate query to
-   determine the overall job type.
+   determine the overall job type. A separate query also has to be used to retrieve the username
+   so that a lock isn't placed on the users table.
 
    In most cases the MVCC behavior provided by Postgres is sufficient to ensure that the system
    stays in a consistent state. The one case where it isn't sufficient is when the status of
@@ -332,8 +340,38 @@
    Important note: in cases where both the job and the job step need to be locked, the job step
    should be locked first."
   [id]
-  (if-let [job (lock-job* id)]
-    (assoc job :job-type (determine-job-type id))))
+  (when-let [job (lock-job* id)]
+    (assoc job
+      :job-type (determine-job-type id)
+      :username (determine-job-username id))))
+
+(defn- lock-job-step*
+  "Retrieves a job step from the database by its job ID and external job ID, placing a lock on
+   the row."
+  [job-id external-id]
+  (-> (select* [:job_steps :s])
+      (fields [:s.job_id          :job-id]
+              [:s.step_number     :step-number]
+              [:s.external_id     :external-id]
+              [:s.start_date      :start-date]
+              [:s.end_date        :end-date]
+              [:s.status          :status]
+              [:s.app_step_number :app-step-number])
+      (where {:s.job_id      job-id
+              :s.external_id external-id})
+      (#(str (as-sql %) " for update"))
+      (#(exec-raw [% [job-id external-id]] :results))
+      (first)))
+
+(defn- determine-job-step-type
+  "Dtermines the job type associated with a job step in the database."
+  [job-id external-id]
+  ((comp :job-type first)
+   (select [:job_steps :s]
+           (join [:job_types :t] {:s.job_type_id :t.id})
+           (fields [:t.name :job-type])
+           (where {:s.job_id      job-id
+                   :s.external_id external-id}))))
 
 (defn lock-job-step
   "Retrieves a job step by its associated job identifier and external job identifier. The lock on
@@ -343,12 +381,8 @@
    Important note: in cases where both the job and the job step need to be locked, the job step
    should be locked first."
   [job-id external-id]
-  (-> (job-step-base-query)
-      (where {:s.job_id      job-id
-              :s.external_id external-id})
-      (#(str (as-sql %) " for update"))
-      (#(exec-raw [% [job-id external-id]] :results))
-      (first)))
+  (when-let [job-step (lock-job-step* job-id external-id)]
+    (assoc job-step :job-type (determine-job-step-type job-id external-id))))
 
 (defn update-job
   "Updates an existing job in the database."
