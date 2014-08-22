@@ -3,7 +3,8 @@
         [kameleon.core]
         [kameleon.entities]
         [metadactyl.user :only [current-user]]
-        [metadactyl.util.conversions :only [date->long]]
+        [metadactyl.util.conversions :only [date->long
+                                            remove-nil-vals]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure-commons.error-codes :as cc-errs]
@@ -198,8 +199,7 @@
                          :file_parameters.is_implicit
                          [:data_source.name :data_source]
                          :file_parameters.retain
-                         [:data_formats.name :format])
-                 (order :ordering :ASC))))
+                         [:data_formats.name :format]))))
            (where {:id app-id}))))
 
 (defn- format-rule-argument
@@ -220,7 +220,8 @@
 
 (defn- format-param-value
   [param-value]
-  (dissoc param-value :parent_id))
+  (remove-nil-vals
+    (dissoc param-value :parent_id)))
 
 (defn- format-tree-param-children
   [param-map group]
@@ -263,7 +264,8 @@
         param (-> param
                   (assoc :validators (map format-validator (:validation_rules param)))
                   (dissoc :parameter_values
-                          :validation_rules))]
+                          :validation_rules)
+                  remove-nil-vals)]
     (if (contains? #{"TextSelection"
                      "IntegerSelection"
                      "DoubleSelection"
@@ -274,22 +276,24 @@
 
 (defn- format-group
   [group]
-  (update-in group [:parameters] (partial map format-param)))
+  (remove-nil-vals
+    (update-in group [:parameters] (partial map format-param))))
 
 (defn- format-app
   [app]
   (let [app (get-app-details (:analysis_id app))
         task (first (:tasks app))
         groups (map format-group (:parameter_groups task))]
-    (-> app
-        (assoc :published_date (date->long (:published_date app))
-               :edited_date (date->long (:edited_date app))
-               :references (:app_references app)
-               :tool (:tool task)
-               :tool_id (:tool_id task)
-               :groups groups)
-        (dissoc :app_references
-                :tasks))))
+    (remove-nil-vals
+      (-> app
+          (assoc :published_date (date->long (:published_date app))
+                 :edited_date (date->long (:edited_date app))
+                 :references (:app_references app)
+                 :tool (:tool task)
+                 :tool_id (:tool_id task)
+                 :groups groups)
+          (dissoc :app_references
+                  :tasks)))))
 
 (defn- format-workflow-app
   "Adds the steps and mappings fields to the app."
@@ -370,7 +374,7 @@
   [app-id]
   (let [app (get-app app-id)]
     (verify-app-editable app)
-    (service/success-response (format-app app))))
+    (service/swagger-response (format-app app))))
 
 (defn edit-workflow
   "This service prepares a JSON response for editing a Pipeline in the client."

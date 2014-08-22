@@ -4,14 +4,13 @@
         [kameleon.queries :only [get-tasks-for-app]]
         [korma.core]
         [medley.core :only [remove-vals]]
-        [metadactyl.util.conversions :only [long->timestamp]]
+        [metadactyl.util.conversions :only [long->timestamp
+                                            remove-nil-vals]]
         [metadactyl.util.assertions]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
             [clojure-commons.error-codes :as ce]))
-
-(def ^:private remove-nil-vals (partial remove-vals nil?))
 
 (defn- get-single-template-for-app
   "Retrieves the template from a single-step app. An exception will be thrown if the app doesn't

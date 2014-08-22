@@ -1,5 +1,6 @@
 (ns metadactyl.util.conversions
-  (:use [clojure.string :only [blank?]])
+  (:use [clojure.string :only [blank?]]
+        [medley.core :only [remove-vals]])
   (:import [java.sql Timestamp]))
 
 (defn to-long
@@ -23,3 +24,6 @@
   [ms]
   (let [ms (str ms)]
     (when-not (blank? ms) (Timestamp. (to-long ms)))))
+
+(def remove-nil-vals (partial remove-vals nil?))
+

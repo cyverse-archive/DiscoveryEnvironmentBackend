@@ -6,6 +6,7 @@
         [compojure.core :only [GET PUT POST]]
         [metadactyl.beans]
         [metadactyl.kormadb]
+        [metadactyl.routes.domain]
         [metadactyl.routes.params]
         [metadactyl.user :only [store-current-user]]
         [ring.middleware keyword-params nested-params]

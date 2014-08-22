@@ -33,8 +33,6 @@
 * [GET /secured/copy-workflow/{analysis-id}](endpoints/app-metadata/editing.md#making-a-copy-of-a-pipeline-available-for-editing)
 * [POST /secured/delete-rating](endpoints/app-metadata/rating.md#deleting-analysis-ratings)
 * [POST /secured/delete-workflow](endpoints/app-metadata/admin.md#logically-deleting-an-analysis)
-* [GET /secured/edit-app/{app-id}](endpoints/app-metadata/updated-admin.md#obtaining-an-app-representation-for-editing)
-* [GET /secured/edit-template/{analysis-id}](endpoints/app-metadata/editing.md#making-an-analysis-available-for-editing-in-tito)
 * [GET /secured/edit-workflow/{analysis-id}](endpoints/app-metadata/editing.md#making-a-pipeline-available-for-editing)
 * [GET /secured/get-components-in-analysis/{analysis-id}](endpoints/app-metadata/listing.md#listing-deployed-components-in-an-analysis)
 * [GET /secured/logout](endpoints/misc.md#recording-when-the-user-logs-out)

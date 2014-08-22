@@ -1,109 +1,12 @@
 # Table of Contents
 
 * [App Editing Services](#app-editing-services)
-    * [Making an Analysis Available for Editing in Tito](#making-an-analysis-available-for-editing-in-tito)
     * [Making a Copy of an Analysis Available for Editing in Tito](#making-a-copy-of-an-analysis-available-for-editing-in-tito)
     * [Submitting an Analysis for Public Use](#submitting-an-analysis-for-public-use)
     * [Making a Pipeline Available for Editing](#making-a-pipeline-available-for-editing)
     * [Making a Copy of a Pipeline Available for Editing](#making-a-copy-of-a-pipeline-available-for-editing)
 
 # App Editing Services
-
-## Making an Analysis Available for Editing in Tito
-
-*Secured Endpoint:* GET /secured/edit-template/{analysis-id}
-
-Tito uses this service to obtain the analysis description JSON so that the
-analysis can be edited. The Analysis must have been integrated by the requesting
-user, and it must not already be public. For editing Analyses with more than 1
-step, the client uses the
-[edit-workflow](#making-a-pipeline-available-for-editing) endpoint.
-
-The response body contains the analysis description in the format that is
-required by Tito. Here's an example:
-
-```
-$ curl -s "http://by-tor:8888/secured/edit-template/F29C156C-E286-4BBD-9033-0075C09E0D70?user=snow-dog&email=sd@example.org" | python -mjson.tool
-{
-    "objects": [
-        {
-            "component": "cat",
-            "component_id": "c72c314d1eace461290b9b568d9feb86a",
-            "description": "",
-            "edited_date": "",
-            "groups": {
-                "description": "",
-                "groups": [
-                    {
-                        "description": "",
-                        "id": "524AD6B2-7093-A9E6-1F56-919C09E286F9",
-                        "isVisible": true,
-                        "label": "Advanced Arguments",
-                        "name": "",
-                        "properties": [
-                            {
-                                "description": "",
-                                "id": "37ADF623-36AD-31A1-3455-4F95F2108774",
-                                "isVisible": true,
-                                "label": "Advanced Options",
-                                "name": "",
-                                "omit_if_blank": false,
-                                "order": -1,
-                                "type": "Info",
-                                "value": ""
-                            },
-                            {
-                                "description": "This is an example of tool tip text that might be helpful ",
-                                "id": "A391A212-8261-3662-A812-68E5309D3A5A",
-                                "isVisible": true,
-                                "label": "Number blank lines",
-                                "name": "-b",
-                                "omit_if_blank": false,
-                                "order": -1,
-                                "type": "Flag",
-                                "value": "false"
-                            }
-                        ],
-                        "type": ""
-                    },
-                    {
-                        "description": "",
-                        "id": "4CC29EF5-E950-5177-B54A-C61C33637BD4",
-                        "isVisible": true,
-                        "label": "This is a group mechanism",
-                        "name": "",
-                        "properties": [
-                            {
-                                "description": "",
-                                "id": "23ABF631-8109-D3FA-0714-2378059BBBA1",
-                                "isVisible": true,
-                                "label": "Another argument",
-                                "name": "-e",
-                                "omit_if_blank": false,
-                                "order": -1,
-                                "type": "Flag",
-                                "value": "false"
-                            }
-                        ],
-                        "type": ""
-                    }
-                ],
-                "id": "--root-PropertyGroupContainer--",
-                "isVisible": true,
-                "label": "",
-                "name": ""
-            },
-            "id": "F29C156C-E286-4BBD-9033-0075C09E0D70",
-            "label": "Sample Cat",
-            "name": "Sample Cat",
-            "published_date": "",
-            "references": [],
-            "tito": "F29C156C-E286-4BBD-9033-0075C09E0D70",
-            "type": ""
-        }
-    ]
-}
-```
 
 ## Making a Copy of an Analysis Available for Editing in Tito
 

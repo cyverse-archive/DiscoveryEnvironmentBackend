@@ -13,6 +13,16 @@
 (defn empty-response []
   {:status 200})
 
+(defn swagger-response
+  ([map]
+   (charset
+     {:status       200
+      :body         map
+      :headers default-content-type-header}
+     "UTF-8"))
+  ([]
+   (swagger-response {})))
+
 (defn success-response
   ([map]
      (charset

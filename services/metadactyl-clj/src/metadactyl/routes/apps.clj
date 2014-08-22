@@ -1,13 +1,10 @@
 (ns metadactyl.routes.apps
-  (:use [metadactyl.zoidberg :only [edit-app
-                                    copy-app
-                                    edit-workflow]])
-  (:require [metadactyl.app-listings :refer [get-app-groups
-                                             list-apps-in-group
-                                             search-apps]]
-            [metadactyl.routes.params :refer :all]
-            [metadactyl.util.service :as service]
-            [compojure.api.sweet :refer :all]
+  (:use [metadactyl.app-listings :only [get-app-groups list-apps-in-group search-apps]]
+        [metadactyl.routes.domain]
+        [metadactyl.routes.params]
+        [metadactyl.zoidberg :only [edit-app copy-app edit-workflow]]
+        [compojure.api.sweet])
+  (:require [metadactyl.util.service :as service]
             [compojure.route :as route]
             [ring.swagger.schema :as ss]
             [schema.core :as s]))
@@ -24,10 +21,11 @@
   (GET* "/:app-id/ui" []
         :path-params [app-id :- AppIdPathParam]
         :query [params SecuredQueryParams]
+        :return App
         :summary "Make an App Available for Editing"
-        :notes "The DE uses this service to obtain the App description JSON so that it can be
-        edited. The App must have been integrated by the requesting user, and it must not already be
-        public."
+        :notes "The app integration utility in the DE uses this service to obtain the App
+        description JSON so that it can be edited. The App must have been integrated by the
+        requesting user, and it must not already be public."
         (service/trap #(edit-app app-id)))
 
   (POST* "/:app-id/copy" []
