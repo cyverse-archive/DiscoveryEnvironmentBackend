@@ -1,6 +1,7 @@
 (ns donkey.clients.metadactyl
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
+            [clojure.tools.logging :as log]
             [clj-http.client :as client]
             [donkey.util.config :as config]
             [donkey.util.service :as service]
@@ -26,11 +27,11 @@
   ([params]
      (assoc params :agave-enabled (str (config/agave-enabled)))))
 
-(defn get-only-app-groups
+(defn get-app-categories
   []
   (let [params {:agave-enabled (str (config/agave-enabled))}]
-    (-> (client/get (secured-url "app-groups")
-                    {:query-params (secured-params (add-agave-enabled-flag))
+    (-> (client/get (log/spy :warn (unsecured-url "apps" "categories"))
+                    {:query-params (secured-params)
                      :as           :stream})
         (:body)
         (service/decode-json))))

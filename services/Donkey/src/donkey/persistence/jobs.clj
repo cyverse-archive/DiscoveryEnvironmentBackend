@@ -259,7 +259,7 @@
   (select (add-job-query-filter-clause (job-base-query) filter)
           (where {:j.deleted  false
                   :j.username username})
-          (where (not (sqlfn exists (agave-job-subselect))))
+          (where (not (exists (agave-job-subselect))))
           (order (translate-sort-field sort-field) sort-order)
           (offset (nil-if-zero row-offset))
           (limit (nil-if-zero row-limit))))

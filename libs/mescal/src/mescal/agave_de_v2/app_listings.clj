@@ -4,12 +4,12 @@
 
 (defn hpc-app-group
   []
-  {:description    c/hpc-group-description
-   :id             c/hpc-group-id
-   :is_public      true
-   :name           c/hpc-group-name
-   :template_count -1
-   :workspace_id   0})
+  {:description  c/hpc-group-description
+   :id           c/hpc-group-id
+   :is_public    true
+   :name         c/hpc-group-name
+   :task_count   -1
+   :workspace_id "00000000-0000-0000-0000-000000000000"})
 
 (defn get-app-name
   [{:keys [name id]}]

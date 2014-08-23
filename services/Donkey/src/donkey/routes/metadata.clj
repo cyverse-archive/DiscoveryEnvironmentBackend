@@ -62,7 +62,7 @@
         (trap #(apps/search-apps params)))
 
    (GET "/app-groups" []
-        (trap #(apps/get-only-app-groups)))
+        (trap #(apps/get-app-categories)))
 
    (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as {params :params}]
         (ce/trap "get-analyses-in-group" #(apps/apps-in-group app-group-id params)))

@@ -122,7 +122,7 @@
   AppLister
 
   (listAppGroups [_]
-    (metadactyl/get-only-app-groups))
+    (metadactyl/get-app-categories))
 
   (listApps [_ group-id params]
     (metadactyl/apps-in-group group-id params))
@@ -186,7 +186,7 @@
   AppLister
 
   (listAppGroups [_]
-    (-> (metadactyl/get-only-app-groups)
+    (-> (metadactyl/get-app-categories)
         (update-in [:groups] conj (.hpcAppGroup agave-client))))
 
   (listApps [_ group-id params]
@@ -309,7 +309,7 @@
        (get-de-hpc-app-lister state-info username)
        (DeOnlyAppLister.))))
 
-(defn get-only-app-groups
+(defn get-app-categories
   []
   (with-db db/de
     (transaction
