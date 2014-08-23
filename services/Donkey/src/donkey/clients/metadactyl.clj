@@ -69,8 +69,8 @@
 
 (defn search-apps
   [search-term]
-  (-> (client/get (secured-url "search-analyses")
-                  {:query-params (secured-params (add-agave-enabled-flag {:search search-term}))
+  (-> (client/get (unsecured-url "apps")
+                  {:query-params (secured-params {:search search-term})
                    :as           :stream})
       (:body)
       (service/decode-json)))

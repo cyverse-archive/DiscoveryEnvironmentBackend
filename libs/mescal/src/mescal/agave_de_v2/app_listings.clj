@@ -50,5 +50,5 @@
         total    (count listing)
         listing  (map (partial format-app-listing statuses jobs-enabled?) listing)]
     (assoc (hpc-app-group)
-      :templates      listing
-      :template_count total)))
+      :templates  listing
+      :task_count total)))
