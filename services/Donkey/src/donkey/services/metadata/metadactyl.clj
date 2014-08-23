@@ -389,13 +389,6 @@
   [req uuid]
   (forward-delete (secured-notification-url req "admin" "system" uuid) req))
 
-(defn list-apps-in-group
-  "This service lists all of the apps in an app group and all of its
-   descendents."
-  [req app-group-id]
-  (let [url (build-metadactyl-secured-url req "get-analyses-in-group" app-group-id)]
-    (forward-get url req)))
-
 (defn edit-app
   "This service makes an app available in Tito for editing."
   [req app-id]

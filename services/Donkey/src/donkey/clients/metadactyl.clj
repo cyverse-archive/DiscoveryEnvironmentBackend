@@ -3,6 +3,8 @@
             [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
             [clj-http.client :as client]
+            [donkey.auth.user-attributes :refer [current-user]]
+            [donkey.util :as util]
             [donkey.util.config :as config]
             [donkey.util.service :as service]
             [donkey.util.transformers :as xforms]))
@@ -29,20 +31,41 @@
 
 (defn get-app-categories
   []
-  (let [params {:agave-enabled (str (config/agave-enabled))}]
-    (-> (client/get (log/spy :warn (unsecured-url "apps" "categories"))
-                    {:query-params (secured-params)
-                     :as           :stream})
-        (:body)
-        (service/decode-json))))
-
-(defn apps-in-group
-  [group-id & [params]]
-  (-> (client/get (secured-url "get-analyses-in-group" group-id)
-                  {:query-params (secured-params (add-agave-enabled-flag params))
+  (-> (client/get (unsecured-url "apps" "categories")
+                  {:query-params (secured-params)
                    :as           :stream})
       (:body)
       (service/decode-json)))
+
+(defn- apps-in-real-category
+  [category-id params]
+  (-> (client/get (unsecured-url "apps" "categories" category-id)
+                  {:query-params (secured-params)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn- virtual-category-params
+  [category-id]
+  (condp = category-id
+    "my-public-apps" {:integrator_email (:email current-user)
+                      :is_public        true}
+    (service/bad-request (str "unrecognized virtual app category: " category-id))))
+
+(defn- add-virtual-category-params
+  [params category-id]
+  (merge (secured-params params) (virtual-category-params category-id)))
+
+(defn- apps-in-virtual-category
+  [category-id params]
+  (-> (client/get (unsecured-url "apps")
+                  {:query-params (add-virtual-category-params params category-id)})))
+
+(defn apps-in-category
+  [category-id & [params]]
+  (if (util/is-uuid? category-id)
+    (apps-in-real-category category-id params)
+    (apps-in-virtual-category category-id params)))
 
 (defn search-apps
   [search-term]

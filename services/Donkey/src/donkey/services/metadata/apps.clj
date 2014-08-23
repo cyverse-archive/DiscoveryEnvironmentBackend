@@ -97,7 +97,7 @@
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
   (listAppGroups [_])
-  (listApps [_ group-id params])
+  (listApps [_ category-id params])
   (searchApps [_ search-term])
   (updateFavorites [_ app-id favorite?])
   (rateApp [_ app-id rating comment-id])
@@ -124,8 +124,8 @@
   (listAppGroups [_]
     (metadactyl/get-app-categories))
 
-  (listApps [_ group-id params]
-    (metadactyl/apps-in-group group-id params))
+  (listApps [_ category-id params]
+    (metadactyl/apps-in-category category-id params))
 
   (searchApps [_ search-term]
     (metadactyl/search-apps search-term))
@@ -189,10 +189,10 @@
     (-> (metadactyl/get-app-categories)
         (update-in [:groups] conj (.hpcAppGroup agave-client))))
 
-  (listApps [_ group-id params]
-    (if (= group-id (:id (.hpcAppGroup agave-client)))
+  (listApps [_ category-id params]
+    (if (= category-id (:id (.hpcAppGroup agave-client)))
       (.listApps agave-client)
-      (metadactyl/apps-in-group group-id params)))
+      (metadactyl/apps-in-category category-id params)))
 
   (searchApps [_ search-term]
     (let [def-result {:template_count 0 :templates {}}
@@ -315,12 +315,12 @@
     (transaction
      (service/success-response (.listAppGroups (get-app-lister "type=apps"))))))
 
-(defn apps-in-group
-  [group-id params]
+(defn apps-in-category
+  [category-id params]
   (with-db db/de
     (transaction
-     (-> (get-app-lister (str "type=apps&app-category=" group-id))
-         (.listApps group-id params)
+     (-> (get-app-lister (str "type=apps&app-category=" category-id))
+         (.listApps category-id params)
          (service/success-response)))))
 
 (defn search-apps

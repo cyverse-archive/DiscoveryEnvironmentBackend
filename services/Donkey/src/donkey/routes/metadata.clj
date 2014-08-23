@@ -65,10 +65,10 @@
         (trap #(apps/get-app-categories)))
 
    (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as {params :params}]
-        (ce/trap "get-analyses-in-group" #(apps/apps-in-group app-group-id params)))
+        (ce/trap "get-analyses-in-group" #(apps/apps-in-category app-group-id params)))
 
    (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id]
-        (trap #(apps/apps-in-group app-group-id)))
+        (trap #(apps/apps-in-category app-group-id)))
 
    (GET "/get-components-in-analysis/:app-id" [app-id]
         (trap #(apps/get-deployed-components-in-app app-id)))
