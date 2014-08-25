@@ -22,20 +22,24 @@
 
 (defn- user-col->api-col
   [col]
-  (case (.toUpperCase col)
-    "NAME"         :base-name
-    "ID"           :full-path
-    "LASTMODIFIED" :modify-ts
-    "DATECREATED"  :create-ts
-    "SIZE"         :data-size
+  (if col
+    (case (.toUpperCase col)
+      "NAME"         :base-name
+      "ID"           :full-path
+      "LASTMODIFIED" :modify-ts
+      "DATECREATED"  :create-ts
+      "SIZE"         :data-size
+                     :base-name)
     :base-name))
 
 
 (defn- user-order->api-order
   [order]
-  (case (.toUpperCase order)
-    "ASC"  :asc
-    "DESC" :desc
+  (if order
+    (case (.toUpperCase order)
+      "ASC"  :asc
+      "DESC" :desc
+             :asc)
     :asc))
 
 
