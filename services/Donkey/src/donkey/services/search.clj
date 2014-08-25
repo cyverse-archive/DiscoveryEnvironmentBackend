@@ -25,22 +25,20 @@
      :invalid-configuration - This is thrown if there is a problem with elasticsearch
      :invalid-query - This is thrown if the query string is invalid."
   [type query from size sort]
-  (let [index "data"]
-    (try+
-      (es/connect! (cfg/es-url))
+  (try+
+    (let [index "data"
+          es    (es/connect (cfg/es-url))]
       (if (= type :any)
-        (es-doc/search-all-types index
+        (es-doc/search-all-types es index
           :query query :from from :size size :sort sort :track_scores true)
-        (es-doc/search index (name type)
-          :query query :from from :size size :sort sort :track_scores true))
-      (catch ConnectException _
-        (throw+ {:type   :invalid-configuration
-                 :reason "cannot connect to elasticsearch"}))
-      (catch [:status 404] {:keys []}
-        (throw+ {:type   :invalid-configuration
-                 :reason "elasticsearch has not been initialized"}))
-      (catch [:status 400] {:keys []}
-        (throw+ {:type :invalid-query})))))
+        (es-doc/search es index (name type)
+          :query query :from from :size size :sort sort :track_scores true)))
+    (catch ConnectException _
+      (throw+ {:type :invalid-configuration :reason "cannot connect to elasticsearch"}))
+    (catch [:status 404] {:keys []}
+      (throw+ {:type :invalid-configuration :reason "elasticsearch has not been initialized"}))
+    (catch [:status 400] {:keys []}
+      (throw+ {:type :invalid-query}))))
 
 
 (defn- format-entity
