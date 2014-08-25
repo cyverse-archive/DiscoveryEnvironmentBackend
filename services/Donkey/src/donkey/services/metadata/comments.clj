@@ -11,7 +11,8 @@
             [donkey.util.config :as config]
             [donkey.util.service :as svc]
             [donkey.util.validators :as valid]
-            [donkey.services.filesystem.uuids :as uuid])
+            [donkey.services.filesystem.uuids :as uuid]
+            [donkey.services.metadata.util :as util])
   (:import [com.fasterxml.jackson.core JsonParseException]))
 
 
@@ -78,10 +79,11 @@
     (fs-init/with-jargon (config/jargon-cfg) [fs]
       (let [user     (:shortUsername user/current-user)
             entry-id (extract-entry-id fs user entry-id)
-            comment  (-> body read-body (json/parse-string true) :comment)]
+            comment  (-> body read-body (json/parse-string true) :comment)
+            tgt-type (util/resolve-target-type fs entry-id)]
         (when-not comment (throw+ {:error_code err/ERR_INVALID_JSON}))
         (svc/create-response {:comment (->> comment
-                                         (db/insert-comment user entry-id "data")
+                                         (db/insert-comment user entry-id tgt-type)
                                          prepare-comment)})))
     (catch JsonParseException _ (throw+ {:error_code err/ERR_INVALID_JSON}))))
 
