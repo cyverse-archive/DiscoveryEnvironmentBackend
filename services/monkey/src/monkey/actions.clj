@@ -40,15 +40,22 @@
 (defn- purge-missing-tags
   [monkey]
   (log/info "purging non-existent tags from search index")
+  ;; TODO indicate how tags will be inspected
   (->> (indexed-tags monkey)
     (filter-missing-tags monkey)
     (remove-from-index monkey)))
 
 
-(defn- format-tag-docs
-  [monkey db-tags]
-  ;; TODO implement
-  db-tags)
+(defn- format-tag-doc
+  [db-tag]
+  (letfn [(format-target [tgt] {:id (:target_id tgt) :type (:target_type tgt)})]
+    {:id           (:id db-tag)
+     :value        (:value db-tag)
+     :description  (:description db-tag)
+     :creator      (:owner_id db-tag)
+     :dateCreated  (:created_on db-tag)
+     :dateModified (:modified_on db-tag)
+     :targets      [(map format-target (:targets db-tag))]}))
 
 
 (defn- index-tags
@@ -61,8 +68,9 @@
 (defn- reindex
   [monkey]
   (log/info "reindexing tags into the search index")
+  ;; TODO indicate how many tags will be reindexed
   (->> (tags/all-tags (:tags monkey))
-    (format-tag-docs monkey)
+    (map format-tag-doc)
     (index-tags monkey)))
 
 
