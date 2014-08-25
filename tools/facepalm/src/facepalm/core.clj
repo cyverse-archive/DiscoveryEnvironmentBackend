@@ -384,7 +384,7 @@
         extra-cfg (:cfg-file (meta convert))]
     (transaction
       (if extra-cfg
-        (convert (load-cfg opts extra-cfg))
+        (convert @admin-db-spec (load-cfg opts extra-cfg))
         (convert))
       (insert version
               (values {:version new-version})))))

@@ -13,20 +13,21 @@
 
 ;; This statement can't be run inside a transaction. That's why jdbc is directly used.
 (defn- create-folder-type
-  []
+  [admin-db-spec]
   (println "\t* creating the folder target enum value")
-  (jdbc/db-do-prepared (db/get-connection @db/_default)
+  (jdbc/db-do-prepared (db/get-connection admin-db-spec)
                        false
                        "ALTER TYPE target_enum ADD VALUE 'folder' AFTER 'data'"))
 
 
 (defn- rename-data-type
-  []
+  [admin-db-spec]
   (println "\t* renaming data target enum value to file")
-  (sql/exec-raw "UPDATE pg_enum
-                   SET enumlabel = 'file'
-                   WHERE enumlabel = 'data'
-                     AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'target_enum')"))
+  (db/with-db admin-db-spec
+    (sql/exec-raw "UPDATE pg_enum
+                     SET enumlabel = 'file'
+                     WHERE enumlabel = 'data'
+                       AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'target_enum')")))
 
 
 (defn- convert-to-folder
@@ -58,7 +59,7 @@
 (def convert
   "Performs the conversion for database version 2.0.0:20140902.01"
   ^{:cfg-file "donkey.properties"}
-  (fn [donkey-cfg]
+  (fn [admin-db-spec donkey-cfg]
     (println "Performing the conversion for" version)
     (let [fs-cfg (fs-init/init (get donkey-cfg "donkey.irods.host")
                                (get donkey-cfg "donkey.irods.port")
@@ -68,11 +69,11 @@
                                (get donkey-cfg "donkey.irods.zone")
                                (get donkey-cfg "donkey.irods.resc"))]
       (fs-init/with-jargon fs-cfg [fs]
-        (create-folder-type)
+        (create-folder-type admin-db-spec)
         (update-table fs :attached_tags)
         (update-table fs :avus)
         (update-table fs :comments)
         (update-table fs :favorites)
         (update-table fs :file_links)
         (update-table fs :ratings)
-        (rename-data-type)))))
+        (rename-data-type admin-db-spec)))))
