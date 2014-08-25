@@ -29,6 +29,9 @@
   (^ISeq all-tags [_]
     "Retrieves the list of all of the tags in the database.")
 
+  (^Integer count-tags [_]
+    "Retreives a count of the number of tags in the database.")
+
   (^ISeq filter-missing [_ ^Iseq ids]
     "Indicates whether or not a tag with the given id is in the database."))
 
@@ -39,6 +42,12 @@
   (all-tags [_]
     (db/with-db db
       (select tag (with-batch target))))
+
+  (count-tags [_]
+    (-> (db/with-db db
+          (select tag
+            (aggregate (count :*) :cnt)))
+      first :cnt))
 
   (filter-missing [_ ids]
     (db/with-db db

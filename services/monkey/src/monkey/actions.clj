@@ -68,7 +68,7 @@
 (defn- reindex
   [monkey]
   (log/info "reindexing tags into the search index")
-  ;; TODO indicate how many tags will be reindexed
+  (log/info "approximately" (tags/count-tags (:tags monkey)) "will be reindex")
   (->> (tags/all-tags (:tags monkey))
     (map format-tag-doc)
     (index-tags monkey)))
