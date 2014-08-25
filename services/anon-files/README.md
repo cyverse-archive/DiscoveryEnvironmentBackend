@@ -106,7 +106,7 @@ A successful ranged request will return the requested byte range and have a 206 
 
 Byte range requests will have the following HTTP headers in the response:
 * Content-Range (see http://tools.ietf.org/html/rfc7233 for more info)
-* Content-Length (see http://tools.ietf.org/html/rfc7233 for more info)
+* Content-Length (see http://tools.ietf.org/html/rfc7233 and http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html for more info)
 * Accept-Ranges (always set to bytes)
 * Cache-Control (this will always be set to no-cache)
 * ETag (we're using a weak ETag based on the last modified date)

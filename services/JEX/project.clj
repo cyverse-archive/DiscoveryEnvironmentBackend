@@ -1,19 +1,29 @@
-(defproject org.iplantc/jex "3.2.3"
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
+(defproject org.iplantc/jex "3.2.4"
   :description "A backend job execution service that submits jobs to Condor."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
+  :manifest {"Git-Ref" ~(git-ref)}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/java.classpath "0.1.0"]
                  [cheshire "5.0.1"]
                  [compojure "1.0.1"]
                  [ring/ring-jetty-adapter "1.0.1"]
-                 [org.iplantc/clojure-commons "3.2.3"]
+                 [org.iplantc/clojure-commons "3.2.4"]
                  [slingshot "0.10.3"]
                  [me.raynes/fs "1.4.4"]
-                 [org.iplantc/common-cli "3.2.3"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.2.3"]
+                 [org.iplantc/common-cli "3.2.4"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.2.4"]
             [lein-midje "3.1.1"]]
   :iplant-rpm {:summary "jex",
                :runuser "condor"

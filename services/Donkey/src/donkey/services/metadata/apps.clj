@@ -113,7 +113,7 @@
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
   (updateJobStatus [_ username job job-step status end-time])
-  (stopJob [_ job-id])
+  (stopJob [_ job])
   (getJobParams [_ job-id])
   (getAppRerunInfo [_ job-id]))
 ;; AppLister
@@ -172,8 +172,8 @@
   (updateJobStatus [_ username job job-step status end-time]
     (da/update-job-status username job job-step status end-time))
 
-  (stopJob [_ job-id]
-    (ca/stop-job job-id))
+  (stopJob [_ job]
+    (ca/stop-job job))
 
   (getJobParams [_ job-id]
     (ca/get-job-params nil (jp/get-job-by-id (UUID/fromString job-id))))
@@ -264,8 +264,8 @@
   (updateJobStatus [_ username job job-step status end-time]
     (ca/update-job-status agave-client username job job-step status end-time))
 
-  (stopJob [_ job-id]
-    (ca/stop-job agave-client job-id))
+  (stopJob [_ job]
+    (ca/stop-job agave-client job))
 
   (getJobParams [_ job-id]
     (process-job agave-client job-id
@@ -422,6 +422,7 @@
      (if (= status jp/submitted-status)
        (service/success-response)
        (let [job-step                   (get-unique-job-step external-id)
+             job-step                   (jp/lock-job-step (:job-id job-step) external-id)
              {:keys [username] :as job} (jp/lock-job (:job-id job-step))
              end-date                   (db/timestamp-from-str end-date)]
          (service/assert-found job "job" (:job-id job-step))
@@ -438,7 +439,7 @@
   (with-db db/de
     (transaction
      (let [uuid                       (UUID/fromString uuid)
-           job-step                   (jp/get-job-step uuid external-id)
+           job-step                   (jp/lock-job-step uuid external-id)
            {:keys [username] :as job} (jp/lock-job uuid)
            end-time                   (db/timestamp-from-str end-time)]
        (service/assert-found job "job" uuid)
@@ -456,9 +457,7 @@
   (with-directory-user [(:username job)]
     (try+
      (log/warn "synchronizing the job status for" (:id job))
-     (transaction
-      (let [job (jp/lock-job (:id job))]
-        (.syncJobStatus (get-app-lister "" (:username job)) job)))
+     (transaction (.syncJobStatus (get-app-lister "" (:username job)) job))
      (catch Object e
        (log/error e "unable to sync the job status for job" (:id job))))))
 
@@ -526,7 +525,7 @@
          (service/not-owner "job" id))
        (when (mu/is-completed? (:status job))
          (service/bad-request (str "job, " id ", is already completed or canceled")))
-       (.stopJob (get-app-lister) id)
+       (.stopJob (get-app-lister) job)
        (service/success-response {:id (str id)})))))
 
 (defn get-property-values

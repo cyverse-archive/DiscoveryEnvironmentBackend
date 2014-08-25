@@ -1,8 +1,18 @@
-(defproject org.iplantc/metadactyl "3.2.3"
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
+(defproject org.iplantc/metadactyl "3.2.4"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
+  :manifest {"Git-Ref" ~(git-ref)}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.6"]
                  [cheshire "5.3.1"]
@@ -11,17 +21,17 @@
                  [com.cemerick/url "0.1.1"]
                  [compojure "1.1.7"]
                  [medley "0.1.5"]
-                 [org.iplantc/clojure-commons "3.2.3"]
-                 [org.iplantc/kameleon "3.2.3"]
-                 [org.iplantc.core/metadactyl "3.2.3"]
-                 [org.iplantc/common-cli "3.2.3"]
+                 [org.iplantc/clojure-commons "3.2.4"]
+                 [org.iplantc/kameleon "3.2.4"]
+                 [org.iplantc.core/metadactyl "3.2.4"]
+                 [org.iplantc/common-cli "3.2.4"]
                  [me.raynes/fs "1.4.5"]
                  [org.springframework/spring-orm "3.1.0.RELEASE"]
                  [korma "0.3.0-RC5"]
                  [ring "1.2.2"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [slingshot "0.10.3"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.2.3"]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.2.4"]
             [lein-ring "0.8.10"]
             [lein-swank "1.4.4"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}

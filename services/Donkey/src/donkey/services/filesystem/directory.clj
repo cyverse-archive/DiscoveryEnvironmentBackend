@@ -77,6 +77,7 @@
     "LASTMODIFIED" :modify-ts
     "DATECREATED"  :create-ts
     "SIZE"         :data-size
+    "PATH"         :full-path
                    :base-name))
 
 (defn- user-order->api-order
@@ -101,7 +102,7 @@
       (validators/path-readable cm user path)
       (validators/path-is-dir cm path)
 
-      (when-not (contains? #{"NAME" "ID" "LASTMODIFIED" "DATECREATED" "SIZE"} sort-col)
+      (when-not (contains? #{"NAME" "ID" "LASTMODIFIED" "DATECREATED" "SIZE" "PATH"} sort-col)
         (log/warn "invalid sort column" sort-col)
         (throw+ {:error_code "ERR_INVALID_SORT_COLUMN"
                  :column sort-col}))
