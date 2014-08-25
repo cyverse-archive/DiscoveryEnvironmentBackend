@@ -8,9 +8,9 @@
             [donkey.persistence.metadata :as db]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.util.config :as config]
+            [donkey.util.icat :as icat]
             [donkey.util.service :as svc]
-            [donkey.util.validators :as valid]
-            [donkey.services.metadata.util :as util])
+            [donkey.util.validators :as valid])
   (:import [java.util UUID]))
 
 
@@ -31,7 +31,7 @@
       (uuids/validate-uuid-accessible fs user entry-id)
       (when-not (empty? unknown-tags)
         (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
-      (db/insert-attached-tags user entry-id (util/resolve-target-type fs entry-id) unattached-tags)
+      (db/insert-attached-tags user entry-id (icat/resolve-data-type fs entry-id) unattached-tags)
       (svc/success-response))))
 
 

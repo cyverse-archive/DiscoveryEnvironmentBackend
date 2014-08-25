@@ -8,8 +8,8 @@
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as valid]
             [donkey.util.config :as cfg]
-            [donkey.util.service :as svc]
-            [donkey.services.metadata.util :as util])
+            [donkey.util.icat :as icat]
+            [donkey.util.service :as svc])
   (:import [java.util UUID]))
 
 
@@ -51,7 +51,7 @@
           entry-id (UUID/fromString entry-id)]
       (uuids/validate-uuid-accessible cm user entry-id)
       (when-not (db/is-favorite? user entry-id)
-        (db/insert-favorite user entry-id (util/resolve-target-type cm entry-id)))
+        (db/insert-favorite user entry-id (icat/resolve-data-type cm entry-id)))
       (svc/success-response))))
 
 
