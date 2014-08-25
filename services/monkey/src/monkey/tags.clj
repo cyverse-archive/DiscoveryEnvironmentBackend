@@ -11,7 +11,7 @@
 
 (defentity ^{:private true} target
   (table (subselect :attached_tags
-           (where {:target_type (raw "'data'")
+           (where {:target_type [in [(raw "'file'") (raw "'folder'")]]
                    :detached_on nil}))
          :targets)
   (entity-fields :target_id :target_type))
