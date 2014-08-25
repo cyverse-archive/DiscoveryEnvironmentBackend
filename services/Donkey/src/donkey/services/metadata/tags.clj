@@ -9,7 +9,8 @@
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.util.config :as config]
             [donkey.util.service :as svc]
-            [donkey.util.validators :as valid])
+            [donkey.util.validators :as valid]
+            [donkey.services.metadata.util :as util])
   (:import [java.util UUID]))
 
 
@@ -21,16 +22,17 @@
 
 (defn- attach-tags
   [fs-cfg user entry-id new-tags]
-  (validate-entry-accessible fs-cfg user entry-id)
-  (let [tag-set         (set new-tags)
-        known-tags      (set (db/filter-tags-owned-by-user user tag-set))
-        unknown-tags    (set/difference tag-set known-tags)
-        unattached-tags (set/difference known-tags
-                          (set (db/filter-attached-tags entry-id known-tags)))]
-    (when-not (empty? unknown-tags)
-      (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
-    (db/insert-attached-tags user entry-id "data" unattached-tags)
-    (svc/success-response)))
+  (fs-init/with-jargon fs-cfg [fs]
+    (let [tag-set         (set new-tags)
+          known-tags      (set (db/filter-tags-owned-by-user user tag-set))
+          unknown-tags    (set/difference tag-set known-tags)
+          unattached-tags (set/difference known-tags
+                                          (set (db/filter-attached-tags entry-id known-tags)))]
+      (uuids/validate-uuid-accessible fs user entry-id)
+      (when-not (empty? unknown-tags)
+        (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
+      (db/insert-attached-tags user entry-id (util/resolve-target-type fs entry-id) unattached-tags)
+      (svc/success-response))))
 
 
 (defn- detach-tags
