@@ -136,18 +136,19 @@
   "Selects all targets of a given type that have are favorites of a given authenticated user.
 
    Parameters:
-     user        - the authenticated user name
-     target-type - the type of target (`analysis`|`app`|`data`|`user`)
+     user         - the authenticated user name
+     target-types - the set of types of target may belong to
+                    (`analysis`|`app`|`file`|`folder`|`user`)
 
    Returns:
      It returns a lazy sequence of favorite target UUIDs. If the user doesn't exist, the sequence
      will be empty."
-  [user target-type]
+  [user target-types]
   (map :target_id
        (korma/with-db db/metadata
          (select :favorites
            (fields :target_id)
-           (where {:target_type (->enum-val target-type)
+           (where {:target_type [in (map ->enum-val target-types)]
                    :owner_id    user})))))
 
 (defn insert-favorite

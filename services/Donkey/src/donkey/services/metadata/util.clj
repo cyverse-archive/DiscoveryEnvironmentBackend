@@ -4,6 +4,7 @@
             [clj-time.format :as tf]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [clj-jargon.metadata :as fs-meta]
             [clojure-commons.file-utils :as ft]
             [donkey.clients.notifications :as dn]
             [donkey.persistence.jobs :as jp]
@@ -76,3 +77,17 @@
                                                 :status    status
                                                 :enddate   end-millis
                                                 :startdate start-millis))))
+
+(defn resolve-target-type
+  "Given filesystem id, it returns the type of the entry it is, file or folder.
+
+   Parameters:
+     fs - An open jargon context
+     entry-id - The UUID of the entry to inspect
+
+   Returns:
+     The type of the entry, file or folder"
+  [fs entry-id]
+  (if (empty? (fs-meta/list-collections-with-attr-value fs "ipc_UUID" entry-id))
+    "file"
+    "folder"))
