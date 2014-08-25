@@ -10,6 +10,9 @@
   (raw (str \' val \')))
 
 
+(def ^:private data-types [(->enum-val "file") (->enum-val "folder")])
+
+
 ;; COMMENTS
 
 (defn- fmt-comment
@@ -360,19 +363,16 @@
 
 ;; TEMPLATES
 
-(defn avu->where-clause
-  "Formats an AVU map for use in a select query where-clause."
-  [{avu-id :id, :as avu}]
-  (let [id-key (if avu-id :id :attribute)]
-    (-> (select-keys avu [id-key :target_id])
-        (assoc :target_type (->enum-val "data")))))
-
 (defn find-existing-metadata-template-avu
   "Finds an existing AVU by ID or attribute, and by target_id."
   [avu]
-  (korma/with-db db/metadata
+  (let [id-key (if (:id avu) :id :attribute)]
+    (korma/with-db db/metadata
       (first
-       (select :avus (where (avu->where-clause avu))))))
+        (select :avus
+          (where {id-key       (id-key avu)
+                  :target_id   (:target_id avu)
+                  :target_type [in data-types]}))))))
 
 (defn get-avus-for-metadata-template
   "Gets AVUs for the given Metadata Template."
@@ -383,7 +383,7 @@
                   {:t.avu_id :avus.id})
             (where {:t.template_id template-id
                     :avus.target_id data-id
-                    :avus.target_type (->enum-val "data")}))))
+                    :avus.target_type [in data-types]}))))
 
 (defn get-metadata-template-ids
   "Finds Metadata Template IDs associated with the given user's data item."
@@ -393,7 +393,7 @@
             (fields :template_id)
             (join :avus {:t.avu_id :avus.id})
             (where {:avus.target_id data-id
-                    :avus.target_type (->enum-val "data")})
+                    :avus.target_type [in data-types]})
             (group :template_id))))
 
 (defn remove-avu-template-instances
@@ -416,11 +416,11 @@
 
 (defn add-metadata-template-avus
   "Adds the given AVUs to the Metadata database."
-  [user-id avus]
+  [user-id avus target-type]
   (let [fmt-avu #(assoc %
                    :created_by user-id
                    :modified_by user-id
-                   :target_type (->enum-val "data"))]
+                   :target_type (->enum-val target-type))]
     (korma/with-db db/metadata
       (insert :avus (values (map fmt-avu avus))))))
 
@@ -452,7 +452,7 @@
   (let [avu-id-select (-> (select* :avus)
                           (fields :id)
                           (where {:target_id data-id
-                                  :target_type (->enum-val "data")}))]
+                                  :target_type [in data-types]}))]
     (korma/with-db db/metadata
     (delete :template_instances (where {:avu_id [in (subselect avu-id-select)]})))))
 
