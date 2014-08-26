@@ -10,7 +10,6 @@
                  [org.clojure/java.jdbc "0.2.3"] ; This needs to be held back until infosquito gets adapted
                  [org.clojure/tools.logging "0.3.0"]
                  [cheshire "5.3.1"]
-                 [clj-time "0.7.0"]
                  [clojurewerkz/elastisch "2.0.0"]
                  [com.novemberain/langohr "2.11.0"]
                  [slingshot "0.10.3"]
