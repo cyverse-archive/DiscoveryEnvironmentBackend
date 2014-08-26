@@ -40,7 +40,7 @@
 (defn- purge-missing-tags
   [monkey]
   (log/info "purging non-existent tags from search index")
-  ;; TODO indicate how tags will be inspected
+  (log/info "approximately" (index/count-tags (:index monkey)) "tag documents will be inspected")
   (->> (indexed-tags monkey)
     (filter-missing-tags monkey)
     (remove-from-index monkey)))

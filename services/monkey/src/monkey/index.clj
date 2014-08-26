@@ -50,6 +50,9 @@
   (^ISeq all-tags [_]
     "returns a sequence of all of the ids for the tag documents in the search index")
 
+  (^Integer count-tags [_]
+    "counts the number of tag documents currently in the search index")
+
   (index-tags [_ ^ISeq tags]
     "adds the provided tag documents to the search index")
 
@@ -62,6 +65,9 @@
 
   (all-tags [_]
     (map :_id (doc/scroll-seq es (init-tag-seq props es))))
+
+  (count-tags [_]
+    (doc/count es (props/es-index props) (props/es-tag-type props)))
 
   (index-tags [_ tags]
     (try
