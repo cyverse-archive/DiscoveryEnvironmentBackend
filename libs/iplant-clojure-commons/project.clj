@@ -5,10 +5,12 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
-  :dependencies [[org.clojure/clojure "1.5.1"]
+  :dependencies [[joda-time "2.4"]
+                 [org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.6"]
                  [clj-http "0.6.5"]
                  [clj-http-fake "0.4.1"]
+                 [clj-time "0.7.0"]
                  [com.cemerick/url "0.0.7"]
                  [log4j/log4j "1.2.17"]
                  [me.raynes/fs "1.4.5"]

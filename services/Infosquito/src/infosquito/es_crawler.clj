@@ -1,5 +1,5 @@
 (ns infosquito.es-crawler
-  (:use [infosquito.progress :only [notifier]])
+  (:use [clojure-commons.progress :only [notifier]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojurewerkz.elastisch.rest :as esr]

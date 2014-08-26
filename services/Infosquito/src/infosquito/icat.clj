@@ -1,6 +1,6 @@
 (ns infosquito.icat
   (:use [clojure.pprint :only [pprint]]
-        [infosquito.progress :only [notifier]])
+        [clojure-commons.progress :only [notifier]])
   (:require [clojure.java.jdbc :as sql]
             [clojure.string :as string]
             [clojure.tools.logging :as log]

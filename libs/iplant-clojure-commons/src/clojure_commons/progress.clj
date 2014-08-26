@@ -1,4 +1,4 @@
-(ns infosquito.progress
+(ns clojure-commons.progress
   (:require [clj-time.core :as ct]
             [clojure.tools.logging :as log])
   (:import [org.joda.time.format PeriodFormatterBuilder]))
