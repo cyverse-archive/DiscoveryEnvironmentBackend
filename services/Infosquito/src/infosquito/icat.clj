@@ -1,7 +1,7 @@
 (ns infosquito.icat
   (:use [clojure.pprint :only [pprint]]
         [clojure-commons.progress :only [notifier]])
-  (:require [clojure.java.jdbc :as sql]
+  (:require [clojure.java.jdbc.deprecated :as sql]  ; TODO move away from deprecated namespace
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as file]
