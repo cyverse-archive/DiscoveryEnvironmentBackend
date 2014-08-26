@@ -6,7 +6,7 @@
 (def ^:private period-formatter
   (-> (PeriodFormatterBuilder.)
       (.appendDays)
-      (.appendSuffix " day", "days")
+      (.appendSuffix " day", " days")
       (.appendSeparator ", ")
       (.appendHours)
       (.appendSuffix " hour", " hours")
