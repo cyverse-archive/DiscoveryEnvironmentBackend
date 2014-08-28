@@ -41,18 +41,12 @@ public class FapiJobRequestFormatterTest {
     private UserDetails userDetails;
 
     /**
-     * The object used to ensure job name uniqueness.
-     */
-    private MockJobNameUniquenessEnsurer jobNameUniquenessEnsurer;
-
-    /**
      * Initializes each of the unit tests.
      */
     @Before
     public void initialize() {
         initializeMockDaoFactory();
         createUserDetails();
-        jobNameUniquenessEnsurer = new MockJobNameUniquenessEnsurer();
     }
 
     private void createUserDetails() {
@@ -602,7 +596,7 @@ public class FapiJobRequestFormatterTest {
         validateParam(1, "", "--proxy_user=" + getShortUsername(), "proxyUser", params.getJSONObject(1));
         validateParam(1, "", "--jobName=empty", "jobName", params.getJSONObject(2));
         validateParam(1, "", "--archive", "archiveResults", params.getJSONObject(3));
-        validateParam(1, "", "--archivePath=/someuser/analyses/empty", "archivePath", params.getJSONObject(4));
+        validateParam(1, "", "--archivePath=/someuser/analyses", "archivePath", params.getJSONObject(4));
         validateParam(1, "", "--first=first=", "--first= id", params.getJSONObject(5));
         validateParam(2, "", "--second=second=", "--second= id", params.getJSONObject(6));
         validateParam(3, "", "--third=third=", "--third= id", params.getJSONObject(7));
@@ -647,7 +641,7 @@ public class FapiJobRequestFormatterTest {
         validateParam(1, "", "--proxy_user=" + getShortUsername(), "proxyUser", params.getJSONObject(1));
         validateParam(1, "", "--jobName=config", "jobName", params.getJSONObject(2));
         validateParam(1, "", "--archive", "archiveResults", params.getJSONObject(3));
-        validateParam(1, "", "--archivePath=/someuser/analyses/config", "archivePath", params.getJSONObject(4));
+        validateParam(1, "", "--archivePath=/someuser/analyses", "archivePath", params.getJSONObject(4));
         validateParam(1, "", "--first=one", "--first= id", params.getJSONObject(5));
         validateParam(2, "", "--second=two", "--second= id", params.getJSONObject(6));
         validateParam(3, "", "--third=three", "--third= id", params.getJSONObject(7));
@@ -678,7 +672,7 @@ public class FapiJobRequestFormatterTest {
         validateParam(1, "", "--proxy_user=" + getShortUsername(), "proxyUser", params.getJSONObject(1));
         validateParam(1, "", "--jobName=config", "jobName", params.getJSONObject(2));
         validateParam(1, "", "--archive", "archiveResults", params.getJSONObject(3));
-        validateParam(1, "", "--archivePath=/someuser/analyses/config", "archivePath", params.getJSONObject(4));
+        validateParam(1, "", "--archivePath=/someuser/analyses", "archivePath", params.getJSONObject(4));
         validateParam(1, "", "--in=/someuser/somefile.txt", "inputFile", "one", params.getJSONObject(5));
         validateParam(2, "", "--folder=/someuser/somefolder", "inputFolder", "folder", params.getJSONObject(6));
         validateParam(3, "", "/someuser/foo", "inputFiles", "many", params.getJSONObject(7));
@@ -708,7 +702,7 @@ public class FapiJobRequestFormatterTest {
         validateParam(1, "", "--proxy_user=" + getShortUsername(), "proxyUser", step1Params.getJSONObject(1));
         validateParam(1, "", "--jobName=config", "jobName", step1Params.getJSONObject(2));
         validateParam(1, "", "--archive", "archiveResults", step1Params.getJSONObject(3));
-        validateParam(1, "", "--archivePath=/someuser/analyses/config", "archivePath", step1Params.getJSONObject(4));
+        validateParam(1, "", "--archivePath=/someuser/analyses", "archivePath", step1Params.getJSONObject(4));
         validateParam(1, "", "--sharedIn=/someuser/shared_input.txt", "sharedInput", "one",
                 step1Params.getJSONObject(5));
         validateParam(2, "", "--chainedOut=chained_output.txt", "chainedOutput", "one", step1Params.getJSONObject(6));
@@ -727,24 +721,12 @@ public class FapiJobRequestFormatterTest {
         validateParam(1, "", "--proxy_user=" + getShortUsername(), "proxyUser", step2Params.getJSONObject(1));
         validateParam(1, "", "--jobName=config", "jobName", step2Params.getJSONObject(2));
         validateParam(1, "", "--archive", "archiveResults", step2Params.getJSONObject(3));
-        validateParam(1, "", "--archivePath=/someuser/analyses/config", "archivePath", step2Params.getJSONObject(4));
+        validateParam(1, "", "--archivePath=/someuser/analyses", "archivePath", step2Params.getJSONObject(4));
         validateParam(1, "", "--sharedIn=/someuser/shared_input.txt", "sharedInput", "one",
                 step2Params.getJSONObject(5));
         validateParam(2, "", "--chainedIn=chained_output.txt", "chainedInput", "one", step2Params.getJSONObject(6));
         validateParam(3, "", "--templateIn=template_template_output.txt", "templateInput", "one",
                 step2Params.getJSONObject(7));
-    }
-
-    /**
-     * Verifies that the experiment name is updated on the fly if it's not unique.
-     */
-    @Test
-    public void testNonUniqueJobName() {
-        jobNameUniquenessEnsurer.addJobName("empty");
-        JSONObject experiment = createEmptyExperiment("analysis_with_one_empty_step");
-        JSONObject submission = createFormatter(experiment).formatJobRequest();
-        assertEquals("empty-1", submission.getString("name"));
-        assertEquals("empty", submission.get("display_name"));
     }
 
     /**
@@ -835,7 +817,7 @@ public class FapiJobRequestFormatterTest {
      */
     protected FapiJobRequestFormatter createFormatter(JSONObject experiment) {
         String irodsHome = "/iplant/home";
-        return new FapiJobRequestFormatter(daoFactory, userDetails, experiment, jobNameUniquenessEnsurer, irodsHome);
+        return new FapiJobRequestFormatter(daoFactory, userDetails, experiment, irodsHome);
     }
 
     /**
