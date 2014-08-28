@@ -54,11 +54,6 @@ public class FapiJobRequestFormatter implements JobRequestFormatter {
     private final JSONObject experiment;
 
     /**
-     * The object used to ensure job name uniqueness.
-     */
-    private final JobNameUniquenessEnsurer jobNameUniquenessEnsurer;
-
-    /**
      * The path to the home directory in iRODS.
      */
     private final String irodsHome;
@@ -67,16 +62,14 @@ public class FapiJobRequestFormatter implements JobRequestFormatter {
      * @param daoFactory the factory used to create data access objects.
      * @param userDetails the details of the user who submitted the job.
      * @param experiment the configuration of the experiment.
-     * @param jobNameUniquenessEnsurer used to ensure that jobs are uniquely named.
      * @param irodsHome the path to the home directory in iRODS.
      */
     public FapiJobRequestFormatter(DaoFactory daoFactory, UserDetails userDetails, JSONObject experiment,
-        JobNameUniquenessEnsurer jobNameUniquenessEnsurer, String irodsHome)
+        String irodsHome)
     {
         this.daoFactory = daoFactory;
         this.userDetails = userDetails;
         this.experiment = experiment;
-        this.jobNameUniquenessEnsurer = jobNameUniquenessEnsurer;
         this.irodsHome = irodsHome;
     }
 
@@ -86,26 +79,12 @@ public class FapiJobRequestFormatter implements JobRequestFormatter {
     @Override
     public JSONObject formatJobRequest() {
         logJson("experiment", experiment);
-        ensureJobNameUniqueness();
         TransformationActivity analysis = loadAnalysis(experiment.getString("analysis_id"));
         JSONObject job = createJobObject(analysis);
         job.put("steps", formatSteps(analysis));
         job.put("email", userDetails.getEmail());
         logJson("job submission", job);
         return job;
-    }
-
-    /**
-     * Ensures that the job name is unique for the user.
-     */
-    private void ensureJobNameUniqueness() {
-        String originalName = experiment.getString("name");
-        String uniqueName = jobNameUniquenessEnsurer.ensureUniqueJobName(userDetails.getShortUsername(), originalName);
-        if (!StringUtils.equals(originalName, uniqueName)) {
-            experiment.remove("name");
-            experiment.put("name", uniqueName);
-            experiment.put("display_name", originalName);
-        }
     }
 
     /**

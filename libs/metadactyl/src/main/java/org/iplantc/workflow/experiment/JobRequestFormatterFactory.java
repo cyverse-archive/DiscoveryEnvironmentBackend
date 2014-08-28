@@ -32,11 +32,6 @@ public class JobRequestFormatterFactory {
     private final UrlAssembler urlAssembler;
 
     /**
-     * Used to ensure the uniqueness of the job name.
-     */
-    private final JobNameUniquenessEnsurer jobNameUniquenessEnsurer;
-
-    /**
      * The details of the user who submitted the job.
      */
     private final UserDetails userDetails;
@@ -50,16 +45,13 @@ public class JobRequestFormatterFactory {
      * @param daoFactory used to create data access objects.
      * @param urlAssembler used to create URLs that will be used by the jobs.
      * @param userDetails information about the user who submitted the jobs.
-     * @param jobNameUniquenessEnsurer the object used to ensure that job names are unique.
      * @param irodsHome the path to the home directory in iRODS.
      */
     public JobRequestFormatterFactory(DaoFactory daoFactory, UrlAssembler urlAssembler,
-            UserDetails userDetails, JobNameUniquenessEnsurer jobNameUniquenessEnsurer,
-            String irodsHome) {
+            UserDetails userDetails, String irodsHome) {
         this.daoFactory = daoFactory;
         this.urlAssembler = urlAssembler;
         this.userDetails = userDetails;
-        this.jobNameUniquenessEnsurer = jobNameUniquenessEnsurer;
         this.irodsHome = irodsHome;
     }
 
@@ -77,8 +69,7 @@ public class JobRequestFormatterFactory {
             formatter = new CondorJobRequestFormatter(daoFactory, urlAssembler, userDetails, experiment);
         }
         else if (StringUtils.equals(componentType, "fAPI")) {
-            formatter = new FapiJobRequestFormatter(daoFactory, userDetails, experiment, jobNameUniquenessEnsurer,
-                    irodsHome);
+            formatter = new FapiJobRequestFormatter(daoFactory, userDetails, experiment, irodsHome);
         }
         else {
             throw new WorkflowException("unrecognized component type: " + componentType);
