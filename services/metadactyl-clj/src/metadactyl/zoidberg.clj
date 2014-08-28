@@ -28,7 +28,7 @@
                :message (str
                           (:shortUsername current-user)
                           " does not own app "
-                          (:analysis_id app))}))))
+                          (:id app))}))))
 
 (defn- verify-app-not-public
   "Verifies that an app has not been made public."
@@ -36,7 +36,7 @@
   (if (:is_public app)
     (throw+ {:code cc-errs/ERR_NOT_WRITEABLE,
              :message (str "Workflow, "
-                           (:analysis_id app)
+                           (:id app)
                            ", is public and may not be edited")})))
 
 (defn- verify-app-editable
@@ -281,7 +281,7 @@
 
 (defn- format-app
   [app]
-  (let [app (get-app-details (:analysis_id app))
+  (let [app (get-app-details (:id app))
         task (first (:tasks app))
         groups (map format-group (:parameter_groups task))]
     (remove-nil-vals
@@ -298,7 +298,7 @@
 (defn- format-workflow-app
   "Adds the steps and mappings fields to the app."
   [app]
-  (let [steps (get-steps (:analysis_id app))
+  (let [steps (get-steps (:id app))
         mappings (mapcat get-formatted-mapping steps)
         steps (map format-step steps)]
     (-> app
@@ -313,8 +313,8 @@
   (let [app (format-workflow-app app)
         task-ids (set (map :task_id (:steps app)))
         tasks (get-tasks task-ids)]
-    {:analyses [app]
-     :templates tasks}))
+    {:apps [app]
+     :tasks tasks}))
 
 (def ^:private copy-prefix "Copy of ")
 
@@ -341,13 +341,13 @@
   "Adds copies of the steps and mappings fields to the app, and formats
    appropriate app fields to prepare it for saving as a copy."
   [app]
-  (let [steps (get-steps (:analysis_id app))
+  (let [steps (get-steps (:id app))
         mappings (mapcat get-formatted-mapping steps)
         steps (map format-step-copy steps)]
     (-> app
       (dissoc :integration_data_id)
-      (assoc :analysis_id "auto-gen")
-      (assoc :analysis_name (app-copy-name (:analysis_name app)))
+      (assoc :id "auto-gen")
+      (assoc :name (app-copy-name (:name app)))
       (assoc :implementation (get-implementor-details))
       (assoc :full_username (:username current-user))
       (assoc :steps steps)
@@ -357,8 +357,8 @@
   "Fetches an app with the given ID."
   [app-id]
   (let [app (select app_listing
-                         (fields [:id :analysis_id]
-                                 [:name :analysis_name]
+                         (fields :id
+                                 :name
                                  :description
                                  :integrator_email
                                  :step_count)

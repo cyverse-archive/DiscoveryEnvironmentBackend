@@ -19,19 +19,18 @@
   (let [subgroups (filter #(= (:id group) (:parent_id %)) groups)
         subgroups (map #(add-subgroups % groups) subgroups)
         result    (if (empty? subgroups) group (assoc group :groups subgroups))
-        result    (assoc result :task_count (:app_count group))
-        result    (dissoc result :app_count :parent_id)]
+        result    (dissoc result :parent_id)]
     result))
 
 (defn- format-my-public-apps-group
   "Formats the virtual group for the user's public apps."
   [workspace-id params]
-  {:id             :my-public-apps
-   :name           "My public apps"
-   :description    ""
-   :workspace_id   workspace-id
-   :is_public      false
-   :task_count (count-public-apps-by-user (:email current-user) params)})
+  {:id           :my-public-apps
+   :name         "My public apps"
+   :description  ""
+   :workspace_id workspace-id
+   :is_public    false
+   :app_count    (count-public-apps-by-user (:email current-user) params)})
 
 (defn list-my-public-apps
   "Lists the public apps belonging to the user with the given workspace."
@@ -61,7 +60,7 @@
                            params)]
       (-> group
           (update-in [:groups] concat virtual-groups)
-          (assoc :task_count actual-count)))))
+          (assoc :app_count actual-count)))))
 
 (defn- format-app-group-hierarchy
   "Formats the app group hierarchy rooted at the app group with the given
@@ -174,10 +173,10 @@
 (defn- list-apps-in-virtual-group
   "Formats a listing for a virtual group."
   [workspace group-id params]
-  (let [group-key (keyword group-id)]
+  (let [group-key (keyword (str group-id))]
     (when-let [format-fns (virtual-group-fns group-key)]
       (assoc ((:format-group format-fns) (:id workspace) params)
-        :templates (map format-app ((:format-listing format-fns) workspace params))))))
+        :apps (map format-app ((:format-listing format-fns) workspace params))))))
 
 (defn- count-apps-in-group
   "Counts the number of apps in an app group, including virtual app groups that may be included."
@@ -202,8 +201,8 @@
         apps_in_group  (get-apps-in-group workspace app_group params)
         apps_in_group  (map format-app apps_in_group)]
     (assoc app_group
-      :task_count total
-      :templates apps_in_group)))
+      :app_count total
+      :apps apps_in_group)))
 
 (defn list-apps-in-group
   "This service lists all of the apps in an app group and all of its
@@ -227,8 +226,8 @@
                         (workspace-favorites-app-group-index)
                         params)
         search_results (map format-app search_results)]
-    (service/success-response {:task_count total
-                               :templates search_results})))
+    (service/success-response {:app_count total
+                               :apps search_results})))
 
 (defn- load-app-details
   "Retrieves the details for a single app."

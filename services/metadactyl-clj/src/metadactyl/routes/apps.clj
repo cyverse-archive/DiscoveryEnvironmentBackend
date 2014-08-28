@@ -14,8 +14,8 @@
         :query [params AppSearchParams]
         :summary "Search Apps"
         :notes "This service allows users to search for Apps based on a part of the App name or
-        description. The response body contains a \"templates\" array that is in the same format as
-        the \"templates\" array in the /apps/categories/:category-id endpoint response."
+        description. The response body contains an `apps` array that is in the same format as
+        the `apps` array in the /apps/categories/:category-id endpoint response."
         (service/trap #(search-apps params)))
 
   (GET* "/:app-id/ui" []
@@ -69,10 +69,10 @@
                  This endpoint accepts optional URL query parameters to limit and sort Apps,
                  which will allow pagination of results.
                  The `can_run` flag is calculated by comparing the number of steps in the app to
-                 the number of steps that have deployed component associated with them. If the
-                 numbers are different then this flag is set to `false`. The idea is that every
-                 step in the analysis has to have, at the very least, a deployed component
-                 associated with it in order to run successfully."
+                 the number of steps that have a tool associated with them. If the numbers are
+                 different then this flag is set to `false`. The idea is that every step in the
+                 analysis has to have, at the very least, a tool associated with it in order to run
+                 successfully."
                  (service/trap #(list-apps-in-group category-id params))))
 
   (route/not-found (service/unrecognized-path-response)))
