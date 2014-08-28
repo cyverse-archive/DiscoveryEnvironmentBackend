@@ -1,4 +1,4 @@
-(ns metadactyl.routes.domain
+(ns metadactyl.routes.domain.app
   (:use [ring.swagger.schema :only [describe]]
         [schema.core :only [defschema optional-key Any]])
   (:import [java.util UUID]))
@@ -16,6 +16,7 @@
          {(optional-key :arguments)
           (describe [AppParameterListItem] "The TreeSelector Group's arguments")
 
+          ;; KLUDGE
           (optional-key :groups)
           (describe [Any]
             "The TreeSelector Group's groups. This will be a list of more groups like this one, but
@@ -148,8 +149,12 @@
    (optional-key :isVisible)
    (describe Boolean "The Parameter Group's intended visibility in the job submission UI")
 
+   ;; KLUDGE
    (optional-key :parameters)
-   (describe [AppParameter] "The list of Parameters in this Group")})
+   (describe [AppParameter]
+     "The list of Parameters in this Group. <b>Note</b>: These objects have an optional
+      `defalutValue` field that can contain any type of value, but the current version of the
+      documentation library does not support documenting these kinds of fields.")})
 
 (defschema App
   {:id                            (describe UUID "A UUID that is used to identify the App")

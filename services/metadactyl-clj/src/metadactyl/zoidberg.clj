@@ -71,6 +71,12 @@
           (with-task-params outputs)
           (where (in :id task-ids))))
 
+(defn- format-task
+  [task]
+  (-> task
+    (update-in [:inputs] (partial map remove-nil-vals))
+    (update-in [:outputs] (partial map remove-nil-vals))))
+
 (defn- add-app-type
   [step]
   (assoc step :app_type (if (:external_app_id step) "External" "DE")))
@@ -312,7 +318,7 @@
   [app]
   (let [app (format-workflow-app app)
         task-ids (set (map :task_id (:steps app)))
-        tasks (get-tasks task-ids)]
+        tasks (map format-task (get-tasks task-ids))]
     {:apps [app]
      :tasks tasks}))
 
@@ -381,7 +387,7 @@
   [app-id]
   (let [app (get-app app-id)]
     (verify-app-editable app)
-    (service/success-response (format-workflow app))))
+    (service/swagger-response (format-workflow app))))
 
 ;; FIXME
 (defn copy-app
