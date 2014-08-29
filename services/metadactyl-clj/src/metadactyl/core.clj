@@ -80,6 +80,10 @@
               :description "Discovery Environment App endpoints."
               (context "/apps" [:as {params :params}]
                        (store-current-user app-routes/apps params)))
+   (swaggered "app-categories"
+              :description "Discovery Environment App Category endpoints."
+              (context "/apps/categories" [:as {params :params}]
+                       (store-current-user app-routes/app-categories params)))
    (swaggered "secured"
               :description "Secured Discovery Environment App endpoints."
               (context "/secured" [:as {params :params}]

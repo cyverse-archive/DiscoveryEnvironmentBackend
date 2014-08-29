@@ -63,29 +63,30 @@
            the database using this service."
            (ce/trap "delete-workflow" #(app-metadata/delete-app app-id)))
 
-  (context "/categories" []
-           (GET* "/" []
-                 :query [params CategoryListingParams]
-                 :summary "List App Categories"
-                 :notes "This service is used by the DE to obtain the list of app categories that
-                 are visible to the user."
-                 (service/trap #(get-app-groups params)))
-
-           (GET* "/:category-id" []
-                 :path-params [category-id :- AppCategoryIdPathParam]
-                 :query [params AppListingParams]
-                 :summary "List Apps in a Category"
-                 :notes "This service lists all of the apps within an app category or any of its
-                 descendents. The DE uses this service to obtain the list of apps when a user
-                 clicks on a category in the _Apps_ window.
-                 This endpoint accepts optional URL query parameters to limit and sort Apps,
-                 which will allow pagination of results.
-                 The `can_run` flag is calculated by comparing the number of steps in the app to
-                 the number of steps that have a tool associated with them. If the numbers are
-                 different then this flag is set to `false`. The idea is that every step in the
-                 analysis has to have, at the very least, a tool associated with it in order to run
-                 successfully."
-                 (service/trap #(list-apps-in-group category-id params))))
-
   (route/not-found (service/unrecognized-path-response)))
 
+(defroutes* app-categories
+   (GET* "/" []
+         :query [params CategoryListingParams]
+         :summary "List App Categories"
+         :notes "This service is used by the DE to obtain the list of app categories that
+         are visible to the user."
+         (service/trap #(get-app-groups params)))
+
+   (GET* "/:category-id" []
+         :path-params [category-id :- AppCategoryIdPathParam]
+         :query [params AppListingParams]
+         :summary "List Apps in a Category"
+         :notes "This service lists all of the apps within an app category or any of its
+         descendents. The DE uses this service to obtain the list of apps when a user
+         clicks on a category in the _Apps_ window.
+         This endpoint accepts optional URL query parameters to limit and sort Apps,
+         which will allow pagination of results.
+         The `can_run` flag is calculated by comparing the number of steps in the app to
+         the number of steps that have a tool associated with them. If the numbers are
+         different then this flag is set to `false`. The idea is that every step in the
+         analysis has to have, at the very least, a tool associated with it in order to run
+         successfully."
+         (service/trap #(list-apps-in-group category-id params)))
+
+  (route/not-found (service/unrecognized-path-response)))
