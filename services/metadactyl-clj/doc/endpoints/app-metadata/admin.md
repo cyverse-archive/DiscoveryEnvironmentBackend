@@ -3111,37 +3111,6 @@ $ curl -sd '
 }
 ```
 
-## Permanently Deleting an Analysis
-
-*Secured Endpoint:* POST /secured/permanently-delete-workflow
-
-This service physically removes an analysis from the database, which allows
-administrators to completely remove analyses that are causing problems. As far
-as I know, this service hasn't been used in quite a while, and it can probably
-be removed at some point in the near future. The request body is in the
-following format for the deletion of one or more private analyses:
-
-```json
-{
-    "app_ids": ["some-analysis-id", "another-analysis-id", ...]
-}
-```
-
-Public analyses may be deleted by this service as well, but the service has to
-be explicitly told that a public analysis is being deleted. The request body for
-the deletion of one or more public analyses by ID is in this format:
-
-```json
-{
-    "app_ids": ["some-analysis-id", "another-analysis-id", ...],
-    "root_deletion_request": true
-}
-```
-
-The response body for this service contains a simple success flag when the
-service succeeds. If the service fails then the response body contains a success
-flag and a brief message indicating the reason for the failure.
-
 ## Logically Deleting an Analysis
 
 *Secured Endpoint:* POST /secured/delete-workflow

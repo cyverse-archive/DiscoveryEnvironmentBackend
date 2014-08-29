@@ -68,9 +68,6 @@
        (ce/trap "is-publishable"
                 (fn [] {:publishable (first (app-publishable? app-id))})))
 
-  (POST "/permanently-delete-workflow" [:as {body :body}]
-        (ce/trap "permanently-delete-workflow" #(app-metadata/permanently-delete-apps body)))
-
   (POST "/delete-workflow" [:as {body :body}]
         (ce/trap "delete-workflow" #(app-metadata/delete-apps body)))
 

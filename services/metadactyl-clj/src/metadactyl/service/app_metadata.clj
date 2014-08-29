@@ -51,14 +51,6 @@
                 (:app_ids req)))))
 
 ;; TODO remove or re-implement endpoint?
-(defn permanently-delete-apps
-  "This service removes apps from the database rather than merely marking them as deleted."
-  [req]
-  (validate-deletion-request req)
-  (transaction (dorun (map (comp amp/permanently-delete-app uuidify) (:app_ids req))))
-  {})
-
-;; TODO remove or re-implement endpoint?
 (defn delete-apps
   "This service marks existing apps as deleted in the database."
   [req]

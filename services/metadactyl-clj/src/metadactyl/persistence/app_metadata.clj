@@ -3,8 +3,7 @@
   (:use [kameleon.entities]
         [korma.core]
         [metadactyl.util.assertions])
-  (:require [metadactyl.persistence.app-metadata.relabel :as relabel]
-            [metadactyl.persistence.app-metadata.delete :as delete]))
+  (:require [metadactyl.persistence.app-metadata.relabel :as relabel]))
 
 (defn get-app
   "Retrieves an app from the database."
@@ -34,11 +33,6 @@
                      {:w.user_id :u.id})
                (fields :u.username)
                (where {:a.id app-id}))))
-
-(defn permanently-delete-app
-  "Permanently removes an app from the metadata database."
-  [app-id]
-  (delete/permanently-delete-app ((comp :id get-app) app-id)))
 
 (defn delete-app
   "Marks an app as deleted in the metadata database."
