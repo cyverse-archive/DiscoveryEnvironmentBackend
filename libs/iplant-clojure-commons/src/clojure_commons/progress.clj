@@ -1,6 +1,9 @@
 (ns clojure-commons.progress
-  (:require [clj-time.core :as ct]
-  (:import [org.joda.time.format PeriodFormatterBuilder]))
+  (:require [clj-time.core :as ct])
+  (:import [clojure.lang IFn]
+           [org.joda.time PeriodType]
+           [org.joda.time.format PeriodFormatterBuilder]))
+
 
 (def ^:private period-formatter
   (-> (PeriodFormatterBuilder.)
@@ -13,6 +16,7 @@
       (.appendMinutes)
       (.appendSuffix " minute", " minutes")
       (.appendSeparator ", ")
+      (.printZeroRarelyLast)
       (.appendSeconds)
       (.appendSuffix " second", " seconds")
       (.toFormatter)))
@@ -23,7 +27,9 @@
   (let [idx-start    (ref (ct/now))
         idx-count    (ref 0)
         notify-count (ref notify-step)
-        get-interval #(.print period-formatter (.toPeriod (ct/interval @idx-start (ct/now))))]
+        wholeSeconds (.withMillisRemoved (PeriodType/standard))
+        get-interval (fn [] (.print period-formatter
+                                    (.toPeriod (ct/interval @idx-start (ct/now)) wholeSeconds)))]
     (fn [entries]
       (let [r (transform entries)]
         (dosync
