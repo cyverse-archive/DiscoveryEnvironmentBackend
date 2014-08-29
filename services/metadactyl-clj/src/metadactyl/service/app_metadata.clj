@@ -5,6 +5,7 @@
         [metadactyl.user :only [current-user]]
         [metadactyl.util.service :only [build-url success-response parse-json]]
         [korma.db :only [transaction]]
+        [kameleon.uuids :only [uuidify]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
@@ -37,31 +38,41 @@
 (defn- validate-deletion-request
   "Validates an app deletion request."
   [req]
-  (validate-map req {:analysis_ids #(and (vector? %) (every? string? %))})
-  (when (empty? (:analysis_ids req))
+  (validate-map req {:app_ids #(and (vector? %) (every? string? %))})
+  (when (empty? (:app_ids req))
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "no analysis identifiers provided"}))
   (when (and (nil? (:username current-user)) (not (:root_deletion_request req)))
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "no username provided for non-root deletion request"}))
-  (dorun (map validate-app-existence (:analysis_ids req)))
+  (dorun (map (comp validate-app-existence uuidify) (:app_ids req)))
   (when-not (:root_deletion_request req)
-    (dorun (map (partial validate-app-ownership (:username current-user)) (:analysis_ids req)))))
+    (dorun (map (comp (partial validate-app-ownership (:username current-user)) uuidify)
+                (:app_ids req)))))
 
+;; TODO remove or re-implement endpoint?
 (defn permanently-delete-apps
   "This service removes apps from the database rather than merely marking them as deleted."
-  [body]
-  (let [req (parse-json body)]
-    (validate-deletion-request req)
-    (transaction (dorun (map amp/permanently-delete-app (:analysis_ids req)))))
+  [req]
+  (validate-deletion-request req)
+  (transaction (dorun (map (comp amp/permanently-delete-app uuidify) (:app_ids req))))
   {})
 
+;; TODO remove or re-implement endpoint?
 (defn delete-apps
   "This service marks existing apps as deleted in the database."
-  [body]
-  (let [req (parse-json body)]
-    (validate-deletion-request req)
-    (transaction (dorun (map amp/delete-app (:analysis_ids req)))))
+  [req]
+  (log/warn req)
+  (validate-deletion-request req)
+  (transaction (dorun (map (comp amp/delete-app uuidify) (:app_ids req))))
+  {})
+
+(defn delete-app
+  "This service marks an existing app as deleted in the database."
+  [app-id]
+  (validate-app-existence app-id)
+  (validate-app-ownership (:username current-user) app-id)
+  (amp/delete-app app-id)
   {})
 
 (defn preview-command-line

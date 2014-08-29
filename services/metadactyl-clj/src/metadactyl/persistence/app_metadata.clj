@@ -23,13 +23,13 @@
   "Obtains the list of users who can access an app."
   [app-id]
   (map :username
-       (select [:transformation_activity :a]
-               (join [:template_group_template :tgt]
-                     {:a.hid :tgt.template_id})
-               (join [:template_group :tg]
-                     {:tgt.template_group_id :tg.hid})
+       (select [:apps :a]
+               (join [:app_category_app :aca]
+                     {:a.id :aca.app_id})
+               (join [:app_categories :g]
+                     {:aca.app_category_id :g.id})
                (join [:workspace :w]
-                     {:tg.workspace_id :w.id})
+                     {:g.workspace_id :w.id})
                (join [:users :u]
                      {:w.user_id :u.id})
                (fields :u.username)
@@ -38,11 +38,11 @@
 (defn permanently-delete-app
   "Permanently removes an app from the metadata database."
   [app-id]
-  (delete/permanently-delete-app ((comp :hid get-app) app-id)))
+  (delete/permanently-delete-app ((comp :id get-app) app-id)))
 
 (defn delete-app
   "Marks an app as deleted in the metadata database."
   [app-id]
-  (update :transformation_activity
+  (update :apps
           (set-fields {:deleted true})
           (where {:id app-id})))

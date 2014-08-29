@@ -5,7 +5,9 @@
         [metadactyl.routes.params]
         [metadactyl.zoidberg :only [edit-app copy-app edit-workflow]]
         [compojure.api.sweet])
-  (:require [metadactyl.util.service :as service]
+  (:require [clojure-commons.error-codes :as ce]
+            [metadactyl.service.app-metadata :as app-metadata]
+            [metadactyl.util.service :as service]
             [compojure.route :as route]
             [ring.swagger.schema :as ss]
             [schema.core :as s]))
@@ -52,6 +54,14 @@
          :summary "Make a Copy of a Pipeline Available for Editing"
          :notes "This service can be used to make a copy of a Pipeline in the user's workspace."
          (service/trap #(copy-app app-id)))
+
+  (DELETE* "/:app-id" []
+           :path-params [app-id :- AppIdPathParam]
+           :query [params SecuredQueryParams]
+           :summary "Logically Deleting an App"
+           :notes "An app can be marked as deleted in the DE without being completely removed from
+           the database using this service."
+           (ce/trap "delete-workflow" #(app-metadata/delete-app app-id)))
 
   (context "/categories" []
            (GET* "/" []

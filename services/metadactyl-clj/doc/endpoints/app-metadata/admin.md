@@ -3123,7 +3123,7 @@ following format for the deletion of one or more private analyses:
 
 ```json
 {
-    "analysis_ids": ["some-analysis-id", "another-analysis-id", ...]
+    "app_ids": ["some-analysis-id", "another-analysis-id", ...]
 }
 ```
 
@@ -3133,7 +3133,7 @@ the deletion of one or more public analyses by ID is in this format:
 
 ```json
 {
-    "analysis_ids": ["some-analysis-id", "another-analysis-id", ...],
+    "app_ids": ["some-analysis-id", "another-analysis-id", ...],
     "root_deletion_request": true
 }
 ```
@@ -3152,7 +3152,7 @@ using the app identifiers, the request body should be in the following format:
 
 ```json
 {
-    "analysis_ids": ["some-analysis-id", "another-analysis-id", ...]
+    "app_ids": ["some-analysis-id", "another-analysis-id", ...]
 }
 ```
 
@@ -3161,7 +3161,7 @@ request body should be in the following format:
 
 ```json
 {
-    "analysis_ids": ["some-analysis-id", "another-analysis-id", ...],
+    "app_ids": ["some-analysis-id", "another-analysis-id", ...],
     "root_deletion_request": true
 }
 ```
