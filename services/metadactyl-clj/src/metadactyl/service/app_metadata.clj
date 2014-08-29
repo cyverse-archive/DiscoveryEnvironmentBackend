@@ -5,7 +5,6 @@
         [metadactyl.user :only [current-user]]
         [metadactyl.util.service :only [build-url success-response parse-json]]
         [korma.db :only [transaction]]
-        [kameleon.uuids :only [uuidify]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
@@ -38,25 +37,21 @@
 (defn- validate-deletion-request
   "Validates an app deletion request."
   [req]
-  (validate-map req {:app_ids #(and (vector? %) (every? string? %))})
   (when (empty? (:app_ids req))
     (throw+ {:error_code ce/ERR_BAD_REQUEST
-             :reason     "no analysis identifiers provided"}))
+             :reason     "no app identifiers provided"}))
   (when (and (nil? (:username current-user)) (not (:root_deletion_request req)))
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "no username provided for non-root deletion request"}))
-  (dorun (map (comp validate-app-existence uuidify) (:app_ids req)))
+  (dorun (map validate-app-existence (:app_ids req)))
   (when-not (:root_deletion_request req)
-    (dorun (map (comp (partial validate-app-ownership (:username current-user)) uuidify)
-                (:app_ids req)))))
+    (dorun (map (partial validate-app-ownership (:username current-user)) (:app_ids req)))))
 
-;; TODO remove or re-implement endpoint?
 (defn delete-apps
   "This service marks existing apps as deleted in the database."
   [req]
-  (log/warn req)
   (validate-deletion-request req)
-  (transaction (dorun (map (comp amp/delete-app uuidify) (:app_ids req))))
+  (transaction (dorun (map amp/delete-app (:app_ids req))))
   {})
 
 (defn delete-app

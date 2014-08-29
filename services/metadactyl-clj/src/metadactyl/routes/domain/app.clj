@@ -170,3 +170,10 @@
    (optional-key :groups)
    (describe [AppGroup] "The list of Parameter Groups associated with the App")})
 
+(defschema AppIdList
+  {:app_ids (describe [UUID] "A List of UUIDs used to identify Apps")})
+
+(defschema AppDeletionRequest
+  (merge AppIdList
+         {(optional-key :root_deletion_request)
+          (describe Boolean "Set to `true` to  delete one or more public apps")}))

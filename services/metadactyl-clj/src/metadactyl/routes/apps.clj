@@ -4,7 +4,8 @@
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.params]
         [metadactyl.zoidberg :only [edit-app copy-app edit-workflow]]
-        [compojure.api.sweet])
+        [compojure.api.sweet]
+        [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
             [metadactyl.service.app-metadata :as app-metadata]
             [metadactyl.util.service :as service]
@@ -60,8 +61,21 @@
            :query [params SecuredQueryParams]
            :summary "Logically Deleting an App"
            :notes "An app can be marked as deleted in the DE without being completely removed from
-           the database using this service."
-           (ce/trap "delete-workflow" #(app-metadata/delete-app app-id)))
+           the database using this service. <b>Note</b>: an attempt to delete an App that is already
+           marked as deleted is treated as a no-op rather than an error condition. If the App
+           doesn't exist in the database at all, however, then that is treated as an error condition."
+           (ce/trap "delete-app" #(app-metadata/delete-app app-id)))
+
+  (POST* "/shredder" []
+         :query [params SecuredQueryParams]
+         :body [body (describe AppDeletionRequest "List of App IDs to delete.")]
+         :summary "Logically Deleting Apps"
+         :notes "One or more Apps can be marked as deleted in the DE without being completely
+         removed from the database using this service. <b>Note</b>: an attempt to delete an app that
+         is already marked as deleted is treated as a no-op rather than an error condition. If the
+         App doesn't exist in the database at all, however, then that is treated as an error
+         condition."
+         (ce/trap "apps-shredder" #(app-metadata/delete-apps body)))
 
   (route/not-found (service/unrecognized-path-response)))
 

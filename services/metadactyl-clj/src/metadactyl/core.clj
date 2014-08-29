@@ -11,6 +11,7 @@
         [metadactyl.routes.params]
         [metadactyl.user :only [store-current-user]]
         [ring.middleware keyword-params nested-params]
+        [ring.swagger.schema :only [describe]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
             [compojure.route :as route]

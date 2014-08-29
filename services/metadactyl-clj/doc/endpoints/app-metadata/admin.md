@@ -3111,38 +3111,6 @@ $ curl -sd '
 }
 ```
 
-## Logically Deleting an Analysis
-
-*Secured Endpoint:* POST /secured/delete-workflow
-
-An app can be marked as deleted in the DE without being completely removed from
-the database using this service. To mark one or more private apps as deleted
-using the app identifiers, the request body should be in the following format:
-
-```json
-{
-    "app_ids": ["some-analysis-id", "another-analysis-id", ...]
-}
-```
-
-To mark one or more public apps as deleted using the app identifiers, the
-request body should be in the following format:
-
-```json
-{
-    "app_ids": ["some-analysis-id", "another-analysis-id", ...],
-    "root_deletion_request": true
-}
-```
-
-The response body for this service contains a simple success flag when the
-service succeeds. If the service fails then the response body contains a success
-flag and a brief message indicating the reason for the failure.
-
-Note that an attempt to delete an app that is already marked as deleted is
-treated as a no-op rather than an error condition. If the app doesn't exist in
-the database at all, however, then that is treated as an error condition.
-
 ## Previewing Templates
 
 *Unsecured Endpoint:* POST /preview-template
