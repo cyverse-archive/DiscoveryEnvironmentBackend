@@ -15,6 +15,10 @@
   ([existing-params]
      (xforms/add-current-user-to-map existing-params)))
 
+(defn- metadactyl-url
+  [& components]
+  (str (apply curl/url (config/metadactyl-unprotected-base-url) components)))
+
 (defn- unsecured-url
   [& components]
   (str (apply curl/url (config/metadactyl-unprotected-base-url) components)))
@@ -101,7 +105,7 @@
 
 (defn app-publishable?
   [app-id]
-  (-> (client/get (secured-url "is-publishable" app-id)
+  (-> (client/get (metadactyl-url "apps" app-id "is-publishable")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)

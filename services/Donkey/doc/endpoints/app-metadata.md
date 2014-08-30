@@ -713,13 +713,13 @@ Delegates to metadactyl: POST /secured/make-analysis-public
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Determining if an Analysis Can be Made Public
+## Determining if an App Can be Made Public
 
-Secured Endpoint: GET /secured/is-publishable/{analysis-id}
+Secured Endpoint: GET /secured/is-publishable/{app-id}
 
-Delegates to metadactyl: GET /secured/is-publishable/{analysis-id}
+Delegates to metadactyl: GET /apps/{app-id}/is-publishable
 
-This endpoint is a passthrough to the metadactyl endpoint using the same path.
+This endpoint is a passthrough to the metadactyl endpoint using the path above.
 Please see the metadactyl documentation for more information.
 
 ## Making a Pipeline Available for Editing

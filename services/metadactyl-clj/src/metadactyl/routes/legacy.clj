@@ -1,7 +1,6 @@
 (ns metadactyl.routes.legacy
   (:use [metadactyl.app-categorization]
         [metadactyl.app-listings]
-        [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.collaborators]
         [metadactyl.metadata.element-listings :only [list-elements]]
         [metadactyl.metadata.tool-requests]
@@ -63,10 +62,6 @@
 
   (POST "/make-analysis-public" [:as {body :body}]
         (trap #(throw+ '("make-app-public" body))))
-
-  (GET "/is-publishable/:app-id" [app-id]
-       (ce/trap "is-publishable"
-                (fn [] {:publishable (first (app-publishable? app-id))})))
 
   (GET "/collaborators" [:as {params :params}]
        (get-collaborators params))

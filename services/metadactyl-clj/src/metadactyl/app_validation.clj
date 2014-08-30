@@ -67,34 +67,26 @@
    (when (nil? (get-deployed-component-from-database component-id))
      (throw+ {:type ::UnknownDeployedComponentException :component-id component-id}))))
 
-(defn- template-ids-for-app
-  "Get the list of template IDs associated with an app."
+(defn- task-ids-for-app
+  "Get the list of task IDs associated with an app."
   [app-id]
-  (map :template_id
-       (select [:analysis_listing :a]
-               (fields :tx.template_id)
-               (join [:transformation_task_steps :tts]
-                     {:a.hid :tts.transformation_task_id})
-               (join [:transformation_steps :ts]
-                     {:tts.transformation_step_id :ts.id})
-               (join [:transformations :tx]
-                     {:ts.transformation_id :tx.id})
+  (map :task_id
+       (select [:apps :a]
+               (fields :step.task_id)
+               (join [:app_steps :step]
+                     {:a.id :step.app_id})
                (where {:a.id app-id}))))
 
 (defn- private-apps-for
-  "Finds private single-step apps for a list of template IDs."
-  [template-ids]
-  (select [:analysis_listing :a]
+  "Finds private single-step apps for a list of task IDs."
+  [task-ids]
+  (select [:app_listing :a]
           (fields :a.id :a.name)
-          (join [:transformation_task_steps :tts]
-                {:a.hid :tts.transformation_task_id})
-          (join [:transformation_steps :ts]
-                {:tts.transformation_step_id :ts.id})
-          (join [:transformations :tx]
-                {:ts.transformation_id :tx.id})
-          (where {:tx.template_id [in template-ids]
-                  :a.step_count   1
-                  :a.is_public    false})))
+          (join [:app_steps :step]
+                {:a.id :step.app_id})
+          (where {:step.task_id [in task-ids]
+                  :a.step_count 1
+                  :a.is_public  false})))
 
 (defn app-publishable?
   "Determines whether or not an app can be published. An app is publishable if none of the
@@ -102,11 +94,9 @@
    a flag indicating whether or not the app is publishable along with the reason the app isn't
    publishable if it's not."
   [app-id]
-  (if (string/blank? app-id)
-    [false "no app ID provided"]
-    (let [template-ids (template-ids-for-app app-id)
-          private-apps (private-apps-for template-ids)]
-      (cond (zero? (count template-ids)) [false "no app ID provided"]
-            (= 1 (count template-ids))   [true]
-            (pos? (count private-apps))  [false "contains private apps" private-apps]
-            :else                        [true]))))
+  (let [task-ids (task-ids-for-app app-id)
+        private-apps (private-apps-for task-ids)]
+    (cond (zero? (count task-ids))    [false "no app ID provided"]
+          (= 1 (count task-ids))      [true]
+          (pos? (count private-apps)) [false "contains private apps" private-apps]
+          :else                       [true])))

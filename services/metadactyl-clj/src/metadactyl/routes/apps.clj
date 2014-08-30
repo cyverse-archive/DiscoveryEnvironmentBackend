@@ -1,5 +1,6 @@
 (ns metadactyl.routes.apps
   (:use [metadactyl.app-listings :only [get-app-groups list-apps-in-group search-apps]]
+        [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.params]
@@ -55,6 +56,15 @@
          :summary "Make a Copy of a Pipeline Available for Editing"
          :notes "This service can be used to make a copy of a Pipeline in the user's workspace."
          (service/trap #(copy-app app-id)))
+
+  (GET* "/:app-id/is-publishable" [app-id]
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :summary "Determine if an App Can be Made Public"
+        :notes "A multi-step App can't be made public if any of the Tasks that are included in it
+        are not public. This endpoint returns a true flag if the App is a single-step App or it's a
+        multistep App in which all of the Tasks included in the pipeline are public."
+        (ce/trap "is-publishable" #(hash-map :publishable (first (app-publishable? app-id)))))
 
   (DELETE* "/:app-id" []
            :path-params [app-id :- AppIdPathParam]

@@ -20,7 +20,6 @@
 * [POST /import-template](endpoints/app-metadata/admin.md#importing-a-template)
 * [POST /import-tools](endpoints/app-metadata/admin.md#importing-tools)
 * [POST /import-workflow](endpoints/app-metadata/admin.md#importing-an-analysis)
-* [GET /is-publishable/{analysis-id}](endpoints/app-metadata/validation.md#determining-if-an-analysis-can-be-made-public)
 * [GET /list-analysis/{analysis-id}](endpoints/app-metadata/listing.md#listing-individual-analyses)
 * [POST /preview-template](endpoints/app-metadata/admin.md#previewing-templates)
 * [POST /preview-workflow](endpoints/app-metadata/admin.md#previewing-analyses)
