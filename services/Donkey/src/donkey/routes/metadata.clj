@@ -106,9 +106,6 @@
    (GET "/is-publishable/:app-id" [app-id]
         (trap #(app-publishable? app-id)))
 
-   (POST "/permanently-delete-workflow" [:as req]
-         (trap #(permanently-delete-workflow req)))
-
    (POST "/delete-workflow" [:as req]
          (trap #(delete-workflow req)))
 

@@ -392,23 +392,14 @@ Delegates to metadactyl: POST /export-deployed-components
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Permanently Deleting an Analysis
-
-Secured Endpoint: POST /secured/permanently-delete-workflow
-
-Delegates to metadactyl: POST /secured/permanently-delete-workflow
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
 ## Logically Deleting an Analysis
 
 Secured Endpoint: POST /secured/delete-workflow
 
-Delegates to metadactyl: POST /secured/delete-workflow
+Delegates to metadactyl: POST /apps/shredder
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint above.
+Please see the metadactyl documentation for more information.
 
 ## Previewing Templates
 

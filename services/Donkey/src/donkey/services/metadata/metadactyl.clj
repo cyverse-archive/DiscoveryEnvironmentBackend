@@ -20,6 +20,14 @@
   (apply build-url-with-query (notificationagent-base-url)
          (add-current-user-to-map (:params req)) components))
 
+(defn- build-metadactyl-url
+  "Adds the name and email of the currently authenticated user to the metadactyl URL with the given
+   relative URL path."
+  [{query :params} & components]
+  (apply build-url-with-query (metadactyl-unprotected-base-url)
+                              (add-current-user-to-map query)
+                              components))
+
 (defn- build-metadactyl-secured-url
   "Adds the name and email of the currently authenticated user to the secured
    metadactyl URL with the given relative URL path."
@@ -215,13 +223,7 @@
 (defn delete-workflow
   "This service will logically remove a workflow from the DE."
   [req]
-  (let [url (build-metadactyl-secured-url req "delete-workflow")]
-    (forward-post url req)))
-
-(defn permanently-delete-workflow
-  "This service will physically remove a workflow from the DE."
-  [req]
-  (let [url (build-metadactyl-secured-url req "permanently-delete-workflow")]
+  (let [url (build-metadactyl-url req "apps" "shredder")]
     (forward-post url req)))
 
 (defn bootstrap
