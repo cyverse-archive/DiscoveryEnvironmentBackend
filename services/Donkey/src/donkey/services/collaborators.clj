@@ -28,7 +28,7 @@
    Trellis."
   [req]
   (let [collaborators (with-db db/de
-                        (queries/get-collaborators (add-domain current-user)))
+                        (queries/get-collaborators (:username current-user)))
         collaborators (map remove-domain collaborators)]
     (success-response {:users (add-user-details collaborators)})))
 
@@ -43,7 +43,7 @@
   [req]
   (let [collaborators (extract-usernames (decode-stream (:body req)))]
     (with-db db/de
-      (queries/add-collaborators (add-domain current-user) (map add-domain collaborators)))
+      (queries/add-collaborators (:username current-user) (map add-domain collaborators)))
     (success-response)))
 
 (defn remove-collaborators
@@ -51,5 +51,5 @@
   [req]
   (let [collaborators (extract-usernames (decode-stream (:body req)))]
     (with-db db/de
-      (queries/remove-collaborators (add-domain current-user) (map add-domain collaborators)))
+      (queries/remove-collaborators (:username current-user) (map add-domain collaborators)))
     (success-response)))
