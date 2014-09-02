@@ -1,7 +1,6 @@
 (ns metadactyl.routes.legacy
   (:use [metadactyl.app-categorization]
         [metadactyl.app-listings]
-        [metadactyl.collaborators]
         [metadactyl.metadata.element-listings :only [list-elements]]
         [metadactyl.metadata.tool-requests]
         [metadactyl.user :only [current-user]]
@@ -62,15 +61,6 @@
 
   (POST "/make-analysis-public" [:as {body :body}]
         (trap #(throw+ '("make-app-public" body))))
-
-  (GET "/collaborators" [:as {params :params}]
-       (get-collaborators params))
-
-  (POST "/collaborators" [:as {params :params body :body}]
-        (add-collaborators params (slurp body)))
-
-  (POST "/remove-collaborators" [:as {params :params body :body}]
-        (remove-collaborators params (slurp body)))
 
   (GET "/reference-genomes" []
        (throw+ '("list-reference-genomes")))

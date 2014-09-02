@@ -2,6 +2,7 @@
   (:use [kameleon.core]
         [kameleon.entities]
         [korma.core]
+        [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
   (:import [java.sql Timestamp]))
 
@@ -113,7 +114,8 @@
   [username collaborators]
   (let [user-id (get-user-id username)
         collaborator-ids (get-user-ids collaborators)]
-    (dorun (map (partial add-collaboration user-id) collaborator-ids))))
+    (transaction
+      (dorun (map (partial add-collaboration user-id) collaborator-ids)))))
 
 (defn- user-id-subquery
   "Performs a subquery for a user ID."
@@ -133,7 +135,8 @@
 (defn remove-collaborators
   "Removes collaborators for a given fully qualified username."
   [username collaborators]
-  (dorun (map (partial remove-collaboration username) collaborators)))
+  (transaction
+    (dorun (map (partial remove-collaboration username) collaborators))))
 
 (defn fetch-workspace-by-user-id
   "Gets the workspace for the given user_id."

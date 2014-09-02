@@ -436,43 +436,6 @@
   [app-id]
   (cheshire/encode (dm/app-publishable? app-id)))
 
-(defn- add-user-details
-  "Adds user details to the results from a request to obtain a list of
-   collaborators."
-  [{:keys [users]}]
-  {:users (map get-user-details (filter #(not (string/blank? %)) users))})
-
-(defn get-collaborators
-  "Gets the list of collaborators from metadactyl and retrieves detailed
-   information from Trellis."
-  [req]
-  (let [url      (build-metadactyl-secured-url req "collaborators")
-        response (forward-get url req)
-        status   (:status response)]
-    (if-not (or (< status 200) (> status 299))
-      (success-response (add-user-details (decode-stream (:body response))))
-      response)))
-
-(defn- extract-usernames
-  "Extracts the usernames from the request body for the services to add and
-   remove collaborators."
-  [{:keys [users]}]
-  {:users (map :username users)})
-
-(defn add-collaborators
-  "Adds users to the list of collaborators for the current user."
-  [req]
-  (let [url   (build-metadactyl-secured-url req "collaborators")
-        users (cheshire/encode (extract-usernames (decode-stream (:body req))))]
-    (forward-post url req users)))
-
-(defn remove-collaborators
-  "Adds users to the list of collaborators for the current user."
-  [req]
-  (let [url   (build-metadactyl-secured-url req "remove-collaborators")
-        users (cheshire/encode (extract-usernames (decode-stream (:body req))))]
-    (forward-post url req users)))
-
 (defn list-reference-genomes
   "Lists the reference genomes in the database."
   [req]

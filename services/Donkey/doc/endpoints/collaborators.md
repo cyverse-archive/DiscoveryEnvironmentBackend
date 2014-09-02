@@ -17,11 +17,6 @@ information.
 
 Secured Endpoint: GET /secured/collaborators
 
-This endpoint calls the metadactyl endpoint with the same path. The response
-from the metadactyl endpoint returns just a list of usernames, however. This
-service takes that response and performs a lookup for all of the usernames in
-the list of collaborators.
-
 This service can be used to retrieve the list of collaborators for the
 authenticated user. The response body is in the following format:
 
@@ -69,10 +64,6 @@ $ curl -s "http://by-tor:8888/secured/collaborators?proxyToken=$(cas-ticket)" | 
 
 Secured Endpoint: POST /secured/collaborators
 
-This service calls the metadactyl service with the same path. The request body
-is altered to match the format required by the metadactyl service before the
-request is forwarded, however.
-
 This service can be used to add users to the list of collaborators for the
 current user. The request body is in the following format:
 
@@ -95,6 +86,9 @@ Note that the only field that is actually required for each user is the
 however. This feature is provided as a convenience to the caller, who may be
 forwarding results from the user search service to this service.
 
+An attempt to add a user that is already listed as a collaborator to the list of
+collaborators will be silently ignored.
+
 Here's an example:
 
 ```
@@ -115,10 +109,6 @@ $ curl -sd '
 ## Removing Collaborators
 
 Secured Endpoint: POST /secured/remove-collaborators
-
-This service calls the metadactyl service with the same path. The request body
-is altered to match the format required by the metadactyl service before the
-request is forwarded, however.
 
 This service can be used to remove users from the list of collaborators for the
 current user. The request body is in the following format:
@@ -141,6 +131,9 @@ Note that the only field that is actually required for each user is the
 `username` field. The rest of the fields may be included if desired,
 however. This feature is provided as a convenience to the caller, who may be
 forwarding results from the user search service to this service.
+
+An attempt to remove a user who is not listed as a collaborator from the list of
+collaborators will be silently ignored.
 
 Here's an example:
 
