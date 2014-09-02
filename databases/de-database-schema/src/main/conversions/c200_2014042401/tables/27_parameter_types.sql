@@ -10,5 +10,6 @@ ALTER TABLE ONLY parameter_types RENAME COLUMN value_type_id TO value_type_id_v1
 ALTER TABLE ONLY parameter_types ALTER COLUMN id TYPE UUID USING
  CAST(regexp_replace(id, 'pt(.*)', '\1') AS UUID);
 ALTER TABLE ONLY parameter_types ALTER COLUMN id SET DEFAULT uuid_generate_v1();
+ALTER TABLE ONLY parameter_types ALTER COLUMN description TYPE TEXT;
 ALTER TABLE ONLY parameter_types ADD COLUMN value_type_id UUID;
 

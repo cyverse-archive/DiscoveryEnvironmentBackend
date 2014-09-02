@@ -7,7 +7,7 @@ CREATE TABLE parameter_groups (
     id uuid NOT NULL DEFAULT uuid_generate_v1(),
     task_id uuid NOT NULL,
     name character varying(255) NOT NULL,
-    description character varying(255),
+    description text,
     label character varying(255),
     is_visible boolean DEFAULT true
 );

@@ -6,4 +6,5 @@ SET search_path = public, pg_catalog;
 ALTER TABLE ONLY info_type ALTER COLUMN id TYPE UUID USING CAST(id AS UUID);
 ALTER TABLE ONLY info_type ALTER COLUMN id SET DEFAULT uuid_generate_v1();
 ALTER TABLE ONLY info_type RENAME COLUMN hid TO hid_v187;
+ALTER TABLE ONLY info_type ALTER COLUMN description TYPE TEXT;
 

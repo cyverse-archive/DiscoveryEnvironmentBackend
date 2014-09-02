@@ -15,6 +15,7 @@ ALTER TABLE ONLY parameter_groups
     END;
 ALTER TABLE ONLY parameter_groups ALTER COLUMN id SET DEFAULT uuid_generate_v1();
 ALTER TABLE ONLY parameter_groups ALTER COLUMN is_visible SET DEFAULT TRUE;
+ALTER TABLE ONLY parameter_groups ALTER COLUMN description TYPE TEXT;
 ALTER TABLE ONLY parameter_groups ADD COLUMN task_id UUID;
 
 WITH dups AS (SELECT id, COUNT(hid_v187) FROM parameter_groups GROUP BY id)

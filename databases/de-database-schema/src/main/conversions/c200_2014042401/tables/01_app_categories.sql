@@ -14,6 +14,7 @@ ALTER TABLE ONLY app_categories RENAME COLUMN hid TO hid_v187;
 ALTER TABLE ONLY app_categories RENAME COLUMN workspace_id TO workspace_id_v187;
 ALTER TABLE ONLY app_categories ALTER COLUMN id TYPE UUID USING CAST(id AS UUID);
 ALTER TABLE ONLY app_categories ALTER COLUMN id SET DEFAULT uuid_generate_v1();
+ALTER TABLE ONLY app_categories ALTER COLUMN description TYPE TEXT;
 ALTER TABLE ONLY app_categories ADD COLUMN workspace_id UUID;
 
 UPDATE app_categories SET id = (uuid_generate_v1())

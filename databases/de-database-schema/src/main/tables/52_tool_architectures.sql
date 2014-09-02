@@ -6,7 +6,7 @@ SET search_path = public, pg_catalog;
 CREATE TABLE tool_architectures (
     id UUID NOT NULL DEFAULT uuid_generate_v1(),
     name VARCHAR(64) NOT NULL,
-    description VARCHAR(256) NOT NULL
+    description TEXT NOT NULL
 );
 
 --
