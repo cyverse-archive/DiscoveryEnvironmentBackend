@@ -13,6 +13,8 @@
     "monkey.es.batch-size"
     "monkey.es.scroll-size"
     "monkey.es.scroll-timeout"
+    "monkey.log-progress-enabled"
+    "monkey.log-progress-interval"
     "monkey.tags.host"
     "monkey.tags.port"
     "monkey.tags.db"
@@ -92,6 +94,30 @@
      It returns the scroll timeout"
   [^PersistentArrayMap props]
   (get props "monkey.es.scroll-timeout"))
+
+
+(defn ^Boolean log-progress?
+  "Indicates whether or not progress logging is enabled.
+
+   Parameters:
+     props - the property map to use
+
+   Returns:
+     It returns the true if progress should be logged, otherwise false."
+  [^PersistentArrayMap props]
+  (Boolean/parseBoolean (get props "monkey.log-progress-enabled")))
+
+
+(defn ^Integer progress-logging-interval
+  "It returns the number of items that must of been processed before progress is logged.
+
+   Parameters:
+     props - the property map to use
+
+   Returns:
+     It returns the item count."
+  [^PersistentArrayMap props]
+  (Integer/parseInt (get props "monkey.log-progress-interval")))
 
 
 (defn ^String tags-host
