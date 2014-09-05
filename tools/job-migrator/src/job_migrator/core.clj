@@ -28,12 +28,7 @@
     (:config options)))
 
 (defn- add-new-job-fields [job]
-  (update :jobs
-          (set-fields {:app_id             (:app-id job)
-                       :app_description    (:app-description job)
-                       :app_wiki_url       (:app-wiki-url job)
-                       :result_folder_path (:result-folder-path job)})
-          (where {:id (:id job)}))
+  (println "Updating job:" (str (:id job)))
   (exec-raw ["UPDATE jobs SET submission = CAST ( ? AS json ) WHERE id = ?"
              [(cast Object (cheshire/encode (:job-submission job))) (:id job)]]))
 
@@ -51,7 +46,8 @@
                   [:s.external_id :external-id]
                   [:u.username    :username]
                   [:t.name        :job-type])
-          (where {:j.deleted false})))
+          (where {:j.deleted    false
+                  :j.submission nil})))
 
 (defn- get-app-wiki-url [app-id]
   (or (-> (select :analysis_listing
@@ -97,8 +93,7 @@
        :job-submission     (.regenerateJobSubmission agave external-id)))
    (catch Object e
      (println e)
-     (println "WARNING: deleting job" id)
-     (delete-job id))))
+     (System/exit 1))))
 
 (defn- get-new-job-fields [{:keys [job-type] :as job}]
   (condp = job-type
