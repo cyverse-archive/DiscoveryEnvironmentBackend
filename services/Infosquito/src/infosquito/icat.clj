@@ -336,7 +336,7 @@
   [cfg indexer]
   (log/info "indexing" (count-collections cfg) "collections")
   (->> (partial index-entries indexer dir-type)
-       (notifier (:notify? cfg) (:notify-count cfg))
+       (notifier (:notify? cfg) #(log/info %) (:notify-count cfg))
        (get-collections cfg))
   (log/info "collection indexing complete"))
 
@@ -345,7 +345,7 @@
   [cfg indexer]
   (log/info "indexing" (count-data-objects cfg) "data objects")
   (->> (partial index-entries indexer file-type)
-       (notifier (:notify? cfg) (:notify-count cfg))
+       (notifier (:notify? cfg) #(log/info %) (:notify-count cfg))
        (get-data-objects cfg))
   (log/info "data object indexing complete"))
 
