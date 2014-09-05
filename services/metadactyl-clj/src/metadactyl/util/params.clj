@@ -34,7 +34,7 @@
   ([ks m d]
      (let [v (first (remove blank? (map m ks)))]
        (if-not (nil? v)
-         (to-long v)
+         (if (string? v) (to-long v) v)
          d))))
 
 (defn optional-boolean

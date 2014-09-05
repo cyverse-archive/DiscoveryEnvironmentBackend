@@ -68,15 +68,6 @@
   (PUT "/reference-genomes" [:as {body :body}]
        (throw+ '("replace-reference-genomes" (slurp body))))
 
-  (PUT "/tool-request" [:as {body :body}]
-       (submit-tool-request (:username current-user) body))
-
-  (POST "/tool-request" [:as {body :body}]
-        (update-tool-request (config/uid-domain) (:username current-user) body))
-
-  (GET "/tool-requests" [:as {:keys [params]}]
-       (list-tool-requests (assoc params :username (:username current-user))))
-
   (route/not-found (unrecognized-path-response)))
 
 (defroutes* metadactyl-routes
@@ -163,18 +154,6 @@
 
   (GET "/get-app-description/:app-id" [app-id]
        (trap #(get-app-description app-id)))
-
-  (POST "/tool-request" [:as {body :body}]
-        (trap #(update-tool-request (config/uid-domain) body)))
-
-  (GET "/tool-request/:uuid" [uuid]
-       (trap #(get-tool-request uuid)))
-
-  (GET "/tool-requests" [:as {params :params}]
-       (trap #(list-tool-requests params)))
-
-  (GET "/tool-request-status-codes" [:as {params :params}]
-       (trap #(list-tool-request-status-codes params)))
 
   (POST "/arg-preview" [:as {body :body}]
         (ce/trap "arg-preview" #(app-metadata/preview-command-line body)))

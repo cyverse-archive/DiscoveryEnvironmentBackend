@@ -8,6 +8,7 @@
         [metadactyl.kormadb]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.pipeline]
+        [metadactyl.routes.domain.tool-requests]
         [metadactyl.routes.params]
         [metadactyl.user :only [store-current-user]]
         [ring.middleware keyword-params nested-params]
@@ -18,7 +19,9 @@
             [compojure.handler :as handler]
             [common-cli.core :as ccli]
             [me.raynes.fs :as fs]
+            [metadactyl.routes.admin :as admin-routes]
             [metadactyl.routes.apps :as app-routes]
+            [metadactyl.routes.tool-requests :as tool-request-routes]
             [metadactyl.routes.legacy :as legacy-routes]
             [metadactyl.util.config :as config]
             [ring.adapter.jetty :as jetty]))
@@ -85,6 +88,14 @@
               :description "Discovery Environment App endpoints."
               (context "/apps" [:as {params :params}]
                        (store-current-user app-routes/apps params)))
+   (swaggered "tool-requests"
+              :description "Tool Request endpoints."
+              (context "/tool-requests" [:as {params :params}]
+                       (store-current-user tool-request-routes/tool-requests params)))
+   (swaggered "admin-tool-requests"
+              :description "Admin Tool Request endpoints."
+              (context "/admin/tool-requests" [:as {params :params}]
+                       (store-current-user admin-routes/tool-requests params)))
    (swaggered "secured"
               :description "Secured Discovery Environment App endpoints."
               (context "/secured" [:as {params :params}]

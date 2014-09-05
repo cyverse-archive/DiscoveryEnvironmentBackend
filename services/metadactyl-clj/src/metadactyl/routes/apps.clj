@@ -99,7 +99,7 @@
 
    (GET* "/:category-id" []
          :path-params [category-id :- AppCategoryIdPathParam]
-         :query [params AppListingParams]
+         :query [params SecuredPagingParams]
          :summary "List Apps in a Category"
          :notes "This service lists all of the apps within an app category or any of its
          descendents. The DE uses this service to obtain the list of apps when a user

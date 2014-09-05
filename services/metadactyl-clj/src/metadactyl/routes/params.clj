@@ -46,10 +46,10 @@
              are in the user's workspace are returned. If not set, then both public and the user's
              private categories are returned.")}))
 
-(s/defschema AppListingParams
+(s/defschema SecuredPagingParams
   (merge SecuredQueryParams PagingParams))
 
 (s/defschema AppSearchParams
-  (merge AppListingParams
+  (merge SecuredPagingParams
          {:search (ss/describe String "The pattern to match in an App's Name or Description.")}))
 
