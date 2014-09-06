@@ -1,6 +1,6 @@
 (ns metadactyl.routes.domain.app
   (:use [ring.swagger.schema :only [describe]]
-        [schema.core :only [defschema optional-key Any]])
+        [schema.core :only [defschema optional-key enum Any]])
   (:import [java.util UUID]))
 
 (defschema AppParameterListItem
@@ -241,3 +241,16 @@
   (merge AppIdList
          {(optional-key :root_deletion_request)
           (describe Boolean "Set to `true` to  delete one or more public apps")}))
+
+(defschema AppElementTypeParam
+  (describe
+    (enum
+      "components"
+      "data-sources"
+      "formats"
+      "info-types"
+      "property-types"
+      "rule-types"
+      "tool-types"
+      "value-types")
+    "The App element types that are currently supported."))

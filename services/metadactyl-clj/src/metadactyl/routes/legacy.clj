@@ -1,7 +1,6 @@
 (ns metadactyl.routes.legacy
   (:use [metadactyl.app-categorization]
         [metadactyl.app-listings]
-        [metadactyl.metadata.element-listings :only [list-elements]]
         [metadactyl.metadata.tool-requests]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.service]
@@ -73,9 +72,6 @@
 (defroutes* metadactyl-routes
   (GET "/" []
        "Welcome to Metadactyl!\n")
-
-  (GET "/get-workflow-elements/:element-type" [element-type :as {params :params}]
-       (trap #(success-response (list-elements element-type params))))
 
   (GET "/search-deployed-components/:search-term" [search-term]
        (trap #(throw+ '("search-deployed-components" search-term))))

@@ -4,7 +4,8 @@
         [kameleon.queries]
         [korma.core]
         [slingshot.slingshot :only [throw+]])
-  (:require [cheshire.core :as cheshire]))
+  (:require [cheshire.core :as cheshire]
+            [metadactyl.util.service :as service]))
 
 (defn- base-property-type-query
   "Creates the base query used to list property types for the metadata element
@@ -50,7 +51,7 @@
   [_]
   {:formats
    (select data_formats
-           (fields [:id :hid] [:guid :id] :name :label)
+           (fields :id :name :label)
            (order :display_order))})
 
 (defn- list-data-sources
@@ -58,7 +59,7 @@
   [_]
   {:data_sources
    (select data_source
-           (fields [:id :hid] [:uuid :id] :name :label)
+           (fields :id :name :label)
            (order :display_order))})
 
 (defn- list-deployed-components
@@ -69,7 +70,6 @@
            (fields [:tools.id :id]
                    [:tools.name :name]
                    [:tools.description :description]
-                   [:tools.hid :hid]
                    [:tools.location :location]
                    [:tool_types.name :type]
                    [:tools.version :version]
@@ -81,7 +81,7 @@
   [_]
   {:info_types
    (select info_type
-           (fields :id :name :label :description :hid)
+           (fields :id :name :label :description)
            (where {:deprecated false})
            (order :display_order))})
 
@@ -114,7 +114,6 @@
                     [:rule_type.name :name]
                     [:rule_type.label :label]
                     [:rule_type.description :description]
-                    [:rule_type.hid :hid]
                     [:rule_subtype.name :subtype]
                     [:rule_type.rule_description_format :rule_description_format])
             (join rule_subtype)
@@ -123,14 +122,14 @@
 (defn- list-tool-types
   "Obtains the list of tool types for the metadata element listing service."
   [_]
-  {:tool_types (select tool_types)})
+  {:tool_types (select tool_types (fields :id :name :label :description))})
 
 (defn- list-value-types
   "Obtains the list of value types for the metadata element listing service."
   [_]
   {:value_types
    (select value_type
-           (fields :hid :id :name :description))})
+           (fields :id :name :description))})
 
 (def ^:private listing-fns
   "The listing functions to use for various metadata element types."
@@ -152,8 +151,9 @@
   "Lists selected workflow elements.  This function handles requests to list
    various different types of workflow elements."
   [elm-type params]
-  (cond
-   (= elm-type "all")               (list-all params)
-   (contains? listing-fns elm-type) ((listing-fns elm-type) params)
-   :else                            (throw+ {:type ::unrecognized_workflow_component_type
-                                             :name elm-type})))
+  (service/swagger-response
+    (cond
+      (= elm-type "all")               (list-all params)
+      (contains? listing-fns elm-type) ((listing-fns elm-type) params)
+      :else                            (throw+ {:type ::unrecognized_workflow_component_type
+                                                :name elm-type}))))
