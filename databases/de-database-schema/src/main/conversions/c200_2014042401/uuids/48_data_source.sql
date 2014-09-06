@@ -5,7 +5,7 @@ SET search_path = public, pg_catalog;
 --
 UPDATE file_parameters SET data_source_id =
     (SELECT d.id FROM data_source d
-     WHERE d.id_v187 = data_source_id_v187);
+     WHERE d.display_order = data_source_id_v187);
 
 -- Add NOT NULL constraints on foreign key columns.
 ALTER TABLE ONLY file_parameters ALTER COLUMN data_source_id SET NOT NULL;

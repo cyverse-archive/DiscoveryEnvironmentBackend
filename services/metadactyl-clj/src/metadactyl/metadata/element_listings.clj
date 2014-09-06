@@ -59,7 +59,7 @@
   {:data_sources
    (select data_source
            (fields [:id :hid] [:uuid :id] :name :label)
-           (order :id))})
+           (order :display_order))})
 
 (defn- list-deployed-components
   "Obtains a listing of deployed components for the metadata element listing service."
