@@ -7,7 +7,7 @@
         [kameleon.app-listing]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config]
-        [metadactyl.util.conversions :only [to-long date->long]]
+        [metadactyl.util.conversions :only [to-long date->long remove-nil-vals]]
         [metadactyl.workspace])
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
@@ -78,7 +78,7 @@
   [params]
   (let [workspace (get-or-create-workspace (:username current-user))
         workspace-id (:id workspace)]
-    {:groups (format-app-group-hierarchy workspace-id params workspace)}))
+    {:groups [(format-app-group-hierarchy workspace-id params workspace)]}))
 
 (defn get-visible-app-groups
   "Retrieves the list of app groups that are visible to a user."
@@ -95,7 +95,7 @@
   "Retrieves the list of app groups that are visible to all users, the current user's app groups, or
    both, depending on the :public param."
   [{:keys [public] :as params}]
-  (service/success-response
+  (service/swagger-response
     (if (contains? params :public)
       (if-not public
         (get-workspace-app-groups params)
@@ -168,7 +168,8 @@
       (format-app-timestamps)
       (format-app-ratings)
       (format-app-pipeline-eligibility)
-      (assoc :can_favor true :can_rate true :app_type "DE")))
+      (assoc :can_favor true :can_rate true :app_type "DE")
+      (remove-nil-vals)))
 
 (defn- list-apps-in-virtual-group
   "Formats a listing for a virtual group."
@@ -209,7 +210,7 @@
    descendents."
   [app-group-id params]
   (let [workspace (get-or-create-workspace (:username current-user))]
-    (service/success-response
+    (service/swagger-response
      (or (list-apps-in-virtual-group workspace app-group-id params)
          (list-apps-in-real-group workspace app-group-id params)))))
 
@@ -226,7 +227,7 @@
                         (workspace-favorites-app-group-index)
                         params)
         search_results (map format-app search_results)]
-    (service/success-response {:app_count total
+    (service/swagger-response {:app_count total
                                :apps search_results})))
 
 (defn- load-app-details

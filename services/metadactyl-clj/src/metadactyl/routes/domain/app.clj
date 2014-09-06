@@ -156,19 +156,83 @@
       `defalutValue` field that can contain any type of value, but the current version of the
       documentation library does not support documenting these kinds of fields.")})
 
-(defschema App
-  {:id                            (describe UUID "A UUID that is used to identify the App")
-   :name                          (describe String "The App's name")
-   :description                   (describe String "The App's description")
-   (optional-key :label)          (describe String "The App's display name")
-   (optional-key :published_date) (describe Long "The App's Date of public submission")
-   (optional-key :edited_date)    (describe Long "The App's Date of its last edit")
-   (optional-key :tool)           (describe String "The tool used to execute the App")
-   (optional-key :tool_id)        (describe UUID "A UUID that is used to identify the App's tool")
-   (optional-key :references)     (describe [String] "The App's references")
+(defschema AppBase
+  {:id                              (describe UUID "A UUID that is used to identify the App")
+   :name                            (describe String "The App's name")
+   :description                     (describe String "The App's description")
+   (optional-key :integration_date) (describe Long "The App's Date of public submission")
+   (optional-key :edited_date)      (describe Long "The App's Date of its last edit")})
 
-   (optional-key :groups)
-   (describe [AppGroup] "The list of Parameter Groups associated with the App")})
+(defschema App
+  (merge AppBase
+         {(optional-key :tool)       (describe String "The tool used to execute the App")
+          (optional-key :tool_id)    (describe UUID "A UUID that is used to identify the App's tool")
+          (optional-key :references) (describe [String] "The App's references")
+
+          (optional-key :groups)     (describe [AppGroup]
+                                       "The list of Parameter Groups associated with the App")}))
+
+(defschema PipelineEligibility
+  {:is_valid (describe Boolean "Whether the App can be used in a Pipeline")
+   :reason (describe String "The reason an App cannot be used in a Pipeline")})
+
+(defschema Rating
+  {:average                   (describe Double "The average user rating for this App")
+   (optional-key :user)       (describe Long "The current user's rating for this App")
+   (optional-key :comment-id) (describe String
+                                "The ID of the current user's rating comment for this App")})
+
+(defschema AppDetails
+  (merge AppBase
+    {:app_type
+     (describe String "The type ID of the App")
+
+     :can_favor
+     (describe Boolean "Whether the current user can favorite this App")
+
+     :can_rate
+     (describe Boolean "Whether the current user can rate this App")
+
+     :can_run
+     (describe Boolean
+       "This flag is calculated by comparing the number of steps in the app to the number of steps
+        that have a tool associated with them. If the numbers are different then this flag is set to
+        `false`. The idea is that every step in the analysis has to have, at the very least, a tool
+        associated with it in order to run successfully")
+
+     :deleted
+     (describe Boolean "Whether the App is marked as deleted")
+
+     :disabled
+     (describe Boolean "Whether the App is marked as disabled")
+
+     :integrator_email
+     (describe String "The App integrator's email address")
+
+     :integrator_name
+     (describe String "The App integrator's full name")
+
+     :is_favorite
+     (describe Boolean "Whether the current user has marked the App as a favorite")
+
+     :is_public
+     (describe Boolean "Whether the App has been published and is viewable by all users")
+
+     :pipeline_eligibility
+     (describe PipelineEligibility "Whether the App can be used in a Pipeline")
+
+     :rating
+     (describe Rating "The App's rating details")
+
+     :step_count
+     (describe Long "The number of Tasks this App executes")
+
+     (optional-key :wiki_url)
+     (describe String "The App's documentation URL")}))
+
+(defschema AppListing
+  {:app_count (describe Long "The total number of Apps in the listing")
+   :apps      (describe [AppDetails] "A listing of App details")})
 
 (defschema AppIdList
   {:app_ids (describe [UUID] "A List of UUIDs used to identify Apps")})

@@ -154,9 +154,8 @@
   (first (select apps
            (fields :id
                    :name
-                   [:name :label]
                    :description
-                   [:integration_date :published_date]
+                   :integration_date
                    :edited_date)
            (with app_references)
            (with tasks
@@ -292,7 +291,7 @@
         groups (map format-group (:parameter_groups task))]
     (remove-nil-vals
       (-> app
-          (assoc :published_date (date->long (:published_date app))
+          (assoc :integration_date (date->long (:integration_date app))
                  :edited_date (date->long (:edited_date app))
                  :references (:app_references app)
                  :tool (:tool task)
