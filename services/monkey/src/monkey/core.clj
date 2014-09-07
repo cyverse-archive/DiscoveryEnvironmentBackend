@@ -6,6 +6,7 @@
             [common-cli.core :as cli]
             [monkey.actions :as actions]
             [monkey.index :as index]
+            [monkey.messenger :as msg]
             [monkey.props :as props]
             [monkey.tags :as tags]))
 
@@ -42,7 +43,7 @@
 (defn- listen
   [props]
   ; TODO implement
-  )
+  (msg/mk-messenger props))
 
 
 (defn -main
