@@ -11,6 +11,7 @@
                  [org.clojure/java.jdbc "0.3.5"]
                  [org.clojure/tools.logging "0.3.0"]
                  [clojurewerkz/elastisch "2.0.0"]
+                 [com.novemberain/langohr "2.11.0"]
                  [me.raynes/fs "1.4.6"]
                  [slingshot "0.10.3"]
                  [org.iplantc/clojure-commons "3.2.4"]

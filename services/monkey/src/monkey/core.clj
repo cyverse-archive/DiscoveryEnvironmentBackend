@@ -1,7 +1,8 @@
 (ns monkey.core
   (:gen-class)
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [me.raynes.fs :as fs]
+  (:require [clojure.tools.logging :as log]
+            [me.raynes.fs :as fs]
             [clojure-commons.config :as cfg]
             [common-cli.core :as cli]
             [monkey.actions :as actions]
@@ -42,8 +43,7 @@
 
 (defn- listen
   [props]
-  ; TODO implement
-  (msg/mk-messenger props))
+  (msg/listen props #(reindex props)))
 
 
 (defn -main
