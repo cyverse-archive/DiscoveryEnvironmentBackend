@@ -1,4 +1,4 @@
-(ns metadactyl.routes.domain.app-category
+(ns metadactyl.routes.domain.app.category
   (:use [metadactyl.routes.domain.app]
         [metadactyl.routes.params]
         [ring.swagger.schema :only [describe]]

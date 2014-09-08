@@ -1,9 +1,8 @@
 (ns metadactyl.routes.apps
-  (:use [metadactyl.app-listings :only [get-app-groups list-apps-in-group search-apps]]
+  (:use [metadactyl.app-listings :only [search-apps]]
         [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.metadata.element-listings :only [list-elements]]
         [metadactyl.routes.domain.app]
-        [metadactyl.routes.domain.app-category]
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.params]
         [metadactyl.zoidberg :only [edit-app copy-app edit-workflow]]
@@ -104,28 +103,5 @@
         :notes "This endpoint is used by the DE to obtain lists of elements that may be included in
         an App."
         (service/trap #(list-elements element-type params)))
-
-  (route/not-found (service/unrecognized-path-response)))
-
-(defroutes* app-categories
-   (GET* "/" []
-         :query [params CategoryListingParams]
-         :return AppCategoryListing
-         :summary "List App Categories"
-         :notes "This service is used by the DE to obtain the list of app categories that
-         are visible to the user."
-         (service/trap #(get-app-groups params)))
-
-   (GET* "/:category-id" []
-         :path-params [category-id :- AppCategoryIdPathParam]
-         :query [params SecuredPagingParams]
-         :return AppCategoryAppListing
-         :summary "List Apps in a Category"
-         :notes "This service lists all of the apps within an app category or any of its
-         descendents. The DE uses this service to obtain the list of apps when a user
-         clicks on a category in the _Apps_ window.
-         This endpoint accepts optional URL query parameters to limit and sort Apps,
-         which will allow pagination of results."
-         (service/trap #(list-apps-in-group category-id params)))
 
   (route/not-found (service/unrecognized-path-response)))

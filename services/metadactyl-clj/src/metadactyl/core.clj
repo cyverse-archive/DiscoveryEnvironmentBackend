@@ -7,7 +7,7 @@
         [metadactyl.beans]
         [metadactyl.kormadb]
         [metadactyl.routes.domain.app]
-        [metadactyl.routes.domain.app-category]
+        [metadactyl.routes.domain.app.category]
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.domain.tool-requests]
         [metadactyl.routes.params]
@@ -22,6 +22,7 @@
             [me.raynes.fs :as fs]
             [metadactyl.routes.admin :as admin-routes]
             [metadactyl.routes.apps :as app-routes]
+            [metadactyl.routes.apps.categories :as app-category-routes]
             [metadactyl.routes.tool-requests :as tool-request-routes]
             [metadactyl.routes.legacy :as legacy-routes]
             [metadactyl.util.config :as config]
@@ -84,7 +85,7 @@
    (swaggered "app-categories"
               :description "Discovery Environment App Category endpoints."
               (context "/apps/categories" [:as {params :params}]
-                       (store-current-user app-routes/app-categories params)))
+                       (store-current-user app-category-routes/app-categories params)))
    (swaggered "apps"
               :description "Discovery Environment App endpoints."
               (context "/apps" [:as {params :params}]
