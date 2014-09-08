@@ -86,12 +86,18 @@
 
 
 (defn listen
+  "This function monitors an AMQP exchange for tags reindexing messages. When it receives a message,
+   it calls the provided function to trigger a reindexing. It never returns.
+
+    Parameters:
+      props           - the configuration properties
+      notify-received - the function to call when a message is received"
   [^PersistentArrayMap props ^IFn notify-received]
   (let [conn (conect props)]
     (try
       (receive (connect props) props notify-received)
       (catch Throwable t
-        (log/error t "reconnecting to AMQP"))
+        (log/error t "reconnecting to AMQP broker"))
       (finally
         (silently-close conn))))
   (Thread/sleep (props/retry-period props))
