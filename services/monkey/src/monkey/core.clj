@@ -1,7 +1,8 @@
 (ns monkey.core
   (:gen-class)
-  (:use [slingshot.slingshot :only [throw+]])
-  (:require [clojure.tools.logging :as log]
+  (:use [slingshot.slingshot :only [throw+ try+]])
+  (:require [clojure.stacktrace :as st]
+            [clojure.tools.logging :as log]
             [me.raynes.fs :as fs]
             [clojure-commons.config :as cfg]
             [common-cli.core :as cli]
@@ -48,12 +49,15 @@
 
 (defn -main
   [& args]
-  (let [{:keys [options _ _ _]} (cli/handle-args svc-info args (fn [] cli-options))]
-    (when-not (fs/exists? (:config options))
-      (cli/exit 1 "The config file does not exist."))
-    (when-not (fs/readable? (:config options))
-      (cli/exit 1 "The config file is not readable."))
-    (let [props (load-config-from-file (:config options))]
-      (if (:reindex options)
-        (reindex props)
-        (listen props)))))
+  (try+
+    (let [{:keys [options _ _ _]} (cli/handle-args svc-info args (fn [] cli-options))]
+      (when-not (fs/exists? (:config options))
+        (cli/exit 1 "The config file does not exist."))
+      (when-not (fs/readable? (:config options))
+        (cli/exit 1 "The config file is not readable."))
+      (let [props (load-config-from-file (:config options))]
+        (if (:reindex options)
+          (reindex props)
+          (listen props))))
+    (catch Throwable t
+      (st/print-cause-trace t))))
