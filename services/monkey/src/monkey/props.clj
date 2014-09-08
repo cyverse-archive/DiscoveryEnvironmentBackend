@@ -1,6 +1,7 @@
 (ns monkey.props
   "This namespace holds all of the logic for managing configuration values."
   (:require [clojure.set :as set]
+            [clojure.string :as string]
             [clojure.tools.logging :as log])
   (:import [java.net URL]
            [clojure.lang PersistentArrayMap]))
@@ -41,7 +42,7 @@
    Returns:
      the AMQP broker hostname"
   [^PersistentArrayMap props]
-  (get props "monkey.amqp.host"))
+  (string/trim (get props "monkey.amqp.host")))
 
 
 (defn ^Integer amqp-port
@@ -53,7 +54,7 @@
    Returns:
      the AMQP broker IP port"
   [^PersistentArrayMap props]
-  (get props "monkey.amqp.port"))
+  (Integer/parseInt (string/trim (get props "monkey.amqp.port"))))
 
 
 (defn ^String amqp-user
@@ -101,7 +102,7 @@
    Returns:
      true if the exchange is durable, otherwise false"
   [^PersistentArrayMap props]
-  (Boolean/parseBoolean (get props "monkey.amqp.exchange.durable")))
+  (Boolean/parseBoolean (string/trim (get props "monkey.amqp.exchange.durable"))))
 
 
 (defn ^Boolean amqp-exchange-auto-delete?
@@ -113,7 +114,7 @@
    Returns:
      true if the exchange is automatically deleted, otherwise false"
   [^PersistentArrayMap props]
-  (Boolean/parseBoolean (get props "monkey.amqp.exchange.auto-delete")))
+  (Boolean/parseBoolean (string/trim (get props "monkey.amqp.exchange.auto-delete"))))
 
 
 (defn ^String amqp-routing-key
@@ -137,7 +138,7 @@
    Returns:
      the number of documents to handle at once in a bulk indexing operation"
   [^PersistentArrayMap props]
-  (Integer/parseInt (get props "monkey.es.batch-size")))
+  (Integer/parseInt (string/trim (get props "monkey.es.batch-size"))))
 
 
 (defn ^URL es-url
@@ -149,7 +150,7 @@
    Returns:
      It returns the elasticsearch base URL."
   [^PersistentArrayMap props]
-  (URL. (get props "monkey.es.url")))
+  (URL. (string/trim (get props "monkey.es.url"))))
 
 
 (defn ^String es-index
@@ -186,7 +187,7 @@
    Returns:
      It returns the scroll size"
   [^PersistentArrayMap props]
-  (Integer/parseInt (get props "monkey.es.scroll-size")))
+  (Integer/parseInt (string/trim (get props "monkey.es.scroll-size"))))
 
 
 (defn ^String es-scroll-timeout
@@ -198,7 +199,7 @@
    Returns:
      It returns the scroll timeout"
   [^PersistentArrayMap props]
-  (get props "monkey.es.scroll-timeout"))
+  (string/trim (get props "monkey.es.scroll-timeout")))
 
 
 (defn ^Boolean log-progress?
@@ -210,7 +211,7 @@
    Returns:
      It returns the true if progress should be logged, otherwise false."
   [^PersistentArrayMap props]
-  (Boolean/parseBoolean (get props "monkey.log-progress-enabled")))
+  (Boolean/parseBoolean (string/trim (get props "monkey.log-progress-enabled"))))
 
 
 (defn ^Integer progress-logging-interval
@@ -222,7 +223,7 @@
    Returns:
      It returns the item count."
   [^PersistentArrayMap props]
-  (Integer/parseInt (get props "monkey.log-progress-interval")))
+  (Integer/parseInt (string/trim (get props "monkey.log-progress-interval"))))
 
 
 (defn ^Integer retry-period
@@ -234,7 +235,7 @@
    Returns:
      It return the period to wait."
   [^PersistentArrayMap props]
-  (Integer/parseInt (get props "monkey.retry-period-ms")))
+  (Integer/parseInt (string/trim (get props "monkey.retry-period-ms"))))
 
 
 (defn ^String tags-host
@@ -246,7 +247,7 @@
    Returns:
      It returns the domain name of the host of the tags database."
   [^PersistentArrayMap props]
-  (get props "monkey.tags.host"))
+  (string/trim (get props "monkey.tags.host")))
 
 
 (defn ^Integer tags-port
@@ -258,7 +259,7 @@
    Returns:
      It returns the port the tags database listens on."
   [^PersistentArrayMap props]
-  (Integer/parseInt (get props "monkey.tags.port")))
+  (Integer/parseInt (string/trim (get props "monkey.tags.port"))))
 
 
 (defn ^String tags-db
@@ -306,7 +307,7 @@
    Returns:
      the number of tags to handle at once in a bulk inspection operation"
   [^PersistentArrayMap props]
-  (Integer/parseInt (get props "monkey.tags.batch-size")))
+  (Integer/parseInt (string/trim (get props "monkey.tags.batch-size"))))
 
 
 (defn ^Boolean validate

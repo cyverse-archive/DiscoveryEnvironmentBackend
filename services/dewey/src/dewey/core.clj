@@ -29,7 +29,7 @@
         (log/info "Found elasticsearch")
         conn)
       (do
-        (log/info "Failed to find elaisticsearch. Retrying...")
+        (log/info "Failed to find elasticsearch. Retrying...")
         (Thread/sleep 1000)
         (recur props)))))
 

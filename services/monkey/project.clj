@@ -4,7 +4,7 @@
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :aot [monkey.index monkey.messenger monkey.tags monkey.core]
+  :aot [monkey.index monkey.tags monkey.core]
   :main monkey.core
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [postgresql "9.1-901-1.jdbc4"]

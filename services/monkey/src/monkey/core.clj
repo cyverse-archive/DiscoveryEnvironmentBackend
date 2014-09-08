@@ -1,8 +1,7 @@
 (ns monkey.core
   (:gen-class)
   (:use [slingshot.slingshot :only [throw+ try+]])
-  (:require [clojure.stacktrace :as st]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [me.raynes.fs :as fs]
             [clojure-commons.config :as cfg]
             [common-cli.core :as cli]
@@ -31,6 +30,7 @@
   [cfg-path]
   (let [p (ref nil)]
     (cfg/load-config-from-file cfg-path p)
+    (cfg/log-config p)
     (when-not (props/validate @p)
       (throw+ "The configuration parameters are invalid."))
     @p))
@@ -59,5 +59,7 @@
         (if (:reindex options)
           (reindex props)
           (listen props))))
-    (catch Throwable t
-      (st/print-cause-trace t))))
+    (catch Object _
+      (log/fatal (:message &throw-context)
+                 (apply str (map #(str "\n\t" %) (:stack-trace &throw-context))))
+      (log/fatal "EXITING"))))

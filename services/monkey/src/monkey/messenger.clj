@@ -1,9 +1,8 @@
 (ns monkey.messenger
   "This namespace implements the Messages protocol where langhor is used to interface with an AMQP
    broker."
-  (:gen-class)
   (:require [clojure.tools.logging :as log]
-            [lnagohr.basic :as basic]
+            [langohr.basic :as basic]
             [langohr.channel :as ch]
             [langohr.consumers :as consumer]
             [langohr.core :as amqp]
@@ -41,7 +40,7 @@
         queue    (props/amqp-routing-key props)]
     (exchange/direct ch exchange
       :durable     (props/amqp-exchange-durable? props)
-      :auto-delete (prop/amqp-exchange-auto-delete? props))
+      :auto-delete (props/amqp-exchange-auto-delete? props))
     (queue/declare ch queue :durable true)
     (queue/bind ch queue exchange :routing-key (props/amqp-routing-key props))
     queue))
@@ -93,7 +92,7 @@
       props           - the configuration properties
       notify-received - the function to call when a message is received"
   [^PersistentArrayMap props ^IFn notify-received]
-  (let [conn (conect props)]
+  (let [conn (connect props)]
     (try
       (receive (connect props) props notify-received)
       (catch Throwable t
