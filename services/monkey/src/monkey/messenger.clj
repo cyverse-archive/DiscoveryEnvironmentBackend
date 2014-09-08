@@ -48,8 +48,9 @@
 
 (defn- handle-delivery
   [deliver ch metadata _]
-  (let [delivery-tag {:delivery-tag metadata}]
+  (let [delivery-tag (:delivery-tag metadata)]
     (try
+      (log/info "received reindex tags message")
       (deliver)
       (basic/ack ch delivery-tag)
       (catch Throwable t
