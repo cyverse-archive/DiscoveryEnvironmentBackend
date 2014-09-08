@@ -46,35 +46,22 @@
     queue))
 
 
-(defn- log-registered
-  [_]
-  (log/info "registered with AMQP broker"))
-
-
 (defn- handle-delivery
-  [ch deliver {:keys [delivery-tag]} _]
-  (try
-    (deliver)
-    (basic/ack ch delivery-tag)
-    (catch Throwable t
-      (log/error t "metadata reindexing failed, rescheduling")
-      (basic/reject ch delivery-tag true))))
-
-
-(defn- log-canceled
-  [_]
-  (log/info "AMQP broker registration canceled"))
+  [deliver ch metadata _]
+  (let [delivery-tag {:delivery-tag metadata}]
+    (try
+      (deliver)
+      (basic/ack ch delivery-tag)
+      (catch Throwable t
+        (log/error t "metadata reindexing failed, rescheduling")
+        (basic/reject ch delivery-tag true)))))
 
 
 (defn- receive
   [conn props notify-received]
   (let [ch       (ch/open conn)
-        queue    (prepare-queue ch props)
-        consumer (consumer/create-default ch
-                   :handle-consume-ok-fn log-registered
-                   :handle-delivery-fn   (partial handle-delivery ch notify-received)
-                   :handle-cancel-fn     log-canceled)]
-    (basic/consume ch queue consumer)))
+        queue    (prepare-queue ch props)]
+    (consumer/blocking-subscribe ch queue (partial handle-delivery notify-received))))
 
 
 (defn- silently-close
@@ -94,7 +81,7 @@
   [^PersistentArrayMap props ^IFn notify-received]
   (let [conn (connect props)]
     (try
-      (receive (connect props) props notify-received)
+      (receive conn props notify-received)
       (catch Throwable t
         (log/error t "reconnecting to AMQP broker"))
       (finally
