@@ -13,6 +13,7 @@
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as validators]
             [donkey.util.db :as db]
+            [donkey.util.icat :as icat]
             [donkey.util.service :as service])
   (:import [java.util UUID]))
 
@@ -73,7 +74,10 @@
      (when (seq existing-avus)
        (dorun (map (partial persistence/update-avu user-id) existing-avus)))
      (when (seq new-avus)
-       (persistence/add-metadata-template-avus user-id new-avus))
+       (with-jargon (jargon-cfg) [fs]
+         (persistence/add-metadata-template-avus user-id
+                                                 new-avus
+                                                 (icat/resolve-data-type fs data-id))))
      (dorun (persistence/set-template-instances data-id template-id (map :id avus))))
     {:data_id data-id
      :template_id template-id

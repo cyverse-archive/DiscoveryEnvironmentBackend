@@ -1,5 +1,5 @@
 (ns infosquito.es-crawler
-  (:use [infosquito.progress :only [notifier]])
+  (:use [clojure-commons.progress :only [notifier]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojurewerkz.elastisch.rest :as esr]
@@ -66,14 +66,17 @@
 
 (defn- purge-deleted-items
   [es item-type keep? props]
-  (log/info "purging non-existent" (name item-type) "entries")
-  (->> (item-seq es item-type props)
-       (mapcat (comp (notifier (cfg/notify-enabled? props) (cfg/get-notify-count props)) vector))
-       (remove (comp (retention-logger item-type keep?) :_id))
-       (partition-all (cfg/get-index-batch-size props))
-       (map (partial delete-items es item-type))
-       (dorun))
-  (log/info (name item-type) "entry purging complete"))
+  (let [notify-prog (notifier (cfg/notify-enabled? props)
+                              #(log/info %)
+                              (cfg/get-notify-count props))]
+    (log/info "purging non-existent" (name item-type) "entries")
+    (->> (item-seq es item-type props)
+      (mapcat (comp notify-prog vector))
+      (remove (comp (retention-logger item-type keep?) :_id))
+      (partition-all (cfg/get-index-batch-size props))
+      (map (partial delete-items es item-type))
+      dorun)
+    (log/info (name item-type) "entry purging complete")))
 
 (defn- purge-deleted-files
   [es props]

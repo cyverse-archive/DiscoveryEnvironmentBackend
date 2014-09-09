@@ -181,6 +181,7 @@
                        (validate-job-steps app-id (load-job-steps app-id)))]
     (jp/save-multistep-job job-info job-steps submission)
     (submit-job-step agave workspace-id job-info (first job-steps) submission)
+    (mu/send-job-status-notification job-info (first job-steps) jp/submitted-status nil)
     {:id         job-id
      :name       (:job-name job-info)
      :status     (:status job-info)
@@ -348,26 +349,27 @@
 
 (defn- stop-job-step
   "Stops an individual step in a job."
-  [agave job-id [& steps]]
-  (let [{:keys [external-id job-type]} (first steps)]
+  [agave {:keys [id] :as job} [& steps]]
+  (let [{:keys [external-id job-type] :as step} (first steps)]
     (when-not (string/blank? external-id)
       (if (= job-type jp/de-job-type)
         (jex/stop-job external-id)
         (when-not (nil? agave) (.stopJob agave external-id)))
-      (jp/cancel-job-step-numbers job-id (mapv :step-number steps)))))
+      (jp/cancel-job-step-numbers id (mapv :step-number steps))
+      (mu/send-job-status-notification job step jp/canceled-status (db/now)))))
 
 (defn stop-job
   "Stops a job. This function updates the database first in order to minimize the risk of a race
    condition; subsequent job steps should not be submitted once a job has been stopped. After the
    database has been updated, it calls the appropriate execution host to stop the currently running
    job step if one exists."
-  ([job-id]
-     (stop-job nil job-id))
-  ([agave job-id]
-     (jp/update-job job-id jp/canceled-status (db/now))
+  ([job]
+     (stop-job nil job))
+  ([agave {:keys [id] :as job}]
+     (jp/update-job id jp/canceled-status (db/now))
      (try+
-      (stop-job-step agave job-id (find-incomplete-job-steps job-id))
+      (stop-job-step agave job (find-incomplete-job-steps id))
       (catch Throwable t
-        (log/warn t "unable to cancel the most recent step of job, " job-id))
+        (log/warn t "unable to cancel the most recent step of job, " id))
       (catch Object _
-        (log/warn "unable to cancel the most recent step of job, " job-id)))))
+        (log/warn "unable to cancel the most recent step of job, " id)))))
