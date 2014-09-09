@@ -51,13 +51,8 @@
                  [de.ubercode.clostache/clostache "1.4.0"]
                  [me.raynes/fs "1.4.6"]
                  [dire "0.5.2"]
-<<<<<<< HEAD
-                 [mvxcvi/clj-pgp "0.5.2"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.2.5"]
-=======
                  [mvxcvi/clj-pgp "0.5.3"]]
   :plugins [[org.iplantc/lein-iplant-rpm "3.2.4"]
->>>>>>> origin/dev
             [lein-ring "0.8.8"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
