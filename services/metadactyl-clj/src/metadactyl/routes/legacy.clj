@@ -76,9 +76,6 @@
   (GET "/search-deployed-components/:search-term" [search-term]
        (trap #(throw+ '("search-deployed-components" search-term))))
 
-  (GET "/get-all-analysis-ids" []
-       (trap #(get-all-app-ids)))
-
   (POST "/delete-categories" [:as {body :body}]
         (trap #(throw+ '("delete-categories" body))))
 

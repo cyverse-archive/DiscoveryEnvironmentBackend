@@ -299,29 +299,25 @@
     (cheshire/encode (format-app-details details components))))
 
 (defn load-app-ids
-  "Loads the identifiers for all apps that refer to valid deployed components from the database."
+  "Loads the identifiers for all apps that refer to valid tools from the database."
   []
   (map :id
-       (select [:transformation_activity :app]
+       (select [:apps :app]
                (modifier "distinct")
                (fields :app.id)
-               (join [:transformation_task_steps :tts]
-                     {:app.hid :tts.transformation_task_id})
-               (join [:transformation_steps :ts]
-                     {:tts.transformation_step_id :ts.id})
-               (join [:transformations :tx]
-                     {:ts.transformation_id :tx.id})
-               (where (not [(sqlfn :exists (subselect [:template :t]
-                                                      (join [:deployed_components :dc]
-                                                            {:t.component_id :dc.id})
-                                                      (where {:tx.template_id :t.id
-                                                              :t.component_id nil})))]))
+               (join [:app_steps :step]
+                     {:app.id :step.app_id})
+               (where (not [(sqlfn :exists (subselect [:tasks :t]
+                                                      (join [:tools :dc]
+                                                            {:t.tool_id :dc.id})
+                                                      (where {:t.id :step.task_id
+                                                              :t.tool_id nil})))]))
                (order :id :ASC))))
 
 (defn get-all-app-ids
-  "This service obtains the identifiers of all apps that refer to valid deployed components."
+  "This service obtains the identifiers of all apps that refer to valid tools."
   []
-  (cheshire/encode {:analysis_ids (load-app-ids)}))
+  (service/swagger-response {:app_ids (load-app-ids)}))
 
 (defn get-app-description
   "This service obtains the description of an app."

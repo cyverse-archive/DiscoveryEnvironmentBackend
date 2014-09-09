@@ -12,7 +12,6 @@
 * [GET /export-template/{template-id}](endpoints/app-metadata/admin.md#exporting-a-template)
 * [GET /export-workflow/{analysis-id}](endpoints/app-metadata/admin.md#exporting-an-analysis)
 * [POST /force-update-workflow](endpoints/app-metadata/admin.md#forcing-an-analysis-to-be-updated)
-* [GET /get-all-analysis-ids](endpoints/app-metadata/listing.md#listing-analysis-identifiers)
 * [GET /get-analysis-categories/{category-set}](endpoints/app-metadata/categorization.md#listing-analysis-categorizations)
 * [GET /get-analysis/{analysis-id}](endpoints/app-metadata/information.md#getting-analyses-in-the-json-format-required-by-the-de)
 * [GET /get-app-description/{analysis-id}](endpoints/app-metadata/information.md#getting-an-app-description)

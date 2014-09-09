@@ -1,5 +1,5 @@
 (ns metadactyl.routes.apps
-  (:use [metadactyl.app-listings :only [search-apps]]
+  (:use [metadactyl.app-listings :only [search-apps get-all-app-ids]]
         [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.pipeline]
@@ -86,4 +86,12 @@
          is already marked as deleted is treated as a no-op rather than an error condition. If the
          App doesn't exist in the database at all, however, then that is treated as an error
          condition."
-         (ce/trap "apps-shredder" #(app-metadata/delete-apps body))))
+         (ce/trap "apps-shredder" #(app-metadata/delete-apps body)))
+
+  (GET* "/ids" []
+        :query [params SecuredQueryParams]
+        :return AppIdList
+        :summary "List All App Identifiers"
+        :notes "The export script needs to have a way to obtain the identifiers of all of the apps
+        in the Discovery Environment, deleted or not. This service provides that information."
+        (service/trap #(get-all-app-ids))))

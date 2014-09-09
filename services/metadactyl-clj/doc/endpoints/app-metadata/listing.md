@@ -2,7 +2,6 @@
 
 * [App Metadata Listing Services](#app-metadata-listing-services)
     * [Search Deployed Components](#search-deployed-components)
-    * [Listing Analysis Identifiers](#listing-analysis-identifiers)
     * [Listing Data Objects in an Analysis](#listing-data-objects-in-an-analysis)
     * [Listing Analysis Groups](#listing-analysis-groups)
     * [Listing Individual Analyses](#listing-individual-analyses)
@@ -35,25 +34,6 @@ $ curl -s http://by-tor:8888/search-deployed-components/example | python -mjson.
             "description": "Another Example Script",
             ...
         },
-        ...
-    ]
-}
-```
-
-## Listing Analysis Identifiers
-
-*Unsecured Endpoint:* GET /get-all-analysis-ids
-
-The export script needs to have a way to obtain the identifiers of all of the
-analyses in the Discovery Environment, deleted or not. This service provides
-that information. Here's an example listing:
-
-```
-$ curl -s http://by-tor:8888/get-all-analysis-ids | python -mjson.tool
-{
-    "analysis_ids": [
-        "19F78CC1-7E14-481B-9D80-85EBCCBFFCAF",
-        "C5FF73E8-157F-47F0-978C-D4FAA12C2D58",
         ...
     ]
 }
