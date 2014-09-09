@@ -283,6 +283,18 @@
   :language :clojure
   :archive? true}
 
+ "monkey"
+ {:type     :service
+  :path     "services/monkey"
+  :build    :lein
+  :rpm?     true
+  :tarball? false
+  :uberjar? true
+  :install? false
+  :language :clojure
+  :archive? true}
+
+
  "iplant-email"
  {:type     :service
   :path     "services/iplant-email"

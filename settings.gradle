@@ -25,6 +25,8 @@ include(':clockwork')
 project(':clockwork').projectDir = new File( rootProject.projectDir, clockworkPrefix )
 include(':conrad')
 project(':conrad').projectDir = new File( rootProject.projectDir, conradPrefix )
+include(':monkey')
+project(':monkey').projectDir = new File( rootProject.projectDir, monkeyPrefix )
 
 // Library Subtrees
 include(':heuristomancer')
