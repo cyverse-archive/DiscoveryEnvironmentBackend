@@ -17,7 +17,7 @@
                  [org.iplantc/clojure-commons "3.2.5"]
                  [org.iplantc/common-cli "3.2.5"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
-  :plugins [[org.iplantc/lein-iplant-rpm "3.2.4"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.2.5"]]
   :iplant-rpm {:summary      "monkey"
                :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
                :config-files ["log4j.properties"]
