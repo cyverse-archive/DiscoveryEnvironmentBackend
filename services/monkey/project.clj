@@ -16,4 +16,9 @@
                  [slingshot "0.10.3"]
                  [org.iplantc/clojure-commons "3.2.4"]
                  [org.iplantc/common-cli "3.2.4"]]
-  :profiles {:dev {:resource-paths ["conf/test"]}})
+  :profiles {:dev {:resource-paths ["conf/test"]}}
+  :plugins [[org.iplantc/lein-iplant-rpm "3.2.4"]]
+  :iplant-rpm {:summary      "monkey"
+               :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
+               :config-files ["log4j.properties"]
+               :config-path  "conf/main"})
