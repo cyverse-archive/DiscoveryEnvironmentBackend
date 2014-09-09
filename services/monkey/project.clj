@@ -1,4 +1,4 @@
-(defproject org.iplantc/monkey "3.2.4"
+(defproject org.iplantc/monkey "3.2.5"
   :description "A metadata database crawler. It synchronizes the tag documents in the search data
                 index with the tag information inthe metadata database.  🐒"
   :url "http://www.iplantcollaborative.org"
