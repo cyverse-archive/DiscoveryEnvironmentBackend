@@ -1,7 +1,6 @@
 (ns metadactyl.routes.apps
   (:use [metadactyl.app-listings :only [search-apps]]
         [metadactyl.app-validation :only [app-publishable?]]
-        [metadactyl.metadata.element-listings :only [list-elements]]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.params]
@@ -87,21 +86,4 @@
          is already marked as deleted is treated as a no-op rather than an error condition. If the
          App doesn't exist in the database at all, however, then that is treated as an error
          condition."
-         (ce/trap "apps-shredder" #(app-metadata/delete-apps body)))
-
-  (GET* "/elements" []
-        :query [params SecuredQueryParams]
-        :summary "List All Available Workflow Elements"
-        :notes "This endpoint is used by the DE to obtain lists of elements that may be included in
-        an App."
-        (service/trap #(list-elements "all" params)))
-
-  (GET* "/elements/:element-type" []
-        :path-params [element-type :- AppElementTypeParam]
-        :query [params SecuredQueryParams]
-        :summary "List Workflow Elements by Type"
-        :notes "This endpoint is used by the DE to obtain lists of elements that may be included in
-        an App."
-        (service/trap #(list-elements element-type params)))
-
-  (route/not-found (service/unrecognized-path-response)))
+         (ce/trap "apps-shredder" #(app-metadata/delete-apps body))))

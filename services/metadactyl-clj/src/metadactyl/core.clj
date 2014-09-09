@@ -8,6 +8,7 @@
         [metadactyl.kormadb]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.category]
+        [metadactyl.routes.domain.app.element]
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.domain.tool-requests]
         [metadactyl.routes.params]
@@ -23,6 +24,7 @@
             [metadactyl.routes.admin :as admin-routes]
             [metadactyl.routes.apps :as app-routes]
             [metadactyl.routes.apps.categories :as app-category-routes]
+            [metadactyl.routes.apps.elements :as app-element-routes]
             [metadactyl.routes.tool-requests :as tool-request-routes]
             [metadactyl.routes.legacy :as legacy-routes]
             [metadactyl.util.config :as config]
@@ -90,6 +92,10 @@
               :description "Discovery Environment App endpoints."
               (context "/apps" [:as {params :params}]
                        (store-current-user app-routes/apps params)))
+   (swaggered "element-types"
+              :description "Discovery Environment App Element endpoints."
+              (context "/apps/elements" [:as {params :params}]
+                       (store-current-user app-element-routes/app-elements params)))
    (swaggered "tool-requests"
               :description "Tool Request endpoints."
               (context "/tool-requests" [:as {params :params}]
