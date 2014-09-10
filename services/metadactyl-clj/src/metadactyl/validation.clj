@@ -40,7 +40,7 @@
   "Validates a value, presumably obtained from the HTTP request."
   [is-valid-fn value exception-fn]
   (when-not (is-valid-fn value)
-    (throw+ exception-fn)))
+    (throw+ (exception-fn))))
 
 (defn- add-field
   "Adds a named field to a path.  The key into the path may be a keyword, a
