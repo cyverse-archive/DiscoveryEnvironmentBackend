@@ -23,8 +23,10 @@
    "infosquito.amqp.port"
    "infosquito.amqp.user"
    "infosquito.amqp.password"
-   "infosquito.amqp.exchange"
    "infosquito.amqp.reindex-queue"
+   "infosquito.amqp.exchange.name"
+   "infosquito.amqp.exchange.durable"
+   "infosquito.amqp.exchange.auto-delete"
    "infosquito.notify.enabled"
    "infosquito.notify.count"
    "infosquito.retry-interval"])
@@ -125,9 +127,19 @@
   (get props "infosquito.amqp.password"))
 
 
-(defn get-amqp-exchange
+(defn get-amqp-exchange-name
   [props]
-  (get props "infosquito.amqp.exchange"))
+  (get props "infosquito.amqp.exchange.name"))
+
+
+(defn amqp-exchange-durable?
+  [props]
+  (Boolean/parseBoolean (get props "infosquito.amqp.exchange.durable")))
+
+
+(defn amqp-exchange-auto-delete?
+  [props]
+  (Boolean/parseBoolean (get props "infosquito.amqp.exchange.auto-delete")))
 
 
 (defn get-amqp-reindex-queue
