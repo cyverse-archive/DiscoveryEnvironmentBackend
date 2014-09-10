@@ -23,6 +23,7 @@
    "infosquito.amqp.port"
    "infosquito.amqp.user"
    "infosquito.amqp.password"
+   "infosquito.amqp.exchange"
    "infosquito.amqp.reindex-queue"
    "infosquito.notify.enabled"
    "infosquito.notify.count"
@@ -122,6 +123,11 @@
 (defn get-amqp-pass
   [props]
   (get props "infosquito.amqp.password"))
+
+
+(defn get-amqp-exchange
+  [props]
+  (get props "infosquito.amqp.exchange"))
 
 
 (defn get-amqp-reindex-queue

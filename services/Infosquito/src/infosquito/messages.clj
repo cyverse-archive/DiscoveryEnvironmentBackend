@@ -9,8 +9,6 @@
             [langohr.basic :as lb])
   (:import [java.io IOException]))
 
-(def ^:const exchange "amq.direct")
-
 (def ^:const initial-sleep-time 5000)
 (def ^:const max-sleep-time 320000)
 
@@ -47,12 +45,12 @@
        (first)))
 
 (defn- declare-queue
-  [ch queue-name]
+  [props ch queue-name]
   (lq/declare ch queue-name
               :durable     true
               :auto-delete false
               :exclusive   false)
-  (lq/bind ch queue-name exchange :routing-key queue-name))
+  (lq/bind ch queue-name (cfg/get-amqp-exchange props) :routing-key queue-name))
 
 (defn- reindex-handler
   [props ch {:keys [delivery-tag]} _]
@@ -68,7 +66,7 @@
 (defn- add-reindex-subscription
  [props ch]
  (let [queue-name (cfg/get-amqp-reindex-queue props)]
-   (declare-queue ch queue-name)
+   (declare-queue props ch queue-name)
    (lc/blocking-subscribe ch queue-name (partial reindex-handler props))))
 
 (defn- rmq-close
