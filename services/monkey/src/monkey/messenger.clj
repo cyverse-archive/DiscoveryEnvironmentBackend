@@ -12,6 +12,9 @@
   (:import [clojure.lang IFn PersistentArrayMap]))
 
 
+;; TODO redesign so that the connection logic becomes testable
+
+
 (defn- attempt-connect
   [props]
   (try
