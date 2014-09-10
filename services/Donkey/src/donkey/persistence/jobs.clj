@@ -357,8 +357,8 @@
               [:s.end_date        :end-date]
               [:s.status          :status]
               [:s.app_step_number :app-step-number])
-      (where {:s.job_id      job-id
-              :s.external_id external-id})
+      (where (and {:s.job_id      job-id}
+                  {:s.external_id external-id}))
       (#(str (as-sql %) " for update"))
       (#(exec-raw [% [job-id external-id]] :results))
       (first)))
