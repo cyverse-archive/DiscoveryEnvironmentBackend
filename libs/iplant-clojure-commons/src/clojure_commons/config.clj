@@ -35,7 +35,7 @@
   "Logs a single configuration setting."
   [[k v] filters]
   (let [v (if (masked-field? k filters) "********" v)]
-    (log/warn "CONFIG:" k "=" v)))
+    (log/info "CONFIG:" k "=" v)))
 
 (defn- mask-prop
   "Masks a single configuration setting, if necessary. Does not log it."
