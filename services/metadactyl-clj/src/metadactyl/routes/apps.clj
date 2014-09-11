@@ -1,5 +1,8 @@
 (ns metadactyl.routes.apps
-  (:use [metadactyl.app-listings :only [get-all-app-ids get-app-details search-apps]]
+  (:use [metadactyl.app-listings :only [get-all-app-ids
+                                        get-app-details
+                                        get-app-description
+                                        search-apps]]
         [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.pipeline]
@@ -95,6 +98,15 @@
          App doesn't exist in the database at all, however, then that is treated as an error
          condition."
          (ce/trap "apps-shredder" #(app-metadata/delete-apps body)))
+
+  (GET* "/:app-id/description" []
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :summary "Get an App Description"
+        :notes "This service is used by Donkey to get App descriptions for job status update
+        notifications. There is no request body and the response body contains only the App
+        description, with no special formatting."
+        (service/trap #(get-app-description app-id)))
 
   (GET* "/ids" []
         :query [params SecuredQueryParams]

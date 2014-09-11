@@ -139,9 +139,6 @@
   (POST "/update-app-labels" [:as {body :body}]
         (ce/trap "update-app-labels" #(app-metadata/relabel-app body)))
 
-  (GET "/get-app-description/:app-id" [app-id]
-       (trap #(get-app-description app-id)))
-
   (POST "/arg-preview" [:as {body :body}]
         (ce/trap "arg-preview" #(app-metadata/preview-command-line body)))
 

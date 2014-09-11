@@ -190,16 +190,3 @@ curl -s "http://by-tor:8888/secured/template/9BCCE2D3-8372-4BA5-A0CE-96E513B2693
     "type": ""
 }
 ```
-
-## Getting an App Description
-
-Unsecured Endpoint: GET /get-app-description/{analysis-id}
-
-This service is used by Donkey to get app descriptions for job status update
-notifications. There is no request body and the response body contains only the
-analysis description, with no special formatting.  Here's an example:
-
-```
-$ curl http://by-tor:8888/get-app-description/FA65A1AF-8B9D-4151-9073-2A5D1874F8C0 && echo
-Lorem ipsum dolor sit amet
-```
