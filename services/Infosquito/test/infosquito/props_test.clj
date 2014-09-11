@@ -58,7 +58,7 @@
   (is (= "amqp-pass" (get-amqp-pass props))))
 
 (deftest test-get-amqp-reindex-queue
-  (is (= "amqp-reindex-queue" (get-amqp-reindex-queue props))))
+  (is (= "amqp-reindex-queue" (get-amqp-queue props))))
 
 (deftest test-validate
   (testing "all properties to be validated are in local.properites"

@@ -51,7 +51,8 @@
               :durable     true
               :auto-delete false
               :exclusive   false)
-  (lq/bind ch queue-name exchange :routing-key queue-name))
+  (doseq [key ["index.all" "index.data"]]
+    (lq/bind ch queue-name exchange :routing-key key)))
 
 (defn- reindex-handler
   [props ch {:keys [delivery-tag]} _]
