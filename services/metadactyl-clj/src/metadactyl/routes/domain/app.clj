@@ -1,9 +1,11 @@
 (ns metadactyl.routes.domain.app
-  (:use [ring.swagger.schema :only [describe]]
+  (:use [metadactyl.routes.params]
+        [ring.swagger.schema :only [describe]]
         [schema.core :only [defschema optional-key enum Any]])
   (:import [java.util UUID]))
 
 (def AppIdParam (describe UUID "A UUID that is used to identify the App"))
+(def ToolIdParam (describe UUID "A UUID that is used to identify the Tool"))
 
 (defschema AppParameterListItem
   {:id                         (describe UUID "A UUID that is used to identify the List Item")
@@ -170,9 +172,37 @@
          {(optional-key :tool)       (describe String "The tool used to execute the App")
           (optional-key :tool_id)    (describe UUID "A UUID that is used to identify the App's tool")
           (optional-key :references) (describe [String] "The App's references")
-
           (optional-key :groups)     (describe [AppGroup]
                                        "The list of Parameter Groups associated with the App")}))
+
+(defschema ToolDetails
+  {:id ToolIdParam
+   :name        (describe String "The Tool's name")
+   :description (describe String "The Tool's description")
+   :location    (describe String "The Tool's installed location")
+   :type        (describe String "The Tool's type")
+   :version     (describe String "The Tool's version")
+   :attribution (describe String "The Tool's attribution information")})
+
+(defschema AppDetailCategory
+  {:id AppCategoryIdPathParam
+   :name (describe String "The App Category's name")})
+
+(defschema AppDetails
+  (merge AppBase
+         {:tools
+          (describe [ToolDetails] "The tools used to execute the App")
+
+          :references
+          (describe [String] "The App's references")
+
+          :categories
+          (describe [AppDetailCategory]
+            "The list of Categories associated with the App")
+
+          :suggested_categories
+          (describe [AppDetailCategory]
+            "The list of Categories the integrator wishes to associate with the App")}))
 
 (defschema PipelineEligibility
   {:is_valid (describe Boolean "Whether the App can be used in a Pipeline")
@@ -184,7 +214,7 @@
    (optional-key :comment-id) (describe String
                                 "The ID of the current user's rating comment for this App")})
 
-(defschema AppDetails
+(defschema AppListingDetail
   (merge AppBase
     {:app_type
      (describe String "The type ID of the App")
@@ -234,7 +264,7 @@
 
 (defschema AppListing
   {:app_count (describe Long "The total number of Apps in the listing")
-   :apps      (describe [AppDetails] "A listing of App details")})
+   :apps      (describe [AppListingDetail] "A listing of App details")})
 
 (defschema AppIdList
   {:app_ids (describe [UUID] "A List of UUIDs used to identify Apps")})

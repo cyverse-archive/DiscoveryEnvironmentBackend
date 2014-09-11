@@ -1,5 +1,5 @@
 (ns metadactyl.routes.apps
-  (:use [metadactyl.app-listings :only [search-apps get-all-app-ids]]
+  (:use [metadactyl.app-listings :only [get-all-app-ids get-app-details search-apps]]
         [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.pipeline]
@@ -23,6 +23,14 @@
         description. The response body contains an `apps` array that is in the same format as
         the `apps` array in the /apps/categories/:category-id endpoint response."
         (service/trap #(search-apps params)))
+
+  (GET* "/:app-id/details" []
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :return AppDetails
+        :summary "Get App Details"
+        :notes "This service is used by the DE to obtain high-level details about a single App"
+        (service/trap #(get-app-details app-id)))
 
   (GET* "/:app-id/ui" []
         :path-params [app-id :- AppIdPathParam]

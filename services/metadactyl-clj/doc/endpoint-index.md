@@ -2,7 +2,6 @@
 
 * [GET /](endpoints/misc.md#verifying-that-metadactyl-clj-is-running)
 * [POST /add-analysis-to-group](endpoints/app-metadata/categorization.md#adding-analyses-to-analysis-groups)
-* [GET /analysis-details/{analysis-id}](endpoints/app-metadata/information.md#getting-analysis-details)
 * [GET /apps/{app-id}/data-objects](endpoints/app-metadata/listing.md#listing-data-objects-in-an-analysis)
 * [POST /arg-preview](endpoints/app-metadata/updated-admin.md#previewing-command-line-arguments)
 * [POST /can-export-analysis](endpoints/app-metadata/validation.md#determining-if-an-analysis-can-be-exported)

@@ -97,9 +97,6 @@
   (GET "/get-analysis/:app-id" [app-id]
        (trap #(throw+ '("get-app" app-id))))
 
-  (GET "/analysis-details/:app-id" [app-id]
-       (trap #(get-app-details app-id)))
-
   (GET "/list-analysis/:app-id" [app-id]
        (throw+ '("list-app" app-id)))
 

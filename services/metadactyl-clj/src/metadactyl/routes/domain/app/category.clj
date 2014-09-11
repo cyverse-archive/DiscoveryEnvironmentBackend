@@ -38,7 +38,7 @@
 
 (defschema AppCategoryAppListing
   (merge (dissoc AppCategory :workspace_id :groups)
-         {:apps (describe [AppDetails] "A listing of Apps under this Category")}))
+         {:apps (describe [AppListingDetail] "A listing of Apps under this Category")}))
 
 (defschema AppCategoryPath
   {:username (describe String "A specific username or '&lt;public&gt;' for public Apps")

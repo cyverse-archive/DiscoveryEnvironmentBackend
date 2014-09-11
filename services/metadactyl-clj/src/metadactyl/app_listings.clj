@@ -237,66 +237,53 @@
                  (with app_references)
                  (where {:id app-id}))))
 
-(defn- load-deployed-components
+(defn- load-tools
   "Loads information about the deployed components associated with an app."
   [app-id]
-  (select [:deployed_components :dc]
+  (select tool_listing
           (fields
-            :dc.id
-            :dc.name
-            :dc.description
-            :dc.location
-            [:tt.name :type]
-            :dc.version
-            :dc.attribution)
-          (join [:tool_types :tt]
-                {:dc.tool_type_id :tt.id})
-          (join [:template :t]
-                {:dc.id :t.component_id})
-          (join [:transformations :tx]
-                {:t.id :tx.template_id})
-          (join [:transformation_steps :ts]
-                {:tx.id :ts.transformation_id})
-          (join [:transformation_task_steps :tts]
-                {:ts.id :tts.transformation_step_id})
-          (join [:transformation_activity :a]
-                {:tts.transformation_task_id :a.hid})
-          (where {:a.id app-id})))
+            [:tool_id :id]
+            :name
+            :description
+            :location
+            :type
+            :version
+            :attribution)
+          (where {:app_id app-id})))
 
 (defn- timestamp-to-millis
-  "Converts a timestamp, which may be nil, to a string representing the number
-   of milliseconds since January 1, 1970."
+  "Converts a timestamp, which may be nil, to the number of milliseconds since January 1, 1970."
   [timestamp]
   (if (nil? timestamp)
-    ""
-    (str (.getTime timestamp))))
+    nil
+    (.getTime timestamp)))
 
 (defn- format-app-details
   "Formats information for the get-app-details service."
-  [details components]
+  [details tools]
   (let [app-id (:id details)]
-    {:published_date   (timestamp-to-millis (:integration_date details))
-     :edited_date      (timestamp-to-millis (:edited_date details))
-     :id               app-id
-     :references       (map :reference_text (:transformation_activity_references details))
-     :description      (:description details "")
-     :name             (:name details "")
-     :label            (:label details "")
-     :tito             app-id
-     :components       components
-     :groups           (get-groups-for-app app-id)
-     :suggested_groups (get-suggested-groups-for-app app-id)}))
+    {:id                   app-id
+     :name                 (:name details "")
+     :description          (:description details "")
+     :integration_date     (timestamp-to-millis (:integration_date details))
+     :edited_date          (timestamp-to-millis (:edited_date details))
+     :references           (map :reference_text (:app_references details))
+     :tools                tools
+     :categories           (get-groups-for-app app-id)
+     :suggested_categories (get-suggested-groups-for-app app-id)}))
 
 (defn get-app-details
   "This service obtains the high-level details of an app."
   [app-id]
-  (let [details    (load-app-details app-id)
-        components (load-deployed-components app-id)]
+  (let [details (load-app-details app-id)
+        tools   (load-tools app-id)]
     (when (nil? details)
       (throw (IllegalArgumentException. (str "app, " app-id ", not found"))))
-    (when (empty? components)
+    (when (empty? tools)
       (throw  (IllegalArgumentException. (str "no tools associated with app, " app-id))))
-    (cheshire/encode (format-app-details details components))))
+    (->> (format-app-details details tools)
+         (remove-nil-vals)
+         (service/swagger-response))))
 
 (defn load-app-ids
   "Loads the identifiers for all apps that refer to valid tools from the database."
