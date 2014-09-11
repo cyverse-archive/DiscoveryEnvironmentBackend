@@ -12,7 +12,7 @@
     "monkey.amqp.port"
     "monkey.amqp.user"
     "monkey.amqp.password"
-    "monkey.amqp.routing-key"
+    "monkey.amqp.queue"
     "monkey.amqp.exchange.name"
     "monkey.amqp.exchange.durable"
     "monkey.amqp.exchange.auto-delete"
@@ -117,16 +117,16 @@
   (Boolean/parseBoolean (string/trim (get props "monkey.amqp.exchange.auto-delete"))))
 
 
-(defn ^String amqp-routing-key
-  "Returns the routing key used by the AMQP exchange route messages to monkey's queue.
+(defn ^String amqp-queue
+  "Returns the AMQP queue name.
 
    Parameters:
      props - the property map to use
 
    Returns:
-     tue AMQP routing key"
+     the queue name"
   [^PersistentArrayMap props]
-  (get props "monkey.amqp.routing-key"))
+  (get props "monkey.amqp.queue"))
 
 
 (defn ^Integer es-batch-size
