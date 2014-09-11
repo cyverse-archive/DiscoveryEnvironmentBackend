@@ -100,6 +100,10 @@
               :description "Tool Request endpoints."
               (context "/tool-requests" [:as {params :params}]
                        (store-current-user tool-request-routes/tool-requests params)))
+   (swaggered "admin-apps"
+              :description "Admin App endpoints."
+              (context "/admin/apps" [:as {params :params}]
+                       (store-current-user admin-routes/admin-apps params)))
    (swaggered "admin-tool-requests"
               :description "Admin Tool Request endpoints."
               (context "/admin/tool-requests" [:as {params :params}]

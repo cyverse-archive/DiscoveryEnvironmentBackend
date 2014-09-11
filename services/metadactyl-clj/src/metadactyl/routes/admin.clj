@@ -1,5 +1,7 @@
 (ns metadactyl.routes.admin
-  (:use [metadactyl.metadata.tool-requests]
+  (:use [metadactyl.app-categorization :only [categorize-apps]]
+        [metadactyl.metadata.tool-requests]
+        [metadactyl.routes.domain.app.category]
         [metadactyl.routes.domain.tool-requests]
         [metadactyl.routes.params]
         [metadactyl.user :only [current-user]]
@@ -39,5 +41,16 @@
          of a tool request."
          (service/trap
            #(update-tool-request request-id (config/uid-domain) (:username current-user) body)))
+
+  (route/not-found (service/unrecognized-path-response)))
+
+(defroutes* admin-apps
+  (POST* "/" [:as {body :body}]
+         :query [params SecuredQueryParams]
+         :body [body (describe AppCategorizationRequest "An App Categorization Request.")]
+         :summary "Categorize Apps"
+         :notes "This endpoint is used by the Admin interface to add or move Apps to into multiple
+         Categories."
+         (service/trap #(categorize-apps body)))
 
   (route/not-found (service/unrecognized-path-response)))

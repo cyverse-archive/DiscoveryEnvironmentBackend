@@ -3,6 +3,8 @@
         [schema.core :only [defschema optional-key enum Any]])
   (:import [java.util UUID]))
 
+(def AppIdParam (describe UUID "A UUID that is used to identify the App"))
+
 (defschema AppParameterListItem
   {:id                         (describe UUID "A UUID that is used to identify the List Item")
    (optional-key :name)        (describe String "The List Item's name")
@@ -157,7 +159,7 @@
       documentation library does not support documenting these kinds of fields.")})
 
 (defschema AppBase
-  {:id                              (describe UUID "A UUID that is used to identify the App")
+  {:id                              AppIdParam
    :name                            (describe String "The App's name")
    :description                     (describe String "The App's description")
    (optional-key :integration_date) (describe Long "The App's Date of public submission")

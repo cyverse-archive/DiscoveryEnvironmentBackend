@@ -85,9 +85,6 @@
   (GET "/apps/:app-id/data-objects" [app-id]
        (trap #(throw+ '("get-data-objects-for-app" app-id))))
 
-  (POST "/categorize-analyses" [:as {body :body}]
-        (trap #(categorize-apps body)))
-
   (GET "/get-analysis-categories/:category-set" [category-set]
        (trap #(throw+ '("get-app-categories" category-set))))
 

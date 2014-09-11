@@ -6,24 +6,18 @@
         [kameleon.app-groups]
         [kameleon.queries :only
          [get-or-create-user get-or-create-workspace-for-user]]
+        [kameleon.uuids :only [uuid]]
         [metadactyl.util.config]
-        [metadactyl.json :only [to-json from-json]]
         [metadactyl.util.service :only [success-response]]
         [metadactyl.validation]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure.string :as string])
-  (:import [java.util UUID]))
-
-(defn- uuid
-  "Generates a random UUID."
-  []
-  (string/upper-case (str (UUID/randomUUID))))
+  (:require [clojure.string :as string]))
 
 (defn- build-hierarchy
   "Builds an app group hierarchy from the result of loading the app group
    group hierarchy from the database."
   [group groups]
-  (let [subgroups    (filter #(= (:hid group) (:parent_hid %)) groups)
+  (let [subgroups    (filter #(= (:id group) (:parent_id %)) groups)
         subgroups    (map #(build-hierarchy % groups) subgroups)
         group        (assoc group :subgroups subgroups)]
     (dissoc group :description :is_public :app_count)))
@@ -33,7 +27,7 @@
    hierarchical format."
   [root-id]
   (let [app-groups (get-app-group-hierarchy root-id {})
-        root       (first (filter #(= (:hid %) root-id) app-groups))]
+        root       (first (filter #(= (:id %) root-id) app-groups))]
     (build-hierarchy root app-groups)))
 
 (defn- load-app-group-hierarchies-from-database
@@ -149,16 +143,16 @@
 
 (defn- associate-subcategory
   "Associates a subcategory with its parent category in the database."
-  [{parent-group-id :hid} {subgroup-id :hid} index]
+  [{parent-group-id :id} {subgroup-id :id} index]
   (when-not (is-subgroup? parent-group-id subgroup-id)
     (add-subgroup parent-group-id index subgroup-id)))
 
 (defn- insert-category-if-missing
   "Inserts a category into the database if it doesn't exist already."
   [workspace-id category]
-  (let [category (if-not (:hid category)
+  (let [category (if-not (:id category)
                    (assoc category
-                     :hid (:hid (create-app-group workspace-id category)))
+                     :id (:id (create-app-group workspace-id category)))
                    category)
         category (assoc category
                    :subgroups (map #(insert-category-if-missing workspace-id %)
@@ -182,7 +176,7 @@
   (let [root-group   (insert-workspace-if-missing username root-group)
         workspace-id (:workspace_id root-group)
         root-group   (insert-category-if-missing workspace-id root-group)]
-    (set-root-app-group workspace-id (:hid root-group))
+    (set-root-app-group workspace-id (:id root-group))
     [username root-group]))
 
 (defn- insert-workspaces-and-categories
@@ -191,29 +185,18 @@
   [hierarchy]
   (into {} (map insert-workspace-and-categories hierarchy)))
 
-(defn- get-app-hid
-  "Gets the internal identifier of an app, throwing an exception if the app
-   doesn't exist."
-  [id]
-  (let [hid (:hid (get-app-by-id id))]
-    (when (nil? hid)
-      (throw+ {:type   ::app_not_found
-               :app-id id}))
-    hid))
-
 (defn- categorize-app
   "Associates an app with an app category."
-  [hierarchy {app :analysis {:keys [username path]} :category_path}]
+  [hierarchy {{app-id :id} :app {:keys [username path]} :category_path}]
   (let [[root & path] path
         workspace     (resolve-workspace hierarchy username root)
         category      (resolve-category workspace path)
-        cat-hid       (:hid category)
-        app-hid       (get-app-hid (:id app))]
-    (add-app-to-group cat-hid app-hid)))
+        cat-id        (:id category)]
+    (add-app-to-group cat-id app-id)))
 
 (defn- extract-app-id
   "Extracts an app ID from a category definition."
-  [{{app-id :id} :analysis}]
+  [{{app-id :id} :app}]
   app-id)
 
 (defn- do-categorization
@@ -228,8 +211,12 @@
 (defn- validate-app-info
   "Validates the app information in a categorized app.  At this time, we only
    require the identifier field."
-  [app-info path]
-  (validate-required-json-string-field app-info :id path))
+  [{app-id :id} path]
+  (let [app (get-app-by-id app-id)]
+    (when (nil? app)
+      (throw+ {:type   ::app_not_found
+               :app-id app-id
+               :path   path}))))
 
 (defn- validate-path
   "Validates an app category path, which must contain a username and path, which
@@ -243,20 +230,18 @@
 (defn- validate-category
   "Validates each categorized app in the request."
   [category path]
-  (validate-json-object-field category :analysis path validate-app-info)
+  (validate-json-object-field category :app path validate-app-info)
   (validate-json-object-field category :category_path path validate-path))
 
-(defn- parse-and-validate-body
-  "Parses and validates the request body."
+(defn- validate-request-body
+  "Validates the request body."
   [body]
-  (doto (from-json body)
-    (validate-json-object ""
-                          #(validate-json-object-array-field
-                            % :categories %2 validate-category))))
+  (validate-json-object body "" #(validate-json-object-array-field
+                                   % :categories %2 validate-category)))
 
 (defn categorize-apps
   "A service that categorizes one or more apps in the database."
   [body]
-  (let [m (parse-and-validate-body (slurp body))]
-    (transaction (do-categorization m))
-    (success-response)))
+  (validate-request-body body)
+  (transaction (do-categorization body))
+  (success-response))
