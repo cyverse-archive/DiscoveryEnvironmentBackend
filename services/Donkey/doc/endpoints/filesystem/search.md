@@ -45,12 +45,14 @@ The following additional URI parameters are recognized.
 
 | Parameter | Required? | Default    | Description |
 | --------- | --------- | ---------- | ----------- |
-| q         | yes       |            | This parameter holds a JSON encoded search query. See [query syntax](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html) for a description of the syntax. |
+| q         | yes*      |            | This parameter holds a JSON encoded search query. See [query syntax](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html) for a description of the syntax. |
 | type      | no        | any        | This parameter restricts the search to either files or folders. It can take the values `any`, meaning files and folders, `file`, only files, and `folders`, only folders. |
-| tags      | no        |            | This is a comma-separated list of tag UUIDs. This parameter restricts the search to only entities that have at least of the provided tags. |
+| tags      | yes*      |            | This is a comma-separated list of tag UUIDs. This parameter restricts the search to only entities that have at least of the provided tags. |
 | offset    | no        | 0          | This parameter indicates the number of matches to skip before including any in the result set. When combined with `limit`, it allows for paging results. |
 | limit     | no        | 200        | This parameter limits the number of matches in the result set to be a most a certain amount. When combined with `offset`, it allows for paging results. |
 | sort      | no        | score:desc | See [sorting](#sorting) |
+
+\* At least `q` or `tags` is required.
 
 #### Sorting
 
