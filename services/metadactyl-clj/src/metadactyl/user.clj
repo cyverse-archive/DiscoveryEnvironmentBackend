@@ -32,7 +32,7 @@
   "Creates a function that takes a request, binds current-user to a new instance
    of org.iplantc.authn.user.User that is built from the user attributes found
    in the given params map, then passes request to the given handler."
-  [handler params]
+  [handler & [opts]]
   (fn [request]
-    (service/trap #(with-user [params] (handler request)))))
+    (service/trap #(with-user [(:params request)] (handler request)))))
 

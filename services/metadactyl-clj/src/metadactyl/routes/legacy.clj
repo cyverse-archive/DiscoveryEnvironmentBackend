@@ -5,7 +5,7 @@
         [metadactyl.user :only [current-user]]
         [metadactyl.util.service]
         [compojure.api.sweet]
-        [compojure.core :only [GET PUT POST]]
+        [compojure.api.legacy]
         [slingshot.slingshot :only [throw+]])
   (:require [compojure.route :as route]
             [clojure-commons.error-codes :as ce]

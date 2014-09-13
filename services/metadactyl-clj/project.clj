@@ -36,7 +36,7 @@
   :profiles {:dev {:resource-paths ["conf/test"]}}
   :aot [metadactyl.core]
   :main metadactyl.core
-  :ring {:handler metadactyl.core/app
+  :ring {:handler metadactyl.routes.api/app
          :init metadactyl.core/load-config-from-file
          :port 31323}
   :iplant-rpm {:summary "iPlant Discovery Environment Metadata Services"
