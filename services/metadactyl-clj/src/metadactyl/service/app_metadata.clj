@@ -18,9 +18,9 @@
   "This service allows labels to be updated in any app, whether or not the app has been submitted
    for public use."
   [body]
-  (let [req (parse-json body)]
-    (transaction (amp/update-app-labels req (:hid (amp/get-app (:id req)))))
-    (success-response)))
+  (amp/get-app (:id body))
+  (transaction (amp/update-app-labels body))
+  (success-response))
 
 (defn- validate-app-existence
   "Verifies that apps exist."

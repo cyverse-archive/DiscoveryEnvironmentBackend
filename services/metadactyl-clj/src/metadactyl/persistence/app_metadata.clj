@@ -15,8 +15,8 @@
 
 (defn update-app-labels
   "Updates the labels in an app."
-  [req app-hid]
-  (relabel/update-app-labels req app-hid))
+  [req]
+  (relabel/update-app-labels req))
 
 (defn app-accessible-by
   "Obtains the list of users who can access an app."

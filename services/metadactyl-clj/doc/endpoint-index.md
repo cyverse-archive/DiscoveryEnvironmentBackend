@@ -36,7 +36,6 @@
 * [POST /secured/update-workflow](endpoints/app-metadata/admin.md#updating-an-analysis)
 * [PUT /secured/workspaces/{workspace-id}/newexperiment](endpoints/app-execution.md#submitting-a-job-for-execution)
 * [POST /update-analysis](endpoints/app-metadata/admin.md#updating-top-level-analysis-information)
-* [POST /update-app-labels](endpoints/app-metadata/admin.md#updating-template-labels)
 * [POST /update-template](endpoints/app-metadata/admin.md#updating-an-existing-template)
 * [POST /update-workflow](endpoints/app-metadata/admin.md#updating-an-analysis)
 * [GET /validate-analysis-for-pipelines/{analysis-id}](endpoints/app-metadata/validation.md#validating-analyses-for-pipelines)

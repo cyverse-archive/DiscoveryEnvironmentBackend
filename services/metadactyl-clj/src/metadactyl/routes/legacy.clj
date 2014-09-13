@@ -136,9 +136,6 @@
   (POST "/update-analysis" [:as {body :body}]
         (trap #(throw+ '("update-app" body))))
 
-  (POST "/update-app-labels" [:as {body :body}]
-        (ce/trap "update-app-labels" #(app-metadata/relabel-app body)))
-
   (POST "/arg-preview" [:as {body :body}]
         (ce/trap "arg-preview" #(app-metadata/preview-command-line body)))
 

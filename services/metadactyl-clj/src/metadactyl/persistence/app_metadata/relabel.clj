@@ -12,171 +12,130 @@
             [clojure.string :as string]
             [clojure-commons.error-codes :as ce]))
 
-(defn- get-single-template-for-app
-  "Retrieves the template from a single-step app. An exception will be thrown if the app doesn't
-   have exactly one step."
+(defn- get-single-task-for-app
+  "Retrieves the task from a single-step app. An exception will be thrown if the app doesn't have
+   exactly one step."
   [app-id]
-  (let [templates (get-tasks-for-app app-id)]
-    (when (not= 1 (count templates))
+  (let [tasks (get-tasks-for-app app-id)]
+    (when (not= 1 (count tasks))
       (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
                :reason     :NOT_SINGLE_STEP_APP
-               :step_count (count templates)}))
-    (first templates)))
+               :step_count (count tasks)}))
+    (first tasks)))
 
-(defn- get-property-group-in-template
-  "Verifies that a selected property group belongs to a specific template."
-  [template-hid group-id]
+(defn- get-parameter-group-in-task
+  "Verifies that a selected parameter group belongs to a specific task."
+  [task-id group-id]
   (assert-not-nil
    [:group_id group-id]
    (first
-    (select [:property_group :pg]
-            (join [:template_property_group :tpg]
-                  {:pg.hid :tpg.property_group_id})
-            (join [:template :t]
-                  {:tpg.template_id :t.hid})
-            (where {:t.hid template-hid
+    (select [parameter_groups :pg]
+            (join [:tasks :t]
+                  {:pg.task_id :t.id})
+            (where {:t.id  task-id
                     :pg.id group-id})))))
 
-(defn- get-property-in-group
-  "Verifies that a property belongs to a specific property group."
-  [group-hid prop-id]
+(defn- get-parameter-in-group
+  "Verifies that a parameter belongs to a specific parameter group."
+  [group-id parameter-id]
   (assert-not-nil
-   [:property_id prop-id]
+   [:parameter_id parameter-id]
    (first
-    (select [:property :p]
-            (fields :p.hid :p.dataobject_id [:pt.name :type])
-            (join [:property_group_property :pgp]
-                  {:p.hid :pgp.property_id})
-            (join [:property_group :pg]
-                  {:pgp.property_group_id :pg.hid})
-            (join [:property_type :pt]
-                  {:p.property_type :pt.hid})
-            (where {:pg.hid group-hid
-                    :p.id   prop-id})))))
+    (select [parameters :p]
+            (fields :p.id [:t.name :info_type])
+            (join [:parameter_group :pg]
+                  {:p.parameter_group_id :pg.id})
+            (join [:file_parameters :f]
+                  {:f.id :p.file_parameter_id})
+            (join [:info_type :t]
+                  {:t.id :f.info_type})
+            (where {:pg.id group-id
+                    :p.id  parameter-id})))))
 
-(defn- get-prop-info-type
-  "Gets the info type associated with a property."
-  [prop-hid]
-  ((comp :name first)
-   (select [:info_type :t]
-           (join [:dataobjects :d]
-                 {:t.hid :d.info_type})
-           (join [:property :p]
-                 {:d.hid :p.dataobject_id})
-           (where {:p.hid prop-hid}))))
-
-(defn- get-must-contain-rules-for-prop
-  "Gets the list of MustContain rules associated with a property."
-  [prop-hid]
-  (select [:rule :r]
-          (join [:rule_type :rt]
-                {:r.rule_type :rt.hid})
-          (join [:validator_rule :vr]
-                {:r.hid :vr.rule_id})
-          (join [:validator :v]
-                {:v.hid :vr.validator_id})
-          (join [:property :p]
-                {:v.hid :p.validator})
-          (where {:p.hid   prop-hid
-                  :rt.name "MustContain"})))
+(defn- get-parameter-value
+  "Verifies that a parameter value belongs to a specific parameter."
+  [parameter-id param-value-id]
+  (assert-not-nil
+    [:parameter_value_id param-value-id]
+    (first
+      (select [:parameter_values :v]
+              (join [:parameters :p]
+                    {:p.id :v.parameter_id})
+              (where {:p.id parameter-id
+                      :v.id param-value-id})))))
 
 (def ^:private generated-selection-list-info-types
   "The list of info types for which selection lists are generated."
   ["ReferenceAnnotation" "ReferenceGenome" "ReferenceSequence"])
 
-(defn- update-must-contain-arg
-  "Updates a single argument in a MustContain rule."
-  [new-args {:keys [rule_id argument_value hid]}]
-  (let [old-arg    (cheshire/decode argument_value true)
-        wanted-arg (fn [arg] (every? true? (map #(= (% old-arg) (% arg)) [:name :value])))
-        new-arg    (first (filter wanted-arg new-args))]
-    (when-not (nil? (:display new-arg))
-      (let [updated-arg (cheshire/encode (assoc old-arg :display (:display new-arg)))]
-        (update :rule_argument
-                (set-fields {:argument_value updated-arg})
-                (where {:rule_id rule_id
-                        :hid     hid}))))))
+(defn- update-parameter-value-labels
+  "Updates the display strings in a single parameter value."
+  [parameter-id {:keys [id display description arguments groups]}]
+  (get-parameter-value parameter-id id)
+  (update parameter_values
+          (set-fields
+            (remove-nil-vals
+              {:description description
+               :label       display}))
+          (where {:id id}))
+  (when (seq arguments)
+    (dorun (map (partial update-parameter-value-labels parameter-id) arguments)))
+  (when (seq groups)
+    (dorun (map (partial update-parameter-value-labels parameter-id) groups))))
 
-(defn- update-must-contain-rule-labels
-  "Updates the display strings in a single MustContain rule."
-  [arguments {:keys [hid] :as rule}]
-  (dorun (map (partial update-must-contain-arg arguments)
-              (select :rule_argument (where {:rule_id hid})))))
+(defn- update-parameter-values
+  "Updates the labels in parameter values."
+  [parameter-id info-type arguments]
+  (when-not (some (partial = info-type) generated-selection-list-info-types)
+    (dorun (map (partial update-parameter-value-labels parameter-id) arguments))))
 
-(defn- update-must-contain-rules-in-validator
-  "Updates the labels in a MustContain rule."
-  [prop-hid arguments]
-  (let [info-type (get-prop-info-type prop-hid)]
-    (when-not (some (partial = info-type) generated-selection-list-info-types)
-      (if-let [rules (seq (get-must-contain-rules-for-prop prop-hid))]
-        (dorun (map (partial update-must-contain-rule-labels arguments) rules))
-        (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-                 :reason     :property_missing_must_contain_rule})))))
-
-(defn- update-data-object-labels
-  "Updates the labels in a data object."
-  ([hid label description]
-     (when hid
-       (update file_parameters
-               (set-fields
-                (remove-nil-vals
-                 {:name        label
-                  :description description}))
-               (where {:hid hid}))))
-  ([hid {:keys [type label description]}]
-     (cond
-      (= type "MultiFileSelector") (update-data-object-labels hid label description)
-      (re-find #"Input$" type)     (update-data-object-labels hid label description)
-      (re-find #"Output$" type)    (update-data-object-labels hid nil description))))
-
-(defn- update-property-labels
-  "Updates the labels in a property."
-  [group-id {:keys [id name description label arguments] :as prop}]
-  (let [{:keys [hid dataobject_id type]} (get-property-in-group group-id id)]
+(defn- update-parameter-labels
+  "Updates the labels in a parameter."
+  [group-id {:keys [id name description label arguments] :as parameter}]
+  (let [{:keys [info_type]} (get-parameter-in-group group-id id)]
     (update parameters
             (set-fields
              (remove-nil-vals
               {:name        name
                :description description
                :label       label}))
-            (where {:hid hid}))
-    (update-data-object-labels dataobject_id (assoc prop :type type))
+            (where {:id id}))
     (when (seq arguments)
-      (update-must-contain-rules-in-validator hid arguments))))
+      (update-parameter-values id info_type arguments))))
 
-(defn- update-property-group-labels
-  "Updates the labels in a property group."
-  [template-hid {:keys [id name description label] :as group}]
-  (let [hid (:hid (get-property-group-in-template template-hid id))]
-    (update parameter_groups
-            (set-fields
-             (remove-nil-vals
-              {:name        name
-               :description description
-               :label       label}))
-            (where {:hid hid}))
-    (dorun (map (partial update-property-labels hid) (:properties group)))))
+(defn- update-parameter-group-labels
+  "Updates the labels in a parameter group."
+  [task-id {:keys [id name description label] :as group}]
+  (get-parameter-group-in-task task-id id)
+  (update parameter_groups
+    (set-fields
+      (remove-nil-vals
+        {:name        name
+         :description description
+         :label       label}))
+    (where {:id id}))
+  (dorun (map (partial update-parameter-labels id) (:parameters group))))
 
-(defn- update-template-labels
-  "Updates the labels in a template."
-  [req template-hid]
+(defn- update-task-labels
+  "Updates the labels in a task."
+  [req task-id]
   (update tasks
           (set-fields
            (remove-nil-vals
             {:name        (:name req)
              :description (:description req)
              :label       (:label req)}))
-          (where {:hid template-hid}))
-  (dorun (map (partial update-property-group-labels template-hid) (:groups req))))
+          (where {:id task-id}))
+  (dorun (map (partial update-parameter-group-labels task-id) (:groups req))))
 
 (defn update-app-labels
   "Updates the labels in an app."
-  [req app-hid]
+  [req]
   (update apps
           (set-fields
            (remove-nil-vals
             {:name             (:name req)
              :description      (:description req)
              :edited_date      (long->timestamp (:edited_date req))}))
-          (where {:hid app-hid}))
-  (update-template-labels req (:hid (get-single-template-for-app app-hid))))
+          (where {:id (:id req)}))
+  (update-task-labels req (:id (get-single-task-for-app (:id req)))))

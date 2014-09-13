@@ -45,6 +45,19 @@
         requesting user, and it must not already be public."
         (service/trap #(edit-app app-id)))
 
+  (PATCH* "/:app-id" []
+          :path-params [app-id :- AppIdPathParam]
+          :query [params SecuredQueryParams]
+          :body [body (describe App "The App to update.")]
+          :summary "Update App Labels"
+          :notes "This service is capable of updating just the labels within a single-step app, and
+          it allows apps that have already been made available for public use to be updated, which
+          helps to eliminate administrative thrash for app updates that only correct typographical
+          errors. Upon success, the response body contains just a success flag. Upon error, the
+          response body contains an error code along with some additional information about the
+          error."
+          (ce/trap "update-app-labels" #(app-metadata/relabel-app body)))
+
   (POST* "/:app-id/copy" []
          :path-params [app-id :- AppIdPathParam]
          :query [params SecuredQueryParams]
