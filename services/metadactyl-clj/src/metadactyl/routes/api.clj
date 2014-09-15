@@ -10,7 +10,8 @@
         [metadactyl.routes.params]
         [metadactyl.user :only [store-current-user]]
         [ring.middleware keyword-params nested-params]
-        [ring.swagger.schema :only [describe]])
+        [ring.swagger.schema :only [describe]]
+        [ring.util.response :only [redirect]])
   (:require [metadactyl.routes.admin :as admin-routes]
             [metadactyl.routes.apps :as app-routes]
             [metadactyl.routes.apps.categories :as app-category-routes]
@@ -24,6 +25,7 @@
     :title "Discovery Environment Apps API"
     :description "Documentation for the Discovery Environment Apps REST API"
     :apiVersion "2.0.0")
+  (GET "/" [] (redirect "/api"))
   (middlewares
     [wrap-keyword-params
      wrap-query-params

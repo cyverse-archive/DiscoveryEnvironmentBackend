@@ -70,9 +70,6 @@
   (route/not-found (unrecognized-path-response)))
 
 (defroutes* metadactyl-routes
-  (GET "/" []
-       "Welcome to Metadactyl!\n")
-
   (GET "/search-deployed-components/:search-term" [search-term]
        (trap #(throw+ '("search-deployed-components" search-term))))
 
