@@ -5,20 +5,13 @@
         [metadactyl.user :only [current-user]]
         [metadactyl.util.conversions :only [date->long
                                             remove-nil-vals]]
+        [metadactyl.persistence.app-metadata :only [get-app]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure-commons.error-codes :as cc-errs]
             [metadactyl.util.service :as service]))
 
-(defn- get-implementor-details
-  "Gets an implementor object with details from the current-user, needed to save
-   workflows."
-  []
-  {:implementor       (str (:first-name current-user) " " (:last-name current-user))
-   :implementor_email (:email current-user)
-   :test              {:params []}})
-
-(defn- verify-ownership
+(defn verify-app-ownership
   "Verifies that the current user owns the app that is being edited."
   [app]
   (let [owner (:integrator_email app)]
@@ -29,6 +22,14 @@
                           (:shortUsername current-user)
                           " does not own app "
                           (:id app))}))))
+
+(defn- get-implementor-details
+  "Gets an implementor object with details from the current-user, needed to save
+   workflows."
+  []
+  {:implementor       (str (:first-name current-user) " " (:last-name current-user))
+   :implementor_email (:email current-user)
+   :test              {:params []}})
 
 (defn- verify-app-not-public
   "Verifies that an app has not been made public."
@@ -42,7 +43,7 @@
 (defn- verify-app-editable
   "Verifies that the app is allowed to be edited by the current user."
   [app]
-  (verify-ownership app)
+  (verify-app-ownership app)
   (verify-app-not-public app))
 
 (defn- with-task-params
@@ -357,22 +358,6 @@
       (assoc :full_username (:username current-user))
       (assoc :steps steps)
       (assoc :mappings mappings))))
-
-(defn- get-app
-  "Fetches an app with the given ID."
-  [app-id]
-  (let [app (select app_listing
-                         (fields :id
-                                 :name
-                                 :description
-                                 :integrator_email
-                                 :step_count)
-                         (where {:id app-id}))
-        app (first app)]
-    (when (empty? app)
-      (throw+ {:code cc-errs/ERR_DOES_NOT_EXIST,
-               :message (str "App, " app-id ", not found")}))
-    app))
 
 (defn edit-app
   "This service prepares a JSON response for editing an App in the client."

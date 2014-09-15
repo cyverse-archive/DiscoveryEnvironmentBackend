@@ -4,6 +4,7 @@
         [clojure-commons.validators]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.service :only [build-url success-response parse-json]]
+        [metadactyl.zoidberg :only [verify-app-ownership]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
@@ -14,18 +15,18 @@
             [metadactyl.translations.app-metadata :as atx]
             [metadactyl.util.config :as config]))
 
-(defn relabel-app
-  "This service allows labels to be updated in any app, whether or not the app has been submitted
-   for public use."
-  [body]
-  (amp/get-app (:id body))
-  (transaction (amp/update-app-labels body))
-  (success-response))
-
 (defn- validate-app-existence
   "Verifies that apps exist."
   [app-id]
   (amp/get-app app-id))
+
+(defn relabel-app
+  "This service allows labels to be updated in any app, whether or not the app has been submitted
+   for public use."
+  [body]
+  (verify-app-ownership (validate-app-existence (:id body)))
+  (transaction (amp/update-app-labels body))
+  (success-response))
 
 (defn- validate-app-ownership
   "Verifies that a user owns an app."

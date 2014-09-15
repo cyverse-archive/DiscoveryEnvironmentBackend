@@ -10,8 +10,14 @@
   [app-id]
   (assert-not-nil
    [:app-id app-id]
-   (first (select apps
-                  (where {:id app-id})))))
+   (first
+     (select app_listing
+             (fields :id
+                     :name
+                     :description
+                     :integrator_email
+                     :step_count)
+             (where {:id app-id})))))
 
 (defn update-app-labels
   "Updates the labels in an app."

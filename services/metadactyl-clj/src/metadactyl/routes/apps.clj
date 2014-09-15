@@ -55,8 +55,10 @@
           helps to eliminate administrative thrash for app updates that only correct typographical
           errors. Upon success, the response body contains just a success flag. Upon error, the
           response body contains an error code along with some additional information about the
-          error."
-          (ce/trap "update-app-labels" #(app-metadata/relabel-app body)))
+          error. <b>Note</b>: Although this endpoint accepts all App fields, only the 'name' (except
+          in parameters and parameter arguments), 'description', 'label', and 'display' (only in
+          parameter arguments) fields will be processed and updated by this endpoint."
+          (ce/trap "update-app-labels" #(app-metadata/relabel-app (assoc body :id app-id))))
 
   (POST* "/:app-id/copy" []
          :path-params [app-id :- AppIdPathParam]

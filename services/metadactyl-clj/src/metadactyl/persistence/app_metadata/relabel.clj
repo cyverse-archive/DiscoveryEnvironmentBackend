@@ -4,10 +4,12 @@
         [kameleon.queries :only [get-tasks-for-app]]
         [korma.core]
         [medley.core :only [remove-vals]]
+        [metadactyl.routes.domain.app :only [AppParameterListGroup]]
         [metadactyl.util.conversions :only [long->timestamp
                                             remove-nil-vals]]
         [metadactyl.util.assertions]
-        [slingshot.slingshot :only [throw+]])
+        [slingshot.slingshot :only [throw+]]
+        [ring.swagger.schema :only [coerce!]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
             [clojure-commons.error-codes :as ce]))
@@ -43,7 +45,7 @@
    (first
     (select [parameters :p]
             (fields :p.id [:t.name :info_type])
-            (join [:parameter_group :pg]
+            (join [:parameter_groups :pg]
                   {:p.parameter_group_id :pg.id})
             (join [:file_parameters :f]
                   {:f.id :p.file_parameter_id})
@@ -72,16 +74,20 @@
   "Updates the display strings in a single parameter value."
   [parameter-id {:keys [id display description arguments groups]}]
   (get-parameter-value parameter-id id)
-  (update parameter_values
-          (set-fields
-            (remove-nil-vals
-              {:description description
-               :label       display}))
-          (where {:id id}))
+  (let [update-vals (remove-nil-vals
+                      {:description description
+                       :label       display})]
+    (when (seq update-vals)
+      (update parameter_values (set-fields update-vals) (where {:id id}))))
   (when (seq arguments)
     (dorun (map (partial update-parameter-value-labels parameter-id) arguments)))
+
+  ;; KLUDGE need to coerce sub-groups until compojure-api supports recursive schema definitions.
   (when (seq groups)
-    (dorun (map (partial update-parameter-value-labels parameter-id) groups))))
+    (dorun
+      (map (comp (partial update-parameter-value-labels parameter-id)
+                 (partial coerce! AppParameterListGroup))
+           groups))))
 
 (defn- update-parameter-values
   "Updates the labels in parameter values."
@@ -91,15 +97,13 @@
 
 (defn- update-parameter-labels
   "Updates the labels in a parameter."
-  [group-id {:keys [id name description label arguments] :as parameter}]
-  (let [{:keys [info_type]} (get-parameter-in-group group-id id)]
-    (update parameters
-            (set-fields
-             (remove-nil-vals
-              {:name        name
-               :description description
-               :label       label}))
-            (where {:id id}))
+  [group-id {:keys [id description label arguments] :as parameter}]
+  (let [{:keys [info_type]} (get-parameter-in-group group-id id)
+        update-vals (remove-nil-vals
+                      {:description description
+                       :label       label})]
+    (when (seq update-vals)
+      (update parameters (set-fields update-vals) (where {:id id})))
     (when (seq arguments)
       (update-parameter-values id info_type arguments))))
 
@@ -107,13 +111,12 @@
   "Updates the labels in a parameter group."
   [task-id {:keys [id name description label] :as group}]
   (get-parameter-group-in-task task-id id)
-  (update parameter_groups
-    (set-fields
-      (remove-nil-vals
-        {:name        name
-         :description description
-         :label       label}))
-    (where {:id id}))
+  (let [update-vals (remove-nil-vals
+                      {:name        name
+                       :description description
+                       :label       label})]
+    (when (seq update-vals)
+      (update parameter_groups (set-fields update-vals) (where {:id id}))))
   (dorun (map (partial update-parameter-labels id) (:parameters group))))
 
 (defn- update-task-labels
