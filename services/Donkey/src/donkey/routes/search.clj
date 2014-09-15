@@ -1,8 +1,7 @@
 (ns donkey.routes.search
   "the routing code for search-related URL resources"
   (:use [compojure.core :only [GET]])
-  (:require [cheshire.core :as json]
-            [donkey.auth.user-attributes :as user]
+  (:require [donkey.auth.user-attributes :as user]
             [donkey.services.search :as search]
             [donkey.util :as util]
             [donkey.util.config :as config]
@@ -15,9 +14,7 @@
   (util/optional-routes
     [config/search-routes-enabled]
 
-    (GET "/filesystem/index" [q & opts]
-      (if q
-        (search/search (search/qualify-name (:shortUsername user/current-user))
-                       (json/parse-string q)
-                       opts)
-        (svc/missing-arg-response "q")))))
+    (GET "/filesystem/index" [q tags & opts]
+      (if (or q tags)
+        (search/search (search/qualify-name (:shortUsername user/current-user)) q tags opts)
+        (svc/missing-arg-response "`q` or `tags`")))))

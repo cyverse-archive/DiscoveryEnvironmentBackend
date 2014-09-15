@@ -2,6 +2,7 @@
   "provides the functions that forward search requests to Elastic Search"
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.string :as string]
+            [cheshire.core :as json]
             [clj-time.core :as t]
             [clj-time.local :as l]
             [clojurewerkz.elastisch.query :as es-query]
@@ -11,7 +12,9 @@
             [donkey.services.filesystem.users :as users]
             [donkey.util.config :as cfg]
             [donkey.util.service :as svc])
-  (:import [java.net ConnectException]))
+  (:import [java.net ConnectException]
+           [java.util UUID]
+           [clojure.lang PersistentArrayMap]))
 
 
 (def ^{:private true :const true} default-zone "iplant")
@@ -73,12 +76,20 @@
      :matches (map format-match (es-resp/hits-from resp))}))
 
 
-(defn- mk-query
+(defn- create-perm-filter
+  "creates a filter for selecting all data entries accessible by a given user"
+  [memberships]
+  (es-query/nested :path   "userPermissions"
+                   :filter (es-query/term "userPermissions.user" memberships)))
+
+
+(defn- mk-es-query
   "Builds a query."
   [query memberships]
-  (let [filter (es-query/nested :path   "userPermissions"
-                                :filter (es-query/term "userPermissions.user" memberships))]
-    (es-query/filtered :query query :filter filter)))
+  (let [perm-filter (create-perm-filter memberships)]
+    (if query
+      (es-query/filtered :query query :filter perm-filter)
+      (es-query/filtered :filter perm-filter))))
 
 
 (defn- mk-sort
@@ -180,6 +191,31 @@
       default)))
 
 
+(defn- extract-query
+  [query-str]
+  (try+
+    (if query-str
+      (json/parse-string query-string))
+    (catch Throwable _
+      (throw+ {:type   :invalid-argument
+               :reason "query string must contain valid JSON"
+               :arg    "q"
+               :val    query-str}))))
+
+
+(defn- extract-tags
+  [tags-str]
+  (try+
+    (if tags-str
+      (map #(UUID/fromString %) (string/split tags-str #","))
+      [])
+    (catch Throwable _
+      throw+ {:type   :invalid-argument
+              :reason "must be a comma-separated list of UUIDs"
+              :arg    "tags"
+              :val    tags-str})))
+
+
 (defn qualify-name
   "Qualifies a user or group name with the default zone."
   [name]
@@ -202,17 +238,30 @@
        (users/list-user-groups (string/replace user (str \# default-zone) ""))))
 
 
-(defn search
-  "Performs a search on the Elastic Search repository."
-  [user query opts]
+(defn ^PersistentArrayMap search
+  "Performs a search on the Elastic Search repository. The search will be filtered to only show what
+   the user is allowed to see.
+
+   Parameters:
+     user      - the username of the user making the query
+     query-str - the JSON query
+     tags-str  - the comma-separated list of tag UUIDs to filter the query with. Results will be
+                 tagged with at least on of these tags.
+     opts      - the optional parameters.
+
+   Returns:
+     It returns the response as a map."
+  [^String user ^String query-str ^String tags-str ^PersistentArrayMap opts]
   (try+
     (let [start       (l/local-now)
+          query       (extract-query query-str)
+          tags        (extract-tags tags-str)
           type        (extract-type opts :any)
           offset      (extract-uint opts :offset 0)
           limit       (extract-uint opts :limit (cfg/default-search-result-limit))
           sort        (extract-sort opts [[:score] :desc])
           memberships (conj (list-user-groups user) user)
-          query-req   (mk-query query memberships)
+          query-req   (mk-es-query query tags memberships)
           sort-req    (mk-sort sort)]
       (-> (send-request type query-req offset limit sort-req)
         (extract-result offset memberships)
