@@ -2,6 +2,7 @@
   "provides the functions that forward search requests to Elastic Search"
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [cheshire.core :as json]
             [clj-time.core :as t]
             [clj-time.local :as l]
@@ -29,6 +30,7 @@
      :invalid-query - This is thrown if the query string is invalid."
   [type query from size sort]
   (try+
+    (log/debug "sending query" query)
     (let [index "data"
           es    (es/connect (cfg/es-url))]
       (if (= type :any)
@@ -83,13 +85,22 @@
                    :filter (es-query/term "userPermissions.user" memberships)))
 
 
+(defn- create-tag-filter
+  "creates a filter for selecting all data entries tagged by a given tag"
+  [tag-id]
+  (es-query/term :id {:type "tag"
+                      :id   tag-id
+                      :path "targets.id"}))
+
+
 (defn- mk-es-query
-  "Builds a query."
-  [query memberships]
-  (let [perm-filter (create-perm-filter memberships)]
+  "Builds the full query for elasticsearch."
+  [query tags memberships]
+  (let [filter (es-query/bool :must   (create-perm-filter memberships)
+                              :should (map create-tag-filter tags))]
     (if query
-      (es-query/filtered :query query :filter perm-filter)
-      (es-query/filtered :filter perm-filter))))
+      (es-query/filtered :query query :filter filter)
+      (es-query/filtered :filter filter))))
 
 
 (defn- mk-sort
@@ -195,7 +206,7 @@
   [query-str]
   (try+
     (if query-str
-      (json/parse-string query-string))
+      (json/parse-string query-str))
     (catch Throwable _
       (throw+ {:type   :invalid-argument
                :reason "query string must contain valid JSON"
@@ -210,10 +221,10 @@
       (map #(UUID/fromString %) (string/split tags-str #","))
       [])
     (catch Throwable _
-      throw+ {:type   :invalid-argument
-              :reason "must be a comma-separated list of UUIDs"
-              :arg    "tags"
-              :val    tags-str})))
+      (throw+ {:type   :invalid-argument
+               :reason "must be a comma-separated list of UUIDs"
+               :arg    "tags"
+               :val    tags-str}))))
 
 
 (defn qualify-name
@@ -270,4 +281,4 @@
     (catch [:type :invalid-argument] {:keys [arg val reason]}
       (svc/invalid-arg-response arg val reason))
     (catch [:type :invalid-query] {:keys []}
-      (svc/invalid-arg-response "q" query "This is not a valid elasticsearch query."))))
+      (svc/invalid-arg-response "q" query-str "This is not a valid elasticsearch query."))))
