@@ -5,7 +5,7 @@
             [clj-jargon.init :as fs-init]
             [clojure-commons.error-codes :as error]
             [donkey.auth.user-attributes :as user]
-            [donkey.persistence.metadata :as db]
+            [donkey.persistence.metadata :as meta]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.util.config :as config]
             [donkey.util.icat :as icat]
@@ -24,21 +24,21 @@
   [fs-cfg user entry-id new-tags]
   (fs-init/with-jargon fs-cfg [fs]
     (let [tag-set         (set new-tags)
-          known-tags      (set (db/filter-tags-owned-by-user user tag-set))
+          known-tags      (set (meta/filter-tags-owned-by-user user tag-set))
           unknown-tags    (set/difference tag-set known-tags)
           unattached-tags (set/difference known-tags
-                                          (set (db/filter-attached-tags entry-id known-tags)))]
+                                          (set (meta/filter-attached-tags entry-id known-tags)))]
       (uuids/validate-uuid-accessible fs user entry-id)
       (when-not (empty? unknown-tags)
         (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
-      (db/insert-attached-tags user entry-id (icat/resolve-data-type fs entry-id) unattached-tags)
+      (meta/insert-attached-tags user entry-id (icat/resolve-data-type fs entry-id) unattached-tags)
       (svc/success-response))))
 
 
 (defn- detach-tags
   [fs-cfg user entry-id tag-ids]
   (validate-entry-accessible fs-cfg user entry-id)
-  (db/mark-tags-detached user entry-id (db/filter-tags-owned-by-user user (set tag-ids)))
+  (meta/mark-tags-detached user entry-id (meta/filter-tags-owned-by-user user (set tag-ids)))
   (svc/success-response))
 
 
@@ -53,9 +53,9 @@
         tag         (json/parse-string (slurp body) true)
         value       (:value tag)
         description (:description tag)]
-    (if (empty? (db/get-tags-by-value owner value))
-      (let [id (:id (db/insert-user-tag owner value description))]
-        (svc/success-response {:id id}))
+    (if (empty? (meta/get-tags-by-value owner value))
+      (let [db-tag (meta/insert-user-tag owner value description)]
+        (svc/success-response (select-keys db-tag [:id])))
       (svc/donkey-response {} 409))))
 
 
@@ -72,10 +72,10 @@
      ERR_NOT_FOUND - if the text isn't a UUID owned by the authenticated user."
   [tag-id]
   (let [tag-id    (valid/extract-uri-uuid tag-id)
-        tag-owner (db/get-tag-owner tag-id)]
+        tag-owner (meta/get-tag-owner tag-id)]
     (when (not= tag-owner (:shortUsername user/current-user))
       (throw+ {:error_code error/ERR_NOT_FOUND :tag-id tag-id}))
-    (db/delete-user-tag tag-id)
+    (meta/delete-user-tag tag-id)
     (svc/success-response)))
 
 
@@ -107,7 +107,7 @@
   [entry-id]
   (let [user     (:shortUsername user/current-user)
         entry-id (UUID/fromString entry-id)
-        tags     (db/select-attached-tags user entry-id)]
+        tags     (meta/select-attached-tags user entry-id)]
     (validate-entry-accessible (config/jargon-cfg) user entry-id)
     (svc/success-response {:tags (map #(dissoc % :owner_id) tags)})))
 
@@ -120,9 +120,9 @@
      contains - The `contains` query parameter.
      limit - The `limit` query parameter. It should be a positive integer."
   [contains limit]
-  (let [matches (db/get-tags-by-value (:shortUsername user/current-user)
-                                      (str "%" contains "%")
-                                      (Long/valueOf limit))]
+  (let [matches (meta/get-tags-by-value (:shortUsername user/current-user)
+                                        (str "%" contains "%")
+                                        (Long/valueOf limit))]
     (svc/success-response {:tags (map #(dissoc % :owner_id) matches)})))
 
 
@@ -143,10 +143,10 @@
                                                                      :description new-description}
                                     new-value                       {:value new-value}
                                     new-description                 {:description new-description})]
-              (when updates (db/update-user-tag (UUID/fromString tag-id) updates))
+              (when updates (meta/update-user-tag (UUID/fromString tag-id) updates))
               (svc/success-response)))]
     (let [owner     (:shortUsername user/current-user)
-          tag-owner (db/get-tag-owner (UUID/fromString tag-id))]
+          tag-owner (meta/get-tag-owner (UUID/fromString tag-id))]
       (cond
         (nil? tag-owner)       (svc/donkey-response {} 404)
         (not= owner tag-owner) (svc/donkey-response {} 403)
