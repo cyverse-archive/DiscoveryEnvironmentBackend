@@ -179,7 +179,7 @@
                                        "The list of Parameter Groups associated with the App")}))
 
 (defschema ToolDetails
-  {:id ToolIdParam
+  {:id          ToolIdParam
    :name        (describe String "The Tool's name")
    :description (describe String "The Tool's description")
    :location    (describe String "The Tool's installed location")
@@ -214,7 +214,7 @@
 (defschema Rating
   {:average                   (describe Double "The average user rating for this App")
    (optional-key :user)       (describe Long "The current user's rating for this App")
-   (optional-key :comment-id) (describe String
+   (optional-key :comment_id) (describe Long
                                 "The ID of the current user's rating comment for this App")})
 
 (defschema AppListingDetail

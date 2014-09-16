@@ -5,6 +5,7 @@
         [kameleon.entities]
         [kameleon.app-groups]
         [kameleon.app-listing]
+        [kameleon.uuids :only [uuidify]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config]
         [metadactyl.util.conversions :only [to-long date->long remove-nil-vals]]
@@ -25,7 +26,7 @@
 (defn- format-my-public-apps-group
   "Formats the virtual group for the user's public apps."
   [workspace-id params]
-  {:id           :my-public-apps
+  {:id           (uuidify "00000000-0000-0000-0000-000000000000")
    :name         "My public apps"
    :description  ""
    :workspace_id workspace-id
@@ -42,7 +43,7 @@
    params))
 
 (def ^:private virtual-group-fns
-  {:my-public-apps {:format-group   format-my-public-apps-group
+  {:00000000-0000-0000-0000-000000000000 {:format-group   format-my-public-apps-group
                     :format-listing list-my-public-apps}})
 
 (defn- format-virtual-groups
@@ -176,8 +177,9 @@
   [workspace group-id params]
   (let [group-key (keyword (str group-id))]
     (when-let [format-fns (virtual-group-fns group-key)]
-      (assoc ((:format-group format-fns) (:id workspace) params)
-        :apps (map format-app ((:format-listing format-fns) workspace params))))))
+      (-> ((:format-group format-fns) (:id workspace) params)
+          (dissoc :workspace_id)
+          (assoc :apps (map format-app ((:format-listing format-fns) workspace params)))))))
 
 (defn- count-apps-in-group
   "Counts the number of apps in an app group, including virtual app groups that may be included."
