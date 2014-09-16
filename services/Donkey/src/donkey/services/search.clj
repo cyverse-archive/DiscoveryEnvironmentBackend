@@ -7,21 +7,18 @@
             [clj-time.core :as t]
             [clj-time.local :as l]
             [clojurewerkz.elastisch.query :as es-query]
-            [clojurewerkz.elastisch.rest :as es]
-            [clojurewerkz.elastisch.rest.document :as es-doc]
             [clojurewerkz.elastisch.rest.response :as es-resp]
+            [donkey.persistence.search :as search]
             [donkey.services.filesystem.users :as users]
             [donkey.util.config :as cfg]
             [donkey.util.service :as svc])
-  (:import [java.net ConnectException]
-           [java.util UUID]
+  (:import [java.util UUID]
            [clojure.lang PersistentArrayMap]))
 
 
 (def ^{:private true :const true} default-zone "iplant")
 
 
-; TODO move this to a namespace in the client package. Also consider creating a protocol for this so that it may be mocked.
 (defn- send-request
   "Sends the search request to Elastic Search.
 
@@ -29,23 +26,9 @@
      :invalid-configuration - This is thrown if there is a problem with elasticsearch
      :invalid-query - This is thrown if the query string is invalid."
   [type query from size sort]
-  (try+
-    (log/debug "sending query" query)
-    (let [index "data"
-          es    (es/connect (cfg/es-url))
-          type' (if (= type :any) ["file" "folder"] (name type))]
-       (es-doc/search es index type'
-         :query        query
-         :from         from
-         :size         size
-         :sort         sort
-         :track_scores true))
-    (catch ConnectException _
-      (throw+ {:type :invalid-configuration :reason "cannot connect to elasticsearch"}))
-    (catch [:status 404] {:keys []}
-      (throw+ {:type :invalid-configuration :reason "elasticsearch has not been initialized"}))
-    (catch [:status 400] {:keys []}
-      (throw+ {:type :invalid-query}))))
+  (log/debug "sending query" query)
+  (let [types (if (= type :any) [:file :folder] [type])]
+    (search/search-data types query sort from size)))
 
 
 (defn- format-entity
