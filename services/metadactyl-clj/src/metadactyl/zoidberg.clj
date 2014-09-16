@@ -259,7 +259,7 @@
   (let [param-type (:type param)
         param-args (format-list-type-params param-type param-values)
         param (if-not (= param-type "TreeSelection")
-                (assoc param :defalutValue (first (filter :isDefault param-args)))
+                (assoc param :defaultValue (first (filter :isDefault param-args)))
                 param)]
     (assoc param :arguments param-args)))
 
@@ -278,7 +278,7 @@
                      "TreeSelection"}
                    param-type)
       (format-list-param param param-values)
-      (assoc param :defalutValue (-> param-values first :value)))))
+      (assoc param :defaultValue (-> param-values first :value)))))
 
 (defn- format-group
   [group]

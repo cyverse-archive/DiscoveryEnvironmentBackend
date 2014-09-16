@@ -67,8 +67,8 @@
       Parameter arguments specify both the command-line flag and the Parameter value to use for each
       option that is selected")
 
-   (optional-key :defalutValue)
-   (describe Any "The Parameter's defalut value")
+   (optional-key :defaultValue)
+   (describe Any "The Parameter's default value")
 
    (optional-key :label)
    (describe String "The Parameter's prompt to display in the UI")
@@ -157,7 +157,7 @@
    (optional-key :parameters)
    (describe [AppParameter]
      "The list of Parameters in this Group. <b>Note</b>: These objects have an optional
-      `defalutValue` field that can contain any type of value, but the current version of the
+      `defaultValue` field that can contain any type of value, but the current version of the
       documentation library does not support documenting these kinds of fields.")})
 
 (defschema AppBase
