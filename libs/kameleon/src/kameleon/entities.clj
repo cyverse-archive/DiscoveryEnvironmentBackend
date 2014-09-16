@@ -54,8 +54,7 @@
   (has-many ratings))
 
 ;; References associated with an app.
-(defentity transformation_activity_references
-  (entity-fields :reference_text))
+(defentity transformation_activity_references)
 
 ;; Information about who integrated an app or a deployed component.
 (defentity integration_data
@@ -81,8 +80,7 @@
   (has-many input_mapping {:fk :target}))
 
 ;; Transformations applied to steps within an app.
-(defentity transformations
-  (entity-fields :name :description :template_id :external_app_id))
+(defentity transformations)
 
 ;; A table that maps outputs from one step to inputs to another set.  Two
 ;; entities are associated with a single table here for convenience.  when I
