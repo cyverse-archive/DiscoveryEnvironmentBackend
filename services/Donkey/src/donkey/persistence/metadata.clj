@@ -2,7 +2,8 @@
   (:use korma.core)
   (:require [korma.db :as korma]
             [donkey.util.db :as db])
-  (:import [java.util UUID]))
+  (:import [java.util UUID]
+           [clojure.lang IPersistentMap]))
 
 
 (defn- ->enum-val
@@ -238,7 +239,7 @@
           (where {:id tag-id})))
     first :owner_id))
 
-(defn insert-user-tag
+(defn ^IPersistentMap insert-user-tag
   "Inserts a user tag.
 
    Parameters:
@@ -247,15 +248,14 @@
      description - The description of the tag. If nil, an empty string will be inserted.
 
    Returns:
-     It returns the new tag."
-  [owner value description]
+     It returns the new database tag entry."
+  [^String owner ^String value ^String description]
   (let [description (if description description "")]
-    (-> (korma/with-db db/metadata
-          (insert :tags
-            (values {:value       value
-                     :description description
-                     :owner_id    owner})))
-      (select-keys [:id :value :description]))))
+    (korma/with-db db/metadata
+      (insert :tags
+        (values {:value       value
+                 :description description
+                 :owner_id    owner})))))
 
 (defn update-user-tag
   "Updates a user tag's description and/or value.
