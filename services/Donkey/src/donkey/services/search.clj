@@ -32,12 +32,14 @@
   (try+
     (log/debug "sending query" query)
     (let [index "data"
-          es    (es/connect (cfg/es-url))]
-      (if (= type :any)
-        (es-doc/search-all-types es index
-          :query query :from from :size size :sort sort :track_scores true)
-        (es-doc/search es index (name type)
-          :query query :from from :size size :sort sort :track_scores true)))
+          es    (es/connect (cfg/es-url))
+          type' (if (= type :any) ["file" "folder"] (name type))]
+       (es-doc/search es index type'
+         :query        query
+         :from         from
+         :size         size
+         :sort         sort
+         :track_scores true))
     (catch ConnectException _
       (throw+ {:type :invalid-configuration :reason "cannot connect to elasticsearch"}))
     (catch [:status 404] {:keys []}
