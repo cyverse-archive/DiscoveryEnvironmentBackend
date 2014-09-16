@@ -75,7 +75,7 @@
        :creator      (:owner_id tag)
        :dateCreated  (:created_on tag)
        :dateModified (:modified_on tag)
-       :targets      [(map format-target (:targets tag))]})))
+       :targets      (map format-target (:targets tag))})))
 
 
 (defn- index-tags
