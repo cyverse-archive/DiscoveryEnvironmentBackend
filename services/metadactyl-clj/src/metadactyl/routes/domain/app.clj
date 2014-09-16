@@ -70,6 +70,9 @@
    (optional-key :defaultValue)
    (describe Any "The Parameter's default value")
 
+   (optional-key :value)
+   (describe Any "The Parameter's value, used for previewing this parameter on the command-line.")
+
    (optional-key :label)
    (describe String "The Parameter's prompt to display in the UI")
 

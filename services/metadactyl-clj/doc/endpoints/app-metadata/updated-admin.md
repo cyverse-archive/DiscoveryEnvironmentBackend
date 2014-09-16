@@ -12,7 +12,6 @@
     * [Updating or Importing a Single-Step App](#updating-or-importing-a-single-step-app)
     * [Obtaining an App Representation for Editing](#obtaining-an-app-representation-for-editing)
     * [Obtaining App Information for Job Submission](#obtaining-app-information-for-job-submission)
-    * [Previewing Command Line Arguments](#previewing-command-line-arguments)
 
 # Overview
 
@@ -522,29 +521,3 @@ $ curl -s "http://by-tor:8888/secured/app/A750DD7B-7EBC-4809-B9EC-6F717220A1D1?u
     "type": ""
 }
 ```
-
-## Previewing Command Line Arguments
-
-*Unsecured Endpoint:* POST /arg-preview
-
-The app integration utility in the DE uses this service to obtain an example
-list of command-line arguments so that the user can tell what the command-line
-might look like without having to run a job using the app that is being
-integrated first. The request body is in the format described by
-[Template JSON](#template-json), above, except that each property also contains
-a `value` field that contains the value of the property to include on the
-command line. The response body is in the same format as the `/arg-preview`
-service in the JEX. Please see the JEX documentation for more information.
-
-Here's an example:
-
-```
-$ curl -sd @app-with-values.json http://by-tor:8888/arg-preview | python -mjson.tool
-{
-    "action": "arg-preview",
-    "params": "-f '/path/to/foo.txt' -b 'bar' -c ",
-    "status": "success"
-}
-```
-
-A copy of app-with-values.json can be found [here](app-with-values.json).

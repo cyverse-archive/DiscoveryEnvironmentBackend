@@ -9,7 +9,6 @@
         [slingshot.slingshot :only [throw+]])
   (:require [compojure.route :as route]
             [clojure-commons.error-codes :as ce]
-            [metadactyl.service.app-metadata :as app-metadata]
             [metadactyl.util.config :as config]))
 
 (defroutes* secured-routes
@@ -132,9 +131,6 @@
 
   (POST "/update-analysis" [:as {body :body}]
         (trap #(throw+ '("update-app" body))))
-
-  (POST "/arg-preview" [:as {body :body}]
-        (ce/trap "arg-preview" #(app-metadata/preview-command-line body)))
 
   (route/not-found (unrecognized-path-response)))
 

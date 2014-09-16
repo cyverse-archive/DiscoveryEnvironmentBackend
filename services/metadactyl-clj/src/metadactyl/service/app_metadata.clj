@@ -66,8 +66,7 @@
 (defn preview-command-line
   "This service sends a command-line preview request to the JEX."
   [body]
-  (let [in-req  (parse-json body)
-        jex-req (atx/template-cli-preview-req in-req)]
+  (let [jex-req (atx/template-cli-preview-req body)]
     (cheshire/decode-stream
      ((comp reader :body)
       (client/post
