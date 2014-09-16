@@ -7,7 +7,6 @@
             [clj-time.core :as t]
             [clj-time.local :as l]
             [clojurewerkz.elastisch.query :as es-query]
-            [clojurewerkz.elastisch.rest.response :as es-resp]
             [donkey.persistence.search :as search]
             [donkey.services.filesystem.users :as users]
             [donkey.util.config :as cfg]
@@ -55,12 +54,11 @@
   "Extracts the result of the Donkey search services from the results returned to us by
    ElasticSearch."
   [resp offset memberships]
-  (letfn [(format-match [match] {:score  (:_score match)
-                                 :type   (:_type match)
-                                 :entity (format-entity (:_source match) memberships)})]
-    {:total   (or (es-resp/total-hits resp) 0)
-     :offset  offset
-     :matches (map format-match (es-resp/hits-from resp))}))
+  (println resp)
+  (letfn [(format-match [match] {:score  (:score match)
+                                 :type   (:type match)
+                                 :entity (format-entity (:document match) memberships)})]
+    (assoc resp :offset offset :matches (map format-match (:matches resp)))))
 
 
 (defn- create-perm-filter

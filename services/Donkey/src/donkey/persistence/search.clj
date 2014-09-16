@@ -2,10 +2,19 @@
   "provides the functions that interact directly with elasticsearch"
   (:require [clojurewerkz.elastisch.rest :as es]
             [clojurewerkz.elastisch.rest.document :as doc]
+            [clojurewerkz.elastisch.rest.response :as resp]
             [slingshot.slingshot :refer [try+ throw+]]
             [donkey.util.config :as cfg])
   (:import [java.net ConnectException]
            [clojure.lang PersistentArrayMap PersistentVector]))
+
+
+(defn- format-response
+  [resp]
+  (letfn [(format-match [match] {:score    (:_score match)
+                                 :type     (:_type match)
+                                 :document (:_source match)})]
+    {:total (or (resp/total-hits resp) 0) :matches (map format-match (resp/hits-from resp))}))
 
 
 (defn ^PersistentArrayMap search-data
@@ -31,12 +40,13 @@
    ^Integer            from
    ^Integer            size]
   (try+
-    (doc/search (es/connect (cfg/es-url)) "data" (map name types)
-      :query        query
-      :from         from
-      :size         size
-      :sort         sort
-      :track_scores true)
+    (let [resp (doc/search (es/connect (cfg/es-url)) "data" (map name types)
+                 :query        query
+                 :from         from
+                 :size         size
+                 :sort         sort
+                 :track_scores true)]
+      (format-response resp))
     (catch ConnectException _
       (throw+ {:type :invalid-configuration :reason "cannot connect to elasticsearch"}))
     (catch [:status 404] {:keys []}
