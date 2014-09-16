@@ -12,7 +12,8 @@
             [donkey.util.icat :as icat]
             [donkey.util.service :as svc]
             [donkey.util.validators :as valid])
-  (:import [java.util UUID]))
+  (:import [java.util UUID]
+           [clojure.lang IPersistentMap]))
 
 
 (defn- validate-entry-accessible
@@ -54,13 +55,13 @@
    :targets      []})
 
 
-(defn create-user-tag
+(defn ^IPersistentMap create-user-tag
   "Creates a new user tag
 
    Parameters:
      body - This is the request body. It should be a JSON document containing a `value` text field
             and optionally a `description` text field."
-  [body]
+  [^String body]
   (let [owner       (:shortUsername user/current-user)
         tag         (json/parse-string (slurp body) true)
         value       (:value tag)
@@ -72,7 +73,7 @@
       (svc/donkey-response {} 409))))
 
 
-(defn delete-user-tag
+(defn ^IPersistentMap delete-user-tag
   "Deletes a user tag. This will detach it from all metadata.
 
    Parameters:
@@ -83,11 +84,12 @@
 
    Throws:
      ERR_NOT_FOUND - if the text isn't a UUID owned by the authenticated user."
-  [tag-id]
+  [^UUID tag-id]
   (let [tag-id    (valid/extract-uri-uuid tag-id)
         tag-owner (meta/get-tag-owner tag-id)]
     (when (not= tag-owner (:shortUsername user/current-user))
       (throw+ {:error_code error/ERR_NOT_FOUND :tag-id tag-id}))
+    (search/remove-tag tag-id)
     (meta/delete-user-tag tag-id)
     (svc/success-response)))
 

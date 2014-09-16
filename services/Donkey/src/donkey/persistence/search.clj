@@ -7,6 +7,7 @@
             [slingshot.slingshot :refer [try+ throw+]]
             [donkey.util.config :as cfg])
   (:import [java.net ConnectException]
+           [java.util UUID]
            [clojure.lang IPersistentMap ISeq]))
 
 
@@ -29,6 +30,21 @@
   [^IPersistentMap tag]
   (try+
     (doc/create (connect) "data" "tag" tag :id (:id tag))
+    (catch [:status 404] {:keys []}
+      (throw+ {:type :invalid-configuration :reason "elasticsearch has not been initialized"}))))
+
+
+(defn remove-tag
+  "Removes a tag from the search index.
+
+   Parameters:
+     tag-id - the id of the tag document to remove.
+
+   Throws:
+     :invalid-configuration - This is thrown if there is a problem with elasticsearch"
+  [^UUID tag-id]
+  (try+
+    (doc/delete (connect) "data" "tag" (str tag-id))
     (catch [:status 404] {:keys []}
       (throw+ {:type :invalid-configuration :reason "elasticsearch has not been initialized"}))))
 
