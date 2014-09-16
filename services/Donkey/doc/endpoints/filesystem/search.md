@@ -45,11 +45,14 @@ The following additional URI parameters are recognized.
 
 | Parameter | Required? | Default    | Description |
 | --------- | --------- | ---------- | ----------- |
-| q         | yes       |            | This parameter holds a JSON encoded search query. See [query syntax](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html) for a description of the syntax. |
+| q         | yes*      |            | This parameter holds a JSON encoded search query. See [query syntax](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html) for a description of the syntax. |
 | type      | no        | any        | This parameter restricts the search to either files or folders. It can take the values `any`, meaning files and folders, `file`, only files, and `folders`, only folders. |
+| tags      | yes*      |            | This is a comma-separated list of tag UUIDs. This parameter restricts the search to only entities that have at least of the provided tags. |
 | offset    | no        | 0          | This parameter indicates the number of matches to skip before including any in the result set. When combined with `limit`, it allows for paging results. |
 | limit     | no        | 200        | This parameter limits the number of matches in the result set to be a most a certain amount. When combined with `offset`, it allows for paging results. |
 | sort      | no        | score:desc | See [sorting](#sorting) |
+
+\* At least `q` or `tags` is required.
 
 #### Sorting
 
@@ -83,7 +86,7 @@ When the search succeeds the response document has these additional fields.
 
 ```
 $ curl \
-> "http://localhost:8888/secured/filesystem/index?proxyToken=$(cas-ticket)&q=\\{\"wildcard\":\\{\"label\":\"?e*\"\\}\\}&type=file&offset=1&limit=2&sort:desc" \
+> "http://localhost:8888/secured/filesystem/index?proxyToken=$(cas-ticket)&q=\\{\"wildcard\":\\{\"label\":\"?e*\"\\}\\}&type=file&tags=64581dbe-3aa1-11e4-a54e-3c4a92e4a804,6504ca14-3aa1-11e4-8d83-3c4a92e4a804&offset=1&limit=2&sort:desc" \
 > | python -mjson.tool
 {
     "matches": [

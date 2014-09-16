@@ -1,0 +1,1 @@
+{:dependencies [[org.clojure/java.jdbc "0.3.5"]]}

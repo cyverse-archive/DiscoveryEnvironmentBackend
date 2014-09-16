@@ -6,10 +6,9 @@
             [langohr.channel :as lch]
             [langohr.queue :as lq]
             [langohr.consumers :as lc]
-            [langohr.basic :as lb])
+            [langohr.basic :as lb]
+            [langohr.exchange :as le])
   (:import [java.io IOException]))
-
-(def ^:const exchange "amq.direct")
 
 (def ^:const initial-sleep-time 5000)
 (def ^:const max-sleep-time 320000)
@@ -47,12 +46,13 @@
        (first)))
 
 (defn- declare-queue
-  [ch queue-name]
+  [ch exchange queue-name]
   (lq/declare ch queue-name
               :durable     true
               :auto-delete false
               :exclusive   false)
-  (lq/bind ch queue-name exchange :routing-key queue-name))
+  (doseq [key ["index.all" "index.data"]]
+    (lq/bind ch queue-name exchange :routing-key key)))
 
 (defn- reindex-handler
   [props ch {:keys [delivery-tag]} _]
@@ -67,8 +67,12 @@
 
 (defn- add-reindex-subscription
  [props ch]
- (let [queue-name (cfg/get-amqp-reindex-queue props)]
-   (declare-queue ch queue-name)
+ (let [exchange   (cfg/get-amqp-exchange-name props)
+       queue-name (cfg/get-amqp-reindex-queue props)]
+   (le/direct ch exchange
+     :durable     (cfg/amqp-exchange-durable? props)
+     :auto-delete (cfg/amqp-exchange-auto-delete? props))
+   (declare-queue ch exchange queue-name)
    (lc/blocking-subscribe ch queue-name (partial reindex-handler props))))
 
 (defn- rmq-close

@@ -23,7 +23,11 @@ project(':infosquito') {
 
 }
 
-project(':panopticon') { 
+project(':monkey') {
+
+}
+
+project(':panopticon') {
 
 }
 

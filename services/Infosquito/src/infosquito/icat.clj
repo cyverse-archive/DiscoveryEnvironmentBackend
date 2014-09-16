@@ -1,7 +1,7 @@
 (ns infosquito.icat
   (:use [clojure.pprint :only [pprint]]
-        [infosquito.progress :only [notifier]])
-  (:require [clojure.java.jdbc :as sql]
+        [clojure-commons.progress :only [notifier]])
+  (:require [clojure.java.jdbc.deprecated :as sql]  ; TODO move away from deprecated namespace
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as file]
@@ -336,7 +336,7 @@
   [cfg indexer]
   (log/info "indexing" (count-collections cfg) "collections")
   (->> (partial index-entries indexer dir-type)
-       (notifier (:notify? cfg) (:notify-count cfg))
+       (notifier (:notify? cfg) #(log/info %) (:notify-count cfg))
        (get-collections cfg))
   (log/info "collection indexing complete"))
 
@@ -345,7 +345,7 @@
   [cfg indexer]
   (log/info "indexing" (count-data-objects cfg) "data objects")
   (->> (partial index-entries indexer file-type)
-       (notifier (:notify? cfg) (:notify-count cfg))
+       (notifier (:notify? cfg) #(log/info %) (:notify-count cfg))
        (get-data-objects cfg))
   (log/info "data object indexing complete"))
 

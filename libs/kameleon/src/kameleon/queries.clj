@@ -75,14 +75,25 @@
                (join collaborator)
                (where {:users.username username}))))
 
+(defn- get-existing-user-id
+  "Gets an existing user identifier for a fully qualified username. Returns nil if the
+   username isn't found in the database."
+  [username]
+  ((comp :id first)
+   (select :users (where {:username username}))))
+
+(defn- get-new-user-id
+  "Gets a new user identifier for a fully qualified username."
+  [username]
+  (insert :users (values {:username username}))
+  (get-existing-user-id username))
+
 (defn get-user-id
   "Gets the internal user identifier for a fully qualified username.  A new
    entry will be added if the user doesn't already exist in the database."
   [username]
-  (let [id (:id (first (select users (where {:username username}))))]
-    (if (nil? id)
-      (:id (insert users (values {:username username})))
-      id)))
+  (or (get-existing-user-id username)
+      (get-new-user-id username)))
 
 (defn get-user-ids
   "Gets the internal user identifiers for each username in a collection of

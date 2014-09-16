@@ -19,7 +19,7 @@
    The payload is passed to handlers as a byte stream. That should theoretically give us the
    ability to handle binary data arriving in messages, even though that doesn't seem likely."
   [channel {:keys [routing-key content-type delivery-tag type] :as meta} ^bytes payload]
-  (log/warn (format "[amqp/message-handler] [%s] [%s]" routing-key (String. payload "UTF-8")))
+  (log/info (format "[amqp/message-handler] [%s] [%s]" routing-key (String. payload "UTF-8")))
   (case routing-key
     "data-object.add" (dataobject-added payload)
     nil))
@@ -46,9 +46,9 @@
   "Initializes the AMQP messaging handling, registering (message-handler) as the callback."
   []
   (if-not (cfg/rabbitmq-enabled)
-    (log/warn "[amqp/messaging-initialization] iRODS messaging disabled"))
+    (log/info "[amqp/messaging-initialization] iRODS messaging disabled"))
   
   (when (cfg/rabbitmq-enabled)
-    (log/warn "[amqp/messaging-initialization] iRODS messaging enabled")
+    (log/info "[amqp/messaging-initialization] iRODS messaging enabled")
     (.start (Thread. receive))
     (monitor)))

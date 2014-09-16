@@ -1,11 +1,13 @@
 (ns monkey.core
   (:gen-class)
-  (:use [slingshot.slingshot :only [throw+]])
-  (:require [me.raynes.fs :as fs]
+  (:use [slingshot.slingshot :only [throw+ try+]])
+  (:require [clojure.tools.logging :as log]
+            [me.raynes.fs :as fs]
             [clojure-commons.config :as cfg]
             [common-cli.core :as cli]
             [monkey.actions :as actions]
             [monkey.index :as index]
+            [monkey.messenger :as msg]
             [monkey.props :as props]
             [monkey.tags :as tags]))
 
@@ -28,6 +30,7 @@
   [cfg-path]
   (let [p (ref nil)]
     (cfg/load-config-from-file cfg-path p)
+    (cfg/log-config p)
     (when-not (props/validate @p)
       (throw+ "The configuration parameters are invalid."))
     @p))
@@ -35,21 +38,28 @@
 
 (defn- reindex
   [props]
-  (actions/sync-index (actions/mk-monkey props (index/mk-index props) (tags/mk-tags props))))
+  (tags/with-tags props
+                  #(actions/sync-index (actions/mk-monkey props (index/mk-index props) %))))
 
 
 (defn- listen
-  [props])
+  [props]
+  (msg/listen props #(reindex props)))
 
 
 (defn -main
   [& args]
-  (let [{:keys [options _ _ _]} (cli/handle-args svc-info args (fn [] cli-options))]
-    (when-not (fs/exists? (:config options))
-      (cli/exit 1 "The config file does not exist."))
-    (when-not (fs/readable? (:config options))
-      (cli/exit 1 "The config file is not readable."))
-    (let [props (load-config-from-file (:config options))]
-      (if (:reindex options)
-        (reindex props)
-        (listen props)))))
+  (try+
+    (let [{:keys [options _ _ _]} (cli/handle-args svc-info args (fn [] cli-options))]
+      (when-not (fs/exists? (:config options))
+        (cli/exit 1 "The config file does not exist."))
+      (when-not (fs/readable? (:config options))
+        (cli/exit 1 "The config file is not readable."))
+      (let [props (load-config-from-file (:config options))]
+        (if (:reindex options)
+          (reindex props)
+          (listen props))))
+    (catch Object _
+      (log/fatal (:message &throw-context)
+                 (apply str (map #(str "\n\t" %) (:stack-trace &throw-context))))
+      (log/fatal "EXITING"))))

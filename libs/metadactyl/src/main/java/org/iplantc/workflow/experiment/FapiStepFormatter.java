@@ -166,9 +166,7 @@ public class FapiStepFormatter {
      * @param params the list of parameters.
      */
     private void addArchivePathParam(JSONArray params) {
-        String baseDir = experiment.getString("outputDirectory").replaceAll("^" + Pattern.quote(irodsHome), "");
-        baseDir = baseDir.replaceAll("/$", "");
-        String archivePath = baseDir + "/" + experiment.getString("name");
+        String archivePath = experiment.getString("outputDirectory").replaceAll("^" + Pattern.quote(irodsHome), "");
         params.add(generateParam(1, "--archivePath=", archivePath, "archivePath"));
     }
 

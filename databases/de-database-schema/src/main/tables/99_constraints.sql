@@ -217,6 +217,14 @@ ALTER TABLE ONLY users
     PRIMARY KEY (id);
 
 --
+-- Name: username_unique; Type: CONSTRAINT; Schema: public; Owner de;
+-- Tablespace:
+--
+ALTER TABLE ONLY users
+    ADD CONSTRAINT username_unique
+    UNIQUE (username);
+
+--
 -- Name: value_type_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --

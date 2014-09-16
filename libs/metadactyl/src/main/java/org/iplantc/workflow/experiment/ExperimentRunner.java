@@ -127,9 +127,8 @@ public class ExperimentRunner extends HibernateAccessor {
 
     protected JSONObject formatJobRequest(JSONObject experiment, DaoFactory daoFactory,
             UserDetails userDetails) {
-        JobNameUniquenessEnsurer jobNameUniquenessEnsurer = new TimestampJobNameUniquenessEnsurer();
         JobRequestFormatterFactory factory = new JobRequestFormatterFactory(daoFactory, urlAssembler,
-                userDetails, jobNameUniquenessEnsurer, irodsHome);
+                userDetails, irodsHome);
         return factory.getFormatter(experiment).formatJobRequest();
     }
 
