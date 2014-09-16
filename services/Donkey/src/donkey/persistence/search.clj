@@ -10,6 +10,29 @@
            [clojure.lang IPersistentMap ISeq]))
 
 
+(defn- connect
+  []
+  (try+
+    (es/connect (cfg/es-url))
+    (catch ConnectException _
+      (throw+ {:type :invalid-configuration :reason "cannot connect to elasticsearch"}))))
+
+
+(defn index-tag
+  "Inserts a tag into the search index.
+
+   Parameters:
+     tag - the tag document to insert.
+
+   Throws:
+     :invalid-configuration - This is thrown if there is a problem with elasticsearch"
+  [^IPersistentMap tag]
+  (try+
+    (doc/create (connect) "data" "tag" tag :id (:id tag))
+    (catch [:status 404] {:keys []}
+      (throw+ {:type :invalid-configuration :reason "elasticsearch has not been initialized"}))))
+
+
 (defn- tags-access-filter
   [tags memberships]
   (letfn [(tag-filter [tag] (query/term :id {:type "tag"
@@ -78,15 +101,13 @@
      :invalid-query - This is thrown if the query string is invalid."
   [^ISeq types ^IPersistentMap query ^IPersistentMap sort ^Integer from ^Integer size]
   (try+
-    (let [resp (doc/search (es/connect (cfg/es-url)) "data" (map name types)
+    (let [resp (doc/search (connect) "data" (map name types)
                  :query        query
                  :from         from
                  :size         size
                  :sort         sort
                  :track_scores true)]
       (format-response resp))
-    (catch ConnectException _
-      (throw+ {:type :invalid-configuration :reason "cannot connect to elasticsearch"}))
     (catch [:status 404] {:keys []}
       (throw+ {:type :invalid-configuration :reason "elasticsearch has not been initialized"}))
     (catch [:status 400] {:keys []}

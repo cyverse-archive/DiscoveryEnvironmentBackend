@@ -6,6 +6,7 @@
             [clojure-commons.error-codes :as error]
             [donkey.auth.user-attributes :as user]
             [donkey.persistence.metadata :as meta]
+            [donkey.persistence.search :as search]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.util.config :as config]
             [donkey.util.icat :as icat]
@@ -42,6 +43,17 @@
   (svc/success-response))
 
 
+(defn- format-new-tag-doc
+  [db-tag]
+  {:id           (:id db-tag)
+   :value        (:value db-tag)
+   :description  (:description db-tag)
+   :creator      (:owner_id db-tag)
+   :dateCreated  (:created_on db-tag)
+   :dateModified (:modified_on db-tag)
+   :targets      []})
+
+
 (defn create-user-tag
   "Creates a new user tag
 
@@ -55,6 +67,7 @@
         description (:description tag)]
     (if (empty? (meta/get-tags-by-value owner value))
       (let [db-tag (meta/insert-user-tag owner value description)]
+        (search/index-tag (format-new-tag-doc db-tag))
         (svc/success-response (select-keys db-tag [:id])))
       (svc/donkey-response {} 409))))
 
