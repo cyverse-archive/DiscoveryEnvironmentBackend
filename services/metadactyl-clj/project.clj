@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/metadactyl "4.0.0"
+(defproject org.iplantc/metadactyl "3.2.4"
   :description "Framework for hosting DiscoveryEnvironment metadata services."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -22,15 +22,15 @@
                  [medley "0.1.5"]
                  [metosin/compojure-api "0.15.0"]
                  [metosin/ring-swagger-ui "2.0.17"]
-                 [org.iplantc/clojure-commons "4.0.0"]
-                 [org.iplantc/kameleon "4.0.0"]
-                 [org.iplantc/common-cli "4.0.0"]
+                 [org.iplantc/clojure-commons "3.2.4"]
+                 [org.iplantc/kameleon "3.2.4"]
+                 [org.iplantc/common-cli "3.2.4"]
                  [me.raynes/fs "1.4.5"]
                  [korma "0.3.2"]
                  [ring "1.2.2"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [slingshot "0.10.3"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "4.0.0"]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.2.4"]
             [lein-ring "0.8.10"]
             [lein-swank "1.4.4"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
