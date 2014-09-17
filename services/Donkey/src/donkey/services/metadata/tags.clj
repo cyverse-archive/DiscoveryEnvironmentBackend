@@ -60,7 +60,10 @@
 
    Parameters:
      body - This is the request body. It should be a JSON document containing a `value` text field
-            and optionally a `description` text field."
+            and optionally a `description` text field.
+
+   Returns:
+     It returns the response."
   [^String body]
   (let [owner       (:shortUsername user/current-user)
         tag         (json/parse-string (slurp body) true)
@@ -141,14 +144,17 @@
     (svc/success-response {:tags (map #(dissoc % :owner_id) matches)})))
 
 
-(defn update-user-tag
+(defn ^IPersistentMap update-user-tag
   "updates the value and/or description of a tag.
 
    Parameters:
      tag-id - The tag-id from request URL. It should be a tag UUID.
-     body - The request body. It should be a JSON document containing at most one `value` text field
-            and one `description` text field."
-  [tag-id body]
+     body   - The request body. It should be a JSON document containing at most one `value` text
+              field and one `description` text field.
+
+    Returns:
+      It returns the response."
+  [^UUID tag-id ^String body]
   (letfn [(do-update []
             (let [req-updates     (json/parse-string (slurp body) true)
                   new-value       (:value req-updates)
@@ -158,7 +164,8 @@
                                                                      :description new-description}
                                     new-value                       {:value new-value}
                                     new-description                 {:description new-description})]
-              (when updates (meta/update-user-tag (UUID/fromString tag-id) updates))
+              (when updates
+                (meta/update-user-tag (UUID/fromString tag-id) updates))
               (svc/success-response)))]
     (let [owner     (:shortUsername user/current-user)
           tag-owner (meta/get-tag-owner (UUID/fromString tag-id))]
