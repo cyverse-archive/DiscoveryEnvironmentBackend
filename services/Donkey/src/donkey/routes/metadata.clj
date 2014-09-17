@@ -14,7 +14,10 @@
     [config/app-routes-enabled]
 
     (GET "/apps/categories" [:as {params :params}]
-         (trap #(apps/get-app-categories params)))))
+         (trap #(apps/get-app-categories params)))
+
+    (GET "/apps/categories/:app-group-id" [app-group-id :as {params :params}]
+         (ce/trap "get-analyses-in-group" #(apps/apps-in-category app-group-id params)))))
 
 (defn secured-metadata-routes
   []
@@ -68,12 +71,6 @@
 
    (GET "/search-analyses" [:as {params :params}]
         (trap #(apps/search-apps params)))
-
-   (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as {params :params}]
-        (ce/trap "get-analyses-in-group" #(apps/apps-in-category app-group-id params)))
-
-   (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id]
-        (trap #(apps/apps-in-category app-group-id)))
 
    (GET "/get-components-in-analysis/:app-id" [app-id]
         (trap #(apps/get-deployed-components-in-app app-id)))

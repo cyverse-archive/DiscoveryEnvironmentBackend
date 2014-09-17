@@ -34,8 +34,7 @@
     * [Rating Analyses](#rating-analyses)
     * [Deleting Analysis Ratings](#deleting-analysis-ratings)
     * [Searching for Analyses](#searching-for-analyses)
-    * [Listing Analyses in an Analysis Group](#listing-analyses-in-an-analysis-group)
-    * [Listing Analyses that may be Included in a Pipeline](#listing-analyses-that-may-be-included-in-a-pipeline)
+    * [Listing Apps in an App Group](#listing-apps-in-an-app-group)
     * [Listing Deployed Components in an Analysis](#listing-deployed-components-in-an-analysis)
     * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
     * [Making an Analysis Available for Editing in Tito](#making-an-analysis-available-for-editing-in-tito)
@@ -642,27 +641,14 @@ Delegates to metadactyl: GET /secured/search-analyses
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Listing Analyses in an Analysis Group
+## Listing Apps in an App Group
 
-Secured Endpoint: GET /secured/get-analyses-in-group/{group-id}
+Secured Endpoint: GET /apps/categories/{group-id}
 
-Delegates to metadactyl: GET /secured/get-analyses-in-group/{group-id}
+Delegates to metadactyl: GET /apps/categories/{group-id}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Listing Analyses that may be Included in a Pipeline
-
-Secured Endpoint: GET /secured/list-analyses-for-pipeline/{group-id}
-
-Delegates to metadactyl: GET /secured/list-analyses-for-pipeline/{group-id}
-
-This service is an alias for the `/get-analyses-in-group/{group-id}` service.
-At one time, this was a different service that returned additional information
-that was normally omitted for the sake of efficiency. Some recent efficiency
-improvements have eliminated the need to omit this information from the more
-commonly used endpoint, however. This endpoint is currently being retained for
-backward compatibility.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Listing Deployed Components in an Analysis
 
