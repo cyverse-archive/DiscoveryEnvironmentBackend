@@ -81,7 +81,7 @@
 
 (defn get-app
   [app-id]
-  (-> (client/get (secured-url "app" app-id)
+  (-> (client/get (metadactyl-url "apps" app-id "ui")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)
@@ -89,7 +89,7 @@
 
 (defn admin-list-tool-requests
   [params]
-  (-> (client/get (unsecured-url "tool-requests")
+  (-> (client/get (metadactyl-url "admin-tool-requests")
                   {:query-params params
                    :as           :stream})
       (:body)
@@ -97,7 +97,7 @@
 
 (defn list-tool-request-status-codes
   [params]
-  (-> (client/get (unsecured-url "tool-request-status-codes")
+  (-> (client/get (unsecured-url "tool-requests" "status-codes")
                   {:query-params params
                    :as           :stream})
       (:body)
@@ -121,7 +121,7 @@
 
 (defn get-app-details
   [app-id]
-  (-> (client/get (unsecured-url "analysis-details" app-id)
+  (-> (client/get (metadactyl-url "apps" app-id "details")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)
@@ -137,7 +137,7 @@
 
 (defn edit-workflow
   [app-id]
-  (-> (client/get (secured-url "edit-workflow" app-id)
+  (-> (client/get (secured-url "apps" app-id "pipeline-ui")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)
@@ -145,7 +145,7 @@
 
 (defn copy-workflow
   [app-id]
-  (-> (client/get (secured-url "copy-workflow" app-id)
+  (-> (client/get (secured-url "apps" app-id "copy-pipeline")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)
