@@ -60,7 +60,7 @@
   {:id           (:id db-tag)
    :value        (:value db-tag)
    :description  (:description db-tag)
-   :creator      (:owner_id db-tag)
+   :creator      (str (:owner_id db-tag) \# (config/irods-zone))
    :dateCreated  (:created_on db-tag)
    :dateModified (:modified_on db-tag)
    :targets      []})
