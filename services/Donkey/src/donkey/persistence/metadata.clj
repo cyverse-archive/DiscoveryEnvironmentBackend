@@ -257,7 +257,8 @@
                  :description description
                  :owner_id    owner})))))
 
-(defn update-user-tag
+
+(defn ^IPersistentMap update-user-tag
   "Updates a user tag's description and/or value.
 
    Parameters:
@@ -265,16 +266,19 @@
      updates - A map containing the updates. The map may contain only the keys :value and
                :description. It doesn't need to contain both.  The :value key will map to a new
                value for the tag, and the :description key will map to a new description. A nil
-               description will be converted to an empty string."
-  [tag-id updates]
+               description will be converted to an empty string.
+
+   Returns:
+     It returns the updated tag record."
+  [^UUID tag-id ^IPersistentMap updates]
   (let [updates (if (get updates :description :not-found)
                   updates
                   (assoc updates :description ""))]
     (korma/with-db db/metadata
       (update :tags
         (set-fields updates)
-        (where {:id tag-id})))
-    nil))
+        (where {:id tag-id})))))
+
 
 (defn delete-user-tag
   "This detaches a user tag from all metadata and deletes it.
