@@ -57,6 +57,24 @@
       (throw+ es-uninitialized))))
 
 
+(defn update-tag-targets
+  "Updates a tag's target list.
+
+   Parameters:
+     tag-id - the id of the tag to update
+     targets - a list of the current targets docs.
+
+   Throws:
+     :invalid-configuration - This is thrown if there is a problem with elasticsearch"
+  [^UUID tag-id ^ISeq targets]
+  (try+
+    (let [script "ctx._source.targets = targets"
+          update {:targets (map #(assoc % :type (str (:type %))) targets)}]
+      (doc/update-with-script (connect) "data" "tag" (str tag-id) script update))
+    (catch [:status 404] {:keys []}
+      (throw+ es-uninitialized))))
+
+
 (defn remove-tag
   "Removes a tag from the search index.
 

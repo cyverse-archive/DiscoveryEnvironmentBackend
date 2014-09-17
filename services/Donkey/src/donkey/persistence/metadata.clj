@@ -3,7 +3,7 @@
   (:require [korma.db :as korma]
             [donkey.util.db :as db])
   (:import [java.util UUID]
-           [clojure.lang IPersistentMap]))
+           [clojure.lang IPersistentMap ISeq]))
 
 
 (defn- ->enum-val
@@ -363,6 +363,20 @@
               :detached_on nil
               :tag_id      [in tag-ids]})))
   nil)
+
+
+(defn ^ISeq select-tag-targets
+  "Retrieve all of the objects that have a given tag attached.
+
+   Parameters:
+     tag-id - The id of the tag
+
+   Returns:
+     It returns the attachment records for this tag."
+  [^UUID tag-id]
+  (korma/with-db db/metadata
+    (select :attached_tags
+      (where {:tag_id tag-id :detached_on nil}))))
 
 
 ;; TEMPLATES

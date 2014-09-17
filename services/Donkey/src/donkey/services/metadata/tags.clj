@@ -23,6 +23,13 @@
     (uuids/validate-uuid-accessible fs user entry-id)))
 
 
+(defn- update-tags-targets
+  [tag-ids]
+  (letfn [(fmt-tgt ([tgt] {:id (:target_id tgt) :type (:target_type tgt)}))]
+    (doseq [id tag-ids]
+      (search/update-tag-targets id (map fmt-tgt (meta/select-tag-targets id))))))
+
+
 (defn- attach-tags
   [fs-cfg user entry-id new-tags]
   (fs-init/with-jargon fs-cfg [fs]
@@ -35,6 +42,7 @@
       (when-not (empty? unknown-tags)
         (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
       (meta/insert-attached-tags user entry-id (icat/resolve-data-type fs entry-id) unattached-tags)
+      (update-tags-targets known-tags)
       (svc/success-response))))
 
 
