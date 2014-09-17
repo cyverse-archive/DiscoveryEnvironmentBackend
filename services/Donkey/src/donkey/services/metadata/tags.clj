@@ -49,8 +49,10 @@
 (defn- detach-tags
   [fs-cfg user entry-id tag-ids]
   (validate-entry-accessible fs-cfg user entry-id)
-  (meta/mark-tags-detached user entry-id (meta/filter-tags-owned-by-user user (set tag-ids)))
-  (svc/success-response))
+  (let [known-tags (meta/filter-tags-owned-by-user user (set tag-ids))]
+    (meta/mark-tags-detached user entry-id known-tags)
+    (update-tags-targets known-tags)
+    (svc/success-response)))
 
 
 (defn- format-new-tag-doc
