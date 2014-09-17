@@ -12,7 +12,8 @@
             [donkey.util.icat :as icat]
             [donkey.util.service :as svc]
             [donkey.util.validators :as valid])
-  (:import [java.util UUID]
+  (:import [java.io Reader]
+           [java.util UUID]
            [clojure.lang IPersistentMap]))
 
 
@@ -144,32 +145,36 @@
     (svc/success-response {:tags (map #(dissoc % :owner_id) matches)})))
 
 
+(defn- prepare-tag-update
+  [update-req]
+  (let [new-value       (:value update-req)
+        new-description (:description update-req)]
+    (cond
+      (and new-value new-description) {:value new-value :description new-description}
+      new-value                       {:value new-value}
+      new-description                 {:description new-description})))
+
+
 (defn ^IPersistentMap update-user-tag
   "updates the value and/or description of a tag.
 
    Parameters:
-     tag-id - The tag-id from request URL. It should be a tag UUID.
-     body   - The request body. It should be a JSON document containing at most one `value` text
-              field and one `description` text field.
+     tag-str - The tag-id from request URL. It should be a tag UUID.
+     body    - The request body. It should be a JSON document containing at most one `value` text
+               field and one `description` text field.
 
     Returns:
       It returns the response."
-  [^UUID tag-id ^String body]
-  (letfn [(do-update []
-            (let [req-updates     (json/parse-string (slurp body) true)
-                  new-value       (:value req-updates)
-                  new-description (:description req-updates)
-                  updates         (cond
-                                    (and new-value new-description) {:value       new-value
-                                                                     :description new-description}
-                                    new-value                       {:value new-value}
-                                    new-description                 {:description new-description})]
-              (when updates
-                (meta/update-user-tag (UUID/fromString tag-id) updates))
-              (svc/success-response)))]
-    (let [owner     (:shortUsername user/current-user)
-          tag-owner (meta/get-tag-owner (UUID/fromString tag-id))]
-      (cond
-        (nil? tag-owner)       (svc/donkey-response {} 404)
-        (not= owner tag-owner) (svc/donkey-response {} 403)
-        :else                  (do-update)))))
+  [^String tag-str ^Reader body]
+  (let [tag-id    (UUID/fromString tag-str)
+        owner     (:shortUsername user/current-user)
+        tag-owner (meta/get-tag-owner tag-id)
+        do-update (fn []
+                    (let [update (prepare-tag-update (json/parse-string (slurp body) true))]
+                      (when-not (empty? update)
+                        (meta/update-user-tag tag-id update))
+                      (svc/success-response {})))]
+    (cond
+      (nil? tag-owner)       (svc/donkey-response {} 404)
+      (not= owner tag-owner) (svc/donkey-response {} 403)
+      :else                  (do-update))))
