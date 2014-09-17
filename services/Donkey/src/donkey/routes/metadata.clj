@@ -8,7 +8,7 @@
             [donkey.util.config :as config]
             [donkey.services.metadata.apps :as apps]))
 
-(defn app-categories
+(defn app-category-routes
   []
   (optional-routes
     [config/app-routes-enabled]
