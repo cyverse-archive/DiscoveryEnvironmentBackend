@@ -12,7 +12,7 @@
    :name
    (describe String "The App Category's name")
 
-   :description
+   (optional-key :description)
    (describe String "The App Category's description")
 
    :app_count

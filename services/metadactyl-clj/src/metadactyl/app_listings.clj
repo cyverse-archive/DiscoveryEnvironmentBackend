@@ -13,6 +13,7 @@
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
+            [medley.core :as medley]
             [metadactyl.util.service :as service]))
 
 (defn- add-subgroups
@@ -44,7 +45,7 @@
 
 (def ^:private virtual-group-fns
   {:00000000-0000-0000-0000-000000000000 {:format-group   format-my-public-apps-group
-                    :format-listing list-my-public-apps}})
+                                          :format-listing list-my-public-apps}})
 
 (defn- format-virtual-groups
   "Formats any virtual groups that should appear in a user's workspace."
@@ -199,7 +200,7 @@
 (defn- list-apps-in-real-group
   "This service lists all of the apps in a real app group and all of its descendents."
   [workspace app_group_id params]
-  (let [app_group      (get-app-group app_group_id)
+  (let [app_group      (medley/remove-vals nil? (get-app-group app_group_id))
         total          (count-apps-in-group workspace app_group params)
         apps_in_group  (get-apps-in-group workspace app_group params)
         apps_in_group  (map format-app apps_in_group)]

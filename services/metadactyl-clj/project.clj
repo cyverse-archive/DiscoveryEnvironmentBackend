@@ -19,7 +19,7 @@
                  [clj-time "0.7.0"]
                  [com.cemerick/url "0.1.1"]
                  [compojure "1.1.8"]
-                 [medley "0.1.5"]
+                 [medley "0.5.1"]
                  [metosin/compojure-api "0.15.0"]
                  [metosin/ring-swagger-ui "2.0.17"]
                  [org.iplantc/clojure-commons "4.0.0"]
