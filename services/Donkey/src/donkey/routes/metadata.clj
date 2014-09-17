@@ -8,6 +8,14 @@
             [donkey.util.config :as config]
             [donkey.services.metadata.apps :as apps]))
 
+(defn app-categories
+  []
+  (optional-routes
+    [config/app-routes-enabled]
+
+    (GET "/apps/categories" [:as {params :params}]
+         (trap #(apps/get-app-categories params)))))
+
 (defn secured-metadata-routes
   []
   (optional-routes
@@ -60,9 +68,6 @@
 
    (GET "/search-analyses" [:as {params :params}]
         (trap #(apps/search-apps params)))
-
-   (GET "/app-groups" []
-        (trap #(apps/get-app-categories)))
 
    (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as {params :params}]
         (ce/trap "get-analyses-in-group" #(apps/apps-in-category app-group-id params)))
@@ -167,9 +172,6 @@
 
    (GET "/get-analysis/:app-id" [app-id :as req]
         (trap #(get-app req app-id)))
-
-   (GET "/public-app-groups" [req]
-        (trap #(get-public-app-groups req)))
 
    (GET "/list-analysis/:app-id" [app-id :as req]
         (trap #(list-app req app-id)))

@@ -96,7 +96,7 @@
 
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
-  (listAppGroups [_])
+  (listAppGroups [_ params])
   (listApps [_ category-id params])
   (searchApps [_ search-term])
   (updateFavorites [_ app-id favorite?])
@@ -121,8 +121,8 @@
 (deftype DeOnlyAppLister []
   AppLister
 
-  (listAppGroups [_]
-    (metadactyl/get-app-categories))
+  (listAppGroups [_ params]
+    (metadactyl/get-app-categories params))
 
   (listApps [_ category-id params]
     (metadactyl/apps-in-category category-id params))
@@ -185,8 +185,8 @@
 (deftype DeHpcAppLister [agave-client user-has-access-token?]
   AppLister
 
-  (listAppGroups [_]
-    (-> (metadactyl/get-app-categories)
+  (listAppGroups [_ params]
+    (-> (metadactyl/get-app-categories params)
         (update-in [:groups] conj (.hpcAppGroup agave-client))))
 
   (listApps [_ category-id params]
@@ -310,10 +310,10 @@
        (DeOnlyAppLister.))))
 
 (defn get-app-categories
-  []
+  [params]
   (with-db db/de
     (transaction
-     (service/success-response (.listAppGroups (get-app-lister "type=apps"))))))
+     (service/success-response (.listAppGroups (get-app-lister "type=apps") params)))))
 
 (defn apps-in-category
   [category-id params]

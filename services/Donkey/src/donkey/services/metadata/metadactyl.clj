@@ -116,12 +116,6 @@
   (let [url (build-metadactyl-secured-url req "template" app-id)]
     (forward-get url req)))
 
-(defn get-public-app-groups
-  "Retrieves the list of public app groups."
-  [req]
-  (let [url (build-metadactyl-unprotected-url req "public-app-groups")]
-    (forward-get url req)))
-
 (defn list-app
   "This service lists a single application.  The response body contains a JSON
    string representing an object containing a list of apps.  If an app with the

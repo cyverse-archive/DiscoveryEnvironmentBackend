@@ -34,9 +34,9 @@
      (assoc params :agave-enabled (str (config/agave-enabled)))))
 
 (defn get-app-categories
-  []
+  [params]
   (-> (client/get (unsecured-url "apps" "categories")
-                  {:query-params (secured-params)
+                  {:query-params (secured-params params)
                    :as           :stream})
       (:body)
       (service/decode-json)))

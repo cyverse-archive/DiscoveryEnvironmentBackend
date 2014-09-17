@@ -13,7 +13,7 @@
     * [Adding Analyses to Analysis Groups](#adding-analyses-to-analysis-groups)
     * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
     * [Getting App Details](#getting-app-details)
-    * [Listing Analysis Groups](#listing-analysis-groups)
+    * [Listing App Groups](#listing-app-groups)
     * [Listing Individual Analyses](#listing-individual-analyses)
     * [Exporting a Template](#exporting-a-template)
     * [Exporting an Analysis](#exporting-an-analysis)
@@ -343,18 +343,14 @@ Here's an example of an Agave app listing:
 }
 ```
 
-## Listing Analysis Groups
+## Listing App Groups
 
-Secured Endpoint: GET /secured/app-groups
+Secured Endpoint: GET /apps/categories
 
-Delegates to metadactyl: GET /secured/app-groups
+Delegates to metadactyl: GET /apps/categories
 
-Unsecured Endpoint: GET /public-app-groups
-
-Delegates to metadactyl: GET /public-app-groups
-
-These endpoints are passthroughs to the metadactyl endpoints using the same
-paths. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Listing Individual Analyses
 
