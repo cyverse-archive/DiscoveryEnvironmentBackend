@@ -19,6 +19,17 @@
     (GET "/apps/categories/:app-group-id" [app-group-id :as {params :params}]
          (ce/trap "get-analyses-in-group" #(apps/apps-in-category app-group-id params)))))
 
+(defn apps-routes
+  []
+  (optional-routes
+    [config/app-routes-enabled]
+
+    (GET "/apps" [:as {params :params}]
+         (trap #(apps/search-apps params)))
+
+    (GET "/apps/:app-id/details" [app-id]
+         (trap #(apps/get-app-details app-id)))))
+
 (defn secured-metadata-routes
   []
   (optional-routes
@@ -35,9 +46,6 @@
 
    (GET "/app/:app-id" [app-id]
         (trap #(apps/get-app app-id)))
-
-   (GET "/app-details/:app-id" [app-id]
-        (trap #(apps/get-app-details app-id)))
 
    (GET "/apps/:app-id/data-objects" [app-id]
         (trap #(apps/list-app-data-objects app-id)))
@@ -68,9 +76,6 @@
 
    (POST "/delete-rating" [:as {body :body}]
          (trap #(apps/delete-rating body)))
-
-   (GET "/search-analyses" [:as {params :params}]
-        (trap #(apps/search-apps params)))
 
    (GET "/get-components-in-analysis/:app-id" [app-id]
         (trap #(apps/get-deployed-components-in-app app-id)))

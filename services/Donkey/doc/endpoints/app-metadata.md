@@ -33,7 +33,7 @@
     * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
     * [Rating Analyses](#rating-analyses)
     * [Deleting Analysis Ratings](#deleting-analysis-ratings)
-    * [Searching for Analyses](#searching-for-analyses)
+    * [Searching for Apps](#searching-for-apps)
     * [Listing Apps in an App Group](#listing-apps-in-an-app-group)
     * [Listing Deployed Components in an Analysis](#listing-deployed-components-in-an-analysis)
     * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
@@ -222,90 +222,19 @@ path. Please see the metadactyl documentation for more information.
 
 ## Getting App Details
 
-Secured Endpoint: GET /secured/app-details/{app-id}
+Secured Endpoint: GET /apps/{app-id}/details
 
 This service is used by the DE to obtain high-level details about a single
-analysis. The response body is in the following format:
+analysis.
 
-```json
-{
-    "components": [
-        {
-            "id": "component-id",
-            "name": "component-name",
-            "description": "component-description",
-            "location": "component-location",
-            "type": "executable",
-            "version": "component-version",
-            "attribution": "component-attribution"
-        }
-    ],
-    "description": "analysis-description",
-    "edited_date": "edited-date-milliseconds",
-    "id": "analysis-id",
-    "label": "analysis-label",
-    "name": "analysis-name",
-    "published_date": "published-date-milliseconds",
-    "references": [
-        "reference-1",
-        "reference-2",
-        ...,
-        "reference-n"
-    ],
-    "groups": [
-        {
-            "name": "Beta",
-            "id": "g5401bd146c144470aedd57b47ea1b979"
-        }
-    ],
-    "tito": "analysis-id",
-    "type": "component-type"
-}
-```
+For DE apps, this service delegates the call to the metadactyl endpoint, `/apps/{app-id}/details`.
+Please see the metadactyl documentation for more information its response format.
 
-For DE apps, this service delegates the call to the metadactyl endpoint,
-`/analysis-details/:app-id`. For Agave apps, this service retrieves the
-information it needs to format the response from Agave.
-
-Here's an example of a DE app listing:
-
-```
-$ curl -s "http://by-tor:8888/secured/app-details/0309394C-37C9-4A64-A806-C12674D2D4F8?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "components": [
-        {
-            "attribution": "Rice P, Longden I, Bleasby A. EMBOSS: the European Molecular Biology Open Software Suite. Trends Genet. 2000 Jun;16(6):276-7",
-            "description": "Needleman-Wunsch global alignment",
-            "id": "c3610c827b37d4c4ba5f18cc1edeb72e5",
-            "location": "/usr/local3/bin/emboss/bin",
-            "name": "needle",
-            "type": "executable",
-            "version": "6.4.0"
-        }
-    ],
-    "description": "needle reads two input sequences and writes their optimal global sequence alignment to file.",
-    "edited_date": "1334734950952",
-    "groups": [
-        {
-            "id": "4B3A8586-9A55-441C-8ED2-D730D60BF5F1",
-            "name": "EMBOSS"
-        }
-    ],
-    "id": "0309394C-37C9-4A64-A806-C12674D2D4F8",
-    "label": "",
-    "name": "EMBOSS Needle",
-    "published_date": "1334734995546",
-    "references": [],
-    "success": true,
-    "suggested_groups": [],
-    "tito": "0309394C-37C9-4A64-A806-C12674D2D4F8"
-}
-```
-
+For Agave apps, this service retrieves the information it needs to format the response from Agave.
 Here's an example of an Agave app listing:
 
 ```
- curl -s "http://gargery:31325/secured/app-details/wc-1.00u1?proxyToken=$(cas-ticket)" | python -mjson.tool
+ curl -s "http://gargery:31325/apps/wc-1.00u1/details?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "components": [
         {
@@ -632,14 +561,14 @@ Delegates to metadactyl: POST /secured/delete-rating
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Searching for Analyses
+## Searching for Apps
 
-Secured Endpoint: GET /secured/search-analyses
+Secured Endpoint: GET /apps?search={term}
 
-Delegates to metadactyl: GET /secured/search-analyses
+Delegates to metadactyl: GET /apps?search={term}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Listing Apps in an App Group
 

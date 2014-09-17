@@ -51,7 +51,8 @@
 
 (defn secured-routes-no-context
   []
-  (app-category-routes))
+  (app-category-routes)
+  (apps-routes))
 
 (defn secured-routes
   []
