@@ -205,8 +205,9 @@
   [username]
   (let [user-id (:id (get-or-create-user username))]
     (if-let [workspace (first (select workspace (where {:user_id user-id})))]
-      workspace
-      (insert workspace (values {:user_id user-id})))))
+      (assoc workspace :newWorkspace false)
+      (-> (insert workspace (values {:user_id user-id}))
+          (assoc :newWorkspace true)))))
 
 (defn get-public-user-id
   "Gets the user ID for the public user."

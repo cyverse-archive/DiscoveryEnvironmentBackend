@@ -19,7 +19,6 @@
 * [POST /preview-workflow](endpoints/app-metadata/admin.md#previewing-analyses)
 * [GET /search-deployed-components/{search-term}](endpoints/app-metadata/listing.md#search-deployed-components)
 * [GET /secured/app/{app-id}](endpoints/app-metadata/updated-admin.md#obtaining-app-information-for-job-submission)
-* [GET /secured/bootstrap](endpoints/misc.md#initializing-a-users-workspace)
 * [GET /secured/copy-template/{analysis-id}](endpoints/app-metadata/editing.md#making-a-copy-of-an-analysis-available-for-editing-in-tito)
 * [GET /secured/copy-workflow/{analysis-id}](endpoints/app-metadata/editing.md#making-a-copy-of-a-pipeline-available-for-editing)
 * [POST /secured/delete-rating](endpoints/app-metadata/rating.md#deleting-analysis-ratings)

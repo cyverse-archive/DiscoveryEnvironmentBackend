@@ -12,9 +12,6 @@
             [metadactyl.util.config :as config]))
 
 (defroutes* secured-routes
-  (GET "/bootstrap" [:as {params :params headers :headers}]
-       (throw+ "(bootstrap (:ip-address params) (headers \"user-agent\"))"))
-
   (GET "/logout" [:as {params :params}]
        (ce/trap "logout" #(throw+ '("logout" params))))
 

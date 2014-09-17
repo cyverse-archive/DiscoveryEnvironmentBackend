@@ -114,8 +114,7 @@
       (handle-blank-default-output-dir user)
       (handle-string-default-output-dir)
       (add-system-default-output-dir)
-      (create-system-default-output-dir)
-      (cheshire/encode)))
+      (create-system-default-output-dir)))
 
 (defn- set-user-prefs
   [user prefs]
@@ -171,7 +170,7 @@
 
 (defn do-get-prefs
   []
-  (user-prefs (:username current-user)))
+  (cheshire/encode (user-prefs (:username current-user))))
 
 (defn do-post-prefs
   [body]

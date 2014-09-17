@@ -5,15 +5,21 @@
         [donkey.auth.user-attributes]
         [donkey.clients.user-info :only [get-user-details]]
         [donkey.services.fileio.actions :only [upload]]
+        [donkey.services.user-prefs :only [user-prefs]]
         [donkey.util.email]
         [donkey.util.service]
+        [kameleon.queries :only [get-or-create-workspace-for-user
+                                 record-login
+                                 record-logout]]
+        [korma.db :only [with-db]]
         [ring.util.codec :only [url-encode]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [donkey.clients.metadactyl :as dm]
             [donkey.clients.notifications :as dn]
-            [donkey.services.filesystem.common-paths :as filesys]))
+            [donkey.services.filesystem.common-paths :as filesys]
+            [donkey.util.db :as db]))
 
 (defn- secured-notification-url
   [req & components]
@@ -227,17 +233,31 @@
     (forward-post url req)))
 
 (defn bootstrap
-  "This service obtains information about and initializes the workspace for
-   the authenticated user. It also records the fact that the user logged in."
-  [req]
-  (let [url (build-metadactyl-secured-url req "bootstrap")
-        resp (forward-get url req)
-        boot (decode-stream (:body resp))
-        user (:shortUsername current-user)]
-    (cheshire/encode (assoc boot
-                            :userHomePath (filesys/user-home-dir user)
-                            :userTrashPath (filesys/user-trash-path user)
-                            :baseTrashPath (filesys/base-trash-path)))))
+  "This service obtains information about and initializes the workspace for the authenticated user.
+   It also records the fact that the user logged in."
+  [{{:keys [ip-address]} :params {user-agent "user-agent"} :headers}]
+  (assert-valid ip-address "Missing or empty query string parameter: ip-address")
+  (assert-valid user-agent "Missing or empty request parameter: user-agent")
+  (let [username    (:username current-user)
+        user        (:shortUsername current-user)
+        workspace   (with-db db/de
+                      (get-or-create-workspace-for-user username))
+        preferences (user-prefs (:username current-user))
+        login-time  (with-db db/de
+                      (record-login username ip-address user-agent))]
+    (cheshire/encode
+      {:workspaceId   (:id workspace)
+       :newWorkspace  (:newWorkspace workspace)
+       :loginTime     (str login-time)
+       :username      user
+       :full_username username
+       :email         (:email current-user)
+       :firstName     (:firstName current-user)
+       :lastName      (:lastName current-user)
+       :userHomePath  (filesys/user-home-dir user)
+       :userTrashPath (filesys/user-trash-path user)
+       :baseTrashPath (filesys/base-trash-path)
+       :preferences   preferences})))
 
 (defn logout
   "This service records the fact that the user logged out."
