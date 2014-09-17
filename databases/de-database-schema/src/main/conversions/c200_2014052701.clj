@@ -1,6 +1,7 @@
 (ns facepalm.c200-2014052701
   (:use [korma.core])
-  (:require [cheshire.core :as cheshire])
+  (:require [cheshire.core :as cheshire]
+            [clojure.string :as string])
   (:import [java.util UUID]))
 
 (declare insert-tree-value)
@@ -16,7 +17,7 @@
             (values {:parameter_id parameter_id
                      :is_default (or (:isDefault arg) false)
                      :name (:name arg)
-                     :value (:value arg)
+                     :value (some-> arg :value string/trim)
                      :description (:description arg)
                      :label (:display arg)}))))
 
@@ -109,4 +110,3 @@
   (convert-defalut-values)
   (convert-selection-values)
   (convert-tree-selection-values))
-
