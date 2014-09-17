@@ -155,6 +155,15 @@
       new-description                 {:description new-description})))
 
 
+(defn- do-update-tag
+  [tag-id update]
+  (let [tag-rec     (meta/update-user-tag tag-id update)
+        doc-updates {:value        (:value tag-rec)
+                     :description  (:description tag-rec)
+                     :dateModified (:modified_on tag-rec)}]
+    (search/update-tag tag-id doc-updates)))
+
+
 (defn ^IPersistentMap update-user-tag
   "updates the value and/or description of a tag.
 
@@ -172,7 +181,7 @@
         do-update (fn []
                     (let [update (prepare-tag-update (json/parse-string (slurp body) true))]
                       (when-not (empty? update)
-                        (meta/update-user-tag tag-id update))
+                        (do-update-tag tag-id update))
                       (svc/success-response {})))]
     (cond
       (nil? tag-owner)       (svc/donkey-response {} 404)

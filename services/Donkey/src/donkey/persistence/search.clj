@@ -11,6 +11,10 @@
            [clojure.lang IPersistentMap ISeq]))
 
 
+(def ^:private es-uninitialized {:type   :invalid-configuration
+                                 :reason "elasticsearch has not been initialized"})
+
+
 (defn- connect
   []
   (try+
@@ -31,7 +35,26 @@
   (try+
     (doc/create (connect) "data" "tag" tag :id (:id tag))
     (catch [:status 404] {:keys []}
-      (throw+ {:type :invalid-configuration :reason "elasticsearch has not been initialized"}))))
+      (throw+ es-uninitialized))))
+
+
+(defn update-tag
+  "Updates a tag's label, description, modification date.
+
+   Parameters:
+     tag-id - the id of the tag to update
+     updates - a map containing the updated values.
+
+   Throws:
+     :invalid-configuration - This is thrown if there is a problem with elasticsearch"
+  [^UUID tag-id ^IPersistentMap updates]
+  (try+
+    (let [script "ctx._source.value = value;
+                  ctx._source.description = description;
+                  ctx._source.dateModified = dateModified"]
+      (doc/update-with-script (connect) "data" "tag" (str tag-id) script updates))
+    (catch [:status 404] {:keys []}
+      (throw+ es-uninitialized))))
 
 
 (defn remove-tag
@@ -46,7 +69,7 @@
   (try+
     (doc/delete (connect) "data" "tag" (str tag-id))
     (catch [:status 404] {:keys []}
-      (throw+ {:type :invalid-configuration :reason "elasticsearch has not been initialized"}))))
+      (throw+ es-uninitialized))))
 
 
 (defn- tags-access-filter
@@ -125,6 +148,6 @@
                  :track_scores true)]
       (format-response resp))
     (catch [:status 404] {:keys []}
-      (throw+ {:type :invalid-configuration :reason "elasticsearch has not been initialized"}))
+      (throw+ es-uninitialized))
     (catch [:status 400] {:keys []}
       (throw+ {:type :invalid-query}))))
