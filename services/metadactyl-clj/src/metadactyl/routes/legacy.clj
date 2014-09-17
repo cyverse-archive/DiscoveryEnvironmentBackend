@@ -12,9 +12,6 @@
             [metadactyl.util.config :as config]))
 
 (defroutes* secured-routes
-  (GET "/logout" [:as {params :params}]
-       (ce/trap "logout" #(throw+ '("logout" params))))
-
   (GET "/template/:app-id" [app-id]
        (throw+ '("get-app" app-id)))
 

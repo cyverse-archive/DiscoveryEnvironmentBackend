@@ -23,7 +23,6 @@
 * [GET /secured/copy-workflow/{analysis-id}](endpoints/app-metadata/editing.md#making-a-copy-of-a-pipeline-available-for-editing)
 * [POST /secured/delete-rating](endpoints/app-metadata/rating.md#deleting-analysis-ratings)
 * [GET /secured/get-components-in-analysis/{analysis-id}](endpoints/app-metadata/listing.md#listing-deployed-components-in-an-analysis)
-* [GET /secured/logout](endpoints/misc.md#recording-when-the-user-logs-out)
 * [POST /secured/make-analysis-public](endpoints/app-metadata/editing.md#submitting-an-analysis-for-public-use)
 * [POST /secured/rate-analysis](endpoints/app-metadata/rating.md#rating-analyses)
 * [GET /secured/reference-genomes](endpoints/reference-genomes.md#exporting-reference-genomes)

@@ -319,6 +319,15 @@
     (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
              :message    (string/join " " msgs)})))
 
+(defn string->long
+  "Converts a String to a long."
+  [string & msgs]
+  (try
+    (Long/parseLong string)
+    (catch NumberFormatException e
+           (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
+                    :message    (string/join " " msgs)}))))
+
 (defn request-failure
   "Throws an exception indicating that a request failed for an unexpected reason."
   [& msgs]

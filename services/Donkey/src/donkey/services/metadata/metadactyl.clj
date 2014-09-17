@@ -261,9 +261,14 @@
 
 (defn logout
   "This service records the fact that the user logged out."
-  [req]
-  (let [url (build-metadactyl-secured-url req "logout")]
-    (forward-get url req)))
+  [{:keys [ip-address login-time]}]
+  (assert-valid ip-address "Missing or empty query string parameter: ip-address")
+  (assert-valid login-time "Missing or empty query string parameter: login-time")
+  (with-db db/de
+    (record-logout (:username current-user)
+                   ip-address
+                   (string->long login-time "Long integer expected: login-time")))
+  {})
 
 (defn get-messages
   "This service forwards requests to the notification agent in order to

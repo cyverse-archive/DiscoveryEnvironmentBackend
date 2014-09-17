@@ -17,27 +17,3 @@ only a welcome message. Here's an example:
 $ curl -s http://by-tor:8888/
 Welcome to Metadactyl!
 ```
-
-## Recording when the User Logs Out
-
-*Secured Endpoint:* GET /secured/logout
-
-The DE calls this service when the user explicitly logs out. This service simply
-records the time that the user logged out in the login record created by the
-`/secured/bootstrap` service. This service requires four query-string
-parameters:
-
-* user - the short version of the username
-* email - the user's email address
-* ip-address - the source IP address of the logout request
-* login-time - the login timestamp that was returned by the bootstrap service
-
-Here's an example:
-
-```
-$ curl -s "http://by-tor:8888/secured/bootstrap?user=snow-dog&email=sd@example.org&ip-address=127.0.0.1&login-time=1374180749466" | python -mjson.tool
-{
-    "action": "logout",
-    "status": "success"
-}
-```

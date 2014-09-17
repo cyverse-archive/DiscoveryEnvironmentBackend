@@ -56,17 +56,6 @@ parameters. The available query string parameters are:
                 endpoints as `first-name`.
             </td>
         </tr>
-        <tr>
-            <td>ip-address</td>
-            <td>
-                The IP address of the originating request. Because these
-                services are called by the DE on behalf of the user it is not
-                possible to obtain the IP address of the originating request
-                from the socket connection. This field is currently only
-                required for the `/secured/bootstrap` and `/secured/logout`
-                endpoints.
-            </td>
-        </tr>
     </tbody>
 </thead>
 

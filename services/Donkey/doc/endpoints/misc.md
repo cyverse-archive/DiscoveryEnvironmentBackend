@@ -84,15 +84,15 @@ $ curl "http://by-tor:8888/secured/bootstrap?proxyToken=$(cas-ticket)&ip-address
 
 Secured Endpoint: GET /secured/logout
 
-Delegates to metadactyl: GET /secured/logout
+The DE calls this service when the user explicitly logs out. This service simply records the time
+that the user logged out in the login record created by the `/secured/bootstrap` service.
+Note that this service requires these query-string parameters, which cannot be obtained
+automatically in most cases, in addition to the `proxyToken` parameter:
 
-This endpoint is a passthrough to the metadactyl endpoint using the same path.
-Please see the metadactyl documentation for more information.
+* ip-address - the source IP address of the logout request
+* login-time - the login timestamp that was returned by the bootstrap service
 
-Note that the `ip-address` and `login-time` query parameters that have to be
-passed to the metadactyl service cannot be obtained automatically in most cases.
-Because of this, these parameters must be passed to this service in addition to
-the `proxyToken` parameter. Here's an example:
+Here's an example:
 
 ```
 $ curl -s "http://by-tor:8888/secured/logout?proxyToken=$(cas-ticket)&ip-address=127.0.0.1&login-time=1374190755304" | python -mjson.tool
