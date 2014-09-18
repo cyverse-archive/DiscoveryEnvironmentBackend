@@ -14,9 +14,6 @@
            [clojure.lang IPersistentMap]))
 
 
-(def ^{:private true :const true} default-zone "iplant")
-
-
 (defn- send-request
   "Sends the search request to Elastic Search.
 
@@ -194,7 +191,7 @@
 (defn qualify-name
   "Qualifies a user or group name with the default zone."
   [name]
-  (str name \# default-zone))
+  (str name \# (cfg/irods-zone)))
 
 
 (defn add-timing
@@ -210,7 +207,7 @@
    Unqualified user names are assumed to belong to the default zone."
   [user]
   (map qualify-name
-       (users/list-user-groups (string/replace user (str \# default-zone) ""))))
+       (users/list-user-groups (string/replace user (str \# (cfg/irods-zone)) ""))))
 
 
 (defn ^IPersistentMap search
