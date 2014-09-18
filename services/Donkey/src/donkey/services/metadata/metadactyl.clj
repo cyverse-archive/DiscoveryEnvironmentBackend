@@ -411,18 +411,12 @@
   (forward-delete (secured-notification-url req "admin" "system" uuid) req))
 
 (defn edit-app
-  "This service makes an app available in Tito for editing."
-  [req app-id]
-  (let [url (build-metadactyl-secured-url req "edit-template" app-id)]
-    (forward-get url req)))
-
-(defn edit-app-new-format
   "This service makes an app available in Tito for editing and returns a
    representation of the app in the JSON format required by the DE as of
    version 1.8."
   [req app-id]
   (forward-get
-   (build-metadactyl-secured-url req "edit-app" app-id)
+   (build-metadactyl-url (update-in req [:params] #(dissoc % :app-id)) "apps" app-id "ui")
    req))
 
 (defn copy-app

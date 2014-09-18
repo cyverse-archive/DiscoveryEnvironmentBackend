@@ -37,7 +37,6 @@
     * [Listing Apps in an App Group](#listing-apps-in-an-app-group)
     * [Listing Deployed Components in an Analysis](#listing-deployed-components-in-an-analysis)
     * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
-    * [Making an Analysis Available for Editing in Tito](#making-an-analysis-available-for-editing-in-tito)
     * [Making a Copy of an Analysis Available for Editing in Tito](#making-a-copy-of-an-analysis-available-for-editing-in-tito)
     * [Submitting an Analysis for Public Use](#submitting-an-analysis-for-public-use)
     * [Determining if an Analysis Can be Made Public](#determining-if-an-analysis-can-be-made-public)
@@ -593,15 +592,6 @@ path. Please see the metadactyl documentation for more information.
 Secured Endpoint: POST /secured/update-favorites
 
 Delegates to metadactyl: POST /secured/update-favorites
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Making an Analysis Available for Editing in Tito
-
-Secured Endpoint: GET /secured/edit-template/{analysis-id}
-
-Delegates to metadactyl: GET /secured/edit-template/{analysis-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.

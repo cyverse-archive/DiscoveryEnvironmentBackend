@@ -23,12 +23,12 @@ path. Please see the metadactyl documentation for more information.
 
 ## Obtaining an App Representation for Editing
 
-*Secured Endpoint:* GET /secured/edit-app/{app-id}
+*Secured Endpoint:* GET /apps/{app-id}/ui
 
-*Delegates to metadactyl:* GET /secured/edit-app/{app-id}
+*Delegates to metadactyl:* GET /apps/{app-id}/ui
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Obtaining App Information for Job Submission
 

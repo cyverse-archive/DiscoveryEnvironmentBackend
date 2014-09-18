@@ -28,7 +28,10 @@
          (trap #(apps/search-apps params)))
 
     (GET "/apps/:app-id/details" [app-id]
-         (trap #(apps/get-app-details app-id)))))
+         (trap #(apps/get-app-details app-id)))
+
+    (GET "/apps/:app-id/ui" [app-id :as req]
+         (trap #(edit-app req app-id)))))
 
 (defn secured-metadata-routes
   []
@@ -82,12 +85,6 @@
 
    (POST "/update-favorites" [:as {body :body}]
          (trap #(apps/update-favorites body)))
-
-   (GET "/edit-template/:app-id" [app-id :as req]
-        (trap #(edit-app req app-id)))
-
-   (GET "/edit-app/:app-id" [app-id :as req]
-        (trap #(edit-app-new-format req app-id)))
 
    (GET "/edit-workflow/:app-id" [app-id]
         (trap #(apps/edit-workflow app-id)))
