@@ -103,11 +103,8 @@
    (unsecured-tree-viewer-routes)
    (unsecured-fileio-routes)
    (unsecured-callback-routes)
-   secured-handler-no-context
-
    (context "/secured" [] secured-handler)
-
-   (route/not-found (unrecognized-path-response))))
+   secured-handler-no-context))
 
 (defn start-nrepl
   []
