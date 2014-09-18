@@ -59,6 +59,7 @@
    "output = " (script-output working_dir) "\n"
    "error = " (script-error working_dir) "\n"
    "log = " (script-log local-log-dir) "\n"
+   "request_disk = " (cfg/request-disk) "\n" 
    "+IpcUuid = \"" uuid "\"\n"
    "+IpcJobId = \"generated_script\"\n"
    "+IpcUsername = \"" username "\"\n"
