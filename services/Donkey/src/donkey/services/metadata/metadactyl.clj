@@ -12,6 +12,7 @@
                                  record-login
                                  record-logout]]
         [korma.db :only [with-db]]
+        [medley.core :only [dissoc-in]]
         [ring.util.codec :only [url-encode]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
@@ -216,9 +217,9 @@
 (defn update-app-labels
   "This service updates the labels in a single-step app. Both vetted and unvetted apps can be
    modified using this service."
-  [req]
-  (let [url (build-metadactyl-unprotected-url req "update-app-labels")]
-    (forward-post url req)))
+  [req app-id]
+  (let [url (build-metadactyl-url (dissoc-in req [:params :app-id]) "apps" app-id)]
+    (forward-patch url req)))
 
 (defn delete-workflow
   "This service will logically remove a workflow from the DE."
@@ -416,7 +417,7 @@
    version 1.8."
   [req app-id]
   (forward-get
-   (build-metadactyl-url (update-in req [:params] #(dissoc % :app-id)) "apps" app-id "ui")
+   (build-metadactyl-url (dissoc-in req [:params :app-id]) "apps" app-id "ui")
    req))
 
 (defn copy-app

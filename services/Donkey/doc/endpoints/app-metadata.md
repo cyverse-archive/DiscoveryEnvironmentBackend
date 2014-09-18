@@ -375,12 +375,12 @@ path. Please see the metadactyl documentation for more information.
 
 ## Updating App Labels
 
-Unsecured Endpoint: POST /update-app-labels
+Unsecured Endpoint: PATCH /apps/{app-id}
 
-Delegates to metadactyl: POST /update-app-labels
+Delegates to metadactyl: PATCH /apps/{app-id}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Importing a Template
 

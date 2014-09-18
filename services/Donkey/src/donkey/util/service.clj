@@ -240,6 +240,13 @@
   ([addr request body]
      (client/put addr (prepare-forwarded-request request body))))
 
+(defn forward-patch
+  "Forwards a PATCH request to a remote service."
+  ([addr request]
+   (forward-patch addr request (slurp (:body request))))
+  ([addr request body]
+   (client/patch addr (prepare-forwarded-request request body))))
+
 (defn forward-delete
   "Forwards a DELETE request to a remote service."
   [addr request]

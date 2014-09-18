@@ -50,6 +50,7 @@
                  [com.novemberain/langohr "2.11.0"]
                  [de.ubercode.clostache/clostache "1.4.0"]
                  [me.raynes/fs "1.4.6"]
+                 [medley "0.5.1"]
                  [dire "0.5.2"]
                  [mvxcvi/clj-pgp "0.5.3"]]
   :plugins [[org.iplantc/lein-iplant-rpm "4.0.0"]

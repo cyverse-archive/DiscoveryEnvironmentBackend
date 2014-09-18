@@ -34,7 +34,10 @@
          (trap #(edit-app req app-id)))
 
     (POST "/apps/arg-preview" [:as req]
-          (trap #(preview-args req)))))
+          (trap #(preview-args req)))
+
+    (PATCH "/apps/:app-id" [app-id :as req]
+           (trap #(update-app-labels req app-id)))))
 
 (defn secured-metadata-routes
   []
@@ -201,9 +204,6 @@
 
    (POST "/update-workflow" [:as req]
          (trap #(update-workflow req)))
-
-   (POST "/update-app-labels" [:as req]
-         (trap #(update-app-labels req)))
 
    (POST "/import-template" [:as req]
          (trap #(import-template req)))
