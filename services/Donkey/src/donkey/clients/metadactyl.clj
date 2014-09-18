@@ -137,7 +137,7 @@
 
 (defn edit-workflow
   [app-id]
-  (-> (client/get (secured-url "apps" app-id "pipeline-ui")
+  (-> (client/get (unsecured-url "apps" app-id "pipeline-ui")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)

@@ -37,7 +37,10 @@
           (trap #(preview-args req)))
 
     (PATCH "/apps/:app-id" [app-id :as req]
-           (trap #(update-app-labels req app-id)))))
+           (trap #(update-app-labels req app-id)))
+
+    (GET "/apps/:app-id/pipeline-ui" [app-id]
+         (trap #(apps/edit-workflow app-id)))))
 
 (defn secured-metadata-routes
   []
@@ -91,9 +94,6 @@
 
    (POST "/update-favorites" [:as {body :body}]
          (trap #(apps/update-favorites body)))
-
-   (GET "/edit-workflow/:app-id" [app-id]
-        (trap #(apps/edit-workflow app-id)))
 
    (GET "/copy-template/:app-id" [app-id :as req]
         (trap #(copy-app req app-id)))

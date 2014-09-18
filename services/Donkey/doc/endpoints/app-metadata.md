@@ -625,12 +625,12 @@ Please see the metadactyl documentation for more information.
 
 ## Making a Pipeline Available for Editing
 
-Secured Endpoint: GET /secured/edit-workflow/{analysis-id}
+Secured Endpoint: GET /apps/{app-id}/pipeline-ui
 
-Delegates to metadactyl: GET /secured/edit-workflow/{analysis-id}
+Delegates to metadactyl: GET /apps/{app-id}/pipeline-ui
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Making a Copy of a Pipeline Available for Editing
 
