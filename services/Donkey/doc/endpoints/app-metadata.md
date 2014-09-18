@@ -1,7 +1,7 @@
 # Table of Contents
 
 * [Application Metadata Endpoints](#application-metadata-endpoints)
-    * [Listing Workflow Elements](#listing-workflow-elements)
+    * [Listing App Elements](#listing-app-elements)
     * [Searching for Deployed Components](#searching-for-deployed-components)
     * [Listing App Identifiers](#listing-app-identifiers)
     * [Deleting Categories](#deleting-categories)
@@ -54,14 +54,14 @@ Note that secured endpoints in Donkey and metadactyl are a little different from
 each other. Please see [Donkey Vs. Metadactyl](donkey-v-metadactyl.md) for more
 information.
 
-## Listing Workflow Elements
+## Listing App Elements
 
-Unsecured Endpoint: GET /get-workflow-elements/{element-type}
+Unsecured Endpoint: GET /apps/elements/{element-type}
 
-Delegates to metadactyl: GET /get-workflow-elements/{element-type}
+Delegates to metadactyl: GET /apps/elements/{element-type}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Searching for Deployed Components
 

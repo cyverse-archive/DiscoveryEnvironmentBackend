@@ -52,7 +52,10 @@
           (trap #(delete-apps req)))
 
     (GET "/apps/ids" [:as req]
-         (trap #(get-all-app-ids req)))))
+         (trap #(get-all-app-ids req)))
+
+    (GET "/apps/elements/:element-type" [element-type :as req]
+         (trap #(get-workflow-elements req element-type)))))
 
 (defn secured-metadata-routes
   []
@@ -153,9 +156,6 @@
   []
   (optional-routes
    [config/app-routes-enabled]
-
-   (GET "/get-workflow-elements/:element-type" [element-type :as req]
-        (trap #(get-workflow-elements req element-type)))
 
    (GET "/search-deployed-components/:search-term" [search-term :as req]
         (trap #(search-deployed-components req search-term)))

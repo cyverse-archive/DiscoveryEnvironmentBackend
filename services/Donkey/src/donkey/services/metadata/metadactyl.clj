@@ -53,7 +53,7 @@
 (defn get-workflow-elements
   "A service to get information about workflow elements."
   [req element-type]
-  (let [url (build-metadactyl-unprotected-url req "get-workflow-elements" element-type)]
+  (let [url (build-metadactyl-url (dissoc-in req [:params :element-type]) "apps" "elements" element-type)]
     (forward-get url req)))
 
 (defn search-deployed-components
