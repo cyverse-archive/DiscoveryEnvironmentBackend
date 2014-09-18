@@ -129,7 +129,7 @@
 
 (defn list-app-data-objects
   [app-id]
-  (-> (client/get (unsecured-url "apps" app-id "data-objects")
+  (-> (client/get (metadactyl-url "apps" app-id "data-objects")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)
@@ -137,7 +137,7 @@
 
 (defn edit-workflow
   [app-id]
-  (-> (client/get (unsecured-url "apps" app-id "pipeline-ui")
+  (-> (client/get (metadactyl-url "apps" app-id "pipeline-ui")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)

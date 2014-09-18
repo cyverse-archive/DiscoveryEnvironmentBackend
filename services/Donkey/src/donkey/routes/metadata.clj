@@ -40,7 +40,19 @@
            (trap #(update-app-labels req app-id)))
 
     (GET "/apps/:app-id/pipeline-ui" [app-id]
-         (trap #(apps/edit-workflow app-id)))))
+         (trap #(apps/edit-workflow app-id)))
+
+    (GET "/apps/:app-id/is-publishable" [app-id]
+         (trap #(app-publishable? app-id)))
+
+    (DELETE "/apps/:app-id" [app-id :as req]
+            (trap #(delete-app req app-id)))
+
+    (POST "/apps/shredder" [:as req]
+          (trap #(delete-apps req)))
+
+    (GET "/apps/ids" [:as req]
+         (trap #(get-all-app-ids req)))))
 
 (defn secured-metadata-routes
   []
@@ -113,12 +125,6 @@
    (POST "/make-analysis-public" [:as req]
          (trap #(make-app-public req)))
 
-   (GET "/is-publishable/:app-id" [app-id]
-        (trap #(app-publishable? app-id)))
-
-   (POST "/delete-workflow" [:as req]
-         (trap #(delete-workflow req)))
-
    (GET "/default-output-dir" []
         (trap #(get-default-output-dir)))
 
@@ -153,9 +159,6 @@
 
    (GET "/search-deployed-components/:search-term" [search-term :as req]
         (trap #(search-deployed-components req search-term)))
-
-   (GET "/get-all-analysis-ids" [:as req]
-        (trap #(get-all-app-ids req)))
 
    (POST "/delete-categories" [:as req]
          (trap #(delete-categories req)))

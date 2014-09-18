@@ -65,7 +65,7 @@
 (defn get-all-app-ids
   "A service to get the list of app identifiers."
   [req]
-  (let [url (build-metadactyl-unprotected-url req "get-all-analysis-ids")]
+  (let [url (build-metadactyl-url req "apps" "ids")]
     (forward-get url req)))
 
 (defn delete-categories
@@ -221,8 +221,14 @@
   (let [url (build-metadactyl-url (dissoc-in req [:params :app-id]) "apps" app-id)]
     (forward-patch url req)))
 
-(defn delete-workflow
-  "This service will logically remove a workflow from the DE."
+(defn delete-app
+  "This service will logically remove an app from the DE."
+  [req app-id]
+  (let [url (build-metadactyl-url (dissoc-in req [:params :app-id]) "apps" app-id)]
+    (forward-delete url req)))
+
+(defn delete-apps
+  "This service will logically remove a list of apps from the DE."
   [req]
   (let [url (build-metadactyl-url req "apps" "shredder")]
     (forward-post url req)))

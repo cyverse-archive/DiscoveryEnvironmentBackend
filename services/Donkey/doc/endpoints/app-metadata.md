@@ -3,7 +3,7 @@
 * [Application Metadata Endpoints](#application-metadata-endpoints)
     * [Listing Workflow Elements](#listing-workflow-elements)
     * [Searching for Deployed Components](#searching-for-deployed-components)
-    * [Listing Analysis Identifiers](#listing-analysis-identifiers)
+    * [Listing App Identifiers](#listing-app-identifiers)
     * [Deleting Categories](#deleting-categories)
     * [Valiating Analyses for Pipelines](#valiating-analyses-for-pipelines)
     * [Listing Data Objects in an Analysis](#listing-data-objects-in-an-analysis)
@@ -18,8 +18,7 @@
     * [Exporting a Template](#exporting-a-template)
     * [Exporting an Analysis](#exporting-an-analysis)
     * [Exporting Selected Deployed Components](#exporting-selected-deployed-components)
-    * [Permanently Deleting an Analysis](#permanently-deleting-an-analysis)
-    * [Logically Deleting an Analysis](#logically-deleting-an-analysis)
+    * [Logically Deleting Apps](#logically-deleting-apps)
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
     * [Updating an Existing Template](#updating-an-existing-template)
@@ -73,14 +72,14 @@ Delegates to metadactyl: GET /search-deployed-components{search-term}
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Listing Analysis Identifiers
+## Listing App Identifiers
 
-Unsecured Endpoint: GET /get-all-analysis-ids
+Unsecured Endpoint: GET /apps/ids
 
-Delegates to metadactyl: GET /get-all-analysis-ids
+Delegates to metadactyl: GET /apps/ids
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Deleting Categories
 
@@ -315,13 +314,15 @@ Delegates to metadactyl: POST /export-deployed-components
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Logically Deleting an Analysis
+## Logically Deleting Apps
 
-Secured Endpoint: POST /secured/delete-workflow
+Secured Endpoint: DELETE /apps/{app-id}
+Delegates to metadactyl: DELETE /apps/{app-id}
 
+Secured Endpoint: POST /apps/shredder
 Delegates to metadactyl: POST /apps/shredder
 
-This endpoint is a passthrough to the metadactyl endpoint above.
+These endpoints are passthroughs to their corresponding metadactyl endpoint.
 Please see the metadactyl documentation for more information.
 
 ## Previewing Templates
@@ -616,7 +617,7 @@ path. Please see the metadactyl documentation for more information.
 
 ## Determining if an App Can be Made Public
 
-Secured Endpoint: GET /secured/is-publishable/{app-id}
+Secured Endpoint: GET /apps/{app-id}/is-publishable
 
 Delegates to metadactyl: GET /apps/{app-id}/is-publishable
 
