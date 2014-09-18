@@ -31,7 +31,10 @@
          (trap #(apps/get-app-details app-id)))
 
     (GET "/apps/:app-id/ui" [app-id :as req]
-         (trap #(edit-app req app-id)))))
+         (trap #(edit-app req app-id)))
+
+    (POST "/apps/arg-preview" [:as req]
+          (trap #(preview-args req)))))
 
 (defn secured-metadata-routes
   []
@@ -227,7 +230,4 @@
         (trap #(admin-list-tool-requests params)))
 
    (GET "/tool-request-status-codes" [:as {params :params}]
-        (trap #(list-tool-request-status-codes params)))
-
-   (POST "/arg-preview" [:as req]
-         (trap #(preview-args req)))))
+        (trap #(list-tool-request-status-codes params)))))

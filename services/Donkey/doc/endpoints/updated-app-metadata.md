@@ -98,9 +98,9 @@ $ curl -s "http://by-tor:8888/secured/app/A750DD7B-7EBC-4809-B9EC-6F717220A1D1?p
 
 ## Previewing Command Line Arguments
 
-*Unsecured Endpoint:* POST /arg-preview
+*Unsecured Endpoint:* POST /apps/arg-preview
 
-*Delegates to metadactyl:* POST /arg-preview
+*Delegates to metadactyl:* POST /apps/arg-preview
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.

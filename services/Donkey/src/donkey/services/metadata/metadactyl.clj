@@ -547,7 +547,7 @@
   "Previews the command-line arguments for a job request."
   [req]
   (forward-post
-   (build-metadactyl-unprotected-url req "arg-preview")
+   (build-metadactyl-url req "apps" "arg-preview")
    req))
 
 (defn provide-user-feedback
