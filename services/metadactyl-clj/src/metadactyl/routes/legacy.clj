@@ -33,9 +33,6 @@
   (POST "/update-favorites" [:as {body :body}]
         (throw+ '("update-favorites" body)))
 
-  (GET "/edit-template/:app-id" [app-id]
-       (throw+ '("edit-app" app-id)))
-
   (GET "/edit-app/:app-id" [app-id]
        (throw+ '("edit-app-new-format" app-id)))
 
