@@ -42,8 +42,7 @@
     * [Making a Pipeline Available for Editing](#making-a-pipeline-available-for-editing)
     * [Making a Copy of a Pipeline Available for Editing](#making-a-copy-of-a-pipeline-available-for-editing)
     * [Requesting Installation of a Tool](#requesting-installation-of-a-tool)
-    * [Updating a Tool Installation Request (User)](#updating-a-tool-installation-request-(user))
-    * [Updating a Tool Installation Request (Administrator)](#updating-a-tool-installation-request-(administrator))
+    * [Updating a Tool Installation Request](#updating-a-tool-installation-request)
     * [Listing Tool Installation Requests](#listing-tool-installation-requests)
     * [Listing Tool Installation Request Details](#listing-tool-installation-request-details)
     * [Listing Tool Request Status Codes](#listing-tool-request-status-codes)
@@ -644,9 +643,9 @@ path. Please see the metadactyl documentation for more information.
 
 ## Requesting Installation of a Tool
 
-Secured Endpoint: PUT /secured/tool-request
+Secured Endpoint: POST /tool-requests
 
-Delegates to metadactyl: PUT /secured/tool-request
+Delegates to metadactyl: POST /tool-requests
 
 This service is primarily a passthrough to the metadactyl endpoint using the
 same path. The only difference is that this endpoint also sends a message to the
@@ -654,20 +653,11 @@ tool request email address and generates a notification for the new tool request
 indicating that the tool request was successfully submitted. Please see the
 metadactyl documentation for more details.
 
-## Updating a Tool Installation Request (User)
+## Updating a Tool Installation Request
 
-Secured Endpoint: POST /secured/tool-request
+Secured Endpoint: POST /admin/tool-requests/{tool-request-id}/status
 
-Delegates to metadactyl: POST /secured/tool-request
-
-This service is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more details.
-
-## Updating a Tool Installation Request (Administrator)
-
-Unsecured Endpoint: POST /tool-request
-
-Delegates to metadactyl: POST /tool-request
+Delegates to metadactyl: POST /admin/tool-requests/{tool-request-id}/status
 
 This service is primarily a passthrough to the metadactyl endpoint using the
 same path. The only difference is that this endpoint also generates a
@@ -680,25 +670,25 @@ Unsecured Endpoint: GET /tool-requests
 
 Delegates to metadactyl: GET /tool-requests
 
-Secured Endpoint: GET /secured/tool-requests
+Secured Endpoint: GET /admin/tool-requests
 
-Delegates to metadactyl: GET /secured/tool-requests
+Delegates to metadactyl: GET /admin/tool-requests
 
 These services are passthroughs to the metadactyl endpoints using the same path.
 Please see the metadactyl documentation for more details.
 
 ## Listing Tool Installation Request Details
 
-Unsecured Endpoint: GET /tool-request/{tool-request-id}
+Unsecured Endpoint: GET /admin/tool-requests/{tool-request-id}
 
-Delegates to metadactyl: GET /tool-request/{tool-request-id}
+Delegates to metadactyl: GET /admin/tool-requests/{tool-request-id}
 
-This service is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more details.
+This service is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more details.
 
 ## Listing Tool Request Status Codes
 
-Unsecured Endpoint: GET /tool-request-status-codes
+Unsecured Endpoint: GET /tool-requests/status-codes
 
-This service is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more details.
+This service is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more details.

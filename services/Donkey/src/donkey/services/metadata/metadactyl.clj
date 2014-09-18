@@ -500,11 +500,9 @@
 (defn submit-tool-request
   "Submits a tool request on behalf of the user found in the request params."
   [req]
-  (let [user-query-params {:user (get-in req [:params "user"])
-                           :email (get-in req [:params "email"])}
-        tool-request-url  (build-metadactyl-secured-url req "tool-request")]
+  (let [tool-request-url (build-metadactyl-url req "tool-requests")]
     (postprocess-tool-request
-      (forward-put tool-request-url req)
+      (forward-post tool-request-url req)
       (fn [tool-req user-details]
         (send-tool-request-email tool-req user-details)
         (dn/send-tool-request-notification tool-req user-details)
@@ -514,7 +512,7 @@
   "Lists the tool requests that were submitted by the authenticated user."
   [req]
   (forward-get
-   (build-metadactyl-secured-url req "tool-requests")
+   (build-metadactyl-url req "tool-requests")
    req))
 
 (defn admin-list-tool-requests
@@ -529,25 +527,20 @@
 
 (defn update-tool-request
   "Updates a tool request with comments and possibly a new status."
-  [req]
+  [req request-id]
   (postprocess-tool-request
-   (forward-post (build-metadactyl-unprotected-url req "tool-request") req)
+   (forward-post (build-metadactyl-url (dissoc-in req [:params :request-id])
+                                       "admin" "tool-requests" request-id "status")
+     req)
    (fn [tool-req user-details]
      (dn/send-tool-request-update-notification tool-req user-details)
      (success-response tool-req))))
 
-(defn update-tool-request-secured
-  "Updates a tool request on behalf of the authenticated user."
-  [req]
-  (forward-post
-   (build-metadactyl-secured-url req "tool-request")
-   req))
-
 (defn get-tool-request
   "Lists details about a specific tool request."
-  [req uuid]
+  [req request-id]
   (forward-get
-   (build-metadactyl-unprotected-url req "tool-request" uuid)
+   (build-metadactyl-url (dissoc-in req [:params :request-id]) "admin" "tool-requests" request-id)
    req))
 
 (defn preview-args

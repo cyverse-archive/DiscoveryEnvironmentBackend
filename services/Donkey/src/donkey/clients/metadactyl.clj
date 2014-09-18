@@ -89,16 +89,16 @@
 
 (defn admin-list-tool-requests
   [params]
-  (-> (client/get (metadactyl-url "admin-tool-requests")
-                  {:query-params params
+  (-> (client/get (metadactyl-url "admin" "tool-requests")
+                  {:query-params (secured-params params)
                    :as           :stream})
       (:body)
       (service/decode-json)))
 
 (defn list-tool-request-status-codes
   [params]
-  (-> (client/get (unsecured-url "tool-requests" "status-codes")
-                  {:query-params params
+  (-> (client/get (metadactyl-url "tool-requests" "status-codes")
+                  {:query-params (secured-params params)
                    :as           :stream})
       (:body)
       (service/decode-json)))

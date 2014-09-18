@@ -57,6 +57,29 @@
     (GET "/apps/elements/:element-type" [element-type :as req]
          (trap #(get-workflow-elements req element-type)))))
 
+(defn tool-request-routes
+  []
+  (optional-routes
+    [config/app-routes-enabled]
+
+    (GET "/tool-requests" [:as req]
+         (trap #(list-tool-requests req)))
+
+    (POST "/tool-requests" [:as req]
+          (trap #(submit-tool-request req)))
+
+    (GET "/tool-requests/status-codes" [:as {params :params}]
+         (trap #(list-tool-request-status-codes params)))
+
+    (GET "/admin/tool-requests" [:as {params :params}]
+         (trap #(admin-list-tool-requests params)))
+
+    (GET "/admin/tool-requests/:request-id" [request-id :as req]
+         (trap #(get-tool-request req request-id)))
+
+    (POST "/admin/tool-requests/:request-id/status" [request-id :as req]
+          (trap #(update-tool-request req request-id)))))
+
 (defn secured-metadata-routes
   []
   (optional-routes
@@ -140,15 +163,6 @@
    (PUT "/reference-genomes" [:as req]
         (trap #(replace-reference-genomes req)))
 
-   (PUT "/tool-request" [:as req]
-        (trap #(submit-tool-request req)))
-
-   (POST "/tool-request" [:as req]
-         (trap #(update-tool-request-secured req)))
-
-   (GET "/tool-requests" [:as req]
-        (trap #(list-tool-requests req)))
-
    (PUT "/feedback" [:as {body :body}]
         (trap #(provide-user-feedback body)))))
 
@@ -218,19 +232,4 @@
          (trap #(import-tools req)))
 
    (POST "/update-analysis" [:as req]
-         (trap #(update-app req)))
-
-   (POST "/submit-tool-request" [:as req]
-         (trap #(submit-tool-request req)))
-
-   (POST "/tool-request" [:as req]
-         (trap #(update-tool-request req)))
-
-   (GET "/tool-request/:uuid" [uuid :as req]
-        (trap #(get-tool-request req uuid)))
-
-   (GET "/tool-requests" [:as {params :params}]
-        (trap #(admin-list-tool-requests params)))
-
-   (GET "/tool-request-status-codes" [:as {params :params}]
-        (trap #(list-tool-request-status-codes params)))))
+         (trap #(update-app req)))))
