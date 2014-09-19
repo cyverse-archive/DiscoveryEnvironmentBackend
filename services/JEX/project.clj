@@ -31,7 +31,7 @@
                               "java-1.7.0-openjdk"],
                :config-files ["log4j.properties"],
                :config-path "conf"
-               :working-dir "pushd $( getent passwd \"$RUNUSER\" ) | cut -d: -f6 ) > /dev/null"}
+               :working-dir "pushd /var/lib/condor > /dev/null"}
   :profiles {:dev {:dependencies [[midje "1.6.0"]]}}
   :aot [jex.core]
   :main jex.core
