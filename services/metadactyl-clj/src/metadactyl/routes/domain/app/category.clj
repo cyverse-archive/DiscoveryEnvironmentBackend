@@ -27,17 +27,17 @@
       Workspace")
 
    ;; KLUDGE
-   :groups
+   :categories
    (describe [Any]
      "A listing of child App Categories under this App Category.
       <b>Note</b>: This will be a list of more categories like this one, but the documentation
       library does not currently support recursive model schema definitions")})
 
 (defschema AppCategoryListing
-  {:groups (describe [AppCategory] "A listing of App Categories visisble to the requesting user")})
+  {:categories (describe [AppCategory] "A listing of App Categories visisble to the requesting user")})
 
 (defschema AppCategoryAppListing
-  (merge (dissoc AppCategory :workspace_id :groups)
+  (merge (dissoc AppCategory :workspace_id :categories)
          {:apps (describe [AppListingDetail] "A listing of Apps under this Category")}))
 
 (defschema AppCategoryPath

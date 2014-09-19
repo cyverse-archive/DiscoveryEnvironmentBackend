@@ -19,7 +19,7 @@
   [group groups]
   (let [subgroups (filter #(= (:id group) (:parent_id %)) groups)
         subgroups (map #(add-subgroups % groups) subgroups)
-        result    (if (empty? subgroups) group (assoc group :groups subgroups))
+        result    (if (empty? subgroups) group (assoc group :categories subgroups))
         result    (dissoc result :parent_id)]
     result))
 
@@ -60,7 +60,7 @@
                            (:email current-user)
                            params)]
       (-> group
-          (update-in [:groups] concat virtual-groups)
+          (update-in [:categories] concat virtual-groups)
           (assoc :app_count actual-count)))))
 
 (defn- format-app-group-hierarchy
@@ -79,7 +79,7 @@
   [params]
   (let [workspace (get-or-create-workspace (:username current-user))
         workspace-id (:id workspace)]
-    {:groups [(format-app-group-hierarchy workspace-id params workspace)]}))
+    {:categories [(format-app-group-hierarchy workspace-id params workspace)]}))
 
 (defn get-visible-app-groups
   "Retrieves the list of app groups that are visible to a user."
@@ -90,7 +90,7 @@
          (get-visible-app-groups params)))
   ([workspace-id params]
      (let [workspaces (get-visible-workspaces workspace-id)]
-       {:groups (map (partial format-app-group-hierarchy workspace-id params) workspaces)})))
+       {:categories (map (partial format-app-group-hierarchy workspace-id params) workspaces)})))
 
 (defn get-app-groups
   "Retrieves the list of app groups that are visible to all users, the current user's app groups, or
