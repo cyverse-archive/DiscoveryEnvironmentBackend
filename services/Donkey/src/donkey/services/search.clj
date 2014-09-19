@@ -166,7 +166,7 @@
 (defn- extract-query
   [query-str]
   (try+
-    (if query-str
+    (when query-str
       (json/parse-string query-str))
     (catch Throwable _
       (throw+ {:type   :invalid-argument
@@ -176,10 +176,10 @@
 
 
 (defn- extract-tags
-  [tags-str]
+  [user tags-str]
   (try+
     (if tags-str
-      (map #(UUID/fromString %) (string/split tags-str #","))
+      (search/filter-user-tags user (map #(UUID/fromString %) (string/split tags-str #",")))
       [])
     (catch Throwable _
       (throw+ {:type   :invalid-argument
@@ -227,7 +227,7 @@
   (try+
     (let [start       (l/local-now)
           query       (extract-query query-str)
-          tags        (extract-tags tags-str)
+          tags        (extract-tags user tags-str)
           type        (extract-type opts :any)
           offset      (extract-uint opts :offset 0)
           limit       (extract-uint opts :limit (cfg/default-search-result-limit))

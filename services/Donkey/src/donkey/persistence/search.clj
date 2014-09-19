@@ -90,6 +90,24 @@
       (throw+ es-uninitialized))))
 
 
+(defn ^ISeq filter-user-tags
+  "Filters a given set of tags for those created by a given user.
+
+   Parameters:
+     user    - the iRODS zone qualified username of the user who must have created the tags
+     tag-ids - the ids of the tags to filter.
+
+   Returns:
+     It returns the subset of the given tags that are owned by the given user."
+  [^String user ^ISeq tag-ids]
+  (try+
+    (let [query (query/filtered :query (query/term :id tag-ids) :filter (query/term :creator user))
+          hits  (resp/hits-from (doc/search (connect) "data" "tag" :query query :_source false))]
+      (map :_id hits))
+    (catch [:status 404] {:keys []}
+      (throw+ es-uninitialized))))
+
+
 (defn- tags-access-filter
   [tags memberships]
   (letfn [(tag-filter [tag] (query/term :id {:type "tag"
