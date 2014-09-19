@@ -41,7 +41,7 @@ start () {
     local cmd="nohup $java_cmd & $echo_cmd"
 
     echo -n $"Starting $program: "
-    pushd / > /dev/null
+    <(:working-dir spec)>
     runuser -m -s "$SH" -c "$cmd" $RUNUSER
     RETVAL=$?
     popd > /dev/null
