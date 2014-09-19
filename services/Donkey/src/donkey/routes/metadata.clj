@@ -22,59 +22,59 @@
    (GET "/template/:app-id" [app-id :as req]
         (trap #(get-app-secured req app-id)))
 
-   (GET "/app/:app-id" [app-id]
-        (trap #(apps/get-app app-id)))
+   (GET "/app/:app-id" [app-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/get-app app-id)))
 
-   (GET "/app-details/:app-id" [app-id]
-        (trap #(apps/get-app-details app-id)))
+   (GET "/app-details/:app-id" [app-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/get-app-details app-id)))
 
-   (GET "/apps/:app-id/data-objects" [app-id]
-        (trap #(apps/list-app-data-objects app-id)))
+   (GET "/apps/:app-id/data-objects" [app-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/list-app-data-objects app-id)))
 
-   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
-        (trap #(apps/submit-job workspace-id body)))
+   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {:keys [body uri]}]
+        (ce/trap uri #(apps/submit-job workspace-id body)))
 
-   (GET "/workspaces/:workspace-id/executions/list" [_ :as {params :params}]
-        (trap #(apps/list-jobs params)))
+   (GET "/workspaces/:workspace-id/executions/list" [_ :as {:keys [params uri]}]
+        (ce/trap uri #(apps/list-jobs params)))
 
-   (PUT "/workspaces/:workspace-id/executions/delete" [_ :as {body :body}]
-        (trap #(apps/delete-jobs body)))
+   (PUT "/workspaces/:workspace-id/executions/delete" [_ :as {:keys [body uri]}]
+        (ce/trap uri #(apps/delete-jobs body)))
 
-   (PATCH "/analysis/:analysis-id" [analysis-id :as {body :body}]
-          (trap #(apps/update-job analysis-id body)))
+   (PATCH "/analysis/:analysis-id" [analysis-id :as {:keys [body uri]}]
+          (ce/trap uri #(apps/update-job analysis-id body)))
 
-   (GET "/get-property-values/:job-id" [job-id]
-        (trap #(apps/get-property-values job-id)))
+   (GET "/get-property-values/:job-id" [job-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/get-property-values job-id)))
 
-   (GET "/app-rerun-info/:job-id" [job-id]
-        (trap #(apps/get-app-rerun-info job-id)))
+   (GET "/app-rerun-info/:job-id" [job-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/get-app-rerun-info job-id)))
 
-   (DELETE "/stop-analysis/:uuid" [uuid]
-           (trap #(apps/stop-job uuid)))
+   (DELETE "/stop-analysis/:uuid" [uuid :as {:keys [uri]}]
+           (ce/trap uri #(apps/stop-job uuid)))
 
-   (POST "/rate-analysis" [:as {body :body}]
-         (trap #(apps/rate-app body)))
+   (POST "/rate-analysis" [:as {:keys [uri body]}]
+         (ce/trap uri #(apps/rate-app body)))
 
-   (POST "/delete-rating" [:as {body :body}]
-         (trap #(apps/delete-rating body)))
+   (POST "/delete-rating" [:as {:keys [uri body]}]
+         (ce/trap uri #(apps/delete-rating body)))
 
-   (GET "/search-analyses" [:as {params :params}]
-        (trap #(apps/search-apps params)))
+   (GET "/search-analyses" [:as {:keys [uri params]}]
+        (ce/trap uri #(apps/search-apps params)))
 
-   (GET "/app-groups" []
-        (trap #(apps/get-only-app-groups)))
+   (GET "/app-groups" [:as {:keys [uri]}]
+        (ce/trap uri #(apps/get-only-app-groups)))
 
-   (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as {params :params}]
-        (ce/trap "get-analyses-in-group" #(apps/apps-in-group app-group-id params)))
+   (GET "/get-analyses-in-group/:app-group-id" [app-group-id :as {:keys [uri params]}]
+        (ce/trap uri #(apps/apps-in-group app-group-id params)))
 
-   (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id]
-        (trap #(apps/apps-in-group app-group-id)))
+   (GET "/list-analyses-for-pipeline/:app-group-id" [app-group-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/apps-in-group app-group-id)))
 
-   (GET "/get-components-in-analysis/:app-id" [app-id]
-        (trap #(apps/get-deployed-components-in-app app-id)))
+   (GET "/get-components-in-analysis/:app-id" [app-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/get-deployed-components-in-app app-id)))
 
-   (POST "/update-favorites" [:as {body :body}]
-         (trap #(apps/update-favorites body)))
+   (POST "/update-favorites" [:as {:keys [uri body]}]
+         (ce/trap uri #(apps/update-favorites body)))
 
    (GET "/edit-template/:app-id" [app-id :as req]
         (trap #(edit-app req app-id)))
@@ -82,14 +82,14 @@
    (GET "/edit-app/:app-id" [app-id :as req]
         (trap #(edit-app-new-format req app-id)))
 
-   (GET "/edit-workflow/:app-id" [app-id]
-        (trap #(apps/edit-workflow app-id)))
+   (GET "/edit-workflow/:app-id" [app-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/edit-workflow app-id)))
 
    (GET "/copy-template/:app-id" [app-id :as req]
         (trap #(copy-app req app-id)))
 
-   (GET "/copy-workflow/:app-id" [app-id]
-        (trap #(apps/copy-workflow app-id)))
+   (GET "/copy-workflow/:app-id" [app-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/copy-workflow app-id)))
 
    (PUT "/update-template" [:as req]
         (trap #(update-template-secured req)))
