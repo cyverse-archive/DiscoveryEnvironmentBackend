@@ -55,7 +55,7 @@ information.
 
 ## Listing App Elements
 
-Unsecured Endpoint: GET /apps/elements/{element-type}
+Secured Endpoint: GET /apps/elements/{element-type}
 
 Delegates to metadactyl: GET /apps/elements/{element-type}
 
@@ -73,7 +73,7 @@ path. Please see the metadactyl documentation for more information.
 
 ## Listing App Identifiers
 
-Unsecured Endpoint: GET /apps/ids
+Secured Endpoint: GET /apps/ids
 
 Delegates to metadactyl: GET /apps/ids
 
@@ -174,7 +174,7 @@ $ curl -s "http://by-tor:8888/secured/apps/wc-osg-1.00u1/data-objects?proxyToken
 
 ## Categorizing Apps
 
-Unsecured Endpoint: POST /admin/apps
+Secured Endpoint: POST /admin/apps
 
 Delegates to metadactyl: POST /admin/apps
 
@@ -375,7 +375,7 @@ path. Please see the metadactyl documentation for more information.
 
 ## Updating App Labels
 
-Unsecured Endpoint: PATCH /apps/{app-id}
+Secured Endpoint: PATCH /apps/{app-id}
 
 Delegates to metadactyl: PATCH /apps/{app-id}
 
@@ -666,7 +666,7 @@ documentation for more details.
 
 ## Listing Tool Installation Requests
 
-Unsecured Endpoint: GET /tool-requests
+Secured Endpoint: GET /tool-requests
 
 Delegates to metadactyl: GET /tool-requests
 
@@ -679,7 +679,7 @@ Please see the metadactyl documentation for more details.
 
 ## Listing Tool Installation Request Details
 
-Unsecured Endpoint: GET /admin/tool-requests/{tool-request-id}
+Secured Endpoint: GET /admin/tool-requests/{tool-request-id}
 
 Delegates to metadactyl: GET /admin/tool-requests/{tool-request-id}
 
@@ -688,7 +688,7 @@ Please see the metadactyl documentation for more details.
 
 ## Listing Tool Request Status Codes
 
-Unsecured Endpoint: GET /tool-requests/status-codes
+Secured Endpoint: GET /tool-requests/status-codes
 
 This service is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more details.
