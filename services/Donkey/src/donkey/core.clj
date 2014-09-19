@@ -51,9 +51,10 @@
 
 (defn secured-routes-no-context
   []
-  (app-category-routes)
-  (apps-routes)
-  (tool-request-routes))
+  (flagged-routes
+    (app-category-routes)
+    (apps-routes)
+    (tool-request-routes)))
 
 (defn secured-routes
   []
@@ -105,7 +106,8 @@
    (unsecured-fileio-routes)
    (unsecured-callback-routes)
    (context "/secured" [] secured-handler)
-   secured-handler-no-context))
+   secured-handler-no-context
+   (route/not-found (unrecognized-path-response))))
 
 (defn start-nrepl
   []
