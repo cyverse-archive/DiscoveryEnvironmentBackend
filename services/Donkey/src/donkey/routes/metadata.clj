@@ -94,9 +94,6 @@
    (GET "/logout" [:as {params :params}]
         (trap #(logout params)))
 
-   (GET "/template/:app-id" [app-id :as req]
-        (trap #(get-app-secured req app-id)))
-
    (GET "/app/:app-id" [app-id]
         (trap #(apps/get-app app-id)))
 

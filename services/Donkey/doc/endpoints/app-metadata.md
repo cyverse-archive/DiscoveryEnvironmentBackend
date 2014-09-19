@@ -29,7 +29,6 @@
     * [Importing an Analysis](#importing-an-analysis)
     * [Importing Deployed Components](#importing-deployed-components)
     * [Updating Top-Level Analysis Information](#updating-top-level-analysis-information)
-    * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
     * [Rating Analyses](#rating-analyses)
     * [Deleting Analysis Ratings](#deleting-analysis-ratings)
     * [Searching for Apps](#searching-for-apps)
@@ -529,15 +528,6 @@ not recommended because it can cause spurious notifications to be sent.
 Unsecured Endpoint: POST /update-analysis
 
 Delegates to metadactyl: POST /update-analysis
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Getting Analyses in the JSON Format Required by the DE
-
-Secured Endpoint: GET /secured/template/{analysis-id}
-
-Delegates to metadactyl: GET /secured/template/{analysis-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.

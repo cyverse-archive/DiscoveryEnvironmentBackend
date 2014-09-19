@@ -170,7 +170,6 @@
 * [POST /secured/tags/user](endpoints/tags.md#creating-a-tag)
 * [DELETE /secured/tags/user/{tag-id}](endpoints/tags.md#delete-a-tag)
 * [PATCH /secured/tags/user/{tag-id}](endpoints/tags.md#update-a-tags-label-andor-description)
-* [GET /secured/template/{analysis-id}](endpoints/app-metadata.md#getting-analyses-in-the-json-format-required-by-the-de)
 * [GET /secured/tree-viewer-urls](endpoints/tree-viewing.md#obtaining-tree-viewer-urls)
 * [POST /secured/unshare](endpoints/sharing.md#unsharing-user-data)
 * [POST /secured/update-app](endpoints/updated-app-metadata.md#updating-or-importing-a-single-step-app)

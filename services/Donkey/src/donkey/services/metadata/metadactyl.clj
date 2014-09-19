@@ -111,12 +111,6 @@
   (let [url (build-metadactyl-unprotected-url req "get-analysis" app-id)]
     (forward-get url req)))
 
-(defn get-app-secured
-  "A secured service used to get an app in the format required by the DE."
-  [req app-id]
-  (let [url (build-metadactyl-secured-url req "template" app-id)]
-    (forward-get url req)))
-
 (defn list-app
   "This service lists a single application.  The response body contains a JSON
    string representing an object containing a list of apps.  If an app with the
