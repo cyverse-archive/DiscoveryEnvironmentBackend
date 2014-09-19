@@ -16,7 +16,7 @@
 
 (defn- agave-unavailable
   [e]
-  (let [msg "the Foundation API appears to be unavailable at this time"]
+  (let [msg "Agave appears to be unavailable at this time"]
     (log/error e msg)
     (throw+ {:error_code ce/ERR_UNAVAILABLE
              :reason     msg})))
