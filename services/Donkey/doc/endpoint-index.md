@@ -2,6 +2,7 @@
 
 * [GET /](endpoints/misc.md#verifying-that-donkey-is-running)
 * [POST /add-analysis-to-group](endpoints/app-metadata.md#adding-analyses-to-analysis-groups)
+* [POST /admin/apps](endpoints/app-metadata.md#categorizing-apps)
 * [GET /admin/filesystem/index](endpoints/filesystem/search.md#endpoints:)
 * [POST /admin/filesystem/index](endpoints/filesystem/search.md#endpoint)
 * [GET /admin/tool-requests](endpoints/app-metadata.md#listing-tool-installation-requests)
@@ -24,7 +25,6 @@
 * [POST /callbacks/de-job](endpoints/callbacks.md#receiving-de-job-status-updates)
 * [POST /callbacks/notification](endpoints/callbacks.md#receiving-de-notifications)
 * [POST /can-export-analysis](endpoints/app-metadata.md#determining-if-an-analysis-can-be-exported)
-* [POST /categorize-analyses](endpoints/app-metadata.md#categorizing-analyses)
 * [POST /delete-categories](endpoints/app-metadata.md#deleting-categories)
 * [POST /export-deployed-components](endpoints/app-metadata.md#exporting-selected-deployed-components)
 * [GET /export-template/{template-id}](endpoints/app-metadata.md#exporting-a-template)

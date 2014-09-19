@@ -84,7 +84,7 @@
 (defn categorize-apps
   "A service used to recategorize apps."
   [req]
-  (let [url (build-metadactyl-unprotected-url req "categorize-analyses")]
+  (let [url (build-metadactyl-url req "admin" "apps")]
     (forward-post url req)))
 
 (defn get-app-categories

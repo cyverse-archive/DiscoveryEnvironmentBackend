@@ -7,7 +7,7 @@
     * [Deleting Categories](#deleting-categories)
     * [Valiating Analyses for Pipelines](#valiating-analyses-for-pipelines)
     * [Listing Data Objects in an Analysis](#listing-data-objects-in-an-analysis)
-    * [Categorizing Analyses](#categorizing-analyses)
+    * [Categorizing Apps](#categorizing-apps)
     * [Listing Analysis Categorizations](#listing-analysis-categorizations)
     * [Determining if an Analysis Can be Exported](#determining-if-an-analysis-can-be-exported)
     * [Adding Analyses to Analysis Groups](#adding-analyses-to-analysis-groups)
@@ -172,14 +172,14 @@ $ curl -s "http://by-tor:8888/secured/apps/wc-osg-1.00u1/data-objects?proxyToken
 
 ```
 
-## Categorizing Analyses
+## Categorizing Apps
 
-Unsecured Endpoint: POST /categorize-analyses
+Unsecured Endpoint: POST /admin/apps
 
-Delegates to metadactyl: POST /categorize-analyses
+Delegates to metadactyl: POST /admin/apps
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Listing Analysis Categorizations
 

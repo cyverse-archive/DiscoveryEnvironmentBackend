@@ -24,6 +24,9 @@
   (optional-routes
     [config/app-routes-enabled]
 
+    (POST "/admin/apps" [:as req]
+          (trap #(categorize-apps req)))
+
     (GET "/apps" [:as {params :params}]
          (trap #(apps/search-apps params)))
 
@@ -179,9 +182,6 @@
 
    (GET "/validate-analysis-for-pipelines/:app-id" [app-id :as req]
         (trap #(validate-app-for-pipelines req app-id)))
-
-   (POST "/categorize-analyses" [:as req]
-         (trap #(categorize-apps req)))
 
    (GET "/get-analysis-categories/:category-set" [category-set :as req]
         (trap #(get-app-categories req category-set)))
