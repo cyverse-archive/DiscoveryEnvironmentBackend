@@ -109,3 +109,10 @@
   (let [user-id (get-valid-user-id (:username current-user))]
     (amp/delete-app-rating app-id user-id)
     (amp/get-app-avg-rating app-id)))
+
+(defn get-app
+  "This service obtains an app description that can be used to build a job submission form in
+   the user interface."
+  [app-id]
+  (->> (amp/get-full-app app-id)
+       (success-response)))

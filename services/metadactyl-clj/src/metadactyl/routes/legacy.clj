@@ -12,6 +12,9 @@
             [metadactyl.util.config :as config]))
 
 (defroutes* secured-routes
+  (GET "/template/:app-id" [app-id]
+       (throw+ '("get-app" app-id)))
+
   (GET "/app/:app-id" [app-id]
        (ce/trap "app" #(throw+ '("get-app-new-format" app-id))))
 
