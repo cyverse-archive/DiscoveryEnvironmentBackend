@@ -104,8 +104,8 @@
         workspace_root_group_id (:root_category_id workspace)
         row_offset (or (:offset query_opts) 0)
         row_limit (or (:limit query_opts) -1)
-        sort_field (keyword (or (:sortField query_opts) (:sortfield query_opts)))
-        sort_dir (keyword (or (:sortDir query_opts) (:sortdir query_opts)))
+        sort_field (keyword (or (:sort-field query_opts) (:sortfield query_opts)))
+        sort_dir (keyword (or (:sort-dir query_opts) (:sortdir query_opts)))
 
         ;; Bind the final query
         listing_query (->

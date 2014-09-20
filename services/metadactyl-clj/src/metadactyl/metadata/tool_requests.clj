@@ -149,8 +149,8 @@
   [params]
   (let [limit      (params/optional-long [:limit] params)
         offset     (params/optional-long [:offset] params)
-        sort-field (params/optional-keyword [:sortfield :sortField] params)
-        sort-order (params/optional-keyword [:sortdir :sortDir] params)
+        sort-field (params/optional-keyword [:sort-field] params)
+        sort-order (params/optional-keyword [:sort-dir] params)
         statuses   (params/optional-vector [:status] params)
         username   (params/optional-string [:username] params)]
     (queries/list-tool-requests :username   username

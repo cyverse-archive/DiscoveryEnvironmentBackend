@@ -33,8 +33,8 @@
     (GET "/apps/:app-id/details" [app-id]
          (trap #(apps/get-app-details app-id)))
 
-    (GET "/apps/:app-id/ui" [app-id :as req]
-         (trap #(edit-app req app-id)))
+    (GET "/apps/:app-id/ui" [app-id]
+         (trap #(edit-app app-id)))
 
     (POST "/apps/arg-preview" [:as req]
           (trap #(preview-args req)))
@@ -54,19 +54,19 @@
     (POST "/apps/shredder" [:as req]
           (trap #(delete-apps req)))
 
-    (GET "/apps/ids" [:as req]
-         (trap #(get-all-app-ids req)))
+    (GET "/apps/ids" []
+         (trap #(get-all-app-ids)))
 
-    (GET "/apps/elements/:element-type" [element-type :as req]
-         (trap #(get-workflow-elements req element-type)))))
+    (GET "/apps/elements/:element-type" [element-type]
+         (trap #(get-workflow-elements element-type)))))
 
 (defn tool-request-routes
   []
   (optional-routes
     [config/app-routes-enabled]
 
-    (GET "/tool-requests" [:as req]
-         (trap #(list-tool-requests req)))
+    (GET "/tool-requests" []
+         (trap #(list-tool-requests)))
 
     (POST "/tool-requests" [:as req]
           (trap #(submit-tool-request req)))
@@ -77,8 +77,8 @@
     (GET "/admin/tool-requests" [:as {params :params}]
          (trap #(admin-list-tool-requests params)))
 
-    (GET "/admin/tool-requests/:request-id" [request-id :as req]
-         (trap #(get-tool-request req request-id)))
+    (GET "/admin/tool-requests/:request-id" [request-id]
+         (trap #(get-tool-request request-id)))
 
     (POST "/admin/tool-requests/:request-id/status" [request-id :as req]
           (trap #(update-tool-request req request-id)))))

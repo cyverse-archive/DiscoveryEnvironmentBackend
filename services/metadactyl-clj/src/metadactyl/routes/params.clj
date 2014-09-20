@@ -24,16 +24,16 @@
      "Skips the first X number of results in the listing array.
       See http://www.postgresql.org/docs/9.3/interactive/queries-limit.html")
 
-   (s/optional-key :sortField)
+   (s/optional-key :sort-field)
    (ss/describe String
      "Sorts the results in the listing array by the field X, before limits and offsets are applied.
       This field can be any one of the simple fields of the listing results, or `average_rating` or
       `user_rating` for ratings sorting.
       See http://www.postgresql.org/docs/9.3/interactive/queries-order.html")
 
-   (s/optional-key :sortDir)
+   (s/optional-key :sort-dir)
    (ss/describe String
-     "Only used when sortField is present. Sorts the results in either ascending (`ASC`) or
+     "Only used when sort-field is present. Sorts the results in either ascending (`ASC`) or
       descending (`DESC`) order, before limits and offsets are applied. Defaults to `ASC`.
       See http://www.postgresql.org/docs/9.3/interactive/queries-order.html")})
 

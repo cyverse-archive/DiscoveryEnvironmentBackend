@@ -9,6 +9,8 @@
             [donkey.util.service :as service]
             [donkey.util.transformers :as xforms]))
 
+(def metadactyl-sort-params [:limit :offset :sort-field :sort-dir])
+
 (defn- secured-params
   ([]
      (secured-params {}))
@@ -35,16 +37,16 @@
 
 (defn get-app-categories
   [params]
-  (-> (client/get (unsecured-url "apps" "categories")
-                  {:query-params (secured-params params)
+  (-> (client/get (metadactyl-url "apps" "categories")
+                  {:query-params (secured-params (select-keys params [:public]))
                    :as           :stream})
       (:body)
       (service/decode-json)))
 
 (defn- apps-in-real-category
   [category-id params]
-  (-> (client/get (unsecured-url "apps" "categories" category-id)
-                  {:query-params (secured-params)
+  (-> (client/get (metadactyl-url "apps" "categories" category-id)
+                  {:query-params (secured-params (select-keys params metadactyl-sort-params))
                    :as           :stream})
       (:body)
       (service/decode-json)))
@@ -62,7 +64,7 @@
 
 (defn- apps-in-virtual-category
   [category-id params]
-  (-> (client/get (unsecured-url "apps")
+  (-> (client/get (metadactyl-url "apps")
                   {:query-params (add-virtual-category-params params category-id)})))
 
 (defn apps-in-category
@@ -73,7 +75,7 @@
 
 (defn search-apps
   [search-term]
-  (-> (client/get (unsecured-url "apps")
+  (-> (client/get (metadactyl-url "apps")
                   {:query-params (secured-params {:search search-term})
                    :as           :stream})
       (:body)
@@ -90,7 +92,7 @@
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
-                  {:query-params (secured-params params)
+                  {:query-params (secured-params (select-keys params (conj metadactyl-sort-params :status)))
                    :as           :stream})
       (:body)
       (service/decode-json)))
@@ -98,7 +100,7 @@
 (defn list-tool-request-status-codes
   [params]
   (-> (client/get (metadactyl-url "tool-requests" "status-codes")
-                  {:query-params (secured-params params)
+                  {:query-params (secured-params (select-keys params [:filter]))
                    :as           :stream})
       (:body)
       (service/decode-json)))
@@ -145,7 +147,7 @@
 
 (defn copy-workflow
   [app-id]
-  (-> (client/get (secured-url "apps" app-id "copy-pipeline")
+  (-> (client/get (metadactyl-url "apps" app-id "copy-pipeline")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)

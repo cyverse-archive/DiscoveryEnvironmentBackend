@@ -15,6 +15,7 @@
         [medley.core :only [dissoc-in]]
         [ring.util.codec :only [url-encode]])
   (:require [cheshire.core :as cheshire]
+            [clj-http.client :as client]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [donkey.clients.metadactyl :as dm]
@@ -27,34 +28,44 @@
   (apply build-url-with-query (notificationagent-base-url)
          (add-current-user-to-map (:params req)) components))
 
-(defn- build-metadactyl-url
+(defn- secured-params
+  ([]
+   (secured-params {}))
+  ([existing-params]
+   (add-current-user-to-map existing-params)))
+
+(defn- metadactyl-request
+  "Prepares a metadactyl request by extracting only the body of the client request and sets the
+   forwarded request's content-type to json."
+  [req]
+  (assoc (select-keys req [:body]) :content-type :json))
+
+(defn- metadactyl-url
   "Adds the name and email of the currently authenticated user to the metadactyl URL with the given
    relative URL path."
-  [{query :params} & components]
+  [query & components]
   (apply build-url-with-query (metadactyl-unprotected-base-url)
-                              (add-current-user-to-map query)
+                              (secured-params query)
                               components))
 
 (defn- build-metadactyl-secured-url
   "Adds the name and email of the currently authenticated user to the secured
    metadactyl URL with the given relative URL path."
   [{query :params} & components]
-  (apply build-url-with-query (metadactyl-base-url)
-         (add-current-user-to-map query) components))
+  (apply build-url-with-query (metadactyl-base-url) (secured-params query) components))
 
 (defn- build-metadactyl-unprotected-url
   "Builds an unsecured metadactyl URL from the given relative URL path.  Any
    query-string parameters that are present in the request will be forwarded
    to metadactyl."
-  [request & components]
-  (apply build-url-with-query (metadactyl-unprotected-base-url)
-         (:params request) components))
+  [{query :params} & components]
+  (apply build-url-with-query (metadactyl-unprotected-base-url) query components))
 
 (defn get-workflow-elements
   "A service to get information about workflow elements."
-  [req element-type]
-  (let [url (build-metadactyl-url (dissoc-in req [:params :element-type]) "apps" "elements" element-type)]
-    (forward-get url req)))
+  [element-type]
+  (client/get (metadactyl-url {} "apps" "elements" element-type)
+              {:as :stream}))
 
 (defn search-deployed-components
   "A service to search information about deployed components."
@@ -64,9 +75,9 @@
 
 (defn get-all-app-ids
   "A service to get the list of app identifiers."
-  [req]
-  (let [url (build-metadactyl-url req "apps" "ids")]
-    (forward-get url req)))
+  []
+  (client/get (metadactyl-url {} "apps" "ids")
+              {:as :stream}))
 
 (defn delete-categories
   "A service used to delete app categories."
@@ -84,7 +95,8 @@
 (defn categorize-apps
   "A service used to recategorize apps."
   [req]
-  (let [url (build-metadactyl-url req "admin" "apps")]
+  (let [url (metadactyl-url {} "admin" "apps")
+        req (metadactyl-request req)]
     (forward-post url req)))
 
 (defn get-app-categories
@@ -212,19 +224,21 @@
   "This service updates the labels in a single-step app. Both vetted and unvetted apps can be
    modified using this service."
   [req app-id]
-  (let [url (build-metadactyl-url (dissoc-in req [:params :app-id]) "apps" app-id)]
+  (let [url (metadactyl-url {} "apps" app-id)
+        req (metadactyl-request req)]
     (forward-patch url req)))
 
 (defn delete-app
   "This service will logically remove an app from the DE."
   [req app-id]
-  (let [url (build-metadactyl-url (dissoc-in req [:params :app-id]) "apps" app-id)]
-    (forward-delete url req)))
+  (client/delete (metadactyl-url {} "apps" app-id)
+                 {:as :stream}))
 
 (defn delete-apps
   "This service will logically remove a list of apps from the DE."
   [req]
-  (let [url (build-metadactyl-url req "apps" "shredder")]
+  (let [url (metadactyl-url {} "apps" "shredder")
+        req (metadactyl-request req)]
     (forward-post url req)))
 
 (defn bootstrap
@@ -415,10 +429,9 @@
   "This service makes an app available in Tito for editing and returns a
    representation of the app in the JSON format required by the DE as of
    version 1.8."
-  [req app-id]
-  (forward-get
-   (build-metadactyl-url (dissoc-in req [:params :app-id]) "apps" app-id "ui")
-   req))
+  [app-id]
+  (client/get (metadactyl-url {} "apps" app-id "ui")
+              {:as :stream}))
 
 (defn copy-app
   "This service makes a copy of an app available in Tito for editing."
@@ -494,7 +507,8 @@
 (defn submit-tool-request
   "Submits a tool request on behalf of the user found in the request params."
   [req]
-  (let [tool-request-url (build-metadactyl-url req "tool-requests")]
+  (let [tool-request-url (metadactyl-url {} "tool-requests")
+        req (metadactyl-request req)]
     (postprocess-tool-request
       (forward-post tool-request-url req)
       (fn [tool-req user-details]
@@ -504,10 +518,9 @@
 
 (defn list-tool-requests
   "Lists the tool requests that were submitted by the authenticated user."
-  [req]
-  (forward-get
-   (build-metadactyl-url req "tool-requests")
-   req))
+  []
+  (client/get (metadactyl-url {} "tool-requests")
+              {:as :stream}))
 
 (defn admin-list-tool-requests
   "Lists the tool requests that were submitted by any user."
@@ -522,27 +535,26 @@
 (defn update-tool-request
   "Updates a tool request with comments and possibly a new status."
   [req request-id]
-  (postprocess-tool-request
-   (forward-post (build-metadactyl-url (dissoc-in req [:params :request-id])
-                                       "admin" "tool-requests" request-id "status")
-     req)
-   (fn [tool-req user-details]
-     (dn/send-tool-request-update-notification tool-req user-details)
-     (success-response tool-req))))
+  (let [url (metadactyl-url {} "admin" "tool-requests" request-id "status")
+        req (metadactyl-request req)]
+    (postprocess-tool-request
+      (forward-post url req)
+      (fn [tool-req user-details]
+        (dn/send-tool-request-update-notification tool-req user-details)
+        (success-response tool-req)))))
 
 (defn get-tool-request
   "Lists details about a specific tool request."
-  [req request-id]
-  (forward-get
-   (build-metadactyl-url (dissoc-in req [:params :request-id]) "admin" "tool-requests" request-id)
-   req))
+  [request-id]
+  (client/get (metadactyl-url {} "admin" "tool-requests" request-id)
+              {:as :stream}))
 
 (defn preview-args
   "Previews the command-line arguments for a job request."
   [req]
-  (forward-post
-   (build-metadactyl-url req "apps" "arg-preview")
-   req))
+  (let [url (metadactyl-url {} "apps" "arg-preview")
+        req (metadactyl-request req)]
+    (forward-post url req)))
 
 (defn provide-user-feedback
   "Forwards feedback from the user to iPlant."
