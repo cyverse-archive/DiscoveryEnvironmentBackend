@@ -87,6 +87,11 @@
     (delete :input_output_mapping (where {:mapping_id [in mapping-ids]}))
     (delete :workflow_io_maps (where {:app_id app-id}))))
 
+(defn get-full-app
+  "Retrieves all app listing fields from the database."
+  [app-id]
+  (assert-not-nil [:app-id app-id] (first (select app_listing (where {:id app-id})))))
+
 (defn update-app-labels
   "Updates the labels in an app."
   [req]

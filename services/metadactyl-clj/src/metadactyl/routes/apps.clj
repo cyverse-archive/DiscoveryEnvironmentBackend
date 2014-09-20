@@ -57,6 +57,14 @@
          `/arg-preview` service in the JEX. Please see the JEX documentation for more information."
          (ce/trap uri #(service/swagger-response (app-metadata/preview-command-line body))))
 
+  (GET* "/:app-id" []
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :summary "Obtain an app description."
+        :notes "This service allows the Discovery Environment user interface to obtain an
+        app description that can be used to construct a job submission form."
+        (ce/trap "get-app" #(get-app-for-job-submission app-id)))
+
   (PATCH* "/:app-id" []
           :path-params [app-id :- AppIdPathParam]
           :query [params SecuredQueryParamsEmailRequired]
