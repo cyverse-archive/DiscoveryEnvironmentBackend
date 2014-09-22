@@ -1,10 +1,10 @@
 (ns donkey.services.filesystem.common-paths
-  (:use [donkey.util.config]
-        [clj-jargon.init]
+  (:use [clj-jargon.init]
         [clj-jargon.item-info])
   (:require [clojure-commons.file-utils :as ft]
             [clojure.tools.logging :as log]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [donkey.util.config :as cfg]))
 
 (def IPCRESERVED "ipc-reserved-unit")
 (def IPCSYSTEM "ipc-system-avu")
@@ -35,11 +35,11 @@
 
 (defn super-user?
   [username]
-  (.equals username (irods-user)))
+  (.equals username (cfg/irods-user)))
 
 (defn user-home-dir
   [user]
-  (ft/path-join "/" (irods-zone) "home" user))
+  (ft/path-join "/" (cfg/irods-zone) "home" user))
 
 (defn string-contains?
   [container-str str-to-check]
@@ -47,7 +47,7 @@
 
 (defn good-string?
   [str-to-check]
-  (not (string-contains? (fs-filter-chars) str-to-check)))
+  (not (string-contains? (cfg/fs-filter-chars) str-to-check)))
 
 (defn valid-file-map? [map-to-check] (good-string? (:id map-to-check)))
 
@@ -55,26 +55,26 @@
 
 (defn sharing?
   [abs]
-  (= (ft/rm-last-slash (irods-home))
+  (= (ft/rm-last-slash (cfg/irods-home))
      (ft/rm-last-slash abs)))
 
-(defn community? [abs] (= (fs-community-data) abs))
+(defn community? [abs] (= (cfg/fs-community-data) abs))
 
 (defn base-trash-path
   []
-     (with-jargon (jargon-cfg) [cm]
+     (with-jargon (cfg/jargon-cfg) [cm]
        (trash-base-dir cm)))
 
 (defn user-trash-path
   ([user]
-     (with-jargon (jargon-cfg) [cm]
+     (with-jargon (cfg/jargon-cfg) [cm]
        (user-trash-path cm user)))
   ([cm user]
      (trash-base-dir cm user)))
 
 (defn user-trash-dir?
   ([user path-to-check]
-     (with-jargon (jargon-cfg) [cm]
+     (with-jargon (cfg/jargon-cfg) [cm]
        (user-trash-dir? cm user path-to-check)))
   ([cm user path-to-check]
      (= (ft/rm-last-slash path-to-check)
