@@ -1,7 +1,6 @@
 (ns donkey.routes.filesystem
   (:use [compojure.core]
         [donkey.auth.user-attributes]
-        [donkey.services.filesystem.copy]
         [donkey.services.filesystem.create]
         [donkey.services.filesystem.directory]
         [donkey.services.filesystem.exists]

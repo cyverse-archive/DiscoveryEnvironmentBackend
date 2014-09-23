@@ -1,8 +1,6 @@
 (ns donkey.services.user-info
   (:use [clojure.string :only [split blank?]]
         [clojure-commons.validators]
-        [donkey.services.filesystem.common-paths]
-        [donkey.services.filesystem.validators]
         [donkey.util.config]
         [byte-streams]
         [slingshot.slingshot :only [try+ throw+]])
