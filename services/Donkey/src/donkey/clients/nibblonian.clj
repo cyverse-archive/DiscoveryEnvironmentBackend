@@ -10,8 +10,8 @@
             [clojure.tools.logging :as log]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
-            [donkey.services.filesystem.stat :as st]
-            [donkey.services.filesystem.exists :as e]))
+            [donkey.services.filesystem.exists :as e]
+            [donkey.services.filesystem.stat :as st]))
 
 (defn home-dir
   "Determines the home folder for the current user."
