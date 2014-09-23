@@ -22,7 +22,8 @@
             [ring.util.response :as rsp-utils]
             [cemerick.url :as url-parser]))
 
-(defn in-stream
+
+(defn- in-stream
   [address]
   (try+
    (ssl/input-stream address)
@@ -31,10 +32,12 @@
               :url address
               :msg (.getMessage e)}))))
 
-(defn gen-uuid []
+
+(defn- gen-uuid []
   (str (java.util.UUID/randomUUID)))
 
-(defn store
+
+(defn- store
   [cm istream filename user dest-dir]
   (actions/store cm istream user (ft/path-join dest-dir filename)))
 
