@@ -1,0 +1,11 @@
+{
+  "AMQPURI" : "amqp://ipc:mostly810S@irods-2.iplantcollaborative.org:31333/",
+  "ExchangeName" : "de",
+  "ExchangeType" : "direct",
+  "RoutingKey" : "condor.events",
+  "Durable" : true,
+  "Autodelete" : false,
+  "Internal" : false,
+  "NoWait" : false,
+  "EventLog" : "test_events.txt"
+}
