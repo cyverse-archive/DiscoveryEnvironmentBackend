@@ -6,7 +6,7 @@
 
 Summary: kifshare
 Name: kifshare
-Version: 3.2.6
+Version: 3.2.7
 Release: 1
 Epoch: 0
 BuildArchitectures: noarch
@@ -50,7 +50,7 @@ install -d $RPM_BUILD_ROOT/var/log/kifshare/
 install -d $RPM_BUILD_ROOT/etc/kifshare/
 
 install kifshare $RPM_BUILD_ROOT/etc/init.d/
-install target/kifshare-3.2.6-standalone.jar $RPM_BUILD_ROOT/usr/local/lib/kifshare/
+install target/kifshare-3.2.7-standalone.jar $RPM_BUILD_ROOT/usr/local/lib/kifshare/
 install conf/log4j.properties $RPM_BUILD_ROOT/etc/kifshare/
 install build/public/robots.txt $RPM_BUILD_ROOT/usr/local/lib/kifshare/resources/public/
 install build/public/css/960.css $RPM_BUILD_ROOT/usr/local/lib/kifshare/resources/public/css/
@@ -100,7 +100,7 @@ rm -r $RPM_BUILD_ROOT
 %config %attr(0644,iplant,iplant) /etc/kifshare/log4j.properties
 
 %attr(0755,root,root) /etc/init.d/kifshare
-%attr(0644,iplant,iplant) /usr/local/lib/kifshare/kifshare-3.2.6-standalone.jar
+%attr(0644,iplant,iplant) /usr/local/lib/kifshare/kifshare-3.2.7-standalone.jar
 %attr(0644,iplant,iplant) /usr/local/lib/kifshare/resources/public/robots.txt
 %attr(0644,iplant,iplant) /usr/local/lib/kifshare/resources/public/img/iplant_logo.ico
 %attr(0644,iplant,iplant) /usr/local/lib/kifshare/resources/public/img/iplant-logo-small.png

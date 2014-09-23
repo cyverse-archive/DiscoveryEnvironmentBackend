@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/jex "3.2.6"
+(defproject org.iplantc/jex "3.2.7"
   :description "A backend job execution service that submits jobs to Condor."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -19,11 +19,11 @@
                  [cheshire "5.0.1"]
                  [compojure "1.0.1"]
                  [ring/ring-jetty-adapter "1.0.1"]
-                 [org.iplantc/clojure-commons "3.2.6"]
+                 [org.iplantc/clojure-commons "3.2.7"]
                  [slingshot "0.10.3"]
                  [me.raynes/fs "1.4.4"]
-                 [org.iplantc/common-cli "3.2.6"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "3.2.6"]
+                 [org.iplantc/common-cli "3.2.7"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "3.2.7"]
             [lein-midje "3.1.1"]]
   :iplant-rpm {:summary "jex",
                :runuser "condor"
