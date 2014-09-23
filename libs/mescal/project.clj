@@ -7,7 +7,7 @@
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [cheshire "5.3.1"]
-                 [clj-http "0.9.1"]
+                 [clj-http "1.0.0"]
                  [clj-time "0.7.0"]
                  [com.cemerick/url "0.1.1"]
                  [medley "0.2.1"]

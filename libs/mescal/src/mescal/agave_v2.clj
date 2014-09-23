@@ -9,11 +9,6 @@
             [mescal.util :as util])
   (:import [java.io IOException]))
 
-(defn- refresh-access-token
-  [token-info-fn timeout]
-  (let [new-token-info (authy/refresh-access-token @(token-info-fn) :timeout timeout)]
-    (dosync (ref-set (token-info-fn) new-token-info))))
-
 (defn- agave-unavailable
   [e]
   (let [msg "Agave appears to be unavailable at this time"]
@@ -21,11 +16,21 @@
     (throw+ {:error_code ce/ERR_UNAVAILABLE
              :reason     msg})))
 
+(defn- refresh-access-token
+  [token-info-fn timeout]
+  (try+
+   (let [new-token-info (authy/refresh-access-token @(token-info-fn) :timeout timeout)]
+     (dosync (ref-set (token-info-fn) new-token-info)))
+   (catch IOException e
+     (agave-unavailable e))))
+
 (defn- wrap-refresh
   [token-info-fn timeout request-fn]
   (try+
    (request-fn)
    (catch IOException e
+     (agave-unavailable e))
+   (catch [:status 503] e
      (agave-unavailable e))
    (catch [:status 401] _
      (refresh-access-token token-info-fn timeout)
