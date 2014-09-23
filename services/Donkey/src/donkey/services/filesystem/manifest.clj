@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.manifest
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [donkey.services.filesystem.sharing :only [anon-file-url anon-readable?]]
@@ -18,7 +17,8 @@
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.filesystem.stat :refer [detect-content-type]]
             [donkey.services.garnish.irods :as filetypes]
-            [ring.util.codec :as cdc])
+            [ring.util.codec :as cdc]
+            [donkey.util.config :as cfg])
   (:import [org.apache.tika Tika]))
 
 (def ^:private coge-attr "ipc-coge-link")
@@ -67,7 +67,7 @@
 (defn- manifest
   [user path data-threshold]
   (let [path (ft/rm-last-slash path)]
-    (with-jargon (jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (validators/user-exists cm user)
       (validators/path-exists cm path)
       (validators/path-is-file cm path)
@@ -76,7 +76,7 @@
 
 (defn do-manifest
   [{user :user path :path}]
-  (manifest user path (fs-data-threshold)))
+  (manifest user path (cfg/fs-data-threshold)))
 
 (with-pre-hook! #'do-manifest
   (fn [params]

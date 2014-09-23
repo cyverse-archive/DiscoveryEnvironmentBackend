@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.rename
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [move]]
@@ -9,12 +8,13 @@
   (:require [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.util.config :as cfg]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn rename-path
   "High-level file renaming. Calls rename-func, passing it file-rename as the mv-func param."
   [user source dest]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (let [source    (ft/rm-last-slash source)
           dest      (ft/rm-last-slash dest)
           src-base  (ft/basename source)
@@ -27,7 +27,7 @@
           (validators/user-owns-path cm user source)
           (validators/path-not-exists cm dest)
 
-          (let [result (move cm source dest :user user :admin-users (irods-admins))]
+          (let [result (move cm source dest :user user :admin-users (cfg/irods-admins))]
             (when-not (nil? result)
               (throw+ {:error_code ERR_INCOMPLETE_RENAME
                        :paths result

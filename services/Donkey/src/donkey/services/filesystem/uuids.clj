@@ -3,14 +3,14 @@
         [clj-jargon.metadata]
         [clj-jargon.permissions]
         [clojure-commons.validators]
-        [donkey.util.config]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]]
         [donkey.services.filesystem.validators])
   (:require [clojure.tools.logging :as log]
             [clj-icat-direct.icat :as icat]
             [donkey.services.filesystem.stat :as stat]
-            [cheshire.core :as json]))
+            [cheshire.core :as json]
+            [donkey.util.config :as cfg]))
 
 (def uuid-attr "ipc_UUID")
 
@@ -36,7 +36,7 @@
 (defn paths-for-uuids
   [user uuids]
   (letfn [(id-type [type entity] (merge entity {:id (:path entity) :type type}))]
-    (with-jargon (jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (user-exists cm user)
       (->> (concat (map (partial id-type :dir) (icat/select-folders-with-uuids uuids))
                    (map (partial id-type :file) (icat/select-files-with-uuids uuids)))
@@ -58,10 +58,10 @@
 
 (defn paths-for-uuids-paged
   [user sort-col sort-order limit offset uuids]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (user-exists cm user)
     (map (partial fmt-stat cm user)
-         (icat/paged-uuid-listing user (irods-zone) sort-col sort-order limit offset uuids))))
+         (icat/paged-uuid-listing user (cfg/irods-zone) sort-col sort-order limit offset uuids))))
 
 (defn do-paths-for-uuids
   [params body]
@@ -82,7 +82,7 @@
 
 (defn uuids-for-paths
   [user paths]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (user-exists cm user)
     (all-paths-exist cm paths)
     (all-paths-readable cm user paths)

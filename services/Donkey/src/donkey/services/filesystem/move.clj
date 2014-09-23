@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.move
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -13,6 +12,7 @@
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clj-icat-direct.icat :as icat]
+            [donkey.util.config :as cfg]
             [donkey.services.filesystem.directory :as directory]
             [donkey.services.filesystem.validators :as validators]))
 
@@ -24,7 +24,7 @@
   "Moves directories listed in 'sources' into the directory listed in 'dest'. This
    works by calling move and passing it move-dir."
   [user sources dest]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (let [path-list  (conj sources dest)
           all-paths  (apply merge (mapv #(hash-map (source->dest %1 dest) %1) sources))
           dest-paths (keys all-paths)
@@ -37,7 +37,7 @@
       (validators/user-owns-paths cm user sources)
       (validators/path-writeable cm user dest)
       (validators/no-paths-exist cm dest-paths)
-      (move-all cm sources dest :user user :admin-users (irods-admins))
+      (move-all cm sources dest :user user :admin-users (cfg/irods-admins))
       {:sources sources :dest dest})))
 
 (defn do-move
@@ -59,7 +59,7 @@
 
 (defn do-move-contents
   [{user :user} {source :source dest :dest}]
-  (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm source))
+  (with-jargon (cfg/jargon-cfg) [cm] (validators/path-is-dir cm source))
   (let [sources (directory/get-paths-in-folder user source)]
     (move-paths user sources dest)))
 

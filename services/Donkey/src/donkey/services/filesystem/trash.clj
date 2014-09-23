@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.trash
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -16,6 +15,7 @@
             [clojure-commons.file-utils :as ft]
             [clj-icat-direct.icat :as icat]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.util.config :as cfg]
             [donkey.services.filesystem.directory :as directory]
             [donkey.services.filesystem.validators :as validators]))
 
@@ -38,14 +38,14 @@
 (defn- move-to-trash
   [cm p user]
   (let [trash-path (randomized-trash-path cm user p)]
-    (move cm p trash-path :user user :admin-users (irods-admins))
+    (move cm p trash-path :user user :admin-users (cfg/irods-admins))
     (set-metadata cm trash-path "ipc-trash-origin" p IPCSYSTEM)))
 
 (defn- delete-paths
   [user paths]
-  (let [home-matcher #(= (str "/" (irods-zone) "/home/" user)
+  (let [home-matcher #(= (str "/" (cfg/irods-zone) "/home/" user)
                          (ft/rm-last-slash %1))]
-    (with-jargon (jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (let [paths (mapv ft/rm-last-slash paths)]
         (validators/user-exists cm user)
         (validators/all-paths-exist cm paths)
@@ -83,7 +83,7 @@
 
 (defn- user-trash
   [user]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     {:trash (user-trash-path cm user)}))
 
@@ -128,7 +128,7 @@
 
 (defn- restore-path
   [{:keys [user paths user-trash]}]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (let [paths (mapv ft/rm-last-slash paths)]
       (validators/user-exists cm user)
       (validators/all-paths-exist cm paths)
@@ -153,7 +153,7 @@
             (validators/path-not-exists cm fully-restored)
 
             (log/warn fully-restored " does not exist. That's good.")
-            (move cm path fully-restored :user user :admin-users (irods-admins))
+            (move cm path fully-restored :user user :admin-users (cfg/irods-admins))
             (log/warn "Done moving " path " to " fully-restored)
 
             (reset! retval
@@ -171,7 +171,7 @@
 
 (defn- delete-trash
   [user]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (let [trash-dir  (user-trash-path cm user)
           trash-list (mapv #(.getAbsolutePath %) (list-in-dir cm (ft/rm-last-slash trash-dir)))]
@@ -198,7 +198,7 @@
 
 (defn do-delete-contents
   [{user :user} {path :path}]
-  (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm path))
+  (with-jargon (cfg/jargon-cfg) [cm] (validators/path-is-dir cm path))
   (let [paths (directory/get-paths-in-folder user path)]
     (delete-paths user paths)))
 

@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.space-handling
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -15,6 +14,7 @@
             [clojure.set :as set]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.util.config :as cfg]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- paths-contain-char
@@ -74,7 +74,7 @@
     (let [new-basename (new-name cm (ft/basename path) new-char :parent parent)
           new-path     (ft/path-join (ft/dirname path) new-basename)]
       (if (and (not (exists? cm new-path)) (exists? cm path))
-        (move cm path new-path :user user :admin-users (irods-admins)))
+        (move cm path new-path :user user :admin-users (cfg/irods-admins)))
       {path new-path})))
 
 (defn- fix-return-map
@@ -84,7 +84,7 @@
 (defn- replace-spaces
   "Generates new paths by replacing all spaces with new-char."
   [user paths new-char]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-paths-exist cm paths)
     (validators/user-owns-paths cm user paths)

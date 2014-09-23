@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.metadata-template-avus
   (:use [clj-jargon.init :only [with-jargon]]
         [donkey.services.filesystem.common-paths]
-        [donkey.util.config]
         [korma.core]
         [korma.db :only [transaction with-db]]
         [slingshot.slingshot :only [throw+]])
@@ -12,6 +11,7 @@
             [donkey.services.filesystem.metadata-templates :as templates]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as validators]
+            [donkey.util.config :as cfg]
             [donkey.util.db :as db]
             [donkey.util.icat :as icat]
             [donkey.util.service :as service])
@@ -74,7 +74,7 @@
      (when (seq existing-avus)
        (dorun (map (partial persistence/update-avu user-id) existing-avus)))
      (when (seq new-avus)
-       (with-jargon (jargon-cfg) [fs]
+       (with-jargon (cfg/jargon-cfg) [fs]
          (persistence/add-metadata-template-avus user-id
                                                  new-avus
                                                  (icat/resolve-data-type fs data-id))))
@@ -119,7 +119,7 @@
   (fn [params data-id & [template-id]]
     (log-call "do-metadata-template-avu-list" params data-id template-id)
     (when template-id (templates/validate-metadata-template-exists template-id))
-    (with-jargon (jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (common-validators/validate-map params {:user string?})
       (validators/user-exists cm (:user params))
       (let [user (:user params)
@@ -142,7 +142,7 @@
     (templates/validate-metadata-template-exists template-id)
     (common-validators/validate-map body {:avus sequential?})
     (common-validators/validate-map params {:user string?})
-    (with-jargon (jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (validators/user-exists cm (:user params))
       (let [user (:user params)
             path (:path (uuids/path-for-uuid cm user data-id))]
@@ -168,7 +168,7 @@
     (log-call "do-remove-metadata-template-avus" params data-id template-id avu-id)
     (templates/validate-metadata-template-exists template-id)
     (common-validators/validate-map params {:user string?})
-    (with-jargon (jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (validators/user-exists cm (:user params))
       (let [user (:user params)
             path (:path (uuids/path-for-uuid cm user data-id))]

@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.tickets
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -13,6 +12,7 @@
             [clostache.parser :as stache]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.util.config :as cfg]
             [donkey.services.filesystem.validators :as validators])
   (:import [java.util UUID]))
 
@@ -32,12 +32,12 @@
 
 (defn render-ticket-tmpl
   [cm ticket-map tmpl]
-  (stache/render tmpl {:url       (kifshare-external-url)
+  (stache/render tmpl {:url       (cfg/kifshare-external-url)
                        :ticket-id (:ticket-id ticket-map)
                        :filename  (ft/basename (:path ticket-map))}))
 (defn- ticket-kifshare-url
   [cm user path]
-  (mapv #(ft/path-join (kifshare-external-url) %)
+  (mapv #(ft/path-join (cfg/kifshare-external-url) %)
         (ticket-ids-for-path cm (:username cm) path)))
 
 (defn url-join
@@ -49,14 +49,14 @@
 (defn- returnable-ticket-map
   [cm ticket-id]
   (let [tm (ticket-map cm (:username cm) ticket-id)]
-    {:download-url      (render-ticket-tmpl cm tm (kifshare-download-template))
-     :download-page-url (url-join (kifshare-external-url) (:ticket-id tm))
+    {:download-url      (render-ticket-tmpl cm tm (cfg/kifshare-download-template))
+     :download-page-url (url-join (cfg/kifshare-external-url) (:ticket-id tm))
      :path              (:path tm)
      :ticket-id         (:ticket-id tm)}))
 
 (defn- add-tickets
   [user paths public?]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (let [new-uuids (gen-uuids cm user (count paths))]
       (validators/user-exists cm user)
       (validators/all-paths-exist cm paths)
@@ -73,7 +73,7 @@
 
 (defn- remove-tickets
   [user ticket-ids]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-tickets-exist cm user ticket-ids)
     (let [all-paths (mapv #(.getIrodsAbsolutePath (ticket-by-id cm (:username cm) %)) ticket-ids)]
@@ -92,7 +92,7 @@
 
 (defn- list-tickets-for-paths
   [user paths]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-paths-exist cm paths)
     (validators/all-paths-readable cm user paths)

@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.copy
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -14,6 +13,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.util.config :as cfg]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- copy-path
@@ -21,7 +21,7 @@
      (copy-path copy-map "ipc-de-copy-from"))
 
   ([{:keys [user from to]} copy-key]
-     (with-jargon (jargon-cfg) [cm]
+     (with-jargon (cfg/jargon-cfg) [cm]
        (validators/user-exists cm user)
        (validators/all-paths-exist cm from)
        (validators/all-paths-readable cm user from)
@@ -48,7 +48,7 @@
     {:user user
      :from paths
      :to   destination}
-    (fs-copy-attribute)))
+    (cfg/fs-copy-attribute)))
 
 (with-pre-hook! #'do-copy
   (fn [params body]

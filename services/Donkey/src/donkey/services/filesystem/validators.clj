@@ -4,20 +4,20 @@
         [clj-jargon.tickets]
         [clj-jargon.users]
         [clj-icat-direct.icat :as icat]
-        [donkey.util.config]
         [clojure-commons.error-codes]
-        [slingshot.slingshot :only [try+ throw+]]))
+        [slingshot.slingshot :only [try+ throw+]])
+  (:require [donkey.util.config :as cfg]))
 
 (defn num-paths-okay?
   [path-count]
-  (<= path-count (fs-max-paths-in-request)))
+  (<= path-count (cfg/fs-max-paths-in-request)))
 
 (defn- validate-path-count
   [count]
   (if-not (num-paths-okay? count)
     (throw+ {:error_code "ERR_TOO_MANY_PATHS"
              :count count
-             :limit (fs-max-paths-in-request)})))
+             :limit (cfg/fs-max-paths-in-request)})))
 
 (defn validate-num-paths
   [paths]
@@ -25,12 +25,12 @@
 
 (defn validate-num-paths-under-folder
   [user folder]
-  (let [total (icat/number-of-all-items-under-folder user (irods-zone) folder)]
+  (let [total (icat/number-of-all-items-under-folder user (cfg/irods-zone) folder)]
     (validate-path-count total)))
 
 (defn validate-num-paths-under-paths
   [user paths]
-  (let [sum-fn #(+ %1 (icat/number-of-all-items-under-folder user (irods-zone) %2))
+  (let [sum-fn #(+ %1 (icat/number-of-all-items-under-folder user (cfg/irods-zone) %2))
         total (reduce sum-fn 0 paths)]
     (validate-path-count total)))
 

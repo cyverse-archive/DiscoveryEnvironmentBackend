@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.page-file
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -13,12 +12,13 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.util.config :as cfg]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- read-file-chunk
   "Reads a chunk of a file starting at 'position' and reading a chunk of length 'chunk-size'."
   [user path position chunk-size]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/path-exists cm path)
     (validators/path-is-file cm path)
@@ -33,7 +33,7 @@
 (defn- overwrite-file-chunk
   "Writes a chunk of a file starting at 'position' and extending to the length of the string."
   [user path position update-string]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/path-exists cm path)
     (validators/path-is-file cm path)

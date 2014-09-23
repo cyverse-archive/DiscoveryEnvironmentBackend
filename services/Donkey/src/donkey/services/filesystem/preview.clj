@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.preview
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -13,6 +12,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.util.config :as cfg]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- preview-buffer
@@ -38,7 +38,7 @@
      size - The size (in bytes) of the preview to be created."
   [user path size]
   (let [path (ft/rm-last-slash path)]
-    (with-jargon (jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (log/debug (str "preview " user " " path " " size))
       (validators/user-exists cm user)
       (validators/path-exists cm path)
@@ -48,7 +48,7 @@
 
 (defn do-preview
   [{user :user path :path}]
-  {:preview (preview user path (fs-preview-size))})
+  {:preview (preview user path (cfg/fs-preview-size))})
 
 (with-pre-hook! #'do-preview
   (fn [params]

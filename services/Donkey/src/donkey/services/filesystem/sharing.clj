@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.sharing
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -17,6 +16,7 @@
             [cheshire.core :as json]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.util.config :as cfg]
             [donkey.services.filesystem.validators :as validators]))
 
 (def shared-with-attr "ipc-contains-obj-shared-with")
@@ -99,7 +99,7 @@
 
 (defn share
   [user share-withs fpaths perm]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-users-exist cm share-withs)
     (validators/all-paths-exist cm fpaths)
@@ -129,7 +129,7 @@
 
 (defn- remove-inherit-bit?
   [cm user fpath]
-  (empty? (remove (comp (conj (set (irods-admins)) user) :user)
+  (empty? (remove (comp (conj (set (cfg/irods-admins)) user) :user)
                   (list-user-perms cm fpath))))
 
 (defn- unshare-dir
@@ -186,7 +186,7 @@
   [user unshare-withs fpaths]
   (log/debug "entered unshare")
 
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-users-exist cm unshare-withs)
     (validators/all-paths-exist cm fpaths)
@@ -249,11 +249,11 @@
 
 (defn anon-readable?
   [cm p]
-  (is-readable? cm (fs-anon-user) p))
+  (is-readable? cm (cfg/fs-anon-user) p))
 
 (defn anon-file-url
   [p]
-  (let [aurl (url/url (anon-files-base-url))]
+  (let [aurl (url/url (cfg/anon-files-base-url))]
     (str (-> aurl (assoc :path (ft/path-join (:path aurl) (string/replace p #"^\/" "")))))))
 
 (defn anon-files-urls
@@ -262,13 +262,13 @@
 
 (defn anon-files
   [user paths]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-paths-exist cm paths)
     (validators/paths-are-files cm paths)
     (validators/user-owns-paths cm user paths)
-    (log/warn "Giving read access to" (fs-anon-user) "on:" (string/join " " paths))
-    (share user [(fs-anon-user)] paths :read)
+    (log/warn "Giving read access to" (cfg/fs-anon-user) "on:" (string/join " " paths))
+    (share user [(cfg/fs-anon-user)] paths :read)
     {:user user :paths (anon-files-urls paths)}))
 
 (defn fix-broken-paths

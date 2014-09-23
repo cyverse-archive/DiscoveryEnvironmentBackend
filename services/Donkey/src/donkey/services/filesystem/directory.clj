@@ -1,6 +1,5 @@
 (ns donkey.services.filesystem.directory
   (:use [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info]
@@ -13,29 +12,30 @@
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.persistence.metadata :as meta]
-            [clj-icat-direct.icat :as icat])
+            [clj-icat-direct.icat :as icat]
+            [donkey.util.config :as cfg])
   (:import [java.util UUID]))
 
 
 (defn get-paths-in-folder
   ([user folder]
-    (get-paths-in-folder user folder (fs-max-paths-in-request)))
+    (get-paths-in-folder user folder (cfg/fs-max-paths-in-request)))
 
   ([user folder limit]
-    (let [listing (icat/paged-folder-listing user (irods-zone) folder :base-name :asc limit 0)]
+    (let [listing (icat/paged-folder-listing user (cfg/irods-zone) folder :base-name :asc limit 0)]
       (map :full_path listing))))
 
 (defn- filtered-paths
   "Returns a seq of full paths that should not be included in paged listing."
   [user]
-  [(fs-community-data)
-   (ft/path-join (irods-home) user)
-   (ft/path-join (irods-home) "public")])
+  [(cfg/fs-community-data)
+   (ft/path-join (cfg/irods-home) user)
+   (ft/path-join (cfg/irods-home) "public")])
 
 (defn- should-filter?
   "Returns true if the map is okay to include in a directory listing."
   [user path-to-check]
-  (let [fpaths (set (concat (fs-filter-files) (filtered-paths user)))]
+  (let [fpaths (set (concat (cfg/fs-filter-files) (filtered-paths user)))]
     (or  (contains? fpaths path-to-check)
          (not (valid-path? path-to-check)))))
 
@@ -96,7 +96,7 @@
   (let [path      (ft/rm-last-slash path)
         sort-col  (string/upper-case sort-col)
         sort-order (string/upper-case sort-order)]
-    (with-jargon (jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (validators/user-exists cm user)
       (validators/path-exists cm path)
       (validators/path-readable cm user path)
@@ -115,7 +115,7 @@
       (let [stat (stat cm path)
             scol (user-col->api-col sort-col)
             sord (user-order->api-order sort-order)
-            zone (irods-zone)
+            zone (cfg/irods-zone)
             uuid (:uuid (uuids/uuid-for-path cm user path))]
         (merge
          (hash-map
@@ -131,8 +131,8 @@
           :file-size        0)
          (icat/number-of-items-in-folder user zone path)
          (icat/number-of-filtered-items-in-folder user zone path
-                                                  (fs-filter-chars)
-                                                  (fs-filter-files)
+                                                  (cfg/fs-filter-chars)
+                                                  (cfg/fs-filter-files)
                                                   (filtered-paths user))
          (page->map user (log/spy (icat/paged-folder-listing user zone path scol sord limit offset))))))))
 
@@ -140,14 +140,14 @@
   "Lists the directories contained under path."
   [user path]
   (let [path (ft/rm-last-slash path)]
-    (with-jargon (jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (validators/user-exists cm user)
       (validators/path-exists cm path)
       (validators/path-readable cm user path)
       (validators/path-is-dir cm path)
 
       (let [stat (stat cm path)
-            zone (irods-zone)
+            zone (cfg/irods-zone)
             uuid (:uuid (uuids/uuid-for-path cm user path))]
         (merge
          (hash-map
@@ -165,14 +165,14 @@
 
 (defn- top-level-listing
   [{user :user}]
-  (let [comm-f     (future (list-directories user (fs-community-data)))
-        share-f    (future (list-directories user (irods-home)))
+  (let [comm-f     (future (list-directories user (cfg/fs-community-data)))
+        share-f    (future (list-directories user (cfg/irods-home)))
         home-f     (future (list-directories user (user-home-dir user)))]
     {:roots [@home-f @comm-f @share-f]}))
 
 (defn- shared-with-me-listing?
   [path]
-  (= (ft/add-trailing-slash path) (ft/add-trailing-slash (irods-home))))
+  (= (ft/add-trailing-slash path) (ft/add-trailing-slash (cfg/irods-home))))
 
 (defn do-directory
   [{:keys [user path] :or {path nil} :as params}]
@@ -182,7 +182,7 @@
     (top-level-listing params)
 
     (shared-with-me-listing? path)
-    (list-directories user (irods-home))
+    (list-directories user (cfg/irods-home))
 
     :else
     (list-directories user path)))

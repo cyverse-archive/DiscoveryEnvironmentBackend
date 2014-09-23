@@ -1,6 +1,5 @@
 (ns donkey.services.filesystem.home
   (:use [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
@@ -8,11 +7,12 @@
   (:require [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.util.config :as cfg]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- user-home-path
   [staging-dir user set-owner?]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (let [user-home (ft/path-join staging-dir user)]
       (if (not (exists? cm user-home))
@@ -22,7 +22,7 @@
 
 (defn do-homedir
   [{user :user}]
-  (user-home-path (irods-home) user false))
+  (user-home-path (cfg/irods-home) user false))
 
 (with-pre-hook! #'do-homedir
   (fn [params]

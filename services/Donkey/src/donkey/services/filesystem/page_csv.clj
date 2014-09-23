@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.page-csv
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -14,6 +13,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.util.config :as cfg]
             [donkey.services.filesystem.validators :as validators])
   (:import [au.com.bytecode.opencsv CSVReader]))
 
@@ -80,7 +80,7 @@
    we shouldn't try to parse partial rows. We scan forward from the starting position to find the first
    line-ending and then scan backwards from the last position for the last line-ending."
   [user path page chunk-size separator]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (log/warn "[read-csv-chunk]" user path page chunk-size separator)
     (validators/user-exists cm user)
     (validators/path-exists cm path)

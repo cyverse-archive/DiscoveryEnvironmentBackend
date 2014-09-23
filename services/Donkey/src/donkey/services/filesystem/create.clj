@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.create
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -13,6 +12,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.util.config :as cfg]
             [donkey.services.filesystem.stat :as stat]
             [donkey.services.filesystem.validators :as validators]))
 
@@ -21,7 +21,7 @@
    becomes the owner of the new directory."
   [user path]
   (log/debug (str "create " user " " path))
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (let [fixed-path (ft/rm-last-slash path)]
       (when-not (good-string? fixed-path)
         (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD

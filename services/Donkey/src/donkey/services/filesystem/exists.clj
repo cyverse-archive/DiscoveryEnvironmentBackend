@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.exists
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -13,6 +12,7 @@
             [cheshire.core :as json]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.util.config :as cfg]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- url-encoded?
@@ -30,7 +30,7 @@
      (path-exists? "" path))
   ([user path]
     (let [path (ft/rm-last-slash path)]
-      (with-jargon (jargon-cfg) [cm]
+      (with-jargon (cfg/jargon-cfg) [cm]
         (exists? cm (url-decode path))))))
 
 (defn do-exists

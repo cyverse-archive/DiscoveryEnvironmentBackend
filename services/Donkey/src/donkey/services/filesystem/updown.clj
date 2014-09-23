@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.updown
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -16,12 +15,13 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.directory :as directory]
             [donkey.services.filesystem.validators :as validators]
-            [clj-icat-direct.icat :as icat])
+            [clj-icat-direct.icat :as icat]
+            [donkey.util.config :as cfg])
   (:import [org.apache.tika Tika]))
 
 (defn- tika-detect-type
   [user file-path]
-  (with-jargon (jargon-cfg) [cm-new]
+  (with-jargon (cfg/jargon-cfg) [cm-new]
     (validators/user-exists cm-new user)
     (validators/path-exists cm-new file-path)
     (validators/path-readable cm-new user file-path)
@@ -29,7 +29,7 @@
 
 (defn- download-file
   [user file-path]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/path-exists cm file-path)
     (validators/path-readable cm user file-path)
@@ -37,7 +37,7 @@
 
 (defn- download
   [user filepaths]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (let [cart-key (str (System/currentTimeMillis))
           account  (:irodsAccount cm)]
@@ -45,7 +45,7 @@
        :status "success"
        :data
        {:user user
-        :home (ft/path-join "/" (irods-zone) "home" user)
+        :home (ft/path-join "/" (cfg/irods-zone) "home" user)
         :password (store-cart cm user cart-key filepaths)
         :host (.getHost account)
         :port (.getPort account)
@@ -55,14 +55,14 @@
 
 (defn- upload
   [user]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (let [account (:irodsAccount cm)]
       {:action "upload"
        :status "success"
        :data
        {:user user
-        :home (ft/path-join "/" (irods-zone) "home" user)
+        :home (ft/path-join "/" (cfg/irods-zone) "home" user)
         :password (temp-password cm user)
         :host (.getHost account)
         :port (.getPort account)
@@ -84,7 +84,7 @@
 
 (defn do-download-contents
   [{user :user} {path :path}]
-  (let [limit (:total (icat/number-of-items-in-folder user (irods-zone) path)) ;; FIXME this is horrible
+  (let [limit (:total (icat/number-of-items-in-folder user (cfg/irods-zone) path)) ;; FIXME this is horrible
         paths (directory/get-paths-in-folder user path limit)]
     (download user paths)))
 
@@ -93,7 +93,7 @@
     (log-call "do-download-contents" params body)
     (validate-map params {:user string?})
     (validate-map body {:path string?})
-    (with-jargon (jargon-cfg) [cm] (validators/path-is-dir cm (:path body)))))
+    (with-jargon (cfg/jargon-cfg) [cm] (validators/path-is-dir cm (:path body)))))
 
 (with-post-hook! #'do-download-contents (log-func "do-download-contents"))
 

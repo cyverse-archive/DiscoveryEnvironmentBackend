@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.stat
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -17,12 +16,13 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.garnish.irods :as filetypes]
-            [clj-icat-direct.icat :as icat])
+            [clj-icat-direct.icat :as icat]
+            [donkey.util.config :as cfg])
   (:import [org.apache.tika Tika]))
 
 (defn- count-shares
   [cm user path]
-  (let [filter-users (set (conj (fs-perms-filter) user (irods-user)))
+  (let [filter-users (set (conj (cfg/fs-perms-filter) user (cfg/irods-user)))
         full-listing (list-user-perms cm path)]
     (count
      (filterv
@@ -32,8 +32,8 @@
 (defn- merge-counts
   [stat-map cm user path]
   (if (is-dir? cm path)
-    (merge stat-map {:file-count (icat/number-of-files-in-folder user (irods-zone) path)
-                     :dir-count  (icat/number-of-folders-in-folder user (irods-zone) path)})
+    (merge stat-map {:file-count (icat/number-of-files-in-folder user (cfg/irods-zone) path)
+                     :dir-count  (icat/number-of-folders-in-folder user (cfg/irods-zone) path)})
     stat-map))
 
 (defn- merge-shares
@@ -60,7 +60,7 @@
 
 (defn path-is-dir?
   [path]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/path-exists cm path)
     (is-dir? cm path)))
 
@@ -84,7 +84,7 @@
 
 (defn do-stat
   [{user :user} {paths :paths}]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     {:paths (into {} (map #(vector % (path-stat cm user %)) paths))}))
 
 (with-pre-hook! #'do-stat
