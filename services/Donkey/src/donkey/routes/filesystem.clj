@@ -1,175 +1,177 @@
 (ns donkey.routes.filesystem
   (:use [compojure.core]
         [donkey.auth.user-attributes]
-        [donkey.services.filesystem.create]
-        [donkey.services.filesystem.directory]
-        [donkey.services.filesystem.exists]
-        [donkey.services.filesystem.home]
-        [donkey.services.filesystem.manifest]
-        [donkey.services.filesystem.metadata]
-        [donkey.services.filesystem.metadata-template-avus]
-        [donkey.services.filesystem.metadata-templates]
-        [donkey.services.filesystem.move]
-        [donkey.services.filesystem.page-csv]
-        [donkey.services.filesystem.page-file]
-        [donkey.services.filesystem.preview]
-        [donkey.services.filesystem.rename]
-        [donkey.services.filesystem.root]
-        [donkey.services.filesystem.sharing]
-        [donkey.services.filesystem.space-handling]
-        [donkey.services.filesystem.stat]
-        [donkey.services.filesystem.tickets]
-        [donkey.services.filesystem.trash]
-        [donkey.services.filesystem.updown]
-        [donkey.services.filesystem.users]
-        [donkey.services.filesystem.uuids]
         [donkey.util.validators :only [parse-body]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.util]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [donkey.util.config :as config]
             [clojure.tools.logging :as log]
-            [dire.core :refer [with-pre-hook!]]))
+            [dire.core :refer [with-pre-hook!]]
+            [donkey.services.filesystem.create :as create]
+            [donkey.services.filesystem.directory :as dir]
+            [donkey.services.filesystem.exists :as exists]
+            [donkey.services.filesystem.home :as home]
+            [donkey.services.filesystem.manifest :as manifest]
+            [donkey.services.filesystem.metadata :as meta]
+            [donkey.services.filesystem.metadata-template-avus :as mta]
+            [donkey.services.filesystem.metadata-templates :as mt]
+            [donkey.services.filesystem.move :as move]
+            [donkey.services.filesystem.page-csv :as csv]
+            [donkey.services.filesystem.page-file :as file]
+            [donkey.services.filesystem.preview :as preview]
+            [donkey.services.filesystem.rename :as rename]
+            [donkey.services.filesystem.root :as root]
+            [donkey.services.filesystem.sharing :as sharing]
+            [donkey.services.filesystem.space-handling :as sh]
+            [donkey.services.filesystem.stat :as stat]
+            [donkey.services.filesystem.tickets :as ticket]
+            [donkey.services.filesystem.trash :as trash]
+            [donkey.services.filesystem.updown :as ud]
+            [donkey.services.filesystem.users :as user]
+            [donkey.services.filesystem.uuids :as uuid]))
+
 
 (defn secured-filesystem-routes
   "The routes for file IO endpoints."
   []
   (optional-routes
     [config/filesystem-routes-enabled]
+
     (GET "/filesystem/root" [:as req]
-         (controller req do-root-listing :params))
+      (controller req root/do-root-listing :params))
 
     (GET "/filesystem/home" [:as req]
-         (controller req do-homedir :params))
+      (controller req home/do-homedir :params))
 
     (POST "/filesystem/exists" [:as req]
-          (controller req do-exists :params :body))
+      (controller req exists/do-exists :params :body))
 
     (POST "/filesystem/stat" [:as req]
-          (controller req do-stat :params :body))
+      (controller req stat/do-stat :params :body))
 
     (POST "/filesystem/download" [:as req]
-          (controller req do-download :params :body))
+      (controller req ud/do-download :params :body))
 
     (POST "/filesystem/download-contents" [:as req]
-          (controller req do-download-contents :params :body))
+      (controller req ud/do-download-contents :params :body))
 
     (GET "/filesystem/display-download" [:as req]
-         (controller req do-special-download :params))
+      (controller req ud/do-special-download :params))
 
     (GET "/filesystem/upload" [:as req]
-         (controller req do-upload :params))
+      (controller req ud/do-upload :params))
 
     (GET "/filesystem/directory" [:as req]
-         (controller req do-directory :params))
+      (controller req dir/do-directory :params))
 
     (GET "/filesystem/paged-directory" [:as req]
-         (controller req do-paged-listing :params))
+      (controller req dir/do-paged-listing :params))
 
     (POST "/filesystem/directory/create" [:as req]
-          (controller req do-create :params :body))
+      (controller req create/do-create :params :body))
 
     (POST "/filesystem/rename" [:as req]
-          (controller req do-rename :params :body))
+      (controller req rename/do-rename :params :body))
 
     (POST "/filesystem/delete" [:as req]
-          (controller req do-delete :params :body))
+      (controller req trash/do-delete :params :body))
 
     (POST "/filesystem/delete-contents" [:as req]
-          (controller req do-delete-contents :params :body))
+      (controller req trash/do-delete-contents :params :body))
 
     (POST "/filesystem/move" [:as req]
-          (controller req do-move :params :body))
+      (controller req move/do-move :params :body))
 
     (POST "/filesystem/move-contents" [:as req]
-          (controller req do-move-contents :params :body))
+      (controller req move/do-move-contents :params :body))
 
     (GET "/filesystem/file/preview" [:as req]
-         (controller req do-preview :params))
+      (controller req preview/do-preview :params))
 
     (GET "/filesystem/file/manifest" [:as req]
-         (controller req do-manifest :params))
+      (controller req manifest/do-manifest :params))
 
     (GET "/filesystem/metadata" [:as req]
-         (controller req do-metadata-get :params))
+      (controller req meta/do-metadata-get :params))
 
     (POST "/filesystem/metadata" [:as req]
-          (controller req do-metadata-set :params :body))
+      (controller req meta/do-metadata-set :params :body))
 
     (DELETE "/filesystem/metadata" [:as req]
-            (controller req do-metadata-delete :params))
+      (controller req meta/do-metadata-delete :params))
 
     (POST "/filesystem/metadata-batch" [:as req]
-          (controller req do-metadata-batch-set :params :body))
+      (controller req meta/do-metadata-batch-set :params :body))
 
     (GET "/filesystem/metadata/templates" [:as req]
-         (controller req do-metadata-template-list))
+      (controller req mt/do-metadata-template-list))
 
     (GET "/filesystem/metadata/template/:id" [id :as req]
-         (controller req do-metadata-template-view id))
+      (controller req mt/do-metadata-template-view id))
 
     (GET "/filesystem/metadata/template/attr/:id" [id :as req]
-         (controller req do-metadata-attribute-view id))
+      (controller req mt/do-metadata-attribute-view id))
 
     (POST "/filesystem/share" [:as req]
-          (controller req do-share :params :body))
+      (controller req sharing/do-share :params :body))
 
     (POST "/filesystem/unshare" [:as req]
-          (controller req do-unshare :params :body))
+      (controller req sharing/do-unshare :params :body))
 
     (POST "/filesystem/user-permissions" [:as req]
-          (controller req do-user-permissions :params :body))
+      (controller req user/do-user-permissions :params :body))
 
     (GET "/filesystem/groups" [:as req]
-         (controller req do-groups :params))
+      (controller req user/do-groups :params))
 
     (GET "/filesystem/quota" [:as req]
-         (controller req do-quota :params))
+      (controller req user/do-quota :params))
 
     (POST "/filesystem/restore" [:as req]
-          (controller req do-restore :params :body))
+      (controller req trash/do-restore :params :body))
 
     (POST "/filesystem/restore-all" [:as req]
-          (controller req do-restore-all :params))
+      (controller req trash/do-restore-all :params))
 
     (POST "/filesystem/tickets" [:as req]
-          (controller req do-add-tickets :params :body))
+      (controller req ticket/do-add-tickets :params :body))
 
     (POST "/filesystem/delete-tickets" [:as req]
-          (controller req do-remove-tickets :params :body))
+      (controller req ticket/do-remove-tickets :params :body))
 
     (POST "/filesystem/list-tickets" [:as req]
-          (controller req do-list-tickets :params :body))
+      (controller req ticket/do-list-tickets :params :body))
 
     (GET "/filesystem/user-trash-dir" [:as req]
-         (controller req do-user-trash :params))
+      (controller req trash/do-user-trash :params))
 
     (POST "/filesystem/paths-contain-space" [:as req]
-          (controller req do-paths-contain-space :params :body))
+      (controller req sh/do-paths-contain-space :params :body))
 
     (POST "/filesystem/replace-spaces" [:as req]
-          (controller req do-replace-spaces :params :body))
+      (controller req sh/do-replace-spaces :params :body))
 
     (DELETE "/filesystem/trash" [:as req]
-            (controller req do-delete-trash :params))
+      (controller req trash/do-delete-trash :params))
 
     (POST "/filesystem/read-chunk" [:as req]
-          (controller req do-read-chunk :params :body))
+      (controller req file/do-read-chunk :params :body))
 
     (POST "/filesystem/overwrite-chunk" [:as req]
-          (controller req do-overwrite-chunk :params :body))
+      (controller req file/do-overwrite-chunk :params :body))
 
     (POST "/filesystem/read-csv-chunk" [:as req]
-          (controller req do-read-csv-chunk :params :body))
+      (controller req csv/do-read-csv-chunk :params :body))
 
     (POST "/filesystem/anon-files" [:as req]
-          (controller req do-anon-files :params :body))
+      (controller req sharing/do-anon-files :params :body))
 
     (POST "/filesystem/paths-for-uuids" [:as req]
-          (controller req do-paths-for-uuids :params :body))
+      (controller req uuid/do-paths-for-uuids :params :body))
 
     (POST "/filesystem/uuids-for-paths" [:as req]
-          (controller req do-uuids-for-paths :params :body))))
+      (controller req uuid/do-uuids-for-paths :params :body))))
 
 (defn secured-filesystem-metadata-routes
   "The routes for file metadata endpoints."
@@ -179,17 +181,17 @@
           (config/metadata-routes-enabled))]
 
    (GET "/filesystem/:data-id/template-avus" [data-id :as req]
-        (controller req do-metadata-template-avu-list :params data-id))
+     (controller req mta/do-metadata-template-avu-list :params data-id))
 
    (GET "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
-        (controller req do-metadata-template-avu-list :params data-id template-id))
+     (controller req mta/do-metadata-template-avu-list :params data-id template-id))
 
    (POST "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
-        (controller req do-set-metadata-template-avus :params data-id template-id :body))
+     (controller req mta/do-set-metadata-template-avus :params data-id template-id :body))
 
    (DELETE "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
-        (controller req do-remove-metadata-template-avus :params data-id template-id))
+     (controller req mta/do-remove-metadata-template-avus :params data-id template-id))
 
-   (DELETE "/filesystem/:data-id/template-avus/:template-id/:avu-id" [data-id template-id avu-id :as req]
-        (controller req do-remove-metadata-template-avus :params data-id template-id avu-id))))
-
+   (DELETE "/filesystem/:data-id/template-avus/:template-id/:avu-id"
+     [data-id template-id avu-id :as req]
+     (controller req mta/do-remove-metadata-template-avus :params data-id template-id avu-id))))
