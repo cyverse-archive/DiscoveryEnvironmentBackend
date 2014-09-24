@@ -8,7 +8,7 @@ bin
 .project
 .lein*
 \#*\#
-nibblonian.log
+data-info.log
 target/
 .settings/
 .DS_Store

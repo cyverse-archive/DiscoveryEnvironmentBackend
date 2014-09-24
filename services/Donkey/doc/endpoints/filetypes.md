@@ -2,7 +2,7 @@
 
 NOTES: If a path appears in a query string parameter, URL encode it first.
 
-Error code maps follow the general format of Nibblonian's errors:
+Error code maps follow the general format of `data-info`'s errors:
 
     {
         err_code: "ERR_CODE_STRING",

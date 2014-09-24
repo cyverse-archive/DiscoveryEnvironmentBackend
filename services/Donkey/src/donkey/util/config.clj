@@ -495,7 +495,7 @@
   "donkey.fileio.max-edit-file-size")
 ;;; End File IO configuration
 
-;;; Filesystem configuration (a.k.a. Nibblonian).
+;;; Filesystem configuration (a.k.a. data-info).
 (cc/defprop-long fs-preview-size
   "The size, in bytes, of the generated previews."
   [props config-valid configs filesystem-routes-enabled]
@@ -560,8 +560,8 @@
   [props config-valid configs search-routes-enabled]
   "donkey.search.default-limit" 50)
 
-(cc/defprop-str nibblonian-base-url
-  "The base URL for the Nibblonian data management services."
+(cc/defprop-str data-info-base-url
+  "The base URL for the data-info data management services."
   [props config-valid configs app-routes-enabled data-routes-enabled
    tree-viewer-routes-enabled]
   "donkey.nibblonian.base-url")

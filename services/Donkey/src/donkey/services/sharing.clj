@@ -3,7 +3,7 @@
         [clojure.string :only [join]]
         [slingshot.slingshot :only [try+]]
         [clojure-commons.file-utils :only [basename]]
-        [donkey.util.config :only [nibblonian-base-url]]
+        [donkey.util.config :only [data-info-base-url]]
         [donkey.util.service :only [build-url decode-stream]]
         [donkey.util.transformers :only [add-current-user-to-url]]
         [donkey.auth.user-attributes])
@@ -15,10 +15,10 @@
 
 (def file-list-threshold 10)
 
-(defn- nibblonian-url
-  "Builds a URL to a Nibblonian service from the given relative URL path."
+(defn- data-info-url
+  "Builds a URL to the data-info service from the given relative URL path."
   [relative-url]
-  (add-current-user-to-url (build-url (nibblonian-base-url) relative-url)))
+  (add-current-user-to-url (build-url (data-info-base-url) relative-url)))
 
 (defn- share-list->path-list
   "Converts a list of maps with path key-values to a list of path strings."
@@ -30,22 +30,22 @@
   [path-list]
   (join ", " (map basename path-list)))
 
-(defn- build-nibblonian-share-req
-  "Builds a Nibblonian request object from a username and a client share
+(defn- build-data-info-share-req
+  "Builds a data-info request object from a username and a client share
    request."
   [user share]
   {:paths (list (:path share)),
    :users (list user),
    :permissions (:permissions share)})
 
-(defn- build-nibblonian-unshare-req
-  "Builds a Nibblonian unshare request object from a username and a path."
+(defn- build-data-info-unshare-req
+  "Builds a data-info unshare request object from a username and a path."
   [user path]
   {:paths (list path),
    :users (list user)})
 
-(defn- forward-nibblonian-share
-  "Forwards a Nibblonian share request."
+(defn- forward-data-info-share
+  "Forwards a data-info share request."
   [user share]
   (let [paths       [(:path share)]
         sharer      (:shortUsername current-user)
@@ -56,13 +56,13 @@
       (sh/share sharer share-withs paths perm)
       (merge {:success true} share)
       (catch map? e
-        (log/error "nibblonian error: " e)
+        (log/error "data-info error: " e)
         (merge {:success false,
                 :error e}
                share)))))
 
-(defn- forward-nibblonian-unshare
-  "Forwards a Nibblonian unshare request."
+(defn- forward-data-info-unshare
+  "Forwards a data-info unshare request."
   [user path]
   (let [unsharer      (:shortUsername current-user)
         unshare-withs [user]]
@@ -72,7 +72,7 @@
       {:success true
        :path path}
       (catch map? e
-        (log/error "nibblonian error: " e)
+        (log/error "data-info error: " e)
         {:success false,
          :error e
          :path path}))))
@@ -197,13 +197,13 @@
       (str "unable to send unshare error notification for " unsharee))))
 
 (defn- share-with-user
-  "Forwards share requests to Nibblonian from the user and list of paths and
-   permissions in the given share map, sending any success notifications to the
-   users involved, and any error notifications to the current user."
+  "Forwards share requests to data-info from the user and list of paths and permissions in the given
+   share map, sending any success notifications to the users involved, and any error notifications
+   to the current user."
   [share]
   (let [user (:user share)
         paths (:paths share)
-        user_share_results (map #(forward-nibblonian-share user %) paths)
+        user_share_results (map #(forward-data-info-share user %) paths)
         successful_shares (filter :success user_share_results)
         unsuccessful_shares (remove :success user_share_results)]
     (when (seq successful_shares)
@@ -213,13 +213,13 @@
     {:user user :sharing user_share_results}))
 
 (defn- unshare-with-user
-  "Forwards unshare requests to Nibblonian from the user and list of paths in
-   the given unshare map, sending any success notifications to the users
-   involved, and any error notifications to the current user."
+  "Forwards unshare requests to data-info from the user and list of paths in the given unshare map,
+   sending any success notifications to the users involved, and any error notifications to the
+   current user."
   [unshare]
   (let [user (:user unshare)
         paths (:paths unshare)
-        unshare_results (map #(forward-nibblonian-unshare user %) paths)
+        unshare_results (map #(forward-data-info-unshare user %) paths)
         successful_unshares (filter :success unshare_results)
         unsuccessful_unshares (remove :success unshare_results)]
     (when (seq successful_unshares)
@@ -229,8 +229,7 @@
     {:user user :unshare unshare_results}))
 
 (defn share
-  "Parses a batch share request, forwarding each user-share request to
-   Nibblonian."
+  "Parses a batch share request, forwarding each user-share request to data-info."
   [req]
   (let [sharing (decode-stream (:body req))]
     (walk share-with-user
@@ -238,8 +237,7 @@
           (:sharing sharing))))
 
 (defn unshare
-  "Parses a batch unshare request, forwarding each user-unshare request to
-   Nibblonian."
+  "Parses a batch unshare request, forwarding each user-unshare request to data-info."
   [req]
   (let [unshare (decode-stream (:body req))]
     (walk unshare-with-user

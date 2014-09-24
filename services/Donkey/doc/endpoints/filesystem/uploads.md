@@ -1,6 +1,7 @@
 File Upload
 -----------
-Uploads are now handled by iDrop Lite. Nibblonian is only responsible for generating a temporary password for a user and returning connection information.
+Uploads are now handled by iDrop Lite. `data-info` is only responsible for generating a temporary 
+password for a user and returning connection information.
 
 __URL Path__: /secured/filesystem/upload
 

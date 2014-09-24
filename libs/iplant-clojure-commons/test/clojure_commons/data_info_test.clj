@@ -1,6 +1,6 @@
-(ns clojure-commons.nibblonian-test
+(ns clojure-commons.data-info-test
   (:use [clojure.test]
-        [clojure-commons.nibblonian])
+        [clojure-commons.data-info])
   (:require [cheshire.core :as cheshire]))
 
 (deftest tree-metaurl-body-test

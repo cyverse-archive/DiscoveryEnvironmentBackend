@@ -1,8 +1,9 @@
-(ns clojure-commons.nibblonian
+(ns clojure-commons.data-info
   (:use [clojure-commons.error-codes])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [clojure-commons.client :as cc]))
+
 
 (defn get-avus
   "Retrieves the AVUs associated with a file."
