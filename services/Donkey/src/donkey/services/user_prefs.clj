@@ -4,7 +4,6 @@
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [mkdir mkdirs]]
         [clj-jargon.permissions :only [set-owner]]
-        [donkey.clients.nibblonian]
         [donkey.clients.user-prefs]
         [donkey.util.config]
         [donkey.util.service]
@@ -14,7 +13,9 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
-            [clj-jargon.item-info :as jinfo]))
+            [clj-jargon.item-info :as jinfo]
+            [donkey.clients.data-info :as di]))
+
 
 (def default-output-dir-key :defaultOutputFolder)
 
@@ -32,13 +33,13 @@
 
 (defn- system-default-output-dir
   []
-  (build-path (home-dir) (default-output-dir)))
+  (di/build-path (di/home-dir) (default-output-dir)))
 
 (defn- generate-default-output-dir
   "Generates a default output directory for the user and stores it in the preferences."
   [user prefs]
-  (let [base  (build-path (home-dir) (default-output-dir))
-        prefs (add-default-output-dir prefs (gen-output-dir base))]
+  (let [base  (di/build-path (di/home-dir) (default-output-dir))
+        prefs (add-default-output-dir prefs (di/gen-output-dir base))]
     (set-prefs user prefs)
     prefs))
 

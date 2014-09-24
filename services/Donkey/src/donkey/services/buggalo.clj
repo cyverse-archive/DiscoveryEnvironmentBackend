@@ -15,7 +15,7 @@
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [clojure-commons.file-utils :as ft]
-            [donkey.clients.nibblonian :as nibblonian]
+            [donkey.clients.data-info :as di]
             [donkey.util.scruffian :as scruffian]
             [donkey.util.tree-url :as tu])
   (:import [java.security MessageDigest DigestInputStream]
@@ -80,7 +80,7 @@
   "Saves the URL used to obtain the tree URLs in the AVUs for the file."
   [path metaurl]
   (try+
-   (nibblonian/save-tree-metaurl path metaurl)
+   (di/save-tree-metaurl path metaurl)
    (catch [:error_code ce/ERR_REQUEST_FAILED] {:keys [body]}
      (log/warn "unable to save the tree metaurl for" path "-"
                (cheshire/generate-string (cheshire/parse-string body) {:pretty true})))
@@ -95,7 +95,7 @@
      (get-tree-urls sha1))
   ([user path]
      (log/debug "searching for existing tree URLs for user" user "and path" path)
-     (when-let [metaurl (nibblonian/get-tree-metaurl user path)]
+     (when-let [metaurl (di/get-tree-metaurl user path)]
        (log/debug "metaurl for path" path "is" metaurl)
        (let [retval (get-tree-urls (ft/basename metaurl))]
          (log/debug "Return value of get-tree-urls is" retval)

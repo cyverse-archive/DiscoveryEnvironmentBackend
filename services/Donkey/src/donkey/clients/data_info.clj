@@ -1,4 +1,4 @@
-(ns donkey.clients.nibblonian
+(ns donkey.clients.data-info
   (:use [donkey.util.config]
         [donkey.util.service :only [build-url-with-query]]
         [donkey.util.transformers :only [add-current-user-to-map]]
