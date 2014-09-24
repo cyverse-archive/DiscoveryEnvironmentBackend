@@ -1,9 +1,9 @@
 (ns donkey.services.filesystem.common-paths
-  (:use [clj-jargon.init]
-        [clj-jargon.item-info])
   (:require [clojure-commons.file-utils :as ft]
             [clojure.tools.logging :as log]
             [clojure.set :as set]
+            [clj-jargon.init :as init]
+            [clj-jargon.item-info :as item]
             [donkey.util.config :as cfg]))
 
 (def IPCRESERVED "ipc-reserved-unit")
@@ -41,7 +41,7 @@
   [user]
   (ft/path-join "/" (cfg/irods-zone) "home" user))
 
-(defn string-contains?
+(defn- string-contains?
   [container-str str-to-check]
   (pos? (count (set/intersection (set (seq container-str)) (set (seq str-to-check))))))
 
@@ -49,33 +49,37 @@
   [str-to-check]
   (not (string-contains? (cfg/fs-filter-chars) str-to-check)))
 
-(defn valid-file-map? [map-to-check] (good-string? (:id map-to-check)))
 
 (defn valid-path? [path-to-check] (good-string? path-to-check))
 
-(defn sharing?
+
+(defn- sharing?
   [abs]
   (= (ft/rm-last-slash (cfg/irods-home))
      (ft/rm-last-slash abs)))
 
-(defn community? [abs] (= (cfg/fs-community-data) abs))
+
+(defn- community? [abs] (= (cfg/fs-community-data) abs))
+
 
 (defn base-trash-path
   []
-     (with-jargon (cfg/jargon-cfg) [cm]
-       (trash-base-dir cm)))
+  (init/with-jargon (cfg/jargon-cfg) [cm]
+    (item/trash-base-dir cm)))
+
 
 (defn user-trash-path
   ([user]
-     (with-jargon (cfg/jargon-cfg) [cm]
-       (user-trash-path cm user)))
+   (init/with-jargon (cfg/jargon-cfg) [cm]
+     (user-trash-path cm user)))
   ([cm user]
-     (trash-base-dir cm user)))
+   (item/trash-base-dir cm user)))
 
-(defn user-trash-dir?
+
+(defn- user-trash-dir?
   ([user path-to-check]
-     (with-jargon (cfg/jargon-cfg) [cm]
-       (user-trash-dir? cm user path-to-check)))
+   (init/with-jargon (cfg/jargon-cfg) [cm]
+     (user-trash-dir? cm user path-to-check)))
   ([cm user path-to-check]
      (= (ft/rm-last-slash path-to-check)
         (ft/rm-last-slash (user-trash-path cm user)))))
@@ -84,17 +88,6 @@
   [cm user fpath]
   (.startsWith fpath (user-trash-path cm user)))
 
-(defn date-mod-from-stat
-  [stat]
-  (str (long (.. stat getModifiedAt getTime))))
-
-(defn date-created-from-stat
-  [stat]
-  (str (long (.. stat getCreatedAt getTime))))
-
-(defn size-from-stat
-  [stat]
-  (str (.getObjSize stat)))
 
 (defn id->label
   "Generates a label given a listing ID (read as absolute path)."
