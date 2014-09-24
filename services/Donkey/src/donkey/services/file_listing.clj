@@ -37,5 +37,6 @@
 (defn reset-default-output-dir
   "Resets the default output directory for a user."
   [body]
-  (let [path (required-param (decode-stream body) :path)]
-    {:path (generate-output-dir (di/build-path (di/home-dir) path))}))
+  (let [path       (required-param (decode-stream body) :path)
+        build-path (di/build-path (di/user-home-folder (:shortUsername current-user) path))]
+    {:path (generate-output-dir build-path)}))

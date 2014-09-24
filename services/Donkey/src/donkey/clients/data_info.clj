@@ -14,10 +14,36 @@
             [donkey.services.filesystem.metadata :as mt]
             [donkey.services.filesystem.stat :as st]))
 
-(defn home-dir
-  "Determines the home folder for the current user."
+
+(defn ^String user-home-folder
+  "Determines the home folder for the given user.
+
+   Parameters:
+     user - the user of the home folder.
+
+   Returns:
+     It returns the absolute path to the home folder."
+  [^String user]
+  (cp/user-home-dir user))
+
+
+(defn ^String base-trash-folder
+  "It returns the root directory for all users' trash folders."
   []
-  (cp/user-home-dir (:shortUsername current-user)))
+  (cp/base-trash-path))
+
+
+(defn ^String user-trash-folder
+  "Determines the top-level trash folder for the given user.
+
+   Parameters:
+     user - the user of the trash folder.
+
+   Returns:
+     It returns the absolute path to the trash folder."
+  [^String user]
+  (cp/user-trash-path user))
+
 
 (defn- create
   "Creates a directory."

@@ -33,12 +33,13 @@
 
 (defn- system-default-output-dir
   []
-  (di/build-path (di/home-dir) (default-output-dir)))
+  (di/build-path (di/user-home-folder (:shortUsername current-user)) (default-output-dir)))
+
 
 (defn- generate-default-output-dir
   "Generates a default output directory for the user and stores it in the preferences."
   [user prefs]
-  (let [base  (di/build-path (di/home-dir) (default-output-dir))
+  (let [base  (system-default-output-dir)
         prefs (add-default-output-dir prefs (di/gen-output-dir base))]
     (set-prefs user prefs)
     prefs))
