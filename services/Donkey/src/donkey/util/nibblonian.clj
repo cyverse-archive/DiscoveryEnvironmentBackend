@@ -1,9 +1,5 @@
 (ns donkey.util.nibblonian
-  (:use [clojure-commons.error-codes])
-  (:require [cheshire.core :as cheshire]
-            [clj-http.client :as client]
-            [clojure-commons.client :as cc]
-            [donkey.services.filesystem.metadata :as mt]))
+  (:require [donkey.services.filesystem.metadata :as mt]))
 
 
 (defn format-tree-url
