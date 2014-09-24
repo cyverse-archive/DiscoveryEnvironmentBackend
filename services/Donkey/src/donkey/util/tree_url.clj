@@ -1,4 +1,4 @@
-(ns donkey.util.nibblonian)
+(ns donkey.util.tree-url)
 
 
 (defn format-tree-url

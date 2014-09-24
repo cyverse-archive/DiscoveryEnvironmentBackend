@@ -15,9 +15,9 @@
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [clojure-commons.file-utils :as ft]
-            [donkey.clients.nibblonian :as di]
-            [donkey.util.nibblonian :as nibblonian]
-            [donkey.util.scruffian :as scruffian])
+            [donkey.clients.nibblonian :as nibblonian]
+            [donkey.util.scruffian :as scruffian]
+            [donkey.util.tree-url :as tu])
   (:import [java.security MessageDigest DigestInputStream]
            [org.forester.io.parsers.util ParserUtils PhylogenyParserException]
            [org.forester.io.writers PhylogenyWriter]
@@ -64,7 +64,7 @@
                                {:multipart        multipart
                                 :throw-exceptions false})]
     (if (< 199 (:status res) 300)
-      (nibblonian/format-tree-url label (string/trim (:body res)))
+      (tu/format-tree-url label (string/trim (:body res)))
       (tree-parser-error res))))
 
 (defn- save-file
@@ -80,7 +80,7 @@
   "Saves the URL used to obtain the tree URLs in the AVUs for the file."
   [path metaurl]
   (try+
-   (di/save-tree-metaurl path metaurl)
+   (nibblonian/save-tree-metaurl path metaurl)
    (catch [:error_code ce/ERR_REQUEST_FAILED] {:keys [body]}
      (log/warn "unable to save the tree metaurl for" path "-"
                (cheshire/generate-string (cheshire/parse-string body) {:pretty true})))
@@ -95,7 +95,7 @@
      (get-tree-urls sha1))
   ([user path]
      (log/debug "searching for existing tree URLs for user" user "and path" path)
-     (when-let [metaurl (di/get-tree-metaurl user path)]
+     (when-let [metaurl (nibblonian/get-tree-metaurl user path)]
        (log/debug "metaurl for path" path "is" metaurl)
        (let [retval (get-tree-urls (ft/basename metaurl))]
          (log/debug "Return value of get-tree-urls is" retval)
@@ -146,7 +146,7 @@
 (defn- build-response-map
   "Builds the map to use when formatting the response body."
   [urls]
-  (when urls (assoc (nibblonian/format-tree-urls urls) :action "tree_manifest")))
+  (when urls (assoc (tu/format-tree-urls urls) :action "tree_manifest")))
 
 (defn- get-and-save-tree-viewer-urls
   "Gets the tree-viewer URLs for a file and stores them via the tree-urls service.  If the username and path to the
