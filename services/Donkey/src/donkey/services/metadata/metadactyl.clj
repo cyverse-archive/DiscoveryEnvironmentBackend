@@ -18,9 +18,9 @@
             [clj-http.client :as client]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [donkey.clients.data-info :as di]
             [donkey.clients.metadactyl :as dm]
             [donkey.clients.notifications :as dn]
-            [donkey.services.filesystem.common-paths :as filesys]
             [donkey.util.db :as db]))
 
 (defn- secured-notification-url
@@ -263,9 +263,9 @@
        :email         (:email current-user)
        :firstName     (:firstName current-user)
        :lastName      (:lastName current-user)
-       :userHomePath  (filesys/user-home-dir user)
-       :userTrashPath (filesys/user-trash-path user)
-       :baseTrashPath (filesys/base-trash-path)
+       :userHomePath  (di/user-home-folder user)
+       :userTrashPath (di/user-trash-folder user)
+       :baseTrashPath (di/base-trash-folder)
        :preferences   preferences})))
 
 (defn logout
