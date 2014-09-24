@@ -17,6 +17,10 @@ CREATE VIEW app_listing AS
                FROM ratings
                WHERE app_id = apps.id
            ) AS average_rating,
+           (   SELECT COUNT(rating)
+               FROM ratings
+               WHERE app_id = apps.id
+           ) AS total_ratings,
            EXISTS (
                SELECT *
                FROM app_category_app aca

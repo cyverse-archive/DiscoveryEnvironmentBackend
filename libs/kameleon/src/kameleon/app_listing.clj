@@ -120,6 +120,7 @@
                                 :edited_date
                                 [:wikiurl :wiki_url]
                                 :average_rating
+                                :total_ratings
                                 :is_public
                                 :step_count
                                 :tool_count
