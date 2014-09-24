@@ -4,7 +4,6 @@
         [donkey.util])
   (:require [donkey.util.config :as config]
             [donkey.services.fileio.controllers :as fio]
-            [donkey.services.filesystem.directory :as d]
             [clojure.tools.logging :as log]))
 
 (defn secured-fileio-routes

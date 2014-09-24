@@ -3,8 +3,8 @@
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [clojure-commons.client :as cc]
-            [donkey.services.filesystem.metadata :as mt]
-            [donkey.services.filesystem.users :as u]))
+            [donkey.services.filesystem.metadata :as mt]))
+
 
 (defn get-avus
   "Retrieves the AVUs associated with a file."
