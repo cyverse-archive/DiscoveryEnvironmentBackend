@@ -27,6 +27,7 @@
     :description "Documentation for the Discovery Environment Apps REST API"
     :apiVersion "2.0.0")
   (GET "/" [] (redirect "/api"))
+  (GET "/favicon.ico" [] {:status 404})
   (middlewares
     [wrap-keyword-params
      wrap-query-params
