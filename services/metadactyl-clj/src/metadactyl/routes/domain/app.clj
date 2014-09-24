@@ -1,5 +1,6 @@
 (ns metadactyl.routes.domain.app
   (:use [metadactyl.routes.params]
+        [metadactyl.routes.domain.app.rating]
         [ring.swagger.schema :only [describe]]
         [schema.core :only [defschema optional-key enum Any]])
   (:import [java.util UUID]))
@@ -210,12 +211,6 @@
 (defschema PipelineEligibility
   {:is_valid (describe Boolean "Whether the App can be used in a Pipeline")
    :reason (describe String "The reason an App cannot be used in a Pipeline")})
-
-(defschema Rating
-  {:average                   (describe Double "The average user rating for this App")
-   (optional-key :user)       (describe Long "The current user's rating for this App")
-   (optional-key :comment_id) (describe Long
-                                "The ID of the current user's rating comment for this App")})
 
 (defschema AppListingDetail
   (merge AppBase

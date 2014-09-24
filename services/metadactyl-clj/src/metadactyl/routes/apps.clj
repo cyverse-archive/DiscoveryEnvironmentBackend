@@ -5,6 +5,7 @@
                                         search-apps]]
         [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
+        [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.params]
         [metadactyl.zoidberg :only [edit-app copy-app edit-workflow]]
@@ -141,4 +142,25 @@
         :summary "List All App Identifiers"
         :notes "The export script needs to have a way to obtain the identifiers of all of the apps
         in the Discovery Environment, deleted or not. This service provides that information."
-        (service/trap #(get-all-app-ids))))
+        (service/trap #(get-all-app-ids)))
+
+  (POST* "/:app-id/rating" [:as {uri :uri}]
+         :path-params [app-id :- AppIdPathParam]
+         :query [params SecuredQueryParams]
+         :body [body (describe RatingRequest "The user's new rating for this App.")]
+         :return RatingResponse
+         :summary "Rate an App"
+         :notes "Users have the ability to rate an App for its usefulness, and this service provides
+         the means to store the App rating. This service accepts a rating level between one and
+         five, inclusive, and a comment identifier that refers to a comment in iPlant's Confluence
+         wiki. The rating is stored in the database and associated with the authenticated user."
+         (ce/trap uri #(service/swagger-response (app-metadata/rate-app app-id body))))
+
+  (DELETE* "/:app-id/rating" [:as {uri :uri}]
+           :path-params [app-id :- AppIdPathParam]
+           :query [params SecuredQueryParams]
+           :return RatingResponse
+           :summary "Delete an App Rating"
+           :notes "The DE uses this service to remove a rating that a user has previously made. This
+           service deletes the authenticated user's rating for the corresponding app-id."
+           (ce/trap uri #(service/swagger-response (app-metadata/delete-app-rating app-id)))))

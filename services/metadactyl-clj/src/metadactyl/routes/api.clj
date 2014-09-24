@@ -5,6 +5,7 @@
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.category]
         [metadactyl.routes.domain.app.element]
+        [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.domain.tool-requests]
         [metadactyl.routes.params]

@@ -2,7 +2,8 @@
   "Persistence layer for app metadata."
   (:use [kameleon.entities]
         [korma.core]
-        [metadactyl.util.assertions])
+        [metadactyl.util.assertions]
+        [metadactyl.util.conversions :only [remove-nil-vals]])
   (:require [metadactyl.persistence.app-metadata.relabel :as relabel]))
 
 (defn get-app
@@ -46,3 +47,31 @@
   (update :apps
           (set-fields {:deleted true})
           (where {:id app-id})))
+
+(defn rate-app
+  "Adds or updates a user's rating and comment ID for the given app."
+  [app-id user-id request]
+  (let [rating (first (select ratings (where {:app_id app-id, :user_id user-id})))]
+    (if rating
+      (update ratings
+              (set-fields (remove-nil-vals request))
+              (where {:app_id app-id
+                      :user_id user-id}))
+      (insert ratings
+              (values (assoc (remove-nil-vals request) :app_id app-id, :user_id user-id))))))
+
+(defn delete-app-rating
+  "Removes a user's rating and comment ID for the given app."
+  [app-id user-id]
+  (delete ratings
+    (where {:app_id app-id
+            :user_id user-id})))
+
+(defn get-app-avg-rating
+  "Gets the average and total number of user ratings for the given app ID."
+  [app-id]
+  (first
+    (select ratings
+            (fields (raw "CAST(COALESCE(AVG(rating), 0.0) AS DOUBLE PRECISION) AS average"))
+            (aggregate (count :rating) :total)
+            (where {:app_id app-id}))))

@@ -75,7 +75,7 @@
                (join collaborator)
                (where {:users.username username}))))
 
-(defn- get-existing-user-id
+(defn get-existing-user-id
   "Gets an existing user identifier for a fully qualified username. Returns nil if the
    username isn't found in the database."
   [username]

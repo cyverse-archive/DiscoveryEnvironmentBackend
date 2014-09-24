@@ -2,6 +2,7 @@
   "DE app metadata services."
   (:use [clojure.java.io :only [reader]]
         [clojure-commons.validators]
+        [kameleon.queries :only [get-existing-user-id]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.service :only [build-url success-response parse-json]]
         [metadactyl.zoidberg :only [verify-app-ownership]]
@@ -14,6 +15,15 @@
             [metadactyl.persistence.app-metadata :as amp]
             [metadactyl.translations.app-metadata :as atx]
             [metadactyl.util.config :as config]))
+
+(defn- get-valid-user-id
+  "Gets the user ID for the given username, or throws an error if that username is not found."
+  [username]
+  (let [user-id (get-existing-user-id username)]
+    (when (nil? user-id)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     (str "No user found for username " username)}))
+    user-id))
 
 (defn- validate-app-existence
   "Verifies that apps exist."
@@ -75,3 +85,27 @@
         :content-type     :json
         :as               :stream}))
      true)))
+
+(defn rate-app
+  "Adds or updates a user's rating and comment ID for the given app. The request must contain either
+   the rating or the comment ID, and the rating must be between 1 and 5, inclusive."
+  [app-id {:keys [rating comment_id] :as request}]
+  (validate-app-existence app-id)
+  (let [user-id (get-valid-user-id (:username current-user))]
+    (when (and (nil? rating) (nil? comment_id))
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     (str "No rating or comment ID given")}))
+    (when (or (> 1 rating) (> rating 5))
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     (str "Rating must be an integer between 1 and 5 inclusive."
+                                " Invalid rating (" rating ") for App ID " app-id)}))
+    (amp/rate-app app-id user-id request)
+    (amp/get-app-avg-rating app-id)))
+
+(defn delete-app-rating
+  "Removes a user's rating and comment ID for the given app."
+  [app-id]
+  (validate-app-existence app-id)
+  (let [user-id (get-valid-user-id (:username current-user))]
+    (amp/delete-app-rating app-id user-id)
+    (amp/get-app-avg-rating app-id)))
