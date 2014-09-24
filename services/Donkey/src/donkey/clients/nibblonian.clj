@@ -11,6 +11,7 @@
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
             [donkey.services.filesystem.exists :as e]
+            [donkey.services.filesystem.metadata :as mt]
             [donkey.services.filesystem.stat :as st]))
 
 (defn home-dir
@@ -57,3 +58,20 @@
    "/"
    (cons (string/replace path #"/+$" "")
          (map #(string/replace % #"^/+|/+$" "") components))))
+
+
+(defn get-tree-metaurl
+  "Gets the URL used to get saved tree URLs."
+  [user path]
+  (->> (mt/metadata-get user path)
+    (:metadata)
+    (filter #(= (:attr %) "tree-urls"))
+    (first)
+    (:value)))
+
+
+(defn save-tree-metaurl
+  "Saves the URL used to get saved tree URLs. The metaurl argument should contain the URL used to
+   obtain the tree URLs."
+  [path metaurl]
+  (mt/admin-metadata-set path {:attr "tree-urls" :value metaurl :unit ""}))
