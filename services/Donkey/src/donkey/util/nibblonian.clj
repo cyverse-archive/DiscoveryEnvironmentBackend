@@ -6,11 +6,6 @@
             [donkey.services.filesystem.metadata :as mt]))
 
 
-(defn get-avus
-  "Retrieves the AVUs associated with a file."
-  [user path]
-  (:metadata (mt/metadata-get user path)))
-
 (defn format-tree-url
   "Creates a tree URL element."
   [label url]
