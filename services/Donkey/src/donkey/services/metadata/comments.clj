@@ -7,12 +7,12 @@
             [clj-jargon.permissions :as fs-perm]
             [clojure-commons.error-codes :as err]
             [donkey.auth.user-attributes :as user]
+            [donkey.clients.data-info :as data]
             [donkey.persistence.metadata :as db]
             [donkey.util.config :as config]
             [donkey.util.icat :as icat]
             [donkey.util.service :as svc]
-            [donkey.util.validators :as valid]
-            [donkey.services.filesystem.uuids :as uuid])
+            [donkey.util.validators :as valid])
   (:import [com.fasterxml.jackson.core JsonParseException]))
 
 
@@ -115,7 +115,7 @@
           entry-id    (extract-entry-id user entry-id)
           comment-id  (extract-comment-id entry-id comment-id)
           retracting? (extract-retracted retracted)
-          entry-path  (:path (uuid/path-for-uuid user entry-id))
+          entry-path  (:path (data/stat-by-uuid user entry-id))
           owns-entry? (and entry-path (fs-perm/owns? fs user entry-path))
           comment     (db/select-comment comment-id)]
       (if retracting?
