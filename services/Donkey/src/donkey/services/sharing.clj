@@ -10,8 +10,9 @@
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
             [clj-http.client :as client]
-            [donkey.clients.notifications :as dn]
-            [donkey.services.filesystem.sharing :as sh]))
+            [donkey.clients.data-info :as data]
+            [donkey.clients.notifications :as dn]))
+
 
 (def file-list-threshold 10)
 
@@ -53,7 +54,7 @@
         perm        (keyword (:permission share))]
     (try+
       (log/warn "share" paths "with" share-withs "by" sharer)
-      (sh/share sharer share-withs paths perm)
+      (data/share sharer share-withs paths perm)
       (merge {:success true} share)
       (catch map? e
         (log/error "data-info error: " e)
@@ -68,7 +69,7 @@
         unshare-withs [user]]
     (try+
       (log/warn "unshare" path "from" user "by" unsharer)
-      (sh/unshare unsharer unshare-withs (vector path))
+      (data/unshare unsharer unshare-withs (vector path))
       {:success true
        :path path}
       (catch map? e
