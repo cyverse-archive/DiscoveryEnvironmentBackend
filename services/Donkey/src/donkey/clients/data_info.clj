@@ -12,7 +12,9 @@
             [donkey.services.filesystem.create :as cr]
             [donkey.services.filesystem.exists :as e]
             [donkey.services.filesystem.metadata :as mt]
-            [donkey.services.filesystem.stat :as st]))
+            [donkey.services.filesystem.sharing :as sharing]
+            [donkey.services.filesystem.stat :as st])
+  (:import [clojure.lang IPersistentMap ISeq]))
 
 
 (defn ^String user-home-folder
@@ -101,3 +103,45 @@
    obtain the tree URLs."
   [path metaurl]
   (mt/admin-metadata-set path {:attr "tree-urls" :value metaurl :unit ""}))
+
+
+(defn ^IPersistentMap share
+  "grants access to a list of data entities for a list of users by a user
+
+   Params:
+     user        - the username of the sharing user
+     share-withs - the list of usernames receiving access
+     fpaths      - the list of absolute paths to the data entities being shared
+     perm        - the permission being granted to the user users (read|write|own)
+
+   Returns:
+     It returns a map with the following fields:
+
+       :user    - the list of users who actually received access
+       :path    - the list of paths actually shared
+       :skipped - the list of records for the things skipped, each record has the following fields:
+                    :user   - the user who didn't get access
+                    :path   - the path the user didn't get access to
+                    :reason - the reason access wasn't granted
+       :perm    - the permission that was granted"
+  [^String user ^ISeq share-withs ^ISeq fpaths ^String perm]
+  (sharing/share user share-withs fpaths perm))
+
+
+(defn unshare
+  "Params:
+     user          - the username of the user removing access
+     unshare-withs - the list of usernames having access removed
+     fpaths        - the list of absolute paths ot the data entities losing accessibility
+
+   Returns:
+     It returns a map with the following fields:
+
+       :user    - the list of users who lost access
+       :path    - the list of paths that lost accessibility
+       :skipped - a list of records for the things skipped, each record has the following fields:
+                    :user   - the user who kept access
+                    :path   - the path the user still can access
+                    :reason - the reason access wasn't removed"
+  [^String user ^ISeq unshare-withs ^ISeq fpaths]
+  (sharing/unshare user unshare-withs fpaths))
