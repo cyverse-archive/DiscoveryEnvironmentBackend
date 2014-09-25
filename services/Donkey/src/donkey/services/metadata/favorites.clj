@@ -131,7 +131,7 @@
     (fs/with-jargon (cfg/jargon-cfg) [fs]
       (valid/user-exists fs user)
       (->> (db/select-favorites-of-type user ["file" "folder"])
-        (filter (partial uuids/uuid-accessible? fs user))
+        (filter (partial uuids/uuid-accessible? user))
         set
         (set/intersection entries)
         (hash-map :filesystem)
