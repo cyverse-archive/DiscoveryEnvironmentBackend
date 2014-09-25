@@ -10,12 +10,12 @@
             [clojurewerkz.elastisch.rest :as es]
             [clojurewerkz.elastisch.rest.document :as es-doc]
             [clojurewerkz.elastisch.rest.response :as es-resp]
-            [donkey.services.filesystem.users :as users]
+            [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
             [donkey.util.service :as svc])
   (:import [java.net ConnectException]
            [java.util UUID]
-           [clojure.lang PersistentArrayMap]))
+           [clojure.lang IPersistentMap]))
 
 
 (def ^{:private true :const true} default-zone "iplant")
@@ -248,10 +248,10 @@
    Unqualified user names are assumed to belong to the default zone."
   [user]
   (map qualify-name
-       (users/list-user-groups (string/replace user (str \# default-zone) ""))))
+       (data/list-user-groups (string/replace user (str \# default-zone) ""))))
 
 
-(defn ^PersistentArrayMap search
+(defn ^IPersistentMap search
   "Performs a search on the Elastic Search repository. The search will be filtered to only show what
    the user is allowed to see.
 
@@ -264,7 +264,7 @@
 
    Returns:
      It returns the response as a map."
-  [^String user ^String query-str ^String tags-str ^PersistentArrayMap opts]
+  [^String user ^String query-str ^String tags-str ^IPersistentMap opts]
   (try+
     (let [start       (l/local-now)
           query       (extract-query query-str)
