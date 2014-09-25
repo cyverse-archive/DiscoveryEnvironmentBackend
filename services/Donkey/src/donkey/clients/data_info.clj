@@ -14,8 +14,10 @@
             [donkey.services.filesystem.metadata :as mt]
             [donkey.services.filesystem.sharing :as sharing]
             [donkey.services.filesystem.stat :as st]
-            [donkey.services.filesystem.users :as users])
-  (:import [clojure.lang IPersistentMap ISeq]))
+            [donkey.services.filesystem.users :as users]
+            [donkey.services.filesystem.uuids :as uuids])
+  (:import [clojure.lang IPersistentMap ISeq]
+           [java.util UUID]))
 
 
 (defn ^String user-home-folder
@@ -116,6 +118,49 @@
      It returns the list of group names."
   [^String user]
   (users/list-user-groups user))
+
+
+(defn ^IPersistentMap stat-by-uuid
+  "Resolves a stat info for the entity with a given UUID.
+
+   Params:
+     user - the user requesting the info
+     uuid - the UUID
+
+   Returns:
+     It returns a path-stat map containing an additional UUID field."
+  [^String user ^UUID uuid]
+  (uuids/path-for-uuid user uuid))
+
+
+(defn ^ISeq stats-by-uuids-paged
+  "Resolves the stat info for the entities with the given UUIDs. The results are paged.
+
+   Params:
+     user       - the user requesting the info
+     sort-field - the stat field to sort on
+     sort-order - the direction of the sort (asc|desc)
+     limit      - the maximum number of results to return
+     offset     - the number of results to skip before returning some
+     uuids      - the UUIDS of interest
+
+   Returns:
+     It returns a page of stat info maps."
+  [^String user ^String sort-field ^String sort-order ^Integer limit ^Integer offset ^ISeq uuids]
+  (uuids/paths-for-uuids-paged user sort-field sort-order limit offset uuids))
+
+
+(defn ^Boolean uuid-accessible?
+  "Indicates if a filesystem entry is readble by a given user.
+
+   Parameters:
+     user     - the authenticated name of the user
+     entry-id - the UUID of the filesystem entry
+
+   Returns:
+     It returns true if the user can access the entry, otherwise false"
+  [^String user ^UUID entry-id]
+  (uuids/uuid-accessible? user entry-id))
 
 
 (defn ^IPersistentMap share
