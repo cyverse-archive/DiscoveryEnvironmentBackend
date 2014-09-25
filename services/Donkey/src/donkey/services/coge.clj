@@ -6,7 +6,7 @@
             [clj-http.client :as client]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [donkey.services.filesystem.sharing :as sharing]
+            [donkey.clients.data-info :as data]
             [donkey.util.config :as config]))
 
 (defn- build-coge-request
@@ -49,7 +49,8 @@
   (let [sharer      (:shortUsername current-user)
         share-withs [(config/coge-user)]
         perms       :write]
-    (sharing/share sharer share-withs paths perms)))
+    (data/share sharer share-withs paths perms)))
+
 
 (defn- request-coge-genome-url
   "Sends a request for a genome viewer URL to the COGE service."
