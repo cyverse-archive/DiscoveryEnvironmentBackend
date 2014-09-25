@@ -3,7 +3,7 @@
         [clojure-commons.error-codes])
   (:require [cheshire.core :as json]
             [cemerick.url :as url-parser]
-            [donkey.services.filesystem.uuids :as uuids])
+            [donkey.clients.data-info :as data])
   (:import [java.util UUID]))
 
 (defn parse-body
@@ -57,5 +57,5 @@
      user     - the authenticated name of the user
      entry-id - the UUID of the filesystem entry"
   [^String user ^UUID entry-id]
-  (when-not (uuids/uuid-accessible? user entry-id)
+  (when-not (data/uuid-accessible? user entry-id)
     (throw+ {:error_code ERR_NOT_FOUND :uuid entry-id})))
