@@ -13,7 +13,8 @@
             [donkey.services.filesystem.exists :as e]
             [donkey.services.filesystem.metadata :as mt]
             [donkey.services.filesystem.sharing :as sharing]
-            [donkey.services.filesystem.stat :as st])
+            [donkey.services.filesystem.stat :as st]
+            [donkey.services.filesystem.users :as users])
   (:import [clojure.lang IPersistentMap ISeq]))
 
 
@@ -103,6 +104,18 @@
    obtain the tree URLs."
   [path metaurl]
   (mt/admin-metadata-set path {:attr "tree-urls" :value metaurl :unit ""}))
+
+
+(defn ^ISeq list-user-groups
+  "retrieves a list of groups names a given user belongs to
+
+   Params:
+     user - the username of the user of interest
+
+   Returns:
+     It returns the list of group names."
+  [^String user]
+  (users/list-user-groups user))
 
 
 (defn ^IPersistentMap share
