@@ -6,7 +6,6 @@
             [donkey.auth.user-attributes :as user]
             [donkey.clients.data-info :as data]
             [donkey.persistence.metadata :as db]
-            [donkey.services.filesystem.validators :as valid]
             [donkey.util.config :as cfg]
             [donkey.util.icat :as icat]
             [donkey.util.service :as svc]
@@ -130,7 +129,6 @@
         ids-txt (-> body slurp (json/parse-string true) :filesystem)
         entries (->> ids-txt (map #(UUID/fromString %)) set)]
     (fs/with-jargon (cfg/jargon-cfg) [fs]
-      (valid/user-exists fs user)
       (->> (db/select-favorites-of-type user ["file" "folder"])
         (filter (partial data/uuid-accessible? user))
         set
