@@ -11,28 +11,38 @@
             [clj-jargon.init :as init]
             [clojure-commons.error-codes :as error]
             [donkey.util.config :as cfg])
-  (:import [java.util UUID]))
+  (:import [java.util UUID]
+           [clojure.lang IPersistentMap]))
 
 
 (def uuid-attr "ipc_UUID")
 
-(defn path-for-uuid
-  "Returns a map of the form
-     {:uuid <uuid>
-      :path \"/path/to/file/or/folder\"}
-  for the UUID passed in. Looks in the ipc_UUID AVU for the UUID."
-  [cm user uuid]
-  (let [results (list-everything-with-attr-value cm uuid-attr uuid)]
-    (when (empty? results)
-      (throw+ {:error_code error/ERR_DOES_NOT_EXIST :uuid uuid}))
-    (when (> (count results) 1)
-      (log/warn "Too many results for" uuid ":" (count results))
-      (log/debug "Results for" uuid ":" results)
-      (throw+ {:error_code error/ERR_TOO_MANY_RESULTS
-               :count      (count results)
-               :uuid       uuid}))
-    (if (pos? (count results))
-      (merge {:uuid uuid} (stat/path-stat cm user (first results))))))
+
+(defn ^IPersistentMap path-for-uuid
+  "Resolves a stat info for the entity with a given UUID.
+
+   Params:
+     user - the user requesting the info
+     uuid - the UUID
+
+   Returns:
+     It returns a path-stat map containing an additional UUID field."
+  ([^IPersistentMap cm ^String user ^UUID uuid]
+   (let [results (list-everything-with-attr-value cm uuid-attr uuid)]
+     (when (empty? results)
+       (throw+ {:error_code error/ERR_DOES_NOT_EXIST :uuid uuid}))
+     (when (> (count results) 1)
+       (log/warn "Too many results for" uuid ":" (count results))
+       (log/debug "Results for" uuid ":" results)
+       (throw+ {:error_code error/ERR_TOO_MANY_RESULTS
+                :count      (count results)
+                :uuid       uuid}))
+     (if (pos? (count results))
+       (merge {:uuid uuid} (stat/path-stat cm user (first results))))))
+  ([^String user ^UUID uuid]
+   (init/with-jargon (cfg/jargon-cfg) [cm]
+     (path-for-uuid cm user uuid))))
+
 
 (defn paths-for-uuids
   [user uuids]
