@@ -53,7 +53,7 @@
   (fs/with-jargon (cfg/jargon-cfg) [cm]
     (let [user     (:shortUsername user/current-user)
           entry-id (UUID/fromString entry-id)]
-      (uuids/validate-uuid-accessible cm user entry-id)
+      (uuids/validate-uuid-accessible user entry-id)
       (when-not (db/is-favorite? user entry-id)
         (db/insert-favorite user entry-id (icat/resolve-data-type cm entry-id)))
       (svc/success-response))))

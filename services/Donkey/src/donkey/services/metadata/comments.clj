@@ -26,10 +26,10 @@
 
 
 (defn- extract-entry-id
-  [fs user entry-id-txt]
+  [user entry-id-txt]
   (try+
     (let [entry-id (valid/extract-uri-uuid entry-id-txt)]
-      (uuid/validate-uuid-accessible fs user entry-id)
+      (uuid/validate-uuid-accessible user entry-id)
       entry-id)
     (catch [:error_code err/ERR_DOES_NOT_EXIST] _ (throw+ {:error_code err/ERR_NOT_FOUND}))))
 
@@ -78,7 +78,7 @@
   (try+
     (fs-init/with-jargon (config/jargon-cfg) [fs]
       (let [user     (:shortUsername user/current-user)
-            entry-id (extract-entry-id fs user entry-id)
+            entry-id (extract-entry-id user entry-id)
             comment  (-> body read-body (json/parse-string true) :comment)
             tgt-type (icat/resolve-data-type fs entry-id)]
         (when-not comment (throw+ {:error_code err/ERR_INVALID_JSON}))
@@ -95,10 +95,9 @@
    Parameters:
      entry-id - the `entry-id` from the request. This should be the UUID corresponding to the entry
                 being inspected"
-  (fs-init/with-jargon (config/jargon-cfg) [fs]
-    (let [entry-id (extract-entry-id fs (:shortUsername user/current-user) entry-id)
-          comments (map prepare-comment (db/select-all-comments entry-id))]
-      (svc/success-response {:comments comments}))))
+   (let [entry-id (extract-entry-id (:shortUsername user/current-user) entry-id)
+         comments (map prepare-comment (db/select-all-comments entry-id))]
+     (svc/success-response {:comments comments})))
 
 
 (defn update-retract-status
@@ -113,7 +112,7 @@
      retracted - the `retracted` query parameter. This should be either `true` or `false`."
   (fs-init/with-jargon (config/jargon-cfg) [fs]
     (let [user        (:shortUsername user/current-user)
-          entry-id    (extract-entry-id fs user entry-id)
+          entry-id    (extract-entry-id user entry-id)
           comment-id  (extract-comment-id entry-id comment-id)
           retracting? (extract-retracted retracted)
           entry-path  (:path (uuid/path-for-uuid fs user entry-id))

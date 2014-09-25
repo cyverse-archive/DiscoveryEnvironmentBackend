@@ -14,12 +14,6 @@
   (:import [java.util UUID]))
 
 
-(defn- validate-entry-accessible
-  [fs-cfg user entry-id]
-  (fs-init/with-jargon fs-cfg [fs]
-    (uuids/validate-uuid-accessible fs user entry-id)))
-
-
 (defn- attach-tags
   [fs-cfg user entry-id new-tags]
   (fs-init/with-jargon fs-cfg [fs]
@@ -28,7 +22,7 @@
           unknown-tags    (set/difference tag-set known-tags)
           unattached-tags (set/difference known-tags
                                           (set (db/filter-attached-tags entry-id known-tags)))]
-      (uuids/validate-uuid-accessible fs user entry-id)
+      (uuids/validate-uuid-accessible user entry-id)
       (when-not (empty? unknown-tags)
         (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
       (db/insert-attached-tags user entry-id (icat/resolve-data-type fs entry-id) unattached-tags)
@@ -36,8 +30,8 @@
 
 
 (defn- detach-tags
-  [fs-cfg user entry-id tag-ids]
-  (validate-entry-accessible fs-cfg user entry-id)
+  [user entry-id tag-ids]
+  (uuids/validate-uuid-accessible user entry-id)
   (db/mark-tags-detached user entry-id (db/filter-tags-owned-by-user user (set tag-ids)))
   (svc/success-response))
 
@@ -95,7 +89,7 @@
         fs-cfg   (config/jargon-cfg)]
     (condp = type
       "attach" (attach-tags fs-cfg user entry-id mods)
-      "detach" (detach-tags fs-cfg user entry-id mods)
+      "detach" (detach-tags user entry-id mods)
       (svc/donkey-response {} 400))))
 
 
@@ -108,7 +102,7 @@
   (let [user     (:shortUsername user/current-user)
         entry-id (UUID/fromString entry-id)
         tags     (db/select-attached-tags user entry-id)]
-    (validate-entry-accessible (config/jargon-cfg) user entry-id)
+    (uuids/validate-uuid-accessible user entry-id)
     (svc/success-response {:tags (map #(dissoc % :owner_id) tags)})))
 
 
