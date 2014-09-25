@@ -2,14 +2,14 @@
   (:use [clj-jargon.metadata]
         [clj-jargon.permissions]
         [clojure-commons.validators]
-        [clojure-commons.error-codes]
-        [slingshot.slingshot :only [try+ throw+]]
+        [slingshot.slingshot :only [throw+]]
         [donkey.services.filesystem.validators])
   (:require [clojure.tools.logging :as log]
             [clj-icat-direct.icat :as icat]
             [donkey.services.filesystem.stat :as stat]
             [cheshire.core :as json]
             [clj-jargon.init :as init]
+            [clojure-commons.error-codes :as error]
             [donkey.util.config :as cfg])
   (:import [java.util UUID]))
 
@@ -24,14 +24,13 @@
   [cm user uuid]
   (let [results (list-everything-with-attr-value cm uuid-attr uuid)]
     (when (empty? results)
-      (throw+ {:error_code ERR_DOES_NOT_EXIST
-               :uuid uuid}))
+      (throw+ {:error_code error/ERR_DOES_NOT_EXIST :uuid uuid}))
     (when (> (count results) 1)
       (log/warn "Too many results for" uuid ":" (count results))
       (log/debug "Results for" uuid ":" results)
-      (throw+ {:error_code ERR_TOO_MANY_RESULTS
-               :count (count results)
-               :uuid uuid}))
+      (throw+ {:error_code error/ERR_TOO_MANY_RESULTS
+               :count      (count results)
+               :uuid       uuid}))
     (if (pos? (count results))
       (merge {:uuid uuid} (stat/path-stat cm user (first results))))))
 
@@ -76,8 +75,7 @@
   (let [attrs (get-attribute cm path uuid-attr)]
     (when-not (pos? (count attrs))
       (log/warn "Missing UUID for" path)
-      (throw+ {:error_code ERR_NOT_FOUND
-               :path path}))
+      (throw+ {:error_code error/ERR_NOT_FOUND :path path}))
     (if (pos? (count attrs))
       (merge {:uuid (:value (first attrs))}
              (stat/path-stat cm user path)))))
@@ -111,14 +109,3 @@
   (init/with-jargon (cfg/jargon-cfg) [cm]
     (let [entry-path (:path (path-for-uuid cm user (str entry-id)))]
       (and entry-path (is-readable? cm user entry-path)))))
-
-
-(defn validate-uuid-accessible
-  "Throws an exception if the given entry is not accessible to the given user.
-
-   Parameters:
-     user     - the authenticated name of the user
-     entry-id - the UUID of the filesystem entry"
-  [^String user ^UUID entry-id]
-  (when-not (uuid-accessible? user entry-id)
-    (throw+ {:error_code ERR_NOT_FOUND :uuid entry-id})))

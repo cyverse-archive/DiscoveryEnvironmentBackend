@@ -2,7 +2,8 @@
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes])
   (:require [cheshire.core :as json]
-            [cemerick.url :as url-parser])
+            [cemerick.url :as url-parser]
+            [donkey.services.filesystem.uuids :as uuids])
   (:import [java.util UUID]))
 
 (defn parse-body
@@ -47,3 +48,14 @@
   (try+
     (UUID/fromString uuid-txt)
     (catch IllegalArgumentException _ (throw+ {:error_code ERR_NOT_FOUND}))))
+
+
+(defn validate-uuid-accessible
+  "Throws an exception if the given entry is not accessible to the given user.
+
+   Parameters:
+     user     - the authenticated name of the user
+     entry-id - the UUID of the filesystem entry"
+  [^String user ^UUID entry-id]
+  (when-not (uuids/uuid-accessible? user entry-id)
+    (throw+ {:error_code ERR_NOT_FOUND :uuid entry-id})))

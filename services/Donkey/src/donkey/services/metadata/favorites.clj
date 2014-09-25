@@ -9,7 +9,8 @@
             [donkey.services.filesystem.validators :as valid]
             [donkey.util.config :as cfg]
             [donkey.util.icat :as icat]
-            [donkey.util.service :as svc])
+            [donkey.util.service :as svc]
+            [donkey.util.validators :as uv])
   (:import [java.util UUID]))
 
 
@@ -53,7 +54,7 @@
   (fs/with-jargon (cfg/jargon-cfg) [cm]
     (let [user     (:shortUsername user/current-user)
           entry-id (UUID/fromString entry-id)]
-      (uuids/validate-uuid-accessible user entry-id)
+      (uv/validate-uuid-accessible user entry-id)
       (when-not (db/is-favorite? user entry-id)
         (db/insert-favorite user entry-id (icat/resolve-data-type cm entry-id)))
       (svc/success-response))))
