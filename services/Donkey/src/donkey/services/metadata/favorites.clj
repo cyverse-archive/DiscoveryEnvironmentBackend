@@ -4,8 +4,8 @@
             [cheshire.core :as json]
             [clj-jargon.init :as fs]
             [donkey.auth.user-attributes :as user]
+            [donkey.clients.data-info :as data]
             [donkey.persistence.metadata :as db]
-            [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as valid]
             [donkey.util.config :as cfg]
             [donkey.util.icat :as icat]
@@ -109,7 +109,7 @@
         limit        (Long/valueOf limit)
         offset       (Long/valueOf offset)
         uuids        (db/select-favorites-of-type user ["file" "folder"])
-        fav-page     (uuids/paths-for-uuids-paged user col ord limit offset uuids)
+        fav-page     (data/stats-by-uuids-paged user col ord limit offset uuids)
         attach-total (fn [favs] (assoc favs :total (compute-total uuids limit offset fav-page)))]
     (->> fav-page
       (format-favorites)
@@ -132,7 +132,7 @@
     (fs/with-jargon (cfg/jargon-cfg) [fs]
       (valid/user-exists fs user)
       (->> (db/select-favorites-of-type user ["file" "folder"])
-        (filter (partial uuids/uuid-accessible? user))
+        (filter (partial data/uuid-accessible? user))
         set
         (set/intersection entries)
         (hash-map :filesystem)
