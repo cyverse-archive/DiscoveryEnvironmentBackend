@@ -1,13 +1,14 @@
 (ns donkey.services.admin
-  (:use [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-info :only [exists?]])
   (:require [clojure.tools.logging :as log]
             [cemerick.url :as url]
             [cheshire.core :as json]
             [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]
             [donkey.util.config :as config]
-            [clj-http.client :as client]))
+            [clj-http.client :as client]
+            [donkey.clients.data-info :as data]))
+
+
 (defn config
   "Returns JSON containing Donkey's configuration, passwords filtered out."
   []
@@ -40,16 +41,6 @@
   [url-to-scrub]
   (str (url/url url-to-scrub :path "/")))
 
-
-(defn- perform-irods-check
-  []
-  (try
-    (with-jargon (config/jargon-cfg) [cm]
-      (exists? cm (:home cm)))
-    (catch Exception e
-      (log/error "Error performing iRODS status check:")
-      (log/error (ce/format-exception e))
-      false)))
 
 (defn perform-jex-check
   []
@@ -90,7 +81,7 @@
 (defn- status-irods
   [status]
   (if (check-irods?)
-    (merge status {:iRODS (perform-irods-check)})
+    (merge status {:iRODS (data/irods-running?)})
     status))
 
 (defn status-jex

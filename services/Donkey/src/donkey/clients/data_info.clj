@@ -1,6 +1,5 @@
 (ns donkey.clients.data-info
-  (:use [donkey.util.config]
-        [donkey.util.service :only [build-url-with-query]]
+  (:use [donkey.util.service :only [build-url-with-query]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [donkey.auth.user-attributes :only [current-user]]
         [slingshot.slingshot :only [throw+]])
@@ -8,6 +7,9 @@
             [clj-http.client :as client]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [clj-jargon.init :as init]
+            [clj-jargon.item-info :as item]
+            [clojure-commons.error-codes :as ce]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
             [donkey.services.filesystem.exists :as e]
@@ -15,9 +17,22 @@
             [donkey.services.filesystem.sharing :as sharing]
             [donkey.services.filesystem.stat :as st]
             [donkey.services.filesystem.users :as users]
-            [donkey.services.filesystem.uuids :as uuids])
+            [donkey.services.filesystem.uuids :as uuids]
+            [donkey.util.config :as cfg])
   (:import [clojure.lang IPersistentMap ISeq]
            [java.util UUID]))
+
+
+(defn ^Boolean irods-running?
+  "Determines whether or not iRODS is running."
+  []
+  (try
+    (init/with-jargon (cfg/jargon-cfg) [cm]
+      (item/exists? cm (:home cm)))
+    (catch Exception e
+      (log/error "Error performing iRODS status check:")
+      (log/error (ce/format-exception e))
+      false)))
 
 
 (defn ^String user-home-folder
@@ -203,3 +218,5 @@
                     :reason - the reason access wasn't removed"
   [^String user ^ISeq unshare-withs ^ISeq fpaths]
   (sharing/unshare user unshare-withs fpaths))
+
+
