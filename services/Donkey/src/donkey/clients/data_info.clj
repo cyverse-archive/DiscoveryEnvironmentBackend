@@ -65,12 +65,6 @@
   (cp/user-trash-path user))
 
 
-(defn- create
-  "Creates a directory."
-  [path]
-  (cr/create (:shortUsername current-user) path))
-
-
 (defn get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If
    the path exists and refers to a regular file then nil is returned.
@@ -79,7 +73,7 @@
   (log/debug "getting or creating dir: path =" path)
   (cond
    (not (e/path-exists? path))
-   (create path)
+   (cr/create (:shortUsername current-user) path)
 
    (and (e/path-exists? path) (st/path-is-dir? path))
    path
