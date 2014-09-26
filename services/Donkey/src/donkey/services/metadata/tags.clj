@@ -2,11 +2,9 @@
   (:use [slingshot.slingshot :only [throw+]])
   (:require [clojure.set :as set]
             [cheshire.core :as json]
-            [clj-jargon.init :as fs-init]
             [clojure-commons.error-codes :as error]
             [donkey.auth.user-attributes :as user]
             [donkey.persistence.metadata :as db]
-            [donkey.util.config :as config]
             [donkey.util.service :as svc]
             [donkey.util.validators :as valid]
             [donkey.services.filesystem.icat :as icat])
@@ -14,18 +12,17 @@
 
 
 (defn- attach-tags
-  [fs-cfg user entry-id new-tags]
-  (fs-init/with-jargon fs-cfg [fs]
-    (let [tag-set         (set new-tags)
-          known-tags      (set (db/filter-tags-owned-by-user user tag-set))
-          unknown-tags    (set/difference tag-set known-tags)
-          unattached-tags (set/difference known-tags
-                                          (set (db/filter-attached-tags entry-id known-tags)))]
-      (valid/validate-uuid-accessible user entry-id)
-      (when-not (empty? unknown-tags)
-        (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
-      (db/insert-attached-tags user entry-id (icat/resolve-data-type fs entry-id) unattached-tags)
-      (svc/success-response))))
+  [user entry-id new-tags]
+  (let [tag-set         (set new-tags)
+        known-tags      (set (db/filter-tags-owned-by-user user tag-set))
+        unknown-tags    (set/difference tag-set known-tags)
+        unattached-tags (set/difference known-tags
+                                        (set (db/filter-attached-tags entry-id known-tags)))]
+    (valid/validate-uuid-accessible user entry-id)
+    (when-not (empty? unknown-tags)
+      (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
+    (db/insert-attached-tags user entry-id (icat/resolve-data-type entry-id) unattached-tags)
+    (svc/success-response)))
 
 
 (defn- detach-tags
@@ -84,10 +81,9 @@
   (let [entry-id (UUID/fromString entry-id)
         req      (-> body slurp (json/parse-string true))
         mods     (map #(UUID/fromString %) (:tags req))
-        user     (:shortUsername user/current-user)
-        fs-cfg   (config/jargon-cfg)]
+        user     (:shortUsername user/current-user)]
     (condp = type
-      "attach" (attach-tags fs-cfg user entry-id mods)
+      "attach" (attach-tags user entry-id mods)
       "detach" (detach-tags user entry-id mods)
       (svc/donkey-response {} 400))))
 
