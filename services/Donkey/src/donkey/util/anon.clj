@@ -8,9 +8,11 @@
            [org.irods.jargon.core.pub.domain User]
            [org.irods.jargon.core.protovalues UserTypeEnum]))
 
-(def anon-user "anonymous")
 
-(defn anon-user?
+(def ^:private anon-user "anonymous")
+
+
+(defn- anon-user?
   "Returns boolean indicating whether the anonymous user exists."
   [cm]
   (try
