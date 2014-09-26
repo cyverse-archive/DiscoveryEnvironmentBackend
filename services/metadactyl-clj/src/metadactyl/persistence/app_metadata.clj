@@ -2,6 +2,7 @@
   "Persistence layer for app metadata."
   (:use [kameleon.entities]
         [korma.core]
+        [metadactyl.user :only [current-user]]
         [metadactyl.util.assertions]
         [metadactyl.util.conversions :only [remove-nil-vals]])
   (:require [metadactyl.persistence.app-metadata.relabel :as relabel]))
@@ -19,6 +20,47 @@
                      :integrator_email
                      :step_count)
              (where {:id app-id})))))
+
+(defn get-integration-data
+  "Retrieves integrator info from the database."
+  [email]
+  (first (select integration_data (where {:integrator_email email}))))
+
+(defn add-app
+  "Adds top-level app info to the database and returns the new app info, including its new ID."
+  [app]
+  (let [integration-data-id (->> current-user
+                                 (:email)
+                                 (get-integration-data)
+                                 (:id))
+        app (-> app
+                (select-keys [:name :description])
+                (assoc :integration_data_id integration-data-id
+                       :edited_date (sqlfn now)))]
+    (insert apps (values app))))
+
+(defn add-step
+  "Adds an app step to the database for the given app ID."
+  [app-id step-number step]
+  (let [step (-> step
+                 (select-keys [:id :task_id])
+                 (assoc :app_id app-id
+                        :step step-number))]
+    (insert app_steps (values step))))
+
+(defn add-mapping
+  "Adds an input/output workflow mapping to the database for the given app ID and source->target
+   mapping."
+  [app-id mapping]
+  (let [workflow-map (-> mapping
+                         (select-keys [:source_step :target_step])
+                         (assoc :app_id app-id))
+        mapping-id (:id (insert :workflow_io_maps (values workflow-map)))]
+    (dorun
+      (for [[input output] (:map mapping)]
+        (insert :input_output_mapping (values {:mapping_id mapping-id
+                                               :input input
+                                               :output output}))))))
 
 (defn update-app-labels
   "Updates the labels in an app."

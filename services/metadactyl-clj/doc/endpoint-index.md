@@ -20,7 +20,6 @@
 * [GET /search-deployed-components/{search-term}](endpoints/app-metadata/listing.md#search-deployed-components)
 * [GET /secured/app/{app-id}](endpoints/app-metadata/updated-admin.md#obtaining-app-information-for-job-submission)
 * [GET /secured/copy-template/{analysis-id}](endpoints/app-metadata/editing.md#making-a-copy-of-an-analysis-available-for-editing-in-tito)
-* [GET /secured/copy-workflow/{analysis-id}](endpoints/app-metadata/editing.md#making-a-copy-of-a-pipeline-available-for-editing)
 * [GET /secured/get-components-in-analysis/{analysis-id}](endpoints/app-metadata/listing.md#listing-deployed-components-in-an-analysis)
 * [POST /secured/make-analysis-public](endpoints/app-metadata/editing.md#submitting-an-analysis-for-public-use)
 * [GET /secured/reference-genomes](endpoints/reference-genomes.md#exporting-reference-genomes)

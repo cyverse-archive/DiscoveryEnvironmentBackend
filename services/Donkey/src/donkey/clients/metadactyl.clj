@@ -147,9 +147,9 @@
 
 (defn copy-workflow
   [app-id]
-  (-> (client/get (metadactyl-url "apps" app-id "copy-pipeline")
-                  {:query-params (secured-params)
-                   :as           :stream})
+  (-> (client/post (metadactyl-url "apps" app-id "copy-pipeline")
+                   {:query-params (secured-params)
+                    :as           :stream})
       (:body)
       (service/decode-json)))
 

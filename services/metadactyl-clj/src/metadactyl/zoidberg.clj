@@ -1,11 +1,16 @@
 (ns metadactyl.zoidberg
   (:use [korma.core]
+        [korma.db :only [transaction]]
+        [kameleon.app-groups :only [add-app-to-group get-app-subcategory-id]]
         [kameleon.core]
         [kameleon.entities]
+        [kameleon.uuids :only [uuid]]
+        [metadactyl.persistence.app-metadata :only [add-app add-mapping add-step get-app]]
         [metadactyl.user :only [current-user]]
+        [metadactyl.util.config :only [workspace-dev-app-group-index]]
         [metadactyl.util.conversions :only [date->long
                                             remove-nil-vals]]
-        [metadactyl.persistence.app-metadata :only [get-app]]
+        [metadactyl.workspace :only [get-workspace]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure-commons.error-codes :as cc-errs]
@@ -28,8 +33,7 @@
    workflows."
   []
   {:implementor       (str (:first-name current-user) " " (:last-name current-user))
-   :implementor_email (:email current-user)
-   :test              {:params []}})
+   :implementor_email (:email current-user)})
 
 (defn- verify-app-not-public
   "Verifies that an app has not been made public."
@@ -118,12 +122,10 @@
 
 (defn- format-step-copy
   "Formats step fields as copies for an update-workflow call."
-  [step]
+  [new-step-ids step]
   (-> step
-    (dissoc :id)
-    (dissoc :guid)
     (dissoc :input_mapping)
-    (assoc :config {})))
+    (assoc :id (new-step-ids (:id step)))))
 
 (defn- get-input-output-mappings
   "Fetches the output->input mapping UUIDs for the given source and target IDs."
@@ -148,6 +150,18 @@
   "Formats a step's list of mapping IDs and step names to fields for the client."
   [step]
   (map format-mapping (:input_mapping step)))
+
+(defn- format-mapping-new-ids
+  [new-step-ids mapping]
+  (assoc mapping
+    :source_step (new-step-ids (:source_step mapping))
+    :target_step (new-step-ids (:target_step mapping))))
+
+(defn- get-formatted-mapping-copy
+  "Formats a step's list of mapping IDs and step names to fields for the client."
+  [new-step-ids step]
+  (map (comp (partial format-mapping-new-ids new-step-ids) format-mapping)
+       (:input_mapping step)))
 
 (defn- get-app-details
   "Retrieves the details for a single-step app."
@@ -348,14 +362,12 @@
    appropriate app fields to prepare it for saving as a copy."
   [app]
   (let [steps (get-steps (:id app))
-        mappings (mapcat get-formatted-mapping steps)
-        steps (map format-step-copy steps)]
+        new-step-ids (into {} (map #(vector (:id %) (uuid)) steps))
+        mappings (mapcat (partial get-formatted-mapping-copy new-step-ids) steps)
+        steps (map (partial format-step-copy new-step-ids) steps)]
     (-> app
-      (dissoc :integration_data_id)
-      (assoc :id "auto-gen")
+      (select-keys [:description])
       (assoc :name (app-copy-name (:name app)))
-      (assoc :implementation (get-implementor-details))
-      (assoc :full_username (:username current-user))
       (assoc :steps steps)
       (assoc :mappings mappings))))
 
@@ -373,14 +385,42 @@
     (verify-app-editable app)
     (service/swagger-response (format-workflow app))))
 
+(defn- add-new-pipeline
+  [app]
+  (let [app-id (:id (add-app app))
+        workspace-category-id (:root_category_id (get-workspace))
+        dev-group-id (get-app-subcategory-id workspace-category-id (workspace-dev-app-group-index))]
+    (add-app-to-group dev-group-id app-id)
+    (dorun (map-indexed (partial add-step app-id) (:steps app)))
+    (dorun (map (partial add-mapping app-id) (:mappings app)))
+    app-id))
+
+(defn- update-pipeline
+  [app]
+  (add-new-pipeline app))
+
+(defn update-workflow
+  [workflow]
+  (transaction
+    (let [app-ids (map update-pipeline (:apps workflow))]
+      {:apps app-ids})))
+
+(defn copy-pipeline
+  "This service makes a copy of a Pipeline for the current user and returns the JSON for editing the
+   copy in the client."
+  [app-id]
+  (let [app (get-app app-id)
+        app {:apps [(convert-app-to-copy app)]}
+        app-copy (update-workflow app)
+        app-id (first (:apps app-copy))]
+    (edit-workflow app-id)))
+
 ;; FIXME
 (defn copy-app
   "This service makes a copy of an App available in Tito for editing."
   [app-id]
   (let [app (get-app app-id)
-        app (convert-app-to-copy app)
-        app-json (cheshire/encode {:analyses [app]})
-        update-response (throw+ '("update-app-from-json" app-json))
-        app-copy (cheshire/decode update-response true)
-        app-id (first (:analyses app-copy))]
+        app {:apps [(convert-app-to-copy app)]}
+        app-copy (update-workflow app)
+        app-id (first (:apps app-copy))]
     (edit-app app-id)))

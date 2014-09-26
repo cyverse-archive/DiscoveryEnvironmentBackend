@@ -624,12 +624,12 @@ Please see the metadactyl documentation for more information.
 
 ## Making a Copy of a Pipeline Available for Editing
 
-Secured Endpoint: GET /secured/copy-workflow/{analysis-id}
+Secured Endpoint: POST /apps/{app-id}/copy-pipeline
 
-Delegates to metadactyl: GET /secured/copy-workflow/{analysis-id}
+Delegates to metadactyl: POST /apps/{app-id}/copy-pipeline
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Requesting Installation of a Tool
 

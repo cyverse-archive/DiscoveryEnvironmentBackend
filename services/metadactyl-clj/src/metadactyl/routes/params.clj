@@ -4,14 +4,20 @@
   (:import [java.util UUID]))
 
 (def AppIdPathParam (ss/describe UUID "The App's UUID"))
-
 (def AppCategoryIdPathParam (ss/describe UUID "The App Category's UUID"))
+(def OptionalEmailParamName (s/optional-key :email))
+(def EmailQueryParam (ss/describe String "The user's email address"))
 
 (s/defschema SecuredQueryParams
   {:user                        (ss/describe String "The short version of the username")
-   (s/optional-key :email)      (ss/describe String "The user's email address")
+   OptionalEmailParamName       EmailQueryParam
    (s/optional-key :first-name) (ss/describe String "The user's first name")
    (s/optional-key :last-name)  (ss/describe String "The user's last name")})
+
+(s/defschema SecuredQueryParamsEmailRequired
+  (-> SecuredQueryParams
+      (dissoc OptionalEmailParamName)
+      (assoc :email EmailQueryParam)))
 
 (s/defschema PagingParams
   {(s/optional-key :limit)

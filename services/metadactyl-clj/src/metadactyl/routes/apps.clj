@@ -8,7 +8,7 @@
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.params]
-        [metadactyl.zoidberg :only [edit-app copy-app edit-workflow]]
+        [metadactyl.zoidberg :only [copy-app copy-pipeline edit-app edit-workflow]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -90,12 +90,15 @@
         public."
         (service/trap #(edit-workflow app-id)))
 
-  (POST* "/:app-id/copy-pipeline" []
+  (POST* "/:app-id/copy-pipeline" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]
-         :query [params SecuredQueryParams]
+         :query [params SecuredQueryParamsEmailRequired]
+         :return Pipeline
          :summary "Make a Copy of a Pipeline Available for Editing"
-         :notes "This service can be used to make a copy of a Pipeline in the user's workspace."
-         (service/trap #(copy-app app-id)))
+         :notes "This service can be used to make a copy of a Pipeline in the user's workspace. This
+         endpoint will copy the App details, steps, and mappings, but will not copy tasks used in
+         the Pipeline steps."
+         (ce/trap uri #(copy-pipeline app-id)))
 
   (GET* "/:app-id/is-publishable" [app-id]
         :path-params [app-id :- AppIdPathParam]

@@ -45,6 +45,9 @@
     (GET "/apps/:app-id/pipeline-ui" [app-id]
          (trap #(apps/edit-workflow app-id)))
 
+    (POST "/apps/:app-id/copy-pipeline" [app-id]
+          (trap #(apps/copy-workflow app-id)))
+
     (GET "/apps/:app-id/is-publishable" [app-id]
          (trap #(app-publishable? app-id)))
 
@@ -135,9 +138,6 @@
 
    (GET "/copy-template/:app-id" [app-id :as req]
         (trap #(copy-app req app-id)))
-
-   (GET "/copy-workflow/:app-id" [app-id]
-        (trap #(apps/copy-workflow app-id)))
 
    (PUT "/update-template" [:as req]
         (trap #(update-template-secured req)))

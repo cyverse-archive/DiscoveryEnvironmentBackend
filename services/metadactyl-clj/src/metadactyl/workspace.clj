@@ -4,8 +4,10 @@
         [kameleon.queries]
         [kameleon.app-groups]
         [metadactyl.user :only [current-user]]
-        [metadactyl.util.config])
-  (:require [cheshire.core :as cheshire]))
+        [metadactyl.util.config]
+        [slingshot.slingshot :only [throw+]])
+  (:require [cheshire.core :as cheshire]
+            [clojure-commons.error-codes :as cc-errs]))
 
 (defn- create-default-workspace-subgroups
   "Creates the workspace-default-app-groups database entries for the given
@@ -47,3 +49,14 @@
     (if (empty? workspace)
       (create-workspace-with-default-app-groups user_id)
       workspace)))
+
+(defn get-workspace
+  "Gets a workspace database entry for the given username or the current user."
+  ([]
+   (get-workspace (:username current-user)))
+  ([username]
+   (if-let [workspace (fetch-workspace-by-user-id (get-existing-user-id username))]
+     workspace
+     (throw+ {:code     cc-errs/ERR_NOT_FOUND,
+              :username username,
+              :message  "Workspace for user not found."}))))
