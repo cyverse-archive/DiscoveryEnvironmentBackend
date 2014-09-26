@@ -2,11 +2,9 @@
   (:require [clojure.tools.logging :as log]
             [clojure.set :as set]
             [cheshire.core :as json]
-            [clj-jargon.init :as fs]
             [donkey.auth.user-attributes :as user]
             [donkey.clients.data-info :as data]
             [donkey.persistence.metadata :as db]
-            [donkey.util.config :as cfg]
             [donkey.util.service :as svc]
             [donkey.util.validators :as uv]
             [donkey.services.filesystem.icat :as icat])
@@ -50,13 +48,12 @@
      entry-id - This is the `entry-id` from the request.  It should be the UUID of the entry being
                 marked."
   [entry-id]
-  (fs/with-jargon (cfg/jargon-cfg) [cm]
-    (let [user     (:shortUsername user/current-user)
-          entry-id (UUID/fromString entry-id)]
-      (uv/validate-uuid-accessible user entry-id)
-      (when-not (db/is-favorite? user entry-id)
-        (db/insert-favorite user entry-id (icat/resolve-data-type cm entry-id)))
-      (svc/success-response))))
+  (let [user     (:shortUsername user/current-user)
+        entry-id (UUID/fromString entry-id)]
+    (uv/validate-uuid-accessible user entry-id)
+    (when-not (db/is-favorite? user entry-id)
+      (db/insert-favorite user entry-id (icat/resolve-data-type entry-id)))
+    (svc/success-response)))
 
 
 (defn remove-favorite
@@ -128,10 +125,9 @@
   (let [user    (:shortUsername user/current-user)
         ids-txt (-> body slurp (json/parse-string true) :filesystem)
         entries (->> ids-txt (map #(UUID/fromString %)) set)]
-    (fs/with-jargon (cfg/jargon-cfg) [fs]
-      (->> (db/select-favorites-of-type user ["file" "folder"])
-        (filter (partial data/uuid-accessible? user))
-        set
-        (set/intersection entries)
-        (hash-map :filesystem)
-        svc/success-response))))
+    (->> (db/select-favorites-of-type user ["file" "folder"])
+      (filter (partial data/uuid-accessible? user))
+      set
+      (set/intersection entries)
+      (hash-map :filesystem)
+      svc/success-response)))
