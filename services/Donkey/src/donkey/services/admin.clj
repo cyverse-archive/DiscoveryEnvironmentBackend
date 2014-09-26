@@ -39,7 +39,8 @@
   [url-to-scrub]
   (str (url/url url-to-scrub :path "/")))
 
-(defn perform-irods-check
+
+(defn- perform-irods-check
   []
   (try
     (with-jargon (config/jargon-cfg) [cm]
@@ -84,7 +85,8 @@
       (log/error (ce/format-exception e))
       false)))
 
-(defn status-irods
+
+(defn- status-irods
   [status]
   (if (check-irods?)
     (merge status {:iRODS (perform-irods-check)})

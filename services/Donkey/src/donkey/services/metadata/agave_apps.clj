@@ -3,9 +3,6 @@
         [donkey.auth.user-attributes :only [current-user]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cemerick.url :as curl]
-            [clj-jargon.item-info :as jargon-info]
-            [clj-jargon.init :as jargon-init]
-            [clj-jargon.permissions :as jargon-perms]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]

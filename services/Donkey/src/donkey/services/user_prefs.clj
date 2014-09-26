@@ -2,10 +2,9 @@
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
         [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-ops :only [mkdir mkdirs]]
+        [clj-jargon.item-ops :only [mkdirs]]
         [clj-jargon.permissions :only [set-owner]]
         [donkey.clients.user-prefs]
-        [donkey.util.config]
         [donkey.util.service]
         [donkey.auth.user-attributes])
   (:require [cheshire.core :as cheshire]
@@ -14,7 +13,8 @@
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [clj-jargon.item-info :as jinfo]
-            [donkey.clients.data-info :as di]))
+            [donkey.clients.data-info :as di]
+            [donkey.util.config :as cfg]))
 
 
 (def default-output-dir-key :defaultOutputFolder)
@@ -33,7 +33,7 @@
 
 (defn- system-default-output-dir
   []
-  (di/build-path (di/user-home-folder (:shortUsername current-user)) (default-output-dir)))
+  (di/build-path (di/user-home-folder (:shortUsername current-user)) (cfg/default-output-dir)))
 
 
 (defn- generate-default-output-dir
@@ -80,7 +80,7 @@
         user           (:shortUsername current-user)]
     (log/warn "sys-output-dir" sys-output-dir)
     (log/warn "output-dir" output-dir)
-    (with-jargon (jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (cond
        (and (string/blank? output-dir)
             (not (string/blank? sys-output-dir))
@@ -154,13 +154,6 @@
   (let [prefs (cheshire/decode (user-prefs user))]
     (user-prefs user (add-default-output-dir prefs path))))
 
-(defn- create-output-dir
-  [user path]
-  (with-jargon (jargon-cfg) [cm]
-    (when-not (jinfo/exists? cm path)
-      (log/warn "Creating output dir")
-      (mkdirs cm path)
-      (set-owner cm user path))))
 
 (defn get-default-output-dir
   "Gets the path to the user's default output folder from the user's preferences."
