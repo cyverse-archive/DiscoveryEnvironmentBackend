@@ -10,9 +10,9 @@
             [donkey.clients.data-info :as data]
             [donkey.persistence.metadata :as db]
             [donkey.util.config :as config]
-            [donkey.util.icat :as icat]
             [donkey.util.service :as svc]
-            [donkey.util.validators :as valid])
+            [donkey.util.validators :as valid]
+            [donkey.services.filesystem.icat :as icat])
   (:import [com.fasterxml.jackson.core JsonParseException]))
 
 

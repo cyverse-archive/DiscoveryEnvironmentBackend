@@ -37,11 +37,11 @@
             [donkey.services.fileio.controllers :as fileio]
             [donkey.tasks :as tasks]
             [donkey.util.messaging :as messages]
-            [donkey.util.icat :as icat]
             [donkey.util.anon :as anon]
             [clojure.tools.nrepl.server :as nrepl]
             [me.raynes.fs :as fs]
-            [common-cli.core :as ccli]))
+            [common-cli.core :as ccli]
+            [donkey.services.filesystem.icat :as icat]))
 
 (defn delayed-handler
   [routes-fn]

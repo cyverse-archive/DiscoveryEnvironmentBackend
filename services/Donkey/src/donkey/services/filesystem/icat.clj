@@ -1,4 +1,4 @@
-(ns donkey.util.icat
+(ns donkey.services.filesystem.icat
   (:use [clj-icat-direct.icat :only [icat-db-spec setup-icat]])
   (:require [donkey.util.config :as cfg]
             [clojure.tools.logging :as log]

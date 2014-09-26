@@ -13,8 +13,8 @@
             [donkey.services.filesystem.validators :as validators]
             [donkey.util.config :as cfg]
             [donkey.util.db :as db]
-            [donkey.util.icat :as icat]
-            [donkey.util.service :as service])
+            [donkey.util.service :as service]
+            [donkey.services.filesystem.icat :as icat])
   (:import [java.util UUID]))
 
 (defn- format-avu

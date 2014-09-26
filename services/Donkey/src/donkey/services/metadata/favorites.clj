@@ -7,9 +7,9 @@
             [donkey.clients.data-info :as data]
             [donkey.persistence.metadata :as db]
             [donkey.util.config :as cfg]
-            [donkey.util.icat :as icat]
             [donkey.util.service :as svc]
-            [donkey.util.validators :as uv])
+            [donkey.util.validators :as uv]
+            [donkey.services.filesystem.icat :as icat])
   (:import [java.util UUID]))
 
 

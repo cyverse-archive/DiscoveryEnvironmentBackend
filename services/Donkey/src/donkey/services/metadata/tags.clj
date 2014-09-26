@@ -7,10 +7,10 @@
             [donkey.auth.user-attributes :as user]
             [donkey.persistence.metadata :as db]
             [donkey.util.config :as config]
-            [donkey.util.icat :as icat]
             [donkey.util.service :as svc]
-            [donkey.util.validators :as valid])
-  (:import [java.util UUID]))
+            [donkey.util.validators :as valid]
+            [donkey.services.filesystem.icat :as icat])
+(:import [java.util UUID]))
 
 
 (defn- attach-tags
