@@ -13,7 +13,8 @@
   []
   (config/masked-config))
 
-(defn check-irods?
+
+(defn- check-irods?
   "Returns true if the iRODS settings should be checked."
   []
   (or (config/data-routes-enabled)
