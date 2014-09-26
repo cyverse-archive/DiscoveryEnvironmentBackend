@@ -3,13 +3,10 @@
   (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
             [cheshire.core :as json]
-            [clj-jargon.init :as fs-init]
-            [clj-jargon.permissions :as fs-perm]
             [clojure-commons.error-codes :as err]
             [donkey.auth.user-attributes :as user]
             [donkey.clients.data-info :as data]
             [donkey.persistence.metadata :as db]
-            [donkey.util.config :as config]
             [donkey.util.service :as svc]
             [donkey.util.validators :as valid]
             [donkey.services.filesystem.icat :as icat])
@@ -76,15 +73,14 @@
      body - the request body. It should be a JSON document containing the comment"
   [entry-id body]
   (try+
-    (fs-init/with-jargon (config/jargon-cfg) [fs]
-      (let [user     (:shortUsername user/current-user)
-            entry-id (extract-entry-id user entry-id)
-            comment  (-> body read-body (json/parse-string true) :comment)
-            tgt-type (icat/resolve-data-type fs entry-id)]
-        (when-not comment (throw+ {:error_code err/ERR_INVALID_JSON}))
-        (svc/create-response {:comment (->> comment
-                                         (db/insert-comment user entry-id tgt-type)
-                                         prepare-comment)})))
+    (let [user     (:shortUsername user/current-user)
+          entry-id (extract-entry-id user entry-id)
+          comment  (-> body read-body (json/parse-string true) :comment)
+          tgt-type (icat/resolve-data-type entry-id)]
+      (when-not comment (throw+ {:error_code err/ERR_INVALID_JSON}))
+      (svc/create-response {:comment (->> comment
+                                       (db/insert-comment user entry-id tgt-type)
+                                       prepare-comment)}))
     (catch JsonParseException _ (throw+ {:error_code err/ERR_INVALID_JSON}))))
 
 
@@ -110,19 +106,18 @@
      comment-id - the comment-id from the request. This should be the UUID corresponding to the
                   comment being modified
      retracted - the `retracted` query parameter. This should be either `true` or `false`."
-  (fs-init/with-jargon (config/jargon-cfg) [fs]
-    (let [user        (:shortUsername user/current-user)
-          entry-id    (extract-entry-id user entry-id)
-          comment-id  (extract-comment-id entry-id comment-id)
-          retracting? (extract-retracted retracted)
-          entry-path  (:path (data/stat-by-uuid user entry-id))
-          owns-entry? (and entry-path (fs-perm/owns? fs user entry-path))
-          comment     (db/select-comment comment-id)]
-      (if retracting?
-        (if (or owns-entry? (= user (:commenter comment)))
-          (db/retract-comment comment-id user)
-          (throw+ {:error_code err/ERR_NOT_OWNER :reason "doesn't own either entry or comment"}))
-        (if (= user (:retracted_by comment))
-          (db/readmit-comment comment-id)
-          (throw+ {:error_code err/ERR_NOT_OWNER :reason "wasn't retractor"})))
-      (svc/success-response))))
+  (let [user        (:shortUsername user/current-user)
+        entry-id    (extract-entry-id user entry-id)
+        comment-id  (extract-comment-id entry-id comment-id)
+        retracting? (extract-retracted retracted)
+        entry-path  (:path (data/stat-by-uuid user entry-id))
+        owns-entry? (and entry-path (data/owns? user entry-path))
+        comment     (db/select-comment comment-id)]
+    (if retracting?
+      (if (or owns-entry? (= user (:commenter comment)))
+        (db/retract-comment comment-id user)
+        (throw+ {:error_code err/ERR_NOT_OWNER :reason "doesn't own either entry or comment"}))
+      (if (= user (:retracted_by comment))
+        (db/readmit-comment comment-id)
+        (throw+ {:error_code err/ERR_NOT_OWNER :reason "wasn't retractor"})))
+    (svc/success-response)))

@@ -188,6 +188,20 @@
   (uuids/uuid-accessible? user entry-id))
 
 
+(defn ^Boolean owns?
+  "Indicates if a file or folder is owned by a given user.
+
+   Parameters:
+     user       - the username of the user
+     entry-path - The absolute path to the file or folder
+
+   Returns:
+     It returns true if the user own the entry, otherwise false."
+  [^String user ^String entry-path]
+  (init/with-jargon (cfg/jargon-cfg) [cm]
+    (perm/owns? cm user entry-path)))
+
+
 (defn ^IPersistentMap share
   "grants access to a list of data entities for a list of users by a user
 

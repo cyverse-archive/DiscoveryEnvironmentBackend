@@ -2,7 +2,11 @@
   (:use [clj-icat-direct.icat :only [icat-db-spec setup-icat]])
   (:require [donkey.util.config :as cfg]
             [clojure.tools.logging :as log]
-            [clj-jargon.metadata :as meta]))
+            [clj-jargon.init :as init]
+            [clj-jargon.metadata :as meta])
+  (:import [clojure.lang IPersistentMap]
+           [java.util UUID]))
+
 
 (defn- spec
   []
@@ -19,16 +23,18 @@
   (log/warn "[ICAT] set up ICAT connection.")
   (setup-icat (spec)))
 
-(defn resolve-data-type
+
+(defn ^String resolve-data-type
   "Given filesystem id, it returns the type of the entry it is, file or folder.
 
    Parameters:
-     fs - An open jargon context
+     fs       - (optional) An open jargon context
      entry-id - The UUID of the entry to inspect
 
    Returns:
      The type of the entry, file or folder"
-  [fs entry-id]
-  (if (empty? (meta/list-collections-with-attr-value fs "ipc_UUID" entry-id))
-    "file"
-    "folder"))
+  ([^IPersistentMap fs ^UUID entry-id]
+   (if (empty? (meta/list-collections-with-attr-value fs "ipc_UUID" entry-id)) "file" "folder"))
+  ([^UUID entry-id]
+   (init/with-jargon (cfg/jargon-cfg) [fs]
+     (resolve-data-type fs entry-id))))
