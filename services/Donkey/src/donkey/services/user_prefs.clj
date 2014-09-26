@@ -1,9 +1,6 @@
 (ns donkey.services.user-prefs
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
-        [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-ops :only [mkdirs]]
-        [clj-jargon.permissions :only [set-owner]]
         [donkey.clients.user-prefs]
         [donkey.util.service]
         [donkey.auth.user-attributes])
@@ -12,7 +9,6 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
-            [clj-jargon.item-info :as jinfo]
             [donkey.clients.data-info :as di]
             [donkey.util.config :as cfg]))
 
@@ -66,11 +62,6 @@
       (do (println "yay") (println out-dir) (:path out-dir))
       (do (println "nay") out-dir))))
 
-(defn- create-dir
-  [cm user out-dir]
-  (log/warn "creating " out-dir)
-  (mkdirs cm out-dir)
-  (set-owner cm out-dir user))
 
 (defn- create-system-default-output-dir
   "Creates the system default output dir."
@@ -80,19 +71,11 @@
         user           (:shortUsername current-user)]
     (log/warn "sys-output-dir" sys-output-dir)
     (log/warn "output-dir" output-dir)
-    (with-jargon (cfg/jargon-cfg) [cm]
-      (cond
-       (and (string/blank? output-dir)
-            (not (string/blank? sys-output-dir))
-            (not (jinfo/exists? cm sys-output-dir)))
-       (create-dir cm user sys-output-dir)
-
-       (and (not (string/blank? output-dir))
-            (not (jinfo/exists? cm output-dir)))
-       (create-dir cm user output-dir)
-
-       :else
-       (log/warn "Not creating default output directory for " user)))
+    (cond
+      (not (string/blank? output-dir))     (di/ensure-dir-created user output-dir)
+      (not (string/blank? sys-output-dir)) (di/ensure-dir-created user sys-output-dir)
+      :else                                (log/warn "Not creating default output directory for"
+                                                     user))
     prefs))
 
 (defn handle-blank-default-output-dir

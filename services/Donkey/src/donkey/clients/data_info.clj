@@ -9,6 +9,8 @@
             [clojure.tools.logging :as log]
             [clj-jargon.init :as init]
             [clj-jargon.item-info :as item]
+            [clj-jargon.item-ops :as ops]
+            [clj-jargon.permissions :as perm]
             [clojure-commons.error-codes :as ce]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
@@ -63,6 +65,20 @@
      It returns the absolute path to the trash folder."
   [^String user]
   (cp/user-trash-path user))
+
+
+(defn ensure-dir-created
+  "If a folder doesn't exist, it creates the folder and makes the given user an owner of it.
+
+   Parameters:
+     user - the username of the user to become an owner of the new folder
+     dir  - the absolute path to the folder"
+  [^String user ^String dir]
+  (init/with-jargon (cfg/jargon-cfg) [cm]
+    (when-not (item/exists? cm dir)
+      (log/warn "creating" dir)
+      (ops/mkdirs cm dir)
+      (perm/set-owner cm dir user))))
 
 
 (defn get-or-create-dir
