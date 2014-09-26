@@ -46,9 +46,10 @@
      entry-id - The UUID of the entry to inspect
 
    Returns:
-     The type of the entry, file or folder"
+     The type of the entry, `file` or `folder`"
   ([^IPersistentMap fs ^UUID entry-id]
    (if (empty? (meta/list-collections-with-attr-value fs "ipc_UUID" entry-id)) "file" "folder"))
+
   ([^UUID entry-id]
    (init/with-jargon (jargon-cfg) [fs]
      (resolve-data-type fs entry-id))))

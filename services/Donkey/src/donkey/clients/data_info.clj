@@ -202,7 +202,19 @@
     (perm/owns? cm user entry-path)))
 
 
-(defn ^IPersistentMap share
+(defn ^String resolve-data-type
+  "Given filesystem id, it returns the type of the entry it is, file or folder.
+
+   Parameters:
+     entry-id - The UUID of the entry to inspect
+
+   Returns:
+     The type of the entry, `file` or `folder`"
+  [^UUID entry-id]
+  (icat/resolve-data-type entry-id))
+
+
+  (defn ^IPersistentMap share
   "grants access to a list of data entities for a list of users by a user
 
    Params:
