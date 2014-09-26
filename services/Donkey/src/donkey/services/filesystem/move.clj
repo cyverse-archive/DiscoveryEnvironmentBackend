@@ -14,6 +14,7 @@
             [clj-icat-direct.icat :as icat]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.directory :as directory]
+            [donkey.services.filesystem.icat :as jargon]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- source->dest
@@ -24,7 +25,7 @@
   "Moves directories listed in 'sources' into the directory listed in 'dest'. This
    works by calling move and passing it move-dir."
   [user sources dest]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (jargon/jargon-cfg) [cm]
     (let [path-list  (conj sources dest)
           all-paths  (apply merge (mapv #(hash-map (source->dest %1 dest) %1) sources))
           dest-paths (keys all-paths)
@@ -59,7 +60,8 @@
 
 (defn do-move-contents
   [{user :user} {source :source dest :dest}]
-  (with-jargon (cfg/jargon-cfg) [cm] (validators/path-is-dir cm source))
+  (with-jargon (jargon/jargon-cfg) [cm]
+    (validators/path-is-dir cm source))
   (let [sources (directory/get-paths-in-folder user source)]
     (move-paths user sources dest)))
 

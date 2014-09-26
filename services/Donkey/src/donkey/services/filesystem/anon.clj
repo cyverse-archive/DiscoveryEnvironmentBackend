@@ -1,7 +1,7 @@
 (ns donkey.services.filesystem.anon
   (:require [clojure.tools.logging :as log]
             [clj-jargon.init :as init]
-            [donkey.util.config :as cfg])
+            [donkey.services.filesystem.icat :as icat])
   (:import [org.irods.jargon.core.exception
             DataNotFoundException
             DuplicateDataException]
@@ -30,7 +30,7 @@
 (defn create-anon-user
   "Creates the anonymous user, but only if it doesn't already exist."
   []
-  (init/with-jargon (cfg/jargon-cfg) [cm]
+  (init/with-jargon (icat/jargon-cfg) [cm]
     (try
       (if-not (anon-user? cm)
         (let [user (user-obj anon-user (:zone cm))]

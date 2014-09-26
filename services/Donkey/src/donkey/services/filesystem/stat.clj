@@ -17,7 +17,8 @@
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.garnish.irods :as filetypes]
             [clj-icat-direct.icat :as icat]
-            [donkey.util.config :as cfg])
+            [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as jargon])
   (:import [org.apache.tika Tika]))
 
 (defn- count-shares
@@ -60,7 +61,7 @@
 
 (defn path-is-dir?
   [path]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (jargon/jargon-cfg) [cm]
     (validators/path-exists cm path)
     (is-dir? cm path)))
 
@@ -84,7 +85,7 @@
 
 (defn do-stat
   [{user :user} {paths :paths}]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (jargon/jargon-cfg) [cm]
     {:paths (into {} (map #(vector % (path-stat cm user %)) paths))}))
 
 (with-pre-hook! #'do-stat

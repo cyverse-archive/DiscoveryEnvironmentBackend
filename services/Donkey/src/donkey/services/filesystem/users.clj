@@ -2,7 +2,6 @@
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
-        [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [quota]]
         [clj-jargon.permissions :only [list-user-perm]]
@@ -14,11 +13,12 @@
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn list-user-groups
   [user]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (user-groups cm user)))
 
@@ -36,7 +36,7 @@
 
 (defn- list-perms
   [user abspaths]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-paths-exist cm abspaths)
     (validators/user-owns-paths cm user abspaths)
@@ -44,7 +44,7 @@
 
 (defn- get-quota
   [user]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (quota cm user)))
 
@@ -79,6 +79,6 @@
     (log-call "do-user-permissions" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
-    (validate-num-paths (:paths body))))
+    (validators/validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-user-permissions (log-func "do-user-permissions"))

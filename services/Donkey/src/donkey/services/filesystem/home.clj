@@ -8,11 +8,12 @@
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- user-home-path
   [staging-dir user set-owner?]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (let [user-home (ft/path-join staging-dir user)]
       (if (not (exists? cm user-home))

@@ -18,7 +18,8 @@
             [donkey.services.garnish.irods :as filetypes]
             [ring.util.codec :as cdc]
             [donkey.clients.tree-urls :as tree]
-            [donkey.util.config :as cfg])
+            [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat])
   (:import [org.apache.tika Tika]))
 
 (def ^:private coge-attr "ipc-coge-link")
@@ -67,7 +68,7 @@
 (defn- manifest
   [user path data-threshold]
   (let [path (ft/rm-last-slash path)]
-    (with-jargon (cfg/jargon-cfg) [cm]
+    (with-jargon (icat/jargon-cfg) [cm]
       (validators/user-exists cm user)
       (validators/path-exists cm path)
       (validators/path-is-file cm path)

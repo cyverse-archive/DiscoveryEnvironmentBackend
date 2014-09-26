@@ -2,7 +2,6 @@
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
-        [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [trash-base-dir is-dir?]]
         [clj-jargon.metadata]
@@ -17,6 +16,7 @@
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
 
 (def shared-with-attr "ipc-contains-obj-shared-with")
@@ -99,7 +99,7 @@
 
 (defn share
   [user share-withs fpaths perm]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-users-exist cm share-withs)
     (validators/all-paths-exist cm fpaths)
@@ -186,7 +186,7 @@
   [user unshare-withs fpaths]
   (log/debug "entered unshare")
 
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-users-exist cm unshare-withs)
     (validators/all-paths-exist cm fpaths)
@@ -229,7 +229,8 @@
     (log-call "do-share" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :users sequential? :permission string?})
-    (validate-num-paths (:paths body))))
+    (validators/validate-num-paths (:paths body))))
+
 
 (defn do-unshare
   [{user :user} {users :users paths :paths}]
@@ -243,7 +244,7 @@
     (log-call "do-unshare" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :users sequential?})
-    (validate-num-paths (:paths body))))
+    (validators/validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-unshare (log-func "do-unshare"))
 
@@ -262,7 +263,7 @@
 
 (defn anon-files
   [user paths]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-paths-exist cm paths)
     (validators/paths-are-files cm paths)
@@ -280,5 +281,5 @@
   (log-call "do-anon-files" params body)
   (validate-map params {:user string?})
   (validate-map body {:paths sequential?})
-  (validate-num-paths (:paths body))
+  (validators/validate-num-paths (:paths body))
   (anon-files (:user params) (fix-broken-paths (:paths body))))

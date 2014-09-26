@@ -12,7 +12,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as cfg]
             [donkey.services.filesystem.stat :as stat]
             [donkey.services.filesystem.validators :as validators]))
 

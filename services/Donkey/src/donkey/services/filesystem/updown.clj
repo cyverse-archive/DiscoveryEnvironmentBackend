@@ -2,7 +2,6 @@
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
-        [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.cart]
         [clj-jargon.item-info :only [file-size]]
@@ -16,12 +15,13 @@
             [donkey.services.filesystem.directory :as directory]
             [donkey.services.filesystem.validators :as validators]
             [clj-icat-direct.icat :as icat]
-            [donkey.util.config :as cfg])
+            [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as jargon])
   (:import [org.apache.tika Tika]))
 
 (defn- tika-detect-type
   [user file-path]
-  (with-jargon (cfg/jargon-cfg) [cm-new]
+  (with-jargon (jargon/jargon-cfg) [cm-new]
     (validators/user-exists cm-new user)
     (validators/path-exists cm-new file-path)
     (validators/path-readable cm-new user file-path)
@@ -29,7 +29,7 @@
 
 (defn- download-file
   [user file-path]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (jargon/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/path-exists cm file-path)
     (validators/path-readable cm user file-path)
@@ -37,7 +37,7 @@
 
 (defn- download
   [user filepaths]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (jargon/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (let [cart-key (str (System/currentTimeMillis))
           account  (:irodsAccount cm)]
@@ -55,7 +55,7 @@
 
 (defn- upload
   [user]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (jargon/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (let [account (:irodsAccount cm)]
       {:action "upload"
@@ -93,7 +93,7 @@
     (log-call "do-download-contents" params body)
     (validate-map params {:user string?})
     (validate-map body {:path string?})
-    (with-jargon (cfg/jargon-cfg) [cm] (validators/path-is-dir cm (:path body)))))
+    (with-jargon (jargon/jargon-cfg) [cm] (validators/path-is-dir cm (:path body)))))
 
 (with-post-hook! #'do-download-contents (log-func "do-download-contents"))
 

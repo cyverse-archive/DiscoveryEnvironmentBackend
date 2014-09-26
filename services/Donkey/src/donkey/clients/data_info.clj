@@ -15,12 +15,12 @@
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
             [donkey.services.filesystem.exists :as e]
+            [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.metadata :as mt]
             [donkey.services.filesystem.sharing :as sharing]
             [donkey.services.filesystem.stat :as st]
             [donkey.services.filesystem.users :as users]
-            [donkey.services.filesystem.uuids :as uuids]
-            [donkey.util.config :as cfg])
+            [donkey.services.filesystem.uuids :as uuids])
   (:import [clojure.lang IPersistentMap ISeq]
            [java.util UUID]))
 
@@ -29,7 +29,7 @@
   "Determines whether or not iRODS is running."
   []
   (try
-    (init/with-jargon (cfg/jargon-cfg) [cm]
+    (init/with-jargon (icat/jargon-cfg) [cm]
       (item/exists? cm (:home cm)))
     (catch Exception e
       (log/error "Error performing iRODS status check:")
@@ -74,7 +74,7 @@
      user - the username of the user to become an owner of the new folder
      dir  - the absolute path to the folder"
   [^String user ^String dir]
-  (init/with-jargon (cfg/jargon-cfg) [cm]
+  (init/with-jargon (icat/jargon-cfg) [cm]
     (when-not (item/exists? cm dir)
       (log/warn "creating" dir)
       (ops/mkdirs cm dir)
@@ -198,7 +198,7 @@
    Returns:
      It returns true if the user own the entry, otherwise false."
   [^String user ^String entry-path]
-  (init/with-jargon (cfg/jargon-cfg) [cm]
+  (init/with-jargon (icat/jargon-cfg) [cm]
     (perm/owns? cm user entry-path)))
 
 

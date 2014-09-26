@@ -2,7 +2,6 @@
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
-        [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops]
         [clj-jargon.item-info]
@@ -17,6 +16,7 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.directory :as directory]
+            [donkey.services.filesystem.icat :as jargon]
             [donkey.services.filesystem.validators :as validators]))
 
 (def alphanums (concat (range 48 58) (range 65 91) (range 97 123)))
@@ -45,7 +45,7 @@
   [user paths]
   (let [home-matcher #(= (str "/" (cfg/irods-zone) "/home/" user)
                          (ft/rm-last-slash %1))]
-    (with-jargon (cfg/jargon-cfg) [cm]
+    (with-jargon (jargon/jargon-cfg) [cm]
       (let [paths (mapv ft/rm-last-slash paths)]
         (validators/user-exists cm user)
         (validators/all-paths-exist cm paths)
@@ -83,7 +83,7 @@
 
 (defn- user-trash
   [user]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (jargon/jargon-cfg) [cm]
     (validators/user-exists cm user)
     {:trash (user-trash-path cm user)}))
 
@@ -128,7 +128,7 @@
 
 (defn- restore-path
   [{:keys [user paths user-trash]}]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (jargon/jargon-cfg) [cm]
     (let [paths (mapv ft/rm-last-slash paths)]
       (validators/user-exists cm user)
       (validators/all-paths-exist cm paths)
@@ -171,7 +171,7 @@
 
 (defn- delete-trash
   [user]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (jargon/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (let [trash-dir  (user-trash-path cm user)
           trash-list (mapv #(.getAbsolutePath %) (list-in-dir cm (ft/rm-last-slash trash-dir)))]
@@ -198,7 +198,7 @@
 
 (defn do-delete-contents
   [{user :user} {path :path}]
-  (with-jargon (cfg/jargon-cfg) [cm] (validators/path-is-dir cm path))
+  (with-jargon (jargon/jargon-cfg) [cm] (validators/path-is-dir cm path))
   (let [paths (directory/get-paths-in-folder user path)]
     (delete-paths user paths)))
 

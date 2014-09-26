@@ -13,6 +13,7 @@
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- preview-buffer
@@ -38,7 +39,7 @@
      size - The size (in bytes) of the preview to be created."
   [user path size]
   (let [path (ft/rm-last-slash path)]
-    (with-jargon (cfg/jargon-cfg) [cm]
+    (with-jargon (icat/jargon-cfg) [cm]
       (log/debug (str "preview " user " " path " " size))
       (validators/user-exists cm user)
       (validators/path-exists cm path)

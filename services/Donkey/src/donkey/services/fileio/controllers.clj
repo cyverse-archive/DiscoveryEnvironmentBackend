@@ -5,7 +5,6 @@
         [clj-jargon.users :only [user-exists?]]
         [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.config]
         [donkey.util.validators]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [slingshot.slingshot :only [try+ throw+]])
@@ -20,7 +19,9 @@
             [donkey.util.ssl :as ssl]
             [clojure.tools.logging :as log]
             [ring.util.response :as rsp-utils]
-            [cemerick.url :as url-parser]))
+            [cemerick.url :as url-parser]
+            [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat]))
 
 
 (defn- in-stream
@@ -45,13 +46,13 @@
   [{stream :stream orig-filename :filename}]
   (let [uuid     (gen-uuid)
         filename (str orig-filename "." uuid)
-        user     (irods-user)
-        home     (irods-home)
-        temp-dir (fileio-temp-dir)]
+        user     (cfg/irods-user)
+        home     (cfg/irods-home)
+        temp-dir (cfg/fileio-temp-dir)]
     (if-not (cp/good-string? orig-filename)
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :path orig-filename}))
-    (with-jargon (jargon-cfg) [cm]
+    (with-jargon (icat/jargon-cfg) [cm]
       (store cm stream filename user temp-dir))))
 
 (defn download
@@ -119,7 +120,7 @@
           tmp-file  (str dest "." (gen-uuid))
           content   (:content body)
           file-size (count (.getBytes content "UTF-8"))]
-      (with-jargon (jargon-cfg) [cm]
+      (with-jargon (icat/jargon-cfg) [cm]
         (when-not (user-exists? cm user)
           (throw+ {:user       user
                    :error_code ERR_NOT_A_USER}))
@@ -140,7 +141,7 @@
         ;; Jargon will delete dest before writing its new contents, which will cause the old version
         ;; of the file to be put into the Trash. So rename dest to tmp-file, then force-delete
         ;; tmp-file after a successful save of the new contents.
-        (jargon-ops/move cm dest tmp-file :user user :admin-users (irods-admins))
+        (jargon-ops/move cm dest tmp-file :user user :admin-users (cfg/irods-admins))
         (try+
           (with-in-str content
             (actions/save cm *in* user dest))
@@ -148,7 +149,7 @@
           (jargon-ops/delete cm tmp-file true)
           (catch Object e
             (log/warn e)
-            (jargon-ops/move cm tmp-file dest :user user :admin-users (irods-admins))
+            (jargon-ops/move cm tmp-file dest :user user :admin-users (cfg/irods-admins))
             (throw+)))
 
         {:file (stat/path-stat cm user dest)}))))
@@ -162,7 +163,7 @@
     (let [user (:user params)
           dest (string/trim (:dest body))
           cont (:content body)]
-      (with-jargon (jargon-cfg) [cm]
+      (with-jargon (icat/jargon-cfg) [cm]
         (when-not (user-exists? cm user)
           (throw+ {:user       user
                    :error_code ERR_NOT_A_USER}))

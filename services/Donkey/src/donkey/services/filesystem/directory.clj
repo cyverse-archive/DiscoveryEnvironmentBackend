@@ -13,7 +13,8 @@
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.persistence.metadata :as meta]
             [clj-icat-direct.icat :as icat]
-            [donkey.util.config :as cfg])
+            [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as jargon])
   (:import [java.util UUID]))
 
 
@@ -96,7 +97,7 @@
   (let [path      (ft/rm-last-slash path)
         sort-col  (string/upper-case sort-col)
         sort-order (string/upper-case sort-order)]
-    (with-jargon (cfg/jargon-cfg) [cm]
+    (with-jargon (jargon/jargon-cfg) [cm]
       (validators/user-exists cm user)
       (validators/path-exists cm path)
       (validators/path-readable cm user path)
@@ -140,7 +141,7 @@
   "Lists the directories contained under path."
   [user path]
   (let [path (ft/rm-last-slash path)]
-    (with-jargon (cfg/jargon-cfg) [cm]
+    (with-jargon (jargon/jargon-cfg) [cm]
       (validators/user-exists cm user)
       (validators/path-exists cm path)
       (validators/path-readable cm user path)

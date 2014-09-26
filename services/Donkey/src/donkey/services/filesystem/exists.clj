@@ -12,7 +12,7 @@
             [cheshire.core :as json]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as cfg]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- url-encoded?

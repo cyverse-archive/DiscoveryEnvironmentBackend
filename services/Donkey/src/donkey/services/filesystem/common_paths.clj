@@ -4,7 +4,9 @@
             [clojure.set :as set]
             [clj-jargon.init :as init]
             [clj-jargon.item-info :as item]
-            [donkey.util.config :as cfg]))
+            [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat]))
+
 
 (def IPCRESERVED "ipc-reserved-unit")
 (def IPCSYSTEM "ipc-system-avu")
@@ -64,13 +66,13 @@
 
 (defn base-trash-path
   []
-  (init/with-jargon (cfg/jargon-cfg) [cm]
+  (init/with-jargon (icat/jargon-cfg) [cm]
     (item/trash-base-dir cm)))
 
 
 (defn user-trash-path
   ([user]
-   (init/with-jargon (cfg/jargon-cfg) [cm]
+   (init/with-jargon (icat/jargon-cfg) [cm]
      (user-trash-path cm user)))
   ([cm user]
    (item/trash-base-dir cm user)))
@@ -78,7 +80,7 @@
 
 (defn- user-trash-dir?
   ([user path-to-check]
-   (init/with-jargon (cfg/jargon-cfg) [cm]
+   (init/with-jargon (icat/jargon-cfg) [cm]
      (user-trash-dir? cm user path-to-check)))
   ([cm user path-to-check]
      (= (ft/rm-last-slash path-to-check)

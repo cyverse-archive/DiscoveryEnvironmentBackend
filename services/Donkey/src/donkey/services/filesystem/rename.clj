@@ -9,12 +9,13 @@
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn rename-path
   "High-level file renaming. Calls rename-func, passing it file-rename as the mv-func param."
   [user source dest]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (let [source    (ft/rm-last-slash source)
           dest      (ft/rm-last-slash dest)
           src-base  (ft/basename source)

@@ -2,9 +2,8 @@
   (:use [slingshot.slingshot :only [throw+]])
   (:require [cemerick.url :as curl]
             [clojure-commons.config :as cc]
-            [clojure-commons.error-codes :as ce]
-            [clojure.core.memoize :as memo]
-            [clj-jargon.init :as jg]))
+            [clojure-commons.error-codes :as ce]))
+
 
 (def ^:private props
   "A ref for storing the configuration properties."
@@ -414,20 +413,6 @@
   "donkey.osm.jobs-bucket")
 ;;;End OSM connection information
 
-(def jargon-cfg
-  (memo/memo
-   #(jg/init
-     (irods-host)
-     (irods-port)
-     (irods-user)
-     (irods-pass)
-     (irods-home)
-     (irods-zone)
-     (irods-resc)
-     :max-retries (irods-max-retries)
-     :retry-sleep (irods-retry-sleep)
-     :use-trash   (irods-use-trash))))
-;;; End iRODS configuration
 
 ;;; ICAT connection information
 (cc/defprop-str icat-host

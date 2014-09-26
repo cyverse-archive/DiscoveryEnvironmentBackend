@@ -13,6 +13,7 @@
             [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- fix-unit
@@ -56,7 +57,7 @@
   "Returns the metadata for a path. Filters out system AVUs and replaces
    units set to ipc-reserved with an empty string."
   [user path]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/path-exists cm path)
     (validators/path-readable cm user path)
@@ -93,7 +94,7 @@
       :unit unit-string
    }"
   [user path avu-map]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (when (= "failure" (:status avu-map))
       (throw+ {:error_code ERR_INVALID_JSON}))
@@ -107,7 +108,7 @@
   "Adds the AVU to path, bypassing user permission checks. See (metadata-set)
    for the AVU map format."
   [path avu-map]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (when (= "failure" (:status avu-map))
       (throw+ {:error_code ERR_INVALID_JSON}))
     (validators/path-exists cm path)
@@ -139,7 +140,7 @@
    }
    All value in the maps should be strings, just like with (metadata-set)."
   [user path adds-dels]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/path-exists cm path)
     (validators/path-writeable cm user path)
@@ -162,7 +163,7 @@
 (defn metadata-delete
   "Deletes an AVU from path on behalf of a user. attr and value should be strings."
   [user path attr value]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/path-exists cm path)
     (validators/path-writeable cm user path)
@@ -221,7 +222,7 @@
           path (:path params)
           adds (:add body)
           dels (:delete body)]
-      (log/warn (cfg/jargon-cfg))
+      (log/warn (icat/jargon-cfg))
       (when (pos? (count adds))
         (if-not (every? true? (check-avus adds))
           (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :field "add"})))

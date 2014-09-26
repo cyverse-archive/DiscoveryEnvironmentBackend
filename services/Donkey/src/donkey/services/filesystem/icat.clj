@@ -1,11 +1,25 @@
 (ns donkey.services.filesystem.icat
   (:use [clj-icat-direct.icat :only [icat-db-spec setup-icat]])
-  (:require [donkey.util.config :as cfg]
+  (:require [clojure.core.memoize :as memo]
+            [donkey.util.config :as cfg]
             [clojure.tools.logging :as log]
             [clj-jargon.init :as init]
             [clj-jargon.metadata :as meta])
   (:import [clojure.lang IPersistentMap]
            [java.util UUID]))
+
+
+(def jargon-cfg
+  (memo/memo #(init/init (cfg/irods-host)
+                         (cfg/irods-port)
+                         (cfg/irods-user)
+                         (cfg/irods-pass)
+                         (cfg/irods-home)
+                         (cfg/irods-zone)
+                         (cfg/irods-resc)
+                 :max-retries (cfg/irods-max-retries)
+                 :retry-sleep (cfg/irods-retry-sleep)
+                 :use-trash   (cfg/irods-use-trash))))
 
 
 (defn- spec
@@ -36,5 +50,5 @@
   ([^IPersistentMap fs ^UUID entry-id]
    (if (empty? (meta/list-collections-with-attr-value fs "ipc_UUID" entry-id)) "file" "folder"))
   ([^UUID entry-id]
-   (init/with-jargon (cfg/jargon-cfg) [fs]
+   (init/with-jargon (jargon-cfg) [fs]
      (resolve-data-type fs entry-id))))

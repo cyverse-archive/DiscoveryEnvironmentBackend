@@ -2,7 +2,6 @@
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
-        [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.permissions :only [process-parent-dirs]]
         [clj-jargon.item-info :only [exists?]]
@@ -15,6 +14,7 @@
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- paths-contain-char
@@ -84,7 +84,7 @@
 (defn- replace-spaces
   "Generates new paths by replacing all spaces with new-char."
   [user paths new-char]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-paths-exist cm paths)
     (validators/user-owns-paths cm user paths)
@@ -112,7 +112,7 @@
     (when-not (every? true? (mapv string? (:paths body)))
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :field      "paths"}))
-    (validate-num-paths (:paths body))))
+    (validators/validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-paths-contain-space (log-func "do-paths-contain-space"))
 
@@ -128,6 +128,6 @@
     (when-not (every? true? (mapv string? (:paths body)))
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :field      "paths"}))
-    (validate-num-paths (:paths body))))
+    (validators/validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-replace-spaces (log-func "do-replace-spaces"))

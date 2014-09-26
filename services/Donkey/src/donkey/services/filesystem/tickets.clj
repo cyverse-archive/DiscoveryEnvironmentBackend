@@ -2,7 +2,6 @@
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
-        [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.tickets]
         [slingshot.slingshot :only [try+ throw+]])
@@ -13,6 +12,7 @@
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators])
   (:import [java.util UUID]))
 
@@ -56,7 +56,7 @@
 
 (defn- add-tickets
   [user paths public?]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (let [new-uuids (gen-uuids cm user (count paths))]
       (validators/user-exists cm user)
       (validators/all-paths-exist cm paths)
@@ -73,7 +73,7 @@
 
 (defn- remove-tickets
   [user ticket-ids]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-tickets-exist cm user ticket-ids)
     (let [all-paths (mapv #(.getIrodsAbsolutePath (ticket-by-id cm (:username cm) %)) ticket-ids)]
@@ -92,7 +92,7 @@
 
 (defn- list-tickets-for-paths
   [user paths]
-  (with-jargon (cfg/jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-paths-exist cm paths)
     (validators/all-paths-readable cm user paths)
@@ -114,7 +114,7 @@
     (log-call "do-add-tickets" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
-    (validate-num-paths (:paths body))))
+    (validators/validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-add-tickets (log-func "do-add-tickets"))
 
@@ -145,6 +145,6 @@
     (when-not (every? true? (mapv string? (:paths body)))
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :field      "paths"}))
-    (validate-num-paths (:paths body))))
+    (validators/validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-list-tickets (log-func "do-list-tickets"))

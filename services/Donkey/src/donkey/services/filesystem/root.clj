@@ -10,6 +10,7 @@
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- create-trash-folder?
@@ -23,7 +24,7 @@
   ([user root-path set-own?]
     (let [root-path (ft/rm-last-slash root-path)]
       (log/warn "[root-listing]" "for" user "at" root-path "with set own as" set-own?)
-      (with-jargon (cfg/jargon-cfg) [cm]
+      (with-jargon (icat/jargon-cfg) [cm]
         (log/warn "in (root-listing)")
         (validators/user-exists cm user)
 

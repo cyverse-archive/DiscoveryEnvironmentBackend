@@ -5,7 +5,6 @@
         [clj-jargon.metadata]
         [clj-jargon.users :only [user-exists?]]
         [clj-jargon.permissions]
-        [donkey.util.config]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cemerick.url :as url] 
@@ -17,11 +16,14 @@
             [clj-http.client :as client]
             [donkey.services.filesystem.stat :as stat]
             [donkey.services.garnish.irods :as filetype]
-            [ring.util.response :as rsp-utils]))
+            [ring.util.response :as rsp-utils]
+            [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat]))
+
 
 (defn set-meta
   [path attr value unit]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (set-metadata cm path attr value unit)))
 
 (defn- scruffy-copy
@@ -74,7 +76,7 @@
 
 (defn- get-istream
   [user file-path]
-  (with-jargon (jargon-cfg) [cm]
+  (with-jargon (icat/jargon-cfg) [cm]
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
                :user       user}))
@@ -100,7 +102,7 @@
   [user tmp-path fpath]
   (log/info "In upload for " user tmp-path fpath)
   (let [final-path (ft/rm-last-slash fpath)] 
-    (with-jargon (jargon-cfg) [cm]
+    (with-jargon (icat/jargon-cfg) [cm]
       (when-not (user-exists? cm user)
         (throw+ {:error_code ERR_NOT_A_USER
                  :user user}))
@@ -116,7 +118,10 @@
       (let [new-fname (new-filename tmp-path)
             new-path  (ft/path-join final-path new-fname)]
         (if (exists? cm new-path) (delete cm new-path))
-        (move cm tmp-path new-path :user user :admin-users (irods-admins) :skip-source-perms? true)
+        (move cm tmp-path new-path
+          :user               user
+          :admin-users        (cfg/irods-admins)
+          :skip-source-perms? true)
         (set-owner cm new-path user)
         {:file (stat/path-stat cm user new-path)}))))
 
@@ -140,8 +145,8 @@
 
 (defn- jex-urlimport
   [user address filename dest-path]
-  (let [curl-dir  (ft/dirname (fileio-curl-path))
-        curl-name (ft/basename (fileio-curl-path))
+  (let [curl-dir  (ft/dirname (cfg/fileio-curl-path))
+        curl-name (ft/basename (cfg/fileio-curl-path))
         job-name  (str "url_import_" filename)
         job-desc  (str "URL Import of " filename " from " address)
         submission-json (json/generate-string
@@ -184,10 +189,8 @@
 
 (defn- jex-send
   [body]
-  (client/post
-    (jex-base-url)
-    {:content-type :json
-     :body body}))
+  (client/post (cfg/jex-base-url) {:content-type :json :body body}))
+
 
 (defn urlimport
   "Pushes out an import job to the JEX.
@@ -200,7 +203,7 @@
      dest-path - irods path indicating the directory the file should go in."
   [user address filename orig-dest-path]
   (let [dest-path (ft/rm-last-slash orig-dest-path)]
-    (with-jargon (jargon-cfg) [cm]
+    (with-jargon (icat/jargon-cfg) [cm]
       (when-not (user-exists? cm user)
         (throw+ {:error_code ERR_NOT_A_USER
                  :user       user}))
