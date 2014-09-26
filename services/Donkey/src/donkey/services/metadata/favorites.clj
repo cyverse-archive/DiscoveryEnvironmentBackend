@@ -6,8 +6,7 @@
             [donkey.clients.data-info :as data]
             [donkey.persistence.metadata :as db]
             [donkey.util.service :as svc]
-            [donkey.util.validators :as uv]
-            [donkey.services.filesystem.icat :as icat])
+            [donkey.util.validators :as uv])
   (:import [java.util UUID]))
 
 
@@ -52,7 +51,7 @@
         entry-id (UUID/fromString entry-id)]
     (uv/validate-uuid-accessible user entry-id)
     (when-not (db/is-favorite? user entry-id)
-      (db/insert-favorite user entry-id (icat/resolve-data-type entry-id)))
+      (db/insert-favorite user entry-id (data/resolve-data-type entry-id)))
     (svc/success-response)))
 
 

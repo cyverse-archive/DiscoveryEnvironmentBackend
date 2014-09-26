@@ -4,10 +4,10 @@
             [cheshire.core :as json]
             [clojure-commons.error-codes :as error]
             [donkey.auth.user-attributes :as user]
+            [donkey.clients.data-info :as data]
             [donkey.persistence.metadata :as db]
             [donkey.util.service :as svc]
-            [donkey.util.validators :as valid]
-            [donkey.services.filesystem.icat :as icat])
+            [donkey.util.validators :as valid])
 (:import [java.util UUID]))
 
 
@@ -21,7 +21,7 @@
     (valid/validate-uuid-accessible user entry-id)
     (when-not (empty? unknown-tags)
       (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
-    (db/insert-attached-tags user entry-id (icat/resolve-data-type entry-id) unattached-tags)
+    (db/insert-attached-tags user entry-id (data/resolve-data-type entry-id) unattached-tags)
     (svc/success-response)))
 
 

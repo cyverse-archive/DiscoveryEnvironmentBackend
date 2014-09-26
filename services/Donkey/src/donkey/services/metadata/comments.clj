@@ -8,8 +8,7 @@
             [donkey.clients.data-info :as data]
             [donkey.persistence.metadata :as db]
             [donkey.util.service :as svc]
-            [donkey.util.validators :as valid]
-            [donkey.services.filesystem.icat :as icat])
+            [donkey.util.validators :as valid])
   (:import [com.fasterxml.jackson.core JsonParseException]))
 
 
@@ -76,7 +75,7 @@
     (let [user     (:shortUsername user/current-user)
           entry-id (extract-entry-id user entry-id)
           comment  (-> body read-body (json/parse-string true) :comment)
-          tgt-type (icat/resolve-data-type entry-id)]
+          tgt-type (data/resolve-data-type entry-id)]
       (when-not comment (throw+ {:error_code err/ERR_INVALID_JSON}))
       (svc/create-response {:comment (->> comment
                                        (db/insert-comment user entry-id tgt-type)
