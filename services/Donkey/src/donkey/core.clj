@@ -34,7 +34,6 @@
             [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.services.fileio.controllers :as fileio]
-            [donkey.services.filesystem.anon :as anon]
             [donkey.tasks :as tasks]
             [donkey.util.messaging :as messages]
             [clojure.tools.nrepl.server :as nrepl]
@@ -201,6 +200,5 @@
     (db/define-database)
     (messages/messaging-initialization)
     (icat/configure-icat)
-    (anon/create-anon-user)
     (tasks/schedule-tasks)
     (jetty/run-jetty app {:port (config/listen-port)})))
