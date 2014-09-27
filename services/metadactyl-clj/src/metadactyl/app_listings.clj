@@ -77,15 +77,14 @@
 (defn get-workspace-app-groups
   "Retrieves the list of the current user's workspace app groups."
   [params]
-  (let [workspace (get-or-create-workspace (:username current-user))
+  (let [workspace (get-workspace)
         workspace-id (:id workspace)]
     {:categories [(format-app-group-hierarchy workspace-id params workspace)]}))
 
 (defn get-visible-app-groups
   "Retrieves the list of app groups that are visible to a user."
   ([params]
-     (-> (:username current-user)
-         (get-or-create-workspace)
+     (-> (get-workspace)
          (:id)
          (get-visible-app-groups params)))
   ([workspace-id params]
@@ -208,7 +207,7 @@
   "This service lists all of the apps in an app group and all of its
    descendents."
   [app-group-id params]
-  (let [workspace (get-or-create-workspace (:username current-user))]
+  (let [workspace (get-workspace)]
     (service/swagger-response
      (or (list-apps-in-virtual-group workspace app-group-id params)
          (list-apps-in-real-group workspace app-group-id params)))))
@@ -218,7 +217,7 @@
    groups, based on a search term."
   [params]
   (let [search_term (curl/url-decode (:search params))
-        workspace (get-or-create-workspace (:username current-user))
+        workspace (get-workspace)
         total (count-search-apps-for-user search_term (:id workspace) params)
         search_results (search-apps-for-user
                         search_term

@@ -4,13 +4,12 @@
         [donkey.util.transformers]
         [donkey.auth.user-attributes]
         [donkey.clients.user-info :only [get-user-details]]
+        [donkey.persistence.workspaces :only [get-or-create-workspace]]
         [donkey.services.fileio.actions :only [upload]]
         [donkey.services.user-prefs :only [user-prefs]]
         [donkey.util.email]
         [donkey.util.service]
-        [kameleon.queries :only [get-or-create-workspace-for-user
-                                 record-login
-                                 record-logout]]
+        [kameleon.queries :only [record-login record-logout]]
         [korma.db :only [with-db]]
         [medley.core :only [dissoc-in]]
         [ring.util.codec :only [url-encode]])
@@ -249,8 +248,7 @@
   (assert-valid user-agent "Missing or empty request parameter: user-agent")
   (let [username    (:username current-user)
         user        (:shortUsername current-user)
-        workspace   (with-db db/de
-                      (get-or-create-workspace-for-user username))
+        workspace   (get-or-create-workspace username)
         preferences (user-prefs (:username current-user))
         login-time  (with-db db/de
                       (record-login username ip-address user-agent))]

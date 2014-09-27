@@ -193,26 +193,10 @@
                  (join tool_types)
                  (where {:tools.id component-id}))))
 
-(defn get-or-create-user
-  "Gets a user from the database, creating the user if necessary."
-  [username]
-  (if-let [user (first (select users (where {:username username})))]
-    user
-    (insert users (values {:username username}))))
-
-(defn get-or-create-workspace-for-user
-  "Gets a workspace from the database, creating it if necessary."
-  [username]
-  (let [user-id (:id (get-or-create-user username))]
-    (if-let [workspace (first (select workspace (where {:user_id user-id})))]
-      (assoc workspace :newWorkspace false)
-      (-> (insert workspace (values {:user_id user-id}))
-          (assoc :newWorkspace true)))))
-
 (defn get-public-user-id
   "Gets the user ID for the public user."
   []
-  (:id (get-or-create-user "<public>")))
+  (get-user-id "<public>"))
 
 (defn get-tasks-for-app
   "Retrieves the list of tasks associated with an app."
