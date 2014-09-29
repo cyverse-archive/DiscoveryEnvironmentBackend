@@ -71,7 +71,7 @@
           item being shared is a directory."
   [cm user share-with perm fpath]
   (let [hdir      (share-path-home fpath)
-        trash-dir (trash-base-dir cm user)
+        trash-dir (trash-base-dir (:zone cm) user)
         base-dirs #{hdir trash-dir}]
     (log/warn fpath "is being shared with" share-with "by" user)
     (process-parent-dirs (partial set-readable cm share-with true) #(not (base-dirs %)) fpath)
@@ -152,7 +152,7 @@
        3. Remove the user's read permissions for parent directories in which the user no longer has
           access to any other files or subdirectories."
   [cm user unshare-with fpath]
-  (let [base-dirs #{(ft/rm-last-slash (user-home-dir user)) (trash-base-dir cm user)}]
+  (let [base-dirs #{(ft/rm-last-slash (user-home-dir user)) (trash-base-dir (:zone cm) user)}]
     (log/warn "Removing permissions on" fpath "from" unshare-with "by" user)
     (remove-permissions cm unshare-with fpath)
 

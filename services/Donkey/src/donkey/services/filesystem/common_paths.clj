@@ -67,7 +67,7 @@
 (defn base-trash-path
   []
   (init/with-jargon (icat/jargon-cfg) [cm]
-    (item/trash-base-dir cm)))
+    (item/trash-base-dir (:zone cm) (:user cm))))
 
 
 (defn user-trash-path
@@ -75,7 +75,7 @@
    (init/with-jargon (icat/jargon-cfg) [cm]
      (user-trash-path cm user)))
   ([cm user]
-   (item/trash-base-dir cm user)))
+   (item/trash-base-dir (:zone cm) user)))
 
 
 (defn- user-trash-dir?

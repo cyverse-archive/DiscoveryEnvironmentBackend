@@ -466,7 +466,7 @@
   (let [user-hm   (ft/rm-last-slash (ft/path-join "/" (:zone cm) "home" user))
         parent    (ft/dirname path)
         base-dirs #{(ft/rm-last-slash (:home cm))
-                    (item/trash-base-dir cm)
+                    (item/trash-base-dir (:zone cm) (:user cm))
                     user-hm}]
     (process-perms
      (fn [{sharee :user}]
@@ -480,7 +480,7 @@
   "Ensures that a file is accessible to all users that have access to the file."
   [cm path user admin-users]
   (let [parent    (ft/dirname path)
-        base-dirs #{(ft/rm-last-slash (:home cm)) (item/trash-base-dir cm)}]
+        base-dirs #{(ft/rm-last-slash (:home cm)) (item/trash-base-dir (:zone cm) (:user cm))}]
     (process-perms
      (fn [{sharee :user}]
        (process-parent-dirs (partial set-readable cm sharee true) #(not (base-dirs %)) path))
