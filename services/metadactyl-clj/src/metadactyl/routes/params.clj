@@ -44,7 +44,7 @@
       See http://www.postgresql.org/docs/9.3/interactive/queries-order.html")})
 
 (s/defschema CategoryListingParams
-  (merge SecuredQueryParams
+  (merge SecuredQueryParamsEmailRequired
          {(s/optional-key :public)
           (ss/describe Boolean
             "If set to 'true', then only app categories that are in a workspace that is marked as
