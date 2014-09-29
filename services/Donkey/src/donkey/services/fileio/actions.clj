@@ -14,8 +14,8 @@
             [clojure.tools.logging :as log]
             [clojure.string :as string]
             [clj-http.client :as client]
-            [donkey.services.filesystem.stat :as stat]
             [ring.util.response :as rsp-utils]
+            [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
             [donkey.services.fileio.config :as jargon]))
 
@@ -117,7 +117,8 @@
           :admin-users        (cfg/irods-admins)
           :skip-source-perms? true)
         (set-owner cm new-path user)
-        {:file (stat/path-stat cm user new-path)}))))
+        {:file (data/path-stat user new-path)}))))
+
 
 (defn url-encoded?
   [string-to-check]

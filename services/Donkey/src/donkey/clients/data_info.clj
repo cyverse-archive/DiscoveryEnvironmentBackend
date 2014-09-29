@@ -145,6 +145,20 @@
   (users/list-user-groups user))
 
 
+(defn ^IPersistentMap path-stat
+  "retrieves the stat info for an entity with a given path
+
+   Params:
+     user - the username of the user making the request
+     path - the absolute path to the entity
+
+   Returns:
+     It returns the stat info formatted for the HTTP response."
+  [^String user ^String path]
+  (init/with-jargon (icat/jargon-cfg) [cm]
+    (st/path-stat cm user path)))
+
+
 (defn ^IPersistentMap stat-by-uuid
   "Resolves a stat info for the entity with a given UUID.
 

@@ -9,8 +9,6 @@
         [donkey.util.transformers :only [add-current-user-to-map]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [donkey.services.fileio.actions :as actions]
-            [donkey.services.filesystem.stat :as stat]
-            [donkey.util.config :as config]
             [cheshire.core :as json]
             [clj-jargon.item-ops :as jargon-ops]
             [clojure-commons.file-utils :as ft]
@@ -20,6 +18,7 @@
             [ring.util.response :as rsp-utils]
             [cemerick.url :as url-parser]
             [clj-jargon.validations :as valid]
+            [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
             [donkey.services.fileio.config :as jargon]))
 
@@ -133,7 +132,7 @@
           (throw+ {:error_code ERR_NOT_WRITEABLE
                    :path       dest}))
 
-        (when (> file-size (config/fileio-max-edit-file-size))
+        (when (> file-size (cfg/fileio-max-edit-file-size))
           (throw+ {:error_code "ERR_FILE_SIZE_TOO_LARGE"
                    :path       dest
                    :size       file-size}))
@@ -152,7 +151,7 @@
             (jargon-ops/move cm tmp-file dest :user user :admin-users (cfg/irods-admins))
             (throw+)))
 
-        {:file (stat/path-stat cm user dest)}))))
+        {:file (data/path-stat user dest)}))))
 
 (defn saveas
   [req-params req-body]
@@ -183,4 +182,4 @@
         (with-in-str cont
           (actions/store cm *in* user dest))
 
-        {:file (stat/path-stat cm user dest)}))))
+        {:file (data/path-stat user dest)}))))
