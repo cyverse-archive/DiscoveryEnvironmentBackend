@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.create
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [mkdir]]
@@ -12,6 +11,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as cfg]
             [donkey.services.filesystem.stat :as stat]
             [donkey.services.filesystem.validators :as validators]))
@@ -23,7 +23,7 @@
   (log/debug (str "create " user " " path))
   (with-jargon (cfg/jargon-cfg) [cm]
     (let [fixed-path (ft/rm-last-slash path)]
-      (when-not (good-string? fixed-path)
+      (when-not (paths/good-string? fixed-path)
         (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                  :path path}))
       (validators/user-exists cm user)
@@ -40,11 +40,11 @@
 
 (with-pre-hook! #'do-create
   (fn [params body]
-    (log-call "do-create" params body)
+    (paths/log-call "do-create" params body)
     (validate-map params {:user string?})
     (validate-map body {:path string?})
     (log/info "Body: " body)
-    (when (super-user? (:user params))
+    (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED :user (:user params)}))))
 
-(with-post-hook! #'do-create (log-func "do-create"))
+(with-post-hook! #'do-create (paths/log-func "do-create"))
