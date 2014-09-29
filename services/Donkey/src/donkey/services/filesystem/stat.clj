@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.stat
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [is-dir? stat]]
@@ -18,6 +17,7 @@
             [donkey.services.garnish.irods :as filetypes]
             [clj-icat-direct.icat :as icat]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as jargon])
   (:import [org.apache.tika Tika]))
 
@@ -69,8 +69,8 @@
   [cm user stat]
   (let [path (:path stat)]
     (-> stat
-        (assoc :id (:value (first (get-attribute cm path "ipc_UUID")))
-               :label      (id->label cm user path)
+        (assoc :id         (:value (first (get-attribute cm path "ipc_UUID")))
+               :label      (paths/id->label cm user path)
                :permission (permission-for cm user path))
         (merge-type-info cm user path)
         (merge-shares cm user path)
@@ -90,11 +90,11 @@
 
 (with-pre-hook! #'do-stat
   (fn [params body]
-    (log-call "do-stat" params body)
+    (paths/log-call "do-stat" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths vector?})
     (validate-map body {:paths #(not (empty? %1))})
     (validate-map body {:paths #(every? (comp not string/blank?) %1)})
     (validate-num-paths (:paths body))))
 
-(with-post-hook! #'do-stat (log-func "do-stat"))
+(with-post-hook! #'do-stat (paths/log-func "do-stat"))
