@@ -1,6 +1,5 @@
 (ns donkey.services.filesystem.root
   (:use [clojure-commons.validators]
-        [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
         [clj-jargon.item-ops :only [mkdir]]
@@ -10,12 +9,13 @@
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- create-trash-folder?
   [cm user root-path]
-  (and (= root-path (user-trash-path cm user)) (not (exists? cm root-path))))
+  (and (= root-path (paths/user-trash-path cm user)) (not (exists? cm root-path))))
 
 (defn root-listing
   ([user root-path]
@@ -43,7 +43,7 @@
 
         (when-let [res (list-dir cm user root-path :include-subdirs false)]
           (assoc res
-                 :label (id->label cm user (:id res))
+                 :label (paths/id->label cm user (:id res))
                  :path  (:id res)
                  :id    (str "/root" (:id res))))))))
 
@@ -51,7 +51,7 @@
   [{user :user}]
   (let [uhome          (ft/path-join (cfg/irods-home) user)
         user-root-list (partial root-listing user)
-        user-trash-dir (user-trash-path user)]
+        user-trash-dir (paths/user-trash-path user)]
     {:roots
      (remove
        nil?
@@ -62,7 +62,7 @@
 
 (with-pre-hook! #'do-root-listing
   (fn [params]
-    (log-call "do-root-listing" params)
+    (paths/log-call "do-root-listing" params)
     (validate-map params {:user string?})))
 
-(with-post-hook! #'do-root-listing (log-func "do-root-listing"))
+(with-post-hook! #'do-root-listing (paths/log-func "do-root-listing"))
