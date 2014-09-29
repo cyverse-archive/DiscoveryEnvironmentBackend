@@ -122,7 +122,7 @@
          (hash-map
           :id               uuid
           :path             path
-          :label            (paths/id->label cm user path)
+          :label            (paths/id->label user path)
           :isFavorite       (meta/is-favorite? user (UUID/fromString uuid))
           :filter           (should-filter? user path)
           :permission       (permission-for cm user path)
@@ -154,7 +154,7 @@
          (hash-map
           :id            uuid
           :path          path
-          :label         (paths/id->label cm user path)
+          :label         (paths/id->label user path)
           :isFavorite    (meta/is-favorite? user (UUID/fromString uuid))
           :filter        (should-filter? user path)
           :permisssion   (permission-for cm user path)

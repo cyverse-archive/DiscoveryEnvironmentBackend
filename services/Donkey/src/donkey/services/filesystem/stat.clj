@@ -70,7 +70,7 @@
   (let [path (:path stat)]
     (-> stat
         (assoc :id         (:value (first (get-attribute cm path "ipc_UUID")))
-               :label      (paths/id->label cm user path)
+               :label      (paths/id->label user path)
                :permission (permission-for cm user path))
         (merge-type-info cm user path)
         (merge-shares cm user path)

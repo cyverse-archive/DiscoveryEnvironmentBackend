@@ -2,10 +2,8 @@
   (:require [clojure-commons.file-utils :as ft]
             [clojure.tools.logging :as log]
             [clojure.set :as set]
-            [clj-jargon.init :as init]
             [clj-jargon.item-info :as item]
-            [donkey.util.config :as cfg]
-            [donkey.services.filesystem.icat :as icat]))
+            [donkey.util.config :as cfg]))
 
 
 (def IPCRESERVED "ipc-reserved-unit")
@@ -66,43 +64,29 @@
 
 (defn base-trash-path
   []
-  (init/with-jargon (icat/jargon-cfg) [cm]
-    (item/trash-base-dir (:zone cm) (:user cm))))
+  (item/trash-base-dir (cfg/irods-zone) (cfg/irods-user)))
 
 
 (defn user-trash-path
-  ([user]
-   (init/with-jargon (icat/jargon-cfg) [cm]
-     (user-trash-path cm user)))
-  ([cm user]
-   (item/trash-base-dir (:zone cm) user)))
+  [user]
+  (item/trash-base-dir (cfg/irods-zone) user))
 
 
 (defn- user-trash-dir?
-  ([user path-to-check]
-   (init/with-jargon (icat/jargon-cfg) [cm]
-     (user-trash-dir? cm user path-to-check)))
-  ([cm user path-to-check]
-     (= (ft/rm-last-slash path-to-check)
-        (ft/rm-last-slash (user-trash-path cm user)))))
+  [user path-to-check]
+  (= (ft/rm-last-slash path-to-check) (ft/rm-last-slash (user-trash-path user))))
+
 
 (defn in-trash?
-  [cm user fpath]
-  (.startsWith fpath (user-trash-path cm user)))
+  [user fpath]
+  (.startsWith fpath (user-trash-path user)))
 
 
 (defn id->label
   "Generates a label given a listing ID (read as absolute path)."
-  [cm user id]
+  [user id]
   (cond
-   (user-trash-dir? cm user id)
-   "Trash"
-
-   (sharing? (ft/add-trailing-slash id))
-   "Shared With Me"
-
-   (community? id)
-   "Community Data"
-
-   :else
-   (ft/basename id)))
+    (user-trash-dir? user id)             "Trash"
+    (sharing? (ft/add-trailing-slash id)) "Shared With Me"
+    (community? id)                       "Community Data"
+    :else                                 (ft/basename id)))

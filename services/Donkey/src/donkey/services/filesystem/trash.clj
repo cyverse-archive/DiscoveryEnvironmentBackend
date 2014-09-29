@@ -30,14 +30,14 @@
   (apply str (take length (repeatedly #(char (rand-nth alphanums))))))
 
 (defn- randomized-trash-path
-  [cm user path-to-inc]
+  [user path-to-inc]
   (ft/path-join
-   (paths/user-trash-path cm user)
+   (paths/user-trash-path user)
    (str (ft/basename path-to-inc) "." (rand-str 7))))
 
 (defn- move-to-trash
   [cm p user]
-  (let [trash-path (randomized-trash-path cm user p)]
+  (let [trash-path (randomized-trash-path user p)]
     (move cm p trash-path :user user :admin-users (cfg/irods-admins))
     (set-metadata cm trash-path "ipc-trash-origin" p paths/IPCSYSTEM)))
 
@@ -67,7 +67,7 @@
 
           ;;; If the file isn't already in the user's trash, move it there
           ;;; otherwise, do a hard delete.
-          (if-not (.startsWith p (paths/user-trash-path cm user))
+          (if-not (.startsWith p (paths/user-trash-path user))
             (move-to-trash cm p user)
             (delete cm p true))) ;;; Force a delete to bypass proxy user's trash.
 
@@ -85,7 +85,7 @@
   [user]
   (with-jargon (jargon/jargon-cfg) [cm]
     (validators/user-exists cm user)
-    {:trash (paths/user-trash-path cm user)}))
+    {:trash (paths/user-trash-path user)}))
 
 
 (defn- trash-origin-path
@@ -175,7 +175,7 @@
   [user]
   (with-jargon (jargon/jargon-cfg) [cm]
     (validators/user-exists cm user)
-    (let [trash-dir  (paths/user-trash-path cm user)
+    (let [trash-dir  (paths/user-trash-path user)
           trash-list (mapv #(.getAbsolutePath %) (list-in-dir cm (ft/rm-last-slash trash-dir)))]
       (doseq [trash-path trash-list]
         (delete cm trash-path true))

@@ -15,7 +15,7 @@
 
 (defn- create-trash-folder?
   [cm user root-path]
-  (and (= root-path (paths/user-trash-path cm user)) (not (exists? cm root-path))))
+  (and (= root-path (paths/user-trash-path user)) (not (exists? cm root-path))))
 
 (defn root-listing
   ([user root-path]
@@ -43,7 +43,7 @@
 
         (when-let [res (list-dir cm user root-path :include-subdirs false)]
           (assoc res
-                 :label (paths/id->label cm user (:id res))
+                 :label (paths/id->label user (:id res))
                  :path  (:id res)
                  :id    (str "/root" (:id res))))))))
 

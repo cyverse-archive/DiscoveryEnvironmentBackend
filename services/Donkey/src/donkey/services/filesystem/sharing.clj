@@ -93,7 +93,7 @@
   (for [share-with share-withs
         fpath      fpaths]
     (cond (= user share-with)                (skip-share share-with fpath :share-with-self)
-          (paths/in-trash? cm user fpath)    (skip-share share-with fpath :share-from-trash)
+          (paths/in-trash? user fpath)       (skip-share share-with fpath :share-from-trash)
           (shared? cm share-with fpath perm) (skip-share share-with fpath :already-shared)
           :else                              (share-path cm user share-with perm fpath))))
 
