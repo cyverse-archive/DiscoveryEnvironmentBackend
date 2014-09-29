@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.space-handling
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.permissions :only [process-parent-dirs]]
         [clj-jargon.item-info :only [exists?]]
@@ -14,12 +13,13 @@
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
 
 (defn- paths-contain-char
   [paths char]
-  (when-not (good-string? char)
+  (when-not (paths/good-string? char)
     (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
              :character char}))
 
@@ -31,7 +31,7 @@
     (process-parent-dirs
      #(reset! pdirs (conj @pdirs %1))
      #(and (not (nil? %1))
-           (not (= %1 (user-home-dir user)))) path)
+           (not (= %1 (paths/user-home-dir user)))) path)
     @pdirs))
 
 (defn- all-parent-dirs
@@ -88,7 +88,7 @@
     (validators/user-exists cm user)
     (validators/all-paths-exist cm paths)
     (validators/user-owns-paths cm user paths)
-    (when-not (good-string? new-char)
+    (when-not (paths/good-string? new-char)
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :character new-char}))
     (let [parent-dirs (all-parent-dirs user paths)]
@@ -106,7 +106,7 @@
 
 (with-pre-hook! #'do-paths-contain-space
   (fn [params body]
-    (log-call "do-path-contain-space" params body)
+    (paths/log-call "do-path-contain-space" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (when-not (every? true? (mapv string? (:paths body)))
@@ -114,7 +114,7 @@
                :field      "paths"}))
     (validators/validate-num-paths (:paths body))))
 
-(with-post-hook! #'do-paths-contain-space (log-func "do-paths-contain-space"))
+(with-post-hook! #'do-paths-contain-space (paths/log-func "do-paths-contain-space"))
 
 (defn do-replace-spaces
   [{user :user} {paths :paths}]
@@ -122,7 +122,7 @@
 
 (with-pre-hook! #'do-replace-spaces
   (fn [params body]
-    (log-call "do-substitute-spaces" params body)
+    (paths/log-call "do-substitute-spaces" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (when-not (every? true? (mapv string? (:paths body)))
@@ -130,4 +130,4 @@
                :field      "paths"}))
     (validators/validate-num-paths (:paths body))))
 
-(with-post-hook! #'do-replace-spaces (log-func "do-replace-spaces"))
+(with-post-hook! #'do-replace-spaces (paths/log-func "do-replace-spaces"))
