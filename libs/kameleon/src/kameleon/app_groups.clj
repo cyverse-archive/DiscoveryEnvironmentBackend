@@ -31,11 +31,11 @@
                   :users.username)
           (join users)))
 
-(defn get-app-group
+(defn get-app-category
   "Retrieves an App category by its ID."
   [app_group_id]
   (first (select app_category_listing
-                 (fields :id :name :description :is_public)
+                 (fields :id :name :is_public)
                  (where {:id app_group_id}))))
 
 (defn get-app-subcategory-id
