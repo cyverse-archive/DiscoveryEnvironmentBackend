@@ -12,6 +12,7 @@
             [clojure.set :as set]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [clj-jargon.validations :as valid]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as icat]
@@ -19,7 +20,7 @@
 
 (defn- paths-contain-char
   [paths char]
-  (when-not (paths/good-string? char)
+  (when-not (valid/good-string? char)
     (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
              :character char}))
 
@@ -88,7 +89,7 @@
     (validators/user-exists cm user)
     (validators/all-paths-exist cm paths)
     (validators/user-owns-paths cm user paths)
-    (when-not (paths/good-string? new-char)
+    (when-not (valid/good-string? new-char)
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :character new-char}))
     (let [parent-dirs (all-parent-dirs user paths)]

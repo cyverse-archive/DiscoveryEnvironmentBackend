@@ -9,7 +9,6 @@
         [donkey.util.transformers :only [add-current-user-to-map]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [donkey.services.fileio.actions :as actions]
-            [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.stat :as stat]
             [donkey.util.config :as config]
             [cheshire.core :as json]
@@ -20,6 +19,7 @@
             [clojure.tools.logging :as log]
             [ring.util.response :as rsp-utils]
             [cemerick.url :as url-parser]
+            [clj-jargon.validations :as valid]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.icat :as icat]))
 
@@ -49,7 +49,7 @@
         user     (cfg/irods-user)
         home     (cfg/irods-home)
         temp-dir (cfg/fileio-temp-dir)]
-    (if-not (cp/good-string? orig-filename)
+    (if-not (valid/good-string? orig-filename)
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :path orig-filename}))
     (with-jargon (icat/jargon-cfg) [cm]
@@ -68,7 +68,7 @@
   (let [user    (get req-params "user")
         dest    (get req-params "dest")
         up-path (get req-multipart "file")]
-    (if-not (cp/good-string? up-path)
+    (if-not (valid/good-string? up-path)
       {:status 500
        :body   (json/generate-string
                  {:error_code ERR_BAD_OR_MISSING_FIELD

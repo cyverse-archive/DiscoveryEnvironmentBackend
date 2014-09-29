@@ -1,8 +1,8 @@
 (ns donkey.services.filesystem.common-paths
   (:require [clojure-commons.file-utils :as ft]
             [clojure.tools.logging :as log]
-            [clojure.set :as set]
             [clj-jargon.item-info :as item]
+            [clj-jargon.validations :as valid]
             [donkey.util.config :as cfg]))
 
 
@@ -41,16 +41,8 @@
   [user]
   (ft/path-join "/" (cfg/irods-zone) "home" user))
 
-(defn- string-contains?
-  [container-str str-to-check]
-  (pos? (count (set/intersection (set (seq container-str)) (set (seq str-to-check))))))
 
-(defn good-string?
-  [str-to-check]
-  (not (string-contains? (cfg/fs-filter-chars) str-to-check)))
-
-
-(defn valid-path? [path-to-check] (good-string? path-to-check))
+(defn valid-path? [path-to-check] (valid/good-string? path-to-check))
 
 
 (defn- sharing?
