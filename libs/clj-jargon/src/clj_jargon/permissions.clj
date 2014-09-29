@@ -2,12 +2,12 @@
   (:use [clj-jargon.validations]
         [clj-jargon.gen-query]
         [clj-jargon.users]
-        [clj-jargon.item-info]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure-commons.file-utils :as ft]
             [clj-jargon.lazy-listings :as ll]
             [clojure.tools.logging :as log]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [clj-jargon.item-info :as item])
   (:import [org.irods.jargon.core.protovalues FilePermissionEnum]
            [org.irods.jargon.core.query RodsGenQueryEnum]))
 
@@ -223,7 +223,7 @@
   [cm abs-path]
   (let [path' (ft/rm-last-slash abs-path)]
     (validate-path-lengths path')
-    (if (is-file? cm path')
+    (if (item/is-file? cm path')
       (mapv perm-map (ll/user-dataobject-perms cm path'))
       (mapv perm-map (ll/user-collection-perms cm path')))))
 
@@ -231,7 +231,7 @@
   [cm abs-path]
   (let [path' (ft/rm-last-slash abs-path)]
     (validate-path-lengths path')
-    (if (is-file? cm path')
+    (if (item/is-file? cm path')
       (mapv perm-user->map (ll/user-dataobject-perms cm path'))
       (mapv perm-user->map (ll/user-collection-perms cm path')))))
 
@@ -265,10 +265,10 @@
   ([cm user fpath read? write? own? recursive?]
      (validate-path-lengths fpath)
      (cond
-      (is-file? cm fpath)
+      (item/is-file? cm fpath)
       (set-dataobj-perms cm user fpath read? write? own?)
 
-      (is-dir? cm fpath)
+      (item/is-dir? cm fpath)
       (set-coll-perms cm user fpath read? write? own? recursive?))))
 
 (defn set-permission
@@ -298,10 +298,10 @@
       owner - The username of the user who will be the owner of 'path'."
   (validate-path-lengths path)
   (cond
-   (is-file? cm path)
+   (item/is-file? cm path)
    (.setAccessPermissionOwn (:dataObjectAO cm) (:zone cm) path owner)
 
-   (is-dir? cm path)
+   (item/is-dir? cm path)
    (.setAccessPermissionOwn (:collectionAO cm) (:zone cm) path owner true)))
 
 (defn set-inherits
@@ -312,7 +312,7 @@
       cm - The iRODS context map
       path - The path being altered."
   (validate-path-lengths path)
-  (if (is-dir? cm path)
+  (if (item/is-dir? cm path)
     (.setAccessPermissionInherit (:collectionAO cm) (:zone cm) path false)))
 
 (defn permissions-inherited?
@@ -323,7 +323,7 @@
       cm - The iRODS context map
       path - The path being checked."
   (validate-path-lengths path)
-  (when (is-dir? cm path)
+  (when (item/is-dir? cm path)
     (.isCollectionSetForPermissionInheritance (:collectionAO cm) path)))
 
 (defn is-writeable?
@@ -339,10 +339,10 @@
    (not (user-exists? cm user))
    false
 
-   (is-dir? cm path)
+   (item/is-dir? cm path)
    (collection-writeable? cm user (ft/rm-last-slash path))
 
-   (is-file? cm path)
+   (item/is-file? cm path)
    (dataobject-writeable? cm user (ft/rm-last-slash path))
 
    :else
@@ -361,10 +361,10 @@
    (not (user-exists? cm user))
    false
 
-   (is-dir? cm path)
+   (item/is-dir? cm path)
    (collection-readable? cm user (ft/rm-last-slash path))
 
-   (is-file? cm path)
+   (item/is-file? cm path)
    (dataobject-readable? cm user (ft/rm-last-slash path))
 
    :else
@@ -435,7 +435,7 @@
        (ft/path-join parent-path %1)
        (catch Object _
          (when-not (contains? (set flags) :ignore-child-exns) (throw+))))
-    (.getListInDir (:fileSystemAO cm) (file cm parent-path))))
+    (.getListInDir (:fileSystemAO cm) (item/file cm parent-path))))
 
 (defn contains-accessible-obj?
   [cm user dpath]
@@ -465,7 +465,9 @@
   [cm path user admin-users]
   (let [user-hm   (ft/rm-last-slash (ft/path-join "/" (:zone cm) "home" user))
         parent    (ft/dirname path)
-        base-dirs #{(ft/rm-last-slash (:home cm)) (trash-base-dir cm) user-hm}]
+        base-dirs #{(ft/rm-last-slash (:home cm))
+                    (item/trash-base-dir cm)
+                    user-hm}]
     (process-perms
      (fn [{sharee :user}]
        (process-parent-dirs
@@ -478,7 +480,7 @@
   "Ensures that a file is accessible to all users that have access to the file."
   [cm path user admin-users]
   (let [parent    (ft/dirname path)
-        base-dirs #{(ft/rm-last-slash (:home cm)) (trash-base-dir cm)}]
+        base-dirs #{(ft/rm-last-slash (:home cm)) (item/trash-base-dir cm)}]
     (process-perms
      (fn [{sharee :user}]
        (process-parent-dirs (partial set-readable cm sharee true) #(not (base-dirs %)) path))
@@ -517,10 +519,10 @@
   [cm user fpath]
   (validate-path-lengths fpath)
   (cond
-    (is-dir? cm fpath)
+    (item/is-dir? cm fpath)
     (collection-perm-map cm user fpath)
 
-    (is-file? cm fpath)
+    (item/is-file? cm fpath)
     (dataobject-perm-map cm user fpath)
 
     :else
@@ -540,8 +542,8 @@
      It returns the aggregated permission."
   [cm user fpath]
   (-> (cond
-        (is-dir? cm fpath)  (user-collection-perms cm user fpath)
-        (is-file? cm fpath) (user-dataobject-perms cm user fpath))
+        (item/is-dir? cm fpath)       (user-collection-perms cm user fpath)
+        (item/is-file? cm fpath) (user-dataobject-perms cm user fpath))
     max-perm
     fmt-perm))
 
@@ -549,14 +551,14 @@
   [cm user fpath]
   (validate-path-lengths fpath)
   (cond
-   (is-file? cm fpath)
+   (item/is-file? cm fpath)
    (.removeAccessPermissionsForUserInAdminMode
      (:dataObjectAO cm)
      (:zone cm)
      fpath
      user)
 
-   (is-dir? cm fpath)
+   (item/is-dir? cm fpath)
    (.removeAccessPermissionForUserAsAdmin
      (:collectionAO cm)
      (:zone cm)
@@ -568,10 +570,10 @@
   [cm user fpath]
   (validate-path-lengths fpath)
   (cond
-    (is-file? cm fpath)
+    (item/is-file? cm fpath)
     (owns-dataobject? cm user fpath)
 
-    (is-dir? cm fpath)
+    (item/is-dir? cm fpath)
     (owns-collection? cm user fpath)
 
     :else
@@ -581,14 +583,14 @@
   [cm user abs-path]
   (validate-path-lengths abs-path)
   (cond
-   (is-file? cm abs-path)
+   (item/is-file? cm abs-path)
    (.removeAccessPermissionsForUserInAdminMode
      (:dataObjectAO cm)
      (:zone cm)
      abs-path
      user)
 
-   (is-dir? cm abs-path)
+   (item/is-dir? cm abs-path)
    (.removeAccessPermissionForUserAsAdmin
      (:collectionAO cm)
      (:zone cm)
