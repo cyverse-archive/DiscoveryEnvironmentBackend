@@ -21,7 +21,7 @@
             [cemerick.url :as url-parser]
             [clj-jargon.validations :as valid]
             [donkey.util.config :as cfg]
-            [donkey.services.filesystem.icat :as icat]))
+            [donkey.services.fileio.config :as jargon]))
 
 
 (defn- in-stream
@@ -52,7 +52,7 @@
     (if-not (valid/good-string? orig-filename)
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :path orig-filename}))
-    (with-jargon (icat/jargon-cfg) [cm]
+    (with-jargon (jargon/jargon-cfg) [cm]
       (store cm stream filename user temp-dir))))
 
 (defn download
@@ -120,7 +120,7 @@
           tmp-file  (str dest "." (gen-uuid))
           content   (:content body)
           file-size (count (.getBytes content "UTF-8"))]
-      (with-jargon (icat/jargon-cfg) [cm]
+      (with-jargon (jargon/jargon-cfg) [cm]
         (when-not (user-exists? cm user)
           (throw+ {:user       user
                    :error_code ERR_NOT_A_USER}))
@@ -163,7 +163,7 @@
     (let [user (:user params)
           dest (string/trim (:dest body))
           cont (:content body)]
-      (with-jargon (icat/jargon-cfg) [cm]
+      (with-jargon (jargon/jargon-cfg) [cm]
         (when-not (user-exists? cm user)
           (throw+ {:user       user
                    :error_code ERR_NOT_A_USER}))

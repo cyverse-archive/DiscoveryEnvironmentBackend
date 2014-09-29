@@ -18,12 +18,12 @@
             [donkey.services.filesystem.garnish.irods :as filetype]
             [ring.util.response :as rsp-utils]
             [donkey.util.config :as cfg]
-            [donkey.services.filesystem.icat :as icat]))
+            [donkey.services.fileio.config :as jargon]))
 
 
 (defn set-meta
   [path attr value unit]
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (jargon/jargon-cfg) [cm]
     (set-metadata cm path attr value unit)))
 
 (defn- scruffy-copy
@@ -76,7 +76,7 @@
 
 (defn- get-istream
   [user file-path]
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (jargon/jargon-cfg) [cm]
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
                :user       user}))
@@ -102,7 +102,7 @@
   [user tmp-path fpath]
   (log/info "In upload for " user tmp-path fpath)
   (let [final-path (ft/rm-last-slash fpath)] 
-    (with-jargon (icat/jargon-cfg) [cm]
+    (with-jargon (jargon/jargon-cfg) [cm]
       (when-not (user-exists? cm user)
         (throw+ {:error_code ERR_NOT_A_USER
                  :user user}))
@@ -203,7 +203,7 @@
      dest-path - irods path indicating the directory the file should go in."
   [user address filename orig-dest-path]
   (let [dest-path (ft/rm-last-slash orig-dest-path)]
-    (with-jargon (icat/jargon-cfg) [cm]
+    (with-jargon (jargon/jargon-cfg) [cm]
       (when-not (user-exists? cm user)
         (throw+ {:error_code ERR_NOT_A_USER
                  :user       user}))
