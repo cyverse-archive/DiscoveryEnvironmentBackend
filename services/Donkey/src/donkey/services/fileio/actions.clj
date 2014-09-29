@@ -15,7 +15,7 @@
             [clojure.string :as string]
             [clj-http.client :as client]
             [donkey.services.filesystem.stat :as stat]
-            [donkey.services.garnish.irods :as filetype]
+            [donkey.services.filesystem.garnish.irods :as filetype]
             [ring.util.response :as rsp-utils]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.icat :as icat]))

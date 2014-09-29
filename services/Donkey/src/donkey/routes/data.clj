@@ -5,7 +5,7 @@
         [donkey.auth.user-attributes]
         [donkey.util])
   (:require [donkey.util.config :as config]
-            [donkey.services.garnish.controllers :as garnish]
+            [donkey.services.filesystem.garnish.controllers :as garnish]
             [donkey.clients.saved-searches :as saved]))
 
 (defn secured-data-routes

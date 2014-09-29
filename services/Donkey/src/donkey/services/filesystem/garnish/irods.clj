@@ -1,4 +1,4 @@
-(ns donkey.services.garnish.irods
+(ns donkey.services.filesystem.garnish.irods
   (:use [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
         [clj-jargon.item-ops :only [input-stream]]

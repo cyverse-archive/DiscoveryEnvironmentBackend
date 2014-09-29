@@ -14,7 +14,7 @@
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]
-            [donkey.services.garnish.irods :as filetypes]
+            [donkey.services.filesystem.garnish.irods :as filetypes]
             [clj-icat-direct.icat :as icat]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.common-paths :as paths]

@@ -15,7 +15,7 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.filesystem.stat :refer [detect-content-type]]
-            [donkey.services.garnish.irods :as filetypes]
+            [donkey.services.filesystem.garnish.irods :as filetypes]
             [ring.util.codec :as cdc]
             [donkey.clients.tree-urls :as tree]
             [donkey.util.config :as cfg]

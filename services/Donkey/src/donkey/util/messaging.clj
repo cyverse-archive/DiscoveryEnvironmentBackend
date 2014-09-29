@@ -1,5 +1,5 @@
 (ns donkey.util.messaging
-  (:require [donkey.services.garnish.messages :as ftype]
+  (:require [donkey.services.filesystem.garnish.messages :as ftype]
             [donkey.clients.amqp :as amqp]
             [donkey.util.config :as cfg]
             [clojure.tools.logging :as log]

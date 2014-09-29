@@ -1,4 +1,4 @@
-(ns donkey.services.garnish.controllers
+(ns donkey.services.filesystem.garnish.controllers
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
         [clojure-commons.validators]
@@ -10,7 +10,7 @@
             [clojure.java.shell :as sh]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [donkey.services.garnish.irods :as prods]
+            [donkey.services.filesystem.garnish.irods :as prods]
             [donkey.util.config :as cfg]))
 
 (def script-types (sort (hm/supported-formats)))
