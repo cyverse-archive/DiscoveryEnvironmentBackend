@@ -7,9 +7,8 @@
             [clojure.string :as string]
             [clojure-commons.error-codes :as ce]
             [cheshire.core :as json]
-            [donkey.services.filesystem.garnish.irods :as irods]
-            [donkey.clients.amqp :as amqp]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.garnish.irods :as irods]
             [donkey.services.filesystem.icat :as icat]))
 
 (defn filetype-message-handler
