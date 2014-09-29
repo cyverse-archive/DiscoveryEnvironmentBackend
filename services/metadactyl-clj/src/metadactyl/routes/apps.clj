@@ -38,7 +38,7 @@
 
   (GET* "/:app-id/ui" []
         :path-params [app-id :- AppIdPathParam]
-        :query [params SecuredQueryParams]
+        :query [params SecuredQueryParamsEmailRequired]
         :return App
         :summary "Make an App Available for Editing"
         :notes "The app integration utility in the DE uses this service to obtain the App
@@ -60,7 +60,7 @@
 
   (PATCH* "/:app-id" []
           :path-params [app-id :- AppIdPathParam]
-          :query [params SecuredQueryParams]
+          :query [params SecuredQueryParamsEmailRequired]
           :body [body (describe App "The App to update.")]
           :summary "Update App Labels"
           :notes "This service is capable of updating just the labels within a single-step app, and
@@ -75,14 +75,14 @@
 
   (POST* "/:app-id/copy" []
          :path-params [app-id :- AppIdPathParam]
-         :query [params SecuredQueryParams]
+         :query [params SecuredQueryParamsEmailRequired]
          :summary "Make a Copy of an App Available for Editing"
          :notes "This service can be used to make a copy of an App in the user's workspace."
          (service/trap #(copy-app app-id)))
 
   (GET* "/:app-id/pipeline-ui" []
         :path-params [app-id :- AppIdPathParam]
-        :query [params SecuredQueryParams]
+        :query [params SecuredQueryParamsEmailRequired]
         :return Pipeline
         :summary "Make a Pipeline Available for Editing"
         :notes "The DE uses this service to obtain a JSON representation of a Pipeline for editing.
