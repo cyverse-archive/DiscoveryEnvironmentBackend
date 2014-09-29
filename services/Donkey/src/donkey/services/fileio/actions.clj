@@ -15,7 +15,6 @@
             [clojure.string :as string]
             [clj-http.client :as client]
             [donkey.services.filesystem.stat :as stat]
-            [donkey.services.filesystem.garnish.irods :as filetype]
             [ring.util.response :as rsp-utils]
             [donkey.util.config :as cfg]
             [donkey.services.fileio.config :as jargon]))
@@ -66,13 +65,8 @@
                :path ddir} )))
 
   (save cm istream user dest-path)
-  (log/info "store function after save.")
-  (let [guessed-type (:type (filetype/preview-auto-type user dest-path))]
-    (log/warn "Guessed type" guessed-type)
-    (when-not (or (nil? guessed-type) (empty? guessed-type))
-      (log/warn "Adding type " guessed-type)
-      (filetype/add-type cm user dest-path guessed-type)))
-    dest-path)
+  dest-path)
+
 
 (defn- get-istream
   [user file-path]
