@@ -20,7 +20,7 @@
   (let [subgroups (filter #(= (:id group) (:parent_id %)) groups)
         subgroups (map #(add-subgroups % groups) subgroups)
         result    (if (empty? subgroups) group (assoc group :categories subgroups))
-        result    (dissoc result :parent_id)]
+        result    (dissoc result :parent_id :workspace_id :description)]
     result))
 
 (defn- format-my-public-apps-group
@@ -28,8 +28,6 @@
   [workspace-id params]
   {:id           (uuidify "00000000-0000-0000-0000-000000000000")
    :name         "My public apps"
-   :description  ""
-   :workspace_id workspace-id
    :is_public    false
    :app_count    (count-public-apps-by-user (:email current-user) params)})
 
@@ -174,7 +172,6 @@
   (let [group-key (keyword (str group-id))]
     (when-let [format-fns (virtual-group-fns group-key)]
       (-> ((:format-group format-fns) (:id workspace) params)
-          (dissoc :workspace_id)
           (assoc :apps (map format-app ((:format-listing format-fns) workspace params)))))))
 
 (defn- count-apps-in-group
@@ -195,7 +192,7 @@
 (defn- list-apps-in-real-group
   "This service lists all of the apps in a real app group and all of its descendents."
   [workspace app_group_id params]
-  (let [app_group      (remove-nil-vals (get-app-group app_group_id))
+  (let [app_group      (remove-nil-vals (get-app-category app_group_id))
         total          (count-apps-in-group workspace app_group params)
         apps_in_group  (get-apps-in-group workspace app_group params)
         apps_in_group  (map format-app apps_in_group)]

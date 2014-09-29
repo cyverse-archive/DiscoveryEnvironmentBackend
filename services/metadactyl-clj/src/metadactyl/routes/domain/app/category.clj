@@ -12,14 +12,8 @@
    :name
    (describe String "The App Category's name")
 
-   (optional-key :description)
-   (describe String "The App Category's description")
-
    :app_count
    (describe Long "The number of Apps under this Category and all of its children")
-
-   :workspace_id
-   (describe UUID "The ID of this App Category's Workspace")
 
    :is_public
    (describe Boolean
@@ -37,7 +31,7 @@
   {:categories (describe [AppCategory] "A listing of App Categories visisble to the requesting user")})
 
 (defschema AppCategoryAppListing
-  (merge (dissoc AppCategory :workspace_id :categories)
+  (merge (dissoc AppCategory :categories)
          {:apps (describe [AppListingDetail] "A listing of Apps under this Category")}))
 
 (defschema AppCategoryPath
