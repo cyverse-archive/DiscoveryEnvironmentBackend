@@ -1,9 +1,12 @@
 (ns donkey.util.transformers
   (:use [cemerick.url :only [url]]
         [donkey.util.service :only [decode-stream]]
-        [donkey.auth.user-attributes])
+        [donkey.auth.user-attributes]
+        [medley.core :only [remove-vals]])
   (:require [cheshire.core :as cheshire])
   (:import [net.sf.json JSONObject]))
+
+(def remove-nil-vals (partial remove-vals nil?))
 
 (defn object->json-str
   "Converts a Java object to a JSON string."

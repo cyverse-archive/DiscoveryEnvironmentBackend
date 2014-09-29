@@ -342,21 +342,20 @@
                          (service/required-field request :user_favorite))))))
 
 (defn rate-app
-  [body]
+  [body app-id]
   (with-db db/de
     (transaction
      (let [request (service/decode-json body)]
        (.rateApp (get-app-lister)
-                 (service/required-field request :analysis_id)
+                 app-id
                  (service/required-field request :rating)
-                 (service/required-field request :comment_id))))))
+                 (:comment_id request))))))
 
 (defn delete-rating
-  [body]
+  [app-id]
   (with-db db/de
     (transaction
-     (let [request (service/decode-json body)]
-       (.deleteRating (get-app-lister) (service/required-field request :analysis_id))))))
+      (.deleteRating (get-app-lister) app-id))))
 
 (defn get-app
   [app-id]

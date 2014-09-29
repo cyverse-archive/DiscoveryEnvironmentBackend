@@ -18,12 +18,6 @@
   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
        (throw+ '("run-experiment" body workspace-id)))
 
-  (POST "/rate-analysis" [:as {body :body}]
-        (throw+ '("rate-app" body)))
-
-  (POST "/delete-rating" [:as {body :body}]
-        (throw+ '("delete-rating" body)))
-
   (GET "/get-components-in-analysis/:app-id" [app-id]
        (throw+ '("list-deployed-components-in-app" app-id)))
 
