@@ -1,6 +1,36 @@
+// condor-log-monitor
+//
+// Tails the configured EVENT_LOG on a condor submission node, parses events from it,
+// and pushes events out to an AMQP broker.
+//
+// condor-log-monitor will make an attempt at detecting rolling over log files and
+// recovering from extended downtime, but whether or not a full recovery is possible
+// depends on how the Condor logging is configured. It is still possible to lose
+// messages if condor-log-monitor is down for a while and Condor rotates files
+// out too many times.
+//
+// Condor attempts to recover from downtime by recording a tombstone file that
+// records the inode number, last modified date, processing date, and last
+// processed position. At start up clm will look for the tombstoned file and will
+// attempt to start processing from that point forward.
+//
+// If the inode of the new file doesn't match the inode contained in the tombstone,
+// then scan the directory for all of the old log files and collect their inodes
+// and last modified dates. Sort the old log files from oldest to newest -- based
+// on the last modified date -- and iterate through them. Find the file that matches
+// the inode of the file from the tombstone and process it starting from the position
+// recorded in the tombstone. Then, process all of remaining files until you reach
+// the current log file. Process the current log file and record a new tombstone.
+// Do not delete the old tombstone until you're ready to record a new one.
+//
+// If condor-log-monitor has been down for so long that the tombstoned log file no
+// longer exists, process all of the log file in order from oldest to newest. Record
+// a new tombstone when you reach the end of the newest log file.
+
 package main
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -8,6 +38,8 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"syscall"
+	"time"
 
 	"github.com/ActiveState/tail"
 	"github.com/streadway/amqp"
@@ -154,8 +186,13 @@ func (p *AMQPPublisher) SetupReconnection(errorChan chan ConnectionErrorChan) {
 	}()
 }
 
-// Publish sends the body off to the configured AMQP exchange.
-func (p *AMQPPublisher) Publish(body string) error {
+// PublishString sends the body off to the configured AMQP exchange.
+func (p *AMQPPublisher) PublishString(body string) error {
+	return p.PublishBytes([]byte(body))
+}
+
+// PublishBytes sends off the bytes to the AMQP broker.
+func (p *AMQPPublisher) PublishBytes(body []byte) error {
 	if err := p.channel.Publish(
 		p.ExchangeName,
 		p.RoutingKey,
@@ -165,7 +202,7 @@ func (p *AMQPPublisher) Publish(body string) error {
 			Headers:         amqp.Table{},
 			ContentType:     "text/plain",
 			ContentEncoding: "",
-			Body:            []byte(body),
+			Body:            body,
 			DeliveryMode:    amqp.Transient,
 			Priority:        0,
 		},
@@ -178,6 +215,23 @@ func (p *AMQPPublisher) Publish(body string) error {
 // Close calls Close() on the underlying AMQP connection.
 func (p *AMQPPublisher) Close() {
 	p.connection.Close()
+}
+
+// PublishableEvent is a type that contains the information that gets sent to
+// the AMQP broker. It's meant to be marshalled into JSON or some other format.
+type PublishableEvent struct {
+	Event string
+	Hash  string
+}
+
+// NewPublishableEvent creates returns a pointer to a newly created instance
+// of PublishableEvent.
+func NewPublishableEvent(event string) *PublishableEvent {
+	hashBytes := sha256.Sum256([]byte(event))
+	return &PublishableEvent{
+		Event: event,
+		Hash:  string(hashBytes[:]),
+	}
 }
 
 // ParseEvent will tail a file and print out each event as it comes through.
@@ -216,7 +270,12 @@ func ParseEvent(filepath string, pub *AMQPPublisher) error {
 			eventlines = eventlines + text + "\n"
 			if matchedEnd {
 				fmt.Println(eventlines)
-				if err = pub.Publish(eventlines); err != nil {
+				pubEvent := NewPublishableEvent(eventlines)
+				pubJSON, err := json.Marshal(pubEvent)
+				if err != nil {
+					return err
+				}
+				if err = pub.PublishBytes(pubJSON); err != nil {
 					fmt.Println(err)
 				}
 				eventlines = ""
@@ -225,6 +284,96 @@ func ParseEvent(filepath string, pub *AMQPPublisher) error {
 		}
 	}
 	return err
+}
+
+//TombstoneAction denotes the kind of action a TombstoneMsg represents.
+type TombstoneAction int
+
+const (
+	//Set says that the TombstoneMsg contains a set action.
+	Set TombstoneAction = iota
+
+	//Get says that the TombstoneMsg contains a get action.
+	Get
+
+	//Quit says that the TombstoneMsg contains a quit action.
+	Quit
+)
+
+//TombstoneMsg represents a message sent to a goroutine that processes tombstone
+//related operations. The Data field contains information that the tombstone
+//goroutine may take action on, depending on the Action. Set messages will set
+//the current value of the tombstone to the value in the Data field. Get messages
+//will return the current value of the tombstone on the Reply channel. Quit
+//messages tell the goroutine to shut down as cleanly as possible. The Reply
+//channel may be used on certain operations to pass back data from the goroutine
+//in response to a received TombstoneMsg.
+type TombstoneMsg struct {
+	Action TombstoneAction
+	Data   Tombstone
+	Reply  chan interface{}
+}
+
+type Tombstone struct {
+	CurrentPos int64
+	Date       time.Time
+	LogLastMod time.Time
+	Inode      uint64
+}
+
+func InodeFromPath(path string) (uint64, error) {
+	openFile, err := os.Open(path)
+	if err != nil {
+		return 0, err
+	}
+	ino, err := InodeFromFile(openFile)
+	if err != nil {
+		return 0, err
+	}
+	return ino, nil
+}
+
+func InodeFromFile(openFile *os.File) (uint64, error) {
+	fileInfo, err := openFile.Stat()
+	if err != nil {
+		return 0, err
+	}
+	sys := fileInfo.Sys().(*syscall.Stat_t)
+	return sys.Ino, nil
+}
+
+func NewTombstoneFromPath(path string) (*Tombstone, error) {
+	openFile, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	tombstone, err := NewTombstoneFromFile(openFile)
+	if err != nil {
+		return nil, err
+	}
+	return tombstone, nil
+}
+
+func NewTombstoneFromFile(openFile *os.File) (*Tombstone, error) {
+	fileInfo, err := openFile.Stat()
+	if err != nil {
+		return nil, err
+	}
+	inode, err := InodeFromFile(openFile)
+	if err != nil {
+		return nil, err
+	}
+	currentPos, err := openFile.Seek(0, os.SEEK_CUR)
+	if err != nil {
+		return nil, err
+	}
+	tombstone := &Tombstone{
+		CurrentPos: currentPos,
+		Date:       time.Now(),
+		LogLastMod: fileInfo.ModTime(),
+		Inode:      inode,
+	}
+	return tombstone, nil
 }
 
 func main() {
