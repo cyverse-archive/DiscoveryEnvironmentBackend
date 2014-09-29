@@ -2,7 +2,6 @@
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.util.validators]
         [donkey.util.transformers :only [add-current-user-to-map]])
   (:require [cheshire.core :as json]
             [heuristomancer.core :as hm]
@@ -11,7 +10,8 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [donkey.services.filesystem.garnish.irods :as prods]
-            [donkey.util.config :as cfg]))
+            [donkey.util.validators :as valid]))
+
 
 (def script-types (sort (hm/supported-formats)))
 
@@ -21,7 +21,7 @@
 
 (defn add-type
   [req-body req-params]
-  (let [body   (parse-body (slurp req-body))
+  (let [body   (valid/parse-body (slurp req-body))
         params (add-current-user-to-map req-params)
         type?  #(or (string/blank? %1) (contains? (accepted-types) %1))]
     (validate-map params {:user string?})
@@ -64,7 +64,7 @@
 
 (defn set-auto-type
   [req-body req-params]
-  (let [body   (parse-body (slurp req-body))
+  (let [body   (valid/parse-body (slurp req-body))
         params (add-current-user-to-map req-params)]
     (log/warn body)
     (validate-map params {:user string?})
