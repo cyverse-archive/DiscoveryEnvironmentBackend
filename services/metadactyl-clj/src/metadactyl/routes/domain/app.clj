@@ -7,6 +7,25 @@
 
 (def AppIdParam (describe UUID "A UUID that is used to identify the App"))
 (def ToolIdParam (describe UUID "A UUID that is used to identify the Tool"))
+(def OptionalIdParam (describe UUID "An optional UUID identifier"))
+
+(def OptionalGroupsKey (optional-key :groups))
+(def OptionalParametersKey (optional-key :parameters))
+(def OptionalParameterArgumentsKey (optional-key :arguments))
+
+(def GroupListDocs "The list of Parameter Groups associated with the App")
+(def ParameterListDocs
+  ;; KLUDGE
+  "The list of Parameters in this Group. <b>Note</b>: These objects have an optional
+   `defaultValue` field that can contain any type of value, but the current version of the
+   documentation library does not support documenting these kinds of fields.")
+(def ListItemOrTreeDocs
+  "The List Parameter's arguments. Only used in cases where the user is given a fixed number of
+   values to choose from. This can occur for Parameters such as `TextSelection` or
+   `IntegerSelection` Parameters")
+(def TreeSelectorParameterListDocs "The TreeSelector root's arguments")
+(def TreeSelectorGroupListDocs "The TreeSelector root's groups")
+(def TreeSelectorGroupParameterListDocs "The TreeSelector Group's arguments")
 
 (defschema AppParameterListItem
   {:id                         (describe UUID "A UUID that is used to identify the List Item")
@@ -18,11 +37,11 @@
 
 (defschema AppParameterListGroup
   (merge AppParameterListItem
-         {(optional-key :arguments)
-          (describe [AppParameterListItem] "The TreeSelector Group's arguments")
+         {OptionalParameterArgumentsKey
+          (describe [AppParameterListItem] TreeSelectorGroupParameterListDocs)
 
           ;; KLUDGE
-          (optional-key :groups)
+          OptionalGroupsKey
           (describe [Any]
             "The TreeSelector Group's groups. This will be a list of more groups like this one, but
              the documentation library does not currently support recursive model schema definitions")}))
@@ -35,11 +54,11 @@
           (optional-key :selectionCascade)
           (describe String "The TreeSelector root's cascace option")
 
-          (optional-key :arguments)
-          (describe [AppParameterListItem] "The TreeSelector root's arguments")
+          OptionalParameterArgumentsKey
+          (describe [AppParameterListItem] TreeSelectorParameterListDocs)
 
-          (optional-key :groups)
-          (describe [AppParameterListGroup] "The TreeSelector root's groups")}))
+          OptionalGroupsKey
+          (describe [AppParameterListGroup] TreeSelectorGroupListDocs)}))
 
 (defschema AppParameterValidator
   {:type
@@ -128,11 +147,8 @@
    (optional-key :format)
    (describe String "The Input/Output Parameter's file format")
 
-   (optional-key :arguments)
-   (describe [AppParameterListItemOrTree]
-     "The List Parameter's arguments. Only used in cases where the user is given a fixed number of
-      values to choose from. This can occur for Parameters such as `TextSelection` or
-      `IntegerSelection` Parameters")
+   OptionalParameterArgumentsKey
+   (describe [AppParameterListItemOrTree] ListItemOrTreeDocs)
 
    (optional-key :validators)
    (describe [AppParameterValidator]
@@ -157,12 +173,8 @@
    (optional-key :isVisible)
    (describe Boolean "The Parameter Group's intended visibility in the job submission UI")
 
-   ;; KLUDGE
-   (optional-key :parameters)
-   (describe [AppParameter]
-     "The list of Parameters in this Group. <b>Note</b>: These objects have an optional
-      `defaultValue` field that can contain any type of value, but the current version of the
-      documentation library does not support documenting these kinds of fields.")})
+   OptionalParametersKey
+   (describe [AppParameter] ParameterListDocs)})
 
 (defschema AppBase
   {:id                              AppIdParam
@@ -176,8 +188,7 @@
          {(optional-key :tool)       (describe String "The tool used to execute the App")
           (optional-key :tool_id)    (describe UUID "A UUID that is used to identify the App's tool")
           (optional-key :references) (describe [String] "The App's references")
-          (optional-key :groups)     (describe [AppGroup]
-                                       "The list of Parameter Groups associated with the App")}))
+          OptionalGroupsKey          (describe [AppGroup] GroupListDocs)}))
 
 (defschema ToolDetails
   {:id          ToolIdParam
@@ -271,3 +282,44 @@
   (merge AppIdList
          {(optional-key :root_deletion_request)
           (describe Boolean "Set to `true` to  delete one or more public apps")}))
+
+(defn- ->optional-param
+  [m key]
+  (-> m
+      (assoc (optional-key key) (get m key))
+      (dissoc key)))
+
+(defschema AppParameterListItemPreviewRequest
+  (->optional-param AppParameterListItem :id))
+
+(defschema AppParameterListGroupPreviewRequest
+  (-> AppParameterListGroup
+    (->optional-param :id)
+    (assoc OptionalParameterArgumentsKey
+           (describe [AppParameterListItemPreviewRequest] TreeSelectorGroupParameterListDocs))))
+
+(defschema AppParameterListItemOrTreePreviewRequest
+  (-> AppParameterListItemOrTree
+    (->optional-param :id)
+    (assoc OptionalParameterArgumentsKey
+           (describe [AppParameterListItemPreviewRequest] TreeSelectorParameterListDocs))
+    (assoc OptionalGroupsKey
+           (describe [AppParameterListGroupPreviewRequest] TreeSelectorGroupListDocs))))
+
+(defschema AppParameterPreviewRequest
+  (-> AppParameter
+    (->optional-param :id)
+    (assoc OptionalParameterArgumentsKey
+           (describe [AppParameterListItemOrTreePreviewRequest] ListItemOrTreeDocs))))
+
+(defschema AppGroupPreviewRequest
+  (-> AppGroup
+      (->optional-param :id)
+      (assoc OptionalParametersKey (describe [AppParameterPreviewRequest] ParameterListDocs))))
+
+(defschema AppPreviewRequest
+  (-> App
+    (->optional-param :id)
+    (->optional-param :name)
+    (->optional-param :description)
+    (assoc OptionalGroupsKey (describe [AppGroupPreviewRequest] GroupListDocs))))

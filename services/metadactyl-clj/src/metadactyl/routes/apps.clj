@@ -46,9 +46,9 @@
         requesting user, and it must not already be public."
         (service/trap #(edit-app app-id)))
 
-  (POST* "/arg-preview" []
+  (POST* "/arg-preview" [:as {uri :uri}]
          :query [params SecuredQueryParams]
-         :body [body (describe App "The App to preview.")]
+         :body [body (describe AppPreviewRequest "The App to preview.")]
          :summary "Preview Command Line Arguments"
          :notes "The app integration utility in the DE uses this service to obtain an example list
          of command-line arguments so that the user can tell what the command-line might look like
@@ -56,7 +56,7 @@
          body also requires that each parameter contain a `value` field that contains the parameter
          value to include on the command line. The response body is in the same format as the
          `/arg-preview` service in the JEX. Please see the JEX documentation for more information."
-         (ce/trap "arg-preview" #(service/swagger-response (app-metadata/preview-command-line body))))
+         (ce/trap uri #(service/swagger-response (app-metadata/preview-command-line body))))
 
   (PATCH* "/:app-id" []
           :path-params [app-id :- AppIdPathParam]
