@@ -7,11 +7,6 @@
             [clj-http.client :as client]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [clj-jargon.init :as init]
-            [clj-jargon.item-info :as item]
-            [clj-jargon.item-ops :as ops]
-            [clj-jargon.permissions :as perm]
-            [clojure-commons.error-codes :as ce]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
             [donkey.services.filesystem.exists :as e]
@@ -19,6 +14,7 @@
             [donkey.services.filesystem.metadata :as mt]
             [donkey.services.filesystem.sharing :as sharing]
             [donkey.services.filesystem.stat :as st]
+            [donkey.services.filesystem.status :as status]
             [donkey.services.filesystem.users :as users]
             [donkey.services.filesystem.uuids :as uuids])
   (:import [clojure.lang IPersistentMap ISeq]
@@ -28,13 +24,7 @@
 (defn ^Boolean irods-running?
   "Determines whether or not iRODS is running."
   []
-  (try
-    (init/with-jargon (icat/jargon-cfg) [cm]
-      (item/exists? cm (:home cm)))
-    (catch Exception e
-      (log/error "Error performing iRODS status check:")
-      (log/error (ce/format-exception e))
-      false)))
+  (status/irods-running?))
 
 
 (defn ^String user-home-folder
@@ -74,11 +64,7 @@
      user - the username of the user to become an owner of the new folder
      dir  - the absolute path to the folder"
   [^String user ^String dir]
-  (init/with-jargon (icat/jargon-cfg) [cm]
-    (when-not (item/exists? cm dir)
-      (log/warn "creating" dir)
-      (ops/mkdirs cm dir)
-      (perm/set-owner cm dir user))))
+  (cr/ensure-created user dir))
 
 
 (defn get-or-create-dir
@@ -145,6 +131,19 @@
   (users/list-user-groups user))
 
 
+(defn ^IPersistentMap path-stat
+  "retrieves the stat info for an entity with a given path
+
+   Params:
+     user - the username of the user making the request
+     path - the absolute path to the entity
+
+   Returns:
+     It returns the stat info formatted for the HTTP response."
+  [^String user ^String path]
+  (-> (st/do-stat {:user user :paths [path]}) :paths first path))
+
+
 (defn ^IPersistentMap stat-by-uuid
   "Resolves a stat info for the entity with a given UUID.
 
@@ -198,8 +197,7 @@
    Returns:
      It returns true if the user own the entry, otherwise false."
   [^String user ^String entry-path]
-  (init/with-jargon (icat/jargon-cfg) [cm]
-    (perm/owns? cm user entry-path)))
+  (users/owns? user entry-path))
 
 
 (defn ^String resolve-data-type

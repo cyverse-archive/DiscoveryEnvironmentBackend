@@ -1,6 +1,5 @@
 (ns donkey.services.filesystem.directory
   (:use [clojure-commons.validators]
-        [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info]
         [clj-jargon.permissions]
@@ -14,6 +13,7 @@
             [donkey.persistence.metadata :as meta]
             [clj-icat-direct.icat :as icat]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as jargon])
   (:import [java.util UUID]))
 
@@ -38,7 +38,7 @@
   [user path-to-check]
   (let [fpaths (set (concat (cfg/fs-filter-files) (filtered-paths user)))]
     (or  (contains? fpaths path-to-check)
-         (not (valid-path? path-to-check)))))
+         (not (paths/valid-path? path-to-check)))))
 
 (defn- page-entry->map
   "Turns a entry in a paged listing result into a map containing file/directory
@@ -122,7 +122,7 @@
          (hash-map
           :id               uuid
           :path             path
-          :label            (id->label cm user path)
+          :label            (paths/id->label user path)
           :isFavorite       (meta/is-favorite? user (UUID/fromString uuid))
           :filter           (should-filter? user path)
           :permission       (permission-for cm user path)
@@ -154,7 +154,7 @@
          (hash-map
           :id            uuid
           :path          path
-          :label         (id->label cm user path)
+          :label         (paths/id->label user path)
           :isFavorite    (meta/is-favorite? user (UUID/fromString uuid))
           :filter        (should-filter? user path)
           :permisssion   (permission-for cm user path)
@@ -168,7 +168,7 @@
   [{user :user}]
   (let [comm-f     (future (list-directories user (cfg/fs-community-data)))
         share-f    (future (list-directories user (cfg/irods-home)))
-        home-f     (future (list-directories user (user-home-dir user)))]
+        home-f     (future (list-directories user (paths/user-home-dir user)))]
     {:roots [@home-f @comm-f @share-f]}))
 
 (defn- shared-with-me-listing?
@@ -219,21 +219,21 @@
 
 (with-pre-hook! #'do-directory
   (fn [params]
-    (log-call "do-directory" params)
+    (paths/log-call "do-directory" params)
     (validate-map params {:user string?})))
 
-(with-post-hook! #'do-directory (log-func "do-directory"))
+(with-post-hook! #'do-directory (paths/log-func "do-directory"))
 
 (with-pre-hook! #'do-paged-listing
   (fn [params]
-    (log-call "do-paged-listing" params)
+    (paths/log-call "do-paged-listing" params)
     (validate-map params {:user string? :path string? :limit string? :offset string?})))
 
-(with-post-hook! #'do-paged-listing (log-func "do-paged-listing"))
+(with-post-hook! #'do-paged-listing (paths/log-func "do-paged-listing"))
 
 (with-pre-hook! #'do-unsecured-paged-listing
   (fn [params]
-    (log-call "do-unsecured-paged-listing" params)
+    (paths/log-call "do-unsecured-paged-listing" params)
     (validate-map params {:path string? :limit string? :offset string?})))
 
-(with-post-hook! #'do-unsecured-paged-listing (log-func "do-unsecured-paged-listing"))
+(with-post-hook! #'do-unsecured-paged-listing (paths/log-func "do-unsecured-paged-listing"))

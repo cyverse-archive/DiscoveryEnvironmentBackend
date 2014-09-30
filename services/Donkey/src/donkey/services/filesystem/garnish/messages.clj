@@ -1,6 +1,5 @@
-(ns donkey.services.garnish.messages
-  (:use [donkey.services.garnish.irods]
-        [clj-jargon.init :only [with-jargon]]
+(ns donkey.services.filesystem.garnish.messages
+  (:use [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
         [clj-jargon.metadata :only [attribute? add-metadata]]
         [slingshot.slingshot :only [throw+ try+]])
@@ -8,9 +7,8 @@
             [clojure.string :as string]
             [clojure-commons.error-codes :as ce]
             [cheshire.core :as json]
-            [donkey.services.garnish.irods :as irods]
-            [donkey.clients.amqp :as amqp]
             [donkey.util.config :as cfg]
+            [donkey.services.filesystem.garnish.irods :as irods]
             [donkey.services.filesystem.icat :as icat]))
 
 (defn filetype-message-handler

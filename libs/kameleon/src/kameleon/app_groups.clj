@@ -38,6 +38,16 @@
                  (fields :id :name :description :is_public)
                  (where {:id app_group_id}))))
 
+(defn get-app-subcategory-id
+  "Gets the ID of the child category at the given index under the parent category with the given ID."
+  [parent-category-id child-index]
+  ((comp :id first)
+   (select
+     :app_category_group
+     (fields [:child_category_id :id])
+     (where {:parent_category_id parent-category-id
+             :child_index child-index}))))
+
 (defn create-app-group
   "Creates a database entry for an app group, with an UUID and the given
    workspace_id and name, and returns a map of the group with its id."

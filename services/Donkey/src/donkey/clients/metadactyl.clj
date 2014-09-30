@@ -147,9 +147,9 @@
 
 (defn copy-workflow
   [app-id]
-  (-> (client/get (metadactyl-url "apps" app-id "copy-pipeline")
-                  {:query-params (secured-params)
-                   :as           :stream})
+  (-> (client/post (metadactyl-url "apps" app-id "copy-pipeline")
+                   {:query-params (secured-params)
+                    :as           :stream})
       (:body)
       (service/decode-json)))
 
@@ -178,25 +178,25 @@
       (service/decode-json)))
 
 (defn- rate-app-request
-  [app-id rating comment-id]
-  {:analysis_id app-id
-   :rating      rating
-   :comment_id  comment-id})
+  [rating comment-id]
+  (xforms/remove-nil-vals
+    {:rating      rating
+     :comment_id  comment-id}))
 
 (defn rate-app
   [app-id rating comment-id]
-  (-> (client/post (secured-url "rate-analysis")
+  (-> (client/post (metadactyl-url "apps" app-id "rating")
                    {:query-params (secured-params)
-                    :body         (cheshire/encode (rate-app-request app-id rating comment-id))
+                    :body         (cheshire/encode (rate-app-request rating comment-id))
+                    :content-type :json
                     :as           :stream})
       (:body)
       (service/decode-json)))
 
 (defn delete-rating
   [app-id]
-  (-> (client/post (secured-url "delete-rating")
-                   {:query-params (secured-params)
-                    :body         (cheshire/encode {:analysis_id app-id})
-                    :as           :stream})
+  (-> (client/delete (metadactyl-url "apps" app-id "rating")
+                     {:query-params (secured-params)
+                      :as           :stream})
       (:body)
       (service/decode-json)))

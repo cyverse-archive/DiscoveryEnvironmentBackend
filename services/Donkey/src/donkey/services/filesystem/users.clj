@@ -4,7 +4,6 @@
         [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [quota]]
-        [clj-jargon.permissions :only [list-user-perm]]
         [clj-jargon.users]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
@@ -12,6 +11,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [clj-jargon.permissions :as perm]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
@@ -27,7 +27,8 @@
   (let [filtered-users (set (conj (cfg/fs-perms-filter) user (cfg/irods-user)))]
     (filter
      #(not (contains? filtered-users (:user %1)))
-     (list-user-perm cm abspath))))
+     (perm/list-user-perm cm abspath))))
+
 
 (defn- list-perm
   [cm user abspath]
@@ -82,3 +83,17 @@
     (validators/validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-user-permissions (log-func "do-user-permissions"))
+
+
+(defn ^Boolean owns?
+  "Indicates if a file or folder is owned by a given user.
+
+   Parameters:
+     user       - the username of the user
+     entry-path - The absolute path to the file or folder
+
+   Returns:
+     It returns true if the user own the entry, otherwise false."
+  [^String user ^String entry-path]
+  (with-jargon (icat/jargon-cfg) [cm]
+    (perm/owns? cm user entry-path)))

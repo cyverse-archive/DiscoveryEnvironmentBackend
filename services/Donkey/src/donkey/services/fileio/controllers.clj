@@ -9,9 +9,6 @@
         [donkey.util.transformers :only [add-current-user-to-map]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [donkey.services.fileio.actions :as actions]
-            [donkey.services.filesystem.common-paths :as cp]
-            [donkey.services.filesystem.stat :as stat]
-            [donkey.util.config :as config]
             [cheshire.core :as json]
             [clj-jargon.item-ops :as jargon-ops]
             [clojure-commons.file-utils :as ft]
@@ -20,8 +17,10 @@
             [clojure.tools.logging :as log]
             [ring.util.response :as rsp-utils]
             [cemerick.url :as url-parser]
+            [clj-jargon.validations :as valid]
+            [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
-            [donkey.services.filesystem.icat :as icat]))
+            [donkey.services.fileio.config :as jargon]))
 
 
 (defn- in-stream
@@ -49,10 +48,10 @@
         user     (cfg/irods-user)
         home     (cfg/irods-home)
         temp-dir (cfg/fileio-temp-dir)]
-    (if-not (cp/good-string? orig-filename)
+    (if-not (valid/good-string? orig-filename)
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :path orig-filename}))
-    (with-jargon (icat/jargon-cfg) [cm]
+    (with-jargon (jargon/jargon-cfg) [cm]
       (store cm stream filename user temp-dir))))
 
 (defn download
@@ -68,7 +67,7 @@
   (let [user    (get req-params "user")
         dest    (get req-params "dest")
         up-path (get req-multipart "file")]
-    (if-not (cp/good-string? up-path)
+    (if-not (valid/good-string? up-path)
       {:status 500
        :body   (json/generate-string
                  {:error_code ERR_BAD_OR_MISSING_FIELD
@@ -120,7 +119,7 @@
           tmp-file  (str dest "." (gen-uuid))
           content   (:content body)
           file-size (count (.getBytes content "UTF-8"))]
-      (with-jargon (icat/jargon-cfg) [cm]
+      (with-jargon (jargon/jargon-cfg) [cm]
         (when-not (user-exists? cm user)
           (throw+ {:user       user
                    :error_code ERR_NOT_A_USER}))
@@ -133,7 +132,7 @@
           (throw+ {:error_code ERR_NOT_WRITEABLE
                    :path       dest}))
 
-        (when (> file-size (config/fileio-max-edit-file-size))
+        (when (> file-size (cfg/fileio-max-edit-file-size))
           (throw+ {:error_code "ERR_FILE_SIZE_TOO_LARGE"
                    :path       dest
                    :size       file-size}))
@@ -152,7 +151,7 @@
             (jargon-ops/move cm tmp-file dest :user user :admin-users (cfg/irods-admins))
             (throw+)))
 
-        {:file (stat/path-stat cm user dest)}))))
+        {:file (data/path-stat user dest)}))))
 
 (defn saveas
   [req-params req-body]
@@ -163,7 +162,7 @@
     (let [user (:user params)
           dest (string/trim (:dest body))
           cont (:content body)]
-      (with-jargon (icat/jargon-cfg) [cm]
+      (with-jargon (jargon/jargon-cfg) [cm]
         (when-not (user-exists? cm user)
           (throw+ {:user       user
                    :error_code ERR_NOT_A_USER}))
@@ -183,4 +182,4 @@
         (with-in-str cont
           (actions/store cm *in* user dest))
 
-        {:file (stat/path-stat cm user dest)}))))
+        {:file (data/path-stat user dest)}))))

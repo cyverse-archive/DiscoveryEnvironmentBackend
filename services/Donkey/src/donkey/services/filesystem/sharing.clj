@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.sharing
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [trash-base-dir is-dir?]]
         [clj-jargon.metadata]
@@ -15,6 +14,7 @@
             [cheshire.core :as json]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.services.filesystem.common-paths :as paths]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
@@ -71,7 +71,7 @@
           item being shared is a directory."
   [cm user share-with perm fpath]
   (let [hdir      (share-path-home fpath)
-        trash-dir (trash-base-dir cm user)
+        trash-dir (trash-base-dir (:zone cm) user)
         base-dirs #{hdir trash-dir}]
     (log/warn fpath "is being shared with" share-with "by" user)
     (process-parent-dirs (partial set-readable cm share-with true) #(not (base-dirs %)) fpath)
@@ -92,10 +92,10 @@
   [cm user share-withs fpaths perm]
   (for [share-with share-withs
         fpath      fpaths]
-    (cond (= user share-with)                 (skip-share share-with fpath :share-with-self)
-          (in-trash? cm user fpath)           (skip-share share-with fpath :share-from-trash)
-          (shared? cm share-with fpath perm)  (skip-share share-with fpath :already-shared)
-          :else                               (share-path cm user share-with perm fpath))))
+    (cond (= user share-with)                (skip-share share-with fpath :share-with-self)
+          (paths/in-trash? user fpath)       (skip-share share-with fpath :share-from-trash)
+          (shared? cm share-with fpath perm) (skip-share share-with fpath :already-shared)
+          :else                              (share-path cm user share-with perm fpath))))
 
 (defn share
   [user share-withs fpaths perm]
@@ -108,8 +108,8 @@
     (let [keyfn      #(if (:skipped %) :skipped :succeeded)
           share-recs (group-by keyfn (share-paths cm user share-withs fpaths perm))
           sharees    (map :user (:succeeded share-recs))
-          home-dir   (user-home-dir user)]
-      (dorun (map (partial add-user-shared-with cm (user-home-dir user)) sharees))
+          home-dir   (paths/user-home-dir user)]
+      (dorun (map (partial add-user-shared-with cm (paths/user-home-dir user)) sharees))
       {:user        sharees
        :path        fpaths
        :skipped     (map #(dissoc % :skipped) (:skipped share-recs))
@@ -152,7 +152,7 @@
        3. Remove the user's read permissions for parent directories in which the user no longer has
           access to any other files or subdirectories."
   [cm user unshare-with fpath]
-  (let [base-dirs #{(ft/rm-last-slash (user-home-dir user)) (trash-base-dir cm user)}]
+  (let [base-dirs #{(ft/rm-last-slash (paths/user-home-dir user)) (trash-base-dir (:zone cm) user)}]
     (log/warn "Removing permissions on" fpath "from" unshare-with "by" user)
     (remove-permissions cm unshare-with fpath)
 
@@ -200,7 +200,7 @@
     (let [keyfn        #(if (:skipped %) :skipped :succeeded)
           unshare-recs (group-by keyfn (unshare-paths cm user unshare-withs fpaths))
           unsharees    (map :user (:succeeded unshare-recs))
-          home-dir     (user-home-dir user)]
+          home-dir     (paths/user-home-dir user)]
       (dorun (map (partial clean-up-unsharee-avus cm home-dir) unsharees))
       {:user unsharees
        :path fpaths
@@ -222,11 +222,11 @@
         share-withs (map fix-username users)]
     (share user share-withs paths permission)))
 
-(with-post-hook! #'do-share (log-func "do-share"))
+(with-post-hook! #'do-share (paths/log-func "do-share"))
 
 (with-pre-hook! #'do-share
   (fn [params body]
-    (log-call "do-share" params body)
+    (paths/log-call "do-share" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :users sequential? :permission string?})
     (validators/validate-num-paths (:paths body))))
@@ -241,12 +241,12 @@
 
 (with-pre-hook! #'do-unshare
   (fn [params body]
-    (log-call "do-unshare" params body)
+    (paths/log-call "do-unshare" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :users sequential?})
     (validators/validate-num-paths (:paths body))))
 
-(with-post-hook! #'do-unshare (log-func "do-unshare"))
+(with-post-hook! #'do-unshare (paths/log-func "do-unshare"))
 
 (defn anon-readable?
   [cm p]
@@ -278,7 +278,7 @@
 
 (defn do-anon-files
   [params body]
-  (log-call "do-anon-files" params body)
+  (paths/log-call "do-anon-files" params body)
   (validate-map params {:user string?})
   (validate-map body {:paths sequential?})
   (validators/validate-num-paths (:paths body))

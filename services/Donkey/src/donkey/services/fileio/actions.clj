@@ -14,16 +14,15 @@
             [clojure.tools.logging :as log]
             [clojure.string :as string]
             [clj-http.client :as client]
-            [donkey.services.filesystem.stat :as stat]
-            [donkey.services.garnish.irods :as filetype]
             [ring.util.response :as rsp-utils]
+            [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
-            [donkey.services.filesystem.icat :as icat]))
+            [donkey.services.fileio.config :as jargon]))
 
 
 (defn set-meta
   [path attr value unit]
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (jargon/jargon-cfg) [cm]
     (set-metadata cm path attr value unit)))
 
 (defn- scruffy-copy
@@ -66,17 +65,12 @@
                :path ddir} )))
 
   (save cm istream user dest-path)
-  (log/info "store function after save.")
-  (let [guessed-type (:type (filetype/preview-auto-type user dest-path))]
-    (log/warn "Guessed type" guessed-type)
-    (when-not (or (nil? guessed-type) (empty? guessed-type))
-      (log/warn "Adding type " guessed-type)
-      (filetype/add-type cm user dest-path guessed-type)))
-    dest-path)
+  dest-path)
+
 
 (defn- get-istream
   [user file-path]
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (jargon/jargon-cfg) [cm]
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
                :user       user}))
@@ -102,7 +96,7 @@
   [user tmp-path fpath]
   (log/info "In upload for " user tmp-path fpath)
   (let [final-path (ft/rm-last-slash fpath)] 
-    (with-jargon (icat/jargon-cfg) [cm]
+    (with-jargon (jargon/jargon-cfg) [cm]
       (when-not (user-exists? cm user)
         (throw+ {:error_code ERR_NOT_A_USER
                  :user user}))
@@ -123,7 +117,8 @@
           :admin-users        (cfg/irods-admins)
           :skip-source-perms? true)
         (set-owner cm new-path user)
-        {:file (stat/path-stat cm user new-path)}))))
+        {:file (data/path-stat user new-path)}))))
+
 
 (defn url-encoded?
   [string-to-check]
@@ -203,7 +198,7 @@
      dest-path - irods path indicating the directory the file should go in."
   [user address filename orig-dest-path]
   (let [dest-path (ft/rm-last-slash orig-dest-path)]
-    (with-jargon (icat/jargon-cfg) [cm]
+    (with-jargon (jargon/jargon-cfg) [cm]
       (when-not (user-exists? cm user)
         (throw+ {:error_code ERR_NOT_A_USER
                  :user       user}))

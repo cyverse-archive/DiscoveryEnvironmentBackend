@@ -45,6 +45,9 @@
     (GET "/apps/:app-id/pipeline-ui" [app-id]
          (trap #(apps/edit-workflow app-id)))
 
+    (POST "/apps/:app-id/copy-pipeline" [app-id]
+          (trap #(apps/copy-workflow app-id)))
+
     (GET "/apps/:app-id/is-publishable" [app-id]
          (trap #(app-publishable? app-id)))
 
@@ -58,7 +61,13 @@
          (trap #(get-all-app-ids)))
 
     (GET "/apps/elements/:element-type" [element-type]
-         (trap #(get-workflow-elements element-type)))))
+         (trap #(get-workflow-elements element-type)))
+
+    (POST "/apps/:app-id/rating" [app-id :as {body :body}]
+          (trap #(apps/rate-app body app-id)))
+
+    (DELETE "/apps/:app-id/rating" [app-id]
+            (trap #(apps/delete-rating app-id)))))
 
 (defn tool-request-routes
   []
@@ -121,12 +130,6 @@
    (DELETE "/stop-analysis/:uuid" [uuid]
            (trap #(apps/stop-job uuid)))
 
-   (POST "/rate-analysis" [:as {body :body}]
-         (trap #(apps/rate-app body)))
-
-   (POST "/delete-rating" [:as {body :body}]
-         (trap #(apps/delete-rating body)))
-
    (GET "/get-components-in-analysis/:app-id" [app-id]
         (trap #(apps/get-deployed-components-in-app app-id)))
 
@@ -135,9 +138,6 @@
 
    (GET "/copy-template/:app-id" [app-id :as req]
         (trap #(copy-app req app-id)))
-
-   (GET "/copy-workflow/:app-id" [app-id]
-        (trap #(apps/copy-workflow app-id)))
 
    (PUT "/update-template" [:as req]
         (trap #(update-template-secured req)))

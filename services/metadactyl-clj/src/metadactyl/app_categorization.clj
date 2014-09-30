@@ -4,12 +4,11 @@
         [kameleon.core]
         [kameleon.entities]
         [kameleon.app-groups]
-        [kameleon.queries :only
-         [get-or-create-user get-or-create-workspace-for-user]]
         [kameleon.uuids :only [uuid]]
         [metadactyl.util.config]
         [metadactyl.util.service :only [success-response]]
         [metadactyl.validation]
+        [metadactyl.workspace :only [get-workspace]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.string :as string]))
 
@@ -166,7 +165,7 @@
   [username root-group]
   (if-not (:workspace_id root-group)
     (assoc root-group :workspace_id
-           (:id (get-or-create-workspace-for-user username)))
+           (:id (get-workspace username)))
     root-group))
 
 (defn- insert-workspace-and-categories

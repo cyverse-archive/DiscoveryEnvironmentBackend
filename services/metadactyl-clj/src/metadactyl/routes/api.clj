@@ -5,6 +5,7 @@
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.category]
         [metadactyl.routes.domain.app.element]
+        [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.domain.tool-requests]
         [metadactyl.routes.params]
@@ -26,6 +27,7 @@
     :description "Documentation for the Discovery Environment Apps REST API"
     :apiVersion "2.0.0")
   (GET "/" [] (redirect "/api"))
+  (GET "/favicon.ico" [] {:status 404})
   (middlewares
     [wrap-keyword-params
      wrap-query-params

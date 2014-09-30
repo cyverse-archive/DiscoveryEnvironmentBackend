@@ -7,12 +7,19 @@
 (def collection-type CollectionAndDataObjectListingEntry$ObjectType/COLLECTION)
 (def dataobject-type CollectionAndDataObjectListingEntry$ObjectType/DATA_OBJECT)
 
-(defn trash-base-dir
-  "Returns the base trash directory either for all users or for a specified user."
-  ([cm]
-     (ft/path-join "/" (:zone cm) "trash" "home" (:username cm)))
-  ([cm user]
-     (ft/path-join (trash-base-dir cm) user)))
+
+(defn ^String trash-base-dir
+  "Returns the base trash folder for a specified user.
+
+   Parameters:
+     zone - he name of the authenication zone
+     user - the username of the user's trash folder to look up.
+
+   Returns:
+     It returns the absolute path to the trash folder."
+  [^String zone ^String user]
+  (ft/path-join "/" zone "trash" "home" user))
+
 
 (defn file
   [cm path]

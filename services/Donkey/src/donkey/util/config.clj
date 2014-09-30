@@ -1,6 +1,7 @@
 (ns donkey.util.config
   (:use [slingshot.slingshot :only [throw+]])
   (:require [cemerick.url :as curl]
+            [cheshire.core :as cheshire]
             [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]))
 
@@ -672,6 +673,21 @@
   "The job status polling interval in minutes."
   [props config-valid configs]
   "donkey.jobs.poll-interval")
+
+(cc/defprop-str workspace-root-app-category
+  "The name of the root app category in a user's workspace."
+  [props config-valid configs]
+  "donkey.workspace.root-app-category")
+
+(cc/defprop-str workspace-default-app-categories
+  "The names of the app categories immediately under the root app category in a user's workspace."
+  [props config-valid configs]
+  "donkey.workspace.default-app-categories")
+
+(def get-default-app-categories
+  (memoize
+    (fn []
+      (cheshire/decode (workspace-default-app-categories) true))))
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."

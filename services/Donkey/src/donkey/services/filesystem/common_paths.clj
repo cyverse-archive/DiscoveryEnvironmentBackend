@@ -1,11 +1,9 @@
 (ns donkey.services.filesystem.common-paths
   (:require [clojure-commons.file-utils :as ft]
             [clojure.tools.logging :as log]
-            [clojure.set :as set]
-            [clj-jargon.init :as init]
             [clj-jargon.item-info :as item]
-            [donkey.util.config :as cfg]
-            [donkey.services.filesystem.icat :as icat]))
+            [clj-jargon.validations :as valid]
+            [donkey.util.config :as cfg]))
 
 
 (def IPCRESERVED "ipc-reserved-unit")
@@ -43,16 +41,8 @@
   [user]
   (ft/path-join "/" (cfg/irods-zone) "home" user))
 
-(defn- string-contains?
-  [container-str str-to-check]
-  (pos? (count (set/intersection (set (seq container-str)) (set (seq str-to-check))))))
 
-(defn good-string?
-  [str-to-check]
-  (not (string-contains? (cfg/fs-filter-chars) str-to-check)))
-
-
-(defn valid-path? [path-to-check] (good-string? path-to-check))
+(defn valid-path? [path-to-check] (valid/good-string? path-to-check))
 
 
 (defn- sharing?
@@ -66,43 +56,29 @@
 
 (defn base-trash-path
   []
-  (init/with-jargon (icat/jargon-cfg) [cm]
-    (item/trash-base-dir cm)))
+  (item/trash-base-dir (cfg/irods-zone) (cfg/irods-user)))
 
 
 (defn user-trash-path
-  ([user]
-   (init/with-jargon (icat/jargon-cfg) [cm]
-     (user-trash-path cm user)))
-  ([cm user]
-   (item/trash-base-dir cm user)))
+  [user]
+  (item/trash-base-dir (cfg/irods-zone) user))
 
 
 (defn- user-trash-dir?
-  ([user path-to-check]
-   (init/with-jargon (icat/jargon-cfg) [cm]
-     (user-trash-dir? cm user path-to-check)))
-  ([cm user path-to-check]
-     (= (ft/rm-last-slash path-to-check)
-        (ft/rm-last-slash (user-trash-path cm user)))))
+  [user path-to-check]
+  (= (ft/rm-last-slash path-to-check) (ft/rm-last-slash (user-trash-path user))))
+
 
 (defn in-trash?
-  [cm user fpath]
-  (.startsWith fpath (user-trash-path cm user)))
+  [user fpath]
+  (.startsWith fpath (user-trash-path user)))
 
 
 (defn id->label
   "Generates a label given a listing ID (read as absolute path)."
-  [cm user id]
+  [user id]
   (cond
-   (user-trash-dir? cm user id)
-   "Trash"
-
-   (sharing? (ft/add-trailing-slash id))
-   "Shared With Me"
-
-   (community? id)
-   "Community Data"
-
-   :else
-   (ft/basename id)))
+    (user-trash-dir? user id)             "Trash"
+    (sharing? (ft/add-trailing-slash id)) "Shared With Me"
+    (community? id)                       "Community Data"
+    :else                                 (ft/basename id)))

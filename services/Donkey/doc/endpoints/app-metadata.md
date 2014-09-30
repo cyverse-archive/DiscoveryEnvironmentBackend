@@ -29,8 +29,8 @@
     * [Importing an Analysis](#importing-an-analysis)
     * [Importing Deployed Components](#importing-deployed-components)
     * [Updating Top-Level Analysis Information](#updating-top-level-analysis-information)
-    * [Rating Analyses](#rating-analyses)
-    * [Deleting Analysis Ratings](#deleting-analysis-ratings)
+    * [Rating Apps](#rating-apps)
+    * [Deleting App Ratings](#deleting-app-ratings)
     * [Searching for Apps](#searching-for-apps)
     * [Listing Apps in an App Group](#listing-apps-in-an-app-group)
     * [Listing Deployed Components in an Analysis](#listing-deployed-components-in-an-analysis)
@@ -532,23 +532,23 @@ Delegates to metadactyl: POST /update-analysis
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Rating Analyses
+## Rating Apps
 
-Secured Endpoint: POST /secured/rate-analysis
+Secured Endpoint: POST /apps/{app-id}/rating
 
-Delegates to metadactyl: POST /secured/rate-analysis
+Delegates to metadactyl: POST /apps/{app-id}/rating
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
-## Deleting Analysis Ratings
+## Deleting App Ratings
 
-Secured Endpoint: POST /secured/delete-rating
+Secured Endpoint: DELETE /apps/{app-id}/rating
 
-Delegates to metadactyl: POST /secured/delete-rating
+Delegates to metadactyl: DELETE /apps/{app-id}/rating
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Searching for Apps
 
@@ -624,12 +624,12 @@ Please see the metadactyl documentation for more information.
 
 ## Making a Copy of a Pipeline Available for Editing
 
-Secured Endpoint: GET /secured/copy-workflow/{analysis-id}
+Secured Endpoint: POST /apps/{app-id}/copy-pipeline
 
-Delegates to metadactyl: GET /secured/copy-workflow/{analysis-id}
+Delegates to metadactyl: POST /apps/{app-id}/copy-pipeline
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Requesting Installation of a Tool
 
