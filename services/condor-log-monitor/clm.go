@@ -38,6 +38,8 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -314,6 +316,9 @@ type TombstoneMsg struct {
 	Reply  chan interface{}
 }
 
+// Tombstone is a type that contains the information stored in a tombstone file.
+// It tracks the current position, last modified data, and inode number of the
+// log file that was parsed and the date that the tombstone was created.
 type Tombstone struct {
 	CurrentPos int64
 	Date       time.Time
@@ -321,6 +326,10 @@ type Tombstone struct {
 	Inode      uint64
 }
 
+// TombstonePath is the path to the tombstone file.
+const TombstonePath = "/tmp/condor-log-monitor.tombstone"
+
+// InodeFromPath will return the inode number for the given path.
 func InodeFromPath(path string) (uint64, error) {
 	openFile, err := os.Open(path)
 	if err != nil {
@@ -333,6 +342,7 @@ func InodeFromPath(path string) (uint64, error) {
 	return ino, nil
 }
 
+// InodeFromFile will return the inode number for the opened file.
 func InodeFromFile(openFile *os.File) (uint64, error) {
 	fileInfo, err := openFile.Stat()
 	if err != nil {
@@ -342,6 +352,7 @@ func InodeFromFile(openFile *os.File) (uint64, error) {
 	return sys.Ino, nil
 }
 
+// NewTombstoneFromPath will create a *Tombstone for the provided path.
 func NewTombstoneFromPath(path string) (*Tombstone, error) {
 	openFile, err := os.Open(path)
 	if err != nil {
@@ -354,6 +365,7 @@ func NewTombstoneFromPath(path string) (*Tombstone, error) {
 	return tombstone, nil
 }
 
+// NewTombstoneFromFile will create a *Tombstone from an open file.
 func NewTombstoneFromFile(openFile *os.File) (*Tombstone, error) {
 	fileInfo, err := openFile.Stat()
 	if err != nil {
@@ -374,6 +386,137 @@ func NewTombstoneFromFile(openFile *os.File) (*Tombstone, error) {
 		Inode:      inode,
 	}
 	return tombstone, nil
+}
+
+// WriteToFile will persist the Tombstone to a file.
+func (t *Tombstone) WriteToFile() error {
+	tombstoneJSON, err := json.Marshal(t)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(TombstonePath, tombstoneJSON, 0644)
+	return err
+}
+
+// UnmodifiedTombstone is the tombstone as it was read from the JSON in the
+// tombstone file. It hasn't been turned into an actual Tombstone instance yet
+// because some of the fields need to be manually converted to a different type.
+type UnmodifiedTombstone struct {
+	CurrentPos int64
+	Date       string
+	LogLastMod string
+	Inode      uint64
+}
+
+// Convert returns a *Tombstone based on the values contained in the
+// UnmodifiedTombstone.
+func (u *UnmodifiedTombstone) Convert() (*Tombstone, error) {
+	parsedDate, err := time.Parse(time.RFC3339Nano, u.Date)
+	if err != nil {
+		return nil, err
+	}
+	parsedLogLastMod, err := time.Parse(time.RFC3339, u.LogLastMod)
+	if err != nil {
+		return nil, err
+	}
+	tombstone := &Tombstone{
+		CurrentPos: u.CurrentPos,
+		Date:       parsedDate,
+		LogLastMod: parsedLogLastMod,
+		Inode:      u.Inode,
+	}
+	return tombstone, nil
+}
+
+// ReadTombstone will read a marshalled tombstone from a file and return a
+// pointer to it.
+func ReadTombstone() (*Tombstone, error) {
+	contents, err := ioutil.ReadFile(TombstonePath)
+	if err != nil {
+		return nil, err
+	}
+	var t *UnmodifiedTombstone
+	err = json.Unmarshal(contents, &t)
+	if err != nil {
+		return nil, err
+	}
+	tombstone, err := t.Convert()
+	if err != nil {
+		return nil, err
+	}
+	return tombstone, nil
+}
+
+// Logfile contains a pointer to a os.FileInfo instance and the base directory
+// for a particular log file.
+type Logfile struct {
+	Info    *os.FileInfo
+	BaseDir string
+}
+
+// LogfileList contains a list of Logfiles.
+type LogfileList []Logfile
+
+func (l LogfileList) Len() int {
+	return len(l)
+}
+
+func (l LogfileList) Swap(i, j int) {
+	l[i], l[j] = l[j], l[i]
+}
+
+func (l LogfileList) Less(i, j int) bool {
+	re := regexp.MustCompile("\\.\\d+$")
+	logfile1 := *l[i].Info
+	logfile2 := *l[j].Info
+	logname1 := logfile1.Name()
+	logname2 := logfile2.Name()
+	match1 := re.Find([]byte(logname1))
+	match2 := re.Find([]byte(logname2))
+
+	if match1 == nil && match2 == nil {
+		return false
+	}
+
+	if match1 == nil && match2 != nil {
+		return false
+	}
+
+	if match1 != nil && match2 == nil {
+		return true
+	}
+
+	match1int, err := strconv.Atoi(string(match1[:]))
+	if err != nil {
+		return false
+	}
+
+	match2int, err := strconv.Atoi(string(match2[:]))
+	if err != nil {
+		return false
+	}
+
+	return match1int > match2int
+}
+
+// ListLogFiles returns a list of FileInfo instances to files that start with
+// the name of the configured log file.
+func ListLogFiles(dir string, logname string) ([]Logfile, error) {
+	startingList, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	var filtered []Logfile
+	for _, fi := range startingList {
+		if strings.HasPrefix(fi.Name(), logname) {
+			lf := Logfile{
+				Info:    &fi,
+				BaseDir: dir,
+			}
+			filtered = append(filtered, lf)
+		}
+	}
+	return filtered, nil
 }
 
 func main() {
