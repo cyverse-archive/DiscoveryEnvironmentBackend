@@ -3,7 +3,6 @@
         [clojure-commons.validators]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-ops :only [mkdir]]
         [clj-jargon.permissions :only [set-owner collection-perm-map]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
@@ -11,6 +10,8 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [clj-jargon.item-info :as item]
+            [clj-jargon.item-ops :as ops]
             [clj-jargon.validations :as valid]
             [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as cfg]
@@ -30,7 +31,7 @@
       (validators/user-exists cm user)
       (validators/path-writeable cm user (ft/dirname fixed-path))
       (validators/path-not-exists cm fixed-path)
-      (mkdir cm fixed-path)
+      (ops/mkdir cm fixed-path)
       (set-owner cm fixed-path user)
       (stat/path-stat cm user fixed-path))))
 
@@ -49,3 +50,17 @@
       (throw+ {:error_code ERR_NOT_AUTHORIZED :user (:user params)}))))
 
 (with-post-hook! #'do-create (paths/log-func "do-create"))
+
+
+(defn ensure-created
+  "If a folder doesn't exist, it creates the folder and makes the given user an owner of it.
+
+   Parameters:
+     user - the username of the user to become an owner of the new folder
+     dir  - the absolute path to the folder"
+  [^String user ^String dir]
+  (with-jargon (cfg/jargon-cfg) [cm]
+    (when-not (item/exists? cm dir)
+      (log/info "creating" dir)
+      (ops/mkdirs cm dir)
+      (set-owner cm dir user))))
