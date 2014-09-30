@@ -110,9 +110,10 @@
 
 (defn- tags-access-filter
   [tags memberships]
-  (letfn [(tag-filter [tag] (query/term :id {:type "tag"
-                                             :id   tag
-                                             :path "targets.id"}))]
+  (letfn [(tag-filter [tag] (query/term :id {:type  "tag"
+                                             :id    tag
+                                             :path  "targets.id"
+                                             :cache false}))]
     (query/bool :must   (query/nested :path   "userPermissions"
                                       :filter (query/term "userPermissions.user" memberships))
                 :should (map tag-filter tags))))
