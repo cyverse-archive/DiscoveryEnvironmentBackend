@@ -216,3 +216,40 @@ func TestSortLogfileList(t *testing.T) {
 		t.Errorf("Entry %d was not %s", 4, "event_log")
 	}
 }
+
+func TestSliceByInode(t *testing.T) {
+	dirname := "test_dir"
+	filename := "event_log"
+	ll, err := NewLogfileList(dirname, filename)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(ll) <= 0 {
+		t.Errorf("length of logfilelist is %d", len(ll))
+	}
+	if len(ll) != 5 {
+		t.Errorf("length of logfilelist was %d, not 5", len(ll))
+	}
+	sort.Sort(ll)
+	lf := ll[2]
+	targetInode := InodeFromFileInfo(&lf.Info)
+	slicedList := ll.SliceByInode(targetInode)
+	first := slicedList[0]
+	firstInode := InodeFromFileInfo(&first.Info)
+	if firstInode != targetInode {
+		t.Errorf("target inode was %d, but first inode was %d", targetInode, firstInode)
+	}
+	if len(slicedList) != 3 {
+		t.Errorf("length of the sliced list was %d", len(slicedList))
+	}
+	if first.Info.Name() != "event_log.2" {
+		t.Error("first entry wasn't named event_log.2")
+	}
+	if slicedList[1].Info.Name() != "event_log.1" {
+		t.Error("second entry wasn't named event_log.1")
+	}
+	if slicedList[2].Info.Name() != "event_log" {
+		t.Error("third entry wasn't named event_log")
+	}
+
+}

@@ -352,6 +352,14 @@ func InodeFromFile(openFile *os.File) (uint64, error) {
 	return sys.Ino, nil
 }
 
+// InodeFromFileInfo will return the inode number from the provided FileInfo
+// instance.
+func InodeFromFileInfo(info *os.FileInfo) uint64 {
+	i := *info
+	sys := i.Sys().(*syscall.Stat_t)
+	return sys.Ino
+}
+
 // NewTombstoneFromPath will create a *Tombstone for the provided path.
 func NewTombstoneFromPath(path string) (*Tombstone, error) {
 	openFile, err := os.Open(path)
@@ -527,6 +535,20 @@ func (l LogfileList) Less(i, j int) bool {
 	}
 
 	return match1int > match2int
+}
+
+// SliceByInode trims the LogfileList by looking for the log file that has the
+// matching inode and returning a list of log files that starts at that point.
+func (l LogfileList) SliceByInode(inode uint64) LogfileList {
+	foundIdx := 0
+	for idx, logfile := range l {
+		fiInode := InodeFromFileInfo(&logfile.Info)
+		if fiInode == inode {
+			foundIdx = idx
+			break
+		}
+	}
+	return l[foundIdx:]
 }
 
 func main() {
