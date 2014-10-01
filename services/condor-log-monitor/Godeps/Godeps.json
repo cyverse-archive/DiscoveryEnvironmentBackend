@@ -1,0 +1,23 @@
+{
+	"ImportPath": "backend/services/condor-log-monitor",
+	"GoVersion": "go1.3.1",
+	"Deps": [
+		{
+			"ImportPath": "github.com/ActiveState/tail",
+			"Rev": "fd3ba4e64ca930fe21edc4c8a8bd1a075ef7f4ac"
+		},
+		{
+			"ImportPath": "github.com/howeyc/fsnotify",
+			"Comment": "v0.9.0-11-g6b1ef89",
+			"Rev": "6b1ef893dc11e0447abda6da20a5203481878dda"
+		},
+		{
+			"ImportPath": "github.com/streadway/amqp",
+			"Rev": "7d6d1802c7710be39564a287f860360c6328f956"
+		},
+		{
+			"ImportPath": "gopkg.in/tomb.v1",
+			"Rev": "c131134a1947e9afd9cecfe11f4c6dff0732ae58"
+		}
+	]
+}
