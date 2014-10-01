@@ -393,36 +393,36 @@
 
 (defn- add-pipeline-app
   [app]
-  (let [app-id (:id (add-app app))
-        workspace-category-id (:root_category_id (get-workspace))
-        dev-group-id (get-app-subcategory-id workspace-category-id (workspace-dev-app-group-index))]
-    (add-app-to-group dev-group-id app-id)
-    (dorun (map-indexed (partial add-step app-id) (:steps app)))
-    (dorun (map (partial add-mapping app-id) (:mappings app)))
-    app-id))
+  (transaction
+    (let [app-id (:id (add-app app))
+          workspace-category-id (:root_category_id (get-workspace))
+          dev-group-id (get-app-subcategory-id workspace-category-id (workspace-dev-app-group-index))]
+      (add-app-to-group dev-group-id app-id)
+      (dorun (map-indexed (partial add-step app-id) (:steps app)))
+      (dorun (map (partial add-mapping app-id) (:mappings app)))
+      app-id)))
 
 (defn- update-pipeline-app
   [app]
-  (let [app-id (:id app)]
-    (verify-app-editable (get-app app-id))
-    (update-app app)
-    (remove-app-mappings app-id)
-    (remove-app-steps app-id)
-    (dorun (map-indexed (partial add-step app-id) (:steps app)))
-    (dorun (map (partial add-mapping app-id) (:mappings app)))
-    app-id))
+  (transaction
+    (let [app-id (:id app)]
+      (verify-app-editable (get-app app-id))
+      (update-app app)
+      (remove-app-mappings app-id)
+      (remove-app-steps app-id)
+      (dorun (map-indexed (partial add-step app-id) (:steps app)))
+      (dorun (map (partial add-mapping app-id) (:mappings app)))
+      app-id)))
 
 (defn add-pipeline
   [workflow]
-  (transaction
-    (let [app-ids (map add-pipeline-app (:apps workflow))]
-      {:apps app-ids})))
+  (let [app-ids (map add-pipeline-app (:apps workflow))]
+    {:apps app-ids}))
 
 (defn update-pipeline
   [workflow]
-  (transaction
-    (let [app-ids (map update-pipeline-app (:apps workflow))]
-      {:apps app-ids})))
+  (let [app-ids (map update-pipeline-app (:apps workflow))]
+    {:apps app-ids}))
 
 (defn copy-pipeline
   "This service makes a copy of a Pipeline for the current user and returns the JSON for editing the
