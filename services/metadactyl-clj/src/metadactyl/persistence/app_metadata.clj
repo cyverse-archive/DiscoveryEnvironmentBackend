@@ -1,6 +1,7 @@
 (ns metadactyl.persistence.app-metadata
   "Persistence layer for app metadata."
   (:use [kameleon.entities]
+        [kameleon.uuids :only [uuidify]]
         [korma.core]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.assertions]
@@ -22,17 +23,17 @@
              (where {:id app-id})))))
 
 (defn get-integration-data
-  "Retrieves integrator info from the database."
-  [email]
-  (first (select integration_data (where {:integrator_email email}))))
+  "Retrieves integrator info from the database, adding it first if not already there."
+  [{:keys [email first-name last-name]}]
+  (if-let [integration-data (first (select integration_data (where {:integrator_email email})))]
+    integration-data
+    (insert integration_data (values {:integrator_name (str first-name " " last-name)
+                                      :integrator_email email}))))
 
 (defn add-app
   "Adds top-level app info to the database and returns the new app info, including its new ID."
   [app]
-  (let [integration-data-id (->> current-user
-                                 (:email)
-                                 (get-integration-data)
-                                 (:id))
+  (let [integration-data-id (:id (get-integration-data current-user))
         app (-> app
                 (select-keys [:name :description])
                 (assoc :integration_data_id integration-data-id
@@ -59,8 +60,32 @@
     (dorun
       (for [[input output] (:map mapping)]
         (insert :input_output_mapping (values {:mapping_id mapping-id
-                                               :input input
-                                               :output output}))))))
+                                               :input (uuidify input)
+                                               :output (uuidify output)}))))))
+
+(defn update-app
+  "Updates top-level app info in the database."
+  [app]
+  (let [app-id (:id app)
+        app (-> app
+                (select-keys [:name :description])
+                (assoc :edited_date (sqlfn now))
+                (remove-nil-vals))]
+    (update apps (set-fields app) (where {:id app-id}))))
+
+(defn remove-app-steps
+  "Removes all steps from an App."
+  [app-id]
+  (delete app_steps (where {:app_id app-id})))
+
+(defn remove-app-mappings
+  "Removes all input/output mappings from an App."
+  [app-id]
+  (let [mapping-ids (map :id (select :workflow_io_maps
+                               (fields :id)
+                               (where {:app_id app-id})))]
+    (delete :input_output_mapping (where {:mapping_id [in mapping-ids]}))
+    (delete :workflow_io_maps (where {:app_id app-id}))))
 
 (defn update-app-labels
   "Updates the labels in an app."

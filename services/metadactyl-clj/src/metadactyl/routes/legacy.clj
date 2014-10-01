@@ -36,9 +36,6 @@
   (PUT "/update-app" [:as {body :body}]
        (ce/trap "update-app" #(throw+ '("update-app-secured" body))))
 
-  (POST "/update-workflow" [:as {body :body}]
-        (trap #(throw+ '("update-workflow" body))))
-
   (POST "/make-analysis-public" [:as {body :body}]
         (trap #(throw+ '("make-app-public" body))))
 
@@ -95,12 +92,6 @@
 
   (POST "/update-template" [:as {body :body}]
         (trap #(throw+ '("update-template" body))))
-
-  (POST "/force-update-workflow" [:as {body :body params :params}]
-        (trap #(throw+ '("force-update-workflow" body params))))
-
-  (POST "/update-workflow" [:as {body :body}]
-        (trap #(throw+ '("update-workflow" body))))
 
   (POST "/import-template" [:as {body :body}]
         (trap #(throw+ '("import-template" body))))

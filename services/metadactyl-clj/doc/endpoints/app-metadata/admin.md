@@ -66,8 +66,6 @@
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
     * [Updating an Existing Template](#updating-an-existing-template)
-    * [Updating an Analysis](#updating-an-analysis)
-    * [Forcing an Analysis to be Updated](#forcing-an-analysis-to-be-updated)
     * [Importing a Template](#importing-a-template)
     * [Importing an Analysis](#importing-an-analysis)
     * [Importing Tools](#importing-tools)
@@ -3312,111 +3310,6 @@ $ curl -sd @app-with-impl.json http://by-tor:8888/update-template
 ```
 
 A copy of app-with-impl.json can be found [here](app-with-impl.json).
-
-## Updating an Analysis
-
-*Secured Endpoint:* POST /secured/update-workflow
-*Unsecured Endpoint:* POST /update-workflow
-
-This service either imports a new analysis or updates an existing analysis in
-the database (as long as the analysis has not been submitted for public use).
-The difference between this service and the `/update-template` service is that
-this service can support multi-step analyses. For information about the format
-of the request body, please see [App JSON](#app-json) above.
-
-There is a minor difference between the secured and unsecured versions of this
-endpoint. The unsecured version requires the user details to be included in the
-implementation record of each app. The secured version automatically populates
-this data using the attributes of the authenticated user.
-
-The response body consists of a JSON object containing the identifiers of all of
-the analyses, components and templates that are imported into the database.
-
-Here's an example:
-
-```
-$ curl -sd @workflow.json http://by-tor:8888/update-workflow | python -mjson.tool
-{
-    "analyses": [
-        "F0A35441-46A9-42F3-862A-FAA89ECB0D1E"
-    ],
-    "components": [
-        "c4e6f548cc0ee431da7f2ddfdf3ace761"
-    ],
-    "templates": [
-        "B9F7496C-D3A8-4D05-A505-01D7AFBECCBB"
-    ]
-}
-```
-
-A copy of workflow.json can be found [here](workflow.json).
-
-## Forcing an Analysis to be Updated
-
-*Unsecured Endpoint:* POST /force-update-workflow
-
-The `/update-workflow` service only allows private analyses to be updated.
-Analyses that have been submitted for public use must be updated using this
-service. The analysis import script uses this service to import analyses that
-have previously been exported. For information about the format of the request
-body, please see [App JSON](#app-json) above.
-
-This endpoint requires one query-string parameter: `update-mode`. This parameter
-has three possible values:
-
-<table border='1'>
-    <thead>
-        <tr>
-            <th>Update Mode</th>
-            <th>Description</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>ignore</td>
-            <td>
-                If a duplicate app or template is found, the app or template
-                will not be updated and no error will be raised. This setting
-                can be useful if, for example. you want to import a pipeline
-                and you don't know whether or not any of the templates in the
-                pipeline are already defined.
-            </td>
-        </tr>
-        <tr>
-            <td>replace</td>
-            <td>
-                If a duplicate app or template is found, the existing app or
-                template will be replaced.
-            </td>
-        </tr>
-        <tr>
-            <td>throw</td>
-            <td>
-                An error will be raised if a duplicate app or template is found.
-                This is the default behavior.
-            </td>
-        </tr>
-    </tbody>
-</table>
-
-The response body consists of a JSON object containing the identifiers of all of
-the analyses, components and templates that are imported into the database.
-Here's an example:
-
-```
-$ curl -sd @workflow.json http://by-tor:8888/force-update-workflow?update-mode=replace | python -mjson.tool
-{
-    "analyses": [
-        "EEFC9B65-C81D-4DE1-A9B8-90C5BD0237F6"
-    ],
-    "components": [
-        "c4e6f548cc0ee431da7f2ddfdf3ace761"
-    ],
-    "templates": [
-        "81B5AF13-4990-4026-A67C-22FEDB682DBF"
-    ]
-}
-```
 
 ## Importing a Template
 

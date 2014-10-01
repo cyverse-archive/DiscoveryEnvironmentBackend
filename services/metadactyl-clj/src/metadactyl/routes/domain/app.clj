@@ -283,12 +283,6 @@
          {(optional-key :root_deletion_request)
           (describe Boolean "Set to `true` to  delete one or more public apps")}))
 
-(defn- ->optional-param
-  [m key]
-  (-> m
-      (assoc (optional-key key) (get m key))
-      (dissoc key)))
-
 (defschema AppParameterListItemPreviewRequest
   (->optional-param AppParameterListItem :id))
 
