@@ -200,4 +200,19 @@ func TestSortLogfileList(t *testing.T) {
 		t.Errorf("Entry %d was not %s", 0, "event_log.4")
 	}
 
+	if ll[1].Info.Name() != "event_log.3" {
+		t.Errorf("Entry %d was not %s", 1, "event_log.3")
+	}
+
+	if ll[2].Info.Name() != "event_log.2" {
+		t.Errorf("Entry %d was not %s", 2, "event_log.2")
+	}
+
+	if ll[3].Info.Name() != "event_log.1" {
+		t.Errorf("Entry %d was not %s", 3, "event_log.1")
+	}
+
+	if ll[4].Info.Name() != "event_log" {
+		t.Errorf("Entry %d was not %s", 4, "event_log")
+	}
 }
