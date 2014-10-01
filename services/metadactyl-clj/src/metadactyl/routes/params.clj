@@ -3,6 +3,13 @@
             [schema.core :as s])
   (:import [java.util UUID]))
 
+(defn ->optional-param
+  "Removes a required param from the given schema and re-adds it as an optional param."
+  [schema param]
+  (-> schema
+    (assoc (s/optional-key param) (schema param))
+    (dissoc param)))
+
 (def AppIdPathParam (ss/describe UUID "The App's UUID"))
 (def AppCategoryIdPathParam (ss/describe UUID "The App Category's UUID"))
 (def OptionalEmailParamName (s/optional-key :email))

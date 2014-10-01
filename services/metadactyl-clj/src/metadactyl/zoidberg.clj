@@ -5,7 +5,13 @@
         [kameleon.core]
         [kameleon.entities]
         [kameleon.uuids :only [uuid]]
-        [metadactyl.persistence.app-metadata :only [add-app add-mapping add-step get-app]]
+        [metadactyl.persistence.app-metadata :only [add-app
+                                                    add-mapping
+                                                    add-step
+                                                    get-app
+                                                    remove-app-mappings
+                                                    remove-app-steps
+                                                    update-app]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config :only [workspace-dev-app-group-index]]
         [metadactyl.util.conversions :only [date->long
@@ -385,7 +391,7 @@
     (verify-app-editable app)
     (service/swagger-response (format-workflow app))))
 
-(defn- add-new-pipeline
+(defn- add-pipeline-app
   [app]
   (let [app-id (:id (add-app app))
         workspace-category-id (:root_category_id (get-workspace))
@@ -395,14 +401,27 @@
     (dorun (map (partial add-mapping app-id) (:mappings app)))
     app-id))
 
-(defn- update-pipeline
+(defn- update-pipeline-app
   [app]
-  (add-new-pipeline app))
+  (let [app-id (:id app)]
+    (verify-app-editable (get-app app-id))
+    (update-app app)
+    (remove-app-mappings app-id)
+    (remove-app-steps app-id)
+    (dorun (map-indexed (partial add-step app-id) (:steps app)))
+    (dorun (map (partial add-mapping app-id) (:mappings app)))
+    app-id))
 
-(defn update-workflow
+(defn add-pipeline
   [workflow]
   (transaction
-    (let [app-ids (map update-pipeline (:apps workflow))]
+    (let [app-ids (map add-pipeline-app (:apps workflow))]
+      {:apps app-ids})))
+
+(defn update-pipeline
+  [workflow]
+  (transaction
+    (let [app-ids (map update-pipeline-app (:apps workflow))]
       {:apps app-ids})))
 
 (defn copy-pipeline
@@ -410,9 +429,8 @@
    copy in the client."
   [app-id]
   (let [app (get-app app-id)
-        app {:apps [(convert-app-to-copy app)]}
-        app-copy (update-workflow app)
-        app-id (first (:apps app-copy))]
+        app (convert-app-to-copy app)
+        app-id (add-pipeline-app app)]
     (edit-workflow app-id)))
 
 ;; FIXME
@@ -420,7 +438,6 @@
   "This service makes a copy of an App available in Tito for editing."
   [app-id]
   (let [app (get-app app-id)
-        app {:apps [(convert-app-to-copy app)]}
-        app-copy (update-workflow app)
-        app-id (first (:apps app-copy))]
+        app (convert-app-to-copy app)
+        app-id (add-pipeline-app app)]
     (edit-app app-id)))

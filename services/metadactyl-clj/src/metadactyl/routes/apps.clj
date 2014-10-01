@@ -8,7 +8,12 @@
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.params]
-        [metadactyl.zoidberg :only [copy-app copy-pipeline edit-app edit-workflow]]
+        [metadactyl.zoidberg :only [add-pipeline
+                                    copy-app
+                                    copy-pipeline
+                                    edit-app
+                                    edit-workflow
+                                    update-pipeline]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -90,6 +95,13 @@
         public."
         (service/trap #(edit-workflow app-id)))
 
+  (POST* "/pipeline" [:as {uri :uri}]
+         :query [params SecuredQueryParamsEmailRequired]
+         :body [body (describe PipelineCreateRequest "The Pipeline to create.")]
+         :summary "Create a Pipeline"
+         :notes "This service adds a new Pipeline."
+         (ce/trap uri #(add-pipeline body)))
+
   (POST* "/:app-id/copy-pipeline" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]
          :query [params SecuredQueryParamsEmailRequired]
@@ -99,6 +111,15 @@
          endpoint will copy the App details, steps, and mappings, but will not copy tasks used in
          the Pipeline steps."
          (ce/trap uri #(copy-pipeline app-id)))
+
+  (PUT* "/:app-id/pipeline" [:as {uri :uri}]
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParamsEmailRequired]
+        :body [body (describe PipelineUpdateRequest "The Pipeline to update.")]
+        :summary "Update a Pipeline"
+        :notes "This service updates an existing Pipeline in the database, as long as the Pipeline
+        has not been submitted for public use."
+        (ce/trap uri #(update-pipeline (assoc body :id app-id))))
 
   (GET* "/:app-id/is-publishable" [app-id]
         :path-params [app-id :- AppIdPathParam]
