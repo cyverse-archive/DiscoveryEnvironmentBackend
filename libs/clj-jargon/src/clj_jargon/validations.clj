@@ -13,7 +13,7 @@
 (def ERR_BAD_PATH_LENGTH "ERR_BAD_PATH_LENGTH")
 
 
-(def ^:private bad-chars
+(def bad-chars
   #{\= \! \" \# \$ \' \% \* \+ \, \: \? \@ \[ \] \^ \{ \} \| \& \; \< \> \` \~ \\ \tab \newline})
 
 
