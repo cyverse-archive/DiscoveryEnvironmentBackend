@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+	"sort"
+	"strings"
 	"testing"
 )
 
@@ -154,4 +156,48 @@ func TestReadTombstone(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+}
+
+func TestNewLogfileList(t *testing.T) {
+	dirname := "test_dir"
+	filename := "event_log"
+	ll, err := NewLogfileList(dirname, filename)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(ll) <= 0 {
+		t.Errorf("length of logfilelist is %d", len(ll))
+	}
+	if len(ll) != 5 {
+		t.Errorf("length of logfilelist was %d, not 5", len(ll))
+	}
+	for idx, lf := range ll {
+		if lf.BaseDir != "test_dir" {
+			t.Errorf("BaseDir for index %d was not set to %s", idx, dirname)
+		}
+		info := lf.Info
+		if !strings.HasPrefix(info.Name(), filename) {
+			t.Errorf("Filename %s does not start with %s", info.Name(), filename)
+		}
+	}
+}
+
+func TestSortLogfileList(t *testing.T) {
+	dirname := "test_dir"
+	filename := "event_log"
+	ll, err := NewLogfileList(dirname, filename)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(ll) <= 0 {
+		t.Errorf("length of logfilelist is %d", len(ll))
+	}
+	if len(ll) != 5 {
+		t.Errorf("length of logfilelist was %d, not 5", len(ll))
+	}
+	sort.Sort(ll)
+	if ll[0].Info.Name() != "event_log.4" {
+		t.Errorf("Entry %d was not %s", 0, "event_log.4")
+	}
+
 }

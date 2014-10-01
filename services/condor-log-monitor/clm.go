@@ -450,12 +450,33 @@ func ReadTombstone() (*Tombstone, error) {
 // Logfile contains a pointer to a os.FileInfo instance and the base directory
 // for a particular log file.
 type Logfile struct {
-	Info    *os.FileInfo
+	Info    os.FileInfo
 	BaseDir string
 }
 
 // LogfileList contains a list of Logfiles.
 type LogfileList []Logfile
+
+// NewLogfileList returns a list of FileInfo instances to files that start with
+// the name of the configured log file.
+func NewLogfileList(dir string, logname string) (LogfileList, error) {
+	startingList, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	var filtered []Logfile
+	for _, fi := range startingList {
+		if strings.HasPrefix(fi.Name(), logname) {
+			lf := Logfile{
+				Info:    fi,
+				BaseDir: dir,
+			}
+			filtered = append(filtered, lf)
+		}
+	}
+	filtered = LogfileList(filtered)
+	return filtered, nil
+}
 
 func (l LogfileList) Len() int {
 	return len(l)
@@ -466,57 +487,46 @@ func (l LogfileList) Swap(i, j int) {
 }
 
 func (l LogfileList) Less(i, j int) bool {
-	re := regexp.MustCompile("\\.\\d+$")
-	logfile1 := *l[i].Info
-	logfile2 := *l[j].Info
+	re := regexp.MustCompile("\\.\\d+$") //extracts the suffix with a leading '.'
+	logfile1 := l[i].Info
+	logfile2 := l[j].Info
 	logname1 := logfile1.Name()
 	logname2 := logfile2.Name()
 	match1 := re.Find([]byte(logname1))
 	match2 := re.Find([]byte(logname2))
 
+	//filenames without a suffix are effectively equal
 	if match1 == nil && match2 == nil {
 		return false
 	}
 
+	//filenames without a suffix have a lower value than basically anything.
+	//this means that the most current log file will get processed last if
+	//the monitor has been down for a while.
 	if match1 == nil && match2 != nil {
 		return false
 	}
 
+	//again, filenames without a suffix have a lower value than files with a
+	//suffix.
 	if match1 != nil && match2 == nil {
 		return true
 	}
 
-	match1int, err := strconv.Atoi(string(match1[:]))
+	//the suffix is assumed to be a number. if it's not it has a lower value.
+	match1int, err := strconv.Atoi(string(match1[1:])) //have to drop the '.'
 	if err != nil {
 		return false
 	}
 
-	match2int, err := strconv.Atoi(string(match2[:]))
+	//the suffix is assumed to be a number again. if it doesn't it's assumed to
+	//have a lower value.
+	match2int, err := strconv.Atoi(string(match2[1:])) //have to drop the '.'
 	if err != nil {
-		return false
+		return true
 	}
 
 	return match1int > match2int
-}
-
-// ListLogFiles returns a list of FileInfo instances to files that start with
-// the name of the configured log file.
-func ListLogFiles(dir string, logname string) ([]Logfile, error) {
-	startingList, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	var filtered []Logfile
-	for _, fi := range startingList {
-		if strings.HasPrefix(fi.Name(), logname) {
-			lf := Logfile{
-				Info:    &fi,
-				BaseDir: dir,
-			}
-			filtered = append(filtered, lf)
-		}
-	}
-	return filtered, nil
 }
 
 func main() {
