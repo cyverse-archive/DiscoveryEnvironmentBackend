@@ -11,7 +11,6 @@
             [data-info.services.filesystem.page-file :as file]
             [data-info.services.filesystem.preview :as preview]
             [data-info.services.filesystem.rename :as rename]
-            [data-info.services.filesystem.root :as root]
             [data-info.services.filesystem.sharing :as sharing]
             [data-info.services.filesystem.space-handling :as sh]
             [data-info.services.filesystem.stat :as stat]
@@ -24,9 +23,6 @@
 (defn filesystem-routes
   "The routes for file IO endpoints."
   []
-  (GET "/filesystem/root" [:as req]
-    (controller req root/do-root-listing :params))
-
   (GET "/filesystem/home" [:as req]
     (controller req home/do-homedir :params))
 
