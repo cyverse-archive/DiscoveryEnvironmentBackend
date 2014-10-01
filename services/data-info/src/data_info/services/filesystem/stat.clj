@@ -6,29 +6,29 @@
         [clj-jargon.item-info :only [is-dir? stat]]
         [clj-jargon.item-ops :only [input-stream]]
         [clj-jargon.metadata :only [get-attribute]]
-        [clj-jargon.permissions :only [list-user-perms permission-for owns?]]
-        [slingshot.slingshot :only [try+ throw+]])
+        [clj-jargon.permissions :only [list-user-perms permission-for owns?]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
-            [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.services.filesystem.validators :as validators]
-            [data-info.services.filesystem.garnish.irods :as filetypes]
+            [data-info.services.filesystem.type-detect.irods :as filetypes]
             [clj-icat-direct.icat :as icat]
             [data-info.util.config :as cfg]
             [data-info.services.filesystem.common-paths :as paths]
             [data-info.services.filesystem.icat :as jargon])
   (:import [org.apache.tika Tika]))
 
+
 (defn- count-shares
   [cm user path]
-  (let [filter-users (set (conj (cfg/fs-perms-filter) user (cfg/irods-user)))
+  (let [filter-users (set (conj (cfg/perms-filter) user (cfg/irods-user)))
         full-listing (list-user-perms cm path)]
     (count
      (filterv
       #(not (contains? filter-users (:user %1)))
       full-listing))))
+
 
 (defn- merge-counts
   [stat-map cm user path]

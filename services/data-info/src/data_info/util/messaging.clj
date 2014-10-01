@@ -1,7 +1,6 @@
 (ns data-info.util.messaging
-  (:require [data-info.services.filesystem.garnish.messages :as ftype]
+  (:require [data-info.services.filesystem.type-detect.messages :as ftype]
             [data-info.clients.amqp :as amqp]
-            [data-info.util.config :as cfg]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]))
 
@@ -34,22 +33,8 @@
     (catch Exception e
       (log/error "[amqp/messaging-initialization]" (ce/format-exception e)))))
 
-(defn- monitor
-  "Fires off the monitoring thread that makes sure that the AMQP connection is still up
-   and working."
-  []
-  (try
-    (amqp/conn-monitor message-handler)
-    (catch Exception e
-      (log/error "[amqp/messaging-initialization]" (ce/format-exception e)))))
 
 (defn messaging-initialization
   "Initializes the AMQP messaging handling, registering (message-handler) as the callback."
   []
-  (if-not (cfg/rabbitmq-enabled)
-    (log/info "[amqp/messaging-initialization] iRODS messaging disabled"))
-  
-  (when (cfg/rabbitmq-enabled)
-    (log/info "[amqp/messaging-initialization] iRODS messaging enabled")
-    (.start (Thread. receive))
-    (monitor)))
+  (.start (Thread. receive)))

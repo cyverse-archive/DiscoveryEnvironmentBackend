@@ -1,4 +1,4 @@
-(ns data-info.services.filesystem.garnish.irods
+(ns data-info.services.filesystem.type-detect.irods
   (:use [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
         [clj-jargon.item-ops :only [input-stream]]
@@ -59,7 +59,7 @@
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
-    (set-metadata cm path (cfg/garnish-type-attribute) type "")
+    (set-metadata cm path (cfg/type-detect-type-attribute) type "")
     (log/info "Added type " type " to " path " for " user ".")
     {:path path
      :type type}))
@@ -87,7 +87,7 @@
                :path path}))
 
     (let [type (content-type cm path)]
-      (add-metadata cm path (cfg/garnish-type-attribute) type "")
+      (add-metadata cm path (cfg/type-detect-type-attribute) type "")
       (log/info "Auto-added type " type " to " path " for " user ".")
       {:path path
        :type type})))
@@ -145,7 +145,7 @@
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
-    (delete-avus cm path (get-avus cm path (cfg/garnish-type-attribute) type))
+    (delete-avus cm path (get-avus cm path (cfg/type-detect-type-attribute) type))
     (log/info "Deleted type " type " from " path " for " user ".")
     {:path path
      :type type
@@ -169,7 +169,7 @@
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
-    (delete-metadata cm path (cfg/garnish-type-attribute))
+    (delete-metadata cm path (cfg/type-detect-type-attribute))
     (log/info "Deleted types from" path "for" user)
     {:path path :user user}))
 
@@ -190,7 +190,7 @@
       (throw+ {:error_code ERR_NOT_READABLE
                :user user
                :path path}))
-    (let [path-types (get-attribute cm path (cfg/garnish-type-attribute))]
+    (let [path-types (get-attribute cm path (cfg/type-detect-type-attribute))]
       (log/info "Retrieved types " path-types " from " path " for " user ".")
       (or (:value (first path-types) ""))))
 
@@ -217,7 +217,7 @@
 
     (let [paths-with-type (list-everything-in-tree-with-attr cm
                                                              (home-dir cm user)
-                                                             {:name  (cfg/garnish-type-attribute)
+                                                             {:name  (cfg/type-detect-type-attribute)
                                                               :value type})]
       (log/info "Looked up all paths with a type of " type " for " user "\n" paths-with-type)
       paths-with-type)))

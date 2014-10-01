@@ -1,13 +1,13 @@
 (ns data-info.clients.amqp
-  (:require [langohr.core      :as rmq]
-            [langohr.channel   :as lch]
-            [langohr.exchange  :as le]
-            [langohr.queue     :as lq]
+  (:require [langohr.core :as rmq]
+            [langohr.channel :as lch]
+            [langohr.exchange :as le]
+            [langohr.queue :as lq]
             [langohr.consumers :as lc]
-            [langohr.basic     :as lb]
-            [data-info.util.config    :as cfg]
-            [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as ce]))
+            [langohr.basic :as lb]
+            [data-info.util.config :as cfg]
+            [clojure.tools.logging :as log]))
+
 
 (defn test-msg-fn
   [channel {:keys [content-type delivery-tag type] :as meta} ^bytes payload]
@@ -66,13 +66,15 @@
 (def amqp-conn (ref nil))
 (def amqp-channel (ref nil))
 
+
 (defn connection-map
-  "Returns a configuration map for the RabbitMQ connection."
+  "Returns a configuration map for the AMQP connection."
   []
-  {:host     (cfg/rabbitmq-host)
-   :port     (cfg/rabbitmq-port)
-   :username (cfg/rabbitmq-user)
-   :password (cfg/rabbitmq-pass)})
+  {:host     (cfg/amqp-host)
+   :port     (cfg/amqp-port)
+   :username (cfg/amqp-user)
+   :password (cfg/amqp-password)})
+
 
 (defn connection-okay?
   "Returns a boolean telling whether the connection that's passed in is still active."
@@ -100,6 +102,7 @@
     @amqp-channel
     (dosync (ref-set amqp-channel (channel (get-connection))))))
 
+
 (defn configure
   "Sets up a channel, exchange, and queue, with the queue bound to the exchange and 'msg-fn' 
    registered as the callback."
@@ -111,29 +114,11 @@
       (let [conn (get-connection)
             chan (get-channel)
             q    (declare-queue @amqp-channel)]
-        
         (declare-exchange
           @amqp-channel
-          (cfg/rabbitmq-exchange) 
-          (cfg/rabbitmq-exchange-type)
-          :durable     (cfg/rabbitmq-exchange-durable?)
-          :auto-delete (cfg/rabbitmq-exchange-auto-delete?))
-        
-        (bind @amqp-channel q (cfg/rabbitmq-exchange) (cfg/rabbitmq-routing-key))
-        (subscribe @amqp-channel q msg-fn :auto-ack (cfg/rabbitmq-msg-auto-ack?))))))
-
-(defn conn-monitor
-  "Starts an infinite loop in a new thread that checks the health of the connection and reconnects 
-   if necessary."
-  [msg-fn]
-  (.start 
-    (Thread. 
-      (fn [] 
-        (loop []
-          (log/info "[amqp/conn-monitor] checking messaging connection.")
-          (try
-            (configure msg-fn)
-            (catch Exception e
-              (log/error "[amqp/conn-monitor]" (ce/format-exception e))))
-          (Thread/sleep (cfg/rabbitmq-health-check-interval))
-          (recur))))))
+          (cfg/amqp-exchange-name)
+          (cfg/amqp-exchange-type)
+          :durable     (cfg/amqp-exchange-durable?)
+          :auto-delete (cfg/amqp-exchange-auto-delete?))
+        (bind @amqp-channel q (cfg/amqp-exchange-name) (cfg/amqp-routing-key))
+        (subscribe @amqp-channel q msg-fn :auto-ack (cfg/amqp-msg-auto-ack?))))))

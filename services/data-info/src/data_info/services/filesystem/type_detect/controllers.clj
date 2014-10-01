@@ -1,11 +1,11 @@
-(ns data-info.services.filesystem.garnish.controllers
+(ns data-info.services.filesystem.type-detect.controllers
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators])
   (:require [cheshire.core :as json]
             [heuristomancer.core :as hm]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [data-info.services.filesystem.garnish.irods :as prods]
+            [data-info.services.filesystem.type-detect.irods :as prods]
             [data-info.util.validators :as valid]))
 
 

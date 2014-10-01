@@ -1,4 +1,4 @@
-(ns data-info.services.filesystem.garnish.messages
+(ns data-info.services.filesystem.type-detect.messages
   (:use [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
         [clj-jargon.metadata :only [attribute? add-metadata]]
@@ -8,7 +8,7 @@
             [clojure-commons.error-codes :as ce]
             [cheshire.core :as json]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.garnish.irods :as irods]
+            [data-info.services.filesystem.type-detect.irods :as irods]
             [data-info.services.filesystem.icat :as icat]))
 
 (defn filetype-message-handler
@@ -24,15 +24,15 @@
         (if-not (exists? cm path)
           (log/warn "[filetype-message-handler]" path "does not exist, it probably got moved before the handler fired."))
         
-        (if (attribute? cm path (cfg/garnish-type-attribute))
+        (if (attribute? cm path (cfg/type-detect-type-attribute))
           (log/warn "[filetype-message-handler]" path "already has an attribute called"
-                    (cfg/garnish-type-attribute)))
+                    (cfg/type-detect-type-attribute)))
         
-        (when (and (exists? cm path) (not (attribute? cm path (cfg/garnish-type-attribute))))
+        (when (and (exists? cm path) (not (attribute? cm path (cfg/type-detect-type-attribute))))
           (let [ctype (irods/content-type cm path)]
             (when-not (or (nil? ctype) (string/blank? ctype))
               (log/warn "[filetype-message-handler] adding type" ctype "to" path)
-              (add-metadata cm path (cfg/garnish-type-attribute) ctype "")
+              (add-metadata cm path (cfg/type-detect-type-attribute) ctype "")
               (log/warn "[filetype-message-handler] done adding type" ctype "to" path))
             (when (or (nil? ctype) (string/blank? ctype))
               (log/warn "[filetype-message-handler] type was not detected for" path))))))
