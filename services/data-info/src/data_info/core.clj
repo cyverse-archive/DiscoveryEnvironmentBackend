@@ -16,6 +16,7 @@
             [clojure.tools.nrepl.server :as nrepl]
             [me.raynes.fs :as fs]
             [common-cli.core :as ccli]
+            [data-info.routes.welcome :as welcome]
             [data-info.services.filesystem.icat :as icat]))
 
 
@@ -36,6 +37,7 @@
 (defn- all-routes
   []
   (flagged-routes
+    (welcome/route)
     (data-routes)
     (filesystem-routes)
     (route/not-found (unrecognized-path-response))))
