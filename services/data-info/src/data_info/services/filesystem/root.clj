@@ -13,6 +13,7 @@
             [data-info.services.filesystem.icat :as icat]
             [data-info.services.filesystem.validators :as validators]))
 
+
 (defn- create-trash-folder?
   [cm user root-path]
   (and (= root-path (paths/user-trash-path user)) (not (exists? cm root-path))))
@@ -47,18 +48,17 @@
                  :path  (:id res)
                  :id    (str "/root" (:id res))))))))
 
+
 (defn do-root-listing
   [{user :user}]
   (let [uhome          (ft/path-join (cfg/irods-home) user)
         user-root-list (partial root-listing user)
         user-trash-dir (paths/user-trash-path user)]
-    {:roots
-     (remove
-       nil?
-       [(user-root-list uhome)
-        (user-root-list (cfg/fs-community-data))
-        (user-root-list (cfg/irods-home))
-        (user-root-list user-trash-dir true)])}))
+    {:roots (remove nil? [(user-root-list uhome)
+                          (user-root-list (cfg/community-data))
+                          (user-root-list (cfg/irods-home))
+                          (user-root-list user-trash-dir true)])}))
+
 
 (with-pre-hook! #'do-root-listing
   (fn [params]

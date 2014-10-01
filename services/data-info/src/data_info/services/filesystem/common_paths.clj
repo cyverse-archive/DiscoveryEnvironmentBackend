@@ -51,7 +51,8 @@
      (ft/rm-last-slash abs)))
 
 
-(defn- community? [abs] (= (cfg/fs-community-data) abs))
+(defn- community? [abs]
+  (= (cfg/community-data) abs))
 
 
 (defn base-trash-path

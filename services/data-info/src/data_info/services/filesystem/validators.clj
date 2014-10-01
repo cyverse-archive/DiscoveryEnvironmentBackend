@@ -3,21 +3,24 @@
         [clj-jargon.permissions]
         [clj-jargon.tickets]
         [clj-jargon.users]
-        [clj-icat-direct.icat :as icat]
         [clojure-commons.error-codes]
-        [slingshot.slingshot :only [try+ throw+]])
-  (:require [data-info.util.config :as cfg]))
+        [slingshot.slingshot :only [throw+]])
+  (:require [clj-icat-direct.icat :as icat]
+            [data-info.util.config :as cfg]))
 
-(defn num-paths-okay?
+
+(defn- num-paths-okay?
   [path-count]
-  (<= path-count (cfg/fs-max-paths-in-request)))
+  (<= path-count (cfg/max-paths-in-request)))
+
 
 (defn- validate-path-count
   [count]
   (if-not (num-paths-okay? count)
     (throw+ {:error_code "ERR_TOO_MANY_PATHS"
              :count count
-             :limit (cfg/fs-max-paths-in-request)})))
+             :limit (cfg/max-paths-in-request)})))
+
 
 (defn validate-num-paths
   [paths]

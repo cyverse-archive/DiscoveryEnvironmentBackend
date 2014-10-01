@@ -12,7 +12,6 @@
             [compojure.route :as route]
             [ring.adapter.jetty :as jetty]
             [data-info.util.config :as config]
-            [data-info.util.db :as db]
             [data-info.util.messaging :as messages]
             [clojure.tools.nrepl.server :as nrepl]
             [me.raynes.fs :as fs]
@@ -89,8 +88,7 @@
    (load-configuration-from-file (find-configuration-file)))
 
   ([path]
-   (config/load-config-from-file path)
-   (db/define-database)))
+   (config/load-config-from-file path)))
 
 
 (defn lein-ring-init
@@ -136,7 +134,6 @@
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
     (config/load-config-from-file (:config options))
-    (db/define-database)
     (messages/messaging-initialization)
     (icat/configure-icat)
     (jetty/run-jetty app {:port (config/listen-port)})))

@@ -6,15 +6,14 @@
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [file-size]]
         [clj-jargon.item-ops :only [read-file]]
-        [slingshot.slingshot :only [try+ throw+]])
+        [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
-            [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
-            [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
             [data-info.services.filesystem.icat :as icat]
             [data-info.services.filesystem.validators :as validators]))
+
 
 (defn- preview-buffer
   [cm path size]
@@ -47,9 +46,11 @@
       (validators/path-is-file cm path)
       (gen-preview cm path size))))
 
+
 (defn do-preview
   [{user :user path :path}]
-  {:preview (preview user path (cfg/fs-preview-size))})
+  {:preview (preview user path (cfg/preview-size))})
+
 
 (with-pre-hook! #'do-preview
   (fn [params]

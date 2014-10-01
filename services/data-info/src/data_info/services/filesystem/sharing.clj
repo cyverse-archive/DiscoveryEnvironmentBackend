@@ -6,12 +6,10 @@
         [clj-jargon.metadata]
         [clj-jargon.permissions]
         [clj-jargon.gen-query]
-        [clj-jargon.listings]
-        [slingshot.slingshot :only [try+ throw+]])
+        [clj-jargon.listings])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
-            [cheshire.core :as json]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.services.filesystem.common-paths :as paths]
@@ -248,9 +246,6 @@
 
 (with-post-hook! #'do-unshare (paths/log-func "do-unshare"))
 
-(defn anon-readable?
-  [cm p]
-  (is-readable? cm (cfg/fs-anon-user) p))
 
 (defn anon-file-url
   [p]
@@ -261,6 +256,7 @@
   [paths]
   (into {} (map #(vector %1 (anon-file-url %1)) paths)))
 
+
 (defn anon-files
   [user paths]
   (with-jargon (icat/jargon-cfg) [cm]
@@ -268,9 +264,10 @@
     (validators/all-paths-exist cm paths)
     (validators/paths-are-files cm paths)
     (validators/user-owns-paths cm user paths)
-    (log/warn "Giving read access to" (cfg/fs-anon-user) "on:" (string/join " " paths))
-    (share user [(cfg/fs-anon-user)] paths :read)
+    (log/warn "Giving read access to" (cfg/anon-user) "on:" (string/join " " paths))
+    (share user [(cfg/anon-user)] paths :read)
     {:user user :paths (anon-files-urls paths)}))
+
 
 (defn fix-broken-paths
   [paths]

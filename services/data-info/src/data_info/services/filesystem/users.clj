@@ -4,17 +4,13 @@
         [data-info.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [quota]]
-        [clj-jargon.users]
-        [slingshot.slingshot :only [try+ throw+]])
-  (:require [clojure.tools.logging :as log]
-            [clojure.string :as string]
-            [clojure-commons.file-utils :as ft]
-            [cheshire.core :as json]
-            [dire.core :refer [with-pre-hook! with-post-hook!]]
+        [clj-jargon.users])
+  (:require [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clj-jargon.permissions :as perm]
             [data-info.util.config :as cfg]
             [data-info.services.filesystem.icat :as icat]
             [data-info.services.filesystem.validators :as validators]))
+
 
 (defn list-user-groups
   [user]
@@ -22,12 +18,12 @@
     (validators/user-exists cm user)
     (user-groups cm user)))
 
+
 (defn- filtered-user-perms
   [cm user abspath]
-  (let [filtered-users (set (conj (cfg/fs-perms-filter) user (cfg/irods-user)))]
-    (filter
-     #(not (contains? filtered-users (:user %1)))
-     (perm/list-user-perm cm abspath))))
+  (let [filtered-users (set (conj (cfg/perms-filter) user (cfg/irods-user)))]
+    (filter #(not (contains? filtered-users (:user %1)))
+            (perm/list-user-perm cm abspath))))
 
 
 (defn- list-perm

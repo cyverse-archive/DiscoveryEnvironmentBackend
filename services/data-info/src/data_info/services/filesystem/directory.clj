@@ -11,6 +11,7 @@
             [data-info.services.filesystem.validators :as validators]
             [data-info.services.filesystem.uuids :as uuids]
             [clj-icat-direct.icat :as icat]
+            [clj-jargon.validations :as jv]
             [data-info.util.config :as cfg]
             [data-info.services.filesystem.common-paths :as paths]
             [data-info.services.filesystem.icat :as jargon]))
@@ -18,25 +19,27 @@
 
 (defn get-paths-in-folder
   ([user folder]
-    (get-paths-in-folder user folder (cfg/fs-max-paths-in-request)))
+   (get-paths-in-folder user folder (cfg/max-paths-in-request)))
 
   ([user folder limit]
-    (let [listing (icat/paged-folder-listing user (cfg/irods-zone) folder :base-name :asc limit 0)]
-      (map :full_path listing))))
+   (let [listing (icat/paged-folder-listing user (cfg/irods-zone) folder :base-name :asc limit 0)]
+     (map :full_path listing))))
+
 
 (defn- filtered-paths
   "Returns a seq of full paths that should not be included in paged listing."
   [user]
-  [(cfg/fs-community-data)
+  [(cfg/community-data)
    (ft/path-join (cfg/irods-home) user)
    (ft/path-join (cfg/irods-home) "public")])
+
 
 (defn- should-filter?
   "Returns true if the map is okay to include in a directory listing."
   [user path-to-check]
-  (let [fpaths (set (concat (cfg/fs-filter-files) (filtered-paths user)))]
-    (or  (contains? fpaths path-to-check)
-         (not (paths/valid-path? path-to-check)))))
+  (let [fpaths (set (concat (cfg/filter-files) (filtered-paths user)))]
+    (or (contains? fpaths path-to-check)
+        (not (paths/valid-path? path-to-check)))))
 
 
 (defn- page-entry->map
@@ -86,53 +89,59 @@
     "DESC" :desc
            :asc))
 
-(defn paged-dir-listing
+
+; TODO this is too big, refactor it
+(defn- paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
   [user path limit offset & {:keys [sort-col sort-order]
-                             :or {:sort-col   "NAME"
-                                  :sort-order "ASC"}}]
+                             :or   {:sort-col "NAME" :sort-order "ASC"}}]
   (log/warn "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
-  (let [path      (ft/rm-last-slash path)
-        sort-col  (string/upper-case sort-col)
+  (let [path       (ft/rm-last-slash path)
+        sort-col   (string/upper-case sort-col)
         sort-order (string/upper-case sort-order)]
     (with-jargon (jargon/jargon-cfg) [cm]
       (validators/user-exists cm user)
       (validators/path-exists cm path)
       (validators/path-readable cm user path)
       (validators/path-is-dir cm path)
-
       (when-not (contains? #{"NAME" "ID" "LASTMODIFIED" "DATECREATED" "SIZE" "PATH"} sort-col)
         (log/warn "invalid sort column" sort-col)
-        (throw+ {:error_code "ERR_INVALID_SORT_COLUMN"
-                 :column sort-col}))
-
+        (throw+ {:error_code "ERR_INVALID_SORT_COLUMN" :column sort-col}))
       (when-not (contains? #{"ASC" "DESC"} sort-order)
         (log/warn "invalid sort order" sort-order)
-        (throw+ {:error_code "ERR_INVALID_SORT_ORDER"
-                 :sort-order sort-order}))
-
+        (throw+ {:error_code "ERR_INVALID_SORT_ORDER" :sort-order sort-order}))
       (let [stat (stat cm path)
             scol (user-col->api-col sort-col)
             sord (user-order->api-order sort-order)
             zone (cfg/irods-zone)
             uuid (:uuid (uuids/uuid-for-path cm user path))]
         (merge
-         (hash-map
-          :id               uuid
-          :path             path
-          :label            (paths/id->label user path)
-          :filter           (should-filter? user path)
-          :permission       (permission-for cm user path)
-          :hasSubDirs       true
-          :date-created     (:date-created stat)
-          :date-modified    (:date-modified stat)
-          :file-size        0)
-         (icat/number-of-items-in-folder user zone path)
-         (icat/number-of-filtered-items-in-folder user zone path
-                                                  (cfg/fs-filter-chars)
-                                                  (cfg/fs-filter-files)
-                                                  (filtered-paths user))
-         (page->map user (log/spy (icat/paged-folder-listing user zone path scol sord limit offset))))))))
+          (hash-map
+            :id            uuid
+            :path          path
+            :label         (paths/id->label user path)
+            :filter        (should-filter? user path)
+            :permission    (permission-for cm user path)
+            :hasSubDirs    true
+            :date-created  (:date-created stat)
+            :date-modified (:date-modified stat)
+            :file-size     0)
+          (icat/number-of-items-in-folder user zone path)
+          (icat/number-of-filtered-items-in-folder user
+                                                   zone
+                                                   path
+                                                   (apply str jv/bad-chars)
+                                                   (cfg/filter-files)
+                                                   (filtered-paths user))
+          (page->map user
+                     (log/spy (icat/paged-folder-listing user
+                                                         zone
+                                                         path
+                                                         scol
+                                                         sord
+                                                         limit
+                                                         offset))))))))
+
 
 (defn list-directories
   "Lists the directories contained under path."
@@ -160,12 +169,14 @@
           :file-size     0)
          (dissoc (page->map user (icat/list-folders-in-folder user zone path)) :files))))))
 
+
 (defn- top-level-listing
   [{user :user}]
-  (let [comm-f     (future (list-directories user (cfg/fs-community-data)))
-        share-f    (future (list-directories user (cfg/irods-home)))
-        home-f     (future (list-directories user (paths/user-home-dir user)))]
+  (let [comm-f  (future (list-directories user (cfg/community-data)))
+        share-f (future (list-directories user (cfg/irods-home)))
+        home-f  (future (list-directories user (paths/user-home-dir user)))]
     {:roots [@home-f @comm-f @share-f]}))
+
 
 (defn- shared-with-me-listing?
   [path]
