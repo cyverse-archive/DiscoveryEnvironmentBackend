@@ -17,7 +17,6 @@ CREATE VIEW task_param_listing AS
            f.retain,
            f.is_implicit,
            f.info_type,
-           f.multiplicity,
            f.data_format,
            f.data_source_id
     FROM parameters p
