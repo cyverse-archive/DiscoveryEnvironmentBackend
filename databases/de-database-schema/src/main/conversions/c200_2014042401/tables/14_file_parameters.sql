@@ -21,6 +21,4 @@ ALTER TABLE ONLY file_parameters RENAME COLUMN data_source_id TO data_source_id_
 ALTER TABLE ONLY file_parameters ADD COLUMN id UUID DEFAULT (uuid_generate_v1());
 ALTER TABLE ONLY file_parameters ADD COLUMN info_type UUID;
 ALTER TABLE ONLY file_parameters ADD COLUMN data_format UUID;
-ALTER TABLE ONLY file_parameters ADD COLUMN multiplicity UUID;
 ALTER TABLE ONLY file_parameters ADD COLUMN data_source_id  UUID;
-

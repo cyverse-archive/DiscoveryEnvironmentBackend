@@ -119,8 +119,6 @@
   (load-sql-file "conversions/c200_2014042401/tables/15_tool_test_data_files.sql")
   (println "\t* updating the info_type table")
   (load-sql-file "conversions/c200_2014042401/tables/17_info_type.sql")
-  (println "\t* updating the multiplicity table")
-  (load-sql-file "conversions/c200_2014042401/tables/19_multiplicity.sql")
   (println "\t* updating the property table to parameters")
   (load-sql-file "conversions/c200_2014042401/tables/24_parameters.sql")
   (println "\t* updating the property_group table to parameter_groups")
@@ -222,8 +220,6 @@
   (load-sql-file "conversions/c200_2014042401/uuids/14_file_parameters.sql")
   (println "\t* updating info_type uuid foreign keys...")
   (load-sql-file "conversions/c200_2014042401/uuids/17_info_type.sql")
-  (println "\t* updating multiplicity uuid foreign keys...")
-  (load-sql-file "conversions/c200_2014042401/uuids/19_multiplicity.sql")
   (println "\t* updating parameters uuid foreign keys (this might take a minute or 2)...")
   (load-sql-file "conversions/c200_2014042401/uuids/24_parameters.sql")
   (println "\t* updating parameter_groups uuid foreign keys...")
@@ -292,6 +288,27 @@
   (exec-raw "DROP FUNCTION IF EXISTS analysis_group_hierarchy(bigint, boolean)")
   (load-sql-file "functions/03_app_category_hierarchy.sql"))
 
+(defn- param-type-subselect
+  [param-type]
+  (subselect :parameter_types
+             (fields :id)
+             (where {:name param-type})))
+
+(defn- multiplicity-subselect
+  []
+  (subselect [:file_parameters :fp]
+             (fields :m.name)
+             (join [:multiplicity_v187 :m] {:fp.multiplicity_v187 :m.hid})
+             (where {:parameters.file_parameter_id :fp.id})))
+
+(defn- convert-parameter-types
+  [new-param-type old-param-type old-multiplicity]
+  (println "\t* performing the conversion for" new-param-type "parameters")
+  (update :parameters
+          (set-fields {:parameter_type (param-type-subselect new-param-type)})
+          (where (and (= :parameter_type (param-type-subselect old-param-type))
+                      (= old-multiplicity (multiplicity-subselect))))))
+
 (defn convert
   "Performs the database conversion."
   []
@@ -304,4 +321,10 @@
   (drop-obsolete-tables)
   (re-add-constraints)
   (add-new-views)
-  (reload-functions))
+  (reload-functions)
+  (convert-parameter-types "FileInput" "Input" "single")
+  (convert-parameter-types "FolderInput" "Input" "collection")
+  (convert-parameter-types "MultiFileSelector" "Input" "many")
+  (convert-parameter-types "FileOutput" "Output" "single")
+  (convert-parameter-types "FolderOutput" "Output" "collection")
+  (convert-parameter-types "MultiFileOutput" "Output" "many"))

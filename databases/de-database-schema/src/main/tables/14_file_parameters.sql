@@ -9,7 +9,5 @@ CREATE TABLE file_parameters (
     is_implicit boolean DEFAULT false,
     info_type uuid NOT NULL,
     data_format uuid NOT NULL,
-    multiplicity uuid NOT NULL,
     data_source_id uuid NOT NULL
 );
-

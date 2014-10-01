@@ -103,78 +103,10 @@
              LEFT JOIN file_parameters f ON f.id = p.file_parameter_id
              WHERE value_type = 'Output' AND CHAR_LENGTH(f.name_v187) > 0 AND pv.value IS NULL)"))
 
-(defn- param-type-subselect
-  [param-type]
-  (subselect :parameter_types
-             (fields :id)
-             (where {:name param-type})))
-
-(defn- multiplicity-subselect
-  []
-  (subselect [:file_parameters :fp]
-             (fields :m.name)
-             (join [:multiplicity :m] {:fp.multiplicity :m.id})
-             (where {:parameters.file_parameter_id :fp.id})))
-
-(defn- convert-parameter-types
-  [new-param-type old-param-type old-multiplicity]
-  (println "\t* performing the conversion for" new-param-type "parameters")
-  (update :parameters
-          (set-fields {:parameter_type (param-type-subselect new-param-type)})
-          (where (and (= :parameter_type (param-type-subselect old-param-type))
-                      (= old-multiplicity (multiplicity-subselect))))))
-
-(defn- redefine-task-param-listing-view
-  []
-  (println "\t* redefining the task_param_listing view")
-  (exec-raw "DROP VIEW IF EXISTS task_param_listing")
-  (exec-raw
-   "CREATE VIEW task_param_listing AS
-    SELECT t.id AS task_id,
-           p.id,
-           p.name,
-           p.label,
-           p.description,
-           p.ordering,
-           p.required,
-           p.omit_if_blank,
-           pt.name AS parameter_type,
-           vt.name AS value_type,
-           f.retain,
-           f.is_implicit,
-           f.info_type,
-           f.data_format,
-           f.data_source_id
-    FROM parameters p
-        LEFT JOIN parameter_types pt ON pt.id = p.parameter_type
-        LEFT JOIN value_type vt ON vt.id = pt.value_type_id
-        LEFT JOIN file_parameters f ON f.id = p.file_parameter_id
-        LEFT JOIN parameter_groups g ON g.id = p.parameter_group_id
-        LEFT JOIN tasks t ON t.id = g.task_id"))
-
-(defn- remove-multiplicity-column
-  []
-  (println "\t* removing the multiplicity column from the file_parameters table")
-  (exec-raw "ALTER TABLE file_parameters DROP COLUMN multiplicity"))
-
-(defn- remove-multiplicity-table
-  []
-  (println "\t* removing the multiplicity table")
-  (exec-raw "DROP TABLE multiplicity"))
-
 (defn convert
   "Performs the database conversion."
   []
   (println "Performing the conversion for" version)
   (convert-defalut-values)
   (convert-selection-values)
-  (convert-tree-selection-values)
-  (convert-parameter-types "FileInput" "Input" "single")
-  (convert-parameter-types "FolderInput" "Input" "collection")
-  (convert-parameter-types "MultiFileSelector" "Input" "many")
-  (convert-parameter-types "FileOutput" "Output" "single")
-  (convert-parameter-types "FolderOutput" "Output" "collection")
-  (convert-parameter-types "MultiFileOutput" "Output" "many")
-  (redefine-task-param-listing-view)
-  (remove-multiplicity-column)
-  (remove-multiplicity-table))
+  (convert-tree-selection-values))
