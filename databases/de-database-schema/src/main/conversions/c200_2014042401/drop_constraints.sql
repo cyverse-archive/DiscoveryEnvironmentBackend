@@ -61,8 +61,7 @@ ALTER TABLE ONLY input_output_mapping ALTER COLUMN mapping_id_v187 DROP NOT NULL
 ALTER TABLE ONLY input_output_mapping ALTER COLUMN input_v187 DROP NOT NULL;
 ALTER TABLE ONLY input_output_mapping ALTER COLUMN output_v187 DROP NOT NULL;
 
-ALTER TABLE ONLY multiplicity ALTER COLUMN hid_v187 DROP NOT NULL;
-ALTER TABLE ONLY multiplicity ALTER COLUMN hid_v187 DROP DEFAULT;
+ALTER TABLE ONLY multiplicity_v187 ALTER COLUMN hid DROP DEFAULT;
 DROP SEQUENCE multiplicity_id_seq;
 
 ALTER TABLE ONLY parameters ALTER COLUMN hid_v187 DROP NOT NULL;
@@ -154,4 +153,3 @@ DROP SEQUENCE transformation_values_id_seq;
 
 ALTER TABLE ONLY validator_v187 ALTER COLUMN hid DROP DEFAULT;
 DROP SEQUENCE validator_id_seq;
-

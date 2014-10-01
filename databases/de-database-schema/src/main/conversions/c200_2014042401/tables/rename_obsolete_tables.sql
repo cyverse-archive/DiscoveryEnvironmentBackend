@@ -14,4 +14,4 @@ ALTER TABLE transformation_activity_mappings RENAME TO transformation_activity_m
 ALTER TABLE transformation_values RENAME TO transformation_values_v187;
 ALTER TABLE validator RENAME TO validator_v187;
 ALTER TABLE validator_rule RENAME TO validator_rule_v187;
-
+ALTER TABLE multiplicity RENAME TO multiplicity_v187;

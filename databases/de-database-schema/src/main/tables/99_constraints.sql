@@ -66,14 +66,6 @@ ALTER TABLE ONLY integration_data
     PRIMARY KEY (id);
 
 --
--- Name: multiplicity_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
--- Tablespace:
---
-ALTER TABLE ONLY multiplicity
-    ADD CONSTRAINT multiplicity_pkey
-    PRIMARY KEY (id);
-
---
 -- Name: parameter_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
 --
@@ -378,15 +370,6 @@ ALTER TABLE ONLY file_parameters
     ADD CONSTRAINT file_parameters_info_type_fkey
     FOREIGN KEY (info_type)
     REFERENCES info_type(id);
-
---
--- Name: file_parameters_multiplicity_fkey; Type: FK CONSTRAINT; Schema: public;
--- Owner: de
---
-ALTER TABLE ONLY file_parameters
-    ADD CONSTRAINT file_parameters_multiplicity_fkey
-    FOREIGN KEY (multiplicity)
-    REFERENCES multiplicity(id);
 
 --
 -- Name: deployed_comp_integration_data_id_fk; Type: FK CONSTRAINT; Schema:
