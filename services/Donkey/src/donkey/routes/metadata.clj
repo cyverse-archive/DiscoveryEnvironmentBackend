@@ -42,12 +42,6 @@
     (PATCH "/apps/:app-id" [app-id :as req]
            (trap #(update-app-labels req app-id)))
 
-    (GET "/apps/:app-id/pipeline-ui" [app-id]
-         (trap #(apps/edit-workflow app-id)))
-
-    (POST "/apps/:app-id/copy-pipeline" [app-id]
-          (trap #(apps/copy-workflow app-id)))
-
     (GET "/apps/:app-id/is-publishable" [app-id]
          (trap #(app-publishable? app-id)))
 
@@ -67,7 +61,19 @@
           (trap #(apps/rate-app body app-id)))
 
     (DELETE "/apps/:app-id/rating" [app-id]
-            (trap #(apps/delete-rating app-id)))))
+            (trap #(apps/delete-rating app-id)))
+
+    (POST "/apps/pipelines" [:as req]
+          (trap #(create-pipeline req)))
+
+    (PUT "/apps/pipelines/:app-id" [app-id :as req]
+         (trap #(update-pipeline req app-id)))
+
+    (POST "/apps/pipelines/:app-id/copy" [app-id]
+          (trap #(apps/copy-workflow app-id)))
+
+    (GET "/apps/pipelines/:app-id/ui" [app-id]
+         (trap #(apps/edit-workflow app-id)))))
 
 (defn tool-request-routes
   []
@@ -145,9 +151,6 @@
    (PUT "/update-app" [:as req]
         (trap #(update-app-secured req)))
 
-   (POST "/update-workflow" [:as req]
-         (trap #(update-workflow-secured req)))
-
    (POST "/make-analysis-public" [:as req]
          (trap #(make-app-public req)))
 
@@ -212,12 +215,6 @@
 
    (POST "/update-template" [:as req]
          (trap #(update-template req)))
-
-   (POST "/force-update-workflow" [:as req]
-         (trap #(force-update-workflow req)))
-
-   (POST "/update-workflow" [:as req]
-         (trap #(update-workflow req)))
 
    (POST "/import-template" [:as req]
          (trap #(import-template req)))

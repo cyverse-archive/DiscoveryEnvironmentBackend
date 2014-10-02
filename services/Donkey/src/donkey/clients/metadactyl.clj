@@ -139,7 +139,7 @@
 
 (defn edit-workflow
   [app-id]
-  (-> (client/get (metadactyl-url "apps" app-id "pipeline-ui")
+  (-> (client/get (metadactyl-url "apps" "pipelines" app-id "ui")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)
@@ -147,7 +147,7 @@
 
 (defn copy-workflow
   [app-id]
-  (-> (client/post (metadactyl-url "apps" app-id "copy-pipeline")
+  (-> (client/post (metadactyl-url "apps" "pipelines" app-id "copy")
                    {:query-params (secured-params)
                     :as           :stream})
       (:body)

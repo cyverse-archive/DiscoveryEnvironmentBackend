@@ -200,24 +200,19 @@
   (let [url (build-metadactyl-unprotected-url req "update-template")]
     (forward-post url req)))
 
-(defn update-workflow
-  "This service will either update an existing workflow or import a new workflow."
+(defn create-pipeline
+  "This service will create a pipeline."
   [req]
-  (let [url (build-metadactyl-unprotected-url req "update-workflow")]
+  (let [url (metadactyl-url {} "apps" "pipelines")
+        req (metadactyl-request req)]
     (forward-post url req)))
 
-(defn update-workflow-secured
-  "This service will either update an existing workflow or import a new workflow."
-  [req]
-  (let [url (build-metadactyl-secured-url req "update-workflow")]
-    (forward-post url req)))
-
-(defn force-update-workflow
-  "This service will either update an existing workflow or import a new workflow.
-   Vetted workflows may be updated."
-  [req]
-  (let [url (build-metadactyl-unprotected-url req "force-update-workflow")]
-    (forward-post url req)))
+(defn update-pipeline
+  "This service will update an existing pipeline."
+  [req app-id]
+  (let [url (metadactyl-url {} "apps" "pipelines" app-id)
+        req (metadactyl-request req)]
+    (forward-put url req)))
 
 (defn update-app-labels
   "This service updates the labels in a single-step app. Both vetted and unvetted apps can be
