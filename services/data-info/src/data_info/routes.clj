@@ -25,8 +25,8 @@
 
 
 (defroutes all-routes
-  (GET "/" []
-    (welcome/welcome))
+  (GET "/" [:as req]
+    (util/controller req welcome/welcome))
 
   (GET "/home" [:as req]
     (util/controller req home/do-homedir :params))
