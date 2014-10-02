@@ -163,10 +163,10 @@
   "data-info.irods.user")
 
 
-(cc/defprop-str irods-pass
+(cc/defprop-str irods-password
   "Returns the iRODS user's password."
   [props config-valid configs]
-  "data-info.irods.pass")
+  "data-info.irods.password")
 
 
 (cc/defprop-str irods-host
@@ -284,7 +284,7 @@
 
 (defn- exception-filters
   []
-  (filter #(not (nil? %)) [(icat-password) (icat-user) (irods-pass) (irods-user)]))
+  (filter #(not (nil? %)) [(icat-password) (icat-user) (irods-password) (irods-user)]))
 
 
 (defn load-config-from-file

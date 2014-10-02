@@ -3,21 +3,19 @@
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
-        [data-info.routes.data]
-        [data-info.routes.filesystem]
-        [data-info.util]
-        [data-info.util.service]
-        [ring.middleware keyword-params])
-  (:require [clojure.java.io :as io]
-            [compojure.route :as route]
+        [data-info.util.service])
+  (:require [compojure.handler :as handler]
+            [clojure.java.io :as io]
             [ring.adapter.jetty :as jetty]
             [data-info.util.config :as config]
             [data-info.util.messaging :as messages]
             [clojure.tools.nrepl.server :as nrepl]
             [me.raynes.fs :as fs]
+            [ring.middleware.keyword-params :as params]
             [common-cli.core :as ccli]
-            [data-info.routes.welcome :as welcome]
-            [data-info.services.filesystem.icat :as icat]))
+            [data-info.routes :as routes]
+            [data-info.services.filesystem.icat :as icat]
+            [data-info.util :as util]))
 
 
 (def svc-info
@@ -25,22 +23,6 @@
    :app-name "data-info"
    :group-id "org.iplantc"
    :art-id   "data-info"})
-
-
-(defn- delayed-handler
-  [routes-fn]
-  (fn [req]
-    (let [handler ((memoize routes-fn))]
-      (handler req))))
-
-
-(defn- all-routes
-  []
-  (flagged-routes
-    (welcome/route)
-    (data-routes)
-    (filesystem-routes)
-    (route/not-found (unrecognized-path-response))))
 
 
 (defn- start-nrepl
@@ -107,18 +89,14 @@
   (icat/configure-icat))
 
 
-(defn- site-handler
-  [routes-fn]
-  (-> (delayed-handler routes-fn)
-      trap-handler
-      req-logger
-      wrap-keyword-params
-      wrap-lcase-params
-      wrap-query-params))
-
-
-(def ^:private app
-  (site-handler all-routes))
+(defn- app
+  []
+  (-> routes/routes
+    util/trap-handler
+    util/req-logger
+    params/wrap-keyword-params
+    wrap-lcase-params
+    wrap-query-params))
 
 
 (defn- cli-options
@@ -127,6 +105,7 @@
     :default "/etc/iplant/de/data-info.properties"]
    ["-v" "--version" "Print out the version number."]
    ["-h" "--help"]])
+
 
 (defn -main
   [& args]
@@ -138,4 +117,4 @@
     (config/load-config-from-file (:config options))
     (messages/messaging-initialization)
     (icat/configure-icat)
-    (jetty/run-jetty app {:port (config/listen-port)})))
+    (jetty/run-jetty (app) {:port (config/listen-port)})))

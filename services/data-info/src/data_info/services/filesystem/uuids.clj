@@ -1,6 +1,5 @@
 (ns data-info.services.filesystem.uuids
-  (:use [clj-jargon.metadata]
-        [clj-jargon.permissions]
+  (:use [clj-jargon.permissions]
         [clojure-commons.validators]
         [slingshot.slingshot :only [throw+]]
         [data-info.services.filesystem.validators])
@@ -9,6 +8,7 @@
             [data-info.services.filesystem.stat :as stat]
             [cheshire.core :as json]
             [clj-jargon.init :as init]
+            [clj-jargon.metadata :as meta]
             [clojure-commons.error-codes :as error]
             [data-info.util.config :as cfg]
             [data-info.services.filesystem.icat :as jargon])
@@ -29,7 +29,7 @@
    Returns:
      It returns a path-stat map containing an additional UUID field."
   ([^IPersistentMap cm ^String user ^UUID uuid]
-   (let [results (list-everything-with-attr-value cm uuid-attr uuid)]
+   (let [results (meta/list-everything-with-attr-value cm uuid-attr uuid)]
      (when (empty? results)
        (throw+ {:error_code error/ERR_DOES_NOT_EXIST :uuid uuid}))
      (when (> (count results) 1)
@@ -40,6 +40,7 @@
                 :uuid       uuid}))
      (if (pos? (count results))
        (merge {:uuid uuid} (stat/path-stat cm user (first results))))))
+
   ([^String user ^UUID uuid]
    (init/with-jargon (jargon/jargon-cfg) [cm]
      (path-for-uuid cm user uuid))))
@@ -81,15 +82,38 @@
   (validate-map body {:uuids sequential?})
   (json/encode {:paths (paths-for-uuids (:user params) (:uuids body))}))
 
-(defn uuid-for-path
-  [cm user path]
-  (let [attrs (get-attribute cm path uuid-attr)]
+
+(defn ^UUID lookup-uuid
+  "Retrieves the UUID associated with a given entity path.
+
+   Parameters:
+     cm   - the jargon context map
+     path - the path to the entity
+
+   Returns:
+     It returns the UUID."
+  [^IPersistentMap cm ^String path]
+  (let [attrs (meta/get-attribute cm path uuid-attr)]
     (when-not (pos? (count attrs))
       (log/warn "Missing UUID for" path)
       (throw+ {:error_code error/ERR_NOT_FOUND :path path}))
-    (if (pos? (count attrs))
-      (merge {:uuid (:value (first attrs))}
-             (stat/path-stat cm user path)))))
+    (-> attrs first :value UUID/fromString)))
+
+
+(defn ^IPersistentMap uuid-for-path
+  "Retrieves the path stat info for a given entity. It attaches the UUID in a additional :uuid
+   field.
+
+   Parameters:
+     cm   - the open jargon context map
+     user - the user making the request
+     path - the absolute path to the entity
+
+   Returns:
+     It returns the modified path stat map."
+  [^IPersistentMap cm ^String user ^String path]
+  (assoc (stat/path-stat cm user path) :uuid (lookup-uuid cm path)))
+
 
 (defn uuids-for-paths
   [user paths]

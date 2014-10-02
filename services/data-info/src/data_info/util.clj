@@ -75,11 +75,6 @@
   (when (option-fn)
     (apply routes handlers)))
 
-(defn flagged-routes
-  "Creates a set of routes, removing any nil route definitions."
-  [& handlers]
-  (apply routes (remove nil? handlers)))
-
 
 (defn- pre-process-request
   [req & {:keys [slurp?] :or {slurp? false}}]

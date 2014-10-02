@@ -13,7 +13,7 @@
   (memo/memo #(init/init (cfg/irods-host)
                          (cfg/irods-port)
                          (cfg/irods-user)
-                         (cfg/irods-pass)
+                         (cfg/irods-password)
                          (cfg/irods-home)
                          (cfg/irods-zone)
                          (cfg/irods-resc)

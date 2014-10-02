@@ -24,112 +24,113 @@
   "The routes for file IO endpoints."
   []
   (GET "/filesystem/home" [:as req]
-    (controller req home/do-homedir :params))
+    "Howdy!"
+    #_(controller req home/do-homedir :params))
 
-  (POST "/filesystem/exists" [:as req]
+  (POST "/data/exists" [:as req]
     (controller req exists/do-exists :params :body))
 
-  (POST "/filesystem/stat" [:as req]
+  (POST "/data/stat" [:as req]
     (controller req stat/do-stat :params :body))
 
-  (POST "/filesystem/download" [:as req]
+  (POST "/data/download" [:as req]
     (controller req ud/do-download :params :body))
 
-  (POST "/filesystem/download-contents" [:as req]
+  (POST "/data/download-contents" [:as req]
     (controller req ud/do-download-contents :params :body))
 
-  (GET "/filesystem/display-download" [:as req]
+  (GET "/data/display-download" [:as req]
     (controller req ud/do-special-download :params))
 
-  (GET "/filesystem/upload" [:as req]
+  (GET "/data/upload" [:as req]
     (controller req ud/do-upload :params))
 
-  (GET "/filesystem/directory" [:as req]
+  (GET "/data/directory" [:as req]
     (controller req dir/do-directory :params))
 
-  (GET "/filesystem/paged-directory" [:as req]
+  (GET "/data/paged-directory" [:as req]
     (controller req dir/do-paged-listing :params))
 
-  (POST "/filesystem/directory/create" [:as req]
+  (POST "/data/directory/create" [:as req]
     (controller req create/do-create :params :body))
 
-  (POST "/filesystem/rename" [:as req]
+  (POST "/data/rename" [:as req]
     (controller req rename/do-rename :params :body))
 
-  (POST "/filesystem/delete" [:as req]
+  (POST "/data/delete" [:as req]
     (controller req trash/do-delete :params :body))
 
-  (POST "/filesystem/delete-contents" [:as req]
+  (POST "/data/delete-contents" [:as req]
     (controller req trash/do-delete-contents :params :body))
 
-  (POST "/filesystem/move" [:as req]
+  (POST "/data/move" [:as req]
     (controller req move/do-move :params :body))
 
-  (POST "/filesystem/move-contents" [:as req]
+  (POST "/data/move-contents" [:as req]
     (controller req move/do-move-contents :params :body))
 
-  (GET "/filesystem/file/preview" [:as req]
+  (GET "/data/file/preview" [:as req]
     (controller req preview/do-preview :params))
 
-  (GET "/filesystem/metadata" [:as req]
+  (GET "/data/metadata" [:as req]
     (controller req meta/do-metadata-get :params))
 
-  (POST "/filesystem/metadata" [:as req]
+  (POST "/data/metadata" [:as req]
     (controller req meta/do-metadata-set :params :body))
 
-  (DELETE "/filesystem/metadata" [:as req]
+  (DELETE "/data/metadata" [:as req]
     (controller req meta/do-metadata-delete :params))
 
-  (POST "/filesystem/metadata-batch" [:as req]
+  (POST "/data/metadata-batch" [:as req]
     (controller req meta/do-metadata-batch-set :params :body))
 
-  (POST "/filesystem/share" [:as req]
+  (POST "/data/share" [:as req]
     (controller req sharing/do-share :params :body))
 
-  (POST "/filesystem/unshare" [:as req]
+  (POST "/data/unshare" [:as req]
     (controller req sharing/do-unshare :params :body))
 
-  (POST "/filesystem/user-permissions" [:as req]
+  (POST "/data/user-permissions" [:as req]
     (controller req user/do-user-permissions :params :body))
 
-  (GET "/filesystem/groups" [:as req]
+  (GET "/data/groups" [:as req]
     (controller req user/do-groups :params))
 
-  (GET "/filesystem/quota" [:as req]
+  (GET "/data/quota" [:as req]
     (controller req user/do-quota :params))
 
-  (POST "/filesystem/restore" [:as req]
+  (POST "/data/restore" [:as req]
     (controller req trash/do-restore :params :body))
 
-  (POST "/filesystem/restore-all" [:as req]
+  (POST "/data/restore-all" [:as req]
     (controller req trash/do-restore-all :params))
 
-  (GET "/filesystem/user-trash-dir" [:as req]
+  (GET "/data/user-trash-dir" [:as req]
     (controller req trash/do-user-trash :params))
 
-  (POST "/filesystem/paths-contain-space" [:as req]
+  (POST "/data/paths-contain-space" [:as req]
     (controller req sh/do-paths-contain-space :params :body))
 
-  (POST "/filesystem/replace-spaces" [:as req]
+  (POST "/data/replace-spaces" [:as req]
     (controller req sh/do-replace-spaces :params :body))
 
-  (DELETE "/filesystem/trash" [:as req]
+  (DELETE "/data/trash" [:as req]
     (controller req trash/do-delete-trash :params))
 
-  (POST "/filesystem/read-chunk" [:as req]
+  (POST "/data/read-chunk" [:as req]
     (controller req file/do-read-chunk :params :body))
 
-  (POST "/filesystem/overwrite-chunk" [:as req]
+  (POST "/data/overwrite-chunk" [:as req]
     (controller req file/do-overwrite-chunk :params :body))
 
-  (POST "/filesystem/read-csv-chunk" [:as req]
+  (POST "/data/read-csv-chunk" [:as req]
     (controller req csv/do-read-csv-chunk :params :body))
 
-  (POST "/filesystem/anon-files" [:as req]
+  (POST "/data/anon-files" [:as req]
     (controller req sharing/do-anon-files :params :body))
 
-  (POST "/filesystem/paths-for-uuids" [:as req]
+  (POST "/data/paths-for-uuids" [:as req]
     (controller req uuid/do-paths-for-uuids :params :body))
 
-  (POST "/filesystem/uuids-for-paths" [:as req]
+  (POST "/data/uuids-for-paths" [:as req]
     (controller req uuid/do-uuids-for-paths :params :body)))
