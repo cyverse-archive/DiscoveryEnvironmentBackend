@@ -2,27 +2,32 @@
   (:use [korma.core]
         [kameleon.core]
         [kameleon.entities])
-  (:require [metadactyl.metadata.params :as mp]))
+  (:require [metadactyl.metadata.params :as mp]
+            [metadactyl.persistence.app-metadata :as amp]))
 
 ;; TODO:
-;; * Add code to format parameters; metadactyl.zoidberg can serve as an example.
-;; * Split the parameter formatting code into a shared namespace if it makes sense.
-;; * Add code to omit mapped input parameters.
 ;; * Add code to omit implicit output parameters.
 ;; * Review the translation code to make sure nothing was missed.
 
+(defn- mapped-input-subselect
+  [step-id]
+  (subselect [:workflow_io_maps :wm]
+             (join [:input_output_mapping :iom] {:wm.id :iom.mapping_id})
+             (where {:iom.input      :p.id
+                     :wm.target_step step-id})))
+
 (defn- get-parameters
-  [group-id]
+  [step-id group-id]
   (select (mp/params-base-query)
           (where {:p.parameter_group_id group-id
-                  :p.is_visible         true})))
+                  :p.is_visible         true})
+          (where (not (exists (mapped-input-subselect step-id))))))
 
 (defn- format-parameter
-  [step parameter]
-  (let [values (mp/get-param-values (:id parameter))
-        type   (:type parameter)]
+  [step {:keys [id type] :as parameter}]
+  (let [values (mp/get-param-values (:id parameter))]
     {:arguments    (mp/format-param-values type values)
-     :defaultValue ""
+     :defaultValue (mp/get-default-value type values)
      :description  (:description parameter)
      :id           (str (:id step) "_" (:id parameter))
      :isVisible    (:is_visible parameter)
@@ -30,7 +35,7 @@
      :name         (:name parameter)
      :required     (:required parameter)
      :type         (:type parameter)
-     :validators   []}))
+     :validators   (mp/get-validators id)}))
 
 (defn- get-groups
   [step-id]
@@ -44,7 +49,7 @@
   [name-prefix step group]
   {:id          (:id group)
    :label       (str name-prefix (:label group))
-   :parameters  (mapv (partial format-parameter step) (get-parameters (:id group)))
+   :parameters  (mapv (partial format-parameter step) (get-parameters (:id step) (:id group)))
    :step_number (:step_number step)})
 
 (defn- format-groups

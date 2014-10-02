@@ -1,7 +1,8 @@
 (ns metadactyl.metadata.params
   (:use [korma.core]
         [kameleon.core]
-        [kameleon.entities]))
+        [kameleon.entities])
+  (:require [metadactyl.util.conversions :as conv]))
 
 (defn- selection-param?
   [param-type]
@@ -59,3 +60,28 @@
   (-> (select* [:parameters :p])
       (join :inner [:parameter_types :t] {:p.parameter_type :t.id})
       (fields :p.description :p.id :p.name :p.label :p.is_visible [:t.name :type])))
+
+(defn get-default-value
+  [type param-values]
+  (let [default (first (filter :isDefault param-values))]
+    (cond
+     (tree-selection-param? type) nil
+     (selection-param? type)      (format-param-value default)
+     :else                        (:value default))))
+
+(defn- format-validator
+  [{:keys [id type]}]
+  {:type   type
+   :params (mapv (comp conv/convert-rule-argument :argument_value)
+                 (select :validation_rule_arguments
+                         (fields :argument_value)
+                         (where {:rule_id id})))})
+
+(defn get-validators
+  [param-id]
+  (mapv format-validator
+        (select [:validation_rules :r]
+                (join [:rule_type :t] {:r.rule_type :r.id})
+                (fields :r.id [:t.name :type])
+                (where {:r.parameter_id param-id
+                        :t.deprecated   false}))))
