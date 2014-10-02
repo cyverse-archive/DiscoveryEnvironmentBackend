@@ -1,4 +1,4 @@
-(ns data-info.services.filesystem.type-detect.messages
+(ns data-info.services.type-detect.messages
   (:use [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
         [clj-jargon.metadata :only [attribute? add-metadata]]
@@ -8,7 +8,7 @@
             [clojure-commons.error-codes :as ce]
             [cheshire.core :as json]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.type-detect.irods :as irods]
+            [data-info.services.type-detect.irods :as irods]
             [data-info.services.filesystem.icat :as icat]))
 
 (defn filetype-message-handler

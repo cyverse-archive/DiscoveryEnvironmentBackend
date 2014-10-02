@@ -1,4 +1,4 @@
-(ns data-info.services.filesystem.type-detect.irods
+(ns data-info.services.type-detect.irods
   (:use [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
         [clj-jargon.item-ops :only [input-stream]]

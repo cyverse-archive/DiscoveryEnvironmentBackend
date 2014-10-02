@@ -1,5 +1,5 @@
 (ns data-info.util.messaging
-  (:require [data-info.services.filesystem.type-detect.messages :as ftype]
+  (:require [data-info.services.type-detect.messages :as ftype]
             [data-info.clients.amqp :as amqp]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]))

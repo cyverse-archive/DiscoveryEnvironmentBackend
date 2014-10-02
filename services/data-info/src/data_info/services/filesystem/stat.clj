@@ -12,7 +12,7 @@
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.services.filesystem.validators :as validators]
-            [data-info.services.filesystem.type-detect.irods :as filetypes]
+            [data-info.services.type-detect.irods :as filetypes]
             [clj-icat-direct.icat :as icat]
             [data-info.util.config :as cfg]
             [data-info.services.filesystem.common-paths :as paths]
