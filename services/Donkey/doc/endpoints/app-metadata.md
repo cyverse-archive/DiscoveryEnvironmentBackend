@@ -22,8 +22,7 @@
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
     * [Updating an Existing Template](#updating-an-existing-template)
-    * [Updating an Analysis](#updating-an-analysis)
-    * [Forcing an Analysis to be Updated](#forcing-an-analysis-to-be-updated)
+    * [Updating a Pipeline](#updating-a-pipeline)
     * [Updating App Labels](#updating-app-labels)
     * [Importing a Template](#importing-a-template)
     * [Importing an Analysis](#importing-an-analysis)
@@ -350,27 +349,14 @@ Delegates to metadactyl: POST /update-template
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Updating an Analysis
-
-Unsecured Endpoint: POST /update-workflow
-
-Delegates to metadactyl: POST /update-workflow
+## Updating a Pipeline
 
 Secured Endpoint: POST /secured/update-workflow
 
 Delegates to metadactyl: POST /secured/update-workflow
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Forcing an Analysis to be Updated
-
-Unsecured Endpoint: POST /force-update-workflow
-
-Delegates to metadactyl: POST /force-update-workflow
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Updating App Labels
 
@@ -615,18 +601,18 @@ Please see the metadactyl documentation for more information.
 
 ## Making a Pipeline Available for Editing
 
-Secured Endpoint: GET /apps/{app-id}/pipeline-ui
+Secured Endpoint: GET /apps/pipelines/{app-id}/ui
 
-Delegates to metadactyl: GET /apps/{app-id}/pipeline-ui
+Delegates to metadactyl: GET /apps/pipelines/{app-id}/ui
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
 
 ## Making a Copy of a Pipeline Available for Editing
 
-Secured Endpoint: POST /apps/{app-id}/copy-pipeline
+Secured Endpoint: POST /apps/pipelines/{app-id}/copy
 
-Delegates to metadactyl: POST /apps/{app-id}/copy-pipeline
+Delegates to metadactyl: POST /apps/pipelines/{app-id}/copy
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.

@@ -17,6 +17,7 @@
             [metadactyl.routes.apps :as app-routes]
             [metadactyl.routes.apps.categories :as app-category-routes]
             [metadactyl.routes.apps.elements :as app-element-routes]
+            [metadactyl.routes.apps.pipelines :as pipeline-routes]
             [metadactyl.routes.tool-requests :as tool-request-routes]
             [metadactyl.routes.legacy :as legacy-routes]))
 
@@ -38,6 +39,9 @@
     (swaggered "apps"
       :description "App endpoints."
       (context "/apps" [] app-routes/apps))
+    (swaggered "pipelines"
+      :description "Pipeline endpoints."
+      (context "/apps/pipelines" [] pipeline-routes/pipelines))
     (swaggered "element-types"
       :description "App Element endpoints."
       (context "/apps/elements" [] app-element-routes/app-elements))

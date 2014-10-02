@@ -5,7 +5,7 @@
         [kameleon.queries :only [get-existing-user-id]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.service :only [build-url success-response parse-json]]
-        [metadactyl.zoidberg :only [verify-app-ownership]]
+        [metadactyl.validation :only [verify-app-ownership]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
