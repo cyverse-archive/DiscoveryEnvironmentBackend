@@ -8,8 +8,7 @@
         [metadactyl.persistence.app-metadata :only [add-app get-app update-app]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config :only [workspace-dev-app-group-index]]
-        [metadactyl.util.conversions :only [date->long
-                                            remove-nil-vals]]
+        [metadactyl.util.conversions :only [date->long remove-nil-vals convert-rule-argument]]
         [metadactyl.validation :only [verify-app-editable verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]])
   (:require [metadactyl.util.service :as service]))
@@ -73,21 +72,11 @@
                          [:data_formats.name :format]))))
            (where {:id app-id}))))
 
-(defn- format-rule-argument
-  [value]
-  (let [value (clojure.string/trim value)]
-    (try
-      (Long/parseLong value)
-      (catch NumberFormatException notInt
-         (try
-           (Double/parseDouble value)
-           (catch NumberFormatException notDouble
-             value))))))
-
 (defn- format-validator
   [validator]
   {:type (:type validator)
-   :params (map (comp format-rule-argument :argument_value) (:validation_rule_arguments validator))})
+   :params (map (comp convert-rule-argument :argument_value)
+                (:validation_rule_arguments validator))})
 
 (defn- format-param-value
   [param-value]

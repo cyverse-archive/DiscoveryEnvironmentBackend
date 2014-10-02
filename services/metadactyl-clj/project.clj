@@ -18,6 +18,7 @@
                  [cheshire "5.3.1"]
                  [clj-time "0.7.0"]
                  [com.cemerick/url "0.1.1"]
+                 [com.google.guava/guava "18.0"]
                  [compojure "1.1.8"]
                  [medley "0.5.1"]
                  [metosin/compojure-api "0.15.0"]
