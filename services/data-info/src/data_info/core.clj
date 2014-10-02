@@ -91,7 +91,7 @@
 
 (defn- app
   []
-  (-> routes/routes
+  (-> routes/all-routes
     util/trap-handler
     util/req-logger
     params/wrap-keyword-params
