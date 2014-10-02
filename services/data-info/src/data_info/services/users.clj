@@ -1,15 +1,15 @@
-(ns data-info.services.filesystem.users
+(ns data-info.services.users
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.filesystem.common-paths]
+        [data-info.services.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [quota]]
         [clj-jargon.users])
   (:require [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clj-jargon.permissions :as perm]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.icat :as icat]
-            [data-info.services.filesystem.validators :as validators]))
+            [data-info.services.icat :as icat]
+            [data-info.services.validators :as validators]))
 
 
 (defn list-user-groups

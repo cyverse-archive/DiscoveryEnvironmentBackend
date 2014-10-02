@@ -1,4 +1,4 @@
-(ns data-info.services.filesystem.directory
+(ns data-info.services.directory
   (:use [clojure-commons.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info]
@@ -8,13 +8,13 @@
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [data-info.services.filesystem.validators :as validators]
-            [data-info.services.filesystem.uuids :as uuids]
+            [data-info.services.validators :as validators]
+            [data-info.services.uuids :as uuids]
             [clj-icat-direct.icat :as icat]
             [clj-jargon.validations :as jv]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.common-paths :as paths]
-            [data-info.services.filesystem.icat :as jargon]))
+            [data-info.services.common-paths :as paths]
+            [data-info.services.icat :as jargon]))
 
 
 (defn get-paths-in-folder

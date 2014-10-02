@@ -1,8 +1,8 @@
-(ns data-info.services.filesystem.page-csv
+(ns data-info.services.page-csv
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.filesystem.common-paths]
-        [data-info.services.filesystem.validators]
+        [data-info.services.common-paths]
+        [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [file-size]]
         [clj-jargon.paging :only [read-at-position]]
@@ -13,8 +13,8 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [data-info.services.filesystem.icat :as cfg]
-            [data-info.services.filesystem.validators :as validators])
+            [data-info.services.icat :as cfg]
+            [data-info.services.validators :as validators])
   (:import [au.com.bytecode.opencsv CSVReader]))
 
 (def line-ending "\n")

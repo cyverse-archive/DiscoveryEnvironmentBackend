@@ -1,8 +1,8 @@
-(ns data-info.services.filesystem.preview
+(ns data-info.services.preview
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.filesystem.common-paths]
-        [data-info.services.filesystem.validators]
+        [data-info.services.common-paths]
+        [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [file-size]]
         [clj-jargon.item-ops :only [read-file]]
@@ -11,8 +11,8 @@
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.icat :as icat]
-            [data-info.services.filesystem.validators :as validators]))
+            [data-info.services.icat :as icat]
+            [data-info.services.validators :as validators]))
 
 
 (defn- preview-buffer

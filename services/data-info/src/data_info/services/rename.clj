@@ -1,7 +1,7 @@
-(ns data-info.services.filesystem.rename
+(ns data-info.services.rename
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.filesystem.common-paths]
+        [data-info.services.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [move]]
         [slingshot.slingshot :only [try+ throw+]])
@@ -9,8 +9,8 @@
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.icat :as icat]
-            [data-info.services.filesystem.validators :as validators]))
+            [data-info.services.icat :as icat]
+            [data-info.services.validators :as validators]))
 
 (defn rename-path
   "High-level file renaming. Calls rename-func, passing it file-rename as the mv-func param."

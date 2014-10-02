@@ -1,9 +1,9 @@
-(ns data-info.services.filesystem.status
+(ns data-info.services.status
   (:require [clojure.tools.logging :as log]
             [clj-jargon.init :as init]
             [clj-jargon.item-info :as item]
             [clojure-commons.error-codes :as ce]
-            [data-info.services.filesystem.icat :as icat]))
+            [data-info.services.icat :as icat]))
 
 
 (defn ^Boolean irods-running?

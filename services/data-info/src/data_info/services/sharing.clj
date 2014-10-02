@@ -1,4 +1,4 @@
-(ns data-info.services.filesystem.sharing
+(ns data-info.services.sharing
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -12,10 +12,10 @@
             [clojure-commons.file-utils :as ft]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [data-info.services.filesystem.common-paths :as paths]
+            [data-info.services.common-paths :as paths]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.icat :as icat]
-            [data-info.services.filesystem.validators :as validators]))
+            [data-info.services.icat :as icat]
+            [data-info.services.validators :as validators]))
 
 (def shared-with-attr "ipc-contains-obj-shared-with")
 

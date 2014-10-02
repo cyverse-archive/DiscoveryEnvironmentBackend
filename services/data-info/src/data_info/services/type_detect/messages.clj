@@ -9,7 +9,7 @@
             [cheshire.core :as json]
             [data-info.util.config :as cfg]
             [data-info.services.type-detect.irods :as irods]
-            [data-info.services.filesystem.icat :as icat]))
+            [data-info.services.icat :as icat]))
 
 (defn filetype-message-handler
   [payload]

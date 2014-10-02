@@ -15,7 +15,7 @@
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.icat :as icat])
+            [data-info.services.icat :as icat])
   (:import [org.apache.tika Tika]))
 
 (defn get-file-type

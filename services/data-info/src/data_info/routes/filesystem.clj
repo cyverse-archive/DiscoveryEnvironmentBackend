@@ -1,23 +1,23 @@
 (ns data-info.routes.filesystem
   (:use [compojure.core]
         [data-info.util])
-  (:require [data-info.services.filesystem.create :as create]
-            [data-info.services.filesystem.directory :as dir]
-            [data-info.services.filesystem.exists :as exists]
-            [data-info.services.filesystem.home :as home]
-            [data-info.services.filesystem.metadata :as meta]
-            [data-info.services.filesystem.move :as move]
-            [data-info.services.filesystem.page-csv :as csv]
-            [data-info.services.filesystem.page-file :as file]
-            [data-info.services.filesystem.preview :as preview]
-            [data-info.services.filesystem.rename :as rename]
-            [data-info.services.filesystem.sharing :as sharing]
-            [data-info.services.filesystem.space-handling :as sh]
-            [data-info.services.filesystem.stat :as stat]
-            [data-info.services.filesystem.trash :as trash]
-            [data-info.services.filesystem.updown :as ud]
-            [data-info.services.filesystem.users :as user]
-            [data-info.services.filesystem.uuids :as uuid]))
+  (:require [data-info.services.create :as create]
+            [data-info.services.directory :as dir]
+            [data-info.services.exists :as exists]
+            [data-info.services.home :as home]
+            [data-info.services.metadata :as meta]
+            [data-info.services.move :as move]
+            [data-info.services.page-csv :as csv]
+            [data-info.services.page-file :as file]
+            [data-info.services.preview :as preview]
+            [data-info.services.rename :as rename]
+            [data-info.services.sharing :as sharing]
+            [data-info.services.space-handling :as sh]
+            [data-info.services.stat :as stat]
+            [data-info.services.trash :as trash]
+            [data-info.services.updown :as ud]
+            [data-info.services.users :as user]
+            [data-info.services.uuids :as uuid]))
 
 
 (defn filesystem-routes

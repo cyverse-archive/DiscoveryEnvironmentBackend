@@ -1,15 +1,15 @@
-(ns data-info.services.filesystem.home
+(ns data-info.services.home
   (:use [clojure-commons.validators]
-        [data-info.services.filesystem.common-paths]
+        [data-info.services.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
         [clj-jargon.item-ops :only [mkdirs]])
   (:require [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.icat :as icat]
-            [data-info.services.filesystem.uuids :as uuid]
-            [data-info.services.filesystem.validators :as validators]))
+            [data-info.services.icat :as icat]
+            [data-info.services.uuids :as uuid]
+            [data-info.services.validators :as validators]))
 
 
 (defn- user-home-path

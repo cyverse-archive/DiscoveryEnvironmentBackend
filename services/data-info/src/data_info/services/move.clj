@@ -1,8 +1,8 @@
-(ns data-info.services.filesystem.move
+(ns data-info.services.move
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.filesystem.common-paths]
-        [data-info.services.filesystem.validators]
+        [data-info.services.common-paths]
+        [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [move-all]]
         [slingshot.slingshot :only [try+ throw+]])
@@ -13,9 +13,9 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clj-icat-direct.icat :as icat]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.directory :as directory]
-            [data-info.services.filesystem.icat :as jargon]
-            [data-info.services.filesystem.validators :as validators]))
+            [data-info.services.directory :as directory]
+            [data-info.services.icat :as jargon]
+            [data-info.services.validators :as validators]))
 
 (defn- source->dest
   [source-path dest-path]

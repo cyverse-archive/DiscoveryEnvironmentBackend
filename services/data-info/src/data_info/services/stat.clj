@@ -1,7 +1,7 @@
-(ns data-info.services.filesystem.stat
+(ns data-info.services.stat
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.filesystem.validators]
+        [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [is-dir? stat]]
         [clj-jargon.item-ops :only [input-stream]]
@@ -11,12 +11,12 @@
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [data-info.services.filesystem.validators :as validators]
+            [data-info.services.validators :as validators]
             [data-info.services.type-detect.irods :as filetypes]
             [clj-icat-direct.icat :as icat]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.common-paths :as paths]
-            [data-info.services.filesystem.icat :as jargon])
+            [data-info.services.common-paths :as paths]
+            [data-info.services.icat :as jargon])
   (:import [org.apache.tika Tika]))
 
 

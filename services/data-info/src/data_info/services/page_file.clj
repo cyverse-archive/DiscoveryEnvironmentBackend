@@ -1,8 +1,8 @@
-(ns data-info.services.filesystem.page-file
+(ns data-info.services.page-file
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.filesystem.common-paths]
-        [data-info.services.filesystem.validators]
+        [data-info.services.common-paths]
+        [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info]
         [clj-jargon.paging]
@@ -12,8 +12,8 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [data-info.services.filesystem.icat :as cfg]
-            [data-info.services.filesystem.validators :as validators]))
+            [data-info.services.icat :as cfg]
+            [data-info.services.validators :as validators]))
 
 (defn- read-file-chunk
   "Reads a chunk of a file starting at 'position' and reading a chunk of length 'chunk-size'."

@@ -1,8 +1,8 @@
-(ns data-info.services.filesystem.metadata
+(ns data-info.services.metadata
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.filesystem.common-paths]
-        [data-info.services.filesystem.validators]
+        [data-info.services.common-paths]
+        [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.metadata]
         [slingshot.slingshot :only [try+ throw+]])
@@ -13,8 +13,8 @@
             [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.icat :as icat]
-            [data-info.services.filesystem.validators :as validators]))
+            [data-info.services.icat :as icat]
+            [data-info.services.validators :as validators]))
 
 (defn- fix-unit
   "Used to replace the IPCRESERVED unit with an empty string."

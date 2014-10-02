@@ -1,4 +1,4 @@
-(ns data-info.services.filesystem.space-handling
+(ns data-info.services.space-handling
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -14,9 +14,9 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clj-jargon.validations :as valid]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.common-paths :as paths]
-            [data-info.services.filesystem.icat :as icat]
-            [data-info.services.filesystem.validators :as validators]))
+            [data-info.services.common-paths :as paths]
+            [data-info.services.icat :as icat]
+            [data-info.services.validators :as validators]))
 
 (defn- paths-contain-char
   [paths char]

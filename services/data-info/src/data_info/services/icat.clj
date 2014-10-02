@@ -1,4 +1,4 @@
-(ns data-info.services.filesystem.icat
+(ns data-info.services.icat
   (:use [clj-icat-direct.icat :only [icat-db-spec setup-icat]])
   (:require [clojure.core.memoize :as memo]
             [data-info.util.config :as cfg]

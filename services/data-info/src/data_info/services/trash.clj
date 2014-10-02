@@ -1,4 +1,4 @@
-(ns data-info.services.filesystem.trash
+(ns data-info.services.trash
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [clj-jargon.init :only [with-jargon]]
@@ -14,10 +14,10 @@
             [clj-icat-direct.icat :as icat]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.common-paths :as paths]
-            [data-info.services.filesystem.directory :as directory]
-            [data-info.services.filesystem.icat :as jargon]
-            [data-info.services.filesystem.validators :as validators]))
+            [data-info.services.common-paths :as paths]
+            [data-info.services.directory :as directory]
+            [data-info.services.icat :as jargon]
+            [data-info.services.validators :as validators]))
 
 (def alphanums (concat (range 48 58) (range 65 91) (range 97 123)))
 

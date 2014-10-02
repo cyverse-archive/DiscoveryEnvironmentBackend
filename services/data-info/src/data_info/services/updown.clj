@@ -1,7 +1,7 @@
-(ns data-info.services.filesystem.updown
+(ns data-info.services.updown
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.filesystem.common-paths]
+        [data-info.services.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.cart]
         [clj-jargon.item-info :only [file-size]]
@@ -12,11 +12,11 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [data-info.services.filesystem.directory :as directory]
-            [data-info.services.filesystem.validators :as validators]
+            [data-info.services.directory :as directory]
+            [data-info.services.validators :as validators]
             [clj-icat-direct.icat :as icat]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.icat :as jargon])
+            [data-info.services.icat :as jargon])
   (:import [org.apache.tika Tika]))
 
 (defn- tika-detect-type

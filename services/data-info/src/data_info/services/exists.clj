@@ -1,8 +1,8 @@
-(ns data-info.services.filesystem.exists
+(ns data-info.services.exists
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.filesystem.common-paths]
-        [data-info.services.filesystem.validators]
+        [data-info.services.common-paths]
+        [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
         [slingshot.slingshot :only [try+ throw+]])
@@ -12,8 +12,8 @@
             [cheshire.core :as json]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [data-info.services.filesystem.icat :as cfg]
-            [data-info.services.filesystem.validators :as validators]))
+            [data-info.services.icat :as cfg]
+            [data-info.services.validators :as validators]))
 
 (defn- url-encoded?
   [string-to-check]

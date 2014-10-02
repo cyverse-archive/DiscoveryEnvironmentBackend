@@ -14,7 +14,7 @@
             [ring.middleware.keyword-params :as params]
             [common-cli.core :as ccli]
             [data-info.routes :as routes]
-            [data-info.services.filesystem.icat :as icat]
+            [data-info.services.icat :as icat]
             [data-info.util :as util]))
 
 

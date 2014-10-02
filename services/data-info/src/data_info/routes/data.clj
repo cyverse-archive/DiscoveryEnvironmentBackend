@@ -2,7 +2,7 @@
   (:use [compojure.core]
         [data-info.util])
   (:require [data-info.util.config :as config]
-            [data-info.services.filesystem.type-detect.controllers :as detect]))
+            [data-info.services.type-detect.controllers :as detect]))
 
 
 (defn data-routes

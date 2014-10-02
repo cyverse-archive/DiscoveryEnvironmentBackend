@@ -1,4 +1,4 @@
-(ns data-info.services.filesystem.validators
+(ns data-info.services.validators
   (:use [clj-jargon.item-info]
         [clj-jargon.permissions]
         [clj-jargon.tickets]

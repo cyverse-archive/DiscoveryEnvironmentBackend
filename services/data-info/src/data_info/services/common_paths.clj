@@ -1,4 +1,4 @@
-(ns data-info.services.filesystem.common-paths
+(ns data-info.services.common-paths
   (:require [clojure-commons.file-utils :as ft]
             [clojure.tools.logging :as log]
             [clj-jargon.item-info :as item]

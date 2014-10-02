@@ -1,17 +1,17 @@
-(ns data-info.services.filesystem.uuids
+(ns data-info.services.uuids
   (:use [clj-jargon.permissions]
         [clojure-commons.validators]
         [slingshot.slingshot :only [throw+]]
-        [data-info.services.filesystem.validators])
+        [data-info.services.validators])
   (:require [clojure.tools.logging :as log]
             [clj-icat-direct.icat :as icat]
-            [data-info.services.filesystem.stat :as stat]
+            [data-info.services.stat :as stat]
             [cheshire.core :as json]
             [clj-jargon.init :as init]
             [clj-jargon.metadata :as meta]
             [clojure-commons.error-codes :as error]
             [data-info.util.config :as cfg]
-            [data-info.services.filesystem.icat :as jargon])
+            [data-info.services.icat :as jargon])
   (:import [java.util UUID]
            [clojure.lang IPersistentMap]))
 
