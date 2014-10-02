@@ -2,7 +2,7 @@
   (:use [korma.core]
         [kameleon.core]
         [kameleon.entities])
-  (:require [metadactyl.persistence.app-metadata :as amp]))
+  (:require [metadactyl.metadata.params :as mp]))
 
 ;; TODO:
 ;; * Add code to format parameters; metadactyl.zoidberg can serve as an example.
@@ -13,18 +13,24 @@
 
 (defn- get-parameters
   [group-id]
-  (->> (select [:parameters :p]
-               (join :inner [:parameter_types :t] {:p.parameter_type :t.id})
-               (fields :p.id :p.name :p.label :p.is_visible [:t.name :type])
-               (where {:p.parameter_group_id group-id}))
-       (remove (complement :is_visible))))
+  (select (mp/params-base-query)
+          (where {:p.parameter_group_id group-id
+                  :p.is_visible         true})))
 
 (defn- format-parameter
   [step parameter]
-  {:id        (str (:id step) "_" (:id parameter))
-   :name      (:name parameter)
-   :label     (:label parameter)
-   :isVisible (:is_visible parameter)})
+  (let [values (mp/get-param-values (:id parameter))
+        type   (:type parameter)]
+    {:arguments    (mp/format-param-values type values)
+     :defaultValue ""
+     :description  (:description parameter)
+     :id           (str (:id step) "_" (:id parameter))
+     :isVisible    (:is_visible parameter)
+     :label        (:label parameter)
+     :name         (:name parameter)
+     :required     (:required parameter)
+     :type         (:type parameter)
+     :validators   []}))
 
 (defn- get-groups
   [step-id]
@@ -38,12 +44,12 @@
   [name-prefix step group]
   {:id          (:id group)
    :label       (str name-prefix (:label group))
-   :parameters  (map (partial format-parameter step) (get-parameters (:id group)))
+   :parameters  (mapv (partial format-parameter step) (get-parameters (:id group)))
    :step_number (:step_number step)})
 
 (defn- format-groups
   [name-prefix step]
-  (map (partial format-group name-prefix step) (get-groups (:id step))))
+  (mapv (partial format-group name-prefix step) (get-groups (:id step))))
 
 (defn- get-steps
   [app-id]
@@ -57,7 +63,7 @@
   (let [app-steps         (get-steps app-id)
         multistep?        (> (count app-steps) 1)
         group-name-prefix (fn [{task-name :task_name}] (if multistep? (str task-name " - ") ""))]
-    (mapcat (fn [step] (format-groups (group-name-prefix step) step)) app-steps)))
+    (doall (mapcat (fn [step] (format-groups (group-name-prefix step) step)) app-steps))))
 
 (defn- format-app
   [app]

@@ -11,6 +11,7 @@
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
+            [metadactyl.metadata.job-view :as jv]
             [metadactyl.service.app-metadata :as app-metadata]
             [metadactyl.util.service :as service]
             [compojure.route :as route]
@@ -63,7 +64,7 @@
         :summary "Obtain an app description."
         :notes "This service allows the Discovery Environment user interface to obtain an
         app description that can be used to construct a job submission form."
-        (ce/trap "get-app" #(get-app-for-job-submission app-id)))
+        (ce/trap "get-app" #(jv/get-app app-id)))
 
   (PATCH* "/:app-id" []
           :path-params [app-id :- AppIdPathParam]
