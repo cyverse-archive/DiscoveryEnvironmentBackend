@@ -7,5 +7,5 @@
   "Autodelete" : false,
   "Internal" : false,
   "NoWait" : false,
-  "EventLog" : "test_events.txt"
+  "EventLog" : "test_dir/event_log"
 }

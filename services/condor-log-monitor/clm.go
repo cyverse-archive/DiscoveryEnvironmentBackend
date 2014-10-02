@@ -30,6 +30,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/sha256"
 	"encoding/json"
 	"flag"
@@ -37,7 +38,10 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
+	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -288,6 +292,69 @@ func ParseEvent(filepath string, pub *AMQPPublisher) error {
 	return err
 }
 
+// ParseEventFile parses an entire file and sends it to the AMQP broker.
+func ParseEventFile(filepath string, pub *AMQPPublisher) error {
+	startRegex := "^[\\d][\\d][\\d]\\s.*"
+	endRegex := "^\\.\\.\\..*"
+	foundStart := false
+	var eventlines string //accumulates lines in an event entry
+
+	openFile, err := os.Open(filepath)
+	if err != nil {
+		return err
+	}
+	var prefixBuffer []byte
+	reader := bufio.NewReader(openFile)
+	for {
+		line, prefix, err := reader.ReadLine()
+		if err != nil {
+			break
+		}
+		if prefix { //a partial line was read.
+			prefixBuffer = line
+			continue
+		}
+		if len(prefixBuffer) > 0 {
+			line = append(prefixBuffer, line...) //concats line onto the prefix
+		}
+		prefixBuffer = []byte{} //reset the prefix for later iterations
+		text := string(line[:])
+		if !foundStart {
+			matchedStart, err := regexp.MatchString(startRegex, text)
+			if err != nil {
+				return err
+			}
+			if matchedStart {
+				foundStart = true
+				eventlines = eventlines + text + "\n"
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			matchedEnd, err := regexp.MatchString(endRegex, text)
+			if err != nil {
+				return err
+			}
+			eventlines = eventlines + text + "\n"
+			if matchedEnd {
+				fmt.Println(eventlines)
+				pubEvent := NewPublishableEvent(eventlines)
+				pubJSON, err := json.Marshal(pubEvent)
+				if err != nil {
+					return err
+				}
+				if err = pub.PublishBytes(pubJSON); err != nil {
+					fmt.Println(err)
+				}
+				eventlines = ""
+				foundStart = false
+			}
+		}
+	}
+	return err
+}
+
 //TombstoneAction denotes the kind of action a TombstoneMsg represents.
 type TombstoneAction int
 
@@ -328,6 +395,15 @@ type Tombstone struct {
 
 // TombstonePath is the path to the tombstone file.
 const TombstonePath = "/tmp/condor-log-monitor.tombstone"
+
+// TombstoneExists returns true if the tombstone file is present.
+func TombstoneExists() bool {
+	_, err := os.Stat(TombstonePath)
+	if err != nil {
+		return false
+	}
+	return true
+}
 
 // InodeFromPath will return the inode number for the given path.
 func InodeFromPath(path string) (uint64, error) {
@@ -551,6 +627,16 @@ func (l LogfileList) SliceByInode(inode uint64) LogfileList {
 	return l[foundIdx:]
 }
 
+/*
+On start up, look for tombstone and read it if it's present.
+List the log files.
+Sort the log files.
+Trim the list based on the tombstoned inode number.
+If the inode is not present in the list, trim the list based on last-modified date.
+If all of the files were modified after the recorded last-modified date, then parse
+and send all of the files.
+After all of the files are parsed, record a new tombstone and tail the latest log file, looking for updates.
+*/
 func main() {
 	if *cfgPath == "" {
 		fmt.Printf("--config must be set.")
@@ -569,7 +655,41 @@ func main() {
 	}
 	exitChan := make(chan int)
 	go func() {
-		err := ParseEvent(cfg.EventLog, pub)
+		var tombstone *Tombstone
+		if TombstoneExists() {
+			tombstone, err = ReadTombstone()
+			if err != nil {
+				fmt.Println("Couldn't read Tombstone file.")
+				fmt.Println(err)
+				tombstone = nil
+			}
+		} else {
+			tombstone = nil
+		}
+		logDir := filepath.Dir(cfg.EventLog)
+		log.Printf("Log directory: %s\n", logDir)
+		logFilename := filepath.Base(cfg.EventLog)
+		log.Printf("Log filename: %s\n", logFilename)
+		logList, err := NewLogfileList(logDir, logFilename)
+		if err != nil {
+			fmt.Println("Couldn't get list of log files.")
+			logList = LogfileList{}
+		}
+		sort.Sort(logList)
+		if len(logList) > 0 && tombstone != nil {
+			log.Printf("Slicing log list by inode number %d\n", tombstone.Inode)
+			logList = logList.SliceByInode(tombstone.Inode)
+		}
+		for _, logFile := range logList {
+			logfilePath := path.Join(logFile.BaseDir, logFile.Info.Name())
+			log.Printf("Parsing %s\n", logfilePath)
+			err = ParseEventFile(logfilePath, pub)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+		log.Println("Done parsing event logs.")
+		err = ParseEvent(cfg.EventLog, pub)
 		if err != nil {
 			fmt.Println(err)
 		}
