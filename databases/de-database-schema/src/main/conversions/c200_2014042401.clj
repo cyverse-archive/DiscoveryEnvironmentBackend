@@ -323,7 +323,7 @@
 
 (defn- convert-parameter-types
   [new-param-type old-param-type old-multiplicity]
-  (println "\t* performing the conversion for" new-param-type "parameters")
+  (println "\t* converting" new-param-type "parameters")
   (update :parameters
           (set-fields {:parameter_type (param-type-subselect new-param-type)})
           (where (and (= :parameter_type (param-type-subselect old-param-type))
