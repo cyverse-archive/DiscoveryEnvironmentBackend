@@ -288,11 +288,23 @@
   (exec-raw "DROP FUNCTION IF EXISTS analysis_group_hierarchy(bigint, boolean)")
   (load-sql-file "functions/03_app_category_hierarchy.sql"))
 
+(defn- add-new-data
+  []
+  (println "\t* adding new reference genome parameter types...")
+  (load-sql-file "conversions/c200_2014042401/data/01_parameter_types.sql"))
+
 (defn- param-type-subselect
   [param-type]
   (subselect :parameter_types
              (fields :id)
              (where {:name param-type})))
+
+(defn- info-type-subselect
+  []
+  (subselect [:file_parameters :fp]
+             (fields :i.name)
+             (join [:info_type :i] {:fp.info_type :i.id})
+             (where {:parameters.file_parameter_id :fp.id})))
 
 (defn- multiplicity-subselect
   []
@@ -300,6 +312,14 @@
              (fields :m.name)
              (join [:multiplicity_v187 :m] {:fp.multiplicity_v187 :m.hid})
              (where {:parameters.file_parameter_id :fp.id})))
+
+(defn- convert-reference-genome-parameters
+  [ref-gen-type]
+  (println "\t* converting" ref-gen-type "parameters")
+  (update :parameters
+          (set-fields {:parameter_type (param-type-subselect ref-gen-type)})
+          (where (and (= :parameter_type (param-type-subselect "Input"))
+                      (= ref-gen-type (info-type-subselect))))))
 
 (defn- convert-parameter-types
   [new-param-type old-param-type old-multiplicity]
@@ -322,6 +342,10 @@
   (re-add-constraints)
   (add-new-views)
   (reload-functions)
+  (add-new-data)
+  (convert-reference-genome-parameters "ReferenceGenome")
+  (convert-reference-genome-parameters "ReferenceSequence")
+  (convert-reference-genome-parameters "ReferenceAnnotation")
   (convert-parameter-types "FileInput" "Input" "single")
   (convert-parameter-types "FolderInput" "Input" "collection")
   (convert-parameter-types "MultiFileSelector" "Input" "many")
