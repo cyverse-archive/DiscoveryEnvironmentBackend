@@ -681,6 +681,9 @@ func main() {
 			logList = logList.SliceByInode(tombstone.Inode)
 		}
 		for _, logFile := range logList {
+			if logFile.Info.Name() == logFilename { //the current log file will get parsed later
+				continue
+			}
 			logfilePath := path.Join(logFile.BaseDir, logFile.Info.Name())
 			log.Printf("Parsing %s\n", logfilePath)
 			err = ParseEventFile(logfilePath, pub)
