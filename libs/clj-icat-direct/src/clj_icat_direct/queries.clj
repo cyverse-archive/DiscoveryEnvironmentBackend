@@ -253,8 +253,8 @@
                            WHERE user_id IN (SELECT g.group_user_id
                                                FROM r_user_main u
                                                  JOIN r_user_group g ON g.user_id = u.user_id
-                                               WHERE u.user_name = 'tedgin' AND u.zone_name = 'iplant')),
-         parent      AS (SELECT * FROM r_coll_main WHERE coll_name = '/iplant/home/tedgin')
+                                               WHERE u.user_name = ? AND u.zone_name = ?)),
+         parent      AS (SELECT * FROM r_coll_main WHERE coll_name = ?)
     SELECT DISTINCT c.coll_name || '/' || d.data_name AS full_path
       FROM r_data_main d JOIN r_coll_main c ON d.coll_id = c.coll_id
       WHERE c.coll_name IN (SELECT coll_name FROM parent)
