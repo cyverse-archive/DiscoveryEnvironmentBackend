@@ -6,7 +6,9 @@
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [throw+]])
   (:require [clj-icat-direct.icat :as icat]
-            [data-info.util.config :as cfg]))
+            [clj-jargon.init :as init]
+            [data-info.util.config :as cfg]
+            [data-info.services.icat :as dsi]))
 
 
 (defn- num-paths-okay?
@@ -37,11 +39,16 @@
         total (reduce sum-fn 0 paths)]
     (validate-path-count total)))
 
+
 (defn user-exists
-  [cm user]
-  (when-not (user-exists? cm user)
-    (throw+ {:error_code ERR_NOT_A_USER
-             :user user})))
+  ([cm user]
+   (when-not (user-exists? cm user)
+     (throw+ {:error_code ERR_NOT_A_USER :user user})))
+
+  ([user]
+    (init/with-jargon (dsi/jargon-cfg) [cm]
+      (user-exists cm user))))
+
 
 (defn all-users-exist
   [cm users]
