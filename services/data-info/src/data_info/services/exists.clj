@@ -59,8 +59,8 @@
 (with-pre-hook! #'exists?
   (fn [params]
     (paths/log-call "exists?" params)
+    (dsv/valid-uuid-field "entry" (:entry params))
     (cv/validate-map params {:user string?})
-    (dsv/user-exists (:user params))
-    (dsv/valid-uuid-field "entry" (:entry params))))
+    (dsv/user-exists (:user params))))
 
 (with-post-hook! #'exists? (paths/log-func "exists?"))
