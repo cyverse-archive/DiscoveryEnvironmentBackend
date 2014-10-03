@@ -64,7 +64,7 @@
                 :key                    (str (System/currentTimeMillis))}})))
 
 
-(defn do-download
+(defn- do-download
   [{user :user} {paths :paths}]
   (download user paths))
 
@@ -77,19 +77,25 @@
 (with-post-hook! #'do-download (path/log-func "do-download"))
 
 
-(defn do-download-contents
-  [{user :user} {path :path}]
+(defn- do-download-contents
+  [{user :user path :path}]
   (with-jargon (jargon/jargon-cfg) [cm]
     (validators/path-is-dir cm path))
   (download user (directory/get-paths-in-folder user path)))
 
 (with-pre-hook! #'do-download-contents
-  (fn [params body]
-    (path/log-call "do-download-contents" params body)
-    (cv/validate-map params {:user string?})
-    (cv/validate-map body {:path string?})))
+  (fn [params]
+    (path/log-call "do-download-contents" params)
+    (cv/validate-map params {:user string? :path string?})))
 
 (with-post-hook! #'do-download-contents (path/log-func "do-download-contents"))
+
+
+(defn dispatch-download
+  [{dir :dir :as params} body]
+  (if dir
+    (do-download params body)
+    (do-download-contents params)))
 
 
 (defn do-upload

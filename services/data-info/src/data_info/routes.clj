@@ -29,7 +29,7 @@
     (util/controller req welcome/welcome))
 
   (POST "/cart" [:as req]
-    (util/controller req ud/do-download :params :body))
+    (util/controller req ud/dispatch-download :params :body))
 
   (HEAD "/entries/:entry" [:as req]
       (util/controller req exists/exists? :params))
@@ -42,9 +42,6 @@
 
   (POST "/stat-gatherer" [:as req]
     (util/controller req stat/do-stat :params :body))
-
-  (POST "/data/download-contents" [:as req]
-    (util/controller req ud/do-download-contents :params :body))
 
   (GET "/data/display-download" [:as req]
     (util/controller req ud/do-special-download :params))
