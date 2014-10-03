@@ -4,12 +4,12 @@
         [clj-jargon.tickets]
         [clj-jargon.users]
         [clojure-commons.error-codes]
-        [slingshot.slingshot :only [try+ throw+]])
+        [slingshot.slingshot :only [throw+]])
   (:require [clj-icat-direct.icat :as icat]
             [clj-jargon.init :as init]
+            [data-info.util :as util]
             [data-info.util.config :as cfg]
-            [data-info.services.icat :as dsi])
-  (:import [java.util UUID]))
+            [data-info.services.icat :as dsi]))
 
 
 (defn- num-paths-okay?
@@ -189,10 +189,7 @@
      field-name - the name of the field holding the proposed UUID
      filed-val  - the proposed UUID"
   [^String field-name ^String field-val]
-  (try+
-    (UUID/fromString field-name)
-    nil
-    (catch Throwable _
-      (throw+ {:error_code ERR_BAD_REQUEST
-               :field      field-name
-               :value      field-val}))))
+  (when-not (util/is-uuid? field-val)
+    (throw+ {:error_code ERR_BAD_REQUEST
+             :field      field-name
+             :value      field-val})))
