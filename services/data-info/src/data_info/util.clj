@@ -41,6 +41,7 @@
       (svc/invalid-arg-response arg val reason))
     (catch [:type :invalid-configuration] {:keys [reason]} (svc/invalid-cfg-response reason))
     (catch [:type :temp-dir-failure] err (svc/temp-dir-failure-response err))
+    (catch [:error_code ce/ERR_NOT_A_USER] err (svc/failure-response err))
     (catch ce/error? err
       (log/error (ce/format-exception (:throwable &throw-context)))
       (svc/error-response err (ce/get-http-status (:error_code err))))
