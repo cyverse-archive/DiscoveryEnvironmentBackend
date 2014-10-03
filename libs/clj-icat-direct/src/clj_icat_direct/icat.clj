@@ -3,7 +3,9 @@
   (:require [clojure.string :as string]
             [korma.db :as db]
             [korma.core :as k]
-            [clj-icat-direct.queries :as q]))
+            [clj-icat-direct.queries :as q])
+  (:import [clojure.lang ISeq]))
+
 
 (defn icat-db-spec
   "Creates a Korma db spec for the ICAT."
@@ -113,6 +115,21 @@
 (def sort-orders
   {:asc  "ASC"
    :desc "DESC"})
+
+
+(defn ^ISeq folder-path-listing
+  "Returns a complete folder listing for everything visible to a given user.
+
+   Parameters:
+     user        - the name of the user
+     zone        - the authentication zone of the user
+     folder-path - the absolute path to the folder
+
+   Returns:
+     It returns a sequence of paths."
+  [^String user ^String zone ^String folder-path]
+  (map :full_path (run-simple-query :folder-listing user zone folder-path)))
+
 
 (defn paged-folder-listing
   "Returns a page from a folder listing."

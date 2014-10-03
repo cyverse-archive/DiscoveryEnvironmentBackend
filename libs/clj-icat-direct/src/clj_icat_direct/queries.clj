@@ -247,6 +247,25 @@
        AND c.coll_id = parent.coll_id
        AND d.data_name = ?"
 
+   :folder-listing
+   "WITH user_access AS (SELECT *
+                           FROM r_objt_access
+                           WHERE user_id IN (SELECT g.group_user_id
+                                               FROM r_user_main u
+                                                 JOIN r_user_group g ON g.user_id = u.user_id
+                                               WHERE u.user_name = 'tedgin' AND u.zone_name = 'iplant')),
+         parent      AS (SELECT * FROM r_coll_main WHERE coll_name = '/iplant/home/tedgin')
+    SELECT DISTINCT c.coll_name || '/' || d.data_name AS full_path
+      FROM r_data_main d JOIN r_coll_main c ON d.coll_id = c.coll_id
+      WHERE c.coll_name IN (SELECT coll_name FROM parent)
+        AND d.data_id IN (SELECT object_id FROM user_access)
+    UNION
+    SELECT coll_name AS full_path
+      FROM r_coll_main
+      WHERE parent_coll_name IN (SELECT coll_name FROM parent)
+        AND coll_id IN (SELECT object_id FROM user_access)
+        AND coll_type != 'linkPoint'"
+
    :paged-folder-listing
    "WITH user_groups AS ( SELECT g.*
                             FROM r_user_main u
