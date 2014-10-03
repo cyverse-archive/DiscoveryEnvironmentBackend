@@ -653,16 +653,22 @@ func main() {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
+
+	// reading from errChan should prevent the application from exiting before
+	// it should.
 	exitChan := make(chan int)
 	go func() {
+		// First, we need to read the tombstone file if it exists.
 		var tombstone *Tombstone
 		if TombstoneExists() {
+			log.Printf("Attempting to read tombstone from %s\n", TombstonePath)
 			tombstone, err = ReadTombstone()
 			if err != nil {
-				fmt.Println("Couldn't read Tombstone file.")
-				fmt.Println(err)
+				log.Println("Couldn't read Tombstone file.")
+				log.Println(err)
 				tombstone = nil
 			}
+			log.Printf("Done reading tombstone file from %s\n", TombstonePath)
 		} else {
 			tombstone = nil
 		}
@@ -670,16 +676,30 @@ func main() {
 		log.Printf("Log directory: %s\n", logDir)
 		logFilename := filepath.Base(cfg.EventLog)
 		log.Printf("Log filename: %s\n", logFilename)
+
+		// Now we need to find all of the rotated out log files and parse them for
+		// potentially missed updates.
 		logList, err := NewLogfileList(logDir, logFilename)
 		if err != nil {
 			fmt.Println("Couldn't get list of log files.")
 			logList = LogfileList{}
 		}
+
+		// We need to sort the rotated log files in order from oldest to newest.
 		sort.Sort(logList)
+
+		// If there aren't any rotated log files or a tombstone file, then there
+		// isn't a reason to truncate the list of rotated log files. Hopefully, we'd
+		// trim the list of log files to prevent reprocessing, which could save us
+		// a significant amount of time at start up.
 		if len(logList) > 0 && tombstone != nil {
 			log.Printf("Slicing log list by inode number %d\n", tombstone.Inode)
 			logList = logList.SliceByInode(tombstone.Inode)
 		}
+
+		// Iterate through the list of log files, parse them, and ultimately send the
+		// events out to the AMQP broker. Skip the latest log file, we'll be handling
+		// that further down.
 		for _, logFile := range logList {
 			if logFile.Info.Name() == logFilename { //the current log file will get parsed later
 				continue
@@ -691,6 +711,10 @@ func main() {
 				fmt.Println(err)
 			}
 		}
+
+		// Okay, we're done with the start up processing part at this point. Now we're
+		// at the part where clm will spend most of its time, tailing the log and
+		// emitting events.
 		log.Println("Done parsing event logs.")
 		err = ParseEvent(cfg.EventLog, pub)
 		if err != nil {
