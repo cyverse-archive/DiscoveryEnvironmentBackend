@@ -1,13 +1,10 @@
 (ns metadactyl.metadata.job-view
   (:use [korma.core]
         [kameleon.core]
-        [kameleon.entities])
+        [kameleon.entities]
+        [metadactyl.util.conversions :only [remove-nil-vals]])
   (:require [metadactyl.metadata.params :as mp]
             [metadactyl.persistence.app-metadata :as amp]))
-
-;; TODO:
-;; * Add code to omit implicit output parameters.
-;; * Review the translation code to make sure nothing was missed.
 
 (defn- mapped-input-subselect
   [step-id]
@@ -19,23 +16,28 @@
 (defn- get-parameters
   [step-id group-id]
   (select (mp/params-base-query)
+          (join [:file_parameters :fp] {:p.file_parameter_id :fp.id})
           (where {:p.parameter_group_id group-id
                   :p.is_visible         true})
-          (where (not (exists (mapped-input-subselect step-id))))))
+          (where (and (not (exists (mapped-input-subselect step-id)))
+                      (or {:fp.is_implicit nil}
+                          {:fp.is_implicit false})))))
 
 (defn- format-parameter
   [step {:keys [id type] :as parameter}]
   (let [values (mp/get-param-values (:id parameter))]
-    {:arguments    (mp/format-param-values type values)
-     :defaultValue (mp/get-default-value type values)
-     :description  (:description parameter)
-     :id           (str (:id step) "_" (:id parameter))
-     :isVisible    (:is_visible parameter)
-     :label        (:label parameter)
-     :name         (:name parameter)
-     :required     (:required parameter)
-     :type         (:type parameter)
-     :validators   (mp/get-validators id)}))
+    (remove-nil-vals
+     {:arguments    (mp/format-param-values type values)
+      :defaultValue (mp/get-default-value type values)
+      :description  (:description parameter)
+      :id           (str (:id step) "_" (:id parameter))
+      :isVisible    (:is_visible parameter)
+      :label        (:label parameter)
+      :name         (:name parameter)
+      :required     (:required parameter)
+      :type         (:type parameter)
+      :validators   (mp/get-validators id)
+      :isImplicit   (:is_implicit parameter)})))
 
 (defn- get-groups
   [step-id]
@@ -76,7 +78,7 @@
    :name     (:name app)
    :type     (:overall_job_type app)
    :disabled (:disabled app)
-   :groups   (format-steps (:id app))})
+   :groups   (remove (comp empty? :parameters) (format-steps (:id app)))})
 
 (defn get-app
   "This service obtains an app description in a format that is suitable for building the job
