@@ -293,16 +293,24 @@ func ParseEvent(filepath string, pub *AMQPPublisher) error {
 }
 
 // ParseEventFile parses an entire file and sends it to the AMQP broker.
-func ParseEventFile(filepath string, pub *AMQPPublisher) error {
+func ParseEventFile(filepath string, seekTo int64, pub *AMQPPublisher) (int64, error) {
 	startRegex := "^[\\d][\\d][\\d]\\s.*"
 	endRegex := "^\\.\\.\\..*"
 	foundStart := false
 	var eventlines string //accumulates lines in an event entry
 
+	// open the file
 	openFile, err := os.Open(filepath)
 	if err != nil {
-		return err
+		return -1, err
 	}
+
+	// seek to the start position
+	_, err = openFile.Seek(seekTo, os.SEEK_SET)
+	if err != nil {
+		return -1, err
+	}
+
 	var prefixBuffer []byte
 	reader := bufio.NewReader(openFile)
 	for {
@@ -322,19 +330,19 @@ func ParseEventFile(filepath string, pub *AMQPPublisher) error {
 		if !foundStart {
 			matchedStart, err := regexp.MatchString(startRegex, text)
 			if err != nil {
-				return err
+				return -1, err
 			}
 			if matchedStart {
 				foundStart = true
 				eventlines = eventlines + text + "\n"
 				if err != nil {
-					return err
+					return -1, err
 				}
 			}
 		} else {
 			matchedEnd, err := regexp.MatchString(endRegex, text)
 			if err != nil {
-				return err
+				return -1, err
 			}
 			eventlines = eventlines + text + "\n"
 			if matchedEnd {
@@ -342,7 +350,7 @@ func ParseEventFile(filepath string, pub *AMQPPublisher) error {
 				pubEvent := NewPublishableEvent(eventlines)
 				pubJSON, err := json.Marshal(pubEvent)
 				if err != nil {
-					return err
+					return -1, err
 				}
 				if err = pub.PublishBytes(pubJSON); err != nil {
 					fmt.Println(err)
@@ -351,8 +359,20 @@ func ParseEventFile(filepath string, pub *AMQPPublisher) error {
 				foundStart = false
 			}
 		}
+		// get tombstone from open file
+		newTombstone, err := NewTombstoneFromFile(openFile)
+		if err != nil {
+			return -1, err
+		}
+		// write out tombstone
+		err = newTombstone.WriteToFile()
+		if err != nil {
+			log.Printf("Failed to write tombstone to %s\n", TombstonePath)
+			log.Println(err)
+		}
 	}
-	return err
+	currentPos, err := openFile.Seek(0, os.SEEK_CUR)
+	return currentPos, err
 }
 
 //TombstoneAction denotes the kind of action a TombstoneMsg represents.
