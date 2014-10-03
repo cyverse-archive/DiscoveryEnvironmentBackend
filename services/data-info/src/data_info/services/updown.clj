@@ -1,31 +1,22 @@
 (ns data-info.services.updown
-  (:use [clojure-commons.error-codes]
-        [clojure-commons.validators]
-        [data-info.services.common-paths]
-        [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.cart]
-        [clj-jargon.item-info :only [file-size]]
-        [clj-jargon.item-ops :only [input-stream]]
-        [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
-            [clojure.string :as string]
-            [clojure-commons.file-utils :as ft]
-            [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [data-info.services.directory :as directory]
-            [data-info.services.validators :as validators]
+            [slingshot.slingshot :refer [throw+]]
             [clj-icat-direct.icat :as icat]
+            [clj-jargon.cart :as cart]
+            [clj-jargon.init :refer [with-jargon]]
+            [clj-jargon.item-info :refer [file-size]]
+            [clj-jargon.item-ops :refer [input-stream]]
+            [clojure-commons.error-codes :as error]
+            [clojure-commons.file-utils :as ft]
+            [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
-            [data-info.services.icat :as jargon])
-  (:import [org.apache.tika Tika]))
+            [data-info.services.common-paths :as path]
+            [data-info.services.directory :as directory]
+            [data-info.services.icat :as jargon]
+            [data-info.services.type-detect.irods :as type]
+            [data-info.services.validators :as validators]))
 
-(defn- tika-detect-type
-  [user file-path]
-  (with-jargon (jargon/jargon-cfg) [cm-new]
-    (validators/user-exists cm-new user)
-    (validators/path-exists cm-new file-path)
-    (validators/path-readable cm-new user file-path)
-    (.detect (Tika.) (input-stream cm-new file-path))))
 
 (defn- download-file
   [user file-path]
@@ -33,7 +24,10 @@
     (validators/user-exists cm user)
     (validators/path-exists cm file-path)
     (validators/path-readable cm user file-path)
-    (if (zero? (file-size cm file-path)) "" (input-stream cm file-path))))
+    (if (zero? (file-size cm file-path))
+      ""
+      (input-stream cm file-path))))
+
 
 (defn- download
   [user filepaths]
@@ -43,15 +37,15 @@
           account  (:irodsAccount cm)]
       {:action "download"
        :status "success"
-       :data
-       {:user user
-        :home (ft/path-join "/" (cfg/irods-zone) "home" user)
-        :password (store-cart cm user cart-key filepaths)
-        :host (.getHost account)
-        :port (.getPort account)
-        :zone (.getZone account)
-        :defaultStorageResource (.getDefaultStorageResource account)
-        :key cart-key}})))
+       :data   {:user                   user
+                :home                   (path/user-home-dir user)
+                :password               (cart/store-cart cm user cart-key filepaths)
+                :host                   (.getHost account)
+                :port                   (.getPort account)
+                :zone                   (.getZone account)
+                :defaultStorageResource (.getDefaultStorageResource account)
+                :key                    cart-key}})))
+
 
 (defn- upload
   [user]
@@ -60,15 +54,15 @@
     (let [account (:irodsAccount cm)]
       {:action "upload"
        :status "success"
-       :data
-       {:user user
-        :home (ft/path-join "/" (cfg/irods-zone) "home" user)
-        :password (temp-password cm user)
-        :host (.getHost account)
-        :port (.getPort account)
-        :zone (.getZone account)
-        :defaultStorageResource (.getDefaultStorageResource account)
-        :key (str (System/currentTimeMillis))}})))
+       :data   {:user                   user
+                :home                   (path/user-home-dir user)
+                :password               (cart/temp-password cm user)
+                :host                   (.getHost account)
+                :port                   (.getPort account)
+                :zone                   (.getZone account)
+                :defaultStorageResource (.getDefaultStorageResource account)
+                :key                    (str (System/currentTimeMillis))}})))
+
 
 (defn do-download
   [{user :user} {paths :paths}]
@@ -76,26 +70,27 @@
 
 (with-pre-hook! #'do-download
   (fn [params body]
-    (log-call "do-download" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})))
+    (path/log-call "do-download" params body)
+    (cv/validate-map params {:user string?})
+    (cv/validate-map body {:paths sequential?})))
 
-(with-post-hook! #'do-download (log-func "do-download"))
+(with-post-hook! #'do-download (path/log-func "do-download"))
+
 
 (defn do-download-contents
   [{user :user} {path :path}]
-  (let [limit (:total (icat/number-of-items-in-folder user (cfg/irods-zone) path)) ;; FIXME this is horrible
-        paths (directory/get-paths-in-folder user path limit)]
-    (download user paths)))
+  (with-jargon (jargon/jargon-cfg) [cm]
+    (validators/path-is-dir cm path))
+  (download user (directory/get-paths-in-folder user path)))
 
 (with-pre-hook! #'do-download-contents
   (fn [params body]
-    (log-call "do-download-contents" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:path string?})
-    (with-jargon (jargon/jargon-cfg) [cm] (validators/path-is-dir cm (:path body)))))
+    (path/log-call "do-download-contents" params body)
+    (cv/validate-map params {:user string?})
+    (cv/validate-map body {:path string?})))
 
-(with-post-hook! #'do-download-contents (log-func "do-download-contents"))
+(with-post-hook! #'do-download-contents (path/log-func "do-download-contents"))
+
 
 (defn do-upload
   [{user :user}]
@@ -103,16 +98,18 @@
 
 (with-pre-hook! #'do-upload
   (fn [params]
-    (log-call "do-upload" params)
-    (validate-map params {:user string?})))
+    (path/log-call "do-upload" params)
+    (cv/validate-map params {:user string?})))
 
-(with-post-hook! #'do-upload (log-func "do-upload"))
+(with-post-hook! #'do-upload (path/log-func "do-upload"))
+
 
 (defn- attachment?
   [params]
   (if-not (contains? params :attachment)
     true
-    (if (= "1" (:attachment params)) true false)))
+    (= "1" (:attachment params))))
+
 
 (defn- get-disposition
   [params]
@@ -126,27 +123,22 @@
     :else
     (str "attachment; filename=\"" (ft/basename (:path params)) "\"")))
 
+
 (defn do-special-download
   [{user :user path :path :as params}]
-  (let [content      (download-file user path)
-        content-type @(future (tika-detect-type user path))
-        disposition  (get-disposition params)]
-    {:status               200
-     :body                 content
-     :headers {"Content-Disposition" disposition
-               "Content-Type"        content-type}}))
+  (when (path/super-user? user)
+    (throw+ {:error_code error/ERR_NOT_AUTHORIZED :user user}))
+  (let [content-type (future (type/detect-media-type path))]
+    {:status  200
+     :body    (download-file user path)
+     :headers {"Content-Disposition" (get-disposition params)
+               "Content-Type"        @content-type}}))
 
 (with-pre-hook! #'do-special-download
   (fn [params]
-    (log-call "do-special-download" params)
-    (validate-map params {:user string? :path string?})
-    (let [user (:user params)
-          path (:path params)]
-      (log/info "User for download: " user)
-      (log/info "Path to download: " path)
+    (path/log-call "do-special-download" params)
+    (cv/validate-map params {:user string? :path string?})
+    (log/info "User for download: " (:user params))
+    (log/info "Path to download: " (:path params))))
 
-      (when (super-user? user)
-        (throw+ {:error_code ERR_NOT_AUTHORIZED
-                 :user       user})))))
-
-(with-post-hook! #'do-special-download (log-func "do-special-download"))
+(with-post-hook! #'do-special-download (path/log-func "do-special-download"))

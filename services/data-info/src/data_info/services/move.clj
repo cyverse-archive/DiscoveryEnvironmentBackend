@@ -62,7 +62,7 @@
   [{user :user} {source :source dest :dest}]
   (with-jargon (jargon/jargon-cfg) [cm]
     (validators/path-is-dir cm source))
-  (let [sources (directory/get-paths-in-folder user source)]
+  (let [sources (directory/get-paths-in-folder user source (cfg/max-paths-in-request))]
     (move-paths user sources dest)))
 
 (with-pre-hook! #'do-move-contents

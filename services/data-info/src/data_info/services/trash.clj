@@ -201,7 +201,7 @@
 (defn do-delete-contents
   [{user :user} {path :path}]
   (with-jargon (jargon/jargon-cfg) [cm] (validators/path-is-dir cm path))
-  (let [paths (directory/get-paths-in-folder user path)]
+  (let [paths (directory/get-paths-in-folder user path (cfg/max-paths-in-request))]
     (delete-paths user paths)))
 
 (with-pre-hook! #'do-delete-contents
@@ -238,7 +238,7 @@
   (let [trash (paths/user-trash-path user)]
     (restore-path
       {:user       user
-       :paths      (directory/get-paths-in-folder user trash)
+       :paths      (directory/get-paths-in-folder user trash (cfg/max-paths-in-request))
        :user-trash trash})))
 
 (with-pre-hook! #'do-restore-all

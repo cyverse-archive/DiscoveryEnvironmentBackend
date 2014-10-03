@@ -14,15 +14,25 @@
             [clj-jargon.validations :as jv]
             [data-info.util.config :as cfg]
             [data-info.services.common-paths :as paths]
-            [data-info.services.icat :as jargon]))
+            [data-info.services.icat :as jargon])
+  (:import [clojure.lang ISeq]))
 
 
-(defn get-paths-in-folder
-  ([user folder]
-   (get-paths-in-folder user folder (cfg/max-paths-in-request)))
+(defn ^ISeq get-paths-in-folder
+  "Returns all of the paths of the members of a given folder that are visible to a given user.
 
-  ([user folder limit]
-   (let [listing (icat/paged-folder-listing user (cfg/irods-zone) folder :base-name :asc limit 0)]
+   Parameters:
+     user   - the username of the user
+     folder - the folder to inspect
+     limit  - (OPTIONAL) if provided, only the first <limit> members will be returned.
+
+   Returns:
+     It returns a list of paths."
+  ([^String user ^String folder]
+   (icat/folder-path-listing user (cfg/irods-zone) folder))
+
+  ([^String user ^String folder ^Integer limit]
+   (let [listing (icat/paged-folder-listing user (cfg/irods-zone) folder :full-path :asc limit 0)]
      (map :full_path listing))))
 
 
