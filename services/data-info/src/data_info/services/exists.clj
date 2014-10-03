@@ -40,6 +40,7 @@
   (fn [params body]
     (paths/log-call "do-exists" params)
     (cv/validate-map params {:user string?})
+    (dsv/user-exists (:user params))
     (cv/validate-map body {:paths vector?})
     (dsv/validate-num-paths (:paths body))))
 
@@ -59,7 +60,6 @@
   (fn [entry params]
     (paths/log-call "exists?" entry params)
     (cv/validate-map params {:user string?})
-    (with-jargon (cfg/jargon-cfg) [cm]
-      (dsv/user-exists cm (:user params)))))
+    (dsv/user-exists (:user params))))
 
 (with-post-hook! #'exists? (paths/log-func "exists?"))
