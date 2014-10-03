@@ -28,10 +28,8 @@
   (GET "/" [:as req]
     (util/controller req welcome/welcome))
 
-  (HEAD "/entry/*" [:as req]
-    (util/controller req
-                     (partial exists/exists? (->> req :params :* (str "/")))
-                     :params))
+  (HEAD "/entries/:entry" [:as req]
+      (util/controller req exists/exists? :params))
 
   (POST "/existence-marker" [:as req]
     (util/controller req exists/do-exists :params :body))
@@ -39,7 +37,7 @@
   (GET "/home" [:as req]
     (util/controller req home/do-homedir :params))
 
-  (POST "data/stat" [:as req]
+  (POST "/stat-gatherer" [:as req]
     (util/controller req stat/do-stat :params :body))
 
   (POST "/data/download" [:as req]

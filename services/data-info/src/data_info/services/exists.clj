@@ -8,7 +8,9 @@
             [clojure-commons.validators :as cv]
             [data-info.services.common-paths :as paths]
             [data-info.services.icat :as cfg]
-            [data-info.services.validators :as dsv]))
+            [data-info.services.uuids :as uuid]
+            [data-info.services.validators :as dsv])
+  (:import [java.util UUID]))
 
 
 (defn- url-encoded?
@@ -48,18 +50,17 @@
 
 
 (defn exists?
-  [entry {user :user}]
+  [{user :user entry :entry}]
   (with-jargon (cfg/jargon-cfg) [cm]
-    (if-not (item/exists? cm entry)
-      {:status 404}
-      (if-not (perm/is-readable? cm user entry)
-        {:status 403}
-        {:status 200}))))
+    (if-let [path (uuid/get-path cm (UUID/fromString entry))]
+      {:status (if (perm/is-readable? cm user path) 200 403)}
+      {:status 404})))
 
 (with-pre-hook! #'exists?
-  (fn [entry params]
-    (paths/log-call "exists?" entry params)
+  (fn [params]
+    (paths/log-call "exists?" params)
     (cv/validate-map params {:user string?})
-    (dsv/user-exists (:user params))))
+    (dsv/user-exists (:user params))
+    (dsv/valid-uuid-field "entry" (:entry params))))
 
 (with-post-hook! #'exists? (paths/log-func "exists?"))

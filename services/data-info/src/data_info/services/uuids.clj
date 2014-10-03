@@ -19,6 +19,27 @@
 (def uuid-attr "ipc_UUID")
 
 
+(defn ^String get-path
+  "Returns the path of an entity given its UUID.
+
+   Parameters:
+     cm   - an open jargon context
+     uuid - the UUID of the entity
+
+   Returns:
+     If found, it returns the path of the entity."
+  [^IPersistentMap cm ^UUID uuid]
+  (let [results (meta/list-everything-with-attr-value cm uuid-attr uuid)]
+    (when-not (empty? results)
+      (when (> (count results) 1)
+        (log/error "Too many results for" uuid ":" (count results))
+        (log/debug "Results for" uuid ":" results)
+        (throw+ {:error_code error/ERR_TOO_MANY_RESULTS
+                 :count      (count results)
+                 :uuid       uuid}))
+      (first results))))
+
+
 (defn ^IPersistentMap path-for-uuid
   "Resolves a stat info for the entity with a given UUID.
 
@@ -29,17 +50,9 @@
    Returns:
      It returns a path-stat map containing an additional UUID field."
   ([^IPersistentMap cm ^String user ^UUID uuid]
-   (let [results (meta/list-everything-with-attr-value cm uuid-attr uuid)]
-     (when (empty? results)
-       (throw+ {:error_code error/ERR_DOES_NOT_EXIST :uuid uuid}))
-     (when (> (count results) 1)
-       (log/warn "Too many results for" uuid ":" (count results))
-       (log/debug "Results for" uuid ":" results)
-       (throw+ {:error_code error/ERR_TOO_MANY_RESULTS
-                :count      (count results)
-                :uuid       uuid}))
-     (if (pos? (count results))
-       (merge {:uuid uuid} (stat/path-stat cm user (first results))))))
+    (if-let [path (get-path cm uuid)]
+      (assoc (stat/path-stat cm user path) :uuid uuid)
+      (throw+ {:error_code error/ERR_DOES_NOT_EXIST :uuid uuid})))
 
   ([^String user ^UUID uuid]
    (init/with-jargon (jargon/jargon-cfg) [cm]

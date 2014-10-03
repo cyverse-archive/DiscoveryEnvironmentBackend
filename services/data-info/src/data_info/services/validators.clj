@@ -4,11 +4,12 @@
         [clj-jargon.tickets]
         [clj-jargon.users]
         [clojure-commons.error-codes]
-        [slingshot.slingshot :only [throw+]])
+        [slingshot.slingshot :only [try+ throw+]])
   (:require [clj-icat-direct.icat :as icat]
             [clj-jargon.init :as init]
             [data-info.util.config :as cfg]
-            [data-info.services.icat :as dsi]))
+            [data-info.services.icat :as dsi])
+  (:import [java.util UUID]))
 
 
 (defn- num-paths-okay?
@@ -179,3 +180,19 @@
   (when (some #(ticket? cm (:username cm) %) ticket-ids)
     (throw+ {:ticket-ids (filterv #(ticket? cm (:username cm) %) ticket-ids)
              :error_code ERR_TICKET_EXISTS})))
+
+
+(defn valid-uuid-field
+  "Validates that a given value is a UUID.
+
+   Parameters:
+     field-name - the name of the field holding the proposed UUID
+     filed-val  - the proposed UUID"
+  [^String field-name ^String field-val]
+  (try+
+    (UUID/fromString field-name)
+    nil
+    (catch Throwable _
+      (throw+ {:error_code ERR_BAD_REQUEST
+               :field      field-name
+               :value      field-val}))))
