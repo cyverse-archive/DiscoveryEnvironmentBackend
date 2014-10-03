@@ -72,13 +72,13 @@
 (defn do-stat
   [{user :user} {paths :paths}]
   (with-jargon (jargon/jargon-cfg) [cm]
+    (validators/user-exists cm user)
     {:paths (into {} (map #(vector % (path-stat cm user %)) paths))}))
 
 (with-pre-hook! #'do-stat
   (fn [params body]
     (paths/log-call "do-stat" params body)
     (cv/validate-map params {:user string?})
-    (validators/user-exists (:user params))
     (cv/validate-map body {:paths vector?})
     (cv/validate-map body {:paths #(not (empty? %))})
     (cv/validate-map body {:paths #(every? (comp not string/blank?) %)})

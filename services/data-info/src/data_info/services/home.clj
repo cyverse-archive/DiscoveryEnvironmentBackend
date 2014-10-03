@@ -16,6 +16,7 @@
   [staging-dir user]
   (let [user-home (ft/path-join staging-dir user)]
     (with-jargon (icat/jargon-cfg) [cm]
+      (validators/user-exists cm user)
       (when-not (exists? cm user-home)
         (mkdirs cm user-home))
       {:id   (uuid/lookup-uuid cm user-home)
@@ -29,7 +30,6 @@
 (with-pre-hook! #'do-homedir
   (fn [params]
     (log/log-call "do-homedir" params)
-    (cv/validate-map params {:user string?})
-    (validators/user-exists (:user params))))
+    (cv/validate-map params {:user string?})))
 
 (with-post-hook! #'do-homedir (log/log-func "do-homedir"))

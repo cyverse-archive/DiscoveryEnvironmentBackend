@@ -29,6 +29,7 @@
   [user path]
   (let [path (ft/rm-last-slash (url-decode path))]
     (with-jargon (cfg/jargon-cfg) [cm]
+      (dsv/user-exists cm user)
       (and (item/exists? cm path)
            (perm/is-readable? cm user path)))))
 
@@ -42,7 +43,6 @@
   (fn [params body]
     (paths/log-call "do-exists" params)
     (cv/validate-map params {:user string?})
-    (dsv/user-exists (:user params))
     (cv/validate-map body {:paths vector?})
     (dsv/validate-num-paths (:paths body))))
 
@@ -52,6 +52,7 @@
 (defn exists?
   [{user :user entry :entry}]
   (with-jargon (cfg/jargon-cfg) [cm]
+    (dsv/user-exists cm user)
     (if-let [path (uuid/get-path cm (UUID/fromString entry))]
       {:status (if (perm/is-readable? cm user path) 200 403)}
       {:status 404})))
@@ -60,7 +61,6 @@
   (fn [params]
     (paths/log-call "exists?" params)
     (dsv/valid-uuid-field "entry" (:entry params))
-    (cv/validate-map params {:user string?})
-    (dsv/user-exists (:user params))))
+    (cv/validate-map params {:user string?})))
 
 (with-post-hook! #'exists? (paths/log-func "exists?"))
