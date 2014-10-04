@@ -36,8 +36,7 @@
       :name         (:name parameter)
       :required     (:required parameter)
       :type         (:type parameter)
-      :validators   (mp/get-validators id)
-      :isImplicit   (:is_implicit parameter)})))
+      :validators   (mp/get-validators id)})))
 
 (defn- get-groups
   [step-id]
@@ -50,6 +49,7 @@
 (defn- format-group
   [name-prefix step group]
   {:id          (:id group)
+   :name        (str name-prefix (:name group))
    :label       (str name-prefix (:label group))
    :parameters  (mapv (partial format-parameter step) (get-parameters (:id step) (:id group)))
    :step_number (:step_number step)})
@@ -74,11 +74,12 @@
 
 (defn- format-app
   [app]
-  {:id       (:id app)
-   :name     (:name app)
-   :type     (:overall_job_type app)
-   :disabled (:disabled app)
-   :groups   (remove (comp empty? :parameters) (format-steps (:id app)))})
+  {:id          (:id app)
+   :name        (:name app)
+   :label       (:name app)
+   :description (:description app)
+   :disabled    (:disabled app)
+   :groups      (remove (comp empty? :parameters) (format-steps (:id app)))})
 
 (defn get-app
   "This service obtains an app description in a format that is suitable for building the job

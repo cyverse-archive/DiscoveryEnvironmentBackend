@@ -14,13 +14,14 @@
 
 (defn- format-tree-root
   [root]
-  {:id               (:id root)
-   :selectionCascade (:name root)
-   :isSingleSelect   (:isDefault root)})
+  (conv/remove-nil-vals
+   {:id               (:id root)
+    :selectionCascade (:name root)
+    :isSingleSelect   (:isDefault root)}))
 
 (defn- format-param-value
   [param-value]
-  (dissoc param-value :parent_id))
+  (and param-value (conv/remove-nil-vals (dissoc param-value :parent_id))))
 
 (defn- format-tree-node
   [values-map node children]
@@ -81,7 +82,7 @@
   [param-id]
   (mapv format-validator
         (select [:validation_rules :r]
-                (join [:rule_type :t] {:r.rule_type :r.id})
+                (join [:rule_type :t] {:r.rule_type :t.id})
                 (fields :r.id [:t.name :type])
                 (where {:r.parameter_id param-id
                         :t.deprecated   false}))))
