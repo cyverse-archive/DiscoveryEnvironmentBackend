@@ -190,6 +190,26 @@
           (optional-key :references) (describe [String] "The App's references")
           OptionalGroupsKey          (describe [AppGroup] GroupListDocs)}))
 
+(defschema AppParameterJobView
+  (assoc AppParameter
+    :id
+    (describe String
+      "A string consisting of the App's step ID and the Parameter ID separated by an underscore.
+       Both identifiers are necessary because the same task may be associated with a single App,
+       which would cause duplicate keys in the job submission JSON. The step ID is prepended to
+       the Parameter ID in order to ensure that all parameter value keys are unique.")))
+
+(defschema AppGroupJobView
+  (assoc AppGroup
+    :step_number          (describe Long "The step number associated with this parameter group")
+    OptionalParametersKey (describe [AppParameterJobView] ParameterListDocs)))
+
+(defschema AppJobView
+  (assoc AppBase
+    :label            (describe String "An alias for the App's name")
+    :disabled         (describe Boolean "A flag indicating whether the App is disabled")
+    OptionalGroupsKey (describe [AppGroupJobView] GroupListDocs)))
+
 (defschema ToolDetails
   {:id          ToolIdParam
    :name        (describe String "The Tool's name")

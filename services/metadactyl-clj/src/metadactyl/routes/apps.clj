@@ -62,9 +62,10 @@
         :path-params [app-id :- AppIdPathParam]
         :query [params SecuredQueryParams]
         :summary "Obtain an app description."
+        :return AppJobView
         :notes "This service allows the Discovery Environment user interface to obtain an
         app description that can be used to construct a job submission form."
-        (ce/trap "get-app" #(jv/get-app app-id)))
+        (ce/trap "get-app" #(service/swagger-response (jv/get-app app-id))))
 
   (PATCH* "/:app-id" []
           :path-params [app-id :- AppIdPathParam]
