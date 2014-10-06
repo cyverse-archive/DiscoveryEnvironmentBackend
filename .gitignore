@@ -28,3 +28,4 @@ libs/metadactyl/metadactyl
 node_modules/
 .idea
 *.iml
+.DS_Store
