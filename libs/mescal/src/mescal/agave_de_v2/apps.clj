@@ -88,7 +88,6 @@
   ([app group-format-fn]
      (let [app-label (get-app-name app)]
        {:id           (:id app)
-        :name         app-label
         :label        app-label
         :component_id c/hpc-group-id
         :groups       (group-format-fn app)}))
@@ -121,7 +120,6 @@
      :id               (:id app)
      :references       []
      :description      (:shortDescription app)
-     :name             app-label
      :label            app-label
      :tito             (:id app)
      :components       [(format-deployed-component-for-app app)]
