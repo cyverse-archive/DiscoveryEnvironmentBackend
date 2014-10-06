@@ -72,20 +72,37 @@
       (first)
       (:total)))
 
-(defn number-of-filtered-items-in-folder
+
+(defn ^Integer number-of-filtered-items-in-folder
   "Returns the total number of files and folders in the specified folder that the user has access to
-   but should be filtered in the client."
-  [user zone folder-path filter-chars filter-files filtered-paths]
+   but should be filtered in the client.
+
+   Parameters:
+     user           - the username of the authorized user
+     zone           - the user's authentication zone
+     folder-path    - The absolute path to the folder of interest
+     filter-chars   - If a path contains one or more of these characters, it forms part of the
+                      filter
+     filter-files   - This is a comma-separated list of paths that form part of the filter
+     filtered-paths - This is an array of paths that form part of the filter."
+  [^String user
+   ^String zone
+   ^String folder-path
+   ^String filter-chars
+   ^String filter-files
+   ^ISeq   filtered-paths]
   (let [filtered-path-args (concat (q/filter-files->query-args filter-files) filtered-paths)
-        query (format (:count-filtered-items-in-folder q/queries)
-                      (q/get-filtered-paths-where-clause filter-files filtered-paths))]
-    (first (apply run-query-string
-                  query
-                  user
-                  zone
-                  folder-path
-                  (q/filter-chars->sql-char-class filter-chars)
-                  filtered-path-args))))
+        query              (format (:count-filtered-items-in-folder q/queries)
+                                   (q/get-filtered-paths-where-clause filter-files filtered-paths))]
+    (-> (apply run-query-string
+               query
+               user
+               zone
+               folder-path
+               (q/filter-chars->sql-char-class filter-chars)
+               filtered-path-args)
+      first :total_filtered)))
+
 
 (defn folder-permissions-for-user
   "Returns the highest permission value for the specified user on the folder."

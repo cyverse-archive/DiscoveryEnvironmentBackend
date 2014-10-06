@@ -130,11 +130,13 @@
           :date-created     (:date-created stat)
           :date-modified    (:date-modified stat)
           :file-size        0
-          :total            (icat/number-of-items-in-folder user zone path))
-         (icat/number-of-filtered-items-in-folder user zone path
-                                                  (cfg/fs-filter-chars)
-                                                  (cfg/fs-filter-files)
-                                                  (filtered-paths user))
+          :total            (icat/number-of-items-in-folder user zone path)
+          :total_filtered   (icat/number-of-filtered-items-in-folder user
+                                                                     zone
+                                                                     path
+                                                                     (cfg/fs-filter-chars)
+                                                                     (cfg/fs-filter-files)
+                                                                     (filtered-paths user)))
          (page->map user (log/spy (icat/paged-folder-listing user zone path scol sord limit offset))))))))
 
 (defn list-directories
