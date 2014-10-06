@@ -29,39 +29,36 @@
       (input-stream cm file-path))))
 
 
+(defn- mk-cart-key
+  []
+  (str (System/currentTimeMillis)))
+
+
+(defn- mk-cart
+  [cart-key user password]
+  {:key                    cart-key
+   :user                   user
+   :home                   (path/user-home-dir user)
+   :password               password
+   :host                   (cfg/irods-host)
+   :port                   (cfg/irods-port)
+   :zone                   (cfg/irods-zone)
+   :defaultStorageResource (cfg/irods-resc)})
+
+
 (defn- download
   [user filepaths]
   (with-jargon (jargon/jargon-cfg) [cm]
     (validators/user-exists cm user)
-    (let [cart-key (str (System/currentTimeMillis))
-          account  (:irodsAccount cm)]
-      {:action "download"
-       :status "success"
-       :data   {:user                   user
-                :home                   (path/user-home-dir user)
-                :password               (cart/store-cart cm user cart-key filepaths)
-                :host                   (.getHost account)
-                :port                   (.getPort account)
-                :zone                   (.getZone account)
-                :defaultStorageResource (.getDefaultStorageResource account)
-                :key                    cart-key}})))
+    (let [cart-key (mk-cart-key)]
+      {:cart (mk-cart cart-key user (cart/store-cart cm user cart-key filepaths))})))
 
 
 (defn- upload
   [user]
   (with-jargon (jargon/jargon-cfg) [cm]
     (validators/user-exists cm user)
-    (let [account (:irodsAccount cm)]
-      {:action "upload"
-       :status "success"
-       :data   {:user                   user
-                :home                   (path/user-home-dir user)
-                :password               (cart/temp-password cm user)
-                :host                   (.getHost account)
-                :port                   (.getPort account)
-                :zone                   (.getZone account)
-                :defaultStorageResource (.getDefaultStorageResource account)
-                :key                    (str (System/currentTimeMillis))}})))
+    {:cart (mk-cart (mk-cart-key) user (cart/temp-password cm user))}))
 
 
 (defn- do-download
@@ -112,9 +109,10 @@
 
 (defn- get-disposition
   [path attachment]
-  (if (or (nil? attachment) (Boolean/parseBoolean attachment))
-    (str "attachment; filename=\"" (ft/basename path) "\"")
-    (str "filename=\"" (ft/basename path) "\"")))
+  (let [filename (str \" (ft/basename path) \")]
+    (if (or (nil? attachment) (Boolean/parseBoolean attachment))
+      (str "attachment; filename=" filename)
+      (str "filename=" filename))))
 
 
 (defn do-special-download
