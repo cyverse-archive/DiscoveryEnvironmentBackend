@@ -61,45 +61,6 @@
   :language :clojure
   :archive? false}
 
- "de-authn"
- {:type     :library
-  :type-num 2
-  :path     "libs/de-authn"
-  :build    :mvn
-  :install  :mvn
-  :rpm?     false
-  :tarball? false
-  :uberjar? false
-  :install? true
-  :language :java
-  :archive? false}
-
- "de-base-services-pom"
- {:type     :library
-  :type-num 0
-  :path     "libs/de-base-services-pom"
-  :build    :mvn
-  :install  :mvn
-  :rpm?     false
-  :tarball? false
-  :uberjar? false
-  :install? true
-  :language :java
-  :archive? false}
-
- "de-persistence"
- {:type     :library
-  :type-num 3
-  :path     "libs/de-persistence"
-  :build    :mvn
-  :install  :mvn
-  :rpm?     false
-  :tarball? false
-  :uberjar? false
-  :install? true
-  :language :java
-  :archive? false}
-
  "heuristomancer"
  {:type     :library
   :type-num 12
@@ -111,19 +72,6 @@
   :uberjar? false
   :install? true
   :language :clojure
-  :archive? false}
-
- "hibernatetoolkit"
- {:type     :library
-  :type-num 1
-  :path     "libs/hibernatetoolkit"
-  :build    :mvn
-  :install  :mvn
-  :rpm?     false
-  :tarball? false
-  :uberjar? false
-  :install? true
-  :language :java
   :archive? false}
 
  "iplant-clojure-commons"
@@ -202,19 +150,6 @@
   :uberjar? false
   :install? true
   :language :clojure
-  :archive? false}
-
- "metadactyl"
- {:type     :library
-  :type-num 4
-  :path     "libs/metadactyl"
-  :build    :mvn
-  :install  :mvn
-  :rpm?     false
-  :tarball? false
-  :uberjar? false
-  :install? true
-  :language :java
   :archive? false}
 
 ;; "chinstrap"
