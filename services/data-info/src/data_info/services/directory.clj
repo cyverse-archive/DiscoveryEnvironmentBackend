@@ -1,20 +1,20 @@
 (ns data-info.services.directory
-  (:use [clojure-commons.validators]
-        [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-info]
-        [clj-jargon.permissions]
-        [slingshot.slingshot :only [throw+]])
-  (:require [clojure.tools.logging :as log]
-            [clojure.string :as string]
-            [clojure-commons.file-utils :as ft]
+  (:require [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [data-info.services.validators :as validators]
-            [data-info.services.uuids :as uuids]
+            [slingshot.slingshot :refer [throw+]]
             [clj-icat-direct.icat :as icat]
+            [clj-jargon.init :refer [with-jargon]]
+            [clj-jargon.item-info :as item]
+            [clj-jargon.permissions :as perm]
             [clj-jargon.validations :as jv]
+            [clojure-commons.file-utils :as ft]
+            [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
+            [data-info.services.uuids :as uuids]
             [data-info.services.common-paths :as paths]
-            [data-info.services.icat :as jargon])
+            [data-info.services.icat :as jargon]
+            [data-info.services.validators :as validators])
   (:import [clojure.lang ISeq]))
 
 
@@ -64,15 +64,15 @@
                   :file-size     data_size
                   :date-created  (* (Integer/parseInt create_ts) 1000)
                   :date-modified (* (Integer/parseInt modify_ts) 1000)
-                  :permission    (fmt-perm access_type_id)}]
+                  :permission    (perm/fmt-perm access_type_id)}]
     (if (= type "dataobject")
       base-map
-      (merge base-map {:hasSubDirs true
-                       :file-size  0}))))
+      (assoc base-map :hasSubDirs true :file-size 0))))
+
 
 (defn- page->map
-  "Transforms an entire page of results for a paged listing in a map that
-   can be returned to the client."
+  "Transforms an entire page of results for a paged listing in a map that can be returned to the
+   client."
   [user page]
   (let [entry-types (group-by :type page)
         do          (get entry-types "dataobject")
@@ -80,6 +80,7 @@
         xformer     (partial page-entry->map user)]
     {:files   (mapv xformer do)
      :folders (mapv xformer collections)}))
+
 
 (defn- user-col->api-col
   [sort-col]
@@ -92,12 +93,10 @@
     "PATH"         :full-path
                    :base-name))
 
+
 (defn- user-order->api-order
   [sort-order]
-  (case sort-order
-    "ASC"  :asc
-    "DESC" :desc
-           :asc))
+  (if (= "DESC" sort-order) :desc :asc))
 
 
 ; TODO this is too big, refactor it
@@ -120,7 +119,7 @@
       (when-not (contains? #{"ASC" "DESC"} sort-order)
         (log/warn "invalid sort order" sort-order)
         (throw+ {:error_code "ERR_INVALID_SORT_ORDER" :sort-order sort-order}))
-      (let [stat (stat cm path)
+      (let [stat (item/stat cm path)
             scol (user-col->api-col sort-col)
             sord (user-order->api-order sort-order)
             zone (cfg/irods-zone)
@@ -131,7 +130,7 @@
             :path          path
             :label         (paths/id->label user path)
             :filter        (should-filter? user path)
-            :permission    (permission-for cm user path)
+            :permission    (perm/permission-for cm user path)
             :hasSubDirs    true
             :date-created  (:date-created stat)
             :date-modified (:date-modified stat)
@@ -153,7 +152,7 @@
                                                          offset))))))))
 
 
-(defn list-directories
+(defn- list-directories
   "Lists the directories contained under path."
   [user path]
   (let [path (ft/rm-last-slash path)]
@@ -162,22 +161,21 @@
       (validators/path-exists cm path)
       (validators/path-readable cm user path)
       (validators/path-is-dir cm path)
-
-      (let [stat (stat cm path)
+      (let [stat (item/stat cm path)
             zone (cfg/irods-zone)
             uuid (:uuid (uuids/uuid-for-path cm user path))]
         (merge
-         (hash-map
-          :id            uuid
-          :path          path
-          :label         (paths/id->label user path)
-          :filter        (should-filter? user path)
-          :permisssion   (permission-for cm user path)
-          :hasSubDirs    true
-          :date-created  (:date-created stat)
-          :date-modified (:date-modified stat)
-          :file-size     0)
-         (dissoc (page->map user (icat/list-folders-in-folder user zone path)) :files))))))
+          (hash-map
+            :id            uuid
+            :path          path
+            :label         (paths/id->label user path)
+            :filter        (should-filter? user path)
+            :permisssion   (perm/permission-for cm user path)
+            :hasSubDirs    true
+            :date-created  (:date-created stat)
+            :date-modified (:date-modified stat)
+            :file-size     0)
+          (dissoc (page->map user (icat/list-folders-in-folder user zone path)) :files))))))
 
 
 (defn- top-level-listing
@@ -190,20 +188,25 @@
 
 (defn- shared-with-me-listing?
   [path]
-  (= (ft/add-trailing-slash path) (ft/add-trailing-slash (cfg/irods-home))))
+  (= (ft/add-trailing-slash path)
+     (ft/add-trailing-slash (cfg/irods-home))))
+
 
 (defn do-directory
   [{:keys [user path] :or {path nil} :as params}]
-  (log/warn "path" path)
   (cond
-    (nil? path)
-    (top-level-listing params)
+    (nil? path)                    (top-level-listing params)
+    (shared-with-me-listing? path) (list-directories user (cfg/irods-home))
+    :else                          (list-directories user path)))
 
-    (shared-with-me-listing? path)
-    (list-directories user (cfg/irods-home))
 
-    :else
-    (list-directories user path)))
+(with-pre-hook! #'do-directory
+  (fn [params]
+    (paths/log-call "do-directory" params)
+    (cv/validate-map params {:user string?})))
+
+(with-post-hook! #'do-directory (paths/log-func "do-directory"))
+
 
 (defn do-paged-listing
   "Entrypoint for the API that calls (paged-dir-listing)."
@@ -220,37 +223,12 @@
         sort-order (if sort-order sort-order "ASC")]
     (paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order)))
 
-(defn do-unsecured-paged-listing
-  "Entrypoint for the API that calls (paged-dir-listing)."
-  [{path       :path
-    limit      :limit
-    offset     :offset
-    sort-col   :sort-col
-    sort-order :sort-order}]
-  (let [user       "ipctest"
-        limit      (Integer/parseInt limit)
-        offset     (Integer/parseInt offset)
-        sort-col   (if sort-col sort-col "NAME")
-        sort-order (if sort-order sort-order "ASC")]
-    (paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order)))
-
-(with-pre-hook! #'do-directory
-  (fn [params]
-    (paths/log-call "do-directory" params)
-    (validate-map params {:user string?})))
-
-(with-post-hook! #'do-directory (paths/log-func "do-directory"))
-
 (with-pre-hook! #'do-paged-listing
   (fn [params]
     (paths/log-call "do-paged-listing" params)
-    (validate-map params {:user string? :path string? :limit string? :offset string?})))
+    (cv/validate-map params {:user   string?
+                             :path   string?
+                             :limit  string?
+                             :offset string?})))
 
 (with-post-hook! #'do-paged-listing (paths/log-func "do-paged-listing"))
-
-(with-pre-hook! #'do-unsecured-paged-listing
-  (fn [params]
-    (paths/log-call "do-unsecured-paged-listing" params)
-    (validate-map params {:path string? :limit string? :offset string?})))
-
-(with-post-hook! #'do-unsecured-paged-listing (paths/log-func "do-unsecured-paged-listing"))
