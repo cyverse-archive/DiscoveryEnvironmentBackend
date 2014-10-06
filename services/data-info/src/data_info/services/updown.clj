@@ -110,41 +110,30 @@
 (with-post-hook! #'do-upload (path/log-func "do-upload"))
 
 
-(defn- attachment?
-  [params]
-  (if-not (contains? params :attachment)
-    true
-    (= "1" (:attachment params))))
-
-
 (defn- get-disposition
-  [params]
-  (cond
-    (not (contains? params :attachment))
-    (str "attachment; filename=\"" (ft/basename (:path params)) "\"")
-
-    (not (attachment? params))
-    (str "filename=\"" (ft/basename (:path params)) "\"")
-
-    :else
-    (str "attachment; filename=\"" (ft/basename (:path params)) "\"")))
+  [path attachment]
+  (if (or (nil? attachment) (Boolean/parseBoolean attachment))
+    (str "attachment; filename=\"" (ft/basename path) "\"")
+    (str "filename=\"" (ft/basename path) "\"")))
 
 
 (defn do-special-download
-  [{user :user path :path :as params}]
+  [path {user :user attachment :attachment}]
   (when (path/super-user? user)
     (throw+ {:error_code error/ERR_NOT_AUTHORIZED :user user}))
   (let [content-type (future (type/detect-media-type path))]
     {:status  200
      :body    (download-file user path)
-     :headers {"Content-Disposition" (get-disposition params)
+     :headers {"Content-Disposition" (get-disposition path attachment)
                "Content-Type"        @content-type}}))
 
 (with-pre-hook! #'do-special-download
-  (fn [params]
-    (path/log-call "do-special-download" params)
-    (cv/validate-map params {:user string? :path string?})
+  (fn [path params]
+    (path/log-call "do-special-download" path params)
+    (cv/validate-map params {:user string?})
+    (when-let [attachment (:attachment params)]
+      (validators/valid-bool-param "attachment" attachment))
     (log/info "User for download: " (:user params))
-    (log/info "Path to download: " (:path params))))
+    (log/info "Path to download: " path)))
 
 (with-post-hook! #'do-special-download (path/log-func "do-special-download"))

@@ -31,8 +31,11 @@
   (POST "/cart" [:as req]
     (util/controller req ud/dispatch-download :params :body))
 
-  (HEAD "/entries/:entry" [:as req]
-      (util/controller req exists/exists? :params))
+  (HEAD "/entries/id/:entry" [:as req]
+    (util/controller req exists/exists? :params))
+
+  (GET "/entries/path/*" [* :as req]
+    (util/controller req (partial ud/do-special-download (str "/" *)) :params))
 
   (POST "/existence-marker" [:as req]
     (util/controller req exists/do-exists :params :body))
@@ -42,9 +45,6 @@
 
   (POST "/stat-gatherer" [:as req]
     (util/controller req stat/do-stat :params :body))
-
-  (GET "/data/display-download" [:as req]
-    (util/controller req ud/do-special-download :params))
 
   (GET "/data/upload" [:as req]
     (util/controller req ud/do-upload :params))

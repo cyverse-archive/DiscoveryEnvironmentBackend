@@ -5,7 +5,8 @@
         [clj-jargon.users]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [throw+]])
-  (:require [clj-icat-direct.icat :as icat]
+  (:require [clojure.string :as str]
+            [clj-icat-direct.icat :as icat]
             [clj-jargon.init :as init]
             [data-info.util :as util]
             [data-info.util.config :as cfg]
@@ -182,14 +183,42 @@
              :error_code ERR_TICKET_EXISTS})))
 
 
-(defn valid-uuid-field
+(defn valid-bool-param
+  "Validates that a given value is a Boolean.
+
+   Parameters:
+     param-name - the name of the param holding the proposed Boolean
+     param-val  - the proposed Boolean
+
+   Throws:
+     It throws a map with of the following form.
+
+       {:error_code ERR_BAD_REQUEST
+        :param      param-name
+        :value      param-val}"
+  [^String param-name ^String param-val]
+  (let [val (str/lower-case param-val)]
+    (when-not (or (= val "true") (= val "false"))
+      (throw+ {:error_code ERR_BAD_REQUEST
+               :param      param-name
+               :value      param-val}))))
+
+
+(defn valid-uuid-param
   "Validates that a given value is a UUID.
 
    Parameters:
-     field-name - the name of the field holding the proposed UUID
-     filed-val  - the proposed UUID"
-  [^String field-name ^String field-val]
-  (when-not (util/is-uuid? field-val)
+     param-name - the name of the param holding the proposed UUID
+     param-val  - the proposed UUID
+
+   Throws:
+     It throws a map with of the following form.
+
+       {:error_code ERR_BAD_REQUEST
+        :param      param-name
+        :value      param-val}"
+  [^String param-name ^String param-val]
+  (when-not (util/is-uuid? param-val)
     (throw+ {:error_code ERR_BAD_REQUEST
-             :field      field-name
-             :value      field-val})))
+             :param      param-name
+             :value      param-val})))
