@@ -29,7 +29,7 @@
     (util/controller req welcome/welcome))
 
   (POST "/cart" [:as req]
-    (util/controller req ud/dispatch-download :params :body))
+    (util/controller req ud/dispatch-cart :params :body))
 
   (HEAD "/entries/id/:entry" [:as req]
     (util/controller req exists/exists? :params))

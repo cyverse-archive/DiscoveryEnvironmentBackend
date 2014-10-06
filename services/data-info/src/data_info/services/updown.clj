@@ -18,20 +18,13 @@
             [data-info.services.validators :as validators]))
 
 
-(defn- download-file
-  [user file-path]
-  (with-jargon (jargon/jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm file-path)
-    (validators/path-readable cm user file-path)
-    (if (zero? (file-size cm file-path))
-      ""
-      (input-stream cm file-path))))
-
-
-(defn- mk-cart-key
-  []
-  (str (System/currentTimeMillis)))
+(defn- gather-paths
+  [cm user folder other-paths]
+  (when folder
+    (validators/path-is-dir cm folder))
+  (set (concat other-paths
+               (when folder
+                 (directory/get-paths-in-folder user folder)))))
 
 
 (defn- mk-cart
@@ -46,65 +39,37 @@
    :defaultStorageResource (cfg/irods-resc)})
 
 
-(defn- download
-  [user filepaths]
+(defn dispatch-cart
+  [{folder :folder user :user} {other-paths :paths}]
   (with-jargon (jargon/jargon-cfg) [cm]
     (validators/user-exists cm user)
-    (let [cart-key (mk-cart-key)]
-      {:cart (mk-cart cart-key user (cart/store-cart cm user cart-key filepaths))})))
+    (let [paths    (gather-paths cm user folder other-paths)
+          cart-key (str (System/currentTimeMillis))
+          password (if (empty? paths)
+                     (cart/temp-password cm user)
+                     (cart/store-cart cm user cart-key paths))]
+      {:cart (mk-cart cart-key user password)})))
 
 
-(defn- upload
-  [user]
-  (with-jargon (jargon/jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    {:cart (mk-cart (mk-cart-key) user (cart/temp-password cm user))}))
-
-
-(defn- do-download
-  [{user :user} {paths :paths}]
-  (download user paths))
-
-(with-pre-hook! #'do-download
+(with-pre-hook! #'dispatch-cart
   (fn [params body]
-    (path/log-call "do-download" params body)
+    (path/log-call "dispatch-cart" params body)
     (cv/validate-map params {:user string?})
-    (cv/validate-map body {:paths sequential?})))
+    (if-not (empty? body)
+      (cv/validate-map body {:paths sequential?}))))
 
-(with-post-hook! #'do-download (path/log-func "do-download"))
+(with-post-hook! #'dispatch-cart (path/log-func "dispatch-cart"))
 
 
-(defn- do-download-contents
-  [{user :user path :path}]
+(defn- download-file
+  [user file-path]
   (with-jargon (jargon/jargon-cfg) [cm]
-    (validators/path-is-dir cm path))
-  (download user (directory/get-paths-in-folder user path)))
-
-(with-pre-hook! #'do-download-contents
-  (fn [params]
-    (path/log-call "do-download-contents" params)
-    (cv/validate-map params {:user string? :path string?})))
-
-(with-post-hook! #'do-download-contents (path/log-func "do-download-contents"))
-
-
-(defn dispatch-download
-  [{dir :dir :as params} body]
-  (if dir
-    (do-download params body)
-    (do-download-contents params)))
-
-
-(defn do-upload
-  [{user :user}]
-  (upload user))
-
-(with-pre-hook! #'do-upload
-  (fn [params]
-    (path/log-call "do-upload" params)
-    (cv/validate-map params {:user string?})))
-
-(with-post-hook! #'do-upload (path/log-func "do-upload"))
+    (validators/user-exists cm user)
+    (validators/path-exists cm file-path)
+    (validators/path-readable cm user file-path)
+    (if (zero? (file-size cm file-path))
+      ""
+      (input-stream cm file-path))))
 
 
 (defn- get-disposition
