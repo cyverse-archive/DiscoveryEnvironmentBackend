@@ -48,11 +48,21 @@
   [user zone folder-path]
   (-> (run-simple-query :count-folders-in-folder user zone folder-path) first :count))
 
-(defn number-of-items-in-folder
+
+(defn ^Integer number-of-items-in-folder
   "Returns the total number of files and folders in the specified folder that the user has access
-   to."
-  [user zone folder-path]
-  (first (run-simple-query :count-items-in-folder user zone folder-path)))
+   to.
+
+   Parameters:
+     user        - the username of the user
+     zone        - the user's authentication zone
+     folder-path - the absolute path to the folder being inspected
+
+   Returns:
+     It returns the total number of items."
+  [^String user ^String zone ^String folder-path]
+  (-> (run-simple-query :count-items-in-folder user zone folder-path) first :total))
+
 
 (defn number-of-all-items-under-folder
   "Returns the total number of files and folders in the specified folder and all

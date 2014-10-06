@@ -84,7 +84,7 @@
 
 (defn do-download-contents
   [{user :user} {path :path}]
-  (let [limit (:total (icat/number-of-items-in-folder user (cfg/irods-zone) path)) ;; FIXME this is horrible
+  (let [limit (icat/number-of-items-in-folder user (cfg/irods-zone) path)  ;; FIXME this is horrible
         paths (directory/get-paths-in-folder user path limit)]
     (download user paths)))
 

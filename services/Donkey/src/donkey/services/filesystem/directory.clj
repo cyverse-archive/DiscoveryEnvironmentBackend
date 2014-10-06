@@ -129,8 +129,8 @@
           :hasSubDirs       true
           :date-created     (:date-created stat)
           :date-modified    (:date-modified stat)
-          :file-size        0)
-         (icat/number-of-items-in-folder user zone path)
+          :file-size        0
+          :total            (icat/number-of-items-in-folder user zone path))
          (icat/number-of-filtered-items-in-folder user zone path
                                                   (cfg/fs-filter-chars)
                                                   (cfg/fs-filter-files)
