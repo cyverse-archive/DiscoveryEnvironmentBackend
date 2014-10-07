@@ -36,6 +36,44 @@
      (map :full_path listing))))
 
 
+(defn- fmt-folder
+  [{:keys [full_path modify_ts create_ts access_type_id uuid]}]
+  {:id            uuid
+   :path          full_path
+   :permission    (perm/fmt-perm access_type_id)
+   :date-created  (* (Integer/parseInt create_ts) 1000)
+   :date-modified (* (Integer/parseInt modify_ts) 1000)})
+
+
+(defn- list-directories
+  "Lists the directories contained under path."
+  [user path]
+  (with-jargon (jargon/jargon-cfg) [cm]
+    (validators/user-exists cm user)
+    (validators/path-exists cm path)
+    (validators/path-readable cm user path)
+    (validators/path-is-dir cm path)
+    (let [stat (item/stat cm path)]
+      {:id            (uuids/lookup-uuid cm path)
+       :path          path
+       :permisssion   (perm/permission-for cm user path)
+       :date-created  (:date-created stat)
+       :date-modified (:date-modified stat)
+       :folders       (map fmt-folder (icat/list-folders-in-folder user (cfg/irods-zone) path))})))
+
+
+(defn do-directory
+  [path {user :user zone :zone}]
+  {:folder (list-directories user (ft/path-join "/" zone (ft/rm-last-slash path)))})
+
+(with-pre-hook! #'do-directory
+  (fn [path params]
+    (paths/log-call "do-directory" path params)
+    (cv/validate-map params {:user string?})))
+
+(with-post-hook! #'do-directory (paths/log-func "do-directory"))
+
+
 (defn- filtered-paths
   "Returns a seq of full paths that should not be included in paged listing."
   [user]
@@ -49,7 +87,7 @@
   [user path-to-check]
   (let [fpaths (set (concat (cfg/filter-files) (filtered-paths user)))]
     (or (contains? fpaths path-to-check)
-        (not (paths/valid-path? path-to-check)))))
+      (not (paths/valid-path? path-to-check)))))
 
 
 (defn- page-entry->map
@@ -60,7 +98,7 @@
                   :path          full_path
                   :label         base_name
                   :filter        (or (should-filter? user full_path)
-                                     (should-filter? user base_name))
+                                   (should-filter? user base_name))
                   :file-size     data_size
                   :date-created  (* (Integer/parseInt create_ts) 1000)
                   :date-modified (* (Integer/parseInt modify_ts) 1000)
@@ -80,62 +118,6 @@
         xformer     (partial page-entry->map user)]
     {:files   (mapv xformer do)
      :folders (mapv xformer collections)}))
-
-
-(defn- list-directories
-  "Lists the directories contained under path."
-  [user path]
-  (let [path (ft/rm-last-slash path)]
-    (with-jargon (jargon/jargon-cfg) [cm]
-      (validators/user-exists cm user)
-      (validators/path-exists cm path)
-      (validators/path-readable cm user path)
-      (validators/path-is-dir cm path)
-      (let [stat (item/stat cm path)
-            zone (cfg/irods-zone)
-            uuid (:uuid (uuids/uuid-for-path cm user path))]
-        (merge
-          (hash-map
-            :id            uuid
-            :path          path
-            :label         (paths/id->label user path)
-            :filter        (should-filter? user path)
-            :permisssion   (perm/permission-for cm user path)
-            :hasSubDirs    true
-            :date-created  (:date-created stat)
-            :date-modified (:date-modified stat)
-            :file-size     0)
-          (dissoc (page->map user (icat/list-folders-in-folder user zone path)) :files))))))
-
-
-(defn- top-level-listing
-  [{user :user}]
-  (let [comm-f  (future (list-directories user (cfg/community-data)))
-        share-f (future (list-directories user (cfg/irods-home)))
-        home-f  (future (list-directories user (paths/user-home-dir user)))]
-    {:roots [@home-f @comm-f @share-f]}))
-
-
-(defn- shared-with-me-listing?
-  [path]
-  (= (ft/add-trailing-slash path)
-     (ft/add-trailing-slash (cfg/irods-home))))
-
-
-(defn do-directory
-  [{:keys [user path] :or {path nil} :as params}]
-  (cond
-    (nil? path)                    (top-level-listing params)
-    (shared-with-me-listing? path) (list-directories user (cfg/irods-home))
-    :else                          (list-directories user path)))
-
-
-(with-pre-hook! #'do-directory
-  (fn [params]
-    (paths/log-call "do-directory" params)
-    (cv/validate-map params {:user string?})))
-
-(with-post-hook! #'do-directory (paths/log-func "do-directory"))
 
 
 (defn- total-filtered

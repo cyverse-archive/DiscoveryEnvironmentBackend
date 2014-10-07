@@ -35,19 +35,19 @@
     (util/controller req exists/exists? :params))
 
   (GET "/entries/path/*" [* :as req]
-    (util/controller req (partial ud/do-special-download (str "/" *)) :params))
+    (util/controller req (partial ud/do-special-download *) :params))
 
   (POST "/existence-marker" [:as req]
     (util/controller req exists/do-exists :params :body))
+
+  (GET "/navigation/:zone/*" [* :as req]
+    (util/controller req (partial dir/do-directory *) :params))
 
   (GET "/home" [:as req]
     (util/controller req home/do-homedir :params))
 
   (POST "/stat-gatherer" [:as req]
     (util/controller req stat/do-stat :params :body))
-
-  (GET "/data/upload" [:as req]
-    (util/controller req ud/do-upload :params))
 
   (GET "/data/directory" [:as req]
     (util/controller req dir/do-directory :params))
