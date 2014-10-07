@@ -5,13 +5,16 @@
             [clj-jargon.init :as fs-init]
             [clojure-commons.error-codes :as error]
             [donkey.auth.user-attributes :as user]
-            [donkey.persistence.metadata :as db]
+            [donkey.persistence.metadata :as meta]
+            [donkey.persistence.search :as search]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.util.config :as config]
             [donkey.util.icat :as icat]
             [donkey.util.service :as svc]
             [donkey.util.validators :as valid])
-  (:import [java.util UUID]))
+  (:import [java.io Reader]
+           [java.util UUID]
+           [clojure.lang IPersistentMap]))
 
 
 (defn- validate-entry-accessible
@@ -20,46 +23,71 @@
     (uuids/validate-uuid-accessible fs user entry-id)))
 
 
+(defn- update-tags-targets
+  [tag-ids]
+  (letfn [(fmt-tgt ([tgt] {:id (:target_id tgt) :type (:target_type tgt)}))]
+    (doseq [id tag-ids]
+      (search/update-tag-targets id (map fmt-tgt (meta/select-tag-targets id))))))
+
+
 (defn- attach-tags
   [fs-cfg user entry-id new-tags]
   (fs-init/with-jargon fs-cfg [fs]
     (let [tag-set         (set new-tags)
-          known-tags      (set (db/filter-tags-owned-by-user user tag-set))
+          known-tags      (set (meta/filter-tags-owned-by-user user tag-set))
           unknown-tags    (set/difference tag-set known-tags)
           unattached-tags (set/difference known-tags
-                                          (set (db/filter-attached-tags entry-id known-tags)))]
+                                          (set (meta/filter-attached-tags entry-id known-tags)))]
       (uuids/validate-uuid-accessible fs user entry-id)
       (when-not (empty? unknown-tags)
         (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
-      (db/insert-attached-tags user entry-id (icat/resolve-data-type fs entry-id) unattached-tags)
+      (meta/insert-attached-tags user entry-id (icat/resolve-data-type fs entry-id) unattached-tags)
+      (update-tags-targets known-tags)
       (svc/success-response))))
 
 
 (defn- detach-tags
   [fs-cfg user entry-id tag-ids]
   (validate-entry-accessible fs-cfg user entry-id)
-  (db/mark-tags-detached user entry-id (db/filter-tags-owned-by-user user (set tag-ids)))
-  (svc/success-response))
+  (let [known-tags (meta/filter-tags-owned-by-user user (set tag-ids))]
+    (meta/mark-tags-detached user entry-id known-tags)
+    (update-tags-targets known-tags)
+    (svc/success-response)))
 
 
-(defn create-user-tag
+(defn- format-new-tag-doc
+  [db-tag]
+  {:id           (:id db-tag)
+   :value        (:value db-tag)
+   :description  (:description db-tag)
+   :creator      (str (:owner_id db-tag) \# (config/irods-zone))
+   :dateCreated  (:created_on db-tag)
+   :dateModified (:modified_on db-tag)
+   :targets      []})
+
+
+(defn ^IPersistentMap create-user-tag
   "Creates a new user tag
 
    Parameters:
      body - This is the request body. It should be a JSON document containing a `value` text field
-            and optionally a `description` text field."
-  [body]
+            and optionally a `description` text field.
+
+   Returns:
+     It returns the response."
+  [^String body]
   (let [owner       (:shortUsername user/current-user)
         tag         (json/parse-string (slurp body) true)
         value       (:value tag)
         description (:description tag)]
-    (if (empty? (db/get-tags-by-value owner value))
-      (let [id (:id (db/insert-user-tag owner value description))]
-        (svc/success-response {:id id}))
+    (if (empty? (meta/get-tags-by-value owner value))
+      (let [db-tag (meta/insert-user-tag owner value description)]
+        (search/index-tag (format-new-tag-doc db-tag))
+        (svc/success-response (select-keys db-tag [:id])))
       (svc/donkey-response {} 409))))
 
 
-(defn delete-user-tag
+(defn ^IPersistentMap delete-user-tag
   "Deletes a user tag. This will detach it from all metadata.
 
    Parameters:
@@ -70,12 +98,13 @@
 
    Throws:
      ERR_NOT_FOUND - if the text isn't a UUID owned by the authenticated user."
-  [tag-id]
+  [^UUID tag-id]
   (let [tag-id    (valid/extract-uri-uuid tag-id)
-        tag-owner (db/get-tag-owner tag-id)]
+        tag-owner (meta/get-tag-owner tag-id)]
     (when (not= tag-owner (:shortUsername user/current-user))
       (throw+ {:error_code error/ERR_NOT_FOUND :tag-id tag-id}))
-    (db/delete-user-tag tag-id)
+    (search/remove-tag tag-id)
+    (meta/delete-user-tag tag-id)
     (svc/success-response)))
 
 
@@ -107,7 +136,7 @@
   [entry-id]
   (let [user     (:shortUsername user/current-user)
         entry-id (UUID/fromString entry-id)
-        tags     (db/select-attached-tags user entry-id)]
+        tags     (meta/select-attached-tags user entry-id)]
     (validate-entry-accessible (config/jargon-cfg) user entry-id)
     (svc/success-response {:tags (map #(dissoc % :owner_id) tags)})))
 
@@ -120,34 +149,51 @@
      contains - The `contains` query parameter.
      limit - The `limit` query parameter. It should be a positive integer."
   [contains limit]
-  (let [matches (db/get-tags-by-value (:shortUsername user/current-user)
-                                      (str "%" contains "%")
-                                      (Long/valueOf limit))]
+  (let [matches (meta/get-tags-by-value (:shortUsername user/current-user)
+                                        (str "%" contains "%")
+                                        (Long/valueOf limit))]
     (svc/success-response {:tags (map #(dissoc % :owner_id) matches)})))
 
 
-(defn update-user-tag
+(defn- prepare-tag-update
+  [update-req]
+  (let [new-value       (:value update-req)
+        new-description (:description update-req)]
+    (cond
+      (and new-value new-description) {:value new-value :description new-description}
+      new-value                       {:value new-value}
+      new-description                 {:description new-description})))
+
+
+(defn- do-update-tag
+  [tag-id update]
+  (let [tag-rec     (meta/update-user-tag tag-id update)
+        doc-updates {:value        (:value tag-rec)
+                     :description  (:description tag-rec)
+                     :dateModified (:modified_on tag-rec)}]
+    (search/update-tag tag-id doc-updates)))
+
+
+(defn ^IPersistentMap update-user-tag
   "updates the value and/or description of a tag.
 
    Parameters:
-     tag-id - The tag-id from request URL. It should be a tag UUID.
-     body - The request body. It should be a JSON document containing at most one `value` text field
-            and one `description` text field."
-  [tag-id body]
-  (letfn [(do-update []
-            (let [req-updates     (json/parse-string (slurp body) true)
-                  new-value       (:value req-updates)
-                  new-description (:description req-updates)
-                  updates         (cond
-                                    (and new-value new-description) {:value       new-value
-                                                                     :description new-description}
-                                    new-value                       {:value new-value}
-                                    new-description                 {:description new-description})]
-              (when updates (db/update-user-tag (UUID/fromString tag-id) updates))
-              (svc/success-response)))]
-    (let [owner     (:shortUsername user/current-user)
-          tag-owner (db/get-tag-owner (UUID/fromString tag-id))]
-      (cond
-        (nil? tag-owner)       (svc/donkey-response {} 404)
-        (not= owner tag-owner) (svc/donkey-response {} 403)
-        :else                  (do-update)))))
+     tag-str - The tag-id from request URL. It should be a tag UUID.
+     body    - The request body. It should be a JSON document containing at most one `value` text
+               field and one `description` text field.
+
+    Returns:
+      It returns the response."
+  [^String tag-str ^Reader body]
+  (let [tag-id    (UUID/fromString tag-str)
+        owner     (:shortUsername user/current-user)
+        tag-owner (meta/get-tag-owner tag-id)
+        do-update (fn []
+                    (let [update (prepare-tag-update (json/parse-string (slurp body) true))]
+                      (when-not (empty? update)
+                        (do-update-tag tag-id update))
+                      (svc/success-response {})))]
+    (cond
+      (nil? tag-owner)       (svc/donkey-response {} 404)
+      (not= owner tag-owner) (svc/donkey-response {} 403)
+      :else                  (do-update))))

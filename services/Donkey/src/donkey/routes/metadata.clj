@@ -109,38 +109,38 @@
    (GET "/logout" [:as {params :params}]
         (trap #(logout params)))
 
-   (GET "/app/:app-id" [app-id]
-        (trap #(apps/get-app app-id)))
+   (GET "/app/:app-id" [app-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/get-app app-id)))
 
-   (GET "/apps/:app-id/data-objects" [app-id]
-        (trap #(apps/list-app-data-objects app-id)))
+   (GET "/apps/:app-id/data-objects" [app-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/list-app-data-objects app-id)))
 
-   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
-        (trap #(apps/submit-job workspace-id body)))
+   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {:keys [body uri]}]
+        (ce/trap uri #(apps/submit-job workspace-id body)))
 
-   (GET "/workspaces/:workspace-id/executions/list" [_ :as {params :params}]
-        (trap #(apps/list-jobs params)))
+   (GET "/workspaces/:workspace-id/executions/list" [_ :as {:keys [params uri]}]
+        (ce/trap uri #(apps/list-jobs params)))
 
-   (PUT "/workspaces/:workspace-id/executions/delete" [_ :as {body :body}]
-        (trap #(apps/delete-jobs body)))
+   (PUT "/workspaces/:workspace-id/executions/delete" [_ :as {:keys [body uri]}]
+        (ce/trap uri #(apps/delete-jobs body)))
 
-   (PATCH "/analysis/:analysis-id" [analysis-id :as {body :body}]
-          (trap #(apps/update-job analysis-id body)))
+   (PATCH "/analysis/:analysis-id" [analysis-id :as {:keys [body uri]}]
+          (ce/trap uri #(apps/update-job analysis-id body)))
 
-   (GET "/get-property-values/:job-id" [job-id]
-        (trap #(apps/get-property-values job-id)))
+   (GET "/get-property-values/:job-id" [job-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/get-property-values job-id)))
 
-   (GET "/app-rerun-info/:job-id" [job-id]
-        (trap #(apps/get-app-rerun-info job-id)))
+   (GET "/app-rerun-info/:job-id" [job-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/get-app-rerun-info job-id)))
 
-   (DELETE "/stop-analysis/:uuid" [uuid]
-           (trap #(apps/stop-job uuid)))
+   (DELETE "/stop-analysis/:uuid" [uuid :as {:keys [uri]}]
+           (ce/trap uri #(apps/stop-job uuid)))
 
-   (GET "/get-components-in-analysis/:app-id" [app-id]
-        (trap #(apps/get-deployed-components-in-app app-id)))
+   (GET "/get-components-in-analysis/:app-id" [app-id :as {:keys [uri]}]
+        (ce/trap uri #(apps/get-deployed-components-in-app app-id)))
 
-   (POST "/update-favorites" [:as {body :body}]
-         (trap #(apps/update-favorites body)))
+   (POST "/update-favorites" [:as {:keys [uri body]}]
+         (ce/trap uri #(apps/update-favorites body)))
 
    (GET "/copy-template/:app-id" [app-id :as req]
         (trap #(copy-app req app-id)))

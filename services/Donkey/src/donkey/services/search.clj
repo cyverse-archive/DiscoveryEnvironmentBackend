@@ -6,22 +6,14 @@
             [cheshire.core :as json]
             [clj-time.core :as t]
             [clj-time.local :as l]
-            [clojurewerkz.elastisch.query :as es-query]
-            [clojurewerkz.elastisch.rest :as es]
-            [clojurewerkz.elastisch.rest.document :as es-doc]
-            [clojurewerkz.elastisch.rest.response :as es-resp]
+            [donkey.persistence.search :as search]
             [donkey.services.filesystem.users :as users]
             [donkey.util.config :as cfg]
             [donkey.util.service :as svc])
-  (:import [java.net ConnectException]
-           [java.util UUID]
-           [clojure.lang PersistentArrayMap]))
+  (:import [java.util UUID]
+           [clojure.lang IPersistentMap]))
 
 
-(def ^{:private true :const true} default-zone "iplant")
-
-
-; TODO move this to a namespace in the client package. Also consider creating a protocol for this so that it may be mocked.
 (defn- send-request
   "Sends the search request to Elastic Search.
 
@@ -29,23 +21,9 @@
      :invalid-configuration - This is thrown if there is a problem with elasticsearch
      :invalid-query - This is thrown if the query string is invalid."
   [type query from size sort]
-  (try+
-    (log/debug "sending query" query)
-    (let [index "data"
-          es    (es/connect (cfg/es-url))
-          type' (if (= type :any) ["file" "folder"] (name type))]
-       (es-doc/search es index type'
-         :query        query
-         :from         from
-         :size         size
-         :sort         sort
-         :track_scores true))
-    (catch ConnectException _
-      (throw+ {:type :invalid-configuration :reason "cannot connect to elasticsearch"}))
-    (catch [:status 404] {:keys []}
-      (throw+ {:type :invalid-configuration :reason "elasticsearch has not been initialized"}))
-    (catch [:status 400] {:keys []}
-      (throw+ {:type :invalid-query}))))
+  (log/debug "sending query" query)
+  (let [types (if (= type :any) [:file :folder] [type])]
+    (search/search-data types query sort from size)))
 
 
 (defn- format-entity
@@ -72,37 +50,18 @@
   "Extracts the result of the Donkey search services from the results returned to us by
    ElasticSearch."
   [resp offset memberships]
-  (letfn [(format-match [match] {:score  (:_score match)
-                                 :type   (:_type match)
-                                 :entity (format-entity (:_source match) memberships)})]
-    {:total   (or (es-resp/total-hits resp) 0)
-     :offset  offset
-     :matches (map format-match (es-resp/hits-from resp))}))
+  (letfn [(format-match [match] {:score  (:score match)
+                                 :type   (:type match)
+                                 :entity (format-entity (:document match) memberships)})]
+    (assoc resp :offset offset :matches (map format-match (:matches resp)))))
 
 
-(defn- create-perm-filter
-  "creates a filter for selecting all data entries accessible by a given user"
-  [memberships]
-  (es-query/nested :path   "userPermissions"
-                   :filter (es-query/term "userPermissions.user" memberships)))
-
-
-(defn- create-tag-filter
-  "creates a filter for selecting all data entries tagged by a given tag"
-  [tag-id]
-  (es-query/term :id {:type "tag"
-                      :id   tag-id
-                      :path "targets.id"}))
-
-
-(defn- mk-es-query
+(defn- mk-data-query
   "Builds the full query for elasticsearch."
   [query tags memberships]
-  (let [filter (es-query/bool :must   (create-perm-filter memberships)
-                              :should (map create-tag-filter tags))]
     (if query
-      (es-query/filtered :query query :filter filter)
-      (es-query/filtered :filter filter))))
+      (search/mk-data-query query tags memberships)
+      (search/mk-data-tags-filter tags memberships)))
 
 
 (defn- mk-sort
@@ -207,7 +166,7 @@
 (defn- extract-query
   [query-str]
   (try+
-    (if query-str
+    (when query-str
       (json/parse-string query-str))
     (catch Throwable _
       (throw+ {:type   :invalid-argument
@@ -217,10 +176,10 @@
 
 
 (defn- extract-tags
-  [tags-str]
+  [user tags-str]
   (try+
     (if tags-str
-      (map #(UUID/fromString %) (string/split tags-str #","))
+      (search/filter-user-tags user (map #(UUID/fromString %) (string/split tags-str #",")))
       [])
     (catch Throwable _
       (throw+ {:type   :invalid-argument
@@ -232,7 +191,7 @@
 (defn qualify-name
   "Qualifies a user or group name with the default zone."
   [name]
-  (str name \# default-zone))
+  (str name \# (cfg/irods-zone)))
 
 
 (defn add-timing
@@ -248,10 +207,10 @@
    Unqualified user names are assumed to belong to the default zone."
   [user]
   (map qualify-name
-       (users/list-user-groups (string/replace user (str \# default-zone) ""))))
+       (users/list-user-groups (string/replace user (str \# (cfg/irods-zone)) ""))))
 
 
-(defn ^PersistentArrayMap search
+(defn ^IPersistentMap search
   "Performs a search on the Elastic Search repository. The search will be filtered to only show what
    the user is allowed to see.
 
@@ -264,17 +223,17 @@
 
    Returns:
      It returns the response as a map."
-  [^String user ^String query-str ^String tags-str ^PersistentArrayMap opts]
+  [^String user ^String query-str ^String tags-str ^IPersistentMap opts]
   (try+
     (let [start       (l/local-now)
           query       (extract-query query-str)
-          tags        (extract-tags tags-str)
+          tags        (extract-tags user tags-str)
           type        (extract-type opts :any)
           offset      (extract-uint opts :offset 0)
           limit       (extract-uint opts :limit (cfg/default-search-result-limit))
           sort        (extract-sort opts [[:score] :desc])
           memberships (conj (list-user-groups user) user)
-          query-req   (mk-es-query query tags memberships)
+          query-req   (mk-data-query query tags memberships)
           sort-req    (mk-sort sort)]
       (-> (send-request type query-req offset limit sort-req)
         (extract-result offset memberships)

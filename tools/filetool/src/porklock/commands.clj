@@ -156,20 +156,19 @@
 
           (shell-out [(iput-path) "-f" "-P" src dest :env ic-env])
 
-          ;;; After the file has been uploaded, the user needs to be
-          ;;; made the owner of it.
-          (when-not (jg-perms/owns? cm (:user options) dest)
-            (porkprint "Setting owner of " dest " to " (:user options))
-            (jg-perms/set-owner cm dest (:user options)))
-
           ;;; Apply the App and Execution metadata to the newly uploaded
           ;;; file/directory.
           (porkprint "Applying metadata to " dest)
           (apply-metadata cm dest metadata)))
 
-      (when (and (jg-info/exists? cm dest-dir) (not skip-parent?))
+      (when-not skip-parent?
         (porkprint "Applying metadata to " dest-dir)
-        (apply-metadata cm dest-dir metadata)))))
+        (apply-metadata cm dest-dir metadata)
+        (doseq [fileobj (file-seq (jg-info/file cm dest-dir))]
+          (let [filepath (.getAbsolutePath fileobj)
+                dir?     (.isDirectory fileobj)]
+            (jg-perms/set-owner cm filepath (:user options))
+            (apply-metadata cm filepath metadata)))))))
 
 (defn- iget-args
   [source destination env]

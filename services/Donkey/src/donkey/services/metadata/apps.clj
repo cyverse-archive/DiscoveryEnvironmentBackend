@@ -49,7 +49,7 @@
   [limit offset sort-field sort-order filter]
   (let [user       (:username current-user)
         jobs       (jp/list-de-jobs user limit offset sort-field sort-order filter)
-        app-tables [(da/load-app-details (map :analysis_id jobs))]]
+        app-tables [(da/load-app-details (map :app-id jobs))]]
     (mapv (partial mu/format-job app-tables) jobs)))
 
 (defn- unrecognized-job-type

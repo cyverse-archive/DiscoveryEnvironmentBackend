@@ -59,12 +59,15 @@
    "output = " (script-output working_dir) "\n"
    "error = " (script-error working_dir) "\n"
    "log = " (script-log local-log-dir) "\n"
+   "request_disk = " (cfg/request-disk) "\n" 
    "+IpcUuid = \"" uuid "\"\n"
    "+IpcJobId = \"generated_script\"\n"
    "+IpcUsername = \"" username "\"\n"
    (ipc-exe analysis-map)
    (ipc-exe-path analysis-map)
-   "should_transfer_files = NO\n"
+   "should_transfer_files = YES\n"
+   "transfer_output_files = logs/de-transfer-trigger.txt\n"
+   "when_to_transfer_output = ON_EXIT_OR_EVICT\n"
    "notification = NEVER\n"
    "queue\n"))
 
@@ -110,18 +113,12 @@
      "#!/bin/bash\n"
      "readonly IPLANT_USER=" (:username analysis-map) "\n"
      "export IPLANT_USER\n"
-     "cd ~\n"
-     fail-script
-     "mkdir -p " job-dir "\n"
-     fail-script
-     "pushd " job-dir "\n"
-     fail-script
      "mkdir -p logs\n"
+     fail-script
+     "touch logs/de-transfer-trigger.txt\n"
      fail-script
      "EXITSTATUS=0\n"
      (join "\n" (map script-line (jobs-in-order analysis-map)))
-     "popd\n"
-     "rm -r " job-dir "\n"
      "exit $EXITSTATUS\n")))
 
 (defn create-submission-directory
