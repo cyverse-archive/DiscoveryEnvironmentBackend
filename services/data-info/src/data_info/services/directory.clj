@@ -158,7 +158,7 @@
 
 (defn- user-col->api-col
   [sort-col]
-  (case (string/upper-case sort-col)
+  (case (when sort-col (string/upper-case sort-col))
     "NAME"         :base-name
     "ID"           :full-path
     "LASTMODIFIED" :modify-ts
@@ -170,7 +170,7 @@
 
 (defn- user-order->api-order
   [sort-order]
-  (if (= "DESC" (string/upper-case sort-order))
+  (if (and sort-order (= "DESC" (string/upper-case sort-order)))
     :desc
     :asc))
 
