@@ -34,13 +34,13 @@
   (HEAD "/entries/id/:entry" [:as req]
     (util/controller req exists/exists? :params))
 
-  (GET "/entries/path/*" [* :as req]
+  (GET "/entries/path/:zone/*" [* :as req]
     (util/controller req (partial ud/do-special-download *) :params))
 
   (POST "/existence-marker" [:as req]
     (util/controller req exists/do-exists :params :body))
 
-  (GET "/navigation/:zone/*" [* :as req]
+  (GET "/navigation/path/:zone/*" [* :as req]
     (util/controller req (partial dir/do-directory *) :params))
 
   (GET "/home" [:as req]
