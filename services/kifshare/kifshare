@@ -11,7 +11,7 @@
 ################################################################################
 RUNUSER=iplant
 program=kifshare
-jarfile=kifshare-3.2.7-standalone.jar
+jarfile=kifshare-3.2.8-standalone.jar
 jar=/usr/local/lib/${program}/${jarfile}
 conf=/etc/iplant-services/:/etc/${program}/:/usr/local/lib/${program}/resources
 mainclass=kifshare.core
