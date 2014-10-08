@@ -1,18 +1,13 @@
 (ns data-info.services.updown
-  (:require [clojure.tools.logging :as log]
-            [dire.core :refer [with-pre-hook! with-post-hook!]]
+  (:require [dire.core :refer [with-pre-hook! with-post-hook!]]
             [slingshot.slingshot :refer [throw+]]
             [clj-icat-direct.icat :as icat]
             [clj-jargon.cart :as cart]
             [clj-jargon.init :refer [with-jargon]]
-            [clj-jargon.item-info :as item]
-            [clj-jargon.item-ops :refer [input-stream]]
             [clojure-commons.error-codes :as error]
-            [clojure-commons.file-utils :as ft]
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
-            [data-info.util.irods :as irods]
             [data-info.util.validators :as validators]
             [data-info.services.common-paths :as path]
             [data-info.services.directory :as directory]))
@@ -59,40 +54,3 @@
       (cv/validate-map body {:paths sequential?}))))
 
 (with-post-hook! #'dispatch-cart (dul/log-func "dispatch-cart"))
-
-
-(defn- download-file
-  [user file-path]
-  (with-jargon (cfg/jargon-cfg) [cm]
-    (validators/path-readable cm user file-path)
-    (if (zero? (item/file-size cm file-path))
-      ""
-      (input-stream cm file-path))))
-
-
-(defn- get-disposition
-  [path attachment]
-  (let [filename (str \" (ft/basename path) \")]
-    (if (or (nil? attachment) (Boolean/parseBoolean attachment))
-      (str "attachment; filename=" filename)
-      (str "filename=" filename))))
-
-
-(defn do-special-download
-  [path {:keys [attachment user]}]
-  (let [content-type (future (irods/detect-media-type path))]
-    {:status  200
-     :body    (download-file user path)
-     :headers {"Content-Disposition" (get-disposition path attachment)
-               "Content-Type"        @content-type}}))
-
-(with-pre-hook! #'do-special-download
-  (fn [path params]
-    (dul/log-call "do-special-download" path params)
-    (cv/validate-map params {:user string?})
-    (when-let [attachment (:attachment params)]
-      (validators/valid-bool-param "attachment" attachment))
-    (log/info "User for download: " (:user params))
-    (log/info "Path to download: " path)))
-
-(with-post-hook! #'do-special-download (dul/log-func "do-special-download"))
