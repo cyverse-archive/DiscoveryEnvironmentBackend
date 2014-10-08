@@ -3,6 +3,7 @@
             [compojure.route :as route]
             [data-info.services.create :as create]
             [data-info.services.directory :as dir]
+            [data-info.services.entry :as entry]
             [data-info.services.exists :as exists]
             [data-info.services.home :as home]
             [data-info.services.metadata :as meta]
@@ -32,10 +33,10 @@
     (util/controller req ud/dispatch-cart :params :body))
 
   (HEAD "/entries/id/:entry" [:as req]
-    (util/controller req exists/exists? :params))
+    (util/controller req entry/id-exists? :params))
 
   (GET "/entries/path/:zone/*" [* :as req]
-    (util/controller req (partial ud/dispatch-entries-path *) :params))
+    (util/controller req (partial entry/get-by-path *) :params))
 
   (POST "/existence-marker" [:as req]
     (util/controller req exists/do-exists :params :body))
