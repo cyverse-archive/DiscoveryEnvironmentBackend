@@ -7,7 +7,6 @@
             [clojure-commons.file-utils :as ft]
             [clojure-commons.validators :as cv]
             [data-info.util.logging :as log]
-            [data-info.util.validators :as duv]
             [data-info.services.icat :as cfg]
             [data-info.services.uuids :as uuid]
             [data-info.services.validators :as dsv])
@@ -57,11 +56,3 @@
     (if-let [path (uuid/get-path cm (UUID/fromString entry))]
       {:status (if (perm/is-readable? cm user path) 200 403)}
       {:status 404})))
-
-(with-pre-hook! #'exists?
-  (fn [params]
-    (log/log-call "exists?" params)
-    (duv/valid-uuid-param "entry" (:entry params))
-    (cv/validate-map params {:user string?})))
-
-(with-post-hook! #'exists? (log/log-func "exists?"))
