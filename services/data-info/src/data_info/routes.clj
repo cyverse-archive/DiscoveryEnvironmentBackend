@@ -35,7 +35,7 @@
     (util/controller req exists/exists? :params))
 
   (GET "/entries/path/:zone/*" [* :as req]
-    (util/controller req (partial ud/do-special-download *) :params))
+    (util/controller req (partial ud/dispatch-entries-path *) :params))
 
   (POST "/existence-marker" [:as req]
     (util/controller req exists/do-exists :params :body))
@@ -48,12 +48,6 @@
 
   (POST "/stat-gatherer" [:as req]
     (util/controller req stat/do-stat :params :body))
-
-  (GET "/data/directory" [:as req]
-    (util/controller req dir/do-directory :params))
-
-  (GET "/data/paged-directory" [:as req]
-    (util/controller req dir/do-paged-listing :params))
 
   (POST "/data/directory/create" [:as req]
     (util/controller req create/do-create :params :body))

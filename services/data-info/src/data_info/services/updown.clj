@@ -5,7 +5,7 @@
             [clj-icat-direct.icat :as icat]
             [clj-jargon.cart :as cart]
             [clj-jargon.init :refer [with-jargon]]
-            [clj-jargon.item-info :refer [file-size]]
+            [clj-jargon.item-info :as item]
             [clj-jargon.item-ops :refer [input-stream]]
             [clojure-commons.error-codes :as error]
             [clojure-commons.file-utils :as ft]
@@ -16,6 +16,11 @@
             [data-info.services.icat :as jargon]
             [data-info.services.type-detect.irods :as type]
             [data-info.services.validators :as validators]))
+
+
+(defn- abs-path
+  [zone path-in-zone]
+  (ft/path-join "/" zone path-in-zone))
 
 
 (defn- gather-paths
@@ -84,7 +89,7 @@
   [path {:keys [attachment user zone]}]
   (when (path/super-user? user)
     (throw+ {:error_code error/ERR_NOT_AUTHORIZED :user user}))
-  (let [path         (str "/" path)
+  (let [path         (ft/path-join "/" zone path)
         content-type (future (type/detect-media-type path))]
     {:status  200
      :body    (download-file user path)

@@ -136,9 +136,7 @@
   (log/info "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
   (with-jargon (jargon/jargon-cfg) [cm]
     (validators/user-exists cm user)
-    (validators/path-exists cm path)
     (validators/path-readable cm user path)
-    (validators/path-is-dir cm path)
     (let [stat  (item/stat cm path)
           zone  (cfg/irods-zone)
           pager (log/spy (icat/paged-folder-listing user zone path scol sord limit offset))]
@@ -192,12 +190,7 @@
 
 (defn do-paged-listing
   "Entrypoint for the API that calls (paged-dir-listing)."
-  [{user       :user
-    path       :path
-    limit      :limit
-    offset     :offset
-    sort-col   :sort-col
-    sort-order :sort-order}]
+  [path {:keys [limit offset sort-col sort-order user]}]
   (let [path       (ft/rm-last-slash path)
         limit      (Integer/parseInt limit)
         offset     (Integer/parseInt offset)
@@ -206,12 +199,11 @@
     (paged-dir-listing user path limit offset sort-col sort-order)))
 
 (with-pre-hook! #'do-paged-listing
-  (fn [params]
-    (paths/log-call "do-paged-listing" params)
-    (cv/validate-map params {:user   string?
-                             :path   string?
-                             :limit  string?
-                             :offset string?})
+  (fn [path params]
+    (paths/log-call "do-paged-listing" path params)
+    (cv/validate-map params {:limit  cv/field-nonnegative-int?
+                             :offset cv/field-nonnegative-int?
+                             :user   string?})
     (when-let [col (:sort-col params)]
       (validate-sort-col col))
     (when-let [ord (:sort-order params)]
