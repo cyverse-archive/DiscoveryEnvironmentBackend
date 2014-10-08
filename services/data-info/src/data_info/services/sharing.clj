@@ -15,7 +15,8 @@
             [data-info.services.common-paths :as paths]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
-            [data-info.services.validators :as validators]))
+            [data-info.util.validators :as validators]))
+
 
 (def shared-with-attr "ipc-contains-obj-shared-with")
 

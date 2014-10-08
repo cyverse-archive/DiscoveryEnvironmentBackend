@@ -8,7 +8,7 @@
             [clj-jargon.permissions :as perm]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as log]
-            [data-info.services.validators :as validators]))
+            [data-info.util.validators :as validators]))
 
 
 (defn list-user-groups

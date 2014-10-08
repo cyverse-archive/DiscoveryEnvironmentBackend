@@ -12,9 +12,9 @@
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
+            [data-info.util.validators :as validators]
             [data-info.services.uuids :as uuids]
-            [data-info.services.common-paths :as paths]
-            [data-info.services.validators :as validators])
+            [data-info.services.common-paths :as paths])
   (:import [clojure.lang ISeq]))
 
 

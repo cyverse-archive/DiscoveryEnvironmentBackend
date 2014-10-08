@@ -1,7 +1,6 @@
 (ns data-info.services.page-file
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info]
         [clj-jargon.paging]
@@ -13,7 +12,8 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
-            [data-info.services.validators :as validators]))
+            [data-info.util.validators :as validators]))
+
 
 (defn- read-file-chunk
   "Reads a chunk of a file starting at 'position' and reading a chunk of length 'chunk-size'."

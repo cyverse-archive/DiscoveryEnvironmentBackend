@@ -1,8 +1,7 @@
 (ns data-info.services.uuids
   (:use [clj-jargon.permissions]
         [clojure-commons.validators]
-        [slingshot.slingshot :only [throw+]]
-        [data-info.services.validators])
+        [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
             [clj-icat-direct.icat :as icat]
             [data-info.services.stat :as stat]
@@ -10,7 +9,8 @@
             [clj-jargon.init :as init]
             [clj-jargon.metadata :as meta]
             [clojure-commons.error-codes :as error]
-            [data-info.util.config :as cfg])
+            [data-info.util.config :as cfg]
+            [data-info.util.validators :as valid])
   (:import [java.util UUID]
            [clojure.lang IPersistentMap]))
 
@@ -62,7 +62,7 @@
   [user uuids]
   (letfn [(id-type [type entity] (merge entity {:id (:path entity) :type type}))]
     (init/with-jargon (cfg/jargon-cfg) [cm]
-      (user-exists cm user)
+      (valid/user-exists cm user)
       (->> (concat (map (partial id-type :dir) (icat/select-folders-with-uuids uuids))
                    (map (partial id-type :file) (icat/select-files-with-uuids uuids)))
         (mapv (partial stat/decorate-stat cm user))
@@ -84,7 +84,7 @@
 (defn paths-for-uuids-paged
   [user sort-col sort-order limit offset uuids]
   (init/with-jargon (cfg/jargon-cfg) [cm]
-    (user-exists cm user)
+    (valid/user-exists cm user)
     (map (partial fmt-stat cm user)
          (icat/paged-uuid-listing user (cfg/irods-zone) sort-col sort-order limit offset uuids))))
 
@@ -130,9 +130,9 @@
 (defn uuids-for-paths
   [user paths]
   (init/with-jargon (cfg/jargon-cfg) [cm]
-    (user-exists cm user)
-    (all-paths-exist cm paths)
-    (all-paths-readable cm user paths)
+    (valid/user-exists cm user)
+    (valid/all-paths-exist cm paths)
+    (valid/all-paths-readable cm user paths)
     (filter #(not (nil? %)) (mapv (partial uuid-for-path cm user) paths))))
 
 (defn do-uuids-for-paths

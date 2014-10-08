@@ -1,7 +1,6 @@
 (ns data-info.services.metadata
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.metadata]
         [slingshot.slingshot :only [try+ throw+]])
@@ -13,8 +12,8 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
-            [data-info.services.common-paths :as paths]
-            [data-info.services.validators :as validators]))
+            [data-info.util.validators :as validators]
+            [data-info.services.common-paths :as paths]))
 
 (defn- fix-unit
   "Used to replace the IPCRESERVED unit with an empty string."

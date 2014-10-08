@@ -1,7 +1,6 @@
 (ns data-info.services.move
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [move-all]]
         [slingshot.slingshot :only [try+ throw+]])
@@ -13,9 +12,10 @@
             [clj-icat-direct.icat :as icat]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
+            [data-info.util.validators :as validators]
             [data-info.services.directory :as directory]
-            [data-info.services.common-paths :as paths]
-            [data-info.services.validators :as validators]))
+            [data-info.services.common-paths :as paths]))
+
 
 (defn- source->dest
   [source-path dest-path]

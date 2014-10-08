@@ -1,7 +1,6 @@
 (ns data-info.services.create
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.permissions :only [set-owner collection-perm-map]]
         [slingshot.slingshot :only [try+ throw+]])
@@ -15,9 +14,10 @@
             [clj-jargon.validations :as valid]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
+            [data-info.util.validators :as validators]
             [data-info.services.common-paths :as paths]
-            [data-info.services.stat :as stat]
-            [data-info.services.validators :as validators]))
+            [data-info.services.stat :as stat]))
+
 
 (defn create
   "Creates a directory at path on behalf of a user. The user

@@ -9,8 +9,9 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
-            [data-info.services.common-paths :as paths]
-            [data-info.services.validators :as validators]))
+            [data-info.util.validators :as validators]
+            [data-info.services.common-paths :as paths]))
+
 
 (defn rename-path
   "High-level file renaming. Calls rename-func, passing it file-rename as the mv-func param."

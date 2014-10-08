@@ -11,9 +11,9 @@
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
+            [data-info.util.validators :as validators]
             [data-info.services.common-paths :as paths]
-            [data-info.services.type-detect.irods :as filetypes]
-            [data-info.services.validators :as validators])
+            [data-info.services.type-detect.irods :as filetypes])
   (:import [clojure.lang IPersistentMap]))
 
 

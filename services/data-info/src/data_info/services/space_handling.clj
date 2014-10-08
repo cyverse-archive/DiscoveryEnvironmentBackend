@@ -15,8 +15,9 @@
             [clj-jargon.validations :as valid]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
-            [data-info.services.common-paths :as paths]
-            [data-info.services.validators :as validators]))
+            [data-info.util.validators :as validators]
+            [data-info.services.common-paths :as paths]))
+
 
 (defn- paths-contain-char
   [paths char]

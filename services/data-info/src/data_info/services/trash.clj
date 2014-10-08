@@ -15,9 +15,10 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
+            [data-info.util.validators :as validators]
             [data-info.services.common-paths :as paths]
-            [data-info.services.directory :as directory]
-            [data-info.services.validators :as validators]))
+            [data-info.services.directory :as directory]))
+
 
 (def alphanums (concat (range 48 58) (range 65 91) (range 97 123)))
 

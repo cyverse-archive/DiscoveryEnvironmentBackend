@@ -8,8 +8,8 @@
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as log]
-            [data-info.services.uuids :as uuid]
-            [data-info.services.validators :as dsv])
+            [data-info.util.validators :as duv]
+            [data-info.services.uuids :as uuid])
   (:import [java.util UUID]))
 
 
@@ -29,7 +29,7 @@
   [user path]
   (let [path (ft/rm-last-slash (url-decode path))]
     (with-jargon (cfg/jargon-cfg) [cm]
-      (dsv/user-exists cm user)
+      (duv/user-exists cm user)
       (and (item/exists? cm path)
            (perm/is-readable? cm user path)))))
 
@@ -44,7 +44,7 @@
     (log/log-call "do-exists" params)
     (cv/validate-map params {:user string?})
     (cv/validate-map body {:paths vector?})
-    (dsv/validate-num-paths (:paths body))))
+    (duv/validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-exists (log/log-func "do-exists"))
 
@@ -52,7 +52,7 @@
 (defn exists?
   [{user :user entry :entry}]
   (with-jargon (cfg/jargon-cfg) [cm]
-    (dsv/user-exists cm user)
+    (duv/user-exists cm user)
     (if-let [path (uuid/get-path cm (UUID/fromString entry))]
       {:status (if (perm/is-readable? cm user path) 200 403)}
       {:status 404})))
