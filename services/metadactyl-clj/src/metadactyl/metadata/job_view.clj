@@ -16,6 +16,7 @@
 (defn- get-parameters
   [step-id group-id]
   (select (mp/params-base-query)
+          (order :p.display_order)
           (join [:file_parameters :fp] {:p.file_parameter_id :fp.id})
           (where {:p.parameter_group_id group-id
                   :p.is_visible         true})
@@ -41,6 +42,7 @@
 (defn- get-groups
   [step-id]
   (select [:parameter_groups :g]
+          (order :display_order)
           (join :inner [:tasks :t] {:g.task_id :t.id})
           (join :inner [:app_steps :s] {:t.id :s.task_id})
           (fields :g.id :g.label)

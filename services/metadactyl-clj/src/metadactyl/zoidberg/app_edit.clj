@@ -29,12 +29,14 @@
                      :tasks.tool_id
                      [:tools.name :tool])
              (with parameter_groups
+               (order :display_order)
                (fields :id
                        :name
                        :description
                        :label
                        [:is_visible :isVisible])
                (with parameters
+                 (order :display_order)
                  (with file_parameters
                    (with info_type)
                    (with data_formats)
