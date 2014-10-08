@@ -57,15 +57,22 @@
   []
   (find-file-in-path "iinit"))
 
+(defn condor-paths-to-exclude
+  []
+  (concat
+   (map str (file-seq (file "gconfd-condor")))
+   (map str (file-seq (file "orbit-condor")))))
 
 (defn relative-paths-to-exclude
   []
-  [(irods-auth-filepath) 
-   (irods-env-filepath) 
-   ".irods" 
-   ".irods/.irodsA" 
-   ".irods/.irodsEnv"
-   "logs/irods-config"])
+  (concat 
+   [(irods-auth-filepath) 
+    (irods-env-filepath) 
+    ".irods" 
+    ".irods/.irodsA" 
+    ".irods/.irodsEnv"
+    "logs/irods-config"]
+   (condor-paths-to-exclude)))
 
 (defn exclude-files-from-dir
   "Splits up the exclude option and turns the result into paths in the source dir."
