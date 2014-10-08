@@ -9,16 +9,6 @@
             [data-info.util.service :as svc]))
 
 
-(def ^:private uuid-regexes
-  [#"^\p{XDigit}{8}(?:-\p{XDigit}{4}){3}-\p{XDigit}{12}$"
-   #"^[at]\p{XDigit}{32}"])
-
-
-(defn is-uuid?
-  [id]
-  (some #(re-find % id) uuid-regexes))
-
-
 (defn determine-response
   [resp-val]
   (if (and (map? resp-val) (number? (:status resp-val)))

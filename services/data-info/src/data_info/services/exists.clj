@@ -7,6 +7,7 @@
             [clojure-commons.file-utils :as ft]
             [clojure-commons.validators :as cv]
             [data-info.util.logging :as log]
+            [data-info.util.validators :as duv]
             [data-info.services.icat :as cfg]
             [data-info.services.uuids :as uuid]
             [data-info.services.validators :as dsv])
@@ -60,7 +61,7 @@
 (with-pre-hook! #'exists?
   (fn [params]
     (log/log-call "exists?" params)
-    (dsv/valid-uuid-param "entry" (:entry params))
+    (duv/valid-uuid-param "entry" (:entry params))
     (cv/validate-map params {:user string?})))
 
 (with-post-hook! #'exists? (log/log-func "exists?"))
