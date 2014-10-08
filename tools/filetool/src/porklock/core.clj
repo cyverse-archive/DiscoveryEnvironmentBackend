@@ -7,7 +7,8 @@
   (:require [porklock.config :as cfg] 
             [clojure.tools.cli :as cli]
             [clojure.string :as string]
-            [clojure-commons.file-utils :as ft]))
+            [clojure-commons.file-utils :as ft])
+  (:import [org.apache.log4j Logger]))
 
 (defn- fmeta-split
   [arg]
@@ -167,11 +168,12 @@
 (defn -main
   [& args]
   (try+
+    (.removeAllAppenders (Logger/getRootLogger))
     (println "[porklock] [arguments] " args)
     
     (let [cmd      (command args)
-         cmd-args (rest args)
-         [options remnants banner] (settings cmd cmd-args)]
+          cmd-args (rest args)
+          [options remnants banner] (settings cmd cmd-args)]
       (println "[porklock] [options] " options)
       (println "[porklock] [remnants] " remnants)
       (when-not (> (count cmd-args) 0)
