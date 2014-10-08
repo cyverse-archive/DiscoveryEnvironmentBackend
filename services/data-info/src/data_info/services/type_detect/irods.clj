@@ -14,9 +14,8 @@
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
-            [data-info.util.config :as cfg])
-  (:import [clojure.lang IPersistentMap]
-           [org.apache.tika Tika]))
+            [data-info.util.config :as cfg]))
+
 
 (defn get-file-type
   [cm path]
@@ -221,24 +220,3 @@
                                                               :value type})]
       (log/info "Looked up all paths with a type of " type " for " user "\n" paths-with-type)
       paths-with-type)))
-
-
-(defn ^String detect-media-type
-  "detects the media type of a given file
-
-   Parameters:
-     cm   - (OPTIONAL) an open jargon context
-     path - the absolute path to the file
-
-   Returns:
-     It returns the media type."
-  ([^IPersistentMap cm ^String path]
-    (let [path-type (.detect (Tika.) (ft/basename path))]
-      (if (or (= path-type "application/octet-stream")
-            (= path-type "text/plain"))
-        (.detect (Tika.) (input-stream cm path))
-        path-type)))
-
-  ([^String path]
-   (with-jargon (cfg/jargon-cfg) [cm]
-     (detect-media-type cm path))))

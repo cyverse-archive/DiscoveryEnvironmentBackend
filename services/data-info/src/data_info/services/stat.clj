@@ -11,6 +11,7 @@
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
+            [data-info.util.irods :as irods]
             [data-info.util.validators :as validators]
             [data-info.services.common-paths :as paths]
             [data-info.services.type-detect.irods :as filetypes])
@@ -45,7 +46,7 @@
   (if-not (is-dir? cm path)
     (assoc stat-map
       :info-type (filetypes/get-types cm user path)
-      :mime-type (filetypes/detect-media-type cm path))
+      :mime-type (irods/detect-media-type cm path))
     stat-map))
 
 

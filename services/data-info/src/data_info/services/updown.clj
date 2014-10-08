@@ -12,10 +12,10 @@
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
+            [data-info.util.irods :as irods]
             [data-info.util.validators :as validators]
             [data-info.services.common-paths :as path]
-            [data-info.services.directory :as directory]
-            [data-info.services.type-detect.irods :as type]))
+            [data-info.services.directory :as directory]))
 
 
 (defn- gather-paths
@@ -80,7 +80,7 @@
 
 (defn do-special-download
   [path {:keys [attachment user]}]
-  (let [content-type (future (type/detect-media-type path))]
+  (let [content-type (future (irods/detect-media-type path))]
     {:status  200
      :body    (download-file user path)
      :headers {"Content-Disposition" (get-disposition path attachment)
