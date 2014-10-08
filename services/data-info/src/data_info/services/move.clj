@@ -14,7 +14,6 @@
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.services.directory :as directory]
-            [data-info.services.icat :as jargon]
             [data-info.services.common-paths :as paths]
             [data-info.services.validators :as validators]))
 
@@ -26,7 +25,7 @@
   "Moves directories listed in 'sources' into the directory listed in 'dest'. This
    works by calling move and passing it move-dir."
   [user sources dest]
-  (with-jargon (jargon/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (let [path-list  (conj sources dest)
           all-paths  (apply merge (mapv #(hash-map (source->dest %1 dest) %1) sources))
           dest-paths (keys all-paths)
@@ -61,7 +60,7 @@
 
 (defn do-move-contents
   [{user :user} {source :source dest :dest}]
-  (with-jargon (jargon/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/path-is-dir cm source))
   (let [sources (directory/get-paths-in-folder user source (cfg/max-paths-in-request))]
     (move-paths user sources dest)))

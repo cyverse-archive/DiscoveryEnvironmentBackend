@@ -13,9 +13,9 @@
             [clj-jargon.item-info :as item]
             [clj-jargon.item-ops :as ops]
             [clj-jargon.validations :as valid]
+            [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.services.common-paths :as paths]
-            [data-info.services.icat :as cfg]
             [data-info.services.stat :as stat]
             [data-info.services.validators :as validators]))
 

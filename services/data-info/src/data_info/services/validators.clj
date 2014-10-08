@@ -9,8 +9,7 @@
             [clj-icat-direct.icat :as icat]
             [clj-jargon.init :as init]
             [data-info.util :as util]
-            [data-info.util.config :as cfg]
-            [data-info.services.icat :as dsi]))
+            [data-info.util.config :as cfg]))
 
 
 (defn- num-paths-okay?
@@ -48,7 +47,7 @@
      (throw+ {:error_code ERR_NOT_A_USER :user user})))
 
   ([user]
-    (init/with-jargon (dsi/jargon-cfg) [cm]
+    (init/with-jargon (cfg/jargon-cfg) [cm]
       (user-exists cm user))))
 
 

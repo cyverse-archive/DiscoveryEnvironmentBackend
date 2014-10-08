@@ -11,8 +11,8 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
-            [data-info.services.icat :as cfg]
             [data-info.services.validators :as validators]))
 
 (defn- read-file-chunk

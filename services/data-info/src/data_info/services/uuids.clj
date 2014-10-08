@@ -10,8 +10,7 @@
             [clj-jargon.init :as init]
             [clj-jargon.metadata :as meta]
             [clojure-commons.error-codes :as error]
-            [data-info.util.config :as cfg]
-            [data-info.services.icat :as jargon])
+            [data-info.util.config :as cfg])
   (:import [java.util UUID]
            [clojure.lang IPersistentMap]))
 
@@ -55,14 +54,14 @@
       (throw+ {:error_code error/ERR_DOES_NOT_EXIST :uuid uuid})))
 
   ([^String user ^UUID uuid]
-   (init/with-jargon (jargon/jargon-cfg) [cm]
+   (init/with-jargon (cfg/jargon-cfg) [cm]
      (path-for-uuid cm user uuid))))
 
 
 (defn paths-for-uuids
   [user uuids]
   (letfn [(id-type [type entity] (merge entity {:id (:path entity) :type type}))]
-    (init/with-jargon (jargon/jargon-cfg) [cm]
+    (init/with-jargon (cfg/jargon-cfg) [cm]
       (user-exists cm user)
       (->> (concat (map (partial id-type :dir) (icat/select-folders-with-uuids uuids))
                    (map (partial id-type :file) (icat/select-files-with-uuids uuids)))
@@ -84,7 +83,7 @@
 
 (defn paths-for-uuids-paged
   [user sort-col sort-order limit offset uuids]
-  (init/with-jargon (jargon/jargon-cfg) [cm]
+  (init/with-jargon (cfg/jargon-cfg) [cm]
     (user-exists cm user)
     (map (partial fmt-stat cm user)
          (icat/paged-uuid-listing user (cfg/irods-zone) sort-col sort-order limit offset uuids))))
@@ -130,7 +129,7 @@
 
 (defn uuids-for-paths
   [user paths]
-  (init/with-jargon (jargon/jargon-cfg) [cm]
+  (init/with-jargon (cfg/jargon-cfg) [cm]
     (user-exists cm user)
     (all-paths-exist cm paths)
     (all-paths-readable cm user paths)
@@ -154,6 +153,6 @@
    Returns:
      It returns true if the user can access the entry, otherwise false"
   [^String user ^UUID entry-id]
-  (init/with-jargon (jargon/jargon-cfg) [cm]
+  (init/with-jargon (cfg/jargon-cfg) [cm]
     (let [entry-path (:path (path-for-uuid cm user (str entry-id)))]
       (and entry-path (is-readable? cm user entry-path)))))

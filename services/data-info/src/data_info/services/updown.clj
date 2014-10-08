@@ -14,7 +14,6 @@
             [data-info.util.logging :as dul]
             [data-info.services.common-paths :as path]
             [data-info.services.directory :as directory]
-            [data-info.services.icat :as jargon]
             [data-info.services.type-detect.irods :as type]
             [data-info.services.validators :as validators]))
 
@@ -47,7 +46,7 @@
 
 (defn dispatch-cart
   [{folder :folder user :user} {other-paths :paths}]
-  (with-jargon (jargon/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (let [paths    (gather-paths cm user folder other-paths)
           cart-key (str (System/currentTimeMillis))
@@ -69,7 +68,7 @@
 
 (defn- download-file
   [user file-path]
-  (with-jargon (jargon/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/path-readable cm user file-path)
     (if (zero? (item/file-size cm file-path))
       ""
@@ -112,7 +111,7 @@
         ;; detecting if the path is a folder happens in a separate connection to iRODS on purpose.
         ;; It appears that downloading a file after detecting its type causes the download to fail.
         ; TODO after migrating to jargon 4, check to see if this error still occurs.
-        folder?   (with-jargon (jargon/jargon-cfg) [cm]
+        folder?   (with-jargon (cfg/jargon-cfg) [cm]
                     (validators/path-exists cm full-path)
                     (item/is-dir? cm full-path))]
     (if folder?

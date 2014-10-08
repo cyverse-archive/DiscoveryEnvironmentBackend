@@ -4,9 +4,9 @@
             [clj-jargon.item-info :refer [exists?]]
             [clj-jargon.item-ops :refer [mkdirs]]
             [clojure-commons.validators :as cv]
+            [data-info.util.config :as cfg]
             [data-info.util.logging :as log]
             [data-info.services.common-paths :as path]
-            [data-info.services.icat :as icat]
             [data-info.services.uuids :as uuid]
             [data-info.services.validators :as validators]))
 
@@ -14,7 +14,7 @@
 (defn- user-home-path
   [user]
   (let [user-home (path/user-home-dir user)]
-    (with-jargon (icat/jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (validators/user-exists cm user)
       (when-not (exists? cm user-home)
         (mkdirs cm user-home))

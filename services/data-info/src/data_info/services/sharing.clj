@@ -15,7 +15,6 @@
             [data-info.services.common-paths :as paths]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
-            [data-info.services.icat :as icat]
             [data-info.services.validators :as validators]))
 
 (def shared-with-attr "ipc-contains-obj-shared-with")
@@ -98,7 +97,7 @@
 
 (defn share
   [user share-withs fpaths perm]
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-users-exist cm share-withs)
     (validators/all-paths-exist cm fpaths)
@@ -185,7 +184,7 @@
   [user unshare-withs fpaths]
   (log/debug "entered unshare")
 
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-users-exist cm unshare-withs)
     (validators/all-paths-exist cm fpaths)
@@ -260,7 +259,7 @@
 
 (defn anon-files
   [user paths]
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-paths-exist cm paths)
     (validators/paths-are-files cm paths)

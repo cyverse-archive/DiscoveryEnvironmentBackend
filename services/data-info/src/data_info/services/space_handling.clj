@@ -16,7 +16,6 @@
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.services.common-paths :as paths]
-            [data-info.services.icat :as icat]
             [data-info.services.validators :as validators]))
 
 (defn- paths-contain-char
@@ -86,7 +85,7 @@
 (defn- replace-spaces
   "Generates new paths by replacing all spaces with new-char."
   [user paths new-char]
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-paths-exist cm paths)
     (validators/user-owns-paths cm user paths)

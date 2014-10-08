@@ -17,7 +17,6 @@
             [data-info.util.logging :as dul]
             [data-info.services.common-paths :as paths]
             [data-info.services.directory :as directory]
-            [data-info.services.icat :as jargon]
             [data-info.services.validators :as validators]))
 
 (def alphanums (concat (range 48 58) (range 65 91) (range 97 123)))
@@ -46,7 +45,7 @@
   [user paths]
   (let [home-matcher #(= (str "/" (cfg/irods-zone) "/home/" user)
                          (ft/rm-last-slash %1))]
-    (with-jargon (jargon/jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (let [paths (mapv ft/rm-last-slash paths)]
         (validators/user-exists cm user)
         (validators/all-paths-exist cm paths)
@@ -84,7 +83,7 @@
 
 (defn- user-trash
   [user]
-  (with-jargon (jargon/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     {:trash (paths/user-trash-path user)}))
 
@@ -131,7 +130,7 @@
 
 (defn- restore-path
   [{:keys [user paths user-trash]}]
-  (with-jargon (jargon/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (let [paths (mapv ft/rm-last-slash paths)]
       (validators/user-exists cm user)
       (validators/all-paths-exist cm paths)
@@ -174,7 +173,7 @@
 
 (defn- delete-trash
   [user]
-  (with-jargon (jargon/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (let [trash-dir  (paths/user-trash-path user)
           trash-list (mapv #(.getAbsolutePath %) (list-in-dir cm (ft/rm-last-slash trash-dir)))]
@@ -201,7 +200,7 @@
 
 (defn do-delete-contents
   [{user :user} {path :path}]
-  (with-jargon (jargon/jargon-cfg) [cm] (validators/path-is-dir cm path))
+  (with-jargon (cfg/jargon-cfg) [cm] (validators/path-is-dir cm path))
   (let [paths (directory/get-paths-in-folder user path (cfg/max-paths-in-request))]
     (delete-paths user paths)))
 

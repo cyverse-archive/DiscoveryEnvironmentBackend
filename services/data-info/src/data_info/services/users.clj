@@ -8,13 +8,12 @@
             [clj-jargon.permissions :as perm]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as log]
-            [data-info.services.icat :as icat]
             [data-info.services.validators :as validators]))
 
 
 (defn list-user-groups
   [user]
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (user-groups cm user)))
 
@@ -33,7 +32,7 @@
 
 (defn- list-perms
   [user abspaths]
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/all-paths-exist cm abspaths)
     (validators/user-owns-paths cm user abspaths)
@@ -41,7 +40,7 @@
 
 (defn- get-quota
   [user]
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (quota cm user)))
 
@@ -91,5 +90,5 @@
    Returns:
      It returns true if the user own the entry, otherwise false."
   [^String user ^String entry-path]
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (perm/owns? cm user entry-path)))

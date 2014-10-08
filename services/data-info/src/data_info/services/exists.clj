@@ -6,8 +6,8 @@
             [clj-jargon.permissions :as perm]
             [clojure-commons.file-utils :as ft]
             [clojure-commons.validators :as cv]
+            [data-info.util.config :as cfg]
             [data-info.util.logging :as log]
-            [data-info.services.icat :as cfg]
             [data-info.services.uuids :as uuid]
             [data-info.services.validators :as dsv])
   (:import [java.util UUID]))

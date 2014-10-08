@@ -14,8 +14,7 @@
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
-            [data-info.util.config :as cfg]
-            [data-info.services.icat :as icat])
+            [data-info.util.config :as cfg])
   (:import [clojure.lang IPersistentMap]
            [org.apache.tika Tika]))
 
@@ -42,7 +41,7 @@
 (defn add-type
   "Adds the type to a file in iRODS at path for the specified user."
   ([user path type]
-    (with-jargon (icat/jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (add-type cm user path type)))
 
   ([cm user path type]
@@ -68,7 +67,7 @@
 (defn auto-add-type
   "Uses (content-type) to guess at a file type and associates it with the file."
   ([user path]
-    (with-jargon (icat/jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (auto-add-type cm user path)))
 
   ([cm user path]
@@ -98,7 +97,7 @@
   [user path]
   (log/info "in preview-auto-type")
 
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
@@ -133,7 +132,7 @@
   [user path type]
   (log/info "in delete-type")
 
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
@@ -157,7 +156,7 @@
   [user path]
   (log/info "in unset-type")
 
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (when-not (exists? cm path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path path}))
@@ -196,7 +195,7 @@
       (or (:value (first path-types) ""))))
 
   ([user path]
-    (with-jargon (icat/jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (get-types cm user path))))
 
 (defn home-dir
@@ -211,7 +210,7 @@
   [user type]
   (log/info "in find-paths-with-type")
 
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
                :user       user}))
@@ -241,5 +240,5 @@
         path-type)))
 
   ([^String path]
-   (with-jargon (icat/jargon-cfg) [cm]
+   (with-jargon (cfg/jargon-cfg) [cm]
      (detect-media-type cm path))))

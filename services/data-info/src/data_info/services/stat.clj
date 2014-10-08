@@ -12,7 +12,6 @@
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.services.common-paths :as paths]
-            [data-info.services.icat :as jargon]
             [data-info.services.type-detect.irods :as filetypes]
             [data-info.services.validators :as validators])
   (:import [clojure.lang IPersistentMap]))
@@ -72,7 +71,7 @@
 
 (defn do-stat
   [{user :user} {paths :paths}]
-  (with-jargon (jargon/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     {:paths (into {} (map #(vector % (path-stat cm user %)) paths))}))
 

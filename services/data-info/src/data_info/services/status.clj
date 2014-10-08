@@ -3,14 +3,14 @@
             [clj-jargon.init :as init]
             [clj-jargon.item-info :as item]
             [clojure-commons.error-codes :as ce]
-            [data-info.services.icat :as icat]))
+            [data-info.util.config :as cfg]))
 
 
 (defn ^Boolean irods-running?
   "Determines whether or not iRODS is running."
   []
   (try
-    (init/with-jargon (icat/jargon-cfg) [cm]
+    (init/with-jargon (cfg/jargon-cfg) [cm]
       (item/exists? cm (:home cm)))
     (catch Exception e
       (log/error "Error performing iRODS status check:")

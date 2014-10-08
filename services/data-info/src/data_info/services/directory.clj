@@ -14,7 +14,6 @@
             [data-info.util.logging :as dul]
             [data-info.services.uuids :as uuids]
             [data-info.services.common-paths :as paths]
-            [data-info.services.icat :as jargon]
             [data-info.services.validators :as validators])
   (:import [clojure.lang ISeq]))
 
@@ -49,7 +48,7 @@
 (defn- list-directories
   "Lists the directories contained under path."
   [user path]
-  (with-jargon (jargon/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/path-exists cm path)
     (validators/path-readable cm user path)
@@ -135,7 +134,7 @@
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
   [user path limit offset scol sord]
   (log/info "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
-  (with-jargon (jargon/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/path-readable cm user path)
     (let [stat  (item/stat cm path)

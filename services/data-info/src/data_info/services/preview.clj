@@ -12,7 +12,6 @@
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.services.common-paths :as paths]
-            [data-info.services.icat :as icat]
             [data-info.services.validators :as validators]))
 
 
@@ -39,7 +38,7 @@
      size - The size (in bytes) of the preview to be created."
   [user path size]
   (let [path (ft/rm-last-slash path)]
-    (with-jargon (icat/jargon-cfg) [cm]
+    (with-jargon (cfg/jargon-cfg) [cm]
       (log/debug (str "preview " user " " path " " size))
       (validators/user-exists cm user)
       (validators/path-exists cm path)

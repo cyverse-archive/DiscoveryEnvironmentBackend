@@ -10,13 +10,12 @@
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.services.common-paths :as paths]
-            [data-info.services.icat :as icat]
             [data-info.services.validators :as validators]))
 
 (defn rename-path
   "High-level file renaming. Calls rename-func, passing it file-rename as the mv-func param."
   [user source dest]
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (let [source    (ft/rm-last-slash source)
           dest      (ft/rm-last-slash dest)
           src-base  (ft/basename source)
