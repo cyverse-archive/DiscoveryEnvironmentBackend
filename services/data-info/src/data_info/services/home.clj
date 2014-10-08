@@ -6,9 +6,9 @@
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as log]
+            [data-info.util.irods :as irods]
             [data-info.util.validators :as validators]
-            [data-info.services.common-paths :as path]
-            [data-info.services.uuids :as uuid]))
+            [data-info.services.common-paths :as path]))
 
 
 (defn- user-home-path
@@ -18,7 +18,7 @@
       (validators/user-exists cm user)
       (when-not (exists? cm user-home)
         (mkdirs cm user-home))
-      {:id   (uuid/lookup-uuid cm user-home)
+      {:id   (irods/lookup-uuid cm user-home)
        :path user-home})))
 
 

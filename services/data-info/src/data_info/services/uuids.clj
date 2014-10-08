@@ -7,7 +7,6 @@
             [data-info.services.stat :as stat]
             [cheshire.core :as json]
             [clj-jargon.init :as init]
-            [clj-jargon.metadata :as meta]
             [clojure-commons.error-codes :as error]
             [data-info.util.config :as cfg]
             [data-info.util.irods :as irods]
@@ -72,23 +71,6 @@
   (json/encode {:paths (paths-for-uuids (:user params) (:uuids body))}))
 
 
-(defn ^UUID lookup-uuid
-  "Retrieves the UUID associated with a given entity path.
-
-   Parameters:
-     cm   - the jargon context map
-     path - the path to the entity
-
-   Returns:
-     It returns the UUID."
-  [^IPersistentMap cm ^String path]
-  (let [attrs (meta/get-attribute cm path irods/uuid-attr)]
-    (when-not (pos? (count attrs))
-      (log/warn "Missing UUID for" path)
-      (throw+ {:error_code error/ERR_NOT_FOUND :path path}))
-    (-> attrs first :value UUID/fromString)))
-
-
 (defn ^IPersistentMap uuid-for-path
   "Retrieves the path stat info for a given entity. It attaches the UUID in a additional :uuid
    field.
@@ -101,7 +83,7 @@
    Returns:
      It returns the modified path stat map."
   [^IPersistentMap cm ^String user ^String path]
-  (assoc (stat/path-stat cm user path) :uuid (lookup-uuid cm path)))
+  (assoc (stat/path-stat cm user path) :uuid (irods/lookup-uuid cm path)))
 
 
 (defn uuids-for-paths

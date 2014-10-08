@@ -12,8 +12,8 @@
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
+            [data-info.util.irods :as irods]
             [data-info.util.validators :as validators]
-            [data-info.services.uuids :as uuids]
             [data-info.services.common-paths :as paths])
   (:import [clojure.lang ISeq]))
 
@@ -54,7 +54,7 @@
     (validators/path-readable cm user path)
     (validators/path-is-dir cm path)
     (let [stat (item/stat cm path)]
-      {:id            (uuids/lookup-uuid cm path)
+      {:id            (irods/lookup-uuid cm path)
        :path          path
        :permisssion   (perm/permission-for cm user path)
        :date-created  (:date-created stat)
@@ -141,7 +141,7 @@
           zone  (cfg/irods-zone)
           pager (log/spy (icat/paged-folder-listing user zone path scol sord limit offset))]
       (assoc (page->map user pager)
-        :id             (uuids/lookup-uuid cm path)
+        :id             (irods/lookup-uuid cm path)
         :path           path
         :label          (paths/id->label user path)
         :filter         (should-filter? user path)

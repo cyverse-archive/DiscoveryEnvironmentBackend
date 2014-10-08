@@ -13,7 +13,24 @@
            [org.apache.tika Tika]))
 
 
-(def uuid-attr "ipc_UUID")
+(def ^:private uuid-attr "ipc_UUID")
+
+
+(defn ^UUID lookup-uuid
+  "Retrieves the UUID associated with a given entity path.
+
+   Parameters:
+     cm   - the jargon context map
+     path - the path to the entity
+
+   Returns:
+     It returns the UUID."
+  [^IPersistentMap cm ^String path]
+  (let [attrs (meta/get-attribute cm path uuid-attr)]
+    (when-not (pos? (count attrs))
+      (log/warn "Missing UUID for" path)
+      (throw+ {:error_code error/ERR_NOT_FOUND :path path}))
+    (-> attrs first :value UUID/fromString)))
 
 
 (defn ^String get-path
