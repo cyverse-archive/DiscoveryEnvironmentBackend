@@ -2,6 +2,16 @@
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]))
 
+
+(defn ^Boolean field-nonnegative-int?
+  "Indicates whether or not the unparsed field value contains a nonnegative integer."
+  [^String field-val]
+  (boolean
+    (try+
+      (<= 0 (Integer/parseInt field-val))
+      (catch Object _))))
+
+
 (defn- check-missing-keys
   [a-map required-keys]
   (let [not-valid? #(not (contains? a-map %))]
