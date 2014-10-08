@@ -1,8 +1,7 @@
 (ns data-info.util.validators
-  (:use [slingshot.slingshot :only [try+ throw+]]
-        [clojure-commons.error-codes])
+  (:use [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as json]
-            [cemerick.url :as url-parser])
+            [clojure-commons.error-codes :as error])
   (:import [java.util UUID]))
 
 
@@ -11,26 +10,8 @@
   (try+
    (json/parse-string body true)
    (catch Exception e
-     (throw+ {:error_code ERR_INVALID_JSON
+     (throw+ {:error_code error/ERR_INVALID_JSON
               :message    (str e)}))))
-
-(defn parse-url
-  [url-str]
-  (try+
-   (url-parser/url url-str)
-   (catch java.net.UnknownHostException e
-     (throw+ {:error_code ERR_INVALID_URL
-              :url url-str}))
-   (catch java.net.MalformedURLException e
-     (throw+ {:error_code ERR_INVALID_URL
-              :url url-str}))))
-
-(defn validate-param
-  [param-name param-value]
-  (when (nil? param-value)
-    (let [param-name (if (keyword? param-name) (name param-name) param-name)]
-      (throw+ {:error_code ERR_BAD_REQUEST
-               :reason     (str "missing request parameter: " param-name)}))))
 
 
 (def ^:private uuid-regexes
@@ -58,7 +39,7 @@
         :value      param-val}"
   [^String param-name ^String param-val]
   (when-not (is-uuid? param-val)
-    (throw+ {:error_code ERR_BAD_REQUEST
+    (throw+ {:error_code error/ERR_BAD_REQUEST
              :param      param-name
              :value      param-val})))
 
@@ -77,4 +58,5 @@
   [uuid-txt]
   (try+
     (UUID/fromString uuid-txt)
-    (catch IllegalArgumentException _ (throw+ {:error_code ERR_NOT_FOUND}))))
+    (catch IllegalArgumentException _
+      (throw+ {:error_code error/ERR_NOT_FOUND}))))
