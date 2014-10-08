@@ -80,8 +80,6 @@
 
 (defn do-special-download
   [path {:keys [attachment user]}]
-  (when (path/super-user? user)
-    (throw+ {:error_code error/ERR_NOT_AUTHORIZED :user user}))
   (let [content-type (future (type/detect-media-type path))]
     {:status  200
      :body    (download-file user path)
