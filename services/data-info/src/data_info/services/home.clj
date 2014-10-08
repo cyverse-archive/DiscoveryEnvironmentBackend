@@ -4,6 +4,7 @@
             [clj-jargon.item-info :refer [exists?]]
             [clj-jargon.item-ops :refer [mkdirs]]
             [clojure-commons.validators :as cv]
+            [data-info.util.logging :as log]
             [data-info.services.common-paths :as path]
             [data-info.services.icat :as icat]
             [data-info.services.uuids :as uuid]
@@ -27,7 +28,7 @@
 
 (with-pre-hook! #'do-homedir
   (fn [params]
-    (path/log-call "do-homedir" params)
+    (log/log-call "do-homedir" params)
     (cv/validate-map params {:user string?})))
 
-(with-post-hook! #'do-homedir (path/log-func "do-homedir"))
+(with-post-hook! #'do-homedir (log/log-func "do-homedir"))

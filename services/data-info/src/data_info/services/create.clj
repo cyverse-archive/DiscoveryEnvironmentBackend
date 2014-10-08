@@ -13,6 +13,7 @@
             [clj-jargon.item-info :as item]
             [clj-jargon.item-ops :as ops]
             [clj-jargon.validations :as valid]
+            [data-info.util.logging :as dul]
             [data-info.services.common-paths :as paths]
             [data-info.services.icat :as cfg]
             [data-info.services.stat :as stat]
@@ -42,14 +43,14 @@
 
 (with-pre-hook! #'do-create
   (fn [params body]
-    (paths/log-call "do-create" params body)
+    (dul/log-call "do-create" params body)
     (validate-map params {:user string?})
     (validate-map body {:path string?})
     (log/info "Body: " body)
     (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED :user (:user params)}))))
 
-(with-post-hook! #'do-create (paths/log-func "do-create"))
+(with-post-hook! #'do-create (dul/log-func "do-create"))
 
 
 (defn ensure-created

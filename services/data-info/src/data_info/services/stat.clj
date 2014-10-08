@@ -10,6 +10,7 @@
             [clojure-commons.file-utils :as ft]
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
+            [data-info.util.logging :as dul]
             [data-info.services.common-paths :as paths]
             [data-info.services.icat :as jargon]
             [data-info.services.type-detect.irods :as filetypes]
@@ -77,11 +78,11 @@
 
 (with-pre-hook! #'do-stat
   (fn [params body]
-    (paths/log-call "do-stat" params body)
+    (dul/log-call "do-stat" params body)
     (cv/validate-map params {:user string?})
     (cv/validate-map body {:paths vector?})
     (cv/validate-map body {:paths #(not (empty? %))})
     (cv/validate-map body {:paths #(every? (comp not string/blank?) %)})
     (validators/validate-num-paths (:paths body))))
 
-(with-post-hook! #'do-stat (paths/log-func "do-stat"))
+(with-post-hook! #'do-stat (dul/log-func "do-stat"))

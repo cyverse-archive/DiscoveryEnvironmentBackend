@@ -1,7 +1,6 @@
 (ns data-info.services.metadata
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.common-paths]
         [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.metadata]
@@ -13,13 +12,15 @@
             [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
+            [data-info.util.logging :as dul]
+            [data-info.services.common-paths :as paths]
             [data-info.services.icat :as icat]
             [data-info.services.validators :as validators]))
 
 (defn- fix-unit
   "Used to replace the IPCRESERVED unit with an empty string."
   [avu]
-  (if (= (:unit avu) IPCRESERVED)
+  (if (= (:unit avu) paths/IPCRESERVED)
     (assoc avu :unit "")
     avu))
 
@@ -50,7 +51,7 @@
   "Turns a blank unit into a reserved unit."
   [avu-map]
   (if (string/blank? (:unit avu-map))
-    IPCRESERVED
+    paths/IPCRESERVED
     (:unit avu-map)))
 
 (defn metadata-get
@@ -188,10 +189,10 @@
 
 (with-pre-hook! #'do-metadata-get
   (fn [params]
-    (log-call "do-metadata-get" params)
+    (dul/log-call "do-metadata-get" params)
     (validate-map params {:user string? :path string?})))
 
-(with-post-hook! #'do-metadata-get (log-func "do-metadata-get"))
+(with-post-hook! #'do-metadata-get (dul/log-func "do-metadata-get"))
 
 (defn do-metadata-set
   "Entrypoint for the API. Calls (metadata-set). Parameter should be a map
@@ -201,11 +202,11 @@
 
 (with-pre-hook! #'do-metadata-set
   (fn [params body]
-    (log-call "do-metadata-set" params body)
+    (dul/log-call "do-metadata-set" params body)
     (validate-map params {:user string? :path string?})
     (validate-map body {:attr string? :value string? :unit string?})))
 
-(with-post-hook! #'do-metadata-set (log-func "do-metadata-set"))
+(with-post-hook! #'do-metadata-set (dul/log-func "do-metadata-set"))
 
 (defn do-metadata-batch-set
   "Entrypoint for the API that calls (metadata-batch-set). Parameter is a map
@@ -215,7 +216,7 @@
 
 (with-pre-hook! #'do-metadata-batch-set
   (fn [params body]
-    (log-call "do-metadata-batch-set" params body)
+    (dul/log-call "do-metadata-batch-set" params body)
     (validate-map params {:user string? :path string?})
     (validate-map body {:add sequential? :delete sequential?})
     (let [user (:user params)
@@ -230,7 +231,7 @@
         (if-not (every? true? (check-avus dels))
           (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :field "delete"}))))))
 
-(with-post-hook! #'do-metadata-batch-set (log-func "do-metadata-batch-set"))
+(with-post-hook! #'do-metadata-batch-set (dul/log-func "do-metadata-batch-set"))
 
 (defn do-metadata-delete
   "Entrypoint for the API that calls (metadata-delete). Parameter is a map
@@ -240,11 +241,10 @@
 
 (with-pre-hook! #'do-metadata-delete
   (fn [params]
-    (log-call "do-metadata-delete" params)
+    (dul/log-call "do-metadata-delete" params)
     (validate-map params {:user string?
                           :path string?
                           :attr string?
                           :value string?})))
 
-(with-post-hook! #'do-metadata-delete (log-func "do-metadata-delete"))
-
+(with-post-hook! #'do-metadata-delete (dul/log-func "do-metadata-delete"))

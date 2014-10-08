@@ -1,13 +1,13 @@
 (ns data-info.services.users
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [quota]]
         [clj-jargon.users])
   (:require [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clj-jargon.permissions :as perm]
             [data-info.util.config :as cfg]
+            [data-info.util.logging :as log]
             [data-info.services.icat :as icat]
             [data-info.services.validators :as validators]))
 
@@ -51,10 +51,10 @@
 
 (with-pre-hook! #'do-groups
   (fn [params]
-    (log-call "do-groups" params)
+    (log/log-call "do-groups" params)
     (validate-map params {:user string?})))
 
-(with-post-hook! #'do-groups (log-func "do-groups"))
+(with-post-hook! #'do-groups (log/log-func "do-groups"))
 
 (defn do-quota
   [{user :user}]
@@ -62,10 +62,10 @@
 
 (with-pre-hook! #'do-quota
   (fn [params]
-    (log-call "do-quota" params)
+    (log/log-call "do-quota" params)
     (validate-map params {:user string?})))
 
-(with-post-hook! #'do-quota (log-func "do-quota"))
+(with-post-hook! #'do-quota (log/log-func "do-quota"))
 
 (defn do-user-permissions
   [{user :user} {paths :paths}]
@@ -73,12 +73,12 @@
 
 (with-pre-hook! #'do-user-permissions
   (fn [params body]
-    (log-call "do-user-permissions" params body)
+    (log/log-call "do-user-permissions" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (validators/validate-num-paths (:paths body))))
 
-(with-post-hook! #'do-user-permissions (log-func "do-user-permissions"))
+(with-post-hook! #'do-user-permissions (log/log-func "do-user-permissions"))
 
 
 (defn ^Boolean owns?

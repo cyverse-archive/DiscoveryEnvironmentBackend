@@ -1,7 +1,6 @@
 (ns data-info.services.rename
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [move]]
         [slingshot.slingshot :only [try+ throw+]])
@@ -9,6 +8,8 @@
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
+            [data-info.util.logging :as dul]
+            [data-info.services.common-paths :as paths]
             [data-info.services.icat :as icat]
             [data-info.services.validators :as validators]))
 
@@ -39,14 +40,14 @@
   [{user :user} {source :source dest :dest}]
   (rename-path user source dest))
 
-(with-post-hook! #'do-rename (log-func "do-rename"))
+(with-post-hook! #'do-rename (dul/log-func "do-rename"))
 
 (with-pre-hook! #'do-rename
   (fn [params body]
-    (log-call "do-rename" params body)
+    (dul/log-call "do-rename" params body)
     (validate-map params {:user string?})
     (validate-map body {:source string? :dest string?})
-    (when (super-user? (:user params))
+    (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user       (:user params)}))
     (validators/validate-num-paths-under-folder (:user params) (:source body))))

@@ -11,6 +11,7 @@
             [clojure-commons.file-utils :as ft]
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
+            [data-info.util.logging :as dul]
             [data-info.services.uuids :as uuids]
             [data-info.services.common-paths :as paths]
             [data-info.services.icat :as jargon]
@@ -68,10 +69,10 @@
 
 (with-pre-hook! #'do-directory
   (fn [path params]
-    (paths/log-call "do-directory" path params)
+    (dul/log-call "do-directory" path params)
     (cv/validate-map params {:user string?})))
 
-(with-post-hook! #'do-directory (paths/log-func "do-directory"))
+(with-post-hook! #'do-directory (dul/log-func "do-directory"))
 
 
 (defn- filtered-paths
@@ -200,7 +201,7 @@
 
 (with-pre-hook! #'do-paged-listing
   (fn [path params]
-    (paths/log-call "do-paged-listing" path params)
+    (dul/log-call "do-paged-listing" path params)
     (cv/validate-map params {:limit  cv/field-nonnegative-int?
                              :offset cv/field-nonnegative-int?
                              :user   string?})
@@ -209,4 +210,4 @@
     (when-let [ord (:sort-order params)]
       (validate-sort-order ord))))
 
-(with-post-hook! #'do-paged-listing (paths/log-func "do-paged-listing"))
+(with-post-hook! #'do-paged-listing (dul/log-func "do-paged-listing"))

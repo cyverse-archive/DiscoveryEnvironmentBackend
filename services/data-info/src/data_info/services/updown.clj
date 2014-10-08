@@ -11,6 +11,7 @@
             [clojure-commons.file-utils :as ft]
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
+            [data-info.util.logging :as dul]
             [data-info.services.common-paths :as path]
             [data-info.services.directory :as directory]
             [data-info.services.icat :as jargon]
@@ -58,21 +59,19 @@
 
 (with-pre-hook! #'dispatch-cart
   (fn [params body]
-    (path/log-call "dispatch-cart" params body)
+    (dul/log-call "dispatch-cart" params body)
     (cv/validate-map params {:user string?})
     (if-not (empty? body)
       (cv/validate-map body {:paths sequential?}))))
 
-(with-post-hook! #'dispatch-cart (path/log-func "dispatch-cart"))
+(with-post-hook! #'dispatch-cart (dul/log-func "dispatch-cart"))
 
 
 (defn- download-file
   [user file-path]
   (with-jargon (jargon/jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm file-path)
     (validators/path-readable cm user file-path)
-    (if (zero? (file-size cm file-path))
+    (if (zero? (item/file-size cm file-path))
       ""
       (input-stream cm file-path))))
 
@@ -85,12 +84,11 @@
       (str "filename=" filename))))
 
 
-(defn do-special-download
-  [path {:keys [attachment user zone]}]
+(defn- do-special-download
+  [path {:keys [attachment user]}]
   (when (path/super-user? user)
     (throw+ {:error_code error/ERR_NOT_AUTHORIZED :user user}))
-  (let [path         (ft/path-join "/" zone path)
-        content-type (future (type/detect-media-type path))]
+  (let [content-type (future (type/detect-media-type path))]
     {:status  200
      :body    (download-file user path)
      :headers {"Content-Disposition" (get-disposition path attachment)
@@ -98,11 +96,25 @@
 
 (with-pre-hook! #'do-special-download
   (fn [path params]
-    (path/log-call "do-special-download" path params)
+    (dul/log-call "do-special-download" path params)
     (cv/validate-map params {:user string?})
     (when-let [attachment (:attachment params)]
       (validators/valid-bool-param "attachment" attachment))
     (log/info "User for download: " (:user params))
     (log/info "Path to download: " path)))
 
-(with-post-hook! #'do-special-download (path/log-func "do-special-download"))
+(with-post-hook! #'do-special-download (dul/log-func "do-special-download"))
+
+
+(defn dispatch-entries-path
+  [path {zone :zone :as params}]
+  (let [full-path (abs-path zone path)
+        ;; detecting if the path is a folder happens in a separate connection to iRODS on purpose.
+        ;; It appears that downloading a file after detecting its type causes the download to fail.
+        ; TODO after migrating to jargon 4, check to see if this error still occurs.
+        folder?   (with-jargon (jargon/jargon-cfg) [cm]
+                    (validators/path-exists cm full-path)
+                    (item/is-dir? cm full-path))]
+    (if folder?
+      (directory/do-paged-listing full-path params)
+      (do-special-download full-path params))))

@@ -1,7 +1,6 @@
 (ns data-info.services.move
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.common-paths]
         [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [move-all]]
@@ -13,8 +12,10 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clj-icat-direct.icat :as icat]
             [data-info.util.config :as cfg]
+            [data-info.util.logging :as dul]
             [data-info.services.directory :as directory]
             [data-info.services.icat :as jargon]
+            [data-info.services.common-paths :as paths]
             [data-info.services.validators :as validators]))
 
 (defn- source->dest
@@ -47,16 +48,16 @@
 
 (with-pre-hook! #'do-move
   (fn [params body]
-    (log-call "do-move" params body)
+    (dul/log-call "do-move" params body)
     (validate-map params {:user string?})
     (validate-map body {:sources sequential? :dest string?})
     (log/info "Body: " (json/encode body))
-    (when (super-user? (:user params))
+    (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user (:user params)}))
     (validators/validate-num-paths-under-paths (:user params) (:sources body))))
 
-(with-post-hook! #'do-move (log-func "do-move"))
+(with-post-hook! #'do-move (dul/log-func "do-move"))
 
 (defn do-move-contents
   [{user :user} {source :source dest :dest}]
@@ -67,13 +68,13 @@
 
 (with-pre-hook! #'do-move-contents
   (fn [params body]
-    (log-call "do-move-contents" params body)
+    (dul/log-call "do-move-contents" params body)
     (validate-map params {:user string?})
     (validate-map body {:source string? :dest string?})
     (log/info "Body: " (json/encode body))
-    (when (super-user? (:user params))
+    (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user (:user params)}))
     (validators/validate-num-paths-under-folder (:user params) (:source body))))
 
-(with-post-hook! #'do-move-contents (log-func "do-move-contents"))
+(with-post-hook! #'do-move-contents (dul/log-func "do-move-contents"))

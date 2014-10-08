@@ -14,6 +14,7 @@
             [clj-icat-direct.icat :as icat]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
+            [data-info.util.logging :as dul]
             [data-info.services.common-paths :as paths]
             [data-info.services.directory :as directory]
             [data-info.services.icat :as jargon]
@@ -188,7 +189,7 @@
 
 (with-pre-hook! #'do-delete
   (fn [params body]
-    (paths/log-call "do-delete" params body)
+    (dul/log-call "do-delete" params body)
     (validate-map params {:user string?})
     (validate-map body   {:paths sequential?})
     (when (paths/super-user? (:user params))
@@ -196,7 +197,7 @@
                :user       (:user params)}))
     (validators/validate-num-paths-under-paths (:user params) (:paths body))))
 
-(with-post-hook! #'do-delete (paths/log-func "do-delete"))
+(with-post-hook! #'do-delete (dul/log-func "do-delete"))
 
 (defn do-delete-contents
   [{user :user} {path :path}]
@@ -206,7 +207,7 @@
 
 (with-pre-hook! #'do-delete-contents
   (fn [params body]
-    (paths/log-call "do-delete-contents" params body)
+    (dul/log-call "do-delete-contents" params body)
     (validate-map params {:user string?})
     (validate-map body   {:path string?})
 
@@ -215,7 +216,7 @@
                :user       (:user params)}))
     (validators/validate-num-paths-under-folder (:user params) (:path body))))
 
-(with-post-hook! #'do-delete-contents (paths/log-func "do-delete-contents"))
+(with-post-hook! #'do-delete-contents (dul/log-func "do-delete-contents"))
 
 (defn do-restore
   [{user :user} {paths :paths}]
@@ -224,11 +225,11 @@
      :paths paths
      :user-trash (paths/user-trash-path user)}))
 
-(with-post-hook! #'do-restore (paths/log-func "do-restore"))
+(with-post-hook! #'do-restore (dul/log-func "do-restore"))
 
 (with-pre-hook! #'do-restore
   (fn [params body]
-    (paths/log-call "do-restore" params body)
+    (dul/log-call "do-restore" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (validators/validate-num-paths-under-paths (:user params) (:paths body))))
@@ -243,7 +244,7 @@
 
 (with-pre-hook! #'do-restore-all
   (fn [params]
-    (paths/log-call "do-restore-all" params)
+    (dul/log-call "do-restore-all" params)
     (validate-map params {:user string?})
 
     (let [user (:user params)]
@@ -252,7 +253,7 @@
                  :user       user}))
       (validators/validate-num-paths-under-folder user (paths/user-trash-path user)))))
 
-(with-post-hook! #'do-restore-all (paths/log-func "do-restore-all"))
+(with-post-hook! #'do-restore-all (dul/log-func "do-restore-all"))
 
 (defn do-user-trash
   [{user :user}]
@@ -261,18 +262,18 @@
 
 (with-pre-hook! #'do-user-trash
   (fn [params]
-    (paths/log-call "do-user-trash" params)
+    (dul/log-call "do-user-trash" params)
     (validate-map params {:user string?})))
 
-(with-post-hook! #'do-user-trash (paths/log-func "do-user-trash"))
+(with-post-hook! #'do-user-trash (dul/log-func "do-user-trash"))
 
 (defn do-delete-trash
   [{user :user}]
   (delete-trash user))
 
-(with-post-hook! #'do-delete-trash (paths/log-func "do-delete-trash"))
+(with-post-hook! #'do-delete-trash (dul/log-func "do-delete-trash"))
 
 (with-pre-hook! #'do-delete-trash
   (fn [params]
-    (paths/log-call "do-delete-trash" params)
+    (dul/log-call "do-delete-trash" params)
     (validate-map params {:user string?})))

@@ -1,7 +1,6 @@
 (ns data-info.services.page-file
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.common-paths]
         [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info]
@@ -12,6 +11,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [data-info.util.logging :as dul]
             [data-info.services.icat :as cfg]
             [data-info.services.validators :as validators]))
 
@@ -53,11 +53,11 @@
 
 (with-pre-hook! #'do-read-chunk
   (fn [params body]
-    (log-call "do-read-chunk" params body)
+    (dul/log-call "do-read-chunk" params body)
     (validate-map params {:user string?})
     (validate-map body {:path string? :position string? :chunk-size string?})))
 
-(with-post-hook! #'do-read-chunk (log-func "do-read-chunk"))
+(with-post-hook! #'do-read-chunk (dul/log-func "do-read-chunk"))
 
 (defn do-overwrite-chunk
   [{user :user} {path :path position :position update :update}]
@@ -66,8 +66,8 @@
 
 (with-pre-hook! #'do-overwrite-chunk
   (fn [params body]
-    (log-call "do-overwrite-chunk" params body)
+    (dul/log-call "do-overwrite-chunk" params body)
     (validate-map params {:user string?})
     (validate-map body {:path string? :position string? :update string?})))
 
-(with-post-hook! #'do-overwrite-chunk (log-func "do-overwrite-chunk"))
+(with-post-hook! #'do-overwrite-chunk (dul/log-func "do-overwrite-chunk"))

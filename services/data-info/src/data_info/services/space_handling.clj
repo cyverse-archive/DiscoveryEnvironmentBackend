@@ -14,6 +14,7 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clj-jargon.validations :as valid]
             [data-info.util.config :as cfg]
+            [data-info.util.logging :as dul]
             [data-info.services.common-paths :as paths]
             [data-info.services.icat :as icat]
             [data-info.services.validators :as validators]))
@@ -107,7 +108,7 @@
 
 (with-pre-hook! #'do-paths-contain-space
   (fn [params body]
-    (paths/log-call "do-path-contain-space" params body)
+    (dul/log-call "do-path-contain-space" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (when-not (every? true? (mapv string? (:paths body)))
@@ -115,7 +116,7 @@
                :field      "paths"}))
     (validators/validate-num-paths (:paths body))))
 
-(with-post-hook! #'do-paths-contain-space (paths/log-func "do-paths-contain-space"))
+(with-post-hook! #'do-paths-contain-space (dul/log-func "do-paths-contain-space"))
 
 (defn do-replace-spaces
   [{user :user} {paths :paths}]
@@ -123,7 +124,7 @@
 
 (with-pre-hook! #'do-replace-spaces
   (fn [params body]
-    (paths/log-call "do-substitute-spaces" params body)
+    (dul/log-call "do-substitute-spaces" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (when-not (every? true? (mapv string? (:paths body)))
@@ -131,4 +132,4 @@
                :field      "paths"}))
     (validators/validate-num-paths (:paths body))))
 
-(with-post-hook! #'do-replace-spaces (paths/log-func "do-replace-spaces"))
+(with-post-hook! #'do-replace-spaces (dul/log-func "do-replace-spaces"))

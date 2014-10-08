@@ -14,6 +14,7 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.services.common-paths :as paths]
             [data-info.util.config :as cfg]
+            [data-info.util.logging :as dul]
             [data-info.services.icat :as icat]
             [data-info.services.validators :as validators]))
 
@@ -220,11 +221,11 @@
         share-withs (map fix-username users)]
     (share user share-withs paths permission)))
 
-(with-post-hook! #'do-share (paths/log-func "do-share"))
+(with-post-hook! #'do-share (dul/log-func "do-share"))
 
 (with-pre-hook! #'do-share
   (fn [params body]
-    (paths/log-call "do-share" params body)
+    (dul/log-call "do-share" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :users sequential? :permission string?})
     (validators/validate-num-paths (:paths body))))
@@ -239,12 +240,12 @@
 
 (with-pre-hook! #'do-unshare
   (fn [params body]
-    (paths/log-call "do-unshare" params body)
+    (dul/log-call "do-unshare" params body)
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :users sequential?})
     (validators/validate-num-paths (:paths body))))
 
-(with-post-hook! #'do-unshare (paths/log-func "do-unshare"))
+(with-post-hook! #'do-unshare (dul/log-func "do-unshare"))
 
 
 (defn anon-file-url
@@ -275,7 +276,7 @@
 
 (defn do-anon-files
   [params body]
-  (paths/log-call "do-anon-files" params body)
+  (dul/log-call "do-anon-files" params body)
   (validate-map params {:user string?})
   (validate-map body {:paths sequential?})
   (validators/validate-num-paths (:paths body))

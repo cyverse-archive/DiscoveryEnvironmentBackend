@@ -1,7 +1,6 @@
 (ns data-info.services.preview
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.common-paths]
         [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [file-size]]
@@ -11,6 +10,8 @@
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
+            [data-info.util.logging :as dul]
+            [data-info.services.common-paths :as paths]
             [data-info.services.icat :as icat]
             [data-info.services.validators :as validators]))
 
@@ -54,11 +55,11 @@
 
 (with-pre-hook! #'do-preview
   (fn [params]
-    (log-call "do-preview" params)
+    (dul/log-call "do-preview" params)
     (validate-map params {:user string? :path string?})
-    (when (super-user? (:user params))
+    (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user (:user params)
                :path (:path params)}))))
 
-(with-post-hook! #'do-preview (log-func "do-preview"))
+(with-post-hook! #'do-preview (dul/log-func "do-preview"))

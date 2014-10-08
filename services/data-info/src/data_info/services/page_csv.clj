@@ -1,7 +1,6 @@
 (ns data-info.services.page-csv
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [data-info.services.common-paths]
         [data-info.services.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [file-size]]
@@ -13,6 +12,7 @@
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [data-info.util.logging :as dul]
             [data-info.services.icat :as cfg]
             [data-info.services.validators :as validators])
   (:import [au.com.bytecode.opencsv CSVReader]))
@@ -140,7 +140,7 @@
 
 (with-pre-hook! #'do-read-csv-chunk
   (fn [params body]
-    (log-call "do-read-csv-chunk" params body)
+    (dul/log-call "do-read-csv-chunk" params body)
     (validate-map params {:user string?})
     (validate-map body {:path        string?
                         :page        string?
@@ -149,7 +149,7 @@
 
 (with-post-hook! #'do-read-csv-chunk
   (fn [result]
-    (log-result "do-read-csv-chunk" (dissoc result :csv))))
+    (dul/log-result "do-read-csv-chunk" (dissoc result :csv))))
 
 ;;; Make sure that page exists
 ;;; Make sure that integer

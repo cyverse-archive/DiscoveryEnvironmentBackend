@@ -6,7 +6,7 @@
             [clj-jargon.permissions :as perm]
             [clojure-commons.file-utils :as ft]
             [clojure-commons.validators :as cv]
-            [data-info.services.common-paths :as paths]
+            [data-info.util.logging :as log]
             [data-info.services.icat :as cfg]
             [data-info.services.uuids :as uuid]
             [data-info.services.validators :as dsv])
@@ -41,12 +41,12 @@
 
 (with-pre-hook! #'do-exists
   (fn [params body]
-    (paths/log-call "do-exists" params)
+    (log/log-call "do-exists" params)
     (cv/validate-map params {:user string?})
     (cv/validate-map body {:paths vector?})
     (dsv/validate-num-paths (:paths body))))
 
-(with-post-hook! #'do-exists (paths/log-func "do-exists"))
+(with-post-hook! #'do-exists (log/log-func "do-exists"))
 
 
 (defn exists?
@@ -59,8 +59,8 @@
 
 (with-pre-hook! #'exists?
   (fn [params]
-    (paths/log-call "exists?" params)
+    (log/log-call "exists?" params)
     (dsv/valid-uuid-param "entry" (:entry params))
     (cv/validate-map params {:user string?})))
 
-(with-post-hook! #'exists? (paths/log-func "exists?"))
+(with-post-hook! #'exists? (log/log-func "exists?"))
