@@ -5,8 +5,8 @@
             [heuristomancer.core :as hm]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [data-info.services.type-detect.irods :as prods]
-            [data-info.util.validators :as valid]))
+            [data-info.util.transformers :as transform]
+            [data-info.services.type-detect.irods :as prods]))
 
 
 (def script-types (sort (hm/supported-formats)))
@@ -19,7 +19,7 @@
 
 (defn add-type
   [req-body params]
-  (let [body  (valid/parse-body (slurp req-body))
+  (let [body  (transform/parse-body (slurp req-body))
         type? #(or (string/blank? %1) (contains? (accepted-types) %1))]
     (validate-map params {:user string?})
     (validate-map body {:path string? :type type?})
@@ -59,7 +59,7 @@
 
 (defn set-auto-type
   [req-body params]
-  (let [body (valid/parse-body (slurp req-body))]
+  (let [body (transform/parse-body (slurp req-body))]
     (log/warn body)
     (validate-map params {:user string?})
     (validate-map body {:path string?})

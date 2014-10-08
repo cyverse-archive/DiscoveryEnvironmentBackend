@@ -2,11 +2,11 @@
   "Utility functions for defining services in data-info. This namespace is used by data-info.core
    and several other top-level service definition namespaces."
   (:use [compojure.core]
-        [data-info.util.validators :only [parse-body]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure-commons.error-codes :as ce]
             [clojure.tools.logging :as log]
-            [data-info.util.service :as svc]))
+            [data-info.util.service :as svc]
+            [data-info.util.transformers :as transform]))
 
 
 (defn determine-response
@@ -70,7 +70,7 @@
 (defn- pre-process-request
   [req & {:keys [slurp?] :or {slurp? false}}]
   (if slurp?
-    (assoc req :body (parse-body (slurp (:body req))))
+    (assoc req :body (transform/parse-body (slurp (:body req))))
     req))
 
 
