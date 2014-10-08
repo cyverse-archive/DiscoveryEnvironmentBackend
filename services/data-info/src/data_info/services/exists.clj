@@ -8,9 +8,7 @@
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as log]
-            [data-info.util.validators :as duv]
-            [data-info.services.uuids :as uuid])
-  (:import [java.util UUID]))
+            [data-info.util.validators :as duv]))
 
 
 (defn- url-encoded?
@@ -47,12 +45,3 @@
     (duv/validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-exists (log/log-func "do-exists"))
-
-
-(defn exists?
-  [{user :user entry :entry}]
-  (with-jargon (cfg/jargon-cfg) [cm]
-    (duv/user-exists cm user)
-    (if-let [path (uuid/get-path cm (UUID/fromString entry))]
-      {:status (if (perm/is-readable? cm user path) 200 403)}
-      {:status 404})))

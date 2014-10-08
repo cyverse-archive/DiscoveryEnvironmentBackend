@@ -10,33 +10,10 @@
             [clj-jargon.metadata :as meta]
             [clojure-commons.error-codes :as error]
             [data-info.util.config :as cfg]
+            [data-info.util.irods :as irods]
             [data-info.util.validators :as valid])
   (:import [java.util UUID]
            [clojure.lang IPersistentMap]))
-
-
-(def uuid-attr "ipc_UUID")
-
-
-(defn ^String get-path
-  "Returns the path of an entity given its UUID.
-
-   Parameters:
-     cm   - an open jargon context
-     uuid - the UUID of the entity
-
-   Returns:
-     If found, it returns the path of the entity."
-  [^IPersistentMap cm ^UUID uuid]
-  (let [results (meta/list-everything-with-attr-value cm uuid-attr uuid)]
-    (when-not (empty? results)
-      (when (> (count results) 1)
-        (log/error "Too many results for" uuid ":" (count results))
-        (log/debug "Results for" uuid ":" results)
-        (throw+ {:error_code error/ERR_TOO_MANY_RESULTS
-                 :count      (count results)
-                 :uuid       uuid}))
-      (first results))))
 
 
 (defn ^IPersistentMap path-for-uuid
@@ -49,7 +26,7 @@
    Returns:
      It returns a path-stat map containing an additional UUID field."
   ([^IPersistentMap cm ^String user ^UUID uuid]
-    (if-let [path (get-path cm uuid)]
+    (if-let [path (irods/get-path cm uuid)]
       (assoc (stat/path-stat cm user path) :uuid uuid)
       (throw+ {:error_code error/ERR_DOES_NOT_EXIST :uuid uuid})))
 
@@ -105,7 +82,7 @@
    Returns:
      It returns the UUID."
   [^IPersistentMap cm ^String path]
-  (let [attrs (meta/get-attribute cm path uuid-attr)]
+  (let [attrs (meta/get-attribute cm path irods/uuid-attr)]
     (when-not (pos? (count attrs))
       (log/warn "Missing UUID for" path)
       (throw+ {:error_code error/ERR_NOT_FOUND :path path}))
