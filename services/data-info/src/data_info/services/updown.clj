@@ -18,11 +18,6 @@
             [data-info.services.type-detect.irods :as type]))
 
 
-(defn- abs-path
-  [zone path-in-zone]
-  (ft/path-join "/" zone path-in-zone))
-
-
 (defn- gather-paths
   [cm user folder other-paths]
   (when folder
@@ -83,7 +78,7 @@
       (str "filename=" filename))))
 
 
-(defn- do-special-download
+(defn do-special-download
   [path {:keys [attachment user]}]
   (when (path/super-user? user)
     (throw+ {:error_code error/ERR_NOT_AUTHORIZED :user user}))
@@ -103,17 +98,3 @@
     (log/info "Path to download: " path)))
 
 (with-post-hook! #'do-special-download (dul/log-func "do-special-download"))
-
-
-(defn dispatch-entries-path
-  [path {zone :zone :as params}]
-  (let [full-path (abs-path zone path)
-        ;; detecting if the path is a folder happens in a separate connection to iRODS on purpose.
-        ;; It appears that downloading a file after detecting its type causes the download to fail.
-        ; TODO after migrating to jargon 4, check to see if this error still occurs.
-        folder?   (with-jargon (cfg/jargon-cfg) [cm]
-                    (validators/path-exists cm full-path)
-                    (item/is-dir? cm full-path))]
-    (if folder?
-      (directory/do-paged-listing full-path params)
-      (do-special-download full-path params))))
