@@ -19,6 +19,7 @@ ALTER TABLE ONLY file_parameters RENAME COLUMN data_format TO data_format_v187;
 ALTER TABLE ONLY file_parameters RENAME COLUMN multiplicity TO multiplicity_v187;
 ALTER TABLE ONLY file_parameters RENAME COLUMN data_source_id TO data_source_id_v187;
 ALTER TABLE ONLY file_parameters ADD COLUMN id UUID DEFAULT (uuid_generate_v1());
+ALTER TABLE ONLY file_parameters ADD COLUMN parameter_id UUID;
 ALTER TABLE ONLY file_parameters ADD COLUMN info_type UUID;
 ALTER TABLE ONLY file_parameters ADD COLUMN data_format UUID;
-ALTER TABLE ONLY file_parameters ADD COLUMN data_source_id  UUID;
+ALTER TABLE ONLY file_parameters ADD COLUMN data_source_id UUID;

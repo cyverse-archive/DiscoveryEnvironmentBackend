@@ -9,7 +9,6 @@
                                                     add-mapping
                                                     add-step
                                                     get-app
-                                                    remove-app-mappings
                                                     remove-app-steps
                                                     update-app]]
         [metadactyl.user :only [current-user]]
@@ -212,7 +211,6 @@
     (let [app-id (:id app)]
       (verify-app-editable (get-app app-id))
       (update-app app)
-      (remove-app-mappings app-id)
       (remove-app-steps app-id)
       (dorun (map-indexed (partial add-step app-id) (:steps app)))
       (dorun (map (partial add-mapping app-id) (:mappings app)))

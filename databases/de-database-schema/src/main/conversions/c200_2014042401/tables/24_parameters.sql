@@ -23,7 +23,6 @@ ALTER TABLE ONLY parameters ADD COLUMN parameter_group_id UUID;
 ALTER TABLE ONLY parameters ADD COLUMN parameter_type UUID;
 ALTER TABLE ONLY parameters ADD COLUMN display_order int NOT NULL DEFAULT 0;
 ALTER TABLE ONLY parameters ADD COLUMN required boolean DEFAULT false;
-ALTER TABLE ONLY parameters ADD COLUMN file_parameter_id UUID;
 
 -- Add temporary index to help speed up the conversion.
 CREATE INDEX property_group_property_property_id_idx ON property_group_property_v187(property_id);

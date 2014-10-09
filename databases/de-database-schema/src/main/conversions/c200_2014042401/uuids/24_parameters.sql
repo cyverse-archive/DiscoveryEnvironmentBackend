@@ -4,9 +4,14 @@ SET search_path = public, pg_catalog;
 -- Updates parameters uuid foreign keys.
 -- Adds temporary indexes to help speed up the conversion.
 --
+CREATE INDEX parameters_dataobject_id_idx ON parameters(validator_v187);
 CREATE INDEX parameters_validator_idx ON parameters(validator_v187);
 CREATE INDEX validator_rule_validator_id_idx ON validator_rule_v187(validator_id);
 CREATE INDEX validator_rule_rule_id_idx ON validator_rule_v187(rule_id);
+
+UPDATE file_parameters f SET parameter_id =
+    (SELECT id FROM parameters p
+     WHERE p.dataobject_id_v187 = f.hid_v187);
 
 UPDATE validation_rules r SET parameter_id =
     (SELECT p.id FROM parameters p
@@ -15,11 +20,11 @@ UPDATE validation_rules r SET parameter_id =
 
 UPDATE input_output_mapping SET input =
     (SELECT p.id FROM parameters p
-     LEFT JOIN file_parameters f ON f.id = p.file_parameter_id
+     LEFT JOIN file_parameters f ON f.parameter_id = p.id
      WHERE f.id_v187 = input_v187);
 UPDATE input_output_mapping SET output =
     (SELECT p.id FROM parameters p
-     LEFT JOIN file_parameters f ON f.id = p.file_parameter_id
+     LEFT JOIN file_parameters f ON f.parameter_id = p.id
      WHERE f.id_v187 = output_v187);
 
 -- Drop temporary indexes.
@@ -35,6 +40,7 @@ DELETE FROM validation_rules WHERE parameter_id IS NULL;
 DELETE FROM input_output_mapping WHERE input IS NULL OR output IS NULL;
 
 -- Add NOT NULL constraints on foreign key columns.
+ALTER TABLE ONLY file_parameters ALTER COLUMN parameter_id SET NOT NULL;
 ALTER TABLE ONLY validation_rules ALTER COLUMN parameter_id SET NOT NULL;
 ALTER TABLE ONLY input_output_mapping ALTER COLUMN input SET NOT NULL;
 ALTER TABLE ONLY input_output_mapping ALTER COLUMN output SET NOT NULL;

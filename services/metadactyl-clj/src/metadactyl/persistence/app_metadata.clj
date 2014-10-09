@@ -74,18 +74,10 @@
     (update apps (set-fields app) (where {:id app-id}))))
 
 (defn remove-app-steps
-  "Removes all steps from an App."
+  "Removes all steps from an App. This delete will cascade to workflow_io_maps and
+   input_output_mapping entries."
   [app-id]
   (delete app_steps (where {:app_id app-id})))
-
-(defn remove-app-mappings
-  "Removes all input/output mappings from an App."
-  [app-id]
-  (let [mapping-ids (map :id (select :workflow_io_maps
-                               (fields :id)
-                               (where {:app_id app-id})))]
-    (delete :input_output_mapping (where {:mapping_id [in mapping-ids]}))
-    (delete :workflow_io_maps (where {:app_id app-id}))))
 
 (defn get-full-app
   "Retrieves all app listing fields from the database."

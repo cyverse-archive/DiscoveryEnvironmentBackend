@@ -324,7 +324,7 @@ ALTER TABLE ONLY tree_urls
 ALTER TABLE ONLY input_output_mapping
     ADD CONSTRAINT input_output_mapping_mapping_id_fk
     FOREIGN KEY (mapping_id)
-    REFERENCES workflow_io_maps(id);
+    REFERENCES workflow_io_maps(id) ON DELETE CASCADE;
 
 --
 -- Name: input_output_mapping_input_fkey; Type: FK CONSTRAINT; Schema: public;
@@ -333,7 +333,7 @@ ALTER TABLE ONLY input_output_mapping
 ALTER TABLE ONLY input_output_mapping
     ADD CONSTRAINT input_output_mapping_input_fkey
     FOREIGN KEY (input)
-    REFERENCES parameters(id);
+    REFERENCES parameters(id) ON DELETE CASCADE;
 
 --
 -- Name: input_output_mapping_output_fkey; Type: FK CONSTRAINT; Schema: public;
@@ -342,7 +342,7 @@ ALTER TABLE ONLY input_output_mapping
 ALTER TABLE ONLY input_output_mapping
     ADD CONSTRAINT input_output_mapping_output_fkey
     FOREIGN KEY (output)
-    REFERENCES parameters(id);
+    REFERENCES parameters(id) ON DELETE CASCADE;
 
 --
 -- Name: app_categories_workspace_id_fk; Type: FK CONSTRAINT; Schema:
@@ -404,7 +404,7 @@ ALTER TABLE ONLY workflow_io_maps
 ALTER TABLE ONLY workflow_io_maps
     ADD CONSTRAINT workflow_io_maps_app_id_fkey
     FOREIGN KEY (app_id)
-    REFERENCES apps(id);
+    REFERENCES apps(id) ON DELETE CASCADE;
 
 --
 -- Name: workflow_io_maps_source_fkey; Type: FK CONSTRAINT; Schema:
@@ -413,7 +413,7 @@ ALTER TABLE ONLY workflow_io_maps
 ALTER TABLE ONLY workflow_io_maps
     ADD CONSTRAINT workflow_io_maps_source_fkey
     FOREIGN KEY (source_step)
-    REFERENCES app_steps(id);
+    REFERENCES app_steps(id) ON DELETE CASCADE;
 
 --
 -- Name: workflow_io_maps_target_fkey; Type: FK CONSTRAINT; Schema:
@@ -422,16 +422,16 @@ ALTER TABLE ONLY workflow_io_maps
 ALTER TABLE ONLY workflow_io_maps
     ADD CONSTRAINT workflow_io_maps_target_fkey
     FOREIGN KEY (target_step)
-    REFERENCES app_steps(id);
+    REFERENCES app_steps(id) ON DELETE CASCADE;
 
 --
--- Name: parameters_file_parameter_id_fkey; Type: FK CONSTRAINT; Schema: public;
+-- Name: file_parameters_parameter_id_fkey; Type: FK CONSTRAINT; Schema: public;
 -- Owner: de
 --
-ALTER TABLE ONLY parameters
-    ADD CONSTRAINT parameters_file_parameter_id_fkey
-    FOREIGN KEY (file_parameter_id)
-    REFERENCES file_parameters(id);
+ALTER TABLE ONLY file_parameters
+    ADD CONSTRAINT file_parameters_parameter_id_fkey
+    FOREIGN KEY (parameter_id)
+    REFERENCES parameters(id) ON DELETE CASCADE;
 
 --
 -- Name: parameters_parameter_groups_id_fkey; Type: FK CONSTRAINT;
@@ -440,7 +440,7 @@ ALTER TABLE ONLY parameters
 ALTER TABLE ONLY parameters
     ADD CONSTRAINT parameters_parameter_groups_id_fkey
     FOREIGN KEY (parameter_group_id)
-    REFERENCES parameter_groups(id);
+    REFERENCES parameter_groups(id) ON DELETE CASCADE;
 
 --
 -- Name: parameters_parameter_types_fkey; Type: FK CONSTRAINT; Schema: public;
@@ -458,7 +458,7 @@ ALTER TABLE ONLY parameters
 ALTER TABLE ONLY parameter_values
     ADD CONSTRAINT parameter_values_parameter_id_fkey
     FOREIGN KEY (parameter_id)
-    REFERENCES parameters(id);
+    REFERENCES parameters(id) ON DELETE CASCADE;
 CREATE INDEX parameter_values_parameter_id_idx ON parameter_values(parameter_id);
 
 --
@@ -468,7 +468,7 @@ CREATE INDEX parameter_values_parameter_id_idx ON parameter_values(parameter_id)
 ALTER TABLE ONLY parameter_values
     ADD CONSTRAINT parameter_values_parent_id_fkey
     FOREIGN KEY (parent_id)
-    REFERENCES parameter_values(id);
+    REFERENCES parameter_values(id) ON DELETE CASCADE;
 CREATE INDEX parameter_values_parent_id_idx ON parameter_values(parent_id);
 
 --
@@ -487,7 +487,7 @@ ALTER TABLE ONLY parameter_types
 ALTER TABLE ONLY ratings
     ADD CONSTRAINT ratings_app_id_fkey
     FOREIGN KEY (app_id)
-    REFERENCES apps(id);
+    REFERENCES apps(id) ON DELETE CASCADE;
 
 --
 -- Name: ratings_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: de
@@ -504,7 +504,7 @@ ALTER TABLE ONLY ratings
 ALTER TABLE ONLY validation_rule_arguments
     ADD CONSTRAINT validation_rule_arguments_validation_rules_id_fkey
     FOREIGN KEY (rule_id)
-    REFERENCES validation_rules(id);
+    REFERENCES validation_rules(id) ON DELETE CASCADE;
 
 --
 -- Name: validation_rules_rule_type_fkey; Type: FK CONSTRAINT; Schema: public; Owner: de
@@ -557,7 +557,7 @@ ALTER TABLE ONLY suggested_groups
 ALTER TABLE ONLY suggested_groups
     ADD CONSTRAINT suggested_groups_app_id_fkey
     FOREIGN KEY (app_id)
-    REFERENCES apps(id);
+    REFERENCES apps(id) ON DELETE CASCADE;
 
 --
 -- Name: app_category_group_parent_category_id_fkey; Type: FK CONSTRAINT;
@@ -593,7 +593,7 @@ ALTER TABLE ONLY app_category_app
 ALTER TABLE ONLY app_category_app
     ADD CONSTRAINT app_category_app_app_id_fkey
     FOREIGN KEY (app_id)
-    REFERENCES apps(id);
+    REFERENCES apps(id) ON DELETE CASCADE;
 
 --
 -- Name: parameter_groups_task_id_fkey; Type: FK CONSTRAINT;
@@ -602,7 +602,7 @@ ALTER TABLE ONLY app_category_app
 ALTER TABLE ONLY parameter_groups
     ADD CONSTRAINT parameter_groups_task_id_fkey
     FOREIGN KEY (task_id)
-    REFERENCES tasks(id);
+    REFERENCES tasks(id) ON DELETE CASCADE;
 
 --
 -- Name: app_integration_data_id_fk; Type: FK CONSTRAINT; Schema:
@@ -620,7 +620,7 @@ ALTER TABLE ONLY apps
 ALTER TABLE ONLY app_references
     ADD CONSTRAINT app_references_app_id_fkey
     FOREIGN KEY (app_id)
-    REFERENCES apps(id);
+    REFERENCES apps(id) ON DELETE CASCADE;
 
 --
 -- Name: app_steps_task_id_fkey; Type: FK
@@ -629,7 +629,7 @@ ALTER TABLE ONLY app_references
 ALTER TABLE ONLY app_steps
     ADD CONSTRAINT app_steps_task_id_fkey
     FOREIGN KEY (task_id)
-    REFERENCES tasks(id);
+    REFERENCES tasks(id) ON DELETE CASCADE;
 
 --
 -- Name: app_steps_app_id_fkey; Type: FK
@@ -638,7 +638,7 @@ ALTER TABLE ONLY app_steps
 ALTER TABLE ONLY app_steps
     ADD CONSTRAINT app_steps_app_id_fkey
     FOREIGN KEY (app_id)
-    REFERENCES apps(id);
+    REFERENCES apps(id) ON DELETE CASCADE;
 
 --
 -- Name: validation_rules_parameters_id_fkey; Type: FK CONSTRAINT; Schema:
@@ -647,7 +647,7 @@ ALTER TABLE ONLY app_steps
 ALTER TABLE ONLY validation_rules
     ADD CONSTRAINT validation_rules_parameters_id_fkey
     FOREIGN KEY (parameter_id)
-    REFERENCES parameters(id);
+    REFERENCES parameters(id) ON DELETE CASCADE;
 CREATE INDEX validation_rules_parameters_id_idx ON validation_rules(parameter_id);
 
 --

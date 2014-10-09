@@ -17,7 +17,7 @@
   [step-id group-id]
   (select (mp/params-base-query)
           (order :p.display_order)
-          (join [:file_parameters :fp] {:p.file_parameter_id :fp.id})
+          (join [:file_parameters :fp] {:p.id :fp.parameter_id})
           (where {:p.parameter_group_id group-id
                   :p.is_visible         true})
           (where (and (not (exists (mapped-input-subselect step-id)))
