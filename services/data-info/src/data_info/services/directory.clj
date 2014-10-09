@@ -77,8 +77,7 @@
 (defn- filtered-paths
   "Returns a seq of full paths that should not be included in paged listing."
   [user]
-  [(cfg/community-data)
-   (ft/path-join (cfg/irods-home) user)
+  [(ft/path-join (cfg/irods-home) user)
    (ft/path-join (cfg/irods-home) "public")])
 
 
@@ -143,7 +142,6 @@
       (assoc (page->map user pager)
         :id             (irods/lookup-uuid cm path)
         :path           path
-        :label          (paths/id->label user path)
         :filter         (should-filter? user path)
         :permission     (perm/permission-for cm user path)
         :hasSubDirs     true

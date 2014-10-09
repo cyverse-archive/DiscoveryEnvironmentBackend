@@ -45,12 +45,6 @@
   "data-info.data-threshold")
 
 
-(cc/defprop-str community-data
-  "The path to the root directory for community data."
-  [props config-valid configs]
-  "data-info.community-data")
-
-
 (cc/defprop-vec filter-files
   "The files to filter out of return values."
   [props config-valid configs]

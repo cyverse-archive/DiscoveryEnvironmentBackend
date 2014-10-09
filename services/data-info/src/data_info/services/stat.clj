@@ -13,7 +13,6 @@
             [data-info.util.logging :as dul]
             [data-info.util.irods :as irods]
             [data-info.util.validators :as validators]
-            [data-info.services.common-paths :as paths]
             [data-info.services.type-detect.irods :as filetypes])
   (:import [clojure.lang IPersistentMap]))
 
@@ -55,7 +54,6 @@
   (let [path (:path stat)]
     (-> stat
       (assoc :id         (-> (get-attribute cm path "ipc_UUID") first :value)
-             :label      (paths/id->label user path)
              :permission (permission-for cm user path))
       (merge-type-info cm user path)
       (merge-shares cm user path)
