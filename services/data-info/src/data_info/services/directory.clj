@@ -4,7 +4,6 @@
             [clj-jargon.init :refer [with-jargon]]
             [clj-jargon.item-info :as item]
             [clj-jargon.permissions :as perm]
-            [clojure-commons.file-utils :as ft]
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
@@ -58,8 +57,8 @@
 
 
 (defn do-directory
-  [path {user :user zone :zone}]
-  {:folder (list-directories user (ft/path-join "/" zone (ft/rm-last-slash path)))})
+  [path-in-zone {user :user zone :zone}]
+  {:folder (list-directories user (irods/abs-path zone path-in-zone))})
 
 (with-pre-hook! #'do-directory
   (fn [path params]
