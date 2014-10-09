@@ -323,16 +323,19 @@ func ParseEventFile(
 		}
 
 		if setTombstone {
+			log.Printf("Generating tombstone for %s\n", filepath)
 			// we only want to record the tombstone when we're done parsing the file.
 			newTombstone, err := NewTombstoneFromFile(openFile)
 			if err != nil {
 				return -1, err
 			}
+			log.Printf("Attempting to write tombstone for %s\n", filepath)
 			err = newTombstone.WriteToFile()
 			if err != nil {
 				log.Printf("Failed to write tombstone to %s\n", TombstonePath)
 				log.Println(err)
 			}
+			log.Printf("Done attempting to write tombstone for %s\n", filepath)
 		}
 	}
 	currentPos, err := openFile.Seek(0, os.SEEK_CUR)
@@ -342,20 +345,27 @@ func ParseEventFile(
 // MonitorPath spawns a gorouting that will check the last modified date on the
 // file specified by path and attempt to parse it when the date changes.
 func MonitorPath(path string, sleepyTime time.Duration, changeDetected chan<- int) error {
+	log.Printf("Monitoring path %s every %s\n", path, sleepyTime.String())
+
 	fileinfo, err := os.Stat(path)
 	if err != nil {
 		return err
 	}
 	lastmod := fileinfo.ModTime()
 	for {
+		log.Println("Beginning sleep")
 		time.Sleep(sleepyTime)
+		log.Println("Done sleeping")
 		latestInfo, err := os.Stat(path)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 		latestLastMod := latestInfo.ModTime()
+		log.Printf("Previous last modified time for %s: %s\n", path, lastmod.String())
+		log.Printf("Latest last modified time for %s: %s\n", path, latestLastMod.String())
 		if !latestLastMod.Equal(lastmod) {
+			log.Printf("Change detected in %s\n", path)
 			changeDetected <- 1
 			lastmod = latestLastMod
 		}
@@ -744,11 +754,15 @@ func main() {
 	} else {
 		startPos = 0
 	}
+	log.Printf("The start position in the log file is %d", startPos)
 	d, err := time.ParseDuration("2s")
 	if err != nil {
 		log.Println(err)
 	}
 	go func() {
+		log.Println("Beginning event log monitor goroutine.")
+		// get the ball rolling...
+		changeDetected <- 1
 		err = MonitorPath(cfg.EventLog, d, changeDetected)
 		if err != nil {
 			log.Println(err)
@@ -758,7 +772,7 @@ func main() {
 	for {
 		select {
 		case <-changeDetected:
-			log.Printf("The main log file matches the tombstoned log file inode number.")
+			log.Printf("Parsing %s starting at position %d\n", cfg.EventLog, startPos)
 			startPos, err = ParseEventFile(cfg.EventLog, startPos, pub, true)
 			if err != nil {
 				fmt.Println(err)
