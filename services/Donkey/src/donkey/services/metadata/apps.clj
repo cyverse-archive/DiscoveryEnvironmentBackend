@@ -195,13 +195,13 @@
       (metadactyl/apps-in-category category-id params)))
 
   (searchApps [_ search-term]
-    (let [def-result {:task_count 0 :templates {}}
+    (let [def-result {:app_count 0 :apps {}}
           de-apps    (metadactyl/search-apps search-term)
           hpc-apps   (if (user-has-access-token?)
                        (aa/search-apps agave-client search-term def-result)
                        def-result)]
-      {:task_count (apply + (map :task_count [de-apps hpc-apps]))
-       :templates  (mapcat :templates [de-apps hpc-apps])}))
+      {:app_count (apply + (map :app_count [de-apps hpc-apps]))
+       :apps      (mapcat :apps [de-apps hpc-apps])}))
 
   (updateFavorites [_ app-id favorite?]
     (if (is-uuid? app-id)
