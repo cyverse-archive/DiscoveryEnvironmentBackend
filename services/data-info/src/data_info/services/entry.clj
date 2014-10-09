@@ -174,11 +174,6 @@
 (with-post-hook! #'do-paged-listing (dul/log-func "do-paged-listing"))
 
 
-(defn- abs-path
-  [zone path-in-zone]
-  (file/path-join "/" zone path-in-zone))
-
-
 (defn- download-file
   [user file-path]
   (init/with-jargon (cfg/jargon-cfg) [cm]
@@ -218,7 +213,7 @@
 
 (defn get-by-path
   [path-in-zone {zone :zone :as params}]
-  (let [full-path (abs-path zone path-in-zone)
+  (let [full-path (irods/abs-path zone path-in-zone)
 
         ;; detecting if the path is a folder happens in a separate connection to iRODS on purpose.
         ;; It appears that downloading a file after detecting its type causes the download to fail.

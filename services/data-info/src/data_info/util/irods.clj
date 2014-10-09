@@ -13,6 +13,19 @@
            [org.apache.tika Tika]))
 
 
+(defn ^String abs-path
+  "Resolves a path relative to a zone into its absolute path.
+
+   Parameters:
+     zone         - the name of the zone
+     path-in-zone - the path relative to the zone
+
+   Returns:
+     It returns the absolute path."
+  [^String zone ^String path-in-zone]
+  (file/path-join "/" zone path-in-zone))
+
+
 (def ^:private uuid-attr "ipc_UUID")
 
 
