@@ -13,8 +13,7 @@
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.util.irods :as irods]
-            [data-info.util.validators :as validators]
-            [data-info.services.common-paths :as paths])
+            [data-info.util.validators :as validators])
   (:import [clojure.lang ISeq]))
 
 
@@ -86,7 +85,7 @@
   [user path-to-check]
   (let [fpaths (set (concat (cfg/filter-files) (filtered-paths user)))]
     (or (contains? fpaths path-to-check)
-      (not (paths/valid-path? path-to-check)))))
+        (not (jv/good-string? path-to-check)))))
 
 
 (defn- page-entry->map

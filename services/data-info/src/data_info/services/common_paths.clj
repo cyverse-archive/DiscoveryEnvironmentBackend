@@ -1,7 +1,6 @@
 (ns data-info.services.common-paths
   (:require [clojure-commons.file-utils :as ft]
             [clj-jargon.item-info :as item]
-            [clj-jargon.validations :as valid]
             [data-info.util.config :as cfg]))
 
 
@@ -16,9 +15,6 @@
 (defn user-home-dir
   [user]
   (ft/path-join "/" (cfg/irods-zone) "home" user))
-
-
-(defn valid-path? [path-to-check] (valid/good-string? path-to-check))
 
 
 (defn base-trash-path
