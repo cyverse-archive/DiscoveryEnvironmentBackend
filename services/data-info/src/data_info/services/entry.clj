@@ -132,14 +132,14 @@
 
 (defn- paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
-  [user path limit offset scol sord]
+  [user path limit offset sfield sord]
   (log/info "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
   (init/with-jargon (cfg/jargon-cfg) [cm]
     (duv/user-exists cm user)
     (duv/path-readable cm user path)
     (let [stat  (item/stat cm path)
           zone  (cfg/irods-zone)
-          pager (log/spy (icat/paged-folder-listing user zone path scol sord limit offset))]
+          pager (log/spy (icat/paged-folder-listing user zone path sfield sord limit offset))]
       (assoc (page->map user pager)
         :id             (irods/lookup-uuid cm path)
         :path           path
@@ -153,15 +153,14 @@
         :total_filtered (total-filtered user zone path)))))
 
 
-(defn- user-col->api-col
-  [sort-col]
-  (case (when sort-col (str/upper-case sort-col))
-    "NAME"         :base-name
-    "ID"           :full-path
-    "LASTMODIFIED" :modify-ts
-    "DATECREATED"  :create-ts
-    "SIZE"         :data-size
-    "PATH"         :full-path
+(defn- resolve-sort-field
+  [sort-field]
+  (case (when sort-field (str/lower-case sort-field))
+    "name"         :base-name
+    "datemodified" :modify-ts
+    "datecreated"  :create-ts
+    "size"         :data-size
+    "path"         :full-path
                    :base-name))
 
 
@@ -172,12 +171,12 @@
     :asc))
 
 
-(defn- validate-sort-col
-  [sort-col]
-  (when-not (contains? #{"NAME" "ID" "LASTMODIFIED" "DATECREATED" "SIZE" "PATH"}
-                       (str/upper-case sort-col))
-    (log/warn "invalid sort column" sort-col)
-    (throw+ {:error_code "ERR_INVALID_SORT_COLUMN" :column sort-col})))
+(defn- validate-sort-field
+  [sort-field]
+  (when-not (contains? #{"name" "datemodified" "datecreated" "size" "path"}
+                       (str/lower-case sort-field))
+    (log/warn "invalid sort field" sort-field)
+    (throw+ {:error_code "ERR_INVALID_SORT_FIELD" :field sort-field})))
 
 
 (defn- validate-sort-order
@@ -189,13 +188,13 @@
 
 (defn- get-folder
   "Entrypoint for the API that calls (paged-dir-listing)."
-  [path {:keys [limit offset sort-col sort-order user]}]
+  [path {:keys [limit offset sort-field sort-order user]}]
   (let [path       (file/rm-last-slash path)
         limit      (Integer/parseInt limit)
         offset     (Integer/parseInt offset)
-        sort-col   (user-col->api-col sort-col)
+        sort-field (resolve-sort-field sort-field)
         sort-order (user-order->api-order sort-order)]
-    (paged-dir-listing user path limit offset sort-col sort-order)))
+    (paged-dir-listing user path limit offset sort-field sort-order)))
 
 (with-pre-hook! #'get-folder
   (fn [path params]
@@ -203,8 +202,8 @@
     (cv/validate-map params {:limit  cv/field-nonnegative-int?
                              :offset cv/field-nonnegative-int?
                              :user   string?})
-    (when-let [col (:sort-col params)]
-      (validate-sort-col col))
+    (when-let [field (:sort-field params)]
+      (validate-sort-field field))
     (when-let [ord (:sort-order params)]
       (validate-sort-order ord))))
 
