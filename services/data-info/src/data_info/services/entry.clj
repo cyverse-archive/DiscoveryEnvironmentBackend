@@ -153,35 +153,46 @@
         :total_filtered (total-filtered user zone path)))))
 
 
+(def ^:private api-field->db-col
+  {"datecreated"  :create-ts
+   "datemodified" :modify-ts
+   "name"         :base-name
+   "path"         :full-path
+   "size"         :data-size
+   nil            :base-name})
+
+
+(def ^:private api-order->db-order
+  {"asc"  :asc
+   "desc" :desc
+   nil    :asc})
+
+
+(defn- canonicalize-str
+  [str]
+  (when str (str/lower-case str)))
+
+
 (defn- resolve-sort-field
   [sort-field]
-  (case (when sort-field (str/lower-case sort-field))
-    "name"         :base-name
-    "datemodified" :modify-ts
-    "datecreated"  :create-ts
-    "size"         :data-size
-    "path"         :full-path
-                   :base-name))
+  (get api-field->db-col (canonicalize-str sort-field)))
 
 
-(defn- user-order->api-order
+(defn- resolve-sort-order
   [sort-order]
-  (if (and sort-order (= "DESC" (str/upper-case sort-order)))
-    :desc
-    :asc))
+  (get api-order->db-order (canonicalize-str sort-order)))
 
 
 (defn- validate-sort-field
   [sort-field]
-  (when-not (contains? #{"name" "datemodified" "datecreated" "size" "path"}
-                       (str/lower-case sort-field))
+  (when-not (contains? api-field->db-col (canonicalize-str sort-field))
     (log/warn "invalid sort field" sort-field)
     (throw+ {:error_code "ERR_INVALID_SORT_FIELD" :field sort-field})))
 
 
 (defn- validate-sort-order
   [sort-order]
-  (when-not (contains? #{"ASC" "DESC"} (str/upper-case sort-order))
+  (when-not (contains? api-order->db-order (canonicalize-str sort-order))
     (log/warn "invalid sort order" sort-order)
     (throw+ {:error_code "ERR_INVALID_SORT_ORDER" :sort-order sort-order})))
 
@@ -193,7 +204,7 @@
         limit      (Integer/parseInt limit)
         offset     (Integer/parseInt offset)
         sort-field (resolve-sort-field sort-field)
-        sort-order (user-order->api-order sort-order)]
+        sort-order (resolve-sort-order sort-order)]
     (paged-dir-listing user path limit offset sort-field sort-order)))
 
 (with-pre-hook! #'get-folder
@@ -204,8 +215,8 @@
                              :user   string?})
     (when-let [field (:sort-field params)]
       (validate-sort-field field))
-    (when-let [ord (:sort-order params)]
-      (validate-sort-order ord))))
+    (when-let [order (:sort-order params)]
+      (validate-sort-order order))))
 
 (with-post-hook! #'get-folder (dul/log-func "get-folder"))
 
