@@ -39,7 +39,7 @@
   (mu/assert-agave-enabled agave)
   (let [app          (.getApp agave external-app-id)
         mapped-props (set (map :input_id (ap/load-target-step-mappings (:step_id step))))]
-    (->> (:groups app)
+    (->> (:categories app)
          (map (partial remove-mapped-inputs mapped-props))
          (remove (comp empty? :properties))
          (map (partial reformat-group (:name app) (:step_name step)))
@@ -75,9 +75,9 @@
 (defn- get-combined-app
   [agave app-id]
   (let [metadactyl-app (metadactyl/get-app app-id)]
-    (->> (:groups metadactyl-app)
+    (->> (:categories metadactyl-app)
          (get-combined-groups agave app-id)
-         (assoc metadactyl-app :groups))))
+         (assoc metadactyl-app :categories))))
 
 (defn get-app
   [agave app-id]
@@ -226,7 +226,7 @@
         update-props  #(map update-prop %)
         update-group  #(update-in % [:properties] update-props)
         update-groups #(map update-group %)]
-    (update-in app [:groups] update-groups)))
+    (update-in app [:categories] update-groups)))
 
 (defn- translate-job-status
   "Translates an Agave status code to something more consistent with the DE's status codes."

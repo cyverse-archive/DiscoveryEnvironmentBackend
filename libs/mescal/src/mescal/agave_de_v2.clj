@@ -30,8 +30,8 @@
 (defn search-apps
   [agave jobs-enabled? search-term]
   (let [matching-apps (find-matching-apps agave jobs-enabled? search-term)]
-    {:task_count (count matching-apps)
-     :templates  matching-apps}))
+    {:app_count (count matching-apps)
+     :apps      matching-apps}))
 
 (defn get-app
   [agave app-id]

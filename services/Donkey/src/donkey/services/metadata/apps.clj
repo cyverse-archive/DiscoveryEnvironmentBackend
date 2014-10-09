@@ -187,7 +187,7 @@
 
   (listAppGroups [_ params]
     (-> (metadactyl/get-app-categories params)
-        (update-in [:groups] conj (.hpcAppGroup agave-client))))
+        (update-in [:categories] conj (.hpcAppGroup agave-client))))
 
   (listApps [_ category-id params]
     (if (= category-id (:id (.hpcAppGroup agave-client)))
