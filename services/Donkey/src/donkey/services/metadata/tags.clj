@@ -18,7 +18,7 @@
         unknown-tags    (set/difference tag-set known-tags)
         unattached-tags (set/difference known-tags
                                         (set (db/filter-attached-tags entry-id known-tags)))]
-    (valid/validate-uuid-accessible user entry-id)
+    (data/validate-uuid-accessible user entry-id)
     (when-not (empty? unknown-tags)
       (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
     (db/insert-attached-tags user entry-id (data/resolve-data-type entry-id) unattached-tags)
@@ -27,7 +27,7 @@
 
 (defn- detach-tags
   [user entry-id tag-ids]
-  (valid/validate-uuid-accessible user entry-id)
+  (data/validate-uuid-accessible user entry-id)
   (db/mark-tags-detached user entry-id (db/filter-tags-owned-by-user user (set tag-ids)))
   (svc/success-response))
 
@@ -97,7 +97,7 @@
   (let [user     (:shortUsername user/current-user)
         entry-id (UUID/fromString entry-id)
         tags     (db/select-attached-tags user entry-id)]
-    (valid/validate-uuid-accessible user entry-id)
+    (data/validate-uuid-accessible user entry-id)
     (svc/success-response {:tags (map #(dissoc % :owner_id) tags)})))
 
 

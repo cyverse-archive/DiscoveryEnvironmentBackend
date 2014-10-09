@@ -2,8 +2,8 @@
   (:require [clojure-commons.file-utils :as ft]
             [clojure.tools.logging :as log]
             [clj-jargon.item-info :as item]
-            [clj-jargon.validations :as valid]
-            [donkey.util.config :as cfg]))
+            [donkey.util.config :as cfg]
+            [donkey.util.validators :as valid]))
 
 
 (def IPCRESERVED "ipc-reserved-unit")

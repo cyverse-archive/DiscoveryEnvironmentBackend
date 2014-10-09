@@ -9,7 +9,6 @@
             [clj-jargon.item-info :as item]
             [clj-jargon.item-ops :as ops]
             [clj-jargon.permissions :as perm]
-            [clj-jargon.validations :as jv]
             [clojure-commons.error-codes :as error]
             [clojure-commons.file-utils :as file]
             [clojure-commons.validators :as cv]
@@ -87,7 +86,7 @@
   [user path-to-check]
   (let [fpaths (set (concat (cfg/filter-files) (filtered-paths user)))]
     (or (contains? fpaths path-to-check)
-        (not (jv/good-string? path-to-check)))))
+        (not (duv/good-string? path-to-check)))))
 
 
 (defn- page-entry->map
@@ -125,7 +124,7 @@
   (icat/number-of-filtered-items-in-folder user
                                            zone
                                            path
-                                           (apply str jv/bad-chars)
+                                           (apply str duv/bad-chars)
                                            (cfg/filter-files)
                                            (filtered-paths user)))
 

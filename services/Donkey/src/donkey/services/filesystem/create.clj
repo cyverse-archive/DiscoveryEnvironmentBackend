@@ -12,7 +12,7 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clj-jargon.item-info :as item]
             [clj-jargon.item-ops :as ops]
-            [clj-jargon.validations :as valid]
+            [donkey.util.validators :as duv]
             [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as cfg]
             [donkey.services.filesystem.stat :as stat]
@@ -25,7 +25,7 @@
   (log/debug (str "create " user " " path))
   (with-jargon (cfg/jargon-cfg) [cm]
     (let [fixed-path (ft/rm-last-slash path)]
-      (when-not (valid/good-string? fixed-path)
+      (when-not (duv/good-string? fixed-path)
         (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                  :path path}))
       (validators/user-exists cm user)

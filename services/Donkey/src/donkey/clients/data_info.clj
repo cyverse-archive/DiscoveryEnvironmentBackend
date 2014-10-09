@@ -7,6 +7,7 @@
             [clj-http.client :as client]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as error]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
             [donkey.services.filesystem.exists :as e]
@@ -185,6 +186,17 @@
      It returns true if the user can access the entry, otherwise false"
   [^String user ^UUID entry-id]
   (uuids/uuid-accessible? user entry-id))
+
+
+(defn validate-uuid-accessible
+  "Throws an exception if the given entry is not accessible to the given user.
+
+   Parameters:
+     user     - the authenticated name of the user
+     entry-id - the UUID of the filesystem entry"
+  [^String user ^UUID entry-id]
+  (when-not (uuid-accessible? user entry-id)
+    (throw+ {:error_code error/ERR_NOT_FOUND :uuid entry-id})))
 
 
 (defn ^Boolean owns?

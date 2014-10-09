@@ -25,7 +25,7 @@
   [user entry-id-txt]
   (try+
     (let [entry-id (valid/extract-uri-uuid entry-id-txt)]
-      (valid/validate-uuid-accessible user entry-id)
+      (data/validate-uuid-accessible user entry-id)
       entry-id)
     (catch [:error_code err/ERR_DOES_NOT_EXIST] _ (throw+ {:error_code err/ERR_NOT_FOUND}))))
 

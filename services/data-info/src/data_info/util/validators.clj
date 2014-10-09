@@ -1,6 +1,7 @@
 (ns data-info.util.validators
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [clojure.string :as str]
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
             [clj-icat-direct.icat :as icat]
             [clj-jargon.init :as init]
             [clj-jargon.item-info :as item]
@@ -8,6 +9,23 @@
             [clj-jargon.users :as user]
             [clojure-commons.error-codes :as error]
             [data-info.util.config :as cfg]))
+
+
+(def bad-chars
+  #{\= \! \" \# \$ \' \% \* \+ \, \: \? \@ \[ \] \^ \{ \} \| \& \; \< \> \` \~ \\ \tab \newline})
+
+
+(defn ^Boolean good-string?
+  "Checks that a string doesn't contain any problematic characters.
+
+   Params:
+     to-check - The string to check
+
+   Returns:
+     It returns false if the string contains at least one problematic character, otherwise false."
+  [^String to-check]
+  (let [chars-to-check (set (seq to-check))]
+    (empty? (set/intersection bad-chars chars-to-check))))
 
 
 (defn valid-bool-param

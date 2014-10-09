@@ -5,8 +5,7 @@
             [donkey.auth.user-attributes :as user]
             [donkey.clients.data-info :as data]
             [donkey.persistence.metadata :as db]
-            [donkey.util.service :as svc]
-            [donkey.util.validators :as uv])
+            [donkey.util.service :as svc])
   (:import [java.util UUID]))
 
 
@@ -49,7 +48,7 @@
   [entry-id]
   (let [user     (:shortUsername user/current-user)
         entry-id (UUID/fromString entry-id)]
-    (uv/validate-uuid-accessible user entry-id)
+    (data/validate-uuid-accessible user entry-id)
     (when-not (db/is-favorite? user entry-id)
       (db/insert-favorite user entry-id (data/resolve-data-type entry-id)))
     (svc/success-response)))

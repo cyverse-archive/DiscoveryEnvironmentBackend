@@ -12,7 +12,6 @@
             [clojure.set :as set]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [clj-jargon.validations :as valid]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.util.validators :as validators]
@@ -21,7 +20,7 @@
 
 (defn- paths-contain-char
   [paths char]
-  (when-not (valid/good-string? char)
+  (when-not (validators/good-string? char)
     (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
              :character char}))
 
@@ -90,7 +89,7 @@
     (validators/user-exists cm user)
     (validators/all-paths-exist cm paths)
     (validators/user-owns-paths cm user paths)
-    (when-not (valid/good-string? new-char)
+    (when-not (validators/good-string? new-char)
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :character new-char}))
     (let [parent-dirs (all-parent-dirs user paths)]

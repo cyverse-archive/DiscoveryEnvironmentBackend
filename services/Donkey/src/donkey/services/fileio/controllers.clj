@@ -17,9 +17,9 @@
             [clojure.tools.logging :as log]
             [ring.util.response :as rsp-utils]
             [cemerick.url :as url-parser]
-            [clj-jargon.validations :as valid]
             [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
+            [donkey.util.validators :as valid]
             [donkey.services.fileio.config :as jargon]))
 
 

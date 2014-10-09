@@ -1,9 +1,10 @@
 (ns donkey.util.validators
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes])
-  (:require [cheshire.core :as json]
+  (:require [clojure.set :as set]
+            [cheshire.core :as json]
             [cemerick.url :as url-parser]
-            [donkey.clients.data-info :as data])
+            [donkey.util.config :as cfg])
   (:import [java.util UUID]))
 
 (defn parse-body
@@ -50,12 +51,15 @@
     (catch IllegalArgumentException _ (throw+ {:error_code ERR_NOT_FOUND}))))
 
 
-(defn validate-uuid-accessible
-  "Throws an exception if the given entry is not accessible to the given user.
+(defn ^Boolean good-string?
+  "Checks that a string doesn't contain any problematic characters.
 
-   Parameters:
-     user     - the authenticated name of the user
-     entry-id - the UUID of the filesystem entry"
-  [^String user ^UUID entry-id]
-  (when-not (data/uuid-accessible? user entry-id)
-    (throw+ {:error_code ERR_NOT_FOUND :uuid entry-id})))
+   Params:
+     to-check - The string to check
+
+   Returns:
+     It returns false if the string contains at least one problematic character, otherwise false."
+  [^String to-check]
+  (let [bad-chars      (set (seq (cfg/fs-filter-chars)))
+        chars-to-check (set (seq to-check))]
+    (empty? (set/intersection bad-chars chars-to-check))))

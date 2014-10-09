@@ -1,8 +1,7 @@
 (ns clj-jargon.validations
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes])
-  (:require [clojure.set :as set]
-            [clojure-commons.file-utils :as ft]))
+  (:require [clojure-commons.file-utils :as ft]))
 
 
 (def max-path-length 1067)
@@ -11,23 +10,6 @@
 (def ERR_BAD_DIRNAME_LENGTH "ERR_BAD_DIRNAME_LENGTH")
 (def ERR_BAD_BASENAME_LENGTH "ERR_BAD_BASENAME_LENGTH")
 (def ERR_BAD_PATH_LENGTH "ERR_BAD_PATH_LENGTH")
-
-
-(def bad-chars
-  #{\= \! \" \# \$ \' \% \* \+ \, \: \? \@ \[ \] \^ \{ \} \| \& \; \< \> \` \~ \\ \tab \newline})
-
-
-(defn ^Boolean good-string?
-  "Checks that a string doesn't contain any problematic characters.
-
-   Params:
-     to-check - The string to check
-
-   Returns:
-     It returns false if the string contains at least one problematic character, otherwise false."
-  [^String to-check]
-  (let [chars-to-check (set (seq to-check))]
-    (empty? (set/intersection bad-chars chars-to-check))))
 
 
 (defn validate-full-dirpath

@@ -12,8 +12,8 @@
             [clojure.set :as set]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [clj-jargon.validations :as valid]
             [donkey.util.config :as cfg]
+            [donkey.util.validators :as valid]
             [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.validators :as validators]))
