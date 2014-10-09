@@ -38,6 +38,43 @@
 (with-post-hook! #'id-exists? (dul/log-func "exists?"))
 
 
+(defn- download-file
+  [user file-path]
+  (init/with-jargon (cfg/jargon-cfg) [cm]
+    (duv/path-readable cm user file-path)
+    (if (zero? (item/file-size cm file-path))
+      ""
+      (ops/input-stream cm file-path))))
+
+
+(defn- get-disposition
+  [path attachment]
+  (let [filename (str \" (file/basename path) \")]
+    (if (or (nil? attachment) (Boolean/parseBoolean attachment))
+      (str "attachment; filename=" filename)
+      (str "filename=" filename))))
+
+
+(defn- get-file
+  [path {:keys [attachment user]}]
+  (let [content-type (future (irods/detect-media-type path))]
+    {:status  200
+     :body    (download-file user path)
+     :headers {"Content-Disposition" (get-disposition path attachment)
+               "Content-Type"        @content-type}}))
+
+(with-pre-hook! #'get-file
+  (fn [path params]
+    (dul/log-call "get-file" path params)
+    (cv/validate-map params {:user string?})
+    (when-let [attachment (:attachment params)]
+      (duv/valid-bool-param "attachment" attachment))
+    (log/info "User for download: " (:user params))
+    (log/info "Path to download: " path)))
+
+(with-post-hook! #'get-file (dul/log-func "get-file"))
+
+
 (defn- filtered-paths
   "Returns a seq of full paths that should not be included in paged listing."
   [user]
@@ -150,7 +187,7 @@
     (throw+ {:error_code "ERR_INVALID_SORT_ORDER" :sort-order sort-order})))
 
 
-(defn- do-paged-listing
+(defn- get-folder
   "Entrypoint for the API that calls (paged-dir-listing)."
   [path {:keys [limit offset sort-col sort-order user]}]
   (let [path       (file/rm-last-slash path)
@@ -160,9 +197,9 @@
         sort-order (user-order->api-order sort-order)]
     (paged-dir-listing user path limit offset sort-col sort-order)))
 
-(with-pre-hook! #'do-paged-listing
+(with-pre-hook! #'get-folder
   (fn [path params]
-    (dul/log-call "do-paged-listing" path params)
+    (dul/log-call "get-folder" path params)
     (cv/validate-map params {:limit  cv/field-nonnegative-int?
                              :offset cv/field-nonnegative-int?
                              :user   string?})
@@ -171,44 +208,7 @@
     (when-let [ord (:sort-order params)]
       (validate-sort-order ord))))
 
-(with-post-hook! #'do-paged-listing (dul/log-func "do-paged-listing"))
-
-
-(defn- download-file
-  [user file-path]
-  (init/with-jargon (cfg/jargon-cfg) [cm]
-    (duv/path-readable cm user file-path)
-    (if (zero? (item/file-size cm file-path))
-      ""
-      (ops/input-stream cm file-path))))
-
-
-(defn- get-disposition
-  [path attachment]
-  (let [filename (str \" (file/basename path) \")]
-    (if (or (nil? attachment) (Boolean/parseBoolean attachment))
-      (str "attachment; filename=" filename)
-      (str "filename=" filename))))
-
-
-(defn- get-file
-  [path {:keys [attachment user]}]
-  (let [content-type (future (irods/detect-media-type path))]
-    {:status  200
-     :body    (download-file user path)
-     :headers {"Content-Disposition" (get-disposition path attachment)
-               "Content-Type"        @content-type}}))
-
-(with-pre-hook! #'get-file
-  (fn [path params]
-    (dul/log-call "do-special-download" path params)
-    (cv/validate-map params {:user string?})
-    (when-let [attachment (:attachment params)]
-      (duv/valid-bool-param "attachment" attachment))
-    (log/info "User for download: " (:user params))
-    (log/info "Path to download: " path)))
-
-(with-post-hook! #'get-file (dul/log-func "do-special-download"))
+(with-post-hook! #'get-folder (dul/log-func "get-folder"))
 
 
 (defn get-by-path
@@ -222,5 +222,5 @@
                   (duv/path-exists cm full-path)
                   (item/is-dir? cm full-path))]
     (if folder?
-      (do-paged-listing full-path params)
+      (get-folder full-path params)
       (get-file full-path params))))
