@@ -150,7 +150,7 @@
       (-> app
           (assoc :integration_date (date->long (:integration_date app))
                  :edited_date (date->long (:edited_date app))
-                 :references (:app_references app)
+                 :references (map :reference_text (:app_references app))
                  :tool (:tool task)
                  :tool_id (:tool_id task)
                  :groups groups)
