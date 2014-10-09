@@ -47,7 +47,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ActiveState/tail"
 	"github.com/streadway/amqp"
 )
 
@@ -240,93 +239,56 @@ func NewPublishableEvent(event string) *PublishableEvent {
 	}
 }
 
-// ParseEvent will tail a file and print out each event as it comes through.
-// The AMQPPublisher that is passed in should already have its connection
-// established. This function does not call Close() on it.
-func ParseEvent(filepath string, pub *AMQPPublisher) error {
-	startRegex := "^[\\d][\\d][\\d]\\s.*"
-	endRegex := "^\\.\\.\\..*"
-	foundStart := false
-	var eventlines string //accumulates lines in an event entry
-
-	t, err := tail.TailFile(filepath, tail.Config{
-		ReOpen: true,
-		Follow: true,
-		Poll:   true,
-	})
-	for line := range t.Lines {
-		text := line.Text
-		if !foundStart {
-			matchedStart, err := regexp.MatchString(startRegex, text)
-			if err != nil {
-				return err
-			}
-			if matchedStart {
-				foundStart = true
-				eventlines = eventlines + text + "\n"
-				if err != nil {
-					return err
-				}
-			}
-		} else {
-			matchedEnd, err := regexp.MatchString(endRegex, text)
-			if err != nil {
-				return err
-			}
-			eventlines = eventlines + text + "\n"
-			if matchedEnd {
-				fmt.Println(eventlines)
-				pubEvent := NewPublishableEvent(eventlines)
-				pubJSON, err := json.Marshal(pubEvent)
-				if err != nil {
-					return err
-				}
-				if err = pub.PublishBytes(pubJSON); err != nil {
-					fmt.Println(err)
-				}
-				eventlines = ""
-				foundStart = false
-			}
-		}
-	}
-	return err
-}
-
 // ParseEventFile parses an entire file and sends it to the AMQP broker.
-func ParseEventFile(filepath string, seekTo int64, pub *AMQPPublisher) (int64, error) {
+func ParseEventFile(
+	filepath string,
+	seekTo int64,
+	pub *AMQPPublisher,
+	setTombstone bool,
+) (int64, error) {
 	startRegex := "^[\\d][\\d][\\d]\\s.*"
 	endRegex := "^\\.\\.\\..*"
 	foundStart := false
 	var eventlines string //accumulates lines in an event entry
 
-	// open the file
 	openFile, err := os.Open(filepath)
 	if err != nil {
 		return -1, err
 	}
-
-	// seek to the start position
 	_, err = openFile.Seek(seekTo, os.SEEK_SET)
 	if err != nil {
 		return -1, err
 	}
 
-	var prefixBuffer []byte
+	var prefixBuffer []byte // used when the reader gets a partial line
 	reader := bufio.NewReader(openFile)
 	for {
 		line, prefix, err := reader.ReadLine()
 		if err != nil {
 			break
 		}
-		if prefix { //a partial line was read.
-			prefixBuffer = line
+		// A partial line was read from the file, so store the partial in the buffer
+		// and skip the rest of the loop. Don't want to try and parse a partial line
+		if prefix {
+			// it's possible to get multiple partials in a row if a line is really
+			// long, so we need to concat multiple partials together as we go. If we
+			// don't, we risk losing data.
+			if len(prefixBuffer) > 0 {
+				prefixBuffer = append(prefixBuffer, line...)
+			} else {
+				prefixBuffer = line
+			}
 			continue
 		}
+		// if we get here, prefix was false and either the rest of a line was read or
+		// the entire line was read at once. if there is data in the prefixBuffer,
+		// then partials were previously read and need to be prepended onto the
+		// the current chunk stored in 'line'.
 		if len(prefixBuffer) > 0 {
-			line = append(prefixBuffer, line...) //concats line onto the prefix
+			line = append(prefixBuffer, line...)
 		}
-		prefixBuffer = []byte{} //reset the prefix for later iterations
-		text := string(line[:])
+		prefixBuffer = []byte{} //reset the prefixBuffer for later iterations
+		text := string(line[:]) //we need to operate on strings for the regexes.
 		if !foundStart {
 			matchedStart, err := regexp.MatchString(startRegex, text)
 			if err != nil {
@@ -359,20 +321,45 @@ func ParseEventFile(filepath string, seekTo int64, pub *AMQPPublisher) (int64, e
 				foundStart = false
 			}
 		}
-		// get tombstone from open file
-		newTombstone, err := NewTombstoneFromFile(openFile)
-		if err != nil {
-			return -1, err
-		}
-		// write out tombstone
-		err = newTombstone.WriteToFile()
-		if err != nil {
-			log.Printf("Failed to write tombstone to %s\n", TombstonePath)
-			log.Println(err)
+
+		if setTombstone {
+			// we only want to record the tombstone when we're done parsing the file.
+			newTombstone, err := NewTombstoneFromFile(openFile)
+			if err != nil {
+				return -1, err
+			}
+			err = newTombstone.WriteToFile()
+			if err != nil {
+				log.Printf("Failed to write tombstone to %s\n", TombstonePath)
+				log.Println(err)
+			}
 		}
 	}
 	currentPos, err := openFile.Seek(0, os.SEEK_CUR)
 	return currentPos, err
+}
+
+// MonitorPath spawns a gorouting that will check the last modified date on the
+// file specified by path and attempt to parse it when the date changes.
+func MonitorPath(path string, sleepyTime time.Duration, changeDetected chan<- int) error {
+	fileinfo, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	lastmod := fileinfo.ModTime()
+	for {
+		time.Sleep(sleepyTime)
+		latestInfo, err := os.Stat(path)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		latestLastMod := latestInfo.ModTime()
+		if !latestLastMod.Equal(lastmod) {
+			changeDetected <- 1
+			lastmod = latestLastMod
+		}
+	}
 }
 
 //TombstoneAction denotes the kind of action a TombstoneMsg represents.
@@ -674,75 +661,108 @@ func main() {
 		os.Exit(-1)
 	}
 
-	// reading from errChan should prevent the application from exiting before
-	// it should.
-	exitChan := make(chan int)
-	go func() {
-		// First, we need to read the tombstone file if it exists.
-		var tombstone *Tombstone
-		if TombstoneExists() {
-			log.Printf("Attempting to read tombstone from %s\n", TombstonePath)
-			tombstone, err = ReadTombstone()
-			if err != nil {
-				log.Println("Couldn't read Tombstone file.")
-				log.Println(err)
-				tombstone = nil
-			}
-			log.Printf("Done reading tombstone file from %s\n", TombstonePath)
-		} else {
+	// First, we need to read the tombstone file if it exists.
+	var tombstone *Tombstone
+	if TombstoneExists() {
+		log.Printf("Attempting to read tombstone from %s\n", TombstonePath)
+		tombstone, err = ReadTombstone()
+		if err != nil {
+			log.Println("Couldn't read Tombstone file.")
+			log.Println(err)
 			tombstone = nil
 		}
-		logDir := filepath.Dir(cfg.EventLog)
-		log.Printf("Log directory: %s\n", logDir)
-		logFilename := filepath.Base(cfg.EventLog)
-		log.Printf("Log filename: %s\n", logFilename)
+		log.Printf("Done reading tombstone file from %s\n", TombstonePath)
+	} else {
+		tombstone = nil
+	}
+	logDir := filepath.Dir(cfg.EventLog)
+	log.Printf("Log directory: %s\n", logDir)
+	logFilename := filepath.Base(cfg.EventLog)
+	log.Printf("Log filename: %s\n", logFilename)
 
-		// Now we need to find all of the rotated out log files and parse them for
-		// potentially missed updates.
-		logList, err := NewLogfileList(logDir, logFilename)
-		if err != nil {
-			fmt.Println("Couldn't get list of log files.")
-			logList = LogfileList{}
+	// Now we need to find all of the rotated out log files and parse them for
+	// potentially missed updates.
+	logList, err := NewLogfileList(logDir, logFilename)
+	if err != nil {
+		fmt.Println("Couldn't get list of log files.")
+		logList = LogfileList{}
+	}
+
+	// We need to sort the rotated log files in order from oldest to newest.
+	sort.Sort(logList)
+
+	// If there aren't any rotated log files or a tombstone file, then there
+	// isn't a reason to truncate the list of rotated log files. Hopefully, we'd
+	// trim the list of log files to prevent reprocessing, which could save us
+	// a significant amount of time at start up.
+	if len(logList) > 0 && tombstone != nil {
+		log.Printf("Slicing log list by inode number %d\n", tombstone.Inode)
+		logList = logList.SliceByInode(tombstone.Inode)
+	}
+
+	// Iterate through the list of log files, parse them, and ultimately send the
+	// events out to the AMQP broker. Skip the latest log file, we'll be handling
+	// that further down.
+	for _, logFile := range logList {
+		if logFile.Info.Name() == logFilename { //the current log file will get parsed later
+			continue
 		}
-
-		// We need to sort the rotated log files in order from oldest to newest.
-		sort.Sort(logList)
-
-		// If there aren't any rotated log files or a tombstone file, then there
-		// isn't a reason to truncate the list of rotated log files. Hopefully, we'd
-		// trim the list of log files to prevent reprocessing, which could save us
-		// a significant amount of time at start up.
-		if len(logList) > 0 && tombstone != nil {
-			log.Printf("Slicing log list by inode number %d\n", tombstone.Inode)
-			logList = logList.SliceByInode(tombstone.Inode)
-		}
-
-		// Iterate through the list of log files, parse them, and ultimately send the
-		// events out to the AMQP broker. Skip the latest log file, we'll be handling
-		// that further down.
-		for _, logFile := range logList {
-			if logFile.Info.Name() == logFilename { //the current log file will get parsed later
-				continue
+		logfilePath := path.Join(logFile.BaseDir, logFile.Info.Name())
+		log.Printf("Parsing %s\n", logfilePath)
+		if tombstone != nil {
+			logfileInode := InodeFromFileInfo(&logFile.Info)
+			if logfileInode == tombstone.Inode {
+				log.Printf("Tombstoned inode matches %s, starting parse at %d\n", logfilePath, tombstone.CurrentPos)
+				_, err = ParseEventFile(logfilePath, tombstone.CurrentPos, pub, false)
+			} else {
+				log.Printf("Tombstoned inode does not match %s, starting parse at position 0\n", logfilePath)
+				_, err = ParseEventFile(logfilePath, 0, pub, false)
 			}
-			logfilePath := path.Join(logFile.BaseDir, logFile.Info.Name())
-			log.Printf("Parsing %s\n", logfilePath)
-			err = ParseEventFile(logfilePath, pub)
+		} else {
+			log.Printf("No tombstone found, starting parse at position 0 for %s\n", logfilePath)
+			_, err = ParseEventFile(logfilePath, 0, pub, false)
+		}
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	changeDetected := make(chan int)
+	var startPos int64
+	if tombstone != nil {
+		logInode, err := InodeFromPath(cfg.EventLog)
+		if err != nil {
+			log.Println(err)
+			startPos = 0
+		} else {
+			if logInode == tombstone.Inode {
+				startPos = tombstone.CurrentPos
+			} else {
+				startPos = 0
+			}
+		}
+	} else {
+		startPos = 0
+	}
+	d, err := time.ParseDuration("2s")
+	if err != nil {
+		log.Println(err)
+	}
+	go func() {
+		err = MonitorPath(cfg.EventLog, d, changeDetected)
+		if err != nil {
+			log.Println(err)
+		}
+	}()
+
+	for {
+		select {
+		case <-changeDetected:
+			log.Printf("The main log file matches the tombstoned log file inode number.")
+			startPos, err = ParseEventFile(cfg.EventLog, startPos, pub, true)
 			if err != nil {
 				fmt.Println(err)
 			}
 		}
-
-		// Okay, we're done with the start up processing part at this point. Now we're
-		// at the part where clm will spend most of its time, tailing the log and
-		// emitting events.
-		log.Println("Done parsing event logs.")
-		err = ParseEvent(cfg.EventLog, pub)
-		if err != nil {
-			fmt.Println(err)
-		}
-		exitChan <- 1
-	}()
-
-	fmt.Println(cfg)
-	<-exitChan
+	}
 }
