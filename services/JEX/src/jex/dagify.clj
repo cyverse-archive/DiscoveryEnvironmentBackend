@@ -63,6 +63,7 @@
    "+IpcUuid = \"" uuid "\"\n"
    "+IpcJobId = \"generated_script\"\n"
    "+IpcUsername = \"" username "\"\n"
+   "+AccountingGroup = \"" (cfg/accounting-group) "." username "\"\n"
    (ipc-exe analysis-map)
    (ipc-exe-path analysis-map)
    "should_transfer_files = YES\n"
