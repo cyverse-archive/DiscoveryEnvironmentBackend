@@ -14,10 +14,12 @@
 (defn get-filtered-paths-where-clause
   "Returns a LIKE clause for folder paths in the count-filtered-items-in-folder query."
   [filter-files filtered-paths]
-  (string/join " OR " (concat (repeat (count filter-files)
-                                      (get-folder-like-clause))
-                              (repeat (count filtered-paths)
-                                      (get-folder-path-clause)))))
+  (let [clauses (concat (repeat (count filter-files) (get-folder-like-clause))
+                        (repeat (count filtered-paths) (get-folder-path-clause)))]
+    (if (empty? clauses)
+      "FALSE"
+      (string/join " OR " clauses))))
+
 
 (defn filter-files->query-args
   "Converts the list of filter-files for use as arguments in the count-filtered-items-in-folder
