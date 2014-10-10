@@ -4,7 +4,8 @@
   (:use [kameleon.entities :only [app_listing]]
         [korma.core]
         [korma.db :only [with-db]])
-  (:require [donkey.util.db :as db]))
+  (:require [donkey.util.db :as db])
+  (:import [java.util UUID]))
 
 (defn load-app-details
   [app-ids]
@@ -80,15 +81,13 @@
 (defn load-app-steps
   [app-id]
   (with-db db/de
-    (select [:transformation_activity :a]
-            (join [:transformation_task_steps :tts] {:a.hid :tts.transformation_task_id})
-            (join [:transformation_steps :ts] {:tts.transformation_step_id :ts.id})
-            (join [:transformations :tx] {:ts.transformation_id :tx.id})
-            (fields [:ts.id              :step_id]
-                    [:ts.name            :step_name]
-                    [:tx.template_id     :template_id]
-                    [:tx.external_app_id :external_app_id])
-            (where {:a.id app-id}))))
+    (select [:apps :a]
+            (join [:app_steps :s] {:a.id :s.app_id})
+            (join [:tasks :t] {:s.task_id :t.id})
+            (fields [:s.id              :step_id]
+                    [:t.tool_id         :tool_id]
+                    [:t.external_app_id :external_app_id])
+            (where {:a.id (UUID/fromString app-id)}))))
 
 (defn load-app-info
   [app-id]

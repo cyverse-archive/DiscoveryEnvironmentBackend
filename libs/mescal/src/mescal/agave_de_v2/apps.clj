@@ -14,11 +14,11 @@
 (defn- format-group
   [name params]
   (when (some :isVisible params)
-    {:name       name
-     :label      name
-     :id         name
-     :type       ""
-     :properties params}))
+    {:step_number 1
+     :id          name
+     :name        name
+     :label       name
+     :parameters  params}))
 
 (defn- format-input-validator
   [input]
@@ -26,9 +26,9 @@
 
 (defn- format-param
   [get-type get-value get-args param]
-  {:arguments    (get-args param)
+  {:description  (get-in param [:details :description])
+   :arguments    (get-args param)
    :defaultValue (get-value param)
-   :description  (get-in param [:details :description])
    :id           (:id param)
    :isVisible    (get-boolean (get-in param [:value :visible]) false)
    :label        (get-in param [:details :label])
@@ -71,7 +71,7 @@
 
 (defn- output-param-formatter
   [& {:keys [get-default] :or {get-default get-default-param-value}}]
-  (param-formatter (constantly "Output") get-default (constantly [])))
+  (param-formatter (constantly "FileOutput") get-default (constantly [])))
 
 (defn- format-params
   [formatter-fn params]
@@ -84,15 +84,25 @@
            (format-group "Parameters" (format-params (opt-param-formatter) (:parameters app)))
            (format-group "Outputs" (format-params (output-param-formatter) (:outputs app)))]))
 
+(defn system-available?
+  [agave system-name]
+  (not= "UP" (:status (.getSystemInfo agave system-name))))
+
 (defn format-app
-  ([app group-format-fn]
-     (let [app-label (get-app-name app)]
-       {:id           (:id app)
-        :label        app-label
-        :component_id c/hpc-group-id
-        :groups       (group-format-fn app)}))
-  ([app]
-     (format-app app format-groups)))
+  ([agave app group-format-fn]
+     (let [system-name (:executionSystem app)
+           app-label   (get-app-name app)
+           mod-time    (util/parse-timestamp (:lastModified app))]
+       {:groups           (group-format-fn app)
+        :disabled         (system-available? agave system-name)
+        :label            app-label
+        :id               (:id app)
+        :name             app-label
+        :description      (:shortDescription app)
+        :integration_date mod-time
+        :edited_date      mod-time}))
+  ([agave app]
+     (format-app agave app format-groups)))
 
 (defn load-app-info
   [agave app-ids]
@@ -126,29 +136,19 @@
      :groups           [c/hpc-group-overview]
      :suggested_groups [c/hpc-group-overview]}))
 
-(defn- build-data-object
+(defn- add-file-info
   [prop]
-  {:cmdSwitch      (:name prop)
-   :description    (:description prop)
-   :file_info_type "File"
-   :format         "Unspecified"
-   :id             (:id prop)
-   :multiplicity   "One"
-   :name           (:label prop)
-   :order          1
-   :required       (:required prop)
-   :retain         false})
-
-(defn- add-data-object
-  [prop]
-  (assoc prop :data_object (build-data-object prop)))
+  (assoc prop
+    :format         "Unspecified"
+    :retain         false
+    :file_info_type "File"))
 
 (defn format-app-data-objects
   [app]
   {:id      (:id app)
-   :inputs  (map (comp add-data-object (input-param-formatter)) (:inputs app))
+   :inputs  (map (comp add-file-info (input-param-formatter)) (:inputs app))
    :name    (get-app-name app)
-   :outputs (map (comp add-data-object (output-param-formatter)) (:outputs app))})
+   :outputs (map (comp add-file-info (output-param-formatter)) (:outputs app))})
 
 (defn- format-rerun-value
   [p v]

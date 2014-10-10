@@ -1,4 +1,5 @@
-(ns mescal.agave-de-v2.params)
+(ns mescal.agave-de-v2.params
+  (:import [java.util UUID]))
 
 (defn- number-type-for
   [xsd-type]
@@ -46,7 +47,7 @@
   (when enum-element
     (let [[enum-value label] (first enum-element)]
       {:display   label
-       :id        (name enum-value)
+       :id        (str (UUID/randomUUID))
        :isDefault (= (name enum-value) default-value)
        :name      ""
        :value     (name enum-value)})))

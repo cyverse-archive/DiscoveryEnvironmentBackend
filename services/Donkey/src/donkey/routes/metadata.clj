@@ -33,6 +33,9 @@
     (GET "/apps/:app-id/details" [app-id]
          (trap #(apps/get-app-details app-id)))
 
+    (GET "/apps/:app-id" [app-id :as {:keys [uri]}]
+         (ce/trap uri #(apps/get-app app-id)))
+
     (GET "/apps/:app-id/ui" [app-id]
          (trap #(edit-app app-id)))
 
@@ -108,9 +111,6 @@
 
    (GET "/logout" [:as {params :params}]
         (trap #(logout params)))
-
-   (GET "/app/:app-id" [app-id :as {:keys [uri]}]
-        (ce/trap uri #(apps/get-app app-id)))
 
    (GET "/apps/:app-id/data-objects" [app-id :as {:keys [uri]}]
         (ce/trap uri #(apps/list-app-data-objects app-id)))

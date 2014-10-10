@@ -83,7 +83,7 @@
 
 (defn get-app
   [app-id]
-  (-> (client/get (metadactyl-url "apps" app-id "ui")
+  (-> (client/get (metadactyl-url "apps" app-id)
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)

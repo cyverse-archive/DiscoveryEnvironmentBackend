@@ -27,11 +27,11 @@
   (assoc group :properties (remove (comp mapped-props :id) (:properties group))))
 
 (defn- reformat-group
-  [app-name step-name group]
+  [app-name step-id group]
   (assoc group
     :name       (str app-name " - " (:name group))
     :label      (str app-name " - " (:label group))
-    :properties (mapv (fn [prop] (assoc prop :id (str step-name "_" (:id prop))))
+    :properties (mapv (fn [prop] (assoc prop :id (str step-id "_" (:id prop))))
                       (:properties group))))
 
 (defn- get-agave-groups
@@ -42,7 +42,7 @@
     (->> (:categories app)
          (map (partial remove-mapped-inputs mapped-props))
          (remove (comp empty? :properties))
-         (map (partial reformat-group (:name app) (:step_name step)))
+         (map (partial reformat-group (:name app) (:step_id step)))
          (doall))))
 
 (defn- get-combined-groups
@@ -165,7 +165,7 @@
                 output-dir    (:result-folder-path job-info)
                 submission    (assoc (mu/update-submission-result-folder submission output-dir)
                                 :analysis_id (:external_app_id curr-app-step)
-                                :paramPrefix (:step_name curr-app-step))]
+                                :paramPrefix (:step_id curr-app-step))]
             (aa/submit-job-step agave job-info job-step submission)))
     (record-step-submission job-info job-step)))
 
