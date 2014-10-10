@@ -25,9 +25,6 @@
   (log/debug (str "create " user " " path))
   (with-jargon (cfg/jargon-cfg) [cm]
     (let [fixed-path (ft/rm-last-slash path)]
-      (when-not (validators/good-string? fixed-path)
-        (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-                 :path path}))
       (validators/user-exists cm user)
       (validators/path-writeable cm user (ft/dirname fixed-path))
       (validators/path-not-exists cm fixed-path)

@@ -8,24 +8,22 @@
             [clj-jargon.permissions :as perm]
             [clj-jargon.users :as user]
             [clojure-commons.error-codes :as error]
-            [data-info.util.config :as cfg]))
-
-
-(def bad-chars
-  #{\= \! \" \# \$ \' \% \* \+ \, \: \? \@ \[ \] \^ \{ \} \| \& \; \< \> \` \~ \\ \tab \newline})
+            [data-info.util.config :as cfg])
+  (:import [clojure.lang IPersistentCollection]))
 
 
 (defn ^Boolean good-string?
   "Checks that a string doesn't contain any problematic characters.
 
    Params:
-     to-check - The string to check
+     bad-chars - the characters that shouldn't be in the string
+     to-check  - The string to check
 
    Returns:
      It returns false if the string contains at least one problematic character, otherwise false."
-  [^String to-check]
+  [^IPersistentCollection bad-chars ^String to-check]
   (let [chars-to-check (set (seq to-check))]
-    (empty? (set/intersection bad-chars chars-to-check))))
+    (empty? (set/intersection (set bad-chars) chars-to-check))))
 
 
 (defn valid-bool-param

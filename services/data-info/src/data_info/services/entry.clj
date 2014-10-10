@@ -83,17 +83,19 @@
 
 (defn- should-filter?
   "Returns true if the map is okay to include in a directory listing."
-  [user path-to-check]
+  [user path-to-check ban-chars]
   (let [fpaths (set (concat (cfg/filter-files) (filtered-paths user)))]
     (or (contains? fpaths path-to-check)
-        (not (duv/good-string? path-to-check)))))
+        (not (duv/good-string? ban-chars path-to-check)))))
 
 
 (defn- page-entry->map
   "Turns a entry in a paged listing result into a map containing file/directory information that can
    be consumed by the front-end."
-  [user {:keys [type full_path base_name data_size modify_ts create_ts access_type_id uuid]}]
-  (let [filter   (or (should-filter? user full_path) (should-filter? user base_name))
+  [user ban-chars {:keys [type full_path base_name data_size modify_ts create_ts access_type_id
+                          uuid]}]
+  (let [filter   (or (should-filter? ban-chars user full_path)
+                     (should-filter? ban-chars user base_name))
         base-map {:id            uuid
                   :path          full_path
                   :label         base_name
@@ -110,28 +112,30 @@
 (defn- page->map
   "Transforms an entire page of results for a paged listing in a map that can be returned to the
    client."
-  [user page]
+  [user ban-chars page]
   (let [entry-types (group-by :type page)
         do          (get entry-types "dataobject")
         collections (get entry-types "collection")
-        xformer     (partial page-entry->map user)]
+        xformer     (partial page-entry->map user ban-chars)]
     {:files   (mapv xformer do)
      :folders (mapv xformer collections)}))
 
 
 (defn- total-filtered
-  [user zone path]
-  (icat/number-of-filtered-items-in-folder user
-                                           zone
-                                           path
-                                           (apply str duv/bad-chars)
-                                           (cfg/filter-files)
-                                           (filtered-paths user)))
+  [user zone ban-chars path]
+  (let [db-ban-chars (apply str ban-chars)
+        ban-paths    (filtered-paths user)]
+    (icat/number-of-filtered-items-in-folder user
+                                             zone
+                                             path
+                                             db-ban-chars
+                                             (cfg/filter-files)
+                                             ban-paths)))
 
 
 (defn- paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
-  [user path limit offset sfield sord]
+  [user path limit offset sfield sord ban-chars]
   (log/info "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
   (init/with-jargon (cfg/jargon-cfg) [cm]
     (duv/user-exists cm user)
@@ -139,17 +143,17 @@
     (let [stat  (item/stat cm path)
           zone  (cfg/irods-zone)
           pager (log/spy (icat/paged-folder-listing user zone path sfield sord limit offset))]
-      (assoc (page->map user pager)
+      (assoc (page->map user ban-chars pager)
         :id             (irods/lookup-uuid cm path)
         :path           path
-        :filter         (should-filter? user path)
+        :filter         (should-filter? ban-chars user path)
         :permission     (perm/permission-for cm user path)
         :hasSubDirs     true
         :date-created   (:date-created stat)
         :date-modified  (:date-modified stat)
         :file-size      0
         :total          (icat/number-of-items-in-folder user zone path)
-        :total_filtered (total-filtered user zone path)))))
+        :total_filtered (total-filtered user zone ban-chars path)))))
 
 
 (def ^:private api-field->db-col
@@ -197,14 +201,14 @@
 
 
 (defn- get-folder
-  "Entrypoint for the API that calls (paged-dir-listing)."
-  [path {:keys [limit offset sort-field sort-order user]}]
+  [path {:keys [ban-chars limit offset sort-field sort-order user]}]
   (let [path       (file/rm-last-slash path)
+        ban-chars  (set (seq ban-chars))
         limit      (Integer/parseInt limit)
         offset     (Integer/parseInt offset)
         sort-field (resolve-sort-field sort-field)
         sort-order (resolve-sort-order sort-order)]
-    (paged-dir-listing user path limit offset sort-field sort-order)))
+    (paged-dir-listing user path limit offset sort-field sort-order ban-chars)))
 
 (with-pre-hook! #'get-folder
   (fn [path params]

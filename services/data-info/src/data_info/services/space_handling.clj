@@ -1,6 +1,5 @@
 (ns data-info.services.space-handling
-  (:use [clojure-commons.error-codes]
-        [clojure-commons.validators]
+  (:use [clojure-commons.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.permissions :only [process-parent-dirs]]
         [clj-jargon.item-info :only [exists?]]
@@ -12,6 +11,7 @@
             [clojure.set :as set]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [clojure-commons.error-codes :as error]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.util.validators :as validators]
@@ -20,11 +20,10 @@
 
 (defn- paths-contain-char
   [paths char]
-  (when-not (validators/good-string? char)
-    (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-             :character char}))
+  (let [pattern        (re-pattern char)
+        contains-char? (fn [path] (not (nil? (re-seq pattern path))))]
+    (apply merge (map #(hash-map % (contains-char? %)) paths))))
 
-  (apply merge (map #(hash-map %1 (not (nil? (re-seq (re-pattern char) %1)))) paths)))
 
 (defn- parent-dirs
   [user path]
@@ -89,9 +88,6 @@
     (validators/user-exists cm user)
     (validators/all-paths-exist cm paths)
     (validators/user-owns-paths cm user paths)
-    (when-not (validators/good-string? new-char)
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :character new-char}))
     (let [parent-dirs (all-parent-dirs user paths)]
       (validators/user-owns-paths cm user parent-dirs)
 
@@ -111,7 +107,7 @@
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (when-not (every? true? (mapv string? (:paths body)))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+      (throw+ {:error_code error/ERR_BAD_OR_MISSING_FIELD
                :field      "paths"}))
     (validators/validate-num-paths (:paths body))))
 
@@ -127,7 +123,7 @@
     (validate-map params {:user string?})
     (validate-map body {:paths sequential?})
     (when-not (every? true? (mapv string? (:paths body)))
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+      (throw+ {:error_code error/ERR_BAD_OR_MISSING_FIELD
                :field      "paths"}))
     (validators/validate-num-paths (:paths body))))
 
