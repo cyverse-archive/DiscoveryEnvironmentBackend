@@ -109,45 +109,39 @@
      :folders (mapv xformer collections)}))
 
 
-(defn- filtered-paths
-  "Returns a seq of full paths that should not be included in paged listing."
-  [user]
-  [(file/path-join (cfg/irods-home) user)
-   (file/path-join (cfg/irods-home) "public")])
-
-
 (defn- should-filter?
   "Returns true if the map is okay to include in a directory listing."
-  [user filter-chars filter-names path]
-  (or (contains? (filtered-paths user) path)
-      (contains? filter-names (file/basename path))
-      (not (duv/good-string? filter-chars path))))
+  [filter path]
+  (or (contains? (:paths filter) path)
+      (contains? (:names filter) (file/basename path))
+      (not (duv/good-string? (:chars filter) path))))
 
 
 (defn- total-filtered
-  [user zone filter-chars filter-names path]
-  (let [cfilt (apply str filter-chars)
-        pfilt (filtered-paths user)]
-    (icat/number-of-filtered-items-in-folder user zone path cfilt filter-names pfilt)))
+  [user zone parent filter]
+  (let [cfilt (apply str (:chars filter))
+        nfilt (:names filter)
+        pfilt (:paths filter)]
+    (icat/number-of-filtered-items-in-folder user zone parent cfilt nfilt pfilt)))
 
 
 (defn- paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
-  [user path limit offset sfield sord filter-chars filter-names]
+  [user path limit offset sfield sord filters]
   (log/info "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
   (init/with-jargon (cfg/jargon-cfg) [cm]
     (duv/user-exists cm user)
     (duv/path-readable cm user path)
-    (let [id     (irods/lookup-uuid cm path)
-          filter (should-filter? user filter-chars filter-names path)
-          perm   (perm/permission-for cm user path)
-          stat   (item/stat cm path)
-          zone   (cfg/irods-zone)
-          pager  (icat/paged-folder-listing user zone path sfield sord limit offset)]
+    (let [id      (irods/lookup-uuid cm path)
+          filter  (should-filter? filters path)
+          perm    (perm/permission-for cm user path)
+          stat    (item/stat cm path)
+          zone    (cfg/irods-zone)
+          pager   (icat/paged-folder-listing user zone path sfield sord limit offset)]
       (merge (fmt-entry id (:date-created stat) (:date-modified stat) filter path perm 0)
-             (page->map (partial should-filter? user filter-chars filter-names) pager)
+             (page->map (partial should-filter? filters) pager)
              {:total         (icat/number-of-items-in-folder user zone path)
-              :totalFiltered (total-filtered user zone filter-chars filter-names path)}))))
+              :totalFiltered (total-filtered user zone path filters)}))))
 
 
 (def ^:private api-field->db-col
@@ -170,12 +164,12 @@
   (when str (str/lower-case str)))
 
 
-(defn- resolve-filter-names
-  [filter-names]
+(defn- resolve-str-set
+  [str-vals]
   (cond
-    (nil?    filter-names) #{}
-    (string? filter-names) #{filter-names}
-    :else                  (set filter-names)))
+    (nil?    str-vals) #{}
+    (string? str-vals) #{str-vals}
+    :else              (set str-vals)))
 
 
 (defn- resolve-sort-field
@@ -207,15 +201,16 @@
 
 
 (defn- get-folder
-  [path {:keys [filter-chars filter-name limit offset sort-field sort-order user]}]
-  (let [path         (file/rm-last-slash path)
-        filter-chars (set filter-chars)
-        filter-names (resolve-filter-names filter-name)
-        limit        (Integer/parseInt limit)
-        offset       (Integer/parseInt offset)
-        sort-field   (resolve-sort-field sort-field)
-        sort-order   (resolve-sort-order sort-order)]
-    (paged-dir-listing user path limit offset sort-field sort-order filter-chars filter-names)))
+  [path {:keys [filter-chars filter-name filter-path limit offset sort-field sort-order user]}]
+  (let [path       (file/rm-last-slash path)
+        filter     {:chars (set filter-chars)
+                    :names (resolve-str-set filter-name)
+                    :paths (resolve-str-set filter-path)}
+        limit      (Integer/parseInt limit)
+        offset     (Integer/parseInt offset)
+        sort-field (resolve-sort-field sort-field)
+        sort-order (resolve-sort-order sort-order)]
+    (paged-dir-listing user path limit offset sort-field sort-order filter)))
 
 (with-pre-hook! #'get-folder
   (fn [path params]
