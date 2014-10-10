@@ -29,13 +29,17 @@
   "Returns a regex character class set for use in the count-filtered-items-in-folder query
    using the given characters."
   [filter-chars]
-  (str "[" (string/replace filter-chars
-                           #"'|\[|\]|\\"
-                           {"\\" "\\\\"
-                            "'" "\\'"
-                            "[" "\\["
-                            "]" "\\]"})
-       "]"))
+  (if (empty? filter-chars)
+    "^$"
+    (str "["
+         (string/replace filter-chars
+                         #"'|\[|\]|\\"
+                         {"\\" "\\\\"
+                          "'" "\\'"
+                          "[" "\\["
+                          "]" "\\]"})
+         "]")))
+
 
 (defn prepare-text-set
   "Given a set, it prepares the elements for injection into an SQL query. It returns a string
