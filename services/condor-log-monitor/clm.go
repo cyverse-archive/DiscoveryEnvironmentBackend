@@ -9,7 +9,7 @@
 // messages if condor-log-monitor is down for a while and Condor rotates files
 // out too many times.
 //
-// Condor attempts to recover from downtime by recording a tombstone file that
+// condor-log-monitor attempts to recover from downtime by recording a tombstone file that
 // records the inode number, last modified date, processing date, and last
 // processed position. At start up clm will look for the tombstoned file and will
 // attempt to start processing from that point forward.
