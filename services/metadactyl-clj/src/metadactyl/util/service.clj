@@ -27,7 +27,7 @@
   (log/error e "bad request")
   (charset
    {:status       400
-    :body         (cheshire/encode {:success false :reason (.getMessage e)})
+    :body         (cheshire/encode {:reason (.getMessage e)})
     :headers default-content-type-header}
    "UTF-8"))
 
@@ -36,8 +36,7 @@
   (charset
    {:status       400
     :body         (cheshire/encode (assoc (dissoc m :type)
-                                     :code    (upper-case (name (or (:type m) (:code m))))
-                                     :success false))
+                                     :code    (upper-case (name (or (:type m) (:code m))))))
     :headers default-content-type-header}
    "UTF-8"))
 
@@ -49,14 +48,14 @@
   (log/error e "internal error")
   (charset
    {:status 500
-    :body (cheshire/encode {:success false :reason (.getMessage e)})
+    :body (cheshire/encode {:reason (.getMessage e)})
     :headers default-content-type-header}
    "UTF-8"))
 
 (defn unrecognized-path-response []
   "Builds the response to send for an unrecognized service path."
   (let [msg "unrecognized service path"]
-    (cheshire/encode {:success false :reason msg})))
+    (cheshire/encode {:reason msg})))
 
 (defn trap
   "Traps any exception thrown by a service and returns an appropriate
