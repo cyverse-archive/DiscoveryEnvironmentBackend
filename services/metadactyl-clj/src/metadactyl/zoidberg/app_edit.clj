@@ -162,7 +162,7 @@
   [app-id]
   (let [app (get-app app-id)]
     (verify-app-editable app)
-    (service/swagger-response (format-app app))))
+    (service/success-response (format-app app))))
 
 ;; FIXME
 (defn copy-app

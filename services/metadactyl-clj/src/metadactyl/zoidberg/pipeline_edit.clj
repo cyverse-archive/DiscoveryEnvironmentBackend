@@ -192,7 +192,7 @@
   [app-id]
   (let [app (get-app app-id)]
     (verify-app-editable app)
-    (service/swagger-response (format-workflow app))))
+    (service/success-response (format-workflow app))))
 
 (defn- add-pipeline-app
   [app]

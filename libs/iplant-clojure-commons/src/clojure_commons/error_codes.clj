@@ -112,10 +112,7 @@
     :body
     (cond
      (map? retval)
-     (-> retval
-         (assoc :status "success"
-                :action action)
-         cheshire/encode)
+     (cheshire/encode retval)
 
      (not (string? retval))
      (str retval)

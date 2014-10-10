@@ -56,7 +56,7 @@
          body also requires that each parameter contain a `value` field that contains the parameter
          value to include on the command line. The response body is in the same format as the
          `/arg-preview` service in the JEX. Please see the JEX documentation for more information."
-         (ce/trap uri #(service/swagger-response (app-metadata/preview-command-line body))))
+         (ce/trap uri #(service/success-response (app-metadata/preview-command-line body))))
 
   (GET* "/:app-id" []
         :path-params [app-id :- AppIdPathParam]
@@ -65,7 +65,7 @@
         :return AppJobView
         :notes "This service allows the Discovery Environment user interface to obtain an
         app description that can be used to construct a job submission form."
-        (ce/trap "get-app" #(service/swagger-response (jv/get-app app-id))))
+        (ce/trap "get-app" #(service/success-response (jv/get-app app-id))))
 
   (PATCH* "/:app-id" []
           :path-params [app-id :- AppIdPathParam]
@@ -146,7 +146,7 @@
          the means to store the App rating. This service accepts a rating level between one and
          five, inclusive, and a comment identifier that refers to a comment in iPlant's Confluence
          wiki. The rating is stored in the database and associated with the authenticated user."
-         (ce/trap uri #(service/swagger-response (app-metadata/rate-app app-id body))))
+         (ce/trap uri #(service/success-response (app-metadata/rate-app app-id body))))
 
   (DELETE* "/:app-id/rating" [:as {uri :uri}]
            :path-params [app-id :- AppIdPathParam]
@@ -155,4 +155,4 @@
            :summary "Delete an App Rating"
            :notes "The DE uses this service to remove a rating that a user has previously made. This
            service deletes the authenticated user's rating for the corresponding app-id."
-           (ce/trap uri #(service/swagger-response (app-metadata/delete-app-rating app-id)))))
+           (ce/trap uri #(service/success-response (app-metadata/delete-app-rating app-id)))))

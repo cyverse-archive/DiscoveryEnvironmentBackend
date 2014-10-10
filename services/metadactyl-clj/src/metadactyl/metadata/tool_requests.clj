@@ -4,7 +4,7 @@
         [korma.core]
         [korma.db]
         [metadactyl.util.conversions :only [remove-nil-vals]]
-        [metadactyl.util.service :only [success-response swagger-response]]
+        [metadactyl.util.service :only [success-response]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
@@ -177,7 +177,7 @@
 (defn get-tool-request
   "Lists the details of a single tool request."
   [uuid]
-  (swagger-response (remove-nil-vals (get-tool-request-details uuid))))
+  (success-response (remove-nil-vals (get-tool-request-details uuid))))
 
 (defn submit-tool-request
   "Submits a tool request on behalf of a user."
@@ -195,7 +195,7 @@
 (defn list-tool-requests
   "Lists tool requests."
   [params]
-  (swagger-response
+  (success-response
    {:tool_requests
     (map #(assoc %
             :date_submitted (.getTime (:date_submitted %))
@@ -211,7 +211,7 @@
 (defn list-tool-request-status-codes
   "Lists the known tool request status codes."
   [{:keys [filter]}]
-  (swagger-response
+  (success-response
    {:status_codes
     (-> (select* tool_request_status_codes)
         (fields :id :name :description)
