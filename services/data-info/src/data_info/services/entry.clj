@@ -4,7 +4,6 @@
             [clojure.string :as str]
             [clojure.tools.logging :as log]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [me.raynes.fs :as fs]
             [slingshot.slingshot :refer [throw+]]
             [clj-icat-direct.icat :as icat]
             [clj-jargon.init :as init]
@@ -193,14 +192,18 @@
   [sort-field]
   (when-not (contains? api-field->db-col (canonicalize-str sort-field))
     (log/warn "invalid sort field" sort-field)
-    (throw+ {:error_code "ERR_INVALID_SORT_FIELD" :field sort-field})))
+    (throw+ {:error_code error/ERR_BAD_QUERY_PARAMETER
+             :parameter  "sort-field"
+             :value      sort-field})))
 
 
 (defn- validate-sort-order
   [sort-order]
   (when-not (contains? api-order->db-order (canonicalize-str sort-order))
     (log/warn "invalid sort order" sort-order)
-    (throw+ {:error_code "ERR_INVALID_SORT_ORDER" :sort-order sort-order})))
+    (throw+ {:error_code error/ERR_BAD_QUERY_PARAMETER
+             :parameter  "sort-order"
+             :value      sort-order})))
 
 
 (defn- get-folder
