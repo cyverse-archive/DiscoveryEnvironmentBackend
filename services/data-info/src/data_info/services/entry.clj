@@ -81,20 +81,12 @@
    (file/path-join (cfg/irods-home) "public")])
 
 
-(defn- should-filter?
-  "Returns true if the map is okay to include in a directory listing."
-  [user path-to-check filter-chars]
-  (let [fpaths (set (concat (cfg/filter-files) (filtered-paths user)))]
-    (or (contains? fpaths path-to-check)
-        (not (duv/good-string? filter-chars path-to-check)))))
-
-
 (defn- fmt-entry
-  [user filter-chars id date-created date-modified path permission size]
+  [id date-created date-modified filter path permission size]
   {:id           id
    :dateCreated  date-created
    :dateModified date-modified
-   :filter       (should-filter? user path filter-chars)
+   :filter       filter
    :path         path
    :permission   permission
    :size         size})
@@ -103,23 +95,32 @@
 (defn- page-entry->map
   "Turns a entry in a paged listing result into a map containing file/directory information that can
    be consumed by the front-end."
-  [user filter-chars {:keys [access_type_id create_ts data_size full_path modify_ts uuid]}]
+  [filter? {:keys [access_type_id create_ts data_size full_path modify_ts uuid]}]
   (let [created  (* (Integer/parseInt create_ts) 1000)
         modified (* (Integer/parseInt modify_ts) 1000)
+        filter   (filter? full_path)
         perm     (perm/fmt-perm access_type_id)]
-    (fmt-entry user filter-chars uuid created modified full_path perm data_size)))
+    (fmt-entry uuid created modified filter full_path perm data_size)))
 
 
 (defn- page->map
   "Transforms an entire page of results for a paged listing in a map that can be returned to the
    client."
-  [user filter-chars page]
+  [filter? page]
   (let [entry-types (group-by :type page)
         do          (get entry-types "dataobject")
         collections (get entry-types "collection")
-        xformer     (partial page-entry->map user filter-chars)]
+        xformer     (partial page-entry->map filter?)]
     {:files   (mapv xformer do)
      :folders (mapv xformer collections)}))
+
+
+(defn- should-filter?
+  "Returns true if the map is okay to include in a directory listing."
+  [user filter-chars path]
+  (let [fpaths (set (concat (cfg/filter-files) (filtered-paths user)))]
+    (or (contains? fpaths path)
+      (not (duv/good-string? filter-chars path)))))
 
 
 (defn- total-filtered
@@ -141,13 +142,14 @@
   (init/with-jargon (cfg/jargon-cfg) [cm]
     (duv/user-exists cm user)
     (duv/path-readable cm user path)
-    (let [id    (irods/lookup-uuid cm path)
-          perm  (perm/permission-for cm user path)
-          stat  (item/stat cm path)
-          zone  (cfg/irods-zone)
-          pager (log/spy (icat/paged-folder-listing user zone path sfield sord limit offset))]
-      (merge (fmt-entry user filter-chars id (:date-created stat) (:date-modified stat) path perm 0)
-             (page->map user filter-chars pager)
+    (let [id     (irods/lookup-uuid cm path)
+          filter (should-filter? user filter-chars path)
+          perm   (perm/permission-for cm user path)
+          stat   (item/stat cm path)
+          zone   (cfg/irods-zone)
+          pager  (log/spy (icat/paged-folder-listing user zone path sfield sord limit offset))]
+      (merge (fmt-entry id (:date-created stat) (:date-modified stat) filter path perm 0)
+             (page->map (partial should-filter? user filter-chars) pager)
              {:total         (icat/number-of-items-in-folder user zone path)
               :totalFiltered (total-filtered user zone filter-chars path)}))))
 
