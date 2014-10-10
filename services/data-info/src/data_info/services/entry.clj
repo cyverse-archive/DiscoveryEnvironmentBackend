@@ -1,8 +1,10 @@
 (ns data-info.services.entry
   "This namespace provides the business logic for all entries endpoints."
-  (:require [clojure.string :as str]
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
             [clojure.tools.logging :as log]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [me.raynes.fs :as fs]
             [slingshot.slingshot :refer [throw+]]
             [clj-icat-direct.icat :as icat]
             [clj-jargon.init :as init]
@@ -74,13 +76,6 @@
 (with-post-hook! #'get-file (dul/log-func "get-file"))
 
 
-(defn- filtered-paths
-  "Returns a seq of full paths that should not be included in paged listing."
-  [user]
-  [(file/path-join (cfg/irods-home) user)
-   (file/path-join (cfg/irods-home) "public")])
-
-
 (defn- fmt-entry
   [id date-created date-modified filter path permission size]
   {:id           id
@@ -115,12 +110,26 @@
      :folders (mapv xformer collections)}))
 
 
+(defn- filtered-paths
+  "Returns a seq of full paths that should not be included in paged listing."
+  [user]
+  [(file/path-join (cfg/irods-home) user)
+   (file/path-join (cfg/irods-home) "public")])
+
+
+(defn- filter-by-name?
+  [path]
+  (let [filter-names (set (cfg/filter-files))
+        path-names   (set (next (fs/split path)))]
+    (not (empty? (set/intersection filter-names path-names)))))
+
+
 (defn- should-filter?
   "Returns true if the map is okay to include in a directory listing."
   [user filter-chars path]
-  (let [fpaths (set (concat (cfg/filter-files) (filtered-paths user)))]
-    (or (contains? fpaths path)
-      (not (duv/good-string? filter-chars path)))))
+  (or (contains? (filtered-paths user) path)
+      (filter-by-name? path)
+      (not (duv/good-string? filter-chars path))))
 
 
 (defn- total-filtered
