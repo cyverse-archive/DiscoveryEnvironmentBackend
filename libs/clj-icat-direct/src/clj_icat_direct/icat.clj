@@ -83,13 +83,13 @@
      folder-path    - The absolute path to the folder of interest
      filter-chars   - If a path contains one or more of these characters, it forms part of the
                       filter
-     filter-files   - This is a comma-separated list of paths that form part of the filter
+     filter-files   - This is a sequence of names that form part of the filter
      filtered-paths - This is an array of paths that form part of the filter."
   [^String user
    ^String zone
    ^String folder-path
    ^String filter-chars
-   ^String filter-files
+   ^ISeq   filter-files
    ^ISeq   filtered-paths]
   (let [filtered-path-args (concat (q/filter-files->query-args filter-files) filtered-paths)
         query              (format (:count-filtered-items-in-folder q/queries)
