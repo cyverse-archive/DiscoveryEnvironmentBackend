@@ -45,12 +45,6 @@
   "data-info.data-threshold")
 
 
-(cc/defprop-vec filter-files
-  "The files to filter out of return values."
-  [props config-valid configs]
-  "data-info.filter-files")
-
-
 (cc/defprop-vec perms-filter
   "Hmmm..."
   [props config-valid configs]

@@ -117,50 +117,38 @@
    (file/path-join (cfg/irods-home) "public")])
 
 
-(defn- filter-by-name?
-  [path]
-  (let [filter-names (set (cfg/filter-files))
-        path-names   (set (next (fs/split path)))]
-    (not (empty? (set/intersection filter-names path-names)))))
-
-
 (defn- should-filter?
   "Returns true if the map is okay to include in a directory listing."
-  [user filter-chars path]
+  [user filter-chars filter-names path]
   (or (contains? (filtered-paths user) path)
-      (filter-by-name? path)
+      (contains? filter-names (file/basename path))
       (not (duv/good-string? filter-chars path))))
 
 
 (defn- total-filtered
-  [user zone filter-chars path]
-  (let [db-filter-chars (apply str filter-chars)
-        fpaths          (filtered-paths user)]
-    (icat/number-of-filtered-items-in-folder user
-                                             zone
-                                             path
-                                             db-filter-chars
-                                             (cfg/filter-files)
-                                             fpaths)))
+  [user zone filter-chars filter-names path]
+  (let [cfilt (apply str filter-chars)
+        pfilt (filtered-paths user)]
+    (icat/number-of-filtered-items-in-folder user zone path cfilt filter-names pfilt)))
 
 
 (defn- paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
-  [user path limit offset sfield sord filter-chars]
+  [user path limit offset sfield sord filter-chars filter-names]
   (log/info "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
   (init/with-jargon (cfg/jargon-cfg) [cm]
     (duv/user-exists cm user)
     (duv/path-readable cm user path)
     (let [id     (irods/lookup-uuid cm path)
-          filter (should-filter? user filter-chars path)
+          filter (should-filter? user filter-chars filter-names path)
           perm   (perm/permission-for cm user path)
           stat   (item/stat cm path)
           zone   (cfg/irods-zone)
-          pager  (log/spy (icat/paged-folder-listing user zone path sfield sord limit offset))]
+          pager  (icat/paged-folder-listing user zone path sfield sord limit offset)]
       (merge (fmt-entry id (:date-created stat) (:date-modified stat) filter path perm 0)
-             (page->map (partial should-filter? user filter-chars) pager)
+             (page->map (partial should-filter? user filter-chars filter-names) pager)
              {:total         (icat/number-of-items-in-folder user zone path)
-              :totalFiltered (total-filtered user zone filter-chars path)}))))
+              :totalFiltered (total-filtered user zone filter-chars filter-names path)}))))
 
 
 (def ^:private api-field->db-col
@@ -181,6 +169,14 @@
 (defn- canonicalize-str
   [str]
   (when str (str/lower-case str)))
+
+
+(defn- resolve-filter-names
+  [filter-names]
+  (cond
+    (nil?    filter-names) #{}
+    (string? filter-names) #{filter-names}
+    :else                  (set filter-names)))
 
 
 (defn- resolve-sort-field
@@ -208,14 +204,15 @@
 
 
 (defn- get-folder
-  [path {:keys [filter-chars limit offset sort-field sort-order user]}]
+  [path {:keys [filter-chars filter-name limit offset sort-field sort-order user]}]
   (let [path         (file/rm-last-slash path)
-        filter-chars (set (seq filter-chars))
+        filter-chars (set filter-chars)
+        filter-names (resolve-filter-names filter-name)
         limit        (Integer/parseInt limit)
         offset       (Integer/parseInt offset)
         sort-field   (resolve-sort-field sort-field)
         sort-order   (resolve-sort-order sort-order)]
-    (paged-dir-listing user path limit offset sort-field sort-order filter-chars)))
+    (paged-dir-listing user path limit offset sort-field sort-order filter-chars filter-names)))
 
 (with-pre-hook! #'get-folder
   (fn [path params]
