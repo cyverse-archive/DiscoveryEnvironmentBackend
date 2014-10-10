@@ -1,0 +1,58 @@
+condor-log-monitor
+==================
+
+The condor-log-monitor is a daemon that monitors a HTCondor EVENT_LOG for changes
+and pushes job updates out to an AMQP broker.
+
+# Configuration
+
+condor-log-monitor is configured with a JSON configuration file. The JSON file
+should look like this:
+
+```json
+{
+  "AMQPURI" : "amqp://user:password@hostname:5672/",
+  "ExchangeName" : "exchange",
+  "ExchangeType" : "direct",
+  "RoutingKey" : "condor.events",
+  "Durable" : true,
+  "Autodelete" : false,
+  "Internal" : false,
+  "NoWait" : false,
+  "EventLog" : "/path/to/event_log"
+}
+```
+
+# Running it
+
+condor-log-monitor logs to stdout and runs in the foreground by default. Here's
+a typical command-line to start it up:
+
+```
+$ ./condor-log-monitor --config /path/to/config.json
+```
+
+# Building it
+
+condor-log-monitor is written in [Go](http://golang.org), so you'll need the Go
+toolchain installed. Also, dependencies can be retrieved with [godeps](https://github.com/tools/godep).
+Once godeps is installed, you can do the following:
+
+```bash
+godep restore
+go build
+```
+
+If you're doing development on OS X but running on Linux, you'll want to set up
+cross-compilation for Go. After that's done, the builds will look like this:
+
+```bash
+godep restore
+GOOS=linux go build
+```
+
+To run the unit tests:
+
+```bash
+go test
+``` 
