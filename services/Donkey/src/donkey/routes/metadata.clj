@@ -30,41 +30,14 @@
     (GET "/apps" [:as {params :params}]
          (trap #(apps/search-apps params)))
 
-    (GET "/apps/:app-id/details" [app-id]
-         (trap #(apps/get-app-details app-id)))
-
-    (GET "/apps/:app-id" [app-id :as {:keys [uri]}]
-         (ce/trap uri #(apps/get-app app-id)))
-
-    (GET "/apps/:app-id/ui" [app-id]
-         (trap #(edit-app app-id)))
-
     (POST "/apps/arg-preview" [:as req]
           (trap #(preview-args req)))
-
-    (PATCH "/apps/:app-id" [app-id :as req]
-           (trap #(update-app-labels req app-id)))
-
-    (GET "/apps/:app-id/is-publishable" [app-id]
-         (trap #(app-publishable? app-id)))
-
-    (DELETE "/apps/:app-id" [app-id :as req]
-            (trap #(delete-app req app-id)))
-
-    (POST "/apps/shredder" [:as req]
-          (trap #(delete-apps req)))
 
     (GET "/apps/ids" []
          (trap #(get-all-app-ids)))
 
     (GET "/apps/elements/:element-type" [element-type]
          (trap #(get-workflow-elements element-type)))
-
-    (POST "/apps/:app-id/rating" [app-id :as {body :body}]
-          (trap #(apps/rate-app body app-id)))
-
-    (DELETE "/apps/:app-id/rating" [app-id]
-            (trap #(apps/delete-rating app-id)))
 
     (POST "/apps/pipelines" [:as req]
           (trap #(create-pipeline req)))
@@ -76,21 +49,39 @@
           (trap #(apps/copy-workflow app-id)))
 
     (GET "/apps/pipelines/:app-id/ui" [app-id]
-         (trap #(apps/edit-workflow app-id)))))
+         (trap #(apps/edit-workflow app-id)))
+
+    (POST "/apps/shredder" [:as req]
+          (trap #(delete-apps req)))
+
+    (GET "/apps/:app-id" [app-id :as {:keys [uri]}]
+         (ce/trap uri #(apps/get-app app-id)))
+
+    (DELETE "/apps/:app-id" [app-id :as req]
+            (trap #(delete-app req app-id)))
+
+    (PATCH "/apps/:app-id" [app-id :as req]
+           (trap #(update-app-labels req app-id)))
+
+    (GET "/apps/:app-id/details" [app-id]
+         (trap #(apps/get-app-details app-id)))
+
+    (GET "/apps/:app-id/is-publishable" [app-id]
+         (trap #(app-publishable? app-id)))
+
+    (DELETE "/apps/:app-id/rating" [app-id]
+            (trap #(apps/delete-rating app-id)))
+
+    (POST "/apps/:app-id/rating" [app-id :as {body :body}]
+          (trap #(apps/rate-app body app-id)))
+
+    (GET "/apps/:app-id/ui" [app-id]
+         (trap #(edit-app app-id)))))
 
 (defn tool-request-routes
   []
   (optional-routes
     [config/app-routes-enabled]
-
-    (GET "/tool-requests" []
-         (trap #(list-tool-requests)))
-
-    (POST "/tool-requests" [:as req]
-          (trap #(submit-tool-request req)))
-
-    (GET "/tool-requests/status-codes" [:as {params :params}]
-         (trap #(list-tool-request-status-codes params)))
 
     (GET "/admin/tool-requests" [:as {params :params}]
          (trap #(admin-list-tool-requests params)))
@@ -99,7 +90,16 @@
          (trap #(get-tool-request request-id)))
 
     (POST "/admin/tool-requests/:request-id/status" [request-id :as req]
-          (trap #(update-tool-request req request-id)))))
+         (trap #(update-tool-request req request-id)))
+
+    (GET "/tool-requests" []
+         (trap #(list-tool-requests)))
+
+    (POST "/tool-requests" [:as req]
+          (trap #(submit-tool-request req)))
+
+    (GET "/tool-requests/status-codes" [:as {params :params}]
+         (trap #(list-tool-request-status-codes params)))))
 
 (defn secured-metadata-routes
   []

@@ -1,6 +1,5 @@
 # Endpoint Index
 
-* [GET /](endpoints/misc.md#verifying-that-metadactyl-clj-is-running)
 * [POST /add-analysis-to-group](endpoints/app-metadata/categorization.md#adding-analyses-to-analysis-groups)
 * [GET /apps/{app-id}/data-objects](endpoints/app-metadata/listing.md#listing-data-objects-in-an-analysis)
 * [POST /can-export-analysis](endpoints/app-metadata/validation.md#determining-if-an-analysis-can-be-exported)
@@ -9,7 +8,6 @@
 * [GET /export-template/{template-id}](endpoints/app-metadata/admin.md#exporting-a-template)
 * [GET /export-workflow/{analysis-id}](endpoints/app-metadata/admin.md#exporting-an-analysis)
 * [GET /get-analysis-categories/{category-set}](endpoints/app-metadata/categorization.md#listing-analysis-categorizations)
-* [GET /get-analysis/{analysis-id}](endpoints/app-metadata/information.md#getting-analyses-in-the-json-format-required-by-the-de)
 * [POST /import-template](endpoints/app-metadata/admin.md#importing-a-template)
 * [POST /import-tools](endpoints/app-metadata/admin.md#importing-tools)
 * [POST /import-workflow](endpoints/app-metadata/admin.md#importing-an-analysis)
@@ -23,7 +21,6 @@
 * [POST /secured/make-analysis-public](endpoints/app-metadata/editing.md#submitting-an-analysis-for-public-use)
 * [GET /secured/reference-genomes](endpoints/reference-genomes.md#exporting-reference-genomes)
 * [PUT /secured/reference-genomes](endpoints/reference-genomes.md#importing-reference-genomes)
-* [GET /secured/template/{analysis-id}](endpoints/app-metadata/information.md#getting-analyses-in-the-json-format-required-by-the-de)
 * [PUT /secured/update-app](endpoints/app-metadata/updated-admin.md#updating-or-importing-a-single-step-app)
 * [POST /secured/update-favorites](endpoints/app-metadata/admin.md#updating-the-favorite-analyses-list)
 * [PUT /secured/workspaces/{workspace-id}/newexperiment](endpoints/app-execution.md#submitting-a-job-for-execution)
