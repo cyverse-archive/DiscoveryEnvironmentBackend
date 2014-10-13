@@ -9,10 +9,14 @@ RUN mkdir -p /opt/go && \
 RUN mkdir -p /opt/maven && \
     curl -O http://apache.mirrors.hoobly.com/maven/maven-3/3.2.3/binaries/apache-maven-3.2.3-bin.tar.gz && \
     tar xzf apache-maven-3.2.3-bin.tar.gz -C /opt/maven --strip-components=1
+RUN mkdir -p /opt/nodejs && \
+    curl -O http://nodejs.org/dist/v0.10.32/node-v0.10.32-linux-x64.tar.gz && \
+    tar xzf node-v0.10.32-linux-x64.tar.gz -C /opt/nodejs --strip-components=1
 RUN mkdir -p /opt/gopath
 ENV GOPATH /opt/gopath
 ENV GOROOT /opt/go
-ENV PATH /bin:/usr/bin:/usr/local/bin:/sbin/:/usr/sbin:/opt/go/bin:/opt/gopath/bin:/opt/maven/bin
+ENV LEIN_ROOT 1
+ENV PATH /bin:/usr/bin:/usr/local/bin:/sbin/:/usr/sbin:/opt/go/bin:/opt/gopath/bin:/opt/maven/bin:/opt/nodejs/bin
 RUN go get github.com/tools/godep
 ADD https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein /usr/bin/lein
 
