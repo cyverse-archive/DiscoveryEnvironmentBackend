@@ -8,7 +8,6 @@
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
-            [clj-jargon.cart :as cart]
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
@@ -16,7 +15,6 @@
             [donkey.services.filesystem.validators :as validators]
             [clj-icat-direct.icat :as icat]
             [donkey.clients.data-info :as data]
-            [donkey.util.config :as cfg]
             [donkey.services.filesystem.icat :as jargon])
   (:import [org.apache.tika Tika]))
 
@@ -35,23 +33,6 @@
     (validators/path-exists cm file-path)
     (validators/path-readable cm user file-path)
     (if (zero? (file-size cm file-path)) "" (input-stream cm file-path))))
-
-(defn- upload
-  [user]
-  (with-jargon (jargon/jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (let [account (:irodsAccount cm)]
-      {:action "upload"
-       :status "success"
-       :data
-       {:user user
-        :home (ft/path-join "/" (cfg/irods-zone) "home" user)
-        :password (cart/temp-password cm user)
-        :host (.getHost account)
-        :port (.getPort account)
-        :zone (.getZone account)
-        :defaultStorageResource (.getDefaultStorageResource account)
-        :key (str (System/currentTimeMillis))}})))
 
 
 (defn do-download
@@ -84,9 +65,12 @@
 
 (with-post-hook! #'do-download-contents (log-func "do-download-contents"))
 
+
 (defn do-upload
   [{user :user}]
-  (upload user))
+  {:action "upload"
+   :status "success"
+   :data   (data/make-empty-cart user)})
 
 (with-pre-hook! #'do-upload
   (fn [params]

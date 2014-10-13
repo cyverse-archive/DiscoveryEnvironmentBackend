@@ -304,6 +304,26 @@
                     :body         (json/generate-string {:paths paths})}))
 
 
+(defn ^IPersistentMap make-empty-cart
+  "This function calls data-info's /cart endpoint to create a empty shopping cart.
+
+ Parameters:
+   user  - the user that will own the shopping cart.
+
+ Returns:
+   It returns a map containing the shopping cart information.
+
+     :key                    <cart key>
+     :user                   user
+     :password               <temporary password>
+     :host                   <irods host>
+     :port                   <irods port>
+     :zone                   <auth zone>
+     :defaultStorageResource <irods storage resource>"
+  [^String user]
+  (exec-cart-query {:query-params {:user user}}))
+
+
 (defn ^IPersistentMap make-folder-cart
   "This function calls data-info's /cart endpoint to create a shopping cart containing the contents
    of a provided folder.
