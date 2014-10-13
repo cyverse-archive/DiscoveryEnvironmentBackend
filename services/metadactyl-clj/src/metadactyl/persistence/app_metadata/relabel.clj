@@ -48,7 +48,7 @@
             (join [:parameter_groups :pg]
                   {:p.parameter_group_id :pg.id})
             (join [:file_parameters :f]
-                  {:f.id :p.file_parameter_id})
+                  {:f.parameter_id :p.id})
             (join [:info_type :t]
                   {:t.id :f.info_type})
             (where {:pg.id group-id

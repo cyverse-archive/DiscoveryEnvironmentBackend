@@ -100,7 +100,7 @@
              FROM task_param_listing tp
              LEFT JOIN parameter_values pv ON tp.id = pv.parameter_id
              LEFT JOIN parameters p ON p.id = tp.id
-             LEFT JOIN file_parameters f ON f.id = p.file_parameter_id
+             LEFT JOIN file_parameters f ON f.parameter_id = p.id
              WHERE value_type = 'Output' AND CHAR_LENGTH(f.name_v187) > 0 AND pv.value IS NULL)"))
 
 (defn convert

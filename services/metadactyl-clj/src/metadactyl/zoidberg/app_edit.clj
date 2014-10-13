@@ -29,12 +29,14 @@
                      :tasks.tool_id
                      [:tools.name :tool])
              (with parameter_groups
+               (order :display_order)
                (fields :id
                        :name
                        :description
                        :label
                        [:is_visible :isVisible])
                (with parameters
+                 (order :display_order)
                  (with file_parameters
                    (with info_type)
                    (with data_formats)
@@ -148,7 +150,7 @@
       (-> app
           (assoc :integration_date (date->long (:integration_date app))
                  :edited_date (date->long (:edited_date app))
-                 :references (:app_references app)
+                 :references (map :reference_text (:app_references app))
                  :tool (:tool task)
                  :tool_id (:tool_id task)
                  :groups groups)
@@ -160,7 +162,7 @@
   [app-id]
   (let [app (get-app app-id)]
     (verify-app-editable app)
-    (service/swagger-response (format-app app))))
+    (service/success-response (format-app app))))
 
 ;; FIXME
 (defn copy-app

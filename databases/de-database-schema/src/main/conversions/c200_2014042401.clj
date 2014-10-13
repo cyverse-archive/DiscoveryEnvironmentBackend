@@ -8,8 +8,6 @@
             [kameleon.uuids :as uuids]
             [me.raynes.fs :as fs]))
 
-;; TODO file_parameters, template_input, template_output conversions.
-
 (def ^:private version
   "The destination database version."
   "2.0.0:20140424.01")
@@ -80,6 +78,115 @@
                             (fields :id :external_app_id)
                             (where (raw "template_id IS NULL")))]
     (dorun (map add-agave-task agave-steps))))
+
+(defn- get-unreferenced-dataobjects
+  [join-table join-col]
+  (select [join-table :t]
+          (join [:file_parameters :f]
+                {:f.hid_v187 join-col})
+          (join [:parameters :p]
+                {:p.dataobject_id_v187 :f.hid_v187})
+          (fields [:t.template_id :task_id]
+                  (raw "f.*"))
+          (where (raw "p.dataobject_id_v187 IS NULL"))
+          (order :t.template_id)
+          (order :f.hid_v187)))
+
+(defn- get-param-type-hid
+  [param-type]
+  ((comp :hid_v187 first)
+   (select :parameter_types (fields :hid_v187) (where {:name param-type}))))
+
+(defn- add-param-wrapper->group
+  [group-id {:keys [hid_v187 display_order]}]
+  (insert :property_group_property_v187 (values {:property_group_id group-id
+                                                 :property_id hid_v187
+                                                 :hid display_order})))
+
+(defn- add-param-wrapper
+  [index param]
+  (insert :parameters (values (assoc param :display_order index))))
+
+(defn- add-file-param-wrappers
+  [task-id group-name params]
+  (let [group-order ((comp inc :group_order first)
+                     (select :template_property_group_v187
+                       (aggregate (max :hid) :group_order)
+                       (where {:template_id task-id})))
+        group-id (:hid_v187 (insert :parameter_groups (values {:name group-name
+                                                               :display_order group-order})))
+        params (map-indexed add-param-wrapper params)]
+    (insert :template_property_group_v187 (values {:template_id task-id
+                                                   :property_group_id group-id
+                                                   :hid group-order}))
+    (dorun (map (partial add-param-wrapper->group group-id) params))))
+
+(defn- input->param
+  [param-type-id {:keys [hid_v187
+                         name_v187
+                         label_v187
+                         description_v187
+                         orderd_v187
+                         switch_v187
+                         required_v187]}]
+  {:dataobject_id_v187 hid_v187
+   :property_type_v187 param-type-id
+   :name switch_v187
+   :description description_v187
+   :label name_v187
+   :ordering orderd_v187
+   :required required_v187
+   :is_visible true})
+
+(defn- output->param
+  [param-type-id {:keys [is_implicit
+                         hid_v187
+                         name_v187
+                         label_v187
+                         description_v187
+                         orderd_v187
+                         switch_v187
+                         required_v187]}]
+  (let [visible (not is_implicit)]
+    (when visible
+      {:dataobject_id_v187 hid_v187
+       :property_type_v187 param-type-id
+       :name switch_v187
+       :description description_v187
+       :defalut_value_v187 name_v187
+       :ordering orderd_v187
+       :required required_v187
+       :is_visible visible
+       :omit_if_blank visible})))
+
+(defn- add-unreferenced-inputs
+  [param-type-id inputs]
+  (let [task-id (:task_id (first inputs))
+        params (remove nil? (map (partial input->param param-type-id) inputs))]
+    (when-not (empty? params)
+      (println "\t\t* adding unreferenced Inputs" params)
+      (add-file-param-wrappers task-id "Inputs" params))))
+
+(defn- add-unreferenced-outputs
+  [param-type-id outputs]
+  (let [task-id (:task_id (first outputs))
+        params (remove nil? (map (partial output->param param-type-id) outputs))]
+    (when-not (empty? params)
+      (println "\t\t* adding unreferenced Outputs" params)
+      (add-file-param-wrappers task-id "Outputs" params))))
+
+(defn- convert-unreferenced-file-params
+  []
+  (let [inputs (group-by :task_id (get-unreferenced-dataobjects :template_input_v187 :t.input_id))
+        outputs (group-by :task_id (get-unreferenced-dataobjects :template_output_v187 :t.output_id))
+        input-param-type-id (get-param-type-hid "Input")
+        output-param-type-id (get-param-type-hid "Output")]
+    (when-not (empty? inputs)
+      (println "\t\t* adding unreferenced Inputs for task" (ffirst inputs))
+      (dorun (map (partial add-unreferenced-inputs input-param-type-id) (vals inputs))))
+    (when-not (empty? outputs)
+      (println "\t\t* adding unreferenced Outputs for task" (ffirst outputs))
+      (dorun (map (partial add-unreferenced-outputs output-param-type-id) (vals outputs))))))
 
 ;; Rename or add new tables and columns.
 (defn- run-table-conversions
@@ -194,6 +301,10 @@
   (println "\t* updating the job_steps table")
   (load-sql-file "conversions/c200_2014042401/tables/69_job_steps.sql"))
 
+(defn- add-unreferenced-file-params
+  []
+  (println "\t* adding unreferenced inputs/outputs as file parameters")
+  (convert-unreferenced-file-params))
 
 ;; Update new UUID columns.
 (defn- run-uuid-conversions
@@ -216,8 +327,6 @@
   (load-sql-file "conversions/c200_2014042401/uuids/12_data_formats.sql")
   (println "\t* updating workflow_io_maps uuid foreign keys...")
   (load-sql-file "conversions/c200_2014042401/uuids/13_workflow_io_maps.sql")
-  (println "\t* updating file_parameters uuid foreign keys...")
-  (load-sql-file "conversions/c200_2014042401/uuids/14_file_parameters.sql")
   (println "\t* updating info_type uuid foreign keys...")
   (load-sql-file "conversions/c200_2014042401/uuids/17_info_type.sql")
   (println "\t* updating parameters uuid foreign keys (this might take a minute or 2)...")
@@ -304,14 +413,14 @@
   (subselect [:file_parameters :fp]
              (fields :i.name)
              (join [:info_type :i] {:fp.info_type :i.id})
-             (where {:parameters.file_parameter_id :fp.id})))
+             (where {:parameters.id :fp.parameter_id})))
 
 (defn- multiplicity-subselect
   []
   (subselect [:file_parameters :fp]
              (fields :m.name)
              (join [:multiplicity_v187 :m] {:fp.multiplicity_v187 :m.hid})
-             (where {:parameters.file_parameter_id :fp.id})))
+             (where {:parameters.id :fp.parameter_id})))
 
 (defn- convert-reference-genome-parameters
   [ref-gen-type]
@@ -336,6 +445,7 @@
   (add-uuid-extension)
   (drop-views)
   (run-table-conversions)
+  (add-unreferenced-file-params)
   (run-uuid-conversions)
   (drop-all-constraints)
   (drop-obsolete-tables)

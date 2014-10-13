@@ -17,10 +17,13 @@
 
 (defn load-app-details
   [agave]
-  (->> (.listApps agave)
-       (:templates)
-       (map (juxt :id identity))
-       (into {})))
+  (try+
+   (->> (.listApps agave)
+        (:templates)
+        (map (juxt :id identity))
+        (into {}))
+   (catch [:error_code ce/ERR_UNAVAILABLE] _
+     {})))
 
 (defn- determine-start-time
   [job]
@@ -78,7 +81,7 @@
 (defn submit-job-step
   [agave-client job-info job-step submission]
   (let [cb-url (build-callback-url (:id job-info))]
-     (:id (.submitJob agave-client (assoc submission :callbackUrl cb-url)))))
+    (:id (.submitJob agave-client (assoc submission :callbackUrl cb-url)))))
 
 (defn get-agave-app-rerun-info
   [agave {:keys [external-id]}]

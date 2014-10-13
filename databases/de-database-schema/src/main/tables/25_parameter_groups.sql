@@ -9,6 +9,7 @@ CREATE TABLE parameter_groups (
     name character varying(255) NOT NULL,
     description text,
     label character varying(255),
+    display_order int NOT NULL DEFAULT 0,
     is_visible boolean DEFAULT true
 );
 

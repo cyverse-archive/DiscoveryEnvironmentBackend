@@ -28,24 +28,6 @@
         the `apps` array in the /apps/categories/:category-id endpoint response."
         (service/trap #(search-apps params)))
 
-  (GET* "/:app-id/details" []
-        :path-params [app-id :- AppIdPathParam]
-        :query [params SecuredQueryParams]
-        :return AppDetails
-        :summary "Get App Details"
-        :notes "This service is used by the DE to obtain high-level details about a single App"
-        (service/trap #(get-app-details app-id)))
-
-  (GET* "/:app-id/ui" []
-        :path-params [app-id :- AppIdPathParam]
-        :query [params SecuredQueryParamsEmailRequired]
-        :return App
-        :summary "Make an App Available for Editing"
-        :notes "The app integration utility in the DE uses this service to obtain the App
-        description JSON so that it can be edited. The App must have been integrated by the
-        requesting user, and it must not already be public."
-        (service/trap #(edit-app app-id)))
-
   (POST* "/arg-preview" [:as {uri :uri}]
          :query [params SecuredQueryParams]
          :body [body (describe AppPreviewRequest "The App to preview.")]
@@ -56,7 +38,26 @@
          body also requires that each parameter contain a `value` field that contains the parameter
          value to include on the command line. The response body is in the same format as the
          `/arg-preview` service in the JEX. Please see the JEX documentation for more information."
-         (ce/trap uri #(service/swagger-response (app-metadata/preview-command-line body))))
+         (ce/trap uri #(service/success-response (app-metadata/preview-command-line body))))
+
+  (GET* "/ids" []
+        :query [params SecuredQueryParams]
+        :return AppIdList
+        :summary "List All App Identifiers"
+        :notes "The export script needs to have a way to obtain the identifiers of all of the apps
+        in the Discovery Environment, deleted or not. This service provides that information."
+        (service/trap #(get-all-app-ids)))
+
+  (POST* "/shredder" []
+         :query [params SecuredQueryParams]
+         :body [body (describe AppDeletionRequest "List of App IDs to delete.")]
+         :summary "Logically Deleting Apps"
+         :notes "One or more Apps can be marked as deleted in the DE without being completely
+         removed from the database using this service. <b>Note</b>: an attempt to delete an app that
+         is already marked as deleted is treated as a no-op rather than an error condition. If the
+         App doesn't exist in the database at all, however, then that is treated as an error
+         condition."
+         (ce/trap "apps-shredder" #(app-metadata/delete-apps body)))
 
   (GET* "/:app-id" []
         :path-params [app-id :- AppIdPathParam]
@@ -65,7 +66,17 @@
         :return AppJobView
         :notes "This service allows the Discovery Environment user interface to obtain an
         app description that can be used to construct a job submission form."
-        (ce/trap "get-app" #(service/swagger-response (jv/get-app app-id))))
+        (ce/trap "get-app" #(service/success-response (jv/get-app app-id))))
+
+  (DELETE* "/:app-id" []
+           :path-params [app-id :- AppIdPathParam]
+           :query [params SecuredQueryParams]
+           :summary "Logically Deleting an App"
+           :notes "An app can be marked as deleted in the DE without being completely removed from
+           the database using this service. <b>Note</b>: an attempt to delete an App that is already
+           marked as deleted is treated as a no-op rather than an error condition. If the App
+           doesn't exist in the database at all, however, then that is treated as an error condition."
+           (ce/trap "delete-app" #(app-metadata/delete-app app-id)))
 
   (PATCH* "/:app-id" []
           :path-params [app-id :- AppIdPathParam]
@@ -82,42 +93,20 @@
           parameter arguments) fields will be processed and updated by this endpoint."
           (ce/trap "update-app-labels" #(app-metadata/relabel-app (assoc body :id app-id))))
 
+  (GET* "/:app-id/details" []
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :return AppDetails
+        :summary "Get App Details"
+        :notes "This service is used by the DE to obtain high-level details about a single App"
+        (service/trap #(get-app-details app-id)))
+
   (POST* "/:app-id/copy" []
          :path-params [app-id :- AppIdPathParam]
          :query [params SecuredQueryParamsEmailRequired]
          :summary "Make a Copy of an App Available for Editing"
          :notes "This service can be used to make a copy of an App in the user's workspace."
          (service/trap #(copy-app app-id)))
-
-  (GET* "/:app-id/is-publishable" [app-id]
-        :path-params [app-id :- AppIdPathParam]
-        :query [params SecuredQueryParams]
-        :summary "Determine if an App Can be Made Public"
-        :notes "A multi-step App can't be made public if any of the Tasks that are included in it
-        are not public. This endpoint returns a true flag if the App is a single-step App or it's a
-        multistep App in which all of the Tasks included in the pipeline are public."
-        (ce/trap "is-publishable" #(hash-map :publishable (first (app-publishable? app-id)))))
-
-  (DELETE* "/:app-id" []
-           :path-params [app-id :- AppIdPathParam]
-           :query [params SecuredQueryParams]
-           :summary "Logically Deleting an App"
-           :notes "An app can be marked as deleted in the DE without being completely removed from
-           the database using this service. <b>Note</b>: an attempt to delete an App that is already
-           marked as deleted is treated as a no-op rather than an error condition. If the App
-           doesn't exist in the database at all, however, then that is treated as an error condition."
-           (ce/trap "delete-app" #(app-metadata/delete-app app-id)))
-
-  (POST* "/shredder" []
-         :query [params SecuredQueryParams]
-         :body [body (describe AppDeletionRequest "List of App IDs to delete.")]
-         :summary "Logically Deleting Apps"
-         :notes "One or more Apps can be marked as deleted in the DE without being completely
-         removed from the database using this service. <b>Note</b>: an attempt to delete an app that
-         is already marked as deleted is treated as a no-op rather than an error condition. If the
-         App doesn't exist in the database at all, however, then that is treated as an error
-         condition."
-         (ce/trap "apps-shredder" #(app-metadata/delete-apps body)))
 
   (GET* "/:app-id/description" []
         :path-params [app-id :- AppIdPathParam]
@@ -128,13 +117,23 @@
         description, with no special formatting."
         (service/trap #(get-app-description app-id)))
 
-  (GET* "/ids" []
+  (GET* "/:app-id/is-publishable" [app-id]
+        :path-params [app-id :- AppIdPathParam]
         :query [params SecuredQueryParams]
-        :return AppIdList
-        :summary "List All App Identifiers"
-        :notes "The export script needs to have a way to obtain the identifiers of all of the apps
-        in the Discovery Environment, deleted or not. This service provides that information."
-        (service/trap #(get-all-app-ids)))
+        :summary "Determine if an App Can be Made Public"
+        :notes "A multi-step App can't be made public if any of the Tasks that are included in it
+        are not public. This endpoint returns a true flag if the App is a single-step App or it's a
+        multistep App in which all of the Tasks included in the pipeline are public."
+        (ce/trap "is-publishable" #(hash-map :publishable (first (app-publishable? app-id)))))
+
+  (DELETE* "/:app-id/rating" [:as {uri :uri}]
+           :path-params [app-id :- AppIdPathParam]
+           :query [params SecuredQueryParams]
+           :return RatingResponse
+           :summary "Delete an App Rating"
+           :notes "The DE uses this service to remove a rating that a user has previously made. This
+           service deletes the authenticated user's rating for the corresponding app-id."
+           (ce/trap uri #(service/success-response (app-metadata/delete-app-rating app-id))))
 
   (POST* "/:app-id/rating" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]
@@ -146,13 +145,14 @@
          the means to store the App rating. This service accepts a rating level between one and
          five, inclusive, and a comment identifier that refers to a comment in iPlant's Confluence
          wiki. The rating is stored in the database and associated with the authenticated user."
-         (ce/trap uri #(service/swagger-response (app-metadata/rate-app app-id body))))
+         (ce/trap uri #(service/success-response (app-metadata/rate-app app-id body))))
 
-  (DELETE* "/:app-id/rating" [:as {uri :uri}]
-           :path-params [app-id :- AppIdPathParam]
-           :query [params SecuredQueryParams]
-           :return RatingResponse
-           :summary "Delete an App Rating"
-           :notes "The DE uses this service to remove a rating that a user has previously made. This
-           service deletes the authenticated user's rating for the corresponding app-id."
-           (ce/trap uri #(service/swagger-response (app-metadata/delete-app-rating app-id)))))
+  (GET* "/:app-id/ui" []
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParamsEmailRequired]
+        :return App
+        :summary "Make an App Available for Editing"
+        :notes "The app integration utility in the DE uses this service to obtain the App
+        description JSON so that it can be edited. The App must have been integrated by the
+        requesting user, and it must not already be public."
+        (service/trap #(edit-app app-id))))

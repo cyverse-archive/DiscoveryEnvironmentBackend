@@ -88,16 +88,9 @@
   ([err-obj]
      {:status (get-http-status (:error_code err-obj))
       :headers (get-http-headers err-obj)
-      :body (-> err-obj
-                (assoc :status "failure")
-                cheshire/encode)})
+      :body (cheshire/encode err-obj)})
   ([action err-obj]
-     {:status (get-http-status (:error_code err-obj))
-      :headers (get-http-headers err-obj)
-      :body (-> err-obj
-                (assoc :action action)
-                (assoc :status "failure")
-                cheshire/encode)}))
+   (err-resp err-obj)))
 
 (defn success-resp [action retval]
   (cond
@@ -112,10 +105,7 @@
     :body
     (cond
      (map? retval)
-     (-> retval
-         (assoc :status "success"
-                :action action)
-         cheshire/encode)
+     (cheshire/encode retval)
 
      (not (string? retval))
      (str retval)

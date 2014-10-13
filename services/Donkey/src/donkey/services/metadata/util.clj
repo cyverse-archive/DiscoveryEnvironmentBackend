@@ -48,6 +48,11 @@
   [timestamp]
   (str (or (db/millis-from-timestamp timestamp) 0)))
 
+(defn- app-disabled?
+  [app-tables app-id]
+  (let [disabled-flag (first (remove nil? (map #(% app-id) app-tables)))]
+    (if (nil? disabled-flag) true disabled-flag)))
+
 (defn format-job
   [app-tables job]
   {:analysis_details (:app-description job)
@@ -63,7 +68,7 @@
    :username         (:username job)
    :deleted          (:deleted job)
    :wiki_url         (:app-wiki-url job)
-   :app_disabled     (:disabled (first (remove nil? (map #(% (:app-id job)) app-tables))))})
+   :app_disabled     (app-disabled? app-tables (:app-id job))})
 
 (defn send-job-status-notification
   "Sends a job status change notification."

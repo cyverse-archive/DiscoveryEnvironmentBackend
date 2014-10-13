@@ -4,6 +4,7 @@
 (defprotocol AgaveClient
   "A client for the Agave API."
   (listSystems [_])
+  (getSystemInfo [_ system-name])
   (listApps [_])
   (getApp [_ app-id])
   (submitJob [_ submission])
@@ -22,6 +23,9 @@
   (listSystems [_]
     (v2/check-access-token token-info-fn timeout)
     (v2/list-systems base-url token-info-fn timeout))
+  (getSystemInfo [_ system-name]
+    (v2/check-access-token token-info-fn timeout)
+    (v2/get-system-info base-url token-info-fn timeout system-name))
   (listApps [_]
     (v2/check-access-token token-info-fn timeout)
     (v2/list-apps base-url token-info-fn timeout))

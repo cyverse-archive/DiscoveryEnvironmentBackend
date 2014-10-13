@@ -9,7 +9,6 @@
                                                     add-mapping
                                                     add-step
                                                     get-app
-                                                    remove-app-mappings
                                                     remove-app-steps
                                                     update-app]]
         [metadactyl.user :only [current-user]]
@@ -98,6 +97,7 @@
             (join [:apps :app]
                   {:app_id :app.id})
             (fields :app_steps.id
+                    :step
                     :t.name
                     :t.description
                     :task_id
@@ -108,14 +108,7 @@
 (defn- format-step
   "Formats step fields for the client."
   [step]
-  (dissoc step :input_mapping))
-
-(defn- format-step-copy
-  "Formats step fields as copies for an update-workflow call."
-  [new-step-ids step]
-  (-> step
-      (dissoc :input_mapping)
-      (assoc :id (new-step-ids (:id step)))))
+  (dissoc step :id :step :input_mapping))
 
 (defn- get-input-output-mappings
   "Fetches the output->input mapping UUIDs for the given source and target IDs."
@@ -130,34 +123,29 @@
 
 (defn- format-mapping
   "Formats mapping fields for the client."
-  [mapping]
-  (let [input-output-mappings (get-input-output-mappings (:source_step mapping)
-                                                         (:target_step mapping))
+  [step-indexes {source-step-id :source_step target-step-id :target_step}]
+  (let [input-output-mappings (get-input-output-mappings source-step-id target-step-id)
         input-output-reducer #(assoc %1 (:input %2) (:output %2))]
-    (assoc mapping :map (reduce input-output-reducer {} input-output-mappings))))
+    {:source_step (step-indexes source-step-id)
+     :target_step (step-indexes target-step-id)
+     :map (reduce input-output-reducer {} input-output-mappings)}))
 
 (defn- get-formatted-mapping
   "Formats a step's list of mapping IDs and step names to fields for the client."
-  [step]
-  (map format-mapping (:input_mapping step)))
+  [step-indexes step]
+  (map (partial format-mapping step-indexes) (:input_mapping step)))
 
-(defn- format-mapping-new-ids
-  [new-step-ids mapping]
-  (assoc mapping
-    :source_step (new-step-ids (:source_step mapping))
-    :target_step (new-step-ids (:target_step mapping))))
-
-(defn- get-formatted-mapping-copy
-  "Formats a step's list of mapping IDs and step names to fields for the client."
-  [new-step-ids step]
-  (map (comp (partial format-mapping-new-ids new-step-ids) format-mapping)
-       (:input_mapping step)))
+(defn- get-mappings
+  "Gets a list of formatted mappings for the given steps."
+  [steps]
+  (let [step-indexes (into {} (map #(vector (:id %) (:step %)) steps))]
+    (mapcat (partial get-formatted-mapping step-indexes) steps)))
 
 (defn- format-workflow-app
   "Adds the steps and mappings fields to the app."
   [app]
   (let [steps (get-steps (:id app))
-        mappings (mapcat get-formatted-mapping steps)
+        mappings (get-mappings steps)
         steps (map format-step steps)]
     (-> app
         (assoc :steps steps)
@@ -179,9 +167,8 @@
    appropriate app fields to prepare it for saving as a copy."
   [app]
   (let [steps (get-steps (:id app))
-        new-step-ids (into {} (map #(vector (:id %) (uuid)) steps))
-        mappings (mapcat (partial get-formatted-mapping-copy new-step-ids) steps)
-        steps (map (partial format-step-copy new-step-ids) steps)]
+        mappings (get-mappings steps)
+        steps (map format-step steps)]
     (-> app
         (select-keys [:description])
         (assoc :name (app-copy-name (:name app)))
@@ -193,7 +180,19 @@
   [app-id]
   (let [app (get-app app-id)]
     (verify-app-editable app)
-    (service/swagger-response (format-workflow app))))
+    (service/success-response (format-workflow app))))
+
+(defn- add-app-mapping
+  [app-id steps {:keys [source_step target_step map]}]
+  (add-mapping {:app_id app-id
+                :source_step (:id (nth steps source_step))
+                :target_step (:id (nth steps target_step))
+                :map map}))
+
+(defn- add-app-steps-mappings
+  [{app-id :id steps :steps mappings :mappings}]
+  (let [steps (map-indexed (partial add-step app-id) steps)]
+    (dorun (map (partial add-app-mapping app-id steps) mappings))))
 
 (defn- add-pipeline-app
   [app]
@@ -202,8 +201,7 @@
           workspace-category-id (:root_category_id (get-workspace))
           dev-group-id (get-app-subcategory-id workspace-category-id (workspace-dev-app-group-index))]
       (add-app-to-group dev-group-id app-id)
-      (dorun (map-indexed (partial add-step app-id) (:steps app)))
-      (dorun (map (partial add-mapping app-id) (:mappings app)))
+      (add-app-steps-mappings app)
       app-id)))
 
 (defn- update-pipeline-app
@@ -212,10 +210,8 @@
     (let [app-id (:id app)]
       (verify-app-editable (get-app app-id))
       (update-app app)
-      (remove-app-mappings app-id)
       (remove-app-steps app-id)
-      (dorun (map-indexed (partial add-step app-id) (:steps app)))
-      (dorun (map (partial add-mapping app-id) (:mappings app)))
+      (add-app-steps-mappings app)
       app-id)))
 
 (defn add-pipeline

@@ -49,7 +49,7 @@
   [limit offset sort-field sort-order filter]
   (let [user       (:username current-user)
         jobs       (jp/list-de-jobs user limit offset sort-field sort-order filter)
-        app-tables [(da/load-app-details (map :analysis_id jobs))]]
+        app-tables [(da/load-app-details (map :app-id jobs))]]
     (mapv (partial mu/format-job app-tables) jobs)))
 
 (defn- unrecognized-job-type
@@ -187,7 +187,7 @@
 
   (listAppGroups [_ params]
     (-> (metadactyl/get-app-categories params)
-        (update-in [:groups] conj (.hpcAppGroup agave-client))))
+        (update-in [:categories] conj (.hpcAppGroup agave-client))))
 
   (listApps [_ category-id params]
     (if (= category-id (:id (.hpcAppGroup agave-client)))
@@ -195,13 +195,13 @@
       (metadactyl/apps-in-category category-id params)))
 
   (searchApps [_ search-term]
-    (let [def-result {:task_count 0 :templates {}}
+    (let [def-result {:app_count 0 :apps {}}
           de-apps    (metadactyl/search-apps search-term)
           hpc-apps   (if (user-has-access-token?)
                        (aa/search-apps agave-client search-term def-result)
                        def-result)]
-      {:task_count (apply + (map :task_count [de-apps hpc-apps]))
-       :templates  (mapcat :templates [de-apps hpc-apps])}))
+      {:app_count (apply + (map :app_count [de-apps hpc-apps]))
+       :apps      (mapcat :apps [de-apps hpc-apps])}))
 
   (updateFavorites [_ app-id favorite?]
     (if (is-uuid? app-id)
@@ -361,7 +361,8 @@
   [app-id]
   (with-db db/de
     (transaction
-     (service/success-response (.getApp (get-app-lister) app-id)))))
+     #_(service/success-response (.getApp (get-app-lister) app-id))
+     (.getApp (get-app-lister) app-id))))
 
 (defn get-deployed-components-in-app
   [app-id]

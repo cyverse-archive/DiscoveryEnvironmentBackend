@@ -12,12 +12,6 @@
             [metadactyl.util.config :as config]))
 
 (defroutes* secured-routes
-  (GET "/template/:app-id" [app-id]
-       (throw+ '("get-app" app-id)))
-
-  (GET "/app/:app-id" [app-id]
-       (ce/trap "app" #(throw+ '("get-app-new-format" app-id))))
-
   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
        (throw+ '("run-experiment" body workspace-id)))
 
@@ -26,9 +20,6 @@
 
   (POST "/update-favorites" [:as {body :body}]
         (throw+ '("update-favorites" body)))
-
-  (GET "/edit-app/:app-id" [app-id]
-       (throw+ '("edit-app-new-format" app-id)))
 
   (GET "/copy-template/:app-id" [app-id]
        (throw+ '("copy-app" app-id)))
@@ -71,9 +62,6 @@
 
   (POST "/add-analysis-to-group" [:as {body :body}]
         (trap #(throw+ '("add-app-to-group" body))))
-
-  (GET "/get-analysis/:app-id" [app-id]
-       (trap #(throw+ '("get-app" app-id))))
 
   (GET "/list-analysis/:app-id" [app-id]
        (throw+ '("list-app" app-id)))

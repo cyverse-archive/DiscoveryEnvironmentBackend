@@ -95,7 +95,7 @@
   [ranges]
   (let [upper          (fn [range] (last (re-seq #"[0-9]+" (:range range))))
         lower          (fn [range] (first (re-seq #"[0-9]+" (:range range))))
-        extract-byte   (fn [range] (first (re-seq #"\s*-\s*[0-9]+" (:range range))))          
+        extract-byte   (fn [range] (first (re-seq #"\s*-\s*[0-9]+" (:range range))))
         bounded-type   (fn [range] (assoc range :upper (upper range) :lower (lower range)))
         unbounded-type (fn [range] (assoc range :lower (lower range)))
         unbounded-neg  (fn [range] (assoc range :lower (extract-byte range)))
@@ -133,15 +133,15 @@
    (not (info/exists? cm filepath))
    (do (warn "[anon-files]" filepath "does not exist.")
        false)
-   
+
    (not (info/is-file? cm filepath))
    (do (warn "[anon-files]" filepath "is not a file.")
        false)
-   
+
    (not (perms/is-readable? cm (:anon-user @cfg/cfg) filepath))
    (do (warn "[anon-files]" filepath "is not readable.")
        false)
-   
+
    :else true))
 
 (defmacro validated
@@ -281,7 +281,7 @@
   (let [file-size (:file-size info)
         lower     (:lower info)
         upper     (:upper info)
-        num-bytes (:num-bytes info)]    
+        num-bytes (:num-bytes info)]
     (handle-range-request cm filepath file-size lower upper num-bytes)))
 
 (defn request-info
@@ -380,3 +380,19 @@
                     {:status 200
                      :body ""
                      :headers (file-header (:uri req) lastmod 0 (dec filesize))}))))))
+
+(defn- build-options-response
+  [cm {:keys [uri]}]
+  (let [lastmod  (info/lastmod-date cm uri)
+        filesize (info/file-size cm uri)]
+    {:status  200
+     :body    ""
+     :headers (assoc (base-file-header uri lastmod)
+                "Allow" "GET, HEAD")}))
+
+(defn handle-options-request
+  [req]
+  (info "Handling options request for" (:uri req))
+  (info "\n" (cfg/pprint-to-string req))
+  (init/with-jargon (jargon-cfg) [cm]
+    (log-headers (validated cm (:uri req) (build-options-response cm req)))))
