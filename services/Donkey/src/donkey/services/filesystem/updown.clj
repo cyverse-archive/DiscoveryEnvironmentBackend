@@ -3,18 +3,19 @@
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.cart]
         [clj-jargon.item-info :only [file-size]]
         [clj-jargon.item-ops :only [input-stream]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
+            [clj-jargon.cart :as cart]
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.directory :as directory]
             [donkey.services.filesystem.validators :as validators]
             [clj-icat-direct.icat :as icat]
+            [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.icat :as jargon])
   (:import [org.apache.tika Tika]))
@@ -46,7 +47,7 @@
        :data
        {:user user
         :home (ft/path-join "/" (cfg/irods-zone) "home" user)
-        :password (store-cart cm user cart-key filepaths)
+        :password (cart/store-cart cm user cart-key filepaths)
         :host (.getHost account)
         :port (.getPort account)
         :zone (.getZone account)
@@ -63,16 +64,19 @@
        :data
        {:user user
         :home (ft/path-join "/" (cfg/irods-zone) "home" user)
-        :password (temp-password cm user)
+        :password (cart/temp-password cm user)
         :host (.getHost account)
         :port (.getPort account)
         :zone (.getZone account)
         :defaultStorageResource (.getDefaultStorageResource account)
         :key (str (System/currentTimeMillis))}})))
 
+
 (defn do-download
   [{user :user} {paths :paths}]
-  (download user paths))
+  {:action "download"
+   :status "success"
+   :data   (data/make-a-la-cart user paths)})
 
 (with-pre-hook! #'do-download
   (fn [params body]

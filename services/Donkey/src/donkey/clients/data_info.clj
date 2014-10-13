@@ -1,12 +1,11 @@
 (ns donkey.clients.data-info
-  (:use [donkey.util.service :only [build-url-with-query]]
-        [donkey.util.transformers :only [add-current-user-to-map]]
-        [donkey.auth.user-attributes :only [current-user]]
-        [slingshot.slingshot :only [throw+]])
-  (:require [cheshire.core :as cheshire]
-            [clj-http.client :as client]
-            [clojure.string :as string]
+  (:use [donkey.auth.user-attributes :only [current-user]]
+        [slingshot.slingshot :only [throw+ try+]])
+  (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [cemerick.url :as url]
+            [cheshire.core :as json]
+            [clj-http.client :as client]
             [clojure-commons.error-codes :as error]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
@@ -17,7 +16,8 @@
             [donkey.services.filesystem.stat :as st]
             [donkey.services.filesystem.status :as status]
             [donkey.services.filesystem.users :as users]
-            [donkey.services.filesystem.uuids :as uuids])
+            [donkey.services.filesystem.uuids :as uuids]
+            [donkey.util.config :as cfg])
   (:import [clojure.lang IPersistentMap ISeq]
            [java.util UUID]))
 
@@ -266,3 +266,34 @@
   (sharing/unshare user unshare-withs fpaths))
 
 
+(defn ^IPersistentMap make-a-la-cart
+  "This function calls data-info's /cart endpoint to create a shopping cart.
+
+   Parameters:
+     user  - the user that will own the shopping cart.
+     paths - the list of files in the shopping cart. All are absolute paths to files.
+
+   Returns:
+     It returns a map containing the shopping cart information.
+
+       :key                    <cart key>
+       :user                   user
+       :password               <temporary password>
+       :host                   <irods host>
+       :port                   <irods port>
+       :zone                   <auth zone>
+       :defaultStorageResource <irods storage resource>"
+  [^String user ^ISeq paths]
+  (try+
+    (let [url-str (str (url/url (cfg/data-info-base-url) "cart"))
+          resp    (client/post url-str {:query-params {:user user}
+                                        :content-type :json
+                                        :body         (json/generate-string {:paths paths})
+                                        :as           :json-strict})]
+      (when (not= 200 (:status resp))
+        (log/error "Bad data-info request to /cart: response =" resp)
+        (throw+ {:error_code error/ERR_INTERNAL_ERROR}))
+      (:cart (:body resp)))
+    (catch Object o
+      (log/error "Internal Error:" o)
+      (throw+ {:error_code error/ERR_INTERNAL_ERROR}))))
