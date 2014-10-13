@@ -112,6 +112,11 @@
   [props config-valid configs]
   "jex.osm.notification-url")
 
+(cc/defprop-str request-disk
+  "The amount of disk space needed for a job, in kilobytes."
+  [props config-valid configs]
+  "jex.app.request-disk")
+
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []

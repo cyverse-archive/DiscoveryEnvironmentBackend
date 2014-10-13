@@ -45,13 +45,22 @@
   (log/warn "Unable to remove the indexed document for the tag" (str id)))
 
 
+; This is how clojurewerkz.elastisch.rest.bulk/bulk-index should have been implemented
+(defn- bulk-index
+  "generates the content for a bulk insert operation, but allows an _id to be provided"
+  ([documents]
+    (let [operations (map bulk/index-operation documents)
+          documents  (map #(dissoc % :_index :_type :_id) documents)]
+      (interleave operations documents))))
+
+
 (defn- index
   [es props tags]
   (let [fmt-tag (fn [tag] (assoc tag :_id (:id tag)))
         resp    (bulk/bulk-with-index-and-type es
                   (props/es-index props)
                   (props/es-tag-type props)
-                  (bulk/bulk-index (map fmt-tag tags)))]
+                  (bulk-index (map fmt-tag tags)))]
     (when (:errors resp)
       (log-failures (:items resp) :create log-index-failure))))
 

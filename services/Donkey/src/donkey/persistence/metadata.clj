@@ -2,7 +2,8 @@
   (:use korma.core)
   (:require [korma.db :as korma]
             [donkey.util.db :as db])
-  (:import [java.util UUID]))
+  (:import [java.util UUID]
+           [clojure.lang IPersistentMap ISeq]))
 
 
 (defn- ->enum-val
@@ -238,7 +239,7 @@
           (where {:id tag-id})))
     first :owner_id))
 
-(defn insert-user-tag
+(defn ^IPersistentMap insert-user-tag
   "Inserts a user tag.
 
    Parameters:
@@ -247,17 +248,17 @@
      description - The description of the tag. If nil, an empty string will be inserted.
 
    Returns:
-     It returns the new tag."
-  [owner value description]
+     It returns the new database tag entry."
+  [^String owner ^String value ^String description]
   (let [description (if description description "")]
-    (-> (korma/with-db db/metadata
-          (insert :tags
-            (values {:value       value
-                     :description description
-                     :owner_id    owner})))
-      (select-keys [:id :value :description]))))
+    (korma/with-db db/metadata
+      (insert :tags
+        (values {:value       value
+                 :description description
+                 :owner_id    owner})))))
 
-(defn update-user-tag
+
+(defn ^IPersistentMap update-user-tag
   "Updates a user tag's description and/or value.
 
    Parameters:
@@ -265,16 +266,19 @@
      updates - A map containing the updates. The map may contain only the keys :value and
                :description. It doesn't need to contain both.  The :value key will map to a new
                value for the tag, and the :description key will map to a new description. A nil
-               description will be converted to an empty string."
-  [tag-id updates]
+               description will be converted to an empty string.
+
+   Returns:
+     It returns the updated tag record."
+  [^UUID tag-id ^IPersistentMap updates]
   (let [updates (if (get updates :description :not-found)
                   updates
                   (assoc updates :description ""))]
     (korma/with-db db/metadata
       (update :tags
         (set-fields updates)
-        (where {:id tag-id})))
-    nil))
+        (where {:id tag-id})))))
+
 
 (defn delete-user-tag
   "This detaches a user tag from all metadata and deletes it.
@@ -359,6 +363,20 @@
               :detached_on nil
               :tag_id      [in tag-ids]})))
   nil)
+
+
+(defn ^ISeq select-tag-targets
+  "Retrieve all of the objects that have a given tag attached.
+
+   Parameters:
+     tag-id - The id of the tag
+
+   Returns:
+     It returns the attachment records for this tag."
+  [^UUID tag-id]
+  (korma/with-db db/metadata
+    (select :attached_tags
+      (where {:tag_id tag-id :detached_on nil}))))
 
 
 ;; TEMPLATES

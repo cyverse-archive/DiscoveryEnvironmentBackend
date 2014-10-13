@@ -30,7 +30,8 @@
                :dependencies ["iplant-service-config >= 0.1.0-5"
                               "java-1.7.0-openjdk"],
                :config-files ["log4j.properties"],
-               :config-path "conf"}
+               :config-path "conf"
+               :working-dir "pushd /var/lib/condor > /dev/null"}
   :profiles {:dev {:dependencies [[midje "1.6.0"]]}}
   :aot [jex.core]
   :main jex.core

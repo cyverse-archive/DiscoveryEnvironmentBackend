@@ -1,7 +1,10 @@
 (ns authy.core
   (:use [slingshot.slingshot :only [throw+ try+]])
-  (:require [clj-http.client :as http])
-  (:import [java.sql Timestamp]))
+  (:require [clj-http.client :as http]
+            [clojure.string :as string]
+            [clojure.tools.logging :as log])
+  (:import [java.io IOException]
+           [java.sql Timestamp]))
 
 (def ^:private default-refresh-window (* 5 60 1000))
 
@@ -37,6 +40,24 @@
        (merge oauth-info)
        (call-token-callback)))
 
+(defn- credentials-token-request
+  [{:keys [token-uri redirect-uri client-key client-secret]} username password timeout]
+  (:body (http/post token-uri
+                    {:basic-auth     [client-key client-secret]
+                     :form-params    {:grant_type "client_credentials"
+                                      :username   username
+                                      :password   password}
+                     :as             :json
+                     :conn-timeout   timeout
+                     :socket-timeout timeout})))
+
+(defn get-access-token-for-credentials
+  [oauth-info username password & {:keys [timeout] or {timeout 5000}}]
+  (->> (credentials-token-request oauth-info username password timeout)
+       (format-token-info)
+       (merge oauth-info)
+       (call-token-callback)))
+
 (defn- send-refresh-token-request
   [{:keys [token-uri client-key client-secret refresh-token]} timeout]
   (:body (http/post token-uri
@@ -47,13 +68,38 @@
                      :conn-timeout   timeout
                      :socket-timeout timeout})))
 
+(defn- can-reauth?
+  [{:keys [token-uri client-key client-secret]} timeout]
+  (some->> (http/post token-uri
+                      {:basic-auth       [client-key client-secret]
+                       :form-params      {:grant_type  "password"
+                                          :username    "fake_username"
+                                          :password    "fake_password"}
+                       :as               :json
+                       :coerce           :always
+                       :conn-timeout     timeout
+                       :socket-timeout   timeout
+                       :throw-exceptions false})
+           (:body)
+           (:error)
+           (= "invalid_grant")))
+
+(defn- check-reauth
+  [token-info timeout]
+  (when-not (can-reauth? token-info timeout)
+    (throw (IOException. "reauthorization sanity check failed"))))
+
 (defn- refresh-token-request
   [{:keys [reauth-callback] :as token-info} timeout]
   (try+ (send-refresh-token-request token-info timeout)
-        (catch Object _
+        (catch (comp #(<= 400 % 499) :status) e
+          (check-reauth token-info timeout)
           (if (fn? reauth-callback)
             (reauth-callback)
-            (throw+)))))
+            (throw+)))
+        (catch Object e
+          (log/error e)
+          (throw+))))
 
 (defn refresh-access-token
   [token-info & {:keys [timeout] :or {timeout 5000}}]

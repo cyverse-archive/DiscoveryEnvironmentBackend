@@ -119,6 +119,13 @@
     :or   {dependencies []}}]
   dependencies)
 
+(defn- build-working-dir
+  "Builds the command for setting the working directory for a service."
+  [settings]
+  (if (contains? settings :working-dir)
+    (:working-dir settings)
+    "pushd / > /dev/null"))
+
 (defn- project-to-settings
   "Converts a project map to the settings map that we need to fill in the
    templates."
@@ -151,6 +158,7 @@
            :lein-deps      dep-names
            :jetty-runner   (when jetty? (find-jetty-runner dep-names))
            :war-file       (when jetty? (find-war-file dep-names))
+           :working-dir    (build-working-dir settings)
            :zk-service     (:zk-service settings (:name project)))))
 
 (defn- validate-settings

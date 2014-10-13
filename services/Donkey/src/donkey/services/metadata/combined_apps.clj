@@ -27,11 +27,11 @@
   (assoc group :properties (remove (comp mapped-props :id) (:properties group))))
 
 (defn- reformat-group
-  [app-name step-name group]
+  [app-name step-id group]
   (assoc group
     :name       (str app-name " - " (:name group))
     :label      (str app-name " - " (:label group))
-    :properties (mapv (fn [prop] (assoc prop :id (str step-name "_" (:id prop))))
+    :properties (mapv (fn [prop] (assoc prop :id (str step-id "_" (:id prop))))
                       (:properties group))))
 
 (defn- get-agave-groups
@@ -39,10 +39,10 @@
   (mu/assert-agave-enabled agave)
   (let [app          (.getApp agave external-app-id)
         mapped-props (set (map :input_id (ap/load-target-step-mappings (:step_id step))))]
-    (->> (:groups app)
+    (->> (:categories app)
          (map (partial remove-mapped-inputs mapped-props))
          (remove (comp empty? :properties))
-         (map (partial reformat-group (:name app) (:step_name step)))
+         (map (partial reformat-group (:name app) (:step_id step)))
          (doall))))
 
 (defn- get-combined-groups
@@ -75,9 +75,9 @@
 (defn- get-combined-app
   [agave app-id]
   (let [metadactyl-app (metadactyl/get-app app-id)]
-    (->> (:groups metadactyl-app)
+    (->> (:categories metadactyl-app)
          (get-combined-groups agave app-id)
-         (assoc metadactyl-app :groups))))
+         (assoc metadactyl-app :categories))))
 
 (defn get-app
   [agave app-id]
@@ -165,7 +165,7 @@
                 output-dir    (:result-folder-path job-info)
                 submission    (assoc (mu/update-submission-result-folder submission output-dir)
                                 :analysis_id (:external_app_id curr-app-step)
-                                :paramPrefix (:step_name curr-app-step))]
+                                :paramPrefix (:step_id curr-app-step))]
             (aa/submit-job-step agave job-info job-step submission)))
     (record-step-submission job-info job-step)))
 
@@ -226,7 +226,7 @@
         update-props  #(map update-prop %)
         update-group  #(update-in % [:properties] update-props)
         update-groups #(map update-group %)]
-    (update-in app [:groups] update-groups)))
+    (update-in app [:categories] update-groups)))
 
 (defn- translate-job-status
   "Translates an Agave status code to something more consistent with the DE's status codes."

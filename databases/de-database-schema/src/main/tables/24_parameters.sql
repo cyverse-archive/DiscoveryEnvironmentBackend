@@ -11,9 +11,9 @@ CREATE TABLE parameters (
     label text,
     is_visible boolean DEFAULT true,
     ordering integer,
+    display_order int NOT NULL DEFAULT 0,
     parameter_type uuid NOT NULL,
     required boolean DEFAULT false,
-    file_parameter_id uuid,
     omit_if_blank boolean DEFAULT true
 );
 

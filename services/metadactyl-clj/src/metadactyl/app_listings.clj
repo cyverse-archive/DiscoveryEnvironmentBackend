@@ -93,7 +93,7 @@
   "Retrieves the list of app groups that are visible to all users, the current user's app groups, or
    both, depending on the :public param."
   [{:keys [public] :as params}]
-  (service/swagger-response
+  (service/success-response
     (if (contains? params :public)
       (if-not public
         (get-workspace-app-groups params)
@@ -205,7 +205,7 @@
    descendents."
   [app-group-id params]
   (let [workspace (get-workspace)]
-    (service/swagger-response
+    (service/success-response
      (or (list-apps-in-virtual-group workspace app-group-id params)
          (list-apps-in-real-group workspace app-group-id params)))))
 
@@ -222,7 +222,7 @@
                         (workspace-favorites-app-group-index)
                         params)
         search_results (map format-app search_results)]
-    (service/swagger-response {:app_count total
+    (service/success-response {:app_count total
                                :apps search_results})))
 
 (defn- load-app-details
@@ -278,7 +278,7 @@
       (throw  (IllegalArgumentException. (str "no tools associated with app, " app-id))))
     (->> (format-app-details details tools)
          (remove-nil-vals)
-         (service/swagger-response))))
+         (service/success-response))))
 
 (defn load-app-ids
   "Loads the identifiers for all apps that refer to valid tools from the database."
@@ -299,7 +299,7 @@
 (defn get-all-app-ids
   "This service obtains the identifiers of all apps that refer to valid tools."
   []
-  (service/swagger-response {:app_ids (load-app-ids)}))
+  (service/success-response {:app_ids (load-app-ids)}))
 
 (defn get-app-description
   "This service obtains the description of an app."

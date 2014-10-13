@@ -72,10 +72,10 @@
       {:id           (:id tag)
        :value        (:value tag)
        :description  (:description tag)
-       :creator      (:owner_id tag)
+       :creator      (str (:owner_id tag) "#iplant")
        :dateCreated  (:created_on tag)
        :dateModified (:modified_on tag)
-       :targets      [(map format-target (:targets tag))]})))
+       :targets      (map format-target (:targets tag))})))
 
 
 (defn- index-tags

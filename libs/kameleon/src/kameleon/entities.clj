@@ -125,7 +125,7 @@
 (defentity parameters
   (has-many parameter_values {:fk :parameter_id})
   (has-many validation_rules {:fk :parameter_id})
-  (belongs-to file_parameters {:fk :file_parameter_id})
+  (has-one file_parameters {:fk :parameter_id})
   (belongs-to parameter_types {:fk :parameter_type})
   (many-to-many tool_types :tool_type_parameter_type
                 {:lfk :parameter_type_id

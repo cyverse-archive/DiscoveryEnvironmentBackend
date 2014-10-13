@@ -44,18 +44,15 @@
   "Adds an app step to the database for the given app ID."
   [app-id step-number step]
   (let [step (-> step
-                 (select-keys [:id :task_id])
+                 (select-keys [:task_id])
                  (assoc :app_id app-id
                         :step step-number))]
     (insert app_steps (values step))))
 
 (defn add-mapping
-  "Adds an input/output workflow mapping to the database for the given app ID and source->target
-   mapping."
-  [app-id mapping]
-  (let [workflow-map (-> mapping
-                         (select-keys [:source_step :target_step])
-                         (assoc :app_id app-id))
+  "Adds an input/output workflow mapping to the database for the given app source->target mapping."
+  [mapping]
+  (let [workflow-map (select-keys mapping [:app_id :source_step :target_step])
         mapping-id (:id (insert :workflow_io_maps (values workflow-map)))]
     (dorun
       (for [[input output] (:map mapping)]
@@ -74,18 +71,10 @@
     (update apps (set-fields app) (where {:id app-id}))))
 
 (defn remove-app-steps
-  "Removes all steps from an App."
+  "Removes all steps from an App. This delete will cascade to workflow_io_maps and
+   input_output_mapping entries."
   [app-id]
   (delete app_steps (where {:app_id app-id})))
-
-(defn remove-app-mappings
-  "Removes all input/output mappings from an App."
-  [app-id]
-  (let [mapping-ids (map :id (select :workflow_io_maps
-                               (fields :id)
-                               (where {:app_id app-id})))]
-    (delete :input_output_mapping (where {:mapping_id [in mapping-ids]}))
-    (delete :workflow_io_maps (where {:app_id app-id}))))
 
 (defn get-full-app
   "Retrieves all app listing fields from the database."

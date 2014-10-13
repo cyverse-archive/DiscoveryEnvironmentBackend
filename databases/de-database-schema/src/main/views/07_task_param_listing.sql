@@ -22,6 +22,6 @@ CREATE VIEW task_param_listing AS
     FROM parameters p
         LEFT JOIN parameter_types pt ON pt.id = p.parameter_type
         LEFT JOIN value_type vt ON vt.id = pt.value_type_id
-        LEFT JOIN file_parameters f ON f.id = p.file_parameter_id
+        LEFT JOIN file_parameters f ON f.parameter_id = p.id
         LEFT JOIN parameter_groups g ON g.id = p.parameter_group_id
         LEFT JOIN tasks t ON t.id = g.task_id;

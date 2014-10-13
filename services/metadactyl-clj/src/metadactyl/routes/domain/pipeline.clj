@@ -5,14 +5,13 @@
   (:import [java.util UUID]))
 
 (defschema PipelineMapping
-  {:target_step (describe UUID "A UUID that is used to identify the Target Step")
-   :source_step (describe UUID "A UUID that is used to identify the Source Step")
+  {:source_step (describe Long "The step index of the Source Step")
+   :target_step (describe Long "The step index of the Target Step")
    ;; KLUDGE
    :map (describe Any "The {'input-uuid': 'output-uuid'} mapping")})
 
 (defschema PipelineStep
-  {:id          (describe UUID "A UUID that is used to identify the Step")
-   :name        (describe String "The Step's name")
+  {:name        (describe String "The Step's name")
    :description (describe String "The Step's description")
    :task_id     (describe UUID "A UUID that is used to identify this Step's Task")
    :app_type    (describe String "The Step's App type")})

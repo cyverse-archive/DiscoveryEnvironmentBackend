@@ -153,7 +153,7 @@
   "Lists selected workflow elements.  This function handles requests to list
    various different types of workflow elements."
   [elm-type params]
-  (service/swagger-response
+  (service/success-response
     (cond
       (= elm-type "all")               (list-all params)
       (contains? listing-fns elm-type) ((listing-fns elm-type) params)
