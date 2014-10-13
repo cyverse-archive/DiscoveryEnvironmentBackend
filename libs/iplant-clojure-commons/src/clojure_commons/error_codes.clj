@@ -46,7 +46,7 @@
 (deferr ERR_TEMPORARILY_MOVED)
 (deferr ERR_REQUEST_BODY_TOO_LARGE)
 (deferr ERR_CONFLICTING_QUERY_PARAMETER_VALUES)
-(deferr ERR_INTERNAL_ERROR)
+
 
 (def ^:private http-status-for
   {ERR_ILLEGAL_ARGUMENT                   400
