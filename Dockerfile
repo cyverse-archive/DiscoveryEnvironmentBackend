@@ -7,7 +7,7 @@ RUN mkdir -p /opt/go && \
     curl -O https://storage.googleapis.com/golang/go1.3.3.linux-amd64.tar.gz && \
     tar xzf go1.3.3.linux-amd64.tar.gz -C /opt/go --strip-components=1
 RUN mkdir -p /opt/maven && \
-    curl -O http://apache.mirrors.hoobly.com/maven/maven-3/3.2.3/binaries/apache-maven-3.2.3-bin.tar.gz /tmp/apache-maven-3.2.3-bin.tar.gz && \
+    curl -O http://apache.mirrors.hoobly.com/maven/maven-3/3.2.3/binaries/apache-maven-3.2.3-bin.tar.gz && \
     tar xzf apache-maven-3.2.3-bin.tar.gz -C /opt/maven --strip-components=1
 RUN mkdir -p /opt/gopath
 ENV GOPATH /opt/gopath
