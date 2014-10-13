@@ -266,8 +266,23 @@
   (sharing/unshare user unshare-withs fpaths))
 
 
+(defn- exec-cart-query
+  [req-map]
+  (try+
+    (let [url-str (str (url/url (cfg/data-info-base-url) "cart"))
+          resp    (client/post url-str (assoc req-map :as :json))]
+      (when (not= 200 (:status resp))
+        (log/error "Bad data-info request to /cart: response =" resp)
+        (throw+ {:error_code error/ERR_INTERNAL_ERROR}))
+      (:cart (:body resp)))
+    (catch Object o
+      (log/error "Internal Error:" o)
+      (throw+ {:error_code error/ERR_INTERNAL_ERROR}))))
+
+
 (defn ^IPersistentMap make-a-la-cart
-  "This function calls data-info's /cart endpoint to create a shopping cart.
+  "This function calls data-info's /cart endpoint to create a shopping cart containing a provided
+   list of files.
 
    Parameters:
      user  - the user that will own the shopping cart.
@@ -284,16 +299,28 @@
        :zone                   <auth zone>
        :defaultStorageResource <irods storage resource>"
   [^String user ^ISeq paths]
-  (try+
-    (let [url-str (str (url/url (cfg/data-info-base-url) "cart"))
-          resp    (client/post url-str {:query-params {:user user}
-                                        :content-type :json
-                                        :body         (json/generate-string {:paths paths})
-                                        :as           :json-strict})]
-      (when (not= 200 (:status resp))
-        (log/error "Bad data-info request to /cart: response =" resp)
-        (throw+ {:error_code error/ERR_INTERNAL_ERROR}))
-      (:cart (:body resp)))
-    (catch Object o
-      (log/error "Internal Error:" o)
-      (throw+ {:error_code error/ERR_INTERNAL_ERROR}))))
+  (exec-cart-query {:query-params {:user user}
+                    :content-type :json
+                    :body         (json/generate-string {:paths paths})}))
+
+
+(defn ^IPersistentMap make-folder-cart
+  "This function calls data-info's /cart endpoint to create a shopping cart containing the contents
+   of a provided folder.
+
+ Parameters:
+   user   - the user that will own the shopping cart.
+   folder - the absolute path to the folder
+
+ Returns:
+   It returns a map containing the shopping cart information.
+
+     :key                    <cart key>
+     :user                   user
+     :password               <temporary password>
+     :host                   <irods host>
+     :port                   <irods port>
+     :zone                   <auth zone>
+     :defaultStorageResource <irods storage resource>"
+  [^String user ^String folder]
+  (exec-cart-query {:query-params {:folder folder :user user}}))

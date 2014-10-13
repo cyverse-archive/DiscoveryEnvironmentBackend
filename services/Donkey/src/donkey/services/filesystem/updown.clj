@@ -36,24 +36,6 @@
     (validators/path-readable cm user file-path)
     (if (zero? (file-size cm file-path)) "" (input-stream cm file-path))))
 
-(defn- download
-  [user filepaths]
-  (with-jargon (jargon/jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (let [cart-key (str (System/currentTimeMillis))
-          account  (:irodsAccount cm)]
-      {:action "download"
-       :status "success"
-       :data
-       {:user user
-        :home (ft/path-join "/" (cfg/irods-zone) "home" user)
-        :password (cart/store-cart cm user cart-key filepaths)
-        :host (.getHost account)
-        :port (.getPort account)
-        :zone (.getZone account)
-        :defaultStorageResource (.getDefaultStorageResource account)
-        :key cart-key}})))
-
 (defn- upload
   [user]
   (with-jargon (jargon/jargon-cfg) [cm]
@@ -86,11 +68,12 @@
 
 (with-post-hook! #'do-download (log-func "do-download"))
 
+
 (defn do-download-contents
   [{user :user} {path :path}]
-  (let [limit (icat/number-of-items-in-folder user (cfg/irods-zone) path)  ;; FIXME this is horrible
-        paths (directory/get-paths-in-folder user path limit)]
-    (download user paths)))
+  {:action "download"
+   :status "success"
+   :data   (data/make-folder-cart user path)})
 
 (with-pre-hook! #'do-download-contents
   (fn [params body]
