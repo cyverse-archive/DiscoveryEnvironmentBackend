@@ -2,14 +2,12 @@
   (:use [slingshot.slingshot :only [throw+]])
   (:require [clojure.set :as set]
             [cheshire.core :as json]
-            [clj-jargon.init :as fs-init]
             [clojure-commons.error-codes :as error]
             [donkey.auth.user-attributes :as user]
             [donkey.clients.data-info :as data]
             [donkey.persistence.metadata :as meta]
             [donkey.persistence.search :as search]
             [donkey.util.config :as config]
-            [donkey.util.icat :as icat]
             [donkey.util.service :as svc]
             [donkey.util.validators :as valid])
   (:import [java.io Reader]
