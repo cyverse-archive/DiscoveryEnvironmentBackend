@@ -10,6 +10,8 @@ ALTER TABLE ONLY parameters RENAME COLUMN defalut_value TO defalut_value_v187;
 ALTER TABLE ONLY parameters RENAME COLUMN property_type TO property_type_v187;
 ALTER TABLE ONLY parameters RENAME COLUMN validator TO validator_v187;
 ALTER TABLE ONLY parameters RENAME COLUMN dataobject_id TO dataobject_id_v187;
+ALTER TABLE ONLY parameters ADD COLUMN id_v187 CHARACTER VARYING(255);
+UPDATE parameters SET id_v187 = id;
 ALTER TABLE ONLY parameters
   ALTER COLUMN id TYPE UUID USING
     CASE WHEN CHAR_LENGTH(id) < 36
@@ -40,4 +42,3 @@ UPDATE parameters SET required = true WHERE id IN
      LEFT JOIN validator_v187 v ON v.hid = p.validator_v187
      LEFT JOIN file_parameters f ON f.hid_v187 = p.dataobject_id_v187
      WHERE v.required = true OR f.required_v187 = true);
-
