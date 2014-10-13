@@ -2,7 +2,7 @@ FROM centos:centos6
 MAINTAINER John Wregglesworth <wregglej@gmail.com>
 
 ##RUN rpm -Uvh http://ftp.linux.ncsu.edu/pub/epel/5/i386/epel-release-5-4.noarch.rpm
-RUN yum install -y git-core java-1.7.0-openjdk-devel java-1.7.0-openjdk mercurial curl wget ruby ruby-devel rubygems  gcc rpm-build gcc g++ make tar
+RUN yum install -y git-core java-1.7.0-openjdk-devel java-1.7.0-openjdk mercurial curl wget ruby ruby-devel rubygems  gcc rpm-build gcc g++ make tar which
 RUN mkdir -p /opt/go && \
     curl -O https://storage.googleapis.com/golang/go1.3.3.linux-amd64.tar.gz && \
     tar xzf go1.3.3.linux-amd64.tar.gz -C /opt/go --strip-components=1
