@@ -6,6 +6,7 @@
             [cemerick.url :as url]
             [cheshire.core :as json]
             [clj-http.client :as client]
+            [me.raynes.fs :as fs]
             [clojure-commons.error-codes :as error]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
@@ -266,18 +267,39 @@
   (sharing/unshare user unshare-withs fpaths))
 
 
+(defn ^IPersistentMap download-file
+  "This function calls data-info's /entry/path/<zone>/<rel-path> endpoints to download a file.
+
+   Parameters:
+     user - the username of the person authorized to download the file.
+     file - the absolute path to the file to download.
+
+   Returns:
+     It returns a map of with the following members.
+
+       :content-type - the media type of the file being downloaded
+       :file-stream  - an open input stream containing the file."
+  [^String user ^String file]
+  (let [nodes   (map url/url-encode (next (fs/split file)))
+        url-str (str (apply url/url (cfg/data-info-base-url) "entries" "path" nodes))
+        resp    (client/get url-str {:query-params {:user user}
+                                     :as           :stream})]
+     (case (:status resp)
+       200 {:content-type (:content-type resp) :file-stream (:body resp)}
+       404 (throw+ {:error_code error/ERR_DOES_NOT_EXIST :path file})
+           (do
+             (log/error "Bad data-info request to" url-str ": response =" resp)
+             (throw+ {:error_code error/ERR_INTERNAL_ERROR})))))
+
+
 (defn- exec-cart-query
   [req-map]
-  (try+
-    (let [url-str (str (url/url (cfg/data-info-base-url) "cart"))
-          resp    (client/post url-str (assoc req-map :as :json))]
-      (when (not= 200 (:status resp))
-        (log/error "Bad data-info request to /cart: response =" resp)
-        (throw+ {:error_code error/ERR_INTERNAL_ERROR}))
-      (:cart (:body resp)))
-    (catch Object o
-      (log/error "Internal Error:" o)
-      (throw+ {:error_code error/ERR_INTERNAL_ERROR}))))
+  (let [url-str (str (url/url (cfg/data-info-base-url) "cart"))
+        resp    (client/post url-str (assoc req-map :as :json))]
+    (when (not= 200 (:status resp))
+      (log/error "Bad data-info request to" url-str ": response =" resp)
+      (throw+ {:error_code error/ERR_INTERNAL_ERROR}))
+    (:cart (:body resp))))
 
 
 (defn ^IPersistentMap make-a-la-cart
@@ -291,13 +313,13 @@
    Returns:
      It returns a map containing the shopping cart information.
 
-       :key                    <cart key>
-       :user                   user
-       :password               <temporary password>
-       :host                   <irods host>
-       :port                   <irods port>
-       :zone                   <auth zone>
-       :defaultStorageResource <irods storage resource>"
+       :key                    - the identity of the shopping cart
+       :user                   - user
+       :password               - a temporary password for access to the cart
+       :host                   - the hostname or IP of the iRODS server holding the cart
+       :port                   - the port the iRODS server listens on
+       :zone                   - the authentication zone for the temporary password
+       :defaultStorageResource - the default iRODS storage resource"
   [^String user ^ISeq paths]
   (exec-cart-query {:query-params {:user user}
                     :content-type :json
@@ -307,19 +329,19 @@
 (defn ^IPersistentMap make-empty-cart
   "This function calls data-info's /cart endpoint to create a empty shopping cart.
 
- Parameters:
-   user  - the user that will own the shopping cart.
+   Parameters:
+     user  - the user that will own the shopping cart.
 
- Returns:
-   It returns a map containing the shopping cart information.
+   Returns:
+     It returns a map containing the shopping cart information.
 
-     :key                    <cart key>
-     :user                   user
-     :password               <temporary password>
-     :host                   <irods host>
-     :port                   <irods port>
-     :zone                   <auth zone>
-     :defaultStorageResource <irods storage resource>"
+       :key                    - the identity of the shopping cart
+       :user                   - user
+       :password               - a temporary password for access to the cart
+       :host                   - the hostname or IP of the iRODS server holding the cart
+       :port                   - the port the iRODS server listens on
+       :zone                   - the authentication zone for the temporary password
+       :defaultStorageResource - the default iRODS storage resource"
   [^String user]
   (exec-cart-query {:query-params {:user user}}))
 
@@ -328,19 +350,19 @@
   "This function calls data-info's /cart endpoint to create a shopping cart containing the contents
    of a provided folder.
 
- Parameters:
-   user   - the user that will own the shopping cart.
-   folder - the absolute path to the folder
+   Parameters:
+     user   - the user that will own the shopping cart.
+     folder - the absolute path to the folder
 
- Returns:
-   It returns a map containing the shopping cart information.
+   Returns:
+     It returns a map containing the shopping cart information.
 
-     :key                    <cart key>
-     :user                   user
-     :password               <temporary password>
-     :host                   <irods host>
-     :port                   <irods port>
-     :zone                   <auth zone>
-     :defaultStorageResource <irods storage resource>"
+       :key                    - the identity of the shopping cart
+       :user                   - user
+       :password               - a temporary password for access to the cart
+       :host                   - the hostname or IP of the iRODS server holding the cart
+       :port                   - the port the iRODS server listens on
+       :zone                   - the authentication zone for the temporary password
+       :defaultStorageResource - the default iRODS storage resource"
   [^String user ^String folder]
   (exec-cart-query {:query-params {:folder folder :user user}}))

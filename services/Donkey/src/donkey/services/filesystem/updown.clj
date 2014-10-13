@@ -2,37 +2,11 @@
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
-        [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-info :only [file-size]]
-        [clj-jargon.item-ops :only [input-stream]]
-        [slingshot.slingshot :only [try+ throw+]])
+        [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
-            [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
-            [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.services.filesystem.directory :as directory]
-            [donkey.services.filesystem.validators :as validators]
-            [clj-icat-direct.icat :as icat]
-            [donkey.clients.data-info :as data]
-            [donkey.services.filesystem.icat :as jargon])
-  (:import [org.apache.tika Tika]))
-
-(defn- tika-detect-type
-  [user file-path]
-  (with-jargon (jargon/jargon-cfg) [cm-new]
-    (validators/user-exists cm-new user)
-    (validators/path-exists cm-new file-path)
-    (validators/path-readable cm-new user file-path)
-    (.detect (Tika.) (input-stream cm-new file-path))))
-
-(defn- download-file
-  [user file-path]
-  (with-jargon (jargon/jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (validators/path-exists cm file-path)
-    (validators/path-readable cm user file-path)
-    (if (zero? (file-size cm file-path)) "" (input-stream cm file-path))))
+            [donkey.clients.data-info :as data]))
 
 
 (defn do-download
@@ -60,8 +34,7 @@
   (fn [params body]
     (log-call "do-download-contents" params body)
     (validate-map params {:user string?})
-    (validate-map body {:path string?})
-    (with-jargon (jargon/jargon-cfg) [cm] (validators/path-is-dir cm (:path body)))))
+    (validate-map body {:path string?})))
 
 (with-post-hook! #'do-download-contents (log-func "do-download-contents"))
 
@@ -97,15 +70,14 @@
     :else
     (str "attachment; filename=\"" (ft/basename (:path params)) "\"")))
 
+
 (defn do-special-download
   [{user :user path :path :as params}]
-  (let [content      (download-file user path)
-        content-type @(future (tika-detect-type user path))
-        disposition  (get-disposition params)]
-    {:status               200
-     :body                 content
-     :headers {"Content-Disposition" disposition
-               "Content-Type"        content-type}}))
+  (let [resp (data/download-file user path)]
+    {:status  200
+     :body    (:file-stream resp)
+     :headers {"Content-Disposition" (get-disposition params)
+               "Content-Type"        (:content-type resp)}}))
 
 (with-pre-hook! #'do-special-download
   (fn [params]
