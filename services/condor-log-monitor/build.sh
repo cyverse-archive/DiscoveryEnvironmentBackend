@@ -1,12 +1,12 @@
 #!/bin/sh
 
-VERSION=$(cat version | sed -e 's/^ *//' -e 's/ *$//')
 BRANCH=$1
 WORKINGDIR=$2
-
-cd $WORKINDIR
 echo "BRANCH=$BRANCH"
 echo "WORKINGIDR=$WORKINGDIR"
+
+cd $WORKINGDIR
+VERSION=$(cat version | sed -e 's/^ *//' -e 's/ *$//')
 git checkout $BRANCH
 mkdir -p build/usr/local/bin
 mkdir -p build/var/log/condor-log-monitor
