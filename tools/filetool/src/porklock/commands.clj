@@ -4,7 +4,8 @@
         [porklock.config]
         [porklock.shell-interop]
         [porklock.fileops :only [absify]]
-        [clojure.pprint :only [pprint]])
+        [clojure.pprint :only [pprint]]
+        [slingshot.slingshot :only [try+]])
   (:require [clj-jargon.init :as jg]
             [clj-jargon.item-info :as jg-info]
             [clj-jargon.item-ops :as jg-ops]
@@ -114,7 +115,8 @@
         transfer-files  (files-to-transfer options)
         metadata        (:meta options)
         skip-parent?    (:skip-parent-meta options)
-        dest-files      (relative-dest-paths transfer-files source-dir dest-dir)]
+        dest-files      (relative-dest-paths transfer-files source-dir dest-dir)
+        error?          (atom false)]
     (jg/with-jargon irods-cfg [cm]
       (when-not (jg-info/exists? cm (ft/dirname dest-dir))
         (porkprint (ft/dirname dest-dir) "does not exist.")
@@ -136,39 +138,49 @@
 
       (doseq [[src dest]  (seq dest-files)]
         (let [dir-dest (ft/dirname dest)]
+          (if-not (or (.isFile (io/file src))
+                      (.isDirectory (io/file src)))
+            (porkprint "Path " src " is neither a file nor a directory.")
+            (do
+              ;;; It's possible that the destination directory doesn't
+              ;;; exist yet in iRODS, so create it if it's not there.
+              (porkprint "Creating all directories in iRODS down to " dir-dest)
+              (when-not (jg-info/exists? cm dir-dest)
+                (jg-ops/mkdirs cm dir-dest))
 
-          ;;; It's possible that the destination directory doesn't
-          ;;; exist yet in iRODS, so create it if it's not there.
-          (porkprint "Creating all directories in iRODS down to " dir-dest)
-          (when-not (jg-info/exists? cm dir-dest)
-            (jg-ops/mkdirs cm dir-dest))
+              ;;; The destination directory needs to be tagged with AVUs
+              ;;; for the App and Execution.
+              (porkprint "Applying metadata to" dir-dest)
+              (apply-metadata cm dir-dest metadata)
 
-          ;;; The destination directory needs to be tagged with AVUs
-          ;;; for the App and Execution.
-          (porkprint "Applying metadata to" dir-dest)
-          (apply-metadata cm dir-dest metadata)
+              ;;; Since we run as a proxy account, the destination directory
+              ;;; needs to have the owner set to the user that ran the app.
+              (when-not (jg-perms/owns? cm (:user options) dir-dest)
+                (porkprint "Setting owner of " dir-dest " to " (:user options))
+                (jg-perms/set-owner cm dir-dest (:user options)))
 
-          ;;; Since we run as a proxy account, the destination directory
-          ;;; needs to have the owner set to the user that ran the app.
-          (when-not (jg-perms/owns? cm (:user options) dir-dest)
-            (porkprint "Setting owner of " dir-dest " to " (:user options))
-            (jg-perms/set-owner cm dir-dest (:user options)))
+              (try+
+               (shell-out [(iput-path) "-f" "-P" src dest :env ic-env])
+               (catch [:error_code "ERR_BAD_EXIT_CODE"] err
+                 (porkprint "Command exited with a non-zero status: " err)
+                 (reset! error? true)))
+              
 
-          (shell-out [(iput-path) "-f" "-P" src dest :env ic-env])
+              ;;; Apply the App and Execution metadata to the newly uploaded
+              ;;; file/directory.
+              (porkprint "Applying metadata to " dest)
+              (apply-metadata cm dest metadata)
 
-          ;;; Apply the App and Execution metadata to the newly uploaded
-          ;;; file/directory.
-          (porkprint "Applying metadata to " dest)
-          (apply-metadata cm dest metadata)))
-
-      (when-not skip-parent?
-        (porkprint "Applying metadata to " dest-dir)
-        (apply-metadata cm dest-dir metadata)
-        (doseq [fileobj (file-seq (jg-info/file cm dest-dir))]
-          (let [filepath (.getAbsolutePath fileobj)
-                dir?     (.isDirectory fileobj)]
-            (jg-perms/set-owner cm filepath (:user options))
-            (apply-metadata cm filepath metadata)))))))
+              (when-not skip-parent?
+                (porkprint "Applying metadata to " dest-dir)
+                (apply-metadata cm dest-dir metadata)
+                (doseq [fileobj (file-seq (jg-info/file cm dest-dir))]
+                  (let [filepath (.getAbsolutePath fileobj)
+                        dir?     (.isDirectory fileobj)]
+                    (jg-perms/set-owner cm filepath (:user options))
+                    (apply-metadata cm filepath metadata))))))))
+      (if @error?
+        (throw (Exception. "An error occurred tranferring files into iRODS. Please check the above logs for more information."))))))
 
 (defn- iget-args
   [source destination env]

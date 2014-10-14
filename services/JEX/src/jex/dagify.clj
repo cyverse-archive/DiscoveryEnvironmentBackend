@@ -63,6 +63,7 @@
    "+IpcUuid = \"" uuid "\"\n"
    "+IpcJobId = \"generated_script\"\n"
    "+IpcUsername = \"" username "\"\n"
+   "+AccountingGroup = \"" (cfg/accounting-group) "." username "\"\n"
    (ipc-exe analysis-map)
    (ipc-exe-path analysis-map)
    "should_transfer_files = YES\n"
@@ -111,6 +112,7 @@
         irods-cfg (irods-config-path analysis-map)]
     (str
      "#!/bin/bash\n"
+     "set -x\n"
      "readonly IPLANT_USER=" (:username analysis-map) "\n"
      "export IPLANT_USER\n"
      "mkdir -p logs\n"
@@ -119,6 +121,13 @@
      fail-script
      "EXITSTATUS=0\n"
      (join "\n" (map script-line (jobs-in-order analysis-map)))
+     "ps aux\n"
+     "echo -----\n"
+     "for i in $(ls logs); do\n"
+     "    echo logs/$i\n"
+     "    cat logs/$i\n"
+     "    echo -----\n"
+     "done\n"
      "exit $EXITSTATUS\n")))
 
 (defn create-submission-directory

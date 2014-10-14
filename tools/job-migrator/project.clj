@@ -1,4 +1,4 @@
-(defproject job-migrator "3.2.7"
+(defproject job-migrator "3.2.9"
   :description "Migration to move more job data into Postgres."
   :url "https://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend"
   :license {:name "BSD Standard License"
@@ -10,8 +10,8 @@
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/tools.logging "0.3.0"]
-                 [org.iplantc/clojure-commons "3.2.7"]
-                 [org.iplantc/mescal "3.2.7"]
+                 [org.iplantc/clojure-commons "3.2.9"]
+                 [org.iplantc/mescal "3.2.9"]
                  [mvxcvi/clj-pgp "0.5.2"]
                  [postgresql "9.0-801.jdbc4"]
                  [slingshot "0.10.3"]]

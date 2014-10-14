@@ -57,7 +57,6 @@
   []
   (find-file-in-path "iinit"))
 
-
 (defn relative-paths-to-exclude
   []
   [(irods-auth-filepath) 

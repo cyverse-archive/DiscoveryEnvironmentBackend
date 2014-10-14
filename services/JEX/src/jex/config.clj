@@ -117,6 +117,11 @@
   [props config-valid configs]
   "jex.app.request-disk")
 
+(cc/defprop-str accounting-group
+  "The accounting group to place everyone in by default."
+  [props config-valid configs]
+  "jex.app.accounting-group")
+
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []
