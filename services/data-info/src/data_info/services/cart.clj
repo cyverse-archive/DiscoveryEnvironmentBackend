@@ -49,8 +49,8 @@
 (with-pre-hook! #'dispatch-cart
   (fn [params body]
     (dul/log-call "dispatch-cart" params body)
-    (cv/validate-map params {:user string?})
-    (if-not (empty? body)
+    (cv/validate-query-params params {:user string?})
+    (when body
       (cv/validate-map body {:paths sequential?}))))
 
 (with-post-hook! #'dispatch-cart (dul/log-func "dispatch-cart"))

@@ -1,36 +1,61 @@
 (ns clojure-commons.validators
   (:use [slingshot.slingshot :only [try+ throw+]]
-        [clojure-commons.error-codes]))
+        [clojure-commons.error-codes])
+  (:import [clojure.lang IPersistentMap]))
 
 
-(defn ^Boolean field-nonnegative-int?
-  "Indicates whether or not the unparsed field value contains a nonnegative integer."
-  [^String field-val]
+(defn ^Boolean nonnegative-int?
+  "Indicates whether or not the unparsed field value contains a nonnegative integer.
+
+   Parameters:
+     str-val - the unparsed value
+
+   Returns:
+     It returns true if str-val contains a 32-bit integer value that is zero or positive, otherwise
+     it returns false."
+  [^String str-val]
   (boolean
     (try+
-      (<= 0 (Integer/parseInt field-val))
+      (<= 0 (Integer/parseInt str-val))
       (catch Object _))))
 
 
-(defn- check-missing-keys
-  [a-map required-keys]
+(defn- check-missing
+  [handle-missing a-map required]
   (let [not-valid? #(not (contains? a-map %))]
-    (if (some not-valid? required-keys)
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :fields     (filter not-valid? required-keys)}))))
+    (when (some not-valid? required)
+      (handle-missing (filter not-valid? required)))))
 
-(defn- check-map-valid
-  [a-map func-map]
-  (let [not-valid? #(not ((last %1) (get a-map (first %1))))
-        field-seq  (seq func-map)]
-    (when (some not-valid? field-seq)
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :fields     (mapv first (filter not-valid? field-seq))}))))
+
+(defn- check-valid
+  [handle-invalid kvs validators]
+  (let [valid?   (fn [[k v]] ((get validators k) v))
+        invalids (->> kvs
+                   seq
+                   (remove valid?)
+                   flatten
+                   (apply hash-map))]
+    (when-not (empty? invalids)
+      (handle-invalid invalids))))
+
+
+(defn- throw-missing-fields
+  [fields]
+  (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+           :fields     fields}))
+
+
+(defn- throw-bad-fields
+  [fields]
+  (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+           :fields     (keys fields)}))
+
 
 (defn validate-map
   [a-map func-map]
-  (check-missing-keys a-map (keys func-map))
-  (check-map-valid a-map func-map))
+  (check-missing throw-missing-fields a-map (keys func-map))
+  (check-valid throw-bad-fields a-map func-map))
+
 
 (defn validate-field
   ([field-name field-value]
@@ -40,3 +65,56 @@
        (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                 :field      field-name
                 :value      field-value}))))
+
+
+(defn- throw-missing-params
+  [params]
+  (throw+ {:error_code ERR_MISSING_QUERY_PARAMETER :parameters params}))
+
+
+(defn- throw-bad-params
+  [params]
+  (throw+ {:error_code ERR_BAD_QUERY_PARAMETER :parameters params}))
+
+
+(defn validate-query-params
+  "Given a set of URL query parameters and a set of corresponding validation functions, this
+   function first verifies that the query parameters are present, and then validates the values.
+
+   The validation map is a mapping of the parameter name to its validator. Each validator is a
+   predicate that accepts the unparsed parameter value and returns whether or not the value is
+   valid. The validation map serves a second purpose. It indicates whether or not the parameter is
+   required. The presence of the parameter in the map indicates that it is required.
+
+   Parameters:
+     params     - the parameter map. It is a map of parameter names to their unparsed values. It
+                  should have the following form.
+
+                    {:<param-1> <value-1>
+                     :<param-2> <value-2>
+                     ...
+                     :<param-n> <value-n>}
+
+     validators - the validation map. It should have the following form.
+
+                    {:<param-1> <validator-1>
+                     :<param-2> <validator-2>
+                     ...
+                     :<param-n> <validator-n>}
+
+                  Each validator should be a function of the form (^Boolean [^String]).
+
+   Throws:
+     If any of the parameters are missing, a map with the following fields is thrown.
+
+       :error_code - ERR_MISSING_QUERY_PARAMETER
+       :parameters - [a list of keys associated with the missing parameters]
+
+     If all of the parameters are present, but some of them have bad values, a map with the
+     following fields is thrown.
+
+       :error_code - ERR_BAD_QUERY_PARAMETER
+       :parameters - The params map filtered for those parameters with bad values."
+  [^IPersistentMap params ^IPersistentMap validators]
+  (check-missing throw-missing-params params (keys validators))
+  (check-valid throw-bad-params params validators))

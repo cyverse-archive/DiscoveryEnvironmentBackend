@@ -215,8 +215,8 @@
 (with-pre-hook! #'get-folder
   (fn [path params]
     (dul/log-call "get-folder" path params)
-    (cv/validate-map params {:limit  cv/field-nonnegative-int?
-                             :offset cv/field-nonnegative-int?
+    (cv/validate-map params {:limit  cv/nonnegative-int?
+                             :offset cv/nonnegative-int?
                              :user   string?})
     (when-let [field (:sort-field params)]
       (validate-sort-field field))
