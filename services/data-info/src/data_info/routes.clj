@@ -1,6 +1,7 @@
 (ns data-info.routes
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
+            [data-info.services.cart :as cart]
             [data-info.services.create :as create]
             [data-info.services.directory :as dir]
             [data-info.services.entry :as entry]
@@ -17,7 +18,6 @@
             [data-info.services.stat :as stat]
             [data-info.services.trash :as trash]
             [data-info.services.type-detect.controllers :as detect]
-            [data-info.services.updown :as ud]
             [data-info.services.users :as user]
             [data-info.services.uuids :as uuid]
             [data-info.services.welcome :as welcome]
@@ -30,7 +30,7 @@
     (util/controller req welcome/welcome))
 
   (POST "/cart" [:as req]
-    (util/controller req ud/dispatch-cart :params :body))
+    (util/controller req cart/dispatch-cart :params :body))
 
   (HEAD "/entries/id/:entry" [:as req]
     (util/controller req entry/id-exists? :params))
