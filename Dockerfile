@@ -24,3 +24,8 @@ ADD build_profiles.clj /.lein/profiles.clj
 RUN chmod a+x /usr/bin/lein
 RUN gem install fpm
 RUN npm install -g grunt-cli
+RUN mkdir -p /usr/src/redhat/BUILD
+RUN mkdir -p /usr/src/redhat/RPMS
+RUN mkdir -p /usr/src/redhat/SOURCES
+RUN mkdir -p /usr/src/redhat/SPECS
+RUN mkdir -p /usr/src/redhat/SRPMS
