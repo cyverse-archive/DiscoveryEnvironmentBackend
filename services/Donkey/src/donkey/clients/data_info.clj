@@ -18,7 +18,8 @@
             [donkey.services.filesystem.status :as status]
             [donkey.services.filesystem.users :as users]
             [donkey.services.filesystem.uuids :as uuids]
-            [donkey.util.config :as cfg])
+            [donkey.util.config :as cfg]
+            [donkey.util.service :as svc])
   (:import [clojure.lang IPersistentMap ISeq]
            [java.util UUID]))
 
@@ -280,26 +281,28 @@
        :content-type - the media type of the file being downloaded
        :file-stream  - an open input stream containing the file."
   [^String user ^String file]
-  (let [nodes   (map url/url-encode (next (fs/split file)))
-        url-str (str (apply url/url (cfg/data-info-base-url) "entries" "path" nodes))
-        resp    (client/get url-str {:query-params {:user user}
-                                     :as           :stream})]
-     (case (:status resp)
-       200 {:content-type (:content-type resp) :file-stream (:body resp)}
-       404 (throw+ {:error_code error/ERR_DOES_NOT_EXIST :path file})
-           (do
-             (log/error "Bad data-info request to" url-str ": response =" resp)
-             (throw+ {:error_code error/ERR_INTERNAL_ERROR})))))
+  (try+
+    (let [nodes   (map url/url-encode (next (fs/split file)))
+          url-str (str (apply url/url (cfg/data-info-base-url) "entries" "path" nodes))
+          resp    (client/get url-str {:query-params {:user user}
+                                       :as           :stream})]
+      {:content-type (:content-type resp)
+       :file-stream  (:body resp)})
+    (catch [:status 404] {}
+      (throw+ {:error_code error/ERR_DOES_NOT_EXIST :path file}))
+    (catch Object o
+      (log/error o "failed to download" file "for" user)
+      (svc/request-failure "failed to download" file "for" user))))
 
 
 (defn- exec-cart-query
   [req-map]
-  (let [url-str (str (url/url (cfg/data-info-base-url) "cart"))
-        resp    (client/post url-str (assoc req-map :as :json))]
-    (when (not= 200 (:status resp))
-      (log/error "Bad data-info request to" url-str ": response =" resp)
-      (throw+ {:error_code error/ERR_INTERNAL_ERROR}))
-    (:cart (:body resp))))
+  (try+
+    (let [url-str (str (url/url (cfg/data-info-base-url) "cart"))]
+      (-> (client/post url-str (assoc req-map :as :json)) :body :cart))
+    (catch Object o
+      (log/error o "failed to create cart")
+      (svc/request-failure "failed to create cart"))))
 
 
 (defn ^IPersistentMap make-a-la-cart
