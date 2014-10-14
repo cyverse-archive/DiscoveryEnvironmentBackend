@@ -1,4 +1,4 @@
-(defproject org.iplantc/clavin "3.2.8"
+(defproject org.iplantc/clavin "3.2.9"
   :description "A command-line tool for loading service configurations."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -8,9 +8,9 @@
                  [org.clojure/tools.cli "0.2.1"]
                  [medley "0.1.5"]
                  [me.raynes/fs "1.4.4"]
-                 [org.iplantc/clojure-commons "3.2.8"]]
-  :plugins [[org.iplantc/lein-iplant-cmdtar "3.2.8"]
-            [org.iplantc/lein-iplant-rpm "3.2.8"]]
+                 [org.iplantc/clojure-commons "3.2.9"]]
+  :plugins [[org.iplantc/lein-iplant-cmdtar "3.2.9"]
+            [org.iplantc/lein-iplant-rpm "3.2.9"]]
   :iplant-rpm {:summary "Clavin"
                :type :command
                :provides "iplant-clavin"}

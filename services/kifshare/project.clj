@@ -1,4 +1,4 @@
-(defproject org.iplantc/kifshare "3.2.8"
+(defproject org.iplantc/kifshare "3.2.9"
   :description "iPlant Quickshare for iRODS"
   :url "http://www.iplantcollaborative.org"
 
@@ -8,9 +8,9 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/core.memoize "0.5.3"]
-                 [org.iplantc/clj-jargon "3.2.8"]
-                 [org.iplantc/clojure-commons "3.2.8"]
-                 [org.iplantc/common-cli "3.2.8"]
+                 [org.iplantc/clj-jargon "3.2.9"]
+                 [org.iplantc/clojure-commons "3.2.9"]
+                 [org.iplantc/common-cli "3.2.9"]
                  [me.raynes/fs "1.4.4"]
                  [cheshire "5.0.1"]
                  [slingshot "0.10.1"]
@@ -36,7 +36,7 @@
                :config-path "conf"}
 
   :plugins [[lein-ring "0.7.5"]
-            [org.iplantc/lein-iplant-rpm "3.2.8"]]
+            [org.iplantc/lein-iplant-rpm "3.2.9"]]
 
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]
