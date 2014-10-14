@@ -19,6 +19,8 @@ ENV LEIN_ROOT 1
 ENV PATH /bin:/usr/bin:/usr/local/bin:/sbin/:/usr/sbin:/opt/go/bin:/opt/gopath/bin:/opt/maven/bin:/opt/nodejs/bin
 RUN go get github.com/tools/godep
 ADD https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein /usr/bin/lein
+ADD build_profiles.clj /.lein/profiles.clj
 
 RUN chmod a+x /usr/bin/lein
 RUN gem install fpm
+RUN npm install -g grunt-cli
