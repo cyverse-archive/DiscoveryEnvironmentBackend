@@ -19,4 +19,4 @@ lein clean
 lein deps
 lein uberjar
 cp target/$BINNAME-*-standalone.jar $BUILDDIR/$BINDIR
-fpm -s dir -t rpm --directories $LOGDIR --version $VERSION --iteration $ITERATION --epoch 0 --prefix / --name $BINNAME --verbose -C $BUILDDIR --rpm-user $USER --rpm-group $GROUP -f .
+fpm -s dir -t rpm --directories $LOGDIR -d java-1.7.0-openjdk --version $VERSION --iteration $ITERATION --epoch 0 --prefix / --name $BINNAME --verbose -C $BUILDDIR --rpm-user $USER --rpm-group $GROUP -f .
