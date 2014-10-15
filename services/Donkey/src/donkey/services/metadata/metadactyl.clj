@@ -122,21 +122,6 @@
   (let [url (build-metadactyl-unprotected-url req "get-analysis" app-id)]
     (forward-get url req)))
 
-(defn list-app
-  "This service lists a single application.  The response body contains a JSON
-   string representing an object containing a list of apps.  If an app with the
-   provided identifier exists then the list will contain that app.  Otherwise,
-   the list will be empty."
-  [req app-id]
-  (let [url (build-metadactyl-unprotected-url req "list-analysis" app-id)]
-    (forward-get url req)))
-
-(defn export-template
-  "This service will export the template with the given identifier."
-  [req template-id]
-  (let [url (build-metadactyl-unprotected-url req "export-template" template-id)]
-    (forward-get url req)))
-
 (defn export-workflow
   "This service will export a workflow with the given identifier."
   [req app-id]

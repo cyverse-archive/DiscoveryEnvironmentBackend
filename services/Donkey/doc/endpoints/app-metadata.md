@@ -14,8 +14,6 @@
     * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
     * [Getting App Details](#getting-app-details)
     * [Listing App Groups](#listing-app-groups)
-    * [Listing Individual Analyses](#listing-individual-analyses)
-    * [Exporting a Template](#exporting-a-template)
     * [Exporting an Analysis](#exporting-an-analysis)
     * [Exporting Selected Deployed Components](#exporting-selected-deployed-components)
     * [Logically Deleting Apps](#logically-deleting-apps)
@@ -36,7 +34,7 @@
     * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
     * [Making a Copy of an Analysis Available for Editing in Tito](#making-a-copy-of-an-analysis-available-for-editing-in-tito)
     * [Submitting an Analysis for Public Use](#submitting-an-analysis-for-public-use)
-    * [Determining if an Analysis Can be Made Public](#determining-if-an-analysis-can-be-made-public)
+    * [Determining if an App Can be Made Public](#determining-if-an-app-can-be-made-public)
     * [Making a Pipeline Available for Editing](#making-a-pipeline-available-for-editing)
     * [Making a Copy of a Pipeline Available for Editing](#making-a-copy-of-a-pipeline-available-for-editing)
     * [Requesting Installation of a Tool](#requesting-installation-of-a-tool)
@@ -274,24 +272,6 @@ Delegates to metadactyl: GET /apps/categories
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
-
-## Listing Individual Analyses
-
-Unsecured Endpoint: GET /list-analysis/{analysis-id}
-
-Delegates to metadactyl: GET /list-analysis/{analysis-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Exporting a Template
-
-Unsecured Endpoint: GET /export-template/{template-id}
-
-Delegates to metadactyl: GET /export-template/{template-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
 
 ## Exporting an Analysis
 
