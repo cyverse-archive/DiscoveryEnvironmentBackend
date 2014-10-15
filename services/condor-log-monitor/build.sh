@@ -1,12 +1,9 @@
 #!/bin/sh
 
 ITERATION=$1
-WORKINGDIR=$2
-echo "WORKINGIDR=$WORKINGDIR"
 USER=condor
 GROUP=condor
 
-cd $WORKINGDIR
 VERSION=$(cat version | sed -e 's/^ *//' -e 's/ *$//')
 mkdir -p build/usr/local/bin
 mkdir -p build/var/log/condor-log-monitor
