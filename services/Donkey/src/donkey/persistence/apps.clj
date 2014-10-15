@@ -98,22 +98,20 @@
 
 (defn- mapping-base-query
   []
-  (-> (select* [:input_output_mapping :iom])
-      (join [:transformation_steps :source] {:iom.source :source.id})
-      (join [:transformation_steps :target] {:iom.target :target.id})
-      (join [:dataobject_mapping :dom] {:iom.hid :dom.mapping_id})
-      (fields [:dom.input    :input_id]
-              [:target.id    :target_id]
-              [:target.name  :target_name]
-              [:dom.output   :output_id]
-              [:source.id    :source_id]
-              [:source.name  :source_name])))
+  (-> (select* [:workflow_io_maps :wim])
+      (join [:input_output_mapping :iom] {:wim.id :iom.mapping_id})
+      (fields [:wim.source_step     :source_id]
+              [:wim.target_step     :target_id]
+              [:iom.input           :input_id]
+              [:iom.external_input  :external_input_id]
+              [:iom.output          :output_id]
+              [:iom.external_output :external_output_id])))
 
 (defn load-target-step-mappings
   [step-id]
   (with-db db/de
     (select (mapping-base-query)
-            (where {:iom.target step-id}))))
+            (where {:wim.target_step step-id}))))
 
 (defn load-app-mappings
   [app-id]

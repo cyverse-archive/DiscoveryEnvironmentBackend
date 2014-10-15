@@ -361,8 +361,7 @@
   [app-id]
   (with-db db/de
     (transaction
-     #_(service/success-response (.getApp (get-app-lister) app-id))
-     (.getApp (get-app-lister) app-id))))
+     (service/success-response (.getApp (get-app-lister) app-id)))))
 
 (defn get-deployed-components-in-app
   [app-id]
