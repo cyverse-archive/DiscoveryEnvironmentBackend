@@ -4,7 +4,7 @@ set -x
 ITERATION=$1
 USER=iplant
 GROUP=iplant
-BINNAME=metadactyl-clj
+BINNAME=metadactyl
 BUILDDIR=$BINNAME-build
 BINDIR=/usr/local/lib/$BINNAME
 LOGDIR=/var/log/$BINNAME
