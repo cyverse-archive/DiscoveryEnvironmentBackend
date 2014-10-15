@@ -20,6 +20,7 @@
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
     * [Updating an Existing Template](#updating-an-existing-template)
+    * [Creating a Pipeline](#creating-a-pipeline)
     * [Updating a Pipeline](#updating-a-pipeline)
     * [Updating App Labels](#updating-app-labels)
     * [Importing a Template](#importing-a-template)
@@ -29,12 +30,14 @@
     * [Rating Apps](#rating-apps)
     * [Deleting App Ratings](#deleting-app-ratings)
     * [Searching for Apps](#searching-for-apps)
+    * [Previewing Command Line Arguments](#previewing-command-line-arguments)
     * [Listing Apps in an App Group](#listing-apps-in-an-app-group)
     * [Listing Deployed Components in an Analysis](#listing-deployed-components-in-an-analysis)
     * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
     * [Making a Copy of an Analysis Available for Editing in Tito](#making-a-copy-of-an-analysis-available-for-editing-in-tito)
     * [Submitting an Analysis for Public Use](#submitting-an-analysis-for-public-use)
     * [Determining if an App Can be Made Public](#determining-if-an-app-can-be-made-public)
+    * [Obtaining an App Representation for Editing](#obtaining-an-app-representation-for-editing)
     * [Making a Pipeline Available for Editing](#making-a-pipeline-available-for-editing)
     * [Making a Copy of a Pipeline Available for Editing](#making-a-copy-of-a-pipeline-available-for-editing)
     * [Requesting Installation of a Tool](#requesting-installation-of-a-tool)
@@ -330,11 +333,20 @@ Delegates to metadactyl: POST /update-template
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
+## Creating a Pipeline
+
+Secured Endpoint: POST /apps/pipelines
+
+Delegates to metadactyl: POST /apps/pipelines
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
+
 ## Updating a Pipeline
 
-Secured Endpoint: POST /secured/update-workflow
+Secured Endpoint: PUT /apps/pipelines/{app-id}
 
-Delegates to metadactyl: POST /secured/update-workflow
+Delegates to metadactyl: PUT /apps/pipelines/{app-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
@@ -526,6 +538,15 @@ Delegates to metadactyl: GET /apps?search={term}
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
 
+## Previewing Command Line Arguments
+
+Unsecured Endpoint: POST /apps/arg-preview
+
+Delegates to metadactyl: POST /apps/arg-preview
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
+
 ## Listing Apps in an App Group
 
 Secured Endpoint: GET /apps/categories/{group-id}
@@ -578,6 +599,15 @@ Secured Endpoint: GET /apps/{app-id}/is-publishable
 Delegates to metadactyl: GET /apps/{app-id}/is-publishable
 
 This endpoint is a passthrough to the metadactyl endpoint using the path above.
+Please see the metadactyl documentation for more information.
+
+## Obtaining an App Representation for Editing
+
+Secured Endpoint: GET /apps/{app-id}/ui
+
+Delegates to metadactyl: GET /apps/{app-id}/ui
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
 
 ## Making a Pipeline Available for Editing
