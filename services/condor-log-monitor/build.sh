@@ -5,6 +5,9 @@ USER=condor
 GROUP=condor
 
 VERSION=$(cat version | sed -e 's/^ *//' -e 's/ *$//')
+if [ -d build ]; then
+  rm -r build
+fi
 mkdir -p build/usr/local/bin
 mkdir -p build/var/log/condor-log-monitor
 godep restore
