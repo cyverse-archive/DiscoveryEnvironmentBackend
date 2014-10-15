@@ -52,10 +52,8 @@ ALTER TABLE ONLY info_type
 --
 -- Name: input_output_mapping_pkey; Type: CONSTRAINT; Schema: public; Owner: de;
 -- Tablespace:
---
-ALTER TABLE ONLY input_output_mapping
-    ADD CONSTRAINT input_output_mapping_pkey
-    PRIMARY KEY (mapping_id, input);
+CREATE UNIQUE INDEX input_output_mapping_unique_idx
+    ON input_output_mapping(mapping_id, input, external_input);
 
 --
 -- Name: integration_data_pkey; Type: CONSTRAINT; Schema: public; Owner: de;

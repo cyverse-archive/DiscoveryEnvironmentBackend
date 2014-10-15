@@ -34,11 +34,19 @@
     :properties (mapv (fn [prop] (assoc prop :id (str step-id "_" (:id prop))))
                       (:properties group))))
 
+
+(defn- get-mapped-props
+  [step-id]
+  (->> (ap/load-target-step-mappings step-id)
+       (map (fn [{ext-id :external_input_id id :input_id}]
+              (str (first (remove nil? [ext-id id])))))
+       (set)))
+
 (defn- get-agave-groups
   [agave step external-app-id]
   (mu/assert-agave-enabled agave)
   (let [app          (.getApp agave external-app-id)
-        mapped-props (set (map :input_id (ap/load-target-step-mappings (:step_id step))))]
+        mapped-props (get-mapped-props (:step_id step))]
     (->> (:categories app)
          (map (partial remove-mapped-inputs mapped-props))
          (remove (comp empty? :properties))

@@ -3,10 +3,14 @@
         [kameleon.sql-reader :only [sql-statements]]
         [korma.core]
         [korma.db :only [with-db]])
-  (:require [clojure.tools.logging :as log]
+  (:require [cheshire.core :as cheshire]
+            [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [facepalm.core :as migrator]
             [kameleon.uuids :as uuids]
-            [me.raynes.fs :as fs]))
+            [me.raynes.fs :as fs])
+  (:import [java.util UUID]
+           [java.util.regex Pattern]))
 
 (def ^:private version
   "The destination database version."
@@ -14,7 +18,7 @@
 
 (defn exec-sql-statement
   "A wrapper around korma.core/exec-raw that logs the statement that is being
-   executed if debugging is enabled."
+  executed if debugging is enabled."
   [& statements]
   (let [statement (clojure.string/join " " statements)]
     (log/debug "executing SQL statement:" statement)
@@ -32,7 +36,7 @@
   []
   (println "\t* adding uuid-ossp extension...")
   (with-db @migrator/admin-db-spec
-     (load-sql-file "extensions/uuid.sql")))
+    (load-sql-file "extensions/uuid.sql")))
 
 ;; Drop constraints
 (defn- drop-all-constraints
@@ -111,8 +115,8 @@
   [task-id group-name params]
   (let [group-order ((comp inc :group_order first)
                      (select :template_property_group_v187
-                       (aggregate (max :hid) :group_order)
-                       (where {:template_id task-id})))
+                             (aggregate (max :hid) :group_order)
+                             (where {:template_id task-id})))
         group-id (:hid_v187 (insert :parameter_groups (values {:name group-name
                                                                :display_order group-order})))
         params (map-indexed add-param-wrapper params)]
@@ -354,7 +358,9 @@
   (println "\t* updating tool_requests uuid foreign keys...")
   (load-sql-file "conversions/c200_2014042401/uuids/53_tool_requests.sql")
   (println "\t* updating job_types uuid foreign keys...")
-  (load-sql-file "conversions/c200_2014042401/uuids/56_job_types.sql"))
+  (load-sql-file "conversions/c200_2014042401/uuids/56_job_types.sql")
+  (println "\t* updating jobs uuid foreign keys")
+  (load-sql-file "conversions/c200_2014042401/uuids/57_jobs.sql"))
 
 (defn- drop-obsolete-tables
   []
@@ -438,6 +444,82 @@
           (where (and (= :parameter_type (param-type-subselect old-param-type))
                       (= old-multiplicity (multiplicity-subselect))))))
 
+(defn- list-de-jobs
+  []
+  (exec-raw
+   "SELECT j.id AS \"job-id\",
+           j.app_id AS \"new-id\",
+           a.id_v187 AS \"old-id\",
+           j.submission AS \"submission\"
+    FROM jobs j
+    JOIN apps a ON j.app_id = CAST(a.id AS character varying)"
+   :results))
+
+(defn- build-step-name-id-map
+  [steps]
+  (into {} (map (juxt :step-name (comp str :step-id)) steps)))
+
+(defn- load-step-name-id-maps
+  []
+  (->> (select [:app_steps :s]
+               (join :inner
+                     [:transformation_steps_v187 :ts]
+                     {:s.transformation_step_id_v187 :ts.id})
+               (fields [:s.app_id :app-id] [:ts.name :step-name] [:s.id :step-id]))
+       (group-by :app-id)
+       (map (fn [[app-id steps]] [(str app-id) (build-step-name-id-map steps)]))
+       (into {})))
+
+(defn- build-param-id-map
+  [params]
+  (into {} (map (juxt :old-id (comp str :new-id)) params)))
+
+(defn- load-param-id-maps
+  []
+  (->> (select [:app_steps :s]
+               (join :inner [:tasks :t] {:s.task_id :t.id})
+               (join :inner [:parameter_groups :pg] {:t.id :pg.task_id})
+               (join :inner [:parameters :p] {:pg.id :p.parameter_group_id})
+               (fields [:s.app_id :app-id] [:p.id_v187 :old-id] [:p.id :new-id]))
+       (group-by :app-id)
+       (map (fn [[app-id params]] [(str app-id) (build-param-id-map params)]))
+       (into {})))
+
+(defn- config-key-pattern
+  [name-id-map]
+  (let [name-pattern (string/join "|" (map #(Pattern/quote %) (keys name-id-map)))]
+    (re-pattern (str "\\A(" name-pattern ")_(.*)\\z"))))
+
+(defn- fix-config-key
+  [key-pattern name-id-map param-id-map [k v]]
+  [(string/replace k key-pattern
+                   (fn [[_ step-name param-id]]
+                     (str (or (name-id-map step-name) step-name)
+                          "_"
+                          (or (param-id-map param-id) param-id))))
+   v])
+
+(defn- update-job-submission
+  [step-name-id-maps param-id-maps {:keys [job-id new-id old-id submission]}]
+  (when-not (nil? submission)
+    (let [submission   (cheshire/decode (.getValue submission))
+          name-id-map  (step-name-id-maps new-id {})
+          key-pattern  (config-key-pattern name-id-map)
+          param-id-map (param-id-maps new-id {})
+          fix-key      (partial fix-config-key key-pattern name-id-map param-id-map)
+          new-config   (into {} (map fix-key (submission "config")))
+          submission   (assoc submission "analysis_id" new-id "config" new-config)]
+      (exec-raw ["UPDATE jobs SET submission = CAST ( ? AS json ) WHERE id = ?"
+                 [(cast Object (cheshire/encode submission)) job-id]]))))
+
+(defn- convert-job-submissions
+  []
+  (println "\t* converting job submissions--this could take a while")
+  (let [step-name-id-maps (load-step-name-id-maps)
+        param-id-maps     (load-param-id-maps)]
+    (dorun (map (partial update-job-submission step-name-id-maps param-id-maps)
+                (list-de-jobs)))))
+
 (defn convert
   "Performs the database conversion."
   []
@@ -461,4 +543,5 @@
   (convert-parameter-types "MultiFileSelector" "Input" "many")
   (convert-parameter-types "FileOutput" "Output" "single")
   (convert-parameter-types "FolderOutput" "Output" "collection")
-  (convert-parameter-types "MultiFileOutput" "Output" "many"))
+  (convert-parameter-types "MultiFileOutput" "Output" "many")
+  (convert-job-submissions))
