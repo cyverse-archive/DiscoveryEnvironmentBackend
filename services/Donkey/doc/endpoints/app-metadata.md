@@ -82,7 +82,7 @@ Unsecured Endpoint: POST /delete-categories
 
 Delegates to metadactyl: POST /delete-categories
 
-This endpoint is a passthrough to the metactyl endpoint using the same
+This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Valiating Analyses for Pipelines
@@ -206,12 +206,13 @@ path. Please see the metadactyl documentation for more information.
 
 ## Getting Analyses in the JSON Format Required by the DE
 
-Unsecured Endpoint: GET /get-analysis/{analysis-id}
+Secured Endpoint: GET /apps/{app-id}
 
-Delegates to metadactyl: GET /get-analysis/{analysis-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This service handles three different classes of apps. Apps that run exclusively in the DE, apps
+that run exclusively in Agave, and apps that contain both DE steps and Agave steps.  In all
+three cases, the response format is the same as in the corresponding metadactyl endpoint, `GET
+/apps/{app-id}`. Please see the metadactyl documentation for more information about the format
+of the response body.
 
 ## Getting App Details
 
@@ -221,7 +222,7 @@ This service is used by the DE to obtain high-level details about a single
 analysis.
 
 For DE apps, this service delegates the call to the metadactyl endpoint, `/apps/{app-id}/details`.
-Please see the metadactyl documentation for more information its response format.
+Please see the metadactyl documentation for more information about its response format.
 
 For Agave apps, this service retrieves the information it needs to format the response from Agave.
 Here's an example of an Agave app listing:
