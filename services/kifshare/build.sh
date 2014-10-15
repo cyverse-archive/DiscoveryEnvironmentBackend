@@ -1,8 +1,14 @@
 #!/bin/bash
+set -x
 
-ES_NAME=kifshare
-ES_DIRNAME=${ES_NAME}-build
-ES_TARNAME=${ES_DIRNAME}.tar.gz
+ITERATION=$1
+USER=iplant
+GROUP=iplant
+BINNAME=kifshare
+BUILDDIR=$BINNAME-build
+BINDIR=/usr/local/lib/$BINNAME
+LOGDIR=/var/log/$BINNAME
+VERSION=$(cat version | sed -e 's/^ *//' -e 's/ *$//')
 
 node --version
 grunt --version
@@ -11,50 +17,23 @@ npm install
 grunt build-resources
 
 echo "Remove old build dir"
-rm -rf ${ES_DIRNAME}
+if [ -d "$BUILDDIR" ]; then
+  rm -r $BUILDDIR
+fi
 
 echo "Create the build directory"
-mkdir -p ${ES_DIRNAME}/target
-
-echo "Copying in init.d script"
-cp ${ES_NAME} ${ES_DIRNAME}
-
-echo "Copying in the sources"
-cp -r src/ ${ES_DIRNAME}
-
-echo "Copying in the project file"
-cp project.clj ${ES_DIRNAME}
-
-echo "Copying in config"
-cp -r conf/ ${ES_DIRNAME}
+mkdir -p $BUILDDIR/$BINDIR
 
 echo "Copying in the build directory, which contains the resources"
-cp -r build/ ${ES_DIRNAME}
+cp -r build/* ${BUILDDIR}/${BINDIR}
 
-echo "Creating tarball."
-tar czf ${ES_TARNAME} ${ES_DIRNAME} 
+echo "Creating the log directory."
+mkdir -p $BUILDDIR/$LOGDIR
 
-echo "Copying spec file to build tree."
-cp ${ES_NAME}.spec /usr/src/redhat/SPECS/
+lein clean
+lein deps
+lein uberjar
 
-echo "Copying tarball to SOURCES."
-cp ${ES_TARNAME} /usr/src/redhat/SOURCES/
+cp target/$BINNAME-*-standalone.jar $BUILDDIR/$BINDIR
 
-echo "Running rpmbuild..."
-rpmbuild -ba /usr/src/redhat/SPECS/${ES_NAME}.spec
-
-echo "Copying back RPMs..."
-cp /usr/src/redhat/RPMS/noarch/${ES_NAME}*.rpm .
-
-echo "Deleting RPMs from build tree."
-rm /usr/src/redhat/RPMS/noarch/${ES_NAME}*.rpm
-
-echo "Deleting spec file from build tree."
-rm /usr/src/redhat/SPECS/${ES_NAME}.spec
-
-echo "Deleting tarball from build tree."
-rm /usr/src/redhat/SOURCES/${ES_TARNAME}
-
-echo "Deleting buildroot"
-rm -rf /usr/src/redhat/BUILDS/${ES_DIRNAME}
-
+fpm -s dir -t rpm --directories $LOGDIR -d java-1.7.0-openjdk --version $VERSION --iteration $ITERATION --epoch 0 --prefix / --name $BINNAME --verbose -C $BUILDDIR --rpm-user $USER --rpm-group $GROUP -f .
