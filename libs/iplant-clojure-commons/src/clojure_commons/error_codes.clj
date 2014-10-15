@@ -49,7 +49,8 @@
 
 
 (def ^:private http-status-for
-  {ERR_ILLEGAL_ARGUMENT                   400
+  {ERR_BAD_OR_MISSING_FIELD               400
+   ERR_ILLEGAL_ARGUMENT                   400
    ERR_INVALID_JSON                       400
    ERR_BAD_REQUEST                        400
    ERR_BAD_QUERY_PARAMETER                400
