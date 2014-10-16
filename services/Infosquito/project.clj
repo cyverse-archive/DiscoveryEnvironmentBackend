@@ -13,6 +13,7 @@
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
+  :uberjar-name "infosquito-standalone.jar"
   :aot [infosquito.core]
   :main infosquito.core
   :dependencies [[org.clojure/clojure "1.6.0"]

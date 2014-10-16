@@ -10,6 +10,7 @@
 (defproject org.iplantc/conrad "4.0.1"
   :description "Back-End Services for the iPlant Administrative Console"
   :url "http://www.iplantcollaborative.org"
+  :uberjar-name "conrad-standalone.jar"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}

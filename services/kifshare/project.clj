@@ -15,6 +15,7 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
 
   :manifest {"Git-Ref" ~(git-ref)}
+  :uberjar-name "kifshare-standalone.jar"
 
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.3"]

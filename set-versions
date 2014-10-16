@@ -53,3 +53,9 @@ for project in $(find . -name project.clj -exec dirname '{}' \;); do
 
   popd 2>&1 > /dev/null
 done
+
+for version in $(find . -name version); do
+  echo ">>> Setting $version to $1"
+  echo "$1" > $version
+  echo " "
+done

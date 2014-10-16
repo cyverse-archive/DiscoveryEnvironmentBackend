@@ -10,6 +10,7 @@
 (defproject org.iplantc/data-info "4.0.1"
   :description "provides the data information HTTP API"
   :manifest {"Git-Ref" ~(git-ref)}
+  :uberjar-name "data-info-standalone.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/tools.logging "0.3.0"]
@@ -24,7 +25,6 @@
                  [org.iplantc/clj-icat-direct "4.0.1"]
                  [org.iplantc/common-cli "4.0.1"]
                  [org/forester "1.005" ]
-                 [org.nexml.model/nexml "1.5-SNAPSHOT"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [cheshire "5.3.1"]
                  [clj-http "1.0.0"]

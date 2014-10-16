@@ -6,6 +6,7 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :aot [monkey.index monkey.tags monkey.core]
   :main monkey.core
+  :uberjar-name "monkey-standalone.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [postgresql "9.1-901-1.jdbc4"]
                  [org.clojure/java.jdbc "0.3.5"]
