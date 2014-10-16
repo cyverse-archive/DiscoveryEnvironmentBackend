@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/data-info "4.0.0"
+(defproject org.iplantc/data-info "4.0.0-SNAPSHOT"
   :description "provides the data information HTTP API"
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "data-info-standalone.jar"
