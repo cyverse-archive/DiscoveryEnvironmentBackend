@@ -10,6 +10,7 @@
 (defproject org.iplantc/data-info "4.0.0"
   :description "provides the data information HTTP API"
   :manifest {"Git-Ref" ~(git-ref)}
+  :uberjar-name "data-info-standalone.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/tools.logging "0.3.0"]
