@@ -1,17 +1,16 @@
 # Endpoint Index
 
+* [GET /](endpoints/misc.md#verifying-that-metadactyl-clj-is-running)
 * [POST /add-analysis-to-group](endpoints/app-metadata/categorization.md#adding-analyses-to-analysis-groups)
 * [GET /apps/{app-id}/data-objects](endpoints/app-metadata/listing.md#listing-data-objects-in-an-analysis)
 * [POST /can-export-analysis](endpoints/app-metadata/validation.md#determining-if-an-analysis-can-be-exported)
 * [POST /delete-categories](endpoints/app-metadata/categorization.md#deleting-categories)
 * [POST /export-deployed-components](endpoints/app-metadata/admin.md#exporting-selected-deployed-components)
-* [GET /export-template/{template-id}](endpoints/app-metadata/admin.md#exporting-a-template)
 * [GET /export-workflow/{analysis-id}](endpoints/app-metadata/admin.md#exporting-an-analysis)
 * [GET /get-analysis-categories/{category-set}](endpoints/app-metadata/categorization.md#listing-analysis-categorizations)
 * [POST /import-template](endpoints/app-metadata/admin.md#importing-a-template)
 * [POST /import-tools](endpoints/app-metadata/admin.md#importing-tools)
 * [POST /import-workflow](endpoints/app-metadata/admin.md#importing-an-analysis)
-* [GET /list-analysis/{analysis-id}](endpoints/app-metadata/listing.md#listing-individual-analyses)
 * [POST /preview-template](endpoints/app-metadata/admin.md#previewing-templates)
 * [POST /preview-workflow](endpoints/app-metadata/admin.md#previewing-analyses)
 * [GET /search-deployed-components/{search-term}](endpoints/app-metadata/listing.md#search-deployed-components)
