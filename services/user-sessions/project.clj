@@ -12,6 +12,7 @@
   :url "https://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend"
   :license {:name "BSD"}
   :manifest {"Git-Ref" ~(git-ref)}
+  :uberjar-name "user-sessions-standalone.jar"
   :aot [user-sessions.core]
   :main user-sessions.core
   :dependencies [[org.clojure/clojure "1.5.1"]
