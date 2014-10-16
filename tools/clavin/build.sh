@@ -10,7 +10,7 @@ BUILDDIR=$BINNAME-build
 BINDIR=/usr/local/lib/$BINNAME
 LOGDIR=/var/log/$BINNAME
 CONFDIR=/etc/$BINNAME
-REPODIR=resources/main
+REPODIR=resources
 
 VERSION=$(cat version | sed -e 's/^ *//' -e 's/ *$//')
 if [ -d "$BUILDDIR" ]; then
