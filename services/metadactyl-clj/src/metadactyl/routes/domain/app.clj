@@ -3,7 +3,7 @@
         [metadactyl.routes.domain.app.rating]
         [ring.swagger.schema :only [describe]]
         [schema.core :only [defschema optional-key enum Any]])
-  (:import [java.util UUID]))
+  (:import [java.util UUID Date]))
 
 (def AppIdParam (describe UUID "A UUID that is used to identify the App"))
 (def ToolIdParam (describe UUID "A UUID that is used to identify the Tool"))
@@ -180,8 +180,8 @@
   {:id                              AppIdParam
    :name                            (describe String "The App's name")
    :description                     (describe String "The App's description")
-   (optional-key :integration_date) (describe Long "The App's Date of public submission")
-   (optional-key :edited_date)      (describe Long "The App's Date of its last edit")})
+   (optional-key :integration_date) (describe Date "The App's Date of public submission")
+   (optional-key :edited_date)      (describe Date "The App's Date of its last edit")})
 
 (defschema App
   (merge AppBase

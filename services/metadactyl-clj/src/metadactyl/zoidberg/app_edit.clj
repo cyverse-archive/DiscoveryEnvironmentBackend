@@ -8,7 +8,7 @@
         [metadactyl.persistence.app-metadata :only [add-app get-app update-app]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config :only [workspace-dev-app-group-index]]
-        [metadactyl.util.conversions :only [date->long remove-nil-vals convert-rule-argument]]
+        [metadactyl.util.conversions :only [remove-nil-vals convert-rule-argument]]
         [metadactyl.validation :only [verify-app-editable verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]])
   (:require [metadactyl.util.service :as service]))
@@ -148,9 +148,7 @@
         groups (map format-group (:parameter_groups task))]
     (remove-nil-vals
       (-> app
-          (assoc :integration_date (date->long (:integration_date app))
-                 :edited_date (date->long (:edited_date app))
-                 :references (map :reference_text (:app_references app))
+          (assoc :references (map :reference_text (:app_references app))
                  :tool (:tool task)
                  :tool_id (:tool_id task)
                  :groups groups)

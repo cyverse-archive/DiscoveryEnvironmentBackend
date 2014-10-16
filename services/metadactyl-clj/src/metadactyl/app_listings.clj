@@ -8,7 +8,7 @@
         [kameleon.uuids :only [uuidify]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config]
-        [metadactyl.util.conversions :only [to-long date->long remove-nil-vals]]
+        [metadactyl.util.conversions :only [to-long remove-nil-vals]]
         [metadactyl.workspace])
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
@@ -148,19 +148,11 @@
                       :user user_rating
                       :comment_id comment_id}))))
 
-(defn- format-app-timestamps
-  "Formats each timestamp in an app."
-  [app]
-  (let [edited_date (date->long (:edited_date app))
-        integration_date (date->long (:integration_date app))]
-    (assoc app :edited_date edited_date :integration_date integration_date)))
-
 (defn- format-app
   "Formats certain app fields into types more suitable for the client."
   [app]
   (-> (assoc app :can_run (= (:task_count app) (:tool_count app)))
       (dissoc :tool_count :task_count)
-      (format-app-timestamps)
       (format-app-ratings)
       (format-app-pipeline-eligibility)
       (assoc :can_favor true :can_rate true :app_type "DE")
