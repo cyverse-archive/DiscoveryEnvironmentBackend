@@ -14,6 +14,7 @@
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
+  :uberjar-name "dewey-standalone.jar"
   :aot [dewey.core]
   :main dewey.core
   :dependencies [[org.clojure/clojure "1.6.0"]
