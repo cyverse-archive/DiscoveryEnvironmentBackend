@@ -13,7 +13,6 @@
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
-  :uberjar-name "clavin-standalone.jar"
   :dependencies [[org.antlr/stringtemplate "4.0.2"]
                  [org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.cli "0.2.1"]
