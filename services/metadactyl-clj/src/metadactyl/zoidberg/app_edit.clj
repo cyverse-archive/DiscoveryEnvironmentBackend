@@ -45,6 +45,7 @@
                  (with validation_rules
                    (with rule_type)
                    (with validation_rule_arguments
+                     (order :ordering)
                      (fields :argument_value))
                    (fields :id
                            [:rule_type.name :type])

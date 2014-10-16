@@ -20,6 +20,7 @@ ALTER TABLE ONLY parameters
     END;
 ALTER TABLE ONLY parameters ALTER COLUMN id SET DEFAULT uuid_generate_v1();
 ALTER TABLE ONLY parameters ALTER COLUMN is_visible SET DEFAULT TRUE;
+ALTER TABLE ONLY parameters ALTER COLUMN ordering SET DEFAULT 0;
 ALTER TABLE ONLY parameters ALTER COLUMN description TYPE TEXT;
 ALTER TABLE ONLY parameters ADD COLUMN parameter_group_id UUID;
 ALTER TABLE ONLY parameters ADD COLUMN parameter_type UUID;

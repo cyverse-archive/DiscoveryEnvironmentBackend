@@ -84,7 +84,6 @@ ALTER TABLE ONLY validation_rules ALTER COLUMN hid_v187 DROP NOT NULL;
 ALTER TABLE ONLY validation_rules ALTER COLUMN hid_v187 DROP DEFAULT;
 DROP SEQUENCE rule_id_seq;
 
-ALTER TABLE ONLY validation_rule_arguments ALTER COLUMN hid_v187 DROP NOT NULL;
 ALTER TABLE ONLY validation_rule_arguments ALTER COLUMN rule_id_v187 DROP NOT NULL;
 
 ALTER TABLE ONLY rule_subtype ALTER COLUMN hid_v187 DROP NOT NULL;
