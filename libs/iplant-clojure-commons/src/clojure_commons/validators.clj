@@ -29,10 +29,11 @@
 
 (defn- check-valid
   [handle-invalid kvs validators]
-  (let [valid?   (fn [[k v]] ((get validators k) v))
+  (let [invalid? (fn [[k v]] (when-let [valid? (get validators k)]
+                               (not (valid? v))))
         invalids (->> kvs
                    seq
-                   (remove valid?)
+                   (filter invalid?)
                    flatten
                    (apply hash-map))]
     (when-not (empty? invalids)
