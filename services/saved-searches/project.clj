@@ -14,6 +14,7 @@
   :manifest {"Git-Ref" ~(git-ref)}
   :aot [saved-searches.core]
   :main saved-searches.core
+  :uberjar-name "saved-searches-standalone.jar"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.iplantc/common-cli "4.0.1"]
                  [org.iplantc/common-cfg "4.0.1"]
