@@ -14,14 +14,13 @@
     * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
     * [Getting App Details](#getting-app-details)
     * [Listing App Groups](#listing-app-groups)
-    * [Listing Individual Analyses](#listing-individual-analyses)
-    * [Exporting a Template](#exporting-a-template)
     * [Exporting an Analysis](#exporting-an-analysis)
     * [Exporting Selected Deployed Components](#exporting-selected-deployed-components)
     * [Logically Deleting Apps](#logically-deleting-apps)
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
     * [Updating an Existing Template](#updating-an-existing-template)
+    * [Creating a Pipeline](#creating-a-pipeline)
     * [Updating a Pipeline](#updating-a-pipeline)
     * [Updating App Labels](#updating-app-labels)
     * [Importing a Template](#importing-a-template)
@@ -31,12 +30,14 @@
     * [Rating Apps](#rating-apps)
     * [Deleting App Ratings](#deleting-app-ratings)
     * [Searching for Apps](#searching-for-apps)
+    * [Previewing Command Line Arguments](#previewing-command-line-arguments)
     * [Listing Apps in an App Group](#listing-apps-in-an-app-group)
     * [Listing Deployed Components in an Analysis](#listing-deployed-components-in-an-analysis)
     * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
     * [Making a Copy of an Analysis Available for Editing in Tito](#making-a-copy-of-an-analysis-available-for-editing-in-tito)
     * [Submitting an Analysis for Public Use](#submitting-an-analysis-for-public-use)
-    * [Determining if an Analysis Can be Made Public](#determining-if-an-analysis-can-be-made-public)
+    * [Determining if an App Can be Made Public](#determining-if-an-app-can-be-made-public)
+    * [Obtaining an App Representation for Editing](#obtaining-an-app-representation-for-editing)
     * [Making a Pipeline Available for Editing](#making-a-pipeline-available-for-editing)
     * [Making a Copy of a Pipeline Available for Editing](#making-a-copy-of-a-pipeline-available-for-editing)
     * [Requesting Installation of a Tool](#requesting-installation-of-a-tool)
@@ -84,7 +85,7 @@ Unsecured Endpoint: POST /delete-categories
 
 Delegates to metadactyl: POST /delete-categories
 
-This endpoint is a passthrough to the metactyl endpoint using the same
+This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Valiating Analyses for Pipelines
@@ -208,12 +209,13 @@ path. Please see the metadactyl documentation for more information.
 
 ## Getting Analyses in the JSON Format Required by the DE
 
-Unsecured Endpoint: GET /get-analysis/{analysis-id}
+Secured Endpoint: GET /apps/{app-id}
 
-Delegates to metadactyl: GET /get-analysis/{analysis-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This service handles three different classes of apps. Apps that run exclusively in the DE, apps
+that run exclusively in Agave, and apps that contain both DE steps and Agave steps.  In all
+three cases, the response format is the same as in the corresponding metadactyl endpoint, `GET
+/apps/{app-id}`. Please see the metadactyl documentation for more information about the format
+of the response body.
 
 ## Getting App Details
 
@@ -223,7 +225,7 @@ This service is used by the DE to obtain high-level details about a single
 analysis.
 
 For DE apps, this service delegates the call to the metadactyl endpoint, `/apps/{app-id}/details`.
-Please see the metadactyl documentation for more information its response format.
+Please see the metadactyl documentation for more information about its response format.
 
 For Agave apps, this service retrieves the information it needs to format the response from Agave.
 Here's an example of an Agave app listing:
@@ -274,24 +276,6 @@ Delegates to metadactyl: GET /apps/categories
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
-
-## Listing Individual Analyses
-
-Unsecured Endpoint: GET /list-analysis/{analysis-id}
-
-Delegates to metadactyl: GET /list-analysis/{analysis-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Exporting a Template
-
-Unsecured Endpoint: GET /export-template/{template-id}
-
-Delegates to metadactyl: GET /export-template/{template-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
 
 ## Exporting an Analysis
 
@@ -349,11 +333,20 @@ Delegates to metadactyl: POST /update-template
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
+## Creating a Pipeline
+
+Secured Endpoint: POST /apps/pipelines
+
+Delegates to metadactyl: POST /apps/pipelines
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
+
 ## Updating a Pipeline
 
-Secured Endpoint: POST /secured/update-workflow
+Secured Endpoint: PUT /apps/pipelines/{app-id}
 
-Delegates to metadactyl: POST /secured/update-workflow
+Delegates to metadactyl: PUT /apps/pipelines/{app-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
@@ -545,6 +538,15 @@ Delegates to metadactyl: GET /apps?search={term}
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
 
+## Previewing Command Line Arguments
+
+Unsecured Endpoint: POST /apps/arg-preview
+
+Delegates to metadactyl: POST /apps/arg-preview
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
+
 ## Listing Apps in an App Group
 
 Secured Endpoint: GET /apps/categories/{group-id}
@@ -597,6 +599,15 @@ Secured Endpoint: GET /apps/{app-id}/is-publishable
 Delegates to metadactyl: GET /apps/{app-id}/is-publishable
 
 This endpoint is a passthrough to the metadactyl endpoint using the path above.
+Please see the metadactyl documentation for more information.
+
+## Obtaining an App Representation for Editing
+
+Secured Endpoint: GET /apps/{app-id}/ui
+
+Delegates to metadactyl: GET /apps/{app-id}/ui
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
 
 ## Making a Pipeline Available for Editing

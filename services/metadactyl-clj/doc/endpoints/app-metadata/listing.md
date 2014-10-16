@@ -3,8 +3,6 @@
 * [App Metadata Listing Services](#app-metadata-listing-services)
     * [Search Deployed Components](#search-deployed-components)
     * [Listing Data Objects in an Analysis](#listing-data-objects-in-an-analysis)
-    * [Listing Analysis Groups](#listing-analysis-groups)
-    * [Listing Individual Analyses](#listing-individual-analyses)
     * [Listing Deployed Components in an Analysis](#listing-deployed-components-in-an-analysis)
 
 # App Metadata Listing Services
@@ -156,49 +154,6 @@ $ curl -s http://by-tor:8888/analysis-data-objects/19F78CC1-7E14-481B-9D80-85EBC
             "value": ""
         }
     ]
-}
-```
-
-## Listing Individual Analyses
-
-*Unsecured Endpoint:* GET /list-analysis/{analysis-id}
-
-This service lists information about a single analysis if that analysis exists.
-Here are some examples:
-
-```
-$ curl -s http://by-tor:8888/list-analysis/00102BE0-A7D7-4CC8-89F0-B1DB84B79018 | python -mjson.tool
-{
-    "analyses": [
-        {
-            "deleted": false,
-            "description": "",
-            "disabled": false,
-            "edited_date": "",
-            "id": "00102BE0-A7D7-4CC8-89F0-B1DB84B79018",
-            "integration_date": "",
-            "integrator_email": "mherde@iplantcollaborative.org",
-            "integrator_name": "mherde",
-            "is_favorite": false,
-            "is_public": false,
-            "name": "Copy of FASTX Barcode Splitter (Single End)",
-            "pipeline_eligibility": {
-                "is_valid": true,
-                "reason": ""
-            },
-            "rating": {
-                "average": 0
-            },
-            "wiki_url": ""
-        }
-    ]
-}
-```
-
-```
-$ curl -s http://by-tor:8888/list-analysis/I-DO-NOT-EXIST | python -mjson.tool
-{
-    "analyses": []
 }
 ```
 

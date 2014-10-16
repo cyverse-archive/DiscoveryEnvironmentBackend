@@ -63,12 +63,6 @@
   (POST "/add-analysis-to-group" [:as {body :body}]
         (trap #(throw+ '("add-app-to-group" body))))
 
-  (GET "/list-analysis/:app-id" [app-id]
-       (throw+ '("list-app" app-id)))
-
-  (GET "/export-template/:template-id" [template-id]
-       (trap #(throw+ '("export-template" template-id))))
-
   (GET "/export-workflow/:app-id" [app-id]
        (trap #(throw+ '("export-workflow" app-id))))
 

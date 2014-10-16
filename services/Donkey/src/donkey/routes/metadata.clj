@@ -195,12 +195,6 @@
    (GET "/get-analysis/:app-id" [app-id :as req]
         (trap #(get-app req app-id)))
 
-   (GET "/list-analysis/:app-id" [app-id :as req]
-        (trap #(list-app req app-id)))
-
-   (GET "/export-template/:template-id" [template-id :as req]
-        (trap #(export-template req template-id)))
-
    (GET "/export-workflow/:app-id" [app-id :as req]
         (trap #(export-workflow req app-id)))
 
