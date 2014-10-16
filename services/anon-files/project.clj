@@ -12,6 +12,7 @@
   :url "http://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend/"
   :license {:name "BSD"}
   :manifest {"Git-Ref" ~(git-ref)}
+  :uberjar-name "anon-files-standalone.jar"
   :aot [anon-files.core]
   :main anon-files.core
   :dependencies [[org.clojure/clojure "1.5.1"]
