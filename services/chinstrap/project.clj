@@ -15,6 +15,7 @@
   :profiles {:dev {:resource-paths ["resources/conf/test"]}}
   :aot [chinstrap.server]
   :main chinstrap.server
+  :uberjar-name "chinstrap-standalone.jar"
   :iplant-rpm {:summary "iPlant Chinstrap"
                :provides "chinstrap"
                :dependencies ["iplant-service-config >= 0.1.0-5"]
