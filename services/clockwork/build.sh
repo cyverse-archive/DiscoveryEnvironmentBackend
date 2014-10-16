@@ -9,7 +9,7 @@ BINNAME=clockwork
 BUILDDIR=clockwork-build
 BINDIR=/usr/local/lib/clockwork
 LOGDIR=/var/log/clockwork
-REPODIR=resources/conf/main
+REPODIR=resources/main
 
 VERSION=$(cat version | sed -e 's/^ *//' -e 's/ *$//')
 if [ -d "$BUILDDIR" ]; then
