@@ -1,5 +1,6 @@
 #!/bin/bash
 set -x
+set -e
 
 ITERATION=$1
 USER=iplant
