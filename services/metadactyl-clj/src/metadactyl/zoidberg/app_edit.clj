@@ -4,14 +4,14 @@
         [kameleon.app-groups :only [add-app-to-group get-app-subcategory-id]]
         [kameleon.core]
         [kameleon.entities]
-        [kameleon.uuids :only [uuid]]
-        [metadactyl.persistence.app-metadata :only [add-app get-app update-app]]
+        [kameleon.uuids :only [uuidify]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config :only [workspace-dev-app-group-index]]
         [metadactyl.util.conversions :only [remove-nil-vals convert-rule-argument]]
         [metadactyl.validation :only [verify-app-editable verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]])
-  (:require [metadactyl.util.service :as service]))
+  (:require [metadactyl.persistence.app-metadata :as persistence]
+            [metadactyl.util.service :as service]))
 
 (defn- get-app-details
   "Retrieves the details for a single-step app."
@@ -107,7 +107,7 @@
 
 (defn- format-list-type-params
   [param-type param-values]
-  (if (= param-type "TreeSelection")
+  (if (= param-type persistence/param-tree-type)
     [(format-tree-params param-values)]
     (map format-param-value param-values)))
 
@@ -115,7 +115,7 @@
   [param param-values]
   (let [param-type (:type param)
         param-args (format-list-type-params param-type param-values)
-        param (if-not (= param-type "TreeSelection")
+        param (if-not (= param-type persistence/param-tree-type)
                 (assoc param :defaultValue (first (filter :isDefault param-args)))
                 param)]
     (assoc param :arguments param-args)))
@@ -129,11 +129,7 @@
                   (dissoc :parameter_values
                           :validation_rules)
                   remove-nil-vals)]
-    (if (contains? #{"TextSelection"
-                     "IntegerSelection"
-                     "DoubleSelection"
-                     "TreeSelection"}
-                   param-type)
+    (if (contains? persistence/param-list-types param-type)
       (format-list-param param param-values)
       (assoc param :defaultValue (-> param-values first :value)))))
 
@@ -159,15 +155,155 @@
 (defn edit-app
   "This service prepares a JSON response for editing an App in the client."
   [app-id]
-  (let [app (get-app app-id)]
+  (let [app (persistence/get-app app-id)]
     (verify-app-editable app)
     (service/success-response (format-app app))))
+
+(defn- update-parameter-argument
+  "Adds a selection parameter's argument, and any of its child arguments and groups."
+  [param-id parent-id display-order {param-value-id :id groups :groups arguments :arguments :as parameter-value}]
+  (let [insert-values (remove-nil-vals
+                        (assoc parameter-value :id (uuidify param-value-id)
+                                               :parameter_id param-id
+                                               :parent_id parent-id
+                                               :display_order display-order))
+        param-value-id (:id (persistence/add-app-parameter-value insert-values))
+        update-sub-arg-mapper (partial update-parameter-argument param-id param-value-id)]
+    (remove-nil-vals
+        (assoc parameter-value
+          :id        param-value-id
+          :arguments (when arguments (doall (map-indexed update-sub-arg-mapper arguments)))
+          :groups    (when groups    (doall (map-indexed update-sub-arg-mapper groups)))))))
+
+(defn- update-parameter-tree-root
+  "Adds a tree selection parameter's root and its child arguments and groups."
+  [param-id {name :selectionCascade is-default :isSingleSelect :as root}]
+  (let [root (update-parameter-argument param-id nil 0 (assoc root :name name :is_default is-default))]
+    (dissoc root :name :is_default)))
+
+(defn- update-param-selection-arguments
+  "Adds a selection parameter's arguments."
+  [param-type param-id arguments]
+  (if (= persistence/param-tree-type param-type)
+    [(update-parameter-tree-root param-id (first arguments))]
+    (doall (map-indexed (partial update-parameter-argument param-id nil) arguments))))
+
+(defn- add-validation-rule
+  "Adds an App parameter's validator and its rule arguments."
+  [parameter-id {validator-type :type rule-args :params}]
+  (let [validation-rule-id (:id (persistence/add-validation-rule parameter-id validator-type))]
+    (dorun (map-indexed (partial persistence/add-validation-rule-argument validation-rule-id)
+                        rule-args))))
+
+(defn- update-app-parameter
+  "Adds or updates an App parameter and any associated file parameters, validators, and arguments."
+  [group-id display-order {param-id :id
+                           default-value :defaultValue
+                           param-type :type
+                           validators :validators
+                           arguments :arguments
+                           :as parameter}]
+  (let [update-values (assoc parameter :parameter_group_id group-id :display_order display-order)
+        param-exists (and param-id (persistence/get-app-parameter param-id))
+        param-id (if param-exists
+                   param-id
+                   (-> update-values
+                       (dissoc :id)
+                       (persistence/add-app-parameter)
+                       (:id)))
+        parameter (assoc parameter :id param-id)]
+    (when param-exists
+      (persistence/update-app-parameter update-values)
+      (persistence/remove-file-parameter param-id)
+      (persistence/remove-parameter-validation-rules param-id)
+      (persistence/remove-parameter-values param-id)
+      (when-not (contains? persistence/param-file-types param-type)
+        (persistence/remove-parameter-mappings param-id)))
+
+    (when-not (or (contains? persistence/param-list-types param-type) (empty? default-value))
+      (persistence/add-parameter-default-value param-id default-value))
+
+    (dorun (map (partial add-validation-rule param-id) validators))
+
+    (when (contains? persistence/param-file-types param-type)
+      (persistence/add-file-parameter (assoc parameter :parameter_id param-id)))
+
+    (remove-nil-vals
+        (assoc parameter
+          :arguments (when (contains? persistence/param-list-types param-type)
+                       (update-param-selection-arguments param-type param-id arguments))))))
+
+(defn- update-app-group
+  "Adds or updates an App group and its parameters."
+  [task-id display-order {group-id :id parameters :parameters :as group}]
+  (let [update-values (assoc group :task_id task-id :display_order display-order)
+        group-exists (and group-id (persistence/get-app-group group-id))
+        group-id (if group-exists group-id (:id (persistence/add-app-group update-values)))]
+    (when group-exists
+      (persistence/update-app-group update-values))
+    (assoc group
+      :id group-id
+      :parameters (doall (map-indexed (partial update-app-parameter group-id) parameters)))))
+
+(defn- param-arg-id-reducer
+  "A function used in a reduce to collect a parameter argument's ID and all of its childrens' IDs by
+   recursively calling itself on its child collections."
+  [result argument]
+  (concat result
+    (reduce param-arg-id-reducer [(:id argument)] (:arguments argument))
+    (reduce param-arg-id-reducer [] (:groups argument))))
+
+(defn- delete-parameter-argument-orphans
+  "Deletes arguments no longer associated with an App parameter."
+  [{param-id :id arguments :arguments :as parameter}]
+  (let [argument-ids (reduce param-arg-id-reducer [] (:arguments parameter))]
+    (when-not (empty? argument-ids)
+      (persistence/remove-parameter-value-orphans param-id argument-ids))))
+
+(defn- delete-app-parameter-orphans
+  "Deletes parameters no longer associated with an App group."
+  [{group-id :id params :parameters}]
+  (let [parameter-ids (remove nil? (map :id params))]
+    (when-not (empty? parameter-ids)
+      (persistence/remove-parameter-orphans group-id parameter-ids)
+      (dorun (map delete-parameter-argument-orphans params)))))
+
+(defn- delete-app-orphans
+  "Deletes groups and parameters no longer associated with an App."
+  [task-id groups]
+  (let [group-ids (remove nil? (map :id groups))]
+    (when-not (empty? group-ids)
+      (persistence/remove-app-group-orphans task-id group-ids)
+      (dorun (map delete-app-parameter-orphans groups)))))
+
+(defn update-app
+  "This service will update a single-step App, including the information at its top level and the
+   tool used by its single task, as long as the App has not been submitted for public use."
+  [app]
+  (verify-app-editable (persistence/get-app (:id app)))
+  (transaction
+    (persistence/update-app app)
+    (let [app-id (:id app)
+          tool-id (:tool_id app)
+          references (:references app)
+          task-id (->> app-id
+                       (get-app-details)
+                       (:tasks)
+                       (first)
+                       (:id))
+          updated-groups (doall (map-indexed (partial update-app-group task-id) (:groups app)))]
+      (delete-app-orphans task-id updated-groups)
+      (when-not (empty? references)
+        (persistence/set-app-references app-id references))
+      (when-not (nil? tool-id)
+        (persistence/set-task-tool task-id tool-id))
+      (service/success-response (assoc app :groups updated-groups)))))
 
 ;; FIXME
 (defn copy-app
   "This service makes a copy of an App available in Tito for editing."
   [app-id]
-  (let [app (get-app app-id)
+  (let [app (persistence/get-app app-id)
         ;;app (convert-app-to-copy app)
         ;;app-id (add-pipeline-app app)
         ]

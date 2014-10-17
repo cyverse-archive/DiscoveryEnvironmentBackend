@@ -3,10 +3,80 @@
   (:use [kameleon.entities]
         [kameleon.uuids :only [uuidify]]
         [korma.core]
+        [korma.db :only [transaction]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.assertions]
         [metadactyl.util.conversions :only [remove-nil-vals]])
-  (:require [metadactyl.persistence.app-metadata.relabel :as relabel]))
+  (:require [metadactyl.persistence.app-metadata.relabel :as relabel]
+            [clojure.set :as set]))
+
+(def param-input-types #{"FileInput" "FolderInput" "MultiFileSelector"})
+(def param-output-types #{"FileOutput" "FolderOutput" "MultiFileOutput"})
+(def param-file-types (set/union param-input-types param-output-types))
+
+(def param-selection-types #{"TextSelection" "DoubleSelection" "IntegerSelection"})
+(def param-tree-type "TreeSelection")
+(def param-list-types (conj param-selection-types param-tree-type))
+
+(defn- filter-valid-app-values
+  "Filters valid keys from the given App for inserting or updating in the database, setting the
+   current date as the edited date."
+  [app]
+  (-> app
+      (select-keys [:name :description])
+      (assoc :edited_date (sqlfn now))))
+
+(defn- filter-valid-app-group-values
+  "Filters and renames valid keys from the given App group for inserting or updating in the database."
+  [group]
+  (-> group
+      (set/rename-keys {:isVisible :is_visible})
+      (select-keys [:task_id :name :description :label :display_order :is_visible])))
+
+(defn- filter-valid-app-parameter-values
+  "Filters and renames valid keys from the given App parameter for inserting or updating in the
+   database."
+  [parameter]
+  (-> parameter
+      (set/rename-keys {:isVisible :is_visible
+                        :order :ordering})
+      (select-keys [:parameter_group_id
+                    :name
+                    :description
+                    :label
+                    :is_visible
+                    :ordering
+                    :display_order
+                    :parameter_type
+                    :required
+                    :omit_if_blank])))
+
+(defn- filter-valid-file-parameter-values
+  "Filters valid keys from the given file-parameter for inserting or updating in the database."
+  [file-parameter]
+  (select-keys file-parameter [:parameter_id
+                               :retain
+                               :is_implicit
+                               :info_type
+                               :data_format
+                               :data_source_id]))
+
+(defn- filter-valid-parameter-value-values
+  "Filters and renames valid keys from the given parameter-value for inserting or updating in the
+   database."
+  [parameter-value]
+  (-> parameter-value
+      (set/rename-keys {:display :label
+                        :isDefault :is_default})
+      (select-keys [:id
+                    :parameter_id
+                    :parent_id
+                    :is_default
+                    :display_order
+                    :name
+                    :value
+                    :description
+                    :label])))
 
 (defn get-app
   "Retrieves an app from the database."
@@ -70,11 +140,40 @@
                 (remove-nil-vals))]
     (update apps (set-fields app) (where {:id app-id}))))
 
+(defn add-app-reference
+  "Adds an App's reference to the database."
+  [app-id reference]
+  (insert app_references (values {:app_id app-id, :reference_text reference})))
+
+(defn set-app-references
+  "Resets the given App's references with the given list."
+  [app-id references]
+  (transaction
+    (delete app_references (where {:id app-id}))
+    (map (partial add-app-reference app-id) references)))
+
+(defn set-task-tool
+  "Sets the given tool-id as the given task's tool."
+  [task-id tool-id]
+  (update tasks (set-fields {:tool_id tool-id}) (where {:id task-id})))
+
 (defn remove-app-steps
   "Removes all steps from an App. This delete will cascade to workflow_io_maps and
    input_output_mapping entries."
   [app-id]
   (delete app_steps (where {:app_id app-id})))
+
+(defn remove-parameter-mappings
+  "Removes all input-output mappings associated with the given parameter ID, then removes any
+   orphaned workflow_io_maps table entries."
+  [parameter-id]
+  (transaction
+    (delete :input_output_mapping (where (or {:input parameter-id}
+                                             {:output parameter-id})))
+    (delete :workflow_io_maps
+      (where (not (exists
+                    (subselect [:input_output_mapping :iom]
+                      (where {:iom.mapping_id :workflow_io_maps.id}))))))))
 
 (defn get-full-app
   "Retrieves all app listing fields from the database."
@@ -85,6 +184,148 @@
   "Updates the labels in an app."
   [req]
   (relabel/update-app-labels req))
+
+(defn get-app-group
+  "Fetches an App group."
+  [group-id]
+  (first (select parameter_groups (where {:id group-id}))))
+
+(defn add-app-group
+  "Adds an App group to the database."
+  [group]
+  (insert parameter_groups (values (filter-valid-app-group-values group))))
+
+(defn update-app-group
+  "Updates an App group in the database."
+  [{group-id :id :as group}]
+  (update parameter_groups
+    (set-fields (filter-valid-app-group-values group))
+    (where {:id group-id})))
+
+(defn remove-app-group-orphans
+  "Removes groups associated with the given task ID, but not in the given group-ids list."
+  [task-id group-ids]
+  (delete parameter_groups (where {:task_id task-id
+                                   :id [not-in group-ids]})))
+
+(defn get-parameter-type-id
+  "Gets the ID of the given parameter type name."
+  [parameter-type]
+  (:id (first
+         (select parameter_types
+           (fields :id)
+           (where {:name parameter-type :deprecated false})))))
+
+(defn get-info-type-id
+  "Gets the ID of the given info type name."
+  [info-type]
+  (:id (first
+         (select info_type
+           (fields :id)
+           (where {:name info-type :deprecated false})))))
+
+(defn get-data-format-id
+  "Gets the ID of the data format with the given name."
+  [data-format]
+  (:id (first
+         (select data_formats
+           (fields :id)
+           (where {:name data-format})))))
+
+(defn get-data-source-id
+  "Gets the ID of the data source with the given name."
+  [data-source]
+  (:id (first
+         (select data_source
+           (fields :id)
+           (where {:name data-source})))))
+
+(defn get-app-parameter
+  "Fetches an App parameter."
+  [parameter-id]
+  (first (select parameters (where {:id parameter-id}))))
+
+(defn add-app-parameter
+  "Adds an App parameter to the parameters table."
+  [{param-type :type :as parameter}]
+  (insert parameters
+    (values (filter-valid-app-parameter-values
+              (assoc parameter :parameter_type (get-parameter-type-id param-type))))))
+
+(defn update-app-parameter
+  "Updates a parameter in the parameters table."
+  [{parameter-id :id param-type :type :as parameter}]
+  (update parameters
+    (set-fields (filter-valid-app-parameter-values
+                  (assoc parameter :parameter_type (get-parameter-type-id param-type))))
+    (where {:id parameter-id})))
+
+(defn remove-parameter-orphans
+  "Removes parameters associated with the given group ID, but not in the given parameter-ids list."
+  [group-id parameter-ids]
+  (delete parameters (where {:parameter_group_id group-id
+                             :id [not-in parameter-ids]})))
+
+(defn add-file-parameter
+  "Adds file parameter fields to the database."
+  [{info-type :file_info_type data-format :format data-source :data_source :as parameter}]
+  (insert file_parameters
+    (values (filter-valid-file-parameter-values
+              (assoc parameter
+                :info_type (get-info-type-id info-type)
+                :data_format (get-data-format-id data-format)
+                :data_source_id (get-data-source-id data-source))))))
+
+(defn remove-file-parameter
+  "Removes all file parameters associated with the given parameter ID."
+  [parameter-id]
+  (delete file_parameters (where {:parameter_id parameter-id})))
+
+(defn add-validation-rule
+  "Adds a validation rule to the database."
+  [parameter-id rule-type]
+  (insert validation_rules
+    (values {:parameter_id parameter-id
+             :rule_type    (subselect rule_type
+                             (fields :id)
+                             (where {:name rule-type
+                                     :deprecated false}))})))
+
+(defn remove-parameter-validation-rules
+  "Removes all validation rules and rule arguments associated with the given parameter ID."
+  [parameter-id]
+  (delete validation_rules (where {:parameter_id parameter-id})))
+
+(defn add-validation-rule-argument
+  "Adds a validation rule argument to the database."
+  [validation-rule-id ordering argument-value]
+  (insert validation_rule_arguments (values {:rule_id validation-rule-id
+                                             :ordering ordering
+                                             :argument_value argument-value})))
+
+(defn add-parameter-default-value
+  "Adds a parameter's default value to the database."
+  [parameter-id default-value]
+  (insert parameter_values (values {:parameter_id parameter-id
+                                    :value        default-value
+                                    :is_default   true})))
+
+(defn add-app-parameter-value
+  "Adds a parameter value to the database."
+  [parameter-value]
+  (insert parameter_values (values (filter-valid-parameter-value-values parameter-value))))
+
+(defn remove-parameter-values
+  "Removes all parameter values associated with the given parameter ID."
+  [parameter-id]
+  (delete parameter_values (where {:parameter_id parameter-id})))
+
+(defn remove-parameter-value-orphans
+  "Removes parameter values associated with the given parameter ID, but not in the given
+   parameter-value-ids list."
+  [parameter-id parameter-value-ids]
+  (delete parameter_values (where {:parameter_id parameter-id
+                                   :id [not-in parameter-value-ids]})))
 
 (defn app-accessible-by
   "Obtains the list of users who can access an app."

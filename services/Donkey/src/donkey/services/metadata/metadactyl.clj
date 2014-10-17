@@ -148,18 +148,6 @@
   (let [url (build-metadactyl-unprotected-url req "preview-workflow")]
     (forward-post url req)))
 
-(defn import-template
-  "This service will import a template into the DE."
-  [req]
-  (let [url (build-metadactyl-unprotected-url req "import-template")]
-    (forward-post url req)))
-
-(defn import-workflow
-  "This service will import a workflow into the DE."
-  [req]
-  (let [url (build-metadactyl-unprotected-url req "import-workflow")]
-    (forward-post url req)))
-
 (defn import-tools
   "This service will import deployed components into the DE and send
    notifications if notification information is included and the deployed
@@ -171,19 +159,6 @@
     (forward-post url req json-string)
     (dorun (map #(dn/send-tool-notification %) (:components json-obj))))
   (success-response))
-
-(defn update-app
-  "This service will update the information at the top level of an analysis.
-   It will not update any of the components of the analysis."
-  [req]
-  (let [url (build-metadactyl-unprotected-url req "update-analysis")]
-    (forward-post url req)))
-
-(defn update-template
-  "This service will either update an existing template or import a new template."
-  [req]
-  (let [url (build-metadactyl-unprotected-url req "update-template")]
-    (forward-post url req)))
 
 (defn create-pipeline
   "This service will create a pipeline."
@@ -417,16 +392,11 @@
   (let [url (build-metadactyl-secured-url req "copy-template" app-id)]
     (forward-get url req)))
 
-(defn update-template-secured
-  "This service will import an app into or update an app in the DE."
-  [req]
-  (let [url (build-metadactyl-secured-url req "update-template")]
-    (forward-put url req)))
-
-(defn update-app-secured
-  "This service will import a single-step app into or update an existing app in the DE."
-  [req]
-  (let [url (build-metadactyl-secured-url req "update-app")]
+(defn update-app
+  "This service will update an existing single-step app in the DE."
+  [req app-id]
+  (let [url (metadactyl-url {} "apps" app-id)
+        req (metadactyl-request req)]
     (forward-put url req)))
 
 (defn make-app-public

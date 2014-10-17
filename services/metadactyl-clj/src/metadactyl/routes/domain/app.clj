@@ -121,7 +121,7 @@
       also be used for positional arguments, but this flag tends to be useful only for trailing
       positional arguments")
 
-   (optional-key :type)
+   :type
    (describe String
      "The Parameter's type name. Must contain the name of one of the Parameter types defined in the
       database. You can get the list of defined and undeprecated Parameter types using the
@@ -303,37 +303,42 @@
          {(optional-key :root_deletion_request)
           (describe Boolean "Set to `true` to  delete one or more public apps")}))
 
-(defschema AppParameterListItemPreviewRequest
+(defschema AppParameterListItemRequest
   (->optional-param AppParameterListItem :id))
 
-(defschema AppParameterListGroupPreviewRequest
+(defschema AppParameterListGroupRequest
   (-> AppParameterListGroup
     (->optional-param :id)
     (assoc OptionalParameterArgumentsKey
-           (describe [AppParameterListItemPreviewRequest] TreeSelectorGroupParameterListDocs))))
+           (describe [AppParameterListItemRequest] TreeSelectorGroupParameterListDocs))))
 
-(defschema AppParameterListItemOrTreePreviewRequest
+(defschema AppParameterListItemOrTreeRequest
   (-> AppParameterListItemOrTree
     (->optional-param :id)
     (assoc OptionalParameterArgumentsKey
-           (describe [AppParameterListItemPreviewRequest] TreeSelectorParameterListDocs))
+           (describe [AppParameterListItemRequest] TreeSelectorParameterListDocs))
     (assoc OptionalGroupsKey
-           (describe [AppParameterListGroupPreviewRequest] TreeSelectorGroupListDocs))))
+           (describe [AppParameterListGroupRequest] TreeSelectorGroupListDocs))))
 
-(defschema AppParameterPreviewRequest
+(defschema AppParameterRequest
   (-> AppParameter
     (->optional-param :id)
     (assoc OptionalParameterArgumentsKey
-           (describe [AppParameterListItemOrTreePreviewRequest] ListItemOrTreeDocs))))
+           (describe [AppParameterListItemOrTreeRequest] ListItemOrTreeDocs))))
 
-(defschema AppGroupPreviewRequest
+(defschema AppGroupRequest
   (-> AppGroup
       (->optional-param :id)
-      (assoc OptionalParametersKey (describe [AppParameterPreviewRequest] ParameterListDocs))))
+      (assoc OptionalParametersKey (describe [AppParameterRequest] ParameterListDocs))))
+
+(defschema AppRequest
+  (-> App
+    (->optional-param :id)
+    (assoc OptionalGroupsKey (describe [AppGroupRequest] GroupListDocs))))
 
 (defschema AppPreviewRequest
   (-> App
     (->optional-param :id)
     (->optional-param :name)
     (->optional-param :description)
-    (assoc OptionalGroupsKey (describe [AppGroupPreviewRequest] GroupListDocs))))
+    (assoc OptionalGroupsKey (describe [AppGroupRequest] GroupListDocs))))

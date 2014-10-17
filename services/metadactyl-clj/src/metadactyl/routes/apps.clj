@@ -7,7 +7,7 @@
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.params]
-        [metadactyl.zoidberg.app-edit :only [copy-app edit-app]]
+        [metadactyl.zoidberg.app-edit :only [copy-app edit-app update-app]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -92,6 +92,16 @@
           in parameters and parameter arguments), 'description', 'label', and 'display' (only in
           parameter arguments) fields will be processed and updated by this endpoint."
           (ce/trap "update-app-labels" #(app-metadata/relabel-app (assoc body :id app-id))))
+
+  (PUT* "/:app-id" [:as {uri :uri}]
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParamsEmailRequired]
+        :body [body (describe AppRequest "The App to update.")]
+        :return App
+        :summary "Update an App"
+        :notes "This service updates a single-step App in the database, as long as the App has not
+        been submitted for public use."
+        (ce/trap uri #(update-app (assoc body :id app-id))))
 
   (GET* "/:app-id/details" []
         :path-params [app-id :- AppIdPathParam]

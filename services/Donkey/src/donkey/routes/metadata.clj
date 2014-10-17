@@ -63,6 +63,9 @@
     (PATCH "/apps/:app-id" [app-id :as req]
            (trap #(update-app-labels req app-id)))
 
+    (PUT "/apps/:app-id" [app-id :as req]
+         (trap #(update-app req app-id)))
+
     (GET "/apps/:app-id/details" [app-id]
          (trap #(apps/get-app-details app-id)))
 
@@ -145,12 +148,6 @@
    (GET "/copy-template/:app-id" [app-id :as req]
         (trap #(copy-app req app-id)))
 
-   (PUT "/update-template" [:as req]
-        (trap #(update-template-secured req)))
-
-   (PUT "/update-app" [:as req]
-        (trap #(update-app-secured req)))
-
    (POST "/make-analysis-public" [:as req]
          (trap #(make-app-public req)))
 
@@ -207,17 +204,5 @@
    (POST "/preview-workflow" [:as req]
          (trap #(preview-workflow req)))
 
-   (POST "/update-template" [:as req]
-         (trap #(update-template req)))
-
-   (POST "/import-template" [:as req]
-         (trap #(import-template req)))
-
-   (POST "/import-workflow" [:as req]
-         (trap #(import-workflow req)))
-
    (POST "/import-tools" [:as req]
-         (trap #(import-tools req)))
-
-   (POST "/update-analysis" [:as req]
-         (trap #(update-app req)))))
+         (trap #(import-tools req)))))

@@ -19,14 +19,11 @@
     * [Logically Deleting Apps](#logically-deleting-apps)
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
-    * [Updating an Existing Template](#updating-an-existing-template)
+    * [Updating a Single-Step App](#updating-a-single-step-app)
     * [Creating a Pipeline](#creating-a-pipeline)
     * [Updating a Pipeline](#updating-a-pipeline)
     * [Updating App Labels](#updating-app-labels)
-    * [Importing a Template](#importing-a-template)
-    * [Importing an Analysis](#importing-an-analysis)
     * [Importing Deployed Components](#importing-deployed-components)
-    * [Updating Top-Level Analysis Information](#updating-top-level-analysis-information)
     * [Rating Apps](#rating-apps)
     * [Deleting App Ratings](#deleting-app-ratings)
     * [Searching for Apps](#searching-for-apps)
@@ -324,14 +321,14 @@ Delegates to metadactyl: POST /preview-workflow
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Updating an Existing Template
+## Updating a Single-Step App
 
-Unsecured Endpoint: POST /update-template
+*Secured Endpoint:* PUT /apps/{app-id}
 
-Delegates to metadactyl: POST /update-template
+*Delegates to metadactyl:* PUT /apps/{app-id}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Creating a Pipeline
 
@@ -359,24 +356,6 @@ Delegates to metadactyl: PATCH /apps/{app-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
-
-## Importing a Template
-
-Unsecured Endpoint: POST /import-template
-
-Delegates to metadactyl: POST /import-template
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Importing an Analysis
-
-Unsecured Endpoint: POST /import-workflow
-
-Delegates to metadactyl: POST /import-workflow
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
 
 ## Importing Deployed Components
 
@@ -501,15 +480,6 @@ $ curl -sd '
 
 Though it is possible to import analyses using this endpoint, this practice is
 not recommended because it can cause spurious notifications to be sent.
-
-## Updating Top-Level Analysis Information
-
-Unsecured Endpoint: POST /update-analysis
-
-Delegates to metadactyl: POST /update-analysis
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
 
 ## Rating Apps
 

@@ -20,8 +20,5 @@
 * [POST /secured/make-analysis-public](endpoints/app-metadata/editing.md#submitting-an-analysis-for-public-use)
 * [GET /secured/reference-genomes](endpoints/reference-genomes.md#exporting-reference-genomes)
 * [PUT /secured/reference-genomes](endpoints/reference-genomes.md#importing-reference-genomes)
-* [PUT /secured/update-app](endpoints/app-metadata/updated-admin.md#updating-or-importing-a-single-step-app)
 * [POST /secured/update-favorites](endpoints/app-metadata/admin.md#updating-the-favorite-analyses-list)
-* [POST /update-analysis](endpoints/app-metadata/admin.md#updating-top-level-analysis-information)
-* [POST /update-template](endpoints/app-metadata/admin.md#updating-an-existing-template)
 * [GET /validate-analysis-for-pipelines/{analysis-id}](endpoints/app-metadata/validation.md#validating-analyses-for-pipelines)

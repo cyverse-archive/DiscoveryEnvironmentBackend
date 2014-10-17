@@ -21,15 +21,6 @@
   (POST "/update-favorites" [:as {body :body}]
         (throw+ '("update-favorites" body)))
 
-  (GET "/copy-template/:app-id" [app-id]
-       (throw+ '("copy-app" app-id)))
-
-  (PUT "/update-template" [:as {body :body}]
-       (trap #(throw+ '("update-template-secured" body))))
-
-  (PUT "/update-app" [:as {body :body}]
-       (ce/trap "update-app" #(throw+ '("update-app-secured" body))))
-
   (POST "/make-analysis-public" [:as {body :body}]
         (trap #(throw+ '("make-app-public" body))))
 
@@ -75,19 +66,7 @@
   (POST "/preview-workflow" [:as {body :body}]
         (trap #(throw+ '("preview-workflow" body))))
 
-  (POST "/update-template" [:as {body :body}]
-        (trap #(throw+ '("update-template" body))))
-
-  (POST "/import-template" [:as {body :body}]
-        (trap #(throw+ '("import-template" body))))
-
-  (POST "/import-workflow" [:as {body :body}]
-        (trap #(throw+ '("import-workflow" body))))
-
   (POST "/import-tools" [:as {body :body}]
         (trap #(throw+ '("import-tools" body))))
-
-  (POST "/update-analysis" [:as {body :body}]
-        (trap #(throw+ '("update-app" body))))
 
   (route/not-found (unrecognized-path-response)))

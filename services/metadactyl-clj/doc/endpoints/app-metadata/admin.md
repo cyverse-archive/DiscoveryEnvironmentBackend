@@ -62,11 +62,9 @@
     * [Exporting Selected Deployed Components](#exporting-selected-deployed-components)
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
-    * [Updating an Existing Template](#updating-an-existing-template)
     * [Importing a Template](#importing-a-template)
     * [Importing an Analysis](#importing-an-analysis)
     * [Importing Tools](#importing-tools)
-    * [Updating Top-Level Analysis Information](#updating-top-level-analysis-information)
     * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
 
 # Overview
@@ -3095,32 +3093,6 @@ $ curl -sd @workflow.json http://by-tor:8888/preview-workflow | python -mjson.to
 
 A copy of workflow.json can be found [here](workflow.json).
 
-## Updating an Existing Template
-
-*Unsecured Endpoint:* POST /update-template
-
-This service either imports a new template or updates an existing template in
-the database. For more information about the format of the request body, please
-see [Template JSON](#template-json) above.
-
-Here are some examples:
-
-```
-$ curl -sd @app.json http://by-tor:8888/update-template | python -mjson.tool
-{
-    "reason": "org.json.JSONException: JSONObject[\"implementation\"] not found.",
-    "success": false
-}
-```
-
-A copy of app.json can be found [here](app.json).
-
-```
-$ curl -sd @app-with-impl.json http://by-tor:8888/update-template
-```
-
-A copy of app-with-impl.json can be found [here](app-with-impl.json).
-
 ## Importing a Template
 
 *Unsecured Endpoint:* POST /import-template
@@ -3186,28 +3158,6 @@ This service imports deployed components into the DE. In metadactyl, this
 service is identical to the `/import-workflow` service; and is provided for the
 sake the clarity of the code in the SCM repository. Please see
 [Importing an Analysis](#importing-an-analysis) for more information.
-
-## Updating Top-Level Analysis Information
-
-*Unsecured Endpoint:* POST /update-analysis
-
-This service updates analysis information without updating any components within
-the analysis. The effect in the database is that the `transformation_activity`
-table will be updated, but none of its associated tables will be updated. The
-request body is in the following format:
-
-```json
-{
-    "id": "analysis-id",
-    "name": "analysis-name",
-    "description": "analysis-description",
-    "edited_date": "analysis-edited-date",
-    "published_date": "analysis-published-date"
-}
-```
-
-Only the "id" field is required; the rest of the fields will be left unmodified
-if they're not specified.
 
 ## Updating the Favorite Analyses List
 
