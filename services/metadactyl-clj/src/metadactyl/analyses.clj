@@ -1,5 +1,6 @@
 (ns metadactyl.analyses
-  (:use [metadactyl.util.conversions :only [remove-nil-vals]]
+  (:use [kameleon.uuids :only [uuid]]
+        [metadactyl.util.conversions :only [remove-nil-vals]]
         [slingshot.slingshot :only [try+]])
   (:require [clojure.tools.logging :as log]
             [metadactyl.persistence.app-metadata :as ap]))
@@ -19,7 +20,7 @@
    :output_dir           (:output_dir submission)
    :request_type         "submit"
    :username             user
-   :uuid                 (or (:uuid submission) (UUID/randomUUID))})
+   :uuid                 (or (:uuid submission) (uuid))})
 
 (defn submit
   [{:keys [user email]} submission]
