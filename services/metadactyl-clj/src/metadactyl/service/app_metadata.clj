@@ -114,5 +114,5 @@
   "This service obtains an app description that can be used to build a job submission form in
    the user interface."
   [app-id]
-  (->> (amp/get-full-app app-id)
+  (->> (amp/get-app app-id)
        (success-response)))

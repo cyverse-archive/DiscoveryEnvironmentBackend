@@ -87,5 +87,5 @@
   "This service obtains an app description in a format that is suitable for building the job
   submission UI."
   [app-id]
-  (-> (amp/get-full-app app-id)
+  (-> (amp/get-app app-id)
       (format-app)))

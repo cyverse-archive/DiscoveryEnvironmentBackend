@@ -79,18 +79,9 @@
                     :label])))
 
 (defn get-app
-  "Retrieves an app from the database."
+  "Retrieves all app listing fields from the database."
   [app-id]
-  (assert-not-nil
-   [:app-id app-id]
-   (first
-     (select app_listing
-             (fields :id
-                     :name
-                     :description
-                     :integrator_email
-                     :step_count)
-             (where {:id app-id})))))
+  (assert-not-nil [:app-id app-id] (first (select app_listing (where {:id app-id})))))
 
 (defn get-integration-data
   "Retrieves integrator info from the database, adding it first if not already there."
@@ -174,11 +165,6 @@
       (where (not (exists
                     (subselect [:input_output_mapping :iom]
                       (where {:iom.mapping_id :workflow_io_maps.id}))))))))
-
-(defn get-full-app
-  "Retrieves all app listing fields from the database."
-  [app-id]
-  (assert-not-nil [:app-id app-id] (first (select app_listing (where {:id app-id})))))
 
 (defn update-app-labels
   "Updates the labels in an app."
