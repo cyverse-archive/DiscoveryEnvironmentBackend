@@ -2,6 +2,7 @@
   (:use [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.api.sweet]
         [compojure.api.legacy]
+        [metadactyl.routes.domain.analysis]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.category]
         [metadactyl.routes.domain.app.element]
@@ -14,6 +15,7 @@
         [ring.swagger.schema :only [describe]]
         [ring.util.response :only [redirect]])
   (:require [metadactyl.routes.admin :as admin-routes]
+            [metadactyl.routes.analyses :as analysis-routes]
             [metadactyl.routes.apps :as app-routes]
             [metadactyl.routes.apps.categories :as app-category-routes]
             [metadactyl.routes.apps.elements :as app-element-routes]
@@ -45,6 +47,9 @@
     (swaggered "element-types"
       :description "App Element endpoints."
       (context "/apps/elements" [] app-element-routes/app-elements))
+    (swaggered "analyses"
+      :description "Analysis endpoints."
+      (context "/analyses" [] analysis-routes/analyses))
     (swaggered "tool-requests"
       :description "Tool Request endpoints."
       (context "/tool-requests" [] tool-request-routes/tool-requests))
