@@ -8,7 +8,7 @@
             [data-info.util.logging :as log]
             [data-info.util.irods :as irods]
             [data-info.util.validators :as validators]
-            [data-info.services.common-paths :as path]))
+            [data-info.util.paths :as path]))
 
 
 (defn- user-home-path

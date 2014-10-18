@@ -12,7 +12,7 @@
             [clojure-commons.file-utils :as ft]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [data-info.services.common-paths :as paths]
+            [data-info.util.paths :as paths]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.util.validators :as validators]))

@@ -10,8 +10,8 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
-            [data-info.util.validators :as validators]
-            [data-info.services.common-paths :as paths]))
+            [data-info.util.paths :as paths]
+            [data-info.util.validators :as validators]))
 
 
 (defn- preview-buffer

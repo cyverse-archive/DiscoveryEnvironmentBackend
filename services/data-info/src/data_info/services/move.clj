@@ -13,8 +13,8 @@
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.util.validators :as validators]
-            [data-info.services.directory :as directory]
-            [data-info.services.common-paths :as paths]))
+            [data-info.util.paths :as paths]
+            [data-info.services.directory :as directory]))
 
 
 (defn- source->dest

@@ -10,6 +10,7 @@
             [data-info.util.config :as config]
             [data-info.util.messaging :as messages]
             [clojure.tools.nrepl.server :as nrepl]
+            [liberator.dev :as liberator]
             [me.raynes.fs :as fs]
             [ring.middleware.keyword-params :as params]
             [common-cli.core :as ccli]
@@ -94,6 +95,7 @@
   (-> routes/all-routes
     util/trap-handler
     util/req-logger
+    #_(liberator/wrap-trace :header :ui)
     params/wrap-keyword-params
     wrap-lcase-params
     wrap-query-params))

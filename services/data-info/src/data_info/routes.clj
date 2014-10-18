@@ -13,6 +13,7 @@
             [data-info.services.page-file :as file]
             [data-info.services.preview :as preview]
             [data-info.services.rename :as rename]
+            [data-info.services.service-info :as info]
             [data-info.services.sharing :as sharing]
             [data-info.services.space-handling :as sh]
             [data-info.services.stat :as stat]
@@ -20,17 +21,14 @@
             [data-info.services.type-detect.controllers :as detect]
             [data-info.services.users :as user]
             [data-info.services.uuids :as uuid]
-            [data-info.services.welcome :as welcome]
             [data-info.util :as util]
             [data-info.util.service :as svc]))
 
 
 (defroutes all-routes
-  (GET "/" [:as req]
-    (util/controller req welcome/welcome))
+  (ANY "/" [] (info/service-info))
 
-  (POST "/cart" [:as req]
-    (util/controller req cart/dispatch-cart :params :body))
+  (POST "/cart" [user folder] (cart/cart user folder))
 
   (HEAD "/entries/id/:entry" [:as req]
     (util/controller req entry/id-exists? :params))

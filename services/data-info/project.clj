@@ -16,6 +16,7 @@
                  [org.clojure/tools.logging "0.3.0"]
                  [org.clojure/data.codec "0.1.0"]
                  [org.clojure/java.classpath "0.2.2"]
+                 [liberator "0.12.2"]
                  [org.apache.tika/tika-core "1.6"]
                  [org.iplantc/clj-jargon "4.0.1"
                   :exclusions [[xerces/xmlParserAPIs]
