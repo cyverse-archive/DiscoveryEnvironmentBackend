@@ -125,6 +125,7 @@
         mappings (get-mappings steps)
         steps (map format-step steps)]
     (-> app
+        (select-keys [:id :name :description])
         (assoc :steps steps)
         (assoc :mappings mappings)
         (dissoc :integrator_email
@@ -176,7 +177,7 @@
   (transaction
     (let [app-id (:id (add-app app))]
       (add-app-to-user-dev-category app-id)
-      (add-app-steps-mappings app)
+      (add-app-steps-mappings (assoc app :id app-id))
       app-id)))
 
 (defn- update-pipeline-app
