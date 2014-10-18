@@ -37,7 +37,27 @@
    (describe UUID (str "The UUID of the analysis. A random UUID will be assigned if one isn't "
                        "provided."))})
 
-;; TODO: nuke when this is no longer needed.
+;; TODO: nuke this when it's no longer needed.
+(def JexStepComponent (describe Any "this should be a schema"))
+
+;; TODO: nuke this when it's no longer needed.
+(def JexStepConfig (describe Any "this should be a schema"))
+
+;; TODO: nuke this when it's no longer needed.
+(defschema JexSubmissionStep
+  {:component
+   (describe JexStepComponent "The program used perform the analysis step.")
+
+   :config
+   (describe JexStepConfig "The configuration settings for an analysis step.")
+
+   :environment
+   (describe Any "A map of environment variable names to values.")
+
+   :type
+   (describe String "The type of the analysis step.")})
+
+;; TODO: nuke this when it's no longer needed.
 (defschema JexSubmission
   {:analysis_description
    (describe String "The app description from the database.")
@@ -76,6 +96,12 @@
 
    :request_type
    (describe String "The type of request being sent to the JEX.")
+
+   (optional-key :starting_step)
+   (describe Integer "The ordinal number of the step to start the job with.")
+
+   :steps
+   (describe [JexSubmissionStep] "The set of steps in the analysis.")
 
    :uuid
    (describe UUID "The UUID of the analysis.")

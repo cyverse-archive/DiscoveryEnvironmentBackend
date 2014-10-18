@@ -86,3 +86,17 @@
                 (fields :r.id [:t.name :type])
                 (where {:r.parameter_id param-id
                         :t.deprecated   false}))))
+
+(defn- add-default-value
+  [{:keys [id type] :as param}]
+  (assoc param :default_value (get-default-value type (get-param-values id))))
+
+(defn load-app-params
+  [app-id]
+  (->> (select (params-base-query)
+               (join :inner [:parameter_groups :pg] {:p.parameter_group_id :pg.id})
+               (join :inner [:tasks :task] {:pg.task_id :task.id})
+               (join :inner [:app_steps :s] {:task.id :s.task_id})
+               (fields [:s.id :step_id])
+               (where {:s.app_id app-id}))
+       (mapv add-default-value)))
