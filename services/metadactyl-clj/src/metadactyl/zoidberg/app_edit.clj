@@ -13,6 +13,9 @@
   (:require [metadactyl.persistence.app-metadata :as persistence]
             [metadactyl.util.service :as service]))
 
+(def ^:private copy-prefix "Copy of ")
+(def ^:private max-app-name-len 255)
+
 (defn- get-app-details
   "Retrieves the details for a single-step app."
   [app-id]
@@ -299,12 +302,88 @@
         (persistence/set-task-tool task-id tool-id))
       (service/success-response (assoc app :groups updated-groups)))))
 
-;; FIXME
+(defn add-app-to-user-dev-category
+  "Adds an app with the given ID to the current user's apps-under-development category."
+  [app-id]
+  (let [workspace-category-id (:root_category_id (get-workspace))
+        dev-group-id (get-app-subcategory-id workspace-category-id (workspace-dev-app-group-index))]
+    (add-app-to-group dev-group-id app-id)))
+
+(defn- add-single-step-task
+  "Adds a task as a single step to the given app, using the app's name, description, and label."
+  [{app-id :id :as app}]
+  (let [task (persistence/add-task app)]
+    (persistence/add-step app-id 0 {:task_id (:id task)})
+    task))
+
+(defn add-app
+  "This service will add a single-step App, including the information at its top level."
+  [{references :references groups :groups :as app}]
+  (transaction
+    (let [app-id (:id (persistence/add-app app))
+          task-id (-> (assoc app :id app-id)
+                      (add-single-step-task)
+                      (:id))]
+      (add-app-to-user-dev-category app-id)
+      (when-not (empty? references)
+        (persistence/set-app-references app-id references))
+      (dorun (map-indexed (partial update-app-group task-id) groups))
+      (edit-app app-id))))
+
+(defn- name-too-long?
+  "Determines if a name is too long to be extended for a copy name."
+  [original-name]
+  (> (+ (count copy-prefix) (count original-name)) max-app-name-len))
+
+(defn- already-copy-name?
+  "Determines if the name of an app is already a copy name."
+  [original-name]
+  (.startsWith original-name copy-prefix))
+
+(defn app-copy-name
+  "Determines the name of a copy of an app."
+  [original-name]
+  (cond (name-too-long? original-name)     original-name
+        (already-copy-name? original-name) original-name
+        :else                              (str copy-prefix original-name)))
+
+(defn- convert-parameter-argument-to-copy
+  [{arguments :arguments groups :groups :as parameter-argument}]
+  (-> parameter-argument
+      (dissoc :id)
+      (assoc :arguments (map convert-parameter-argument-to-copy arguments)
+             :groups    (map convert-parameter-argument-to-copy groups))
+      (remove-nil-vals)))
+
+(defn- convert-app-parameter-to-copy
+  [{arguments :arguments :as parameter}]
+  (-> parameter
+      (dissoc :id)
+      (assoc :arguments (map convert-parameter-argument-to-copy arguments))
+      (remove-nil-vals)))
+
+(defn- convert-app-group-to-copy
+  [{parameters :parameters :as group}]
+  (-> group
+      (dissoc :id)
+      (assoc :parameters (map convert-app-parameter-to-copy parameters))
+      (remove-nil-vals)))
+
+(defn- convert-app-to-copy
+  "Removes ID fields from a client formatted App, its groups, parameters, and parameter arguments,
+   and formats appropriate app fields to prepare it for saving as a copy."
+  [app]
+  (let [app (format-app app)]
+    (-> app
+        (dissoc :id)
+        (assoc :name   (app-copy-name (:name app))
+               :groups (map convert-app-group-to-copy (:groups app)))
+        (remove-nil-vals))))
+
 (defn copy-app
   "This service makes a copy of an App available in Tito for editing."
   [app-id]
-  (let [app (persistence/get-app app-id)
-        ;;app (convert-app-to-copy app)
-        ;;app-id (add-pipeline-app app)
-        ]
-    (edit-app app-id)))
+  (-> app-id
+      (persistence/get-app)
+      (convert-app-to-copy)
+      (add-app)))

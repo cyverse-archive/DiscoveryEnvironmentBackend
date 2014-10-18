@@ -30,6 +30,9 @@
     (GET "/apps" [:as {params :params}]
          (trap #(apps/search-apps params)))
 
+    (POST "/apps" [:as {:keys [uri] :as req}]
+          (ce/trap uri #(create-app req)))
+
     (POST "/apps/arg-preview" [:as req]
           (trap #(preview-args req)))
 
@@ -65,6 +68,9 @@
 
     (PUT "/apps/:app-id" [app-id :as req]
          (trap #(update-app req app-id)))
+
+    (POST "/apps/:app-id/copy" [app-id :as {:keys [uri] :as req}]
+          (ce/trap uri #(copy-app req app-id)))
 
     (GET "/apps/:app-id/details" [app-id]
          (trap #(apps/get-app-details app-id)))
@@ -144,9 +150,6 @@
 
    (POST "/update-favorites" [:as {:keys [uri body]}]
          (ce/trap uri #(apps/update-favorites body)))
-
-   (GET "/copy-template/:app-id" [app-id :as req]
-        (trap #(copy-app req app-id)))
 
    (POST "/make-analysis-public" [:as req]
          (trap #(make-app-public req)))

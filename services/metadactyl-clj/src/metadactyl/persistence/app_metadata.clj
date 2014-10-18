@@ -26,6 +26,11 @@
       (select-keys [:name :description])
       (assoc :edited_date (sqlfn now))))
 
+(defn- filter-valid-task-values
+  "Filters valid keys from the given Task for inserting or updating in the database."
+  [task]
+  (select-keys task [:name :description :label :tool_id]))
+
 (defn- filter-valid-app-group-values
   "Filters and renames valid keys from the given App group for inserting or updating in the database."
   [group]
@@ -142,6 +147,11 @@
   (transaction
     (delete app_references (where {:id app-id}))
     (map (partial add-app-reference app-id) references)))
+
+(defn add-task
+  "Adds a task to the database."
+  [task]
+  (insert tasks (values (filter-valid-task-values task))))
 
 (defn set-task-tool
   "Sets the given tool-id as the given task's tool."

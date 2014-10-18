@@ -62,8 +62,6 @@
     * [Exporting Selected Deployed Components](#exporting-selected-deployed-components)
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
-    * [Importing a Template](#importing-a-template)
-    * [Importing an Analysis](#importing-an-analysis)
     * [Importing Tools](#importing-tools)
     * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
 
@@ -3087,63 +3085,6 @@ $ curl -sd @workflow.json http://by-tor:8888/preview-workflow | python -mjson.to
             "name": "Find Unique Values",
             "type": ""
         }
-    ]
-}
-```
-
-A copy of workflow.json can be found [here](workflow.json).
-
-## Importing a Template
-
-*Unsecured Endpoint:* POST /import-template
-
-This service imports a new template into the DE; it will not overwrite an
-existing template. To overwrite an existing template, please use the
-`/update-template` service. For information about the format of the request
-body, please see [Template JSON](#template-json) above.
-
-Here are some examples:
-
-```
-$ curl -sd @app.json http://by-tor:8888/import-template | python -mjson.tool
-{
-    "reason": "org.json.JSONException: JSONObject[\"implementation\"] not found.",
-    "success": false
-}
-```
-
-A copy of app.json can be found [here](app.json).
-
-```
-$ curl -sd @app-with-impl.json http://by-tor:8888/import-template
-```
-
-A copy of app-with-impl.json can be found [here](app-with-impl.json).
-
-## Importing an Analysis
-
-*Unsecured Endpoint:* POST /import-workflow
-
-This service imports a new analysis into the DE; it will not overwrite an
-existing analysis. To overwrite an existing analysis, please use the
-`/update-workflow` service. For information about the format of the request
-body, please see [App JSON](#app-json) above.
-
-The response body consists of a JSON object containing the identifiers of all of
-the analyses, components and templates that are imported into the database.
-Here's an example:
-
-```
-$ curl -sd @workflow.json http://by-tor:8888/import-workflow | python -mjson.tool
-{
-    "analyses": [
-        "5574A263-3807-4005-AC3E-3EFAFAEEB5F1"
-    ],
-    "components": [
-        "c4e6f548cc0ee431da7f2ddfdf3ace761"
-    ],
-    "templates": [
-        "5C74B636-9E44-4F59-B3F2-B781A0A2C501"
     ]
 }
 ```

@@ -1,7 +1,6 @@
 (ns metadactyl.zoidberg.pipeline-edit
   (:use [korma.core]
         [korma.db :only [transaction]]
-        [kameleon.app-groups :only [add-app-to-group get-app-subcategory-id]]
         [kameleon.core]
         [kameleon.entities]
         [kameleon.uuids :only [uuid]]
@@ -11,33 +10,11 @@
                                                     get-app
                                                     remove-app-steps
                                                     update-app]]
-        [metadactyl.user :only [current-user]]
-        [metadactyl.util.config :only [workspace-dev-app-group-index]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
         [metadactyl.validation :only [verify-app-editable verify-app-ownership]]
-        [metadactyl.workspace :only [get-workspace]])
+        [metadactyl.workspace :only [get-workspace]]
+        [metadactyl.zoidberg.app-edit :only [add-app-to-user-dev-category app-copy-name]])
   (:require [metadactyl.util.service :as service]))
-
-(def ^:private copy-prefix "Copy of ")
-
-(def ^:private max-app-name-len 255)
-
-(defn- name-too-long?
-  "Determines if a name is too long to be extended for a copy name."
-  [original-name]
-  (> (+ (count copy-prefix) (count original-name)) max-app-name-len))
-
-(defn- already-copy-name?
-  "Determines if the name of an app is already a copy name."
-  [original-name]
-  (.startsWith original-name copy-prefix))
-
-(defn- app-copy-name
-  "Determines the name of a copy of an app."
-  [original-name]
-  (cond (name-too-long? original-name)     original-name
-        (already-copy-name? original-name) original-name
-        :else                              (str copy-prefix original-name)))
 
 (defn- with-task-params
   "Includes a list of related file parameters in the query's result set,
@@ -197,10 +174,8 @@
 (defn- add-pipeline-app
   [app]
   (transaction
-    (let [app-id (:id (add-app app))
-          workspace-category-id (:root_category_id (get-workspace))
-          dev-group-id (get-app-subcategory-id workspace-category-id (workspace-dev-app-group-index))]
-      (add-app-to-group dev-group-id app-id)
+    (let [app-id (:id (add-app app))]
+      (add-app-to-user-dev-category app-id)
       (add-app-steps-mappings app)
       app-id)))
 

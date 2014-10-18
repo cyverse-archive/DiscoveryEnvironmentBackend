@@ -1,27 +1,9 @@
 # Table of Contents
 
 * [App Editing Services](#app-editing-services)
-    * [Making a Copy of an Analysis Available for Editing in Tito](#making-a-copy-of-an-analysis-available-for-editing-in-tito)
     * [Submitting an Analysis for Public Use](#submitting-an-analysis-for-public-use)
 
 # App Editing Services
-
-## Making a Copy of an Analysis Available for Editing in Tito
-
-*Secured Endpoint:* GET /secured/copy-template/{analysis-id}
-
-This service can be used to make a copy of an analysis in the user's workspace.
-The response body consists of a JSON object containing the ID of the new
-analysis.
-
-Here's an example:
-
-```
-$ curl -s "http://by-tor:8888/secured/copy-template/C720C42D-531A-164B-38CC-D2D6A337C5A5?user=snow-dog&email=sd@example.org" | python -m json.tool
-{
-    "analysis_id": "13FF6D0C-F6F7-4ACE-A6C7-635A17826383"
-}
-```
 
 ## Submitting an Analysis for Public Use
 

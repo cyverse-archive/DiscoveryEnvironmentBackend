@@ -7,7 +7,7 @@
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.params]
-        [metadactyl.zoidberg.app-edit :only [copy-app edit-app update-app]]
+        [metadactyl.zoidberg.app-edit :only [add-app copy-app edit-app update-app]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -27,6 +27,14 @@
         description. The response body contains an `apps` array that is in the same format as
         the `apps` array in the /apps/categories/:category-id endpoint response."
         (service/trap #(search-apps params)))
+
+  (POST* "/" [:as {uri :uri}]
+         :query [params SecuredQueryParamsEmailRequired]
+         :body [body (describe AppRequest "The App to add.")]
+         :return App
+         :summary "Add a new App."
+         :notes "This service adds a new App to the user's workspace."
+         (ce/trap uri #(add-app body)))
 
   (POST* "/arg-preview" [:as {uri :uri}]
          :query [params SecuredQueryParams]
@@ -111,12 +119,13 @@
         :notes "This service is used by the DE to obtain high-level details about a single App"
         (service/trap #(get-app-details app-id)))
 
-  (POST* "/:app-id/copy" []
+  (POST* "/:app-id/copy" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]
          :query [params SecuredQueryParamsEmailRequired]
+         :return App
          :summary "Make a Copy of an App Available for Editing"
          :notes "This service can be used to make a copy of an App in the user's workspace."
-         (service/trap #(copy-app app-id)))
+         (ce/trap uri #(copy-app app-id)))
 
   (GET* "/:app-id/description" []
         :path-params [app-id :- AppIdPathParam]

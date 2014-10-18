@@ -386,11 +386,19 @@
   (client/get (metadactyl-url {} "apps" app-id "ui")
               {:as :stream}))
 
+(defn create-app
+  "This service creates an app in the current user's workspace."
+  [req]
+  (let [url (metadactyl-url {} "apps")
+        req (metadactyl-request req)]
+    (forward-post url req)))
+
 (defn copy-app
   "This service makes a copy of an app available in Tito for editing."
   [req app-id]
-  (let [url (build-metadactyl-secured-url req "copy-template" app-id)]
-    (forward-get url req)))
+  (let [url (metadactyl-url {} "apps" app-id "copy")
+        req (metadactyl-request req)]
+    (forward-post url req)))
 
 (defn update-app
   "This service will update an existing single-step app in the DE."
