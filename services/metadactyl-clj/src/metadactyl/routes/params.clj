@@ -62,6 +62,9 @@
 (s/defschema SecuredPagingParams
   (merge SecuredQueryParams PagingParams))
 
+(s/defschema SecuredPagingParamsEmailRequired
+  (merge SecuredQueryParamsEmailRequired PagingParams))
+
 (s/defschema AppSearchParams
   (merge SecuredPagingParams
          {:search (ss/describe String "The pattern to match in an App's Name or Description.")}))

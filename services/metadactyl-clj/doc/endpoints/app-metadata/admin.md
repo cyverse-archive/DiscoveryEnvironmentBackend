@@ -62,11 +62,7 @@
     * [Exporting Selected Deployed Components](#exporting-selected-deployed-components)
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
-    * [Updating an Existing Template](#updating-an-existing-template)
-    * [Importing a Template](#importing-a-template)
-    * [Importing an Analysis](#importing-an-analysis)
     * [Importing Tools](#importing-tools)
-    * [Updating Top-Level Analysis Information](#updating-top-level-analysis-information)
     * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
 
 # Overview
@@ -3095,89 +3091,6 @@ $ curl -sd @workflow.json http://by-tor:8888/preview-workflow | python -mjson.to
 
 A copy of workflow.json can be found [here](workflow.json).
 
-## Updating an Existing Template
-
-*Unsecured Endpoint:* POST /update-template
-
-This service either imports a new template or updates an existing template in
-the database. For more information about the format of the request body, please
-see [Template JSON](#template-json) above.
-
-Here are some examples:
-
-```
-$ curl -sd @app.json http://by-tor:8888/update-template | python -mjson.tool
-{
-    "reason": "org.json.JSONException: JSONObject[\"implementation\"] not found.",
-    "success": false
-}
-```
-
-A copy of app.json can be found [here](app.json).
-
-```
-$ curl -sd @app-with-impl.json http://by-tor:8888/update-template
-```
-
-A copy of app-with-impl.json can be found [here](app-with-impl.json).
-
-## Importing a Template
-
-*Unsecured Endpoint:* POST /import-template
-
-This service imports a new template into the DE; it will not overwrite an
-existing template. To overwrite an existing template, please use the
-`/update-template` service. For information about the format of the request
-body, please see [Template JSON](#template-json) above.
-
-Here are some examples:
-
-```
-$ curl -sd @app.json http://by-tor:8888/import-template | python -mjson.tool
-{
-    "reason": "org.json.JSONException: JSONObject[\"implementation\"] not found.",
-    "success": false
-}
-```
-
-A copy of app.json can be found [here](app.json).
-
-```
-$ curl -sd @app-with-impl.json http://by-tor:8888/import-template
-```
-
-A copy of app-with-impl.json can be found [here](app-with-impl.json).
-
-## Importing an Analysis
-
-*Unsecured Endpoint:* POST /import-workflow
-
-This service imports a new analysis into the DE; it will not overwrite an
-existing analysis. To overwrite an existing analysis, please use the
-`/update-workflow` service. For information about the format of the request
-body, please see [App JSON](#app-json) above.
-
-The response body consists of a JSON object containing the identifiers of all of
-the analyses, components and templates that are imported into the database.
-Here's an example:
-
-```
-$ curl -sd @workflow.json http://by-tor:8888/import-workflow | python -mjson.tool
-{
-    "analyses": [
-        "5574A263-3807-4005-AC3E-3EFAFAEEB5F1"
-    ],
-    "components": [
-        "c4e6f548cc0ee431da7f2ddfdf3ace761"
-    ],
-    "templates": [
-        "5C74B636-9E44-4F59-B3F2-B781A0A2C501"
-    ]
-}
-```
-
-A copy of workflow.json can be found [here](workflow.json).
-
 ## Importing Tools
 
 *Unsecured Endpoint:* POST /import-tools
@@ -3186,28 +3099,6 @@ This service imports deployed components into the DE. In metadactyl, this
 service is identical to the `/import-workflow` service; and is provided for the
 sake the clarity of the code in the SCM repository. Please see
 [Importing an Analysis](#importing-an-analysis) for more information.
-
-## Updating Top-Level Analysis Information
-
-*Unsecured Endpoint:* POST /update-analysis
-
-This service updates analysis information without updating any components within
-the analysis. The effect in the database is that the `transformation_activity`
-table will be updated, but none of its associated tables will be updated. The
-request body is in the following format:
-
-```json
-{
-    "id": "analysis-id",
-    "name": "analysis-name",
-    "description": "analysis-description",
-    "edited_date": "analysis-edited-date",
-    "published_date": "analysis-published-date"
-}
-```
-
-Only the "id" field is required; the rest of the fields will be left unmodified
-if they're not specified.
 
 ## Updating the Favorite Analyses List
 

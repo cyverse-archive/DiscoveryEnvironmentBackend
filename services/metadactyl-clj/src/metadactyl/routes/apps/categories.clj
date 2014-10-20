@@ -17,7 +17,7 @@
 
   (GET* "/:category-id" []
         :path-params [category-id :- AppCategoryIdPathParam]
-        :query [params SecuredQueryParamsEmailRequired]
+        :query [params SecuredPagingParamsEmailRequired]
         :return AppCategoryAppListing
         :summary "List Apps in a Category"
         :notes "This service lists all of the apps within an app category or any of its

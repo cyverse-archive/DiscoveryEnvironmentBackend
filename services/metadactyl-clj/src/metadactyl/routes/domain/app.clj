@@ -3,7 +3,7 @@
         [metadactyl.routes.domain.app.rating]
         [ring.swagger.schema :only [describe]]
         [schema.core :only [defschema optional-key enum Any]])
-  (:import [java.util UUID]))
+  (:import [java.util UUID Date]))
 
 (def AppIdParam (describe UUID "A UUID that is used to identify the App"))
 (def ToolIdParam (describe UUID "A UUID that is used to identify the Tool"))
@@ -121,7 +121,7 @@
       also be used for positional arguments, but this flag tends to be useful only for trailing
       positional arguments")
 
-   (optional-key :type)
+   :type
    (describe String
      "The Parameter's type name. Must contain the name of one of the Parameter types defined in the
       database. You can get the list of defined and undeprecated Parameter types using the
@@ -180,8 +180,8 @@
   {:id                              AppIdParam
    :name                            (describe String "The App's name")
    :description                     (describe String "The App's description")
-   (optional-key :integration_date) (describe Long "The App's Date of public submission")
-   (optional-key :edited_date)      (describe Long "The App's Date of its last edit")})
+   (optional-key :integration_date) (describe Date "The App's Date of public submission")
+   (optional-key :edited_date)      (describe Date "The App's Date of its last edit")})
 
 (defschema App
   (merge AppBase
@@ -303,37 +303,42 @@
          {(optional-key :root_deletion_request)
           (describe Boolean "Set to `true` to  delete one or more public apps")}))
 
-(defschema AppParameterListItemPreviewRequest
+(defschema AppParameterListItemRequest
   (->optional-param AppParameterListItem :id))
 
-(defschema AppParameterListGroupPreviewRequest
+(defschema AppParameterListGroupRequest
   (-> AppParameterListGroup
     (->optional-param :id)
     (assoc OptionalParameterArgumentsKey
-           (describe [AppParameterListItemPreviewRequest] TreeSelectorGroupParameterListDocs))))
+           (describe [AppParameterListItemRequest] TreeSelectorGroupParameterListDocs))))
 
-(defschema AppParameterListItemOrTreePreviewRequest
+(defschema AppParameterListItemOrTreeRequest
   (-> AppParameterListItemOrTree
     (->optional-param :id)
     (assoc OptionalParameterArgumentsKey
-           (describe [AppParameterListItemPreviewRequest] TreeSelectorParameterListDocs))
+           (describe [AppParameterListItemRequest] TreeSelectorParameterListDocs))
     (assoc OptionalGroupsKey
-           (describe [AppParameterListGroupPreviewRequest] TreeSelectorGroupListDocs))))
+           (describe [AppParameterListGroupRequest] TreeSelectorGroupListDocs))))
 
-(defschema AppParameterPreviewRequest
+(defschema AppParameterRequest
   (-> AppParameter
     (->optional-param :id)
     (assoc OptionalParameterArgumentsKey
-           (describe [AppParameterListItemOrTreePreviewRequest] ListItemOrTreeDocs))))
+           (describe [AppParameterListItemOrTreeRequest] ListItemOrTreeDocs))))
 
-(defschema AppGroupPreviewRequest
+(defschema AppGroupRequest
   (-> AppGroup
       (->optional-param :id)
-      (assoc OptionalParametersKey (describe [AppParameterPreviewRequest] ParameterListDocs))))
+      (assoc OptionalParametersKey (describe [AppParameterRequest] ParameterListDocs))))
+
+(defschema AppRequest
+  (-> App
+    (->optional-param :id)
+    (assoc OptionalGroupsKey (describe [AppGroupRequest] GroupListDocs))))
 
 (defschema AppPreviewRequest
   (-> App
     (->optional-param :id)
     (->optional-param :name)
     (->optional-param :description)
-    (assoc OptionalGroupsKey (describe [AppGroupPreviewRequest] GroupListDocs))))
+    (assoc OptionalGroupsKey (describe [AppGroupRequest] GroupListDocs))))

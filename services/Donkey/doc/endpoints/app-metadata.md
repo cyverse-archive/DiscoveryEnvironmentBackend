@@ -11,6 +11,7 @@
     * [Listing Analysis Categorizations](#listing-analysis-categorizations)
     * [Determining if an Analysis Can be Exported](#determining-if-an-analysis-can-be-exported)
     * [Adding Analyses to Analysis Groups](#adding-analyses-to-analysis-groups)
+    * [Creating an App for the Current User](#creating-an-app-for-the-current-user)
     * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
     * [Getting App Details](#getting-app-details)
     * [Listing App Groups](#listing-app-groups)
@@ -19,14 +20,11 @@
     * [Logically Deleting Apps](#logically-deleting-apps)
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
-    * [Updating an Existing Template](#updating-an-existing-template)
+    * [Updating a Single-Step App](#updating-a-single-step-app)
     * [Creating a Pipeline](#creating-a-pipeline)
     * [Updating a Pipeline](#updating-a-pipeline)
     * [Updating App Labels](#updating-app-labels)
-    * [Importing a Template](#importing-a-template)
-    * [Importing an Analysis](#importing-an-analysis)
     * [Importing Deployed Components](#importing-deployed-components)
-    * [Updating Top-Level Analysis Information](#updating-top-level-analysis-information)
     * [Rating Apps](#rating-apps)
     * [Deleting App Ratings](#deleting-app-ratings)
     * [Searching for Apps](#searching-for-apps)
@@ -34,7 +32,7 @@
     * [Listing Apps in an App Group](#listing-apps-in-an-app-group)
     * [Listing Deployed Components in an Analysis](#listing-deployed-components-in-an-analysis)
     * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
-    * [Making a Copy of an Analysis Available for Editing in Tito](#making-a-copy-of-an-analysis-available-for-editing-in-tito)
+    * [Making a Copy of an App Available for Editing](#making-a-copy-of-an-app-available-for-editing)
     * [Submitting an Analysis for Public Use](#submitting-an-analysis-for-public-use)
     * [Determining if an App Can be Made Public](#determining-if-an-app-can-be-made-public)
     * [Obtaining an App Representation for Editing](#obtaining-an-app-representation-for-editing)
@@ -207,6 +205,15 @@ Delegates to metadactyl: POST /add-analysis-to-group
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
+## Creating an App for the Current User
+
+Secured Endpoint: POST /apps
+
+Delegates to metadactyl: POST /apps
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
+
 ## Getting Analyses in the JSON Format Required by the DE
 
 Secured Endpoint: GET /apps/{app-id}
@@ -324,14 +331,14 @@ Delegates to metadactyl: POST /preview-workflow
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Updating an Existing Template
+## Updating a Single-Step App
 
-Unsecured Endpoint: POST /update-template
+*Secured Endpoint:* PUT /apps/{app-id}
 
-Delegates to metadactyl: POST /update-template
+*Delegates to metadactyl:* PUT /apps/{app-id}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Creating a Pipeline
 
@@ -359,24 +366,6 @@ Delegates to metadactyl: PATCH /apps/{app-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
-
-## Importing a Template
-
-Unsecured Endpoint: POST /import-template
-
-Delegates to metadactyl: POST /import-template
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Importing an Analysis
-
-Unsecured Endpoint: POST /import-workflow
-
-Delegates to metadactyl: POST /import-workflow
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
 
 ## Importing Deployed Components
 
@@ -502,15 +491,6 @@ $ curl -sd '
 Though it is possible to import analyses using this endpoint, this practice is
 not recommended because it can cause spurious notifications to be sent.
 
-## Updating Top-Level Analysis Information
-
-Unsecured Endpoint: POST /update-analysis
-
-Delegates to metadactyl: POST /update-analysis
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
 ## Rating Apps
 
 Secured Endpoint: POST /apps/{app-id}/rating
@@ -574,14 +554,14 @@ Delegates to metadactyl: POST /secured/update-favorites
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Making a Copy of an Analysis Available for Editing in Tito
+## Making a Copy of an App Available for Editing
 
-Secured Endpoint: GET /secured/copy-template/{analysis-id}
+Secured Endpoint: POST /apps/{app-id}/copy
 
-Delegates to metadactyl: GET /secured/copy-template/{analysis-id}
+Delegates to metadactyl: POST /apps/{app-id}/copy
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Submitting an Analysis for Public Use
 

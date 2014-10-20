@@ -9,7 +9,6 @@
         * [Template JSON - Validators](#template-json---validators)
     * [Template JSON Example](#template-json-example)
 * [Updated Administrative Services](#updated-administrative-services)
-    * [Updating or Importing a Single-Step App](#updating-or-importing-a-single-step-app)
     * [Obtaining an App Representation for Editing](#obtaining-an-app-representation-for-editing)
     * [Obtaining App Information for Job Submission](#obtaining-app-information-for-job-submission)
 
@@ -438,21 +437,6 @@ along with a parameter list of `[0]`.
 Please see the [examples file](examples.md#updated-template-json).
 
 # Updated Administrative Services
-
-## Updating or Importing a Single-Step App
-
-*Secured Endpoint:* PUT /secured/update-app
-
-This service either imports a new single-step app or updates an existing one in
-the database. For more information about the format of the request body, please
-see [Template JSON](#template-json) above.
-
-Here's an example:
-
-```
-$ curl -X PUT -sd @app.json "http://by-tor:8888/secured/update-app?user=nobody&email=nobody@iplantcollaborative.org" && echo
-A750DD7B-7EBC-4809-B9EC-6F717220A1D1
-```
 
 ## Obtaining App Information for Job Submission
 
