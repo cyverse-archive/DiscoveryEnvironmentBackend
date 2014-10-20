@@ -3,8 +3,8 @@ set -x
 set -e
 
 ITERATION=$1
-USER=iplant
-GROUP=iplant
+USER=condor
+GROUP=condor
 BINNAME=jex
 BUILDDIR=jex-build
 BINDIR=/usr/local/lib/jex
