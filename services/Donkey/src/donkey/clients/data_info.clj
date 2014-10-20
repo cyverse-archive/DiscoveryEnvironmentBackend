@@ -4,7 +4,6 @@
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [cemerick.url :as url]
-            [cheshire.core :as json]
             [clj-http.client :as client]
             [me.raynes.fs :as fs]
             [clojure-commons.error-codes :as error]
@@ -293,79 +292,3 @@
     (catch Object o
       (log/error o "failed to download" file "for" user)
       (svc/request-failure "failed to download" file "for" user))))
-
-
-(defn- exec-cart-query
-  [req-map]
-  (try+
-    (let [url-str (str (url/url (cfg/data-info-base-url) "cart"))]
-      (-> (client/post url-str (assoc req-map :as :json)) :body :cart))
-    (catch Object o
-      (log/error o "failed to create cart")
-      (svc/request-failure "failed to create cart"))))
-
-
-(defn ^IPersistentMap make-a-la-cart
-  "This function calls data-info's /cart endpoint to create a shopping cart containing a provided
-   list of files.
-
-   Parameters:
-     user  - the user that will own the shopping cart.
-     paths - the list of files in the shopping cart. All are absolute paths to files.
-
-   Returns:
-     It returns a map containing the shopping cart information.
-
-       :key                    - the identity of the shopping cart
-       :user                   - user
-       :password               - a temporary password for access to the cart
-       :host                   - the hostname or IP of the iRODS server holding the cart
-       :port                   - the port the iRODS server listens on
-       :zone                   - the authentication zone for the temporary password
-       :defaultStorageResource - the default iRODS storage resource"
-  [^String user ^ISeq paths]
-  (exec-cart-query {:query-params {:user user}
-                    :content-type :json
-                    :body         (json/generate-string {:paths paths})}))
-
-
-(defn ^IPersistentMap make-empty-cart
-  "This function calls data-info's /cart endpoint to create a empty shopping cart.
-
-   Parameters:
-     user  - the user that will own the shopping cart.
-
-   Returns:
-     It returns a map containing the shopping cart information.
-
-       :key                    - the identity of the shopping cart
-       :user                   - user
-       :password               - a temporary password for access to the cart
-       :host                   - the hostname or IP of the iRODS server holding the cart
-       :port                   - the port the iRODS server listens on
-       :zone                   - the authentication zone for the temporary password
-       :defaultStorageResource - the default iRODS storage resource"
-  [^String user]
-  (exec-cart-query {:query-params {:user user}}))
-
-
-(defn ^IPersistentMap make-folder-cart
-  "This function calls data-info's /cart endpoint to create a shopping cart containing the contents
-   of a provided folder.
-
-   Parameters:
-     user   - the user that will own the shopping cart.
-     folder - the absolute path to the folder
-
-   Returns:
-     It returns a map containing the shopping cart information.
-
-       :key                    - the identity of the shopping cart
-       :user                   - user
-       :password               - a temporary password for access to the cart
-       :host                   - the hostname or IP of the iRODS server holding the cart
-       :port                   - the port the iRODS server listens on
-       :zone                   - the authentication zone for the temporary password
-       :defaultStorageResource - the default iRODS storage resource"
-  [^String user ^String folder]
-  (exec-cart-query {:query-params {:folder folder :user user}}))
