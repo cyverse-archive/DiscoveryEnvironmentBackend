@@ -120,14 +120,30 @@
                 param)]
     (assoc param :arguments param-args)))
 
+(defn- format-file-params
+  [{param-type :type :as param}]
+  (if (contains? persistence/param-file-types param-type)
+    (assoc param :file_parameters (select-keys param [:format
+                                                      :file_info_type
+                                                      :is_implicit
+                                                      :data_source
+                                                      :retain]))
+    param))
+
 (defn- format-param
   [param]
   (let [param-type (:type param)
         param-values (:parameter_values param)
         param (-> param
+                  format-file-params
                   (assoc :validators (map format-validator (:validation_rules param)))
                   (dissoc :parameter_values
-                          :validation_rules)
+                          :validation_rules
+                          :format
+                          :file_info_type
+                          :is_implicit
+                          :data_source
+                          :retain)
                   remove-nil-vals)]
     (if (contains? persistence/param-list-types param-type)
       (format-list-param param param-values)

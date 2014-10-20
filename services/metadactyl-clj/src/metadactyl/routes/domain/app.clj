@@ -75,6 +75,27 @@
       Parameter contains a value that is an integer greater than zero, you would use a validation
       rule of type `IntAbove` along with a parameter list of `[0]`")})
 
+(defschema AppFileParameters
+  {(optional-key :format)
+   (describe String "The Input/Output Parameter's file format")
+
+   (optional-key :file_info_type)
+   (describe String "The Input/Output Parameter's info type")
+
+   (optional-key :is_implicit)
+   (describe Boolean
+     "Whether the Output Parameter name is specified on the command line (but still be referenced in
+      Pipelines), or implicitly determined by the app itself. If the output file name is implicit
+      then the output file name either must always be the same or it must follow a naming convention
+      that can easily be matched with a glob pattern")
+
+   (optional-key :data_source)
+   (describe String "The Output Parameter's source")
+
+   (optional-key :retain)
+   (describe Boolean
+     "Whether or not the Input should be copied back to the job output directory in iRODS")})
+
 (defschema AppParameter
   {:id
    (describe UUID "A UUID that is used to identify the Parameter")
@@ -128,25 +149,8 @@
       database. You can get the list of defined and undeprecated Parameter types using the
       `parameter-types` endpoint")
 
-   (optional-key :file_info_type)
-   (describe String "The Input/Output Parameter's info type")
-
-   (optional-key :is_implicit)
-   (describe Boolean
-     "Whether the Output Parameter name is specified on the command line (but still be referenced in
-      Pipelines), or implicitly determined by the app itself. If the output file name is implicit
-      then the output file name either must always be the same or it must follow a naming convention
-      that can easily be matched with a glob pattern")
-
-   (optional-key :data_source)
-   (describe String "The Output Parameter's source")
-
-   (optional-key :retain)
-   (describe Boolean
-     "Whether or not the Input should be copied back to the job output directory in iRODS")
-
-   (optional-key :format)
-   (describe String "The Input/Output Parameter's file format")
+   (optional-key :file_parameters)
+   (describe AppFileParameters "The File Parameter specific details")
 
    OptionalParameterArgumentsKey
    (describe [AppParameterListItemOrTree] ListItemOrTreeDocs)
