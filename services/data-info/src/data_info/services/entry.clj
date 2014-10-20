@@ -4,12 +4,14 @@
             [clojure.string :as str]
             [clojure.tools.logging :as log]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [slingshot.slingshot :refer [throw+]]
+            [liberator.core :refer [defresource]]
+            [slingshot.slingshot :refer [throw+ try+]]
             [clj-icat-direct.icat :as icat]
             [clj-jargon.init :as init]
             [clj-jargon.item-info :as item]
             [clj-jargon.item-ops :as ops]
             [clj-jargon.permissions :as perm]
+            [clj-jargon.users :as user]
             [clojure-commons.error-codes :as error]
             [clojure-commons.file-utils :as file]
             [clojure-commons.validators :as cv]
@@ -20,22 +22,27 @@
   (:import [java.util UUID]))
 
 
-(defn id-exists?
-  [{user :user entry :entry}]
-  (init/with-jargon (cfg/jargon-cfg) [cm]
-    (duv/user-exists cm user)
-    (if-let [path (irods/get-path cm (UUID/fromString entry))]
-      {:status (if (perm/is-readable? cm user path) 200 403)}
-      {:status 404})))
+(defn- allowed?
+  [url-id user _]
+  (try+
+    (init/with-jargon (cfg/jargon-cfg) [cm]
+      (if-not (user/user-exists? cm user)
+        {::processable? false}
+        (if-let [path (irods/get-path cm (UUID/fromString url-id))]
+          (when (perm/is-readable? cm user path)
+            {::processable? true ::exists? true})
+          {::processable? true ::exists? false})))
+    (catch IllegalArgumentException _
+      {::processable? false})))
 
 
-(with-pre-hook! #'id-exists?
-  (fn [params]
-    (dul/log-call "exists?" params)
-    (duv/valid-uuid-param "entry" (:entry params))
-    (cv/validate-map params {:user string?})))
-
-(with-post-hook! #'id-exists? (dul/log-func "exists?"))
+(defresource entry [url-id user]
+  :allowed-methods       [:head]
+  :allowed?              (partial allowed? url-id user)
+  :exists?               #(::exists? %)
+  :malformed?            (fn [_] (not user))
+  :media-type-available? (fn [_] true)
+  :processable?          #(::processable? %))
 
 
 (defn- download-file

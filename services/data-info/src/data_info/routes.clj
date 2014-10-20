@@ -26,12 +26,11 @@
 
 
 (defroutes all-routes
-  (ANY "/" [] (info/service-info))
+  (GET "/" [] (info/service-info))
 
   (POST "/cart" [user folder] (cart/cart user folder))
 
-  (HEAD "/entries/id/:entry" [:as req]
-    (util/controller req entry/id-exists? :params))
+  (HEAD "/entries/id/:entry-id" [entry-id user] (entry/entry entry-id user))
 
   (GET "/entries/path/:zone/*" [* :as req]
     (util/controller req (partial entry/get-by-path *) :params))
