@@ -3,6 +3,7 @@
 * [GET /](endpoints/misc.md#verifying-that-donkey-is-running)
 * [POST /add-analysis-to-group](endpoints/app-metadata.md#adding-analyses-to-analysis-groups)
 * [POST /admin/apps](endpoints/app-metadata.md#categorizing-apps)
+* [POST /admin/apps/shredder](endpoints/app-metadata.md#permanently-deleting-an-app)
 * [GET /admin/filesystem/index](endpoints/filesystem/search.md#endpoints:)
 * [POST /admin/filesystem/index](endpoints/filesystem/search.md#endpoint)
 * [GET /admin/tool-requests](endpoints/app-metadata.md#listing-tool-installation-requests)

@@ -27,6 +27,9 @@
     (POST "/admin/apps" [:as req]
           (trap #(categorize-apps req)))
 
+    (POST "/admin/apps/shredder" [:as req]
+          (trap #(permanently-delete-apps req)))
+
     (GET "/apps" [:as {params :params}]
          (trap #(apps/search-apps params)))
 

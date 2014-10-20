@@ -195,6 +195,13 @@
         req (metadactyl-request req)]
     (forward-post url req)))
 
+(defn permanently-delete-apps
+  "This service will permanently remove a list of apps from the DE."
+  [req]
+  (let [url (metadactyl-url {} "admin" "apps" "shredder")
+        req (metadactyl-request req)]
+    (forward-post url req)))
+
 (defn bootstrap
   "This service obtains information about and initializes the workspace for the authenticated user.
    It also records the fact that the user logged in."

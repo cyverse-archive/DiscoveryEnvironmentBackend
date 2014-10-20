@@ -7,7 +7,8 @@
         [metadactyl.user :only [current-user]]
         [metadactyl.util.assertions]
         [metadactyl.util.conversions :only [remove-nil-vals]])
-  (:require [metadactyl.persistence.app-metadata.relabel :as relabel]
+  (:require [metadactyl.persistence.app-metadata.delete :as delete]
+            [metadactyl.persistence.app-metadata.relabel :as relabel]
             [clojure.set :as set]))
 
 (def param-input-types #{"FileInput" "FolderInput" "MultiFileSelector"})
@@ -164,6 +165,13 @@
   [app-id]
   (delete app_steps (where {:app_id app-id})))
 
+(defn remove-workflow-map-orphans
+  "Removes any orphaned workflow_io_maps table entries."
+  []
+  (delete :workflow_io_maps
+    (where (not (exists (subselect [:input_output_mapping :iom]
+                          (where {:iom.mapping_id :workflow_io_maps.id})))))))
+
 (defn remove-parameter-mappings
   "Removes all input-output mappings associated with the given parameter ID, then removes any
    orphaned workflow_io_maps table entries."
@@ -171,10 +179,7 @@
   (transaction
     (delete :input_output_mapping (where (or {:input parameter-id}
                                              {:output parameter-id})))
-    (delete :workflow_io_maps
-      (where (not (exists
-                    (subselect [:input_output_mapping :iom]
-                      (where {:iom.mapping_id :workflow_io_maps.id}))))))))
+    (remove-workflow-map-orphans)))
 
 (defn update-app-labels
   "Updates the labels in an app."
@@ -338,6 +343,11 @@
                      {:w.user_id :u.id})
                (fields :u.username)
                (where {:a.id app-id}))))
+
+(defn permanently-delete-app
+  "Permanently removes an app from the metadata database."
+  [app-id]
+  (delete/permanently-delete-app ((comp :id get-app) app-id)))
 
 (defn delete-app
   "Marks an app as deleted in the metadata database."

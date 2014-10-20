@@ -17,6 +17,7 @@
     * [Listing App Groups](#listing-app-groups)
     * [Exporting an Analysis](#exporting-an-analysis)
     * [Exporting Selected Deployed Components](#exporting-selected-deployed-components)
+    * [Permanently Deleting an App](#permanently-deleting-an-app)
     * [Logically Deleting Apps](#logically-deleting-apps)
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
@@ -301,6 +302,15 @@ Delegates to metadactyl: POST /export-deployed-components
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
+
+## Permanently Deleting an App
+
+Secured Endpoint: POST /admin/apps/shredder
+
+Delegates to metadactyl: POST /admin/apps/shredder
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Logically Deleting Apps
 

@@ -1,9 +1,11 @@
 (ns metadactyl.routes.admin
   (:use [metadactyl.app-categorization :only [categorize-apps]]
         [metadactyl.metadata.tool-requests]
+        [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.category]
         [metadactyl.routes.domain.tool-requests]
         [metadactyl.routes.params]
+        [metadactyl.service.app-metadata :only [permanently-delete-apps]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
@@ -52,5 +54,13 @@
          :notes "This endpoint is used by the Admin interface to add or move Apps to into multiple
          Categories."
          (service/trap #(categorize-apps body)))
+
+  (POST* "/shredder" [:as {uri :uri}]
+         :query [params SecuredQueryParams]
+         :body [body (describe AppDeletionRequest "List of App IDs to delete.")]
+         :summary "Permanently Deleting Apps"
+         :notes "This service physically removes an App from the database, which allows
+         administrators to completely remove Apps that are causing problems."
+         (ce/trap uri #(permanently-delete-apps body)))
 
   (route/not-found (service/unrecognized-path-response)))
