@@ -27,10 +27,7 @@
                    :edited_date)
            (with app_references)
            (with tasks
-             (join :tools {:tools.id :tasks.tool_id})
-             (fields :id
-                     :tasks.tool_id
-                     [:tools.name :tool])
+             (fields :id)
              (with parameter_groups
                (order :display_order)
                (fields :id
@@ -149,8 +146,7 @@
     (remove-nil-vals
       (-> app
           (assoc :references (map :reference_text (:app_references app))
-                 :tool (:tool task)
-                 :tool_id (:tool_id task)
+                 :tools (persistence/get-app-tools (:id app))
                  :groups groups)
           (dissoc :app_references
                   :tasks)))))

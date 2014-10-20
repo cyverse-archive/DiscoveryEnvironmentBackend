@@ -97,6 +97,19 @@
     (insert integration_data (values {:integrator_name (str first-name " " last-name)
                                       :integrator_email email}))))
 
+(defn get-app-tools
+  "Loads information about the tools associated with an app."
+  [app-id]
+  (select tool_listing
+          (fields [:tool_id :id]
+                  :name
+                  :description
+                  :location
+                  :type
+                  :version
+                  :attribution)
+          (where {:app_id app-id})))
+
 (defn add-app
   "Adds top-level app info to the database and returns the new app info, including its new ID."
   [app]

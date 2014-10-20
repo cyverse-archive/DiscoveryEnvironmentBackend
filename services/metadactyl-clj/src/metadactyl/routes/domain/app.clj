@@ -13,6 +13,7 @@
 (def OptionalParametersKey (optional-key :parameters))
 (def OptionalParameterArgumentsKey (optional-key :arguments))
 
+(def ToolListDocs "The tools used to execute the App")
 (def GroupListDocs "The list of Parameter Groups associated with the App")
 (def ParameterListDocs
   ;; KLUDGE
@@ -176,6 +177,15 @@
    OptionalParametersKey
    (describe [AppParameter] ParameterListDocs)})
 
+(defschema ToolDetails
+  {:id          ToolIdParam
+   :name        (describe String "The Tool's name")
+   :description (describe String "The Tool's description")
+   :location    (describe String "The Tool's installed location")
+   :type        (describe String "The Tool's type")
+   :version     (describe String "The Tool's version")
+   :attribution (describe String "The Tool's attribution information")})
+
 (defschema AppBase
   {:id                              AppIdParam
    :name                            (describe String "The App's name")
@@ -185,8 +195,7 @@
 
 (defschema App
   (merge AppBase
-         {(optional-key :tool)       (describe String "The tool used to execute the App")
-          (optional-key :tool_id)    (describe UUID "A UUID that is used to identify the App's tool")
+         {(optional-key :tools)      (describe [ToolDetails] ToolListDocs)
           (optional-key :references) (describe [String] "The App's references")
           OptionalGroupsKey          (describe [AppGroup] GroupListDocs)}))
 
@@ -210,15 +219,6 @@
     :disabled         (describe Boolean "A flag indicating whether the App is disabled")
     OptionalGroupsKey (describe [AppGroupJobView] GroupListDocs)))
 
-(defschema ToolDetails
-  {:id          ToolIdParam
-   :name        (describe String "The Tool's name")
-   :description (describe String "The Tool's description")
-   :location    (describe String "The Tool's installed location")
-   :type        (describe String "The Tool's type")
-   :version     (describe String "The Tool's version")
-   :attribution (describe String "The Tool's attribution information")})
-
 (defschema AppDetailCategory
   {:id AppCategoryIdPathParam
    :name (describe String "The App Category's name")})
@@ -226,7 +226,7 @@
 (defschema AppDetails
   (merge AppBase
          {:tools
-          (describe [ToolDetails] "The tools used to execute the App")
+          (describe [ToolDetails] ToolListDocs)
 
           :references
           (describe [String] "The App's references")

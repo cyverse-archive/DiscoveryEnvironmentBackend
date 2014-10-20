@@ -6,6 +6,7 @@
         [kameleon.app-groups]
         [kameleon.app-listing]
         [kameleon.uuids :only [uuidify]]
+        [metadactyl.persistence.app-metadata :only [get-app-tools]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config]
         [metadactyl.util.conversions :only [to-long remove-nil-vals]]
@@ -224,20 +225,6 @@
                  (with app_references)
                  (where {:id app-id}))))
 
-(defn- load-tools
-  "Loads information about the deployed components associated with an app."
-  [app-id]
-  (select tool_listing
-          (fields
-            [:tool_id :id]
-            :name
-            :description
-            :location
-            :type
-            :version
-            :attribution)
-          (where {:app_id app-id})))
-
 (defn- timestamp-to-millis
   "Converts a timestamp, which may be nil, to the number of milliseconds since January 1, 1970."
   [timestamp]
@@ -263,7 +250,7 @@
   "This service obtains the high-level details of an app."
   [app-id]
   (let [details (load-app-details app-id)
-        tools   (load-tools app-id)]
+        tools   (get-app-tools app-id)]
     (when (nil? details)
       (throw (IllegalArgumentException. (str "app, " app-id ", not found"))))
     (when (empty? tools)
