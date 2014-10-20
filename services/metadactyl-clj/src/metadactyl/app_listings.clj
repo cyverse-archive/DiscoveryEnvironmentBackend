@@ -225,26 +225,18 @@
                  (with app_references)
                  (where {:id app-id}))))
 
-(defn- timestamp-to-millis
-  "Converts a timestamp, which may be nil, to the number of milliseconds since January 1, 1970."
-  [timestamp]
-  (if (nil? timestamp)
-    nil
-    (.getTime timestamp)))
-
 (defn- format-app-details
   "Formats information for the get-app-details service."
   [details tools]
   (let [app-id (:id details)]
-    {:id                   app-id
-     :name                 (:name details "")
-     :description          (:description details "")
-     :integration_date     (timestamp-to-millis (:integration_date details))
-     :edited_date          (timestamp-to-millis (:edited_date details))
-     :references           (map :reference_text (:app_references details))
-     :tools                tools
-     :categories           (get-groups-for-app app-id)
-     :suggested_categories (get-suggested-groups-for-app app-id)}))
+    (-> details
+      (select-keys [:id :integration_date :edited_date])
+      (assoc :name                 (:name details "")
+             :description          (:description details "")
+             :references           (map :reference_text (:app_references details))
+             :tools                tools
+             :categories           (get-groups-for-app app-id)
+             :suggested_categories (get-suggested-groups-for-app app-id)))))
 
 (defn get-app-details
   "This service obtains the high-level details of an app."

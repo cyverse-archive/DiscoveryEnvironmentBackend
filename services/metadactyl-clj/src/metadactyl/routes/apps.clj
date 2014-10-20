@@ -111,14 +111,6 @@
         been submitted for public use."
         (ce/trap uri #(update-app (assoc body :id app-id))))
 
-  (GET* "/:app-id/details" []
-        :path-params [app-id :- AppIdPathParam]
-        :query [params SecuredQueryParams]
-        :return AppDetails
-        :summary "Get App Details"
-        :notes "This service is used by the DE to obtain high-level details about a single App"
-        (service/trap #(get-app-details app-id)))
-
   (POST* "/:app-id/copy" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]
          :query [params SecuredQueryParamsEmailRequired]
@@ -126,6 +118,14 @@
          :summary "Make a Copy of an App Available for Editing"
          :notes "This service can be used to make a copy of an App in the user's workspace."
          (ce/trap uri #(copy-app app-id)))
+
+  (GET* "/:app-id/details" []
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :return AppDetails
+        :summary "Get App Details"
+        :notes "This service is used by the DE to obtain high-level details about a single App"
+        (service/trap #(get-app-details app-id)))
 
   (GET* "/:app-id/description" []
         :path-params [app-id :- AppIdPathParam]
