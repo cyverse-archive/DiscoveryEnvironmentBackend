@@ -100,16 +100,6 @@
       {::cart (mk-cart cart-key user password)})))
 
 
-(defn- handle-created
-  [ctx]
-  (::cart ctx))
-
-
-(defn- handle-malformed
-  [ctx]
-  (json/encode (:message ctx)))
-
-
 (defn- handle-unprocessable-entity
   [user folder _]
   (init/with-jargon (cfg/jargon-cfg) [cm]
@@ -127,6 +117,6 @@
   :malformed?                  (partial malformed? user)
   :processable?                (partial processable? user folder)
   :post!                       (partial post! user folder)
-  :handle-created              handle-created
-  :handle-malformed            handle-malformed
+  :handle-created              #(::cart %)
+  :handle-malformed            #(json/encode (:message %))
   :handle-unprocessable-entity (partial handle-unprocessable-entity user folder))
