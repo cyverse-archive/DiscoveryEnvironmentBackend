@@ -59,7 +59,7 @@
 
 ;; TODO: nuke this when it's no longer needed.
 (defschema JexSubmission
-  {:analysis_description
+  {:analysis_details
    (describe String "The app description from the database.")
 
    :analysis_id
@@ -98,7 +98,7 @@
    (describe String "The type of request being sent to the JEX.")
 
    (optional-key :starting_step)
-   (describe Integer "The ordinal number of the step to start the job with.")
+   (describe Long "The ordinal number of the step to start the job with.")
 
    :steps
    (describe [JexSubmissionStep] "The set of steps in the analysis.")
@@ -107,7 +107,10 @@
    (describe UUID "The UUID of the analysis.")
 
    :username
-   (describe String "The username of the user who submitted the analysis.")})
+   (describe String "The username of the user who submitted the analysis.")
+
+   :wiki_url
+   (describe String "A link to the app's documentation page.")})
 
 (defschema SubmissionResponse
   {:id

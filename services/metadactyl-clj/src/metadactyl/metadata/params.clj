@@ -60,7 +60,13 @@
   []
   (-> (select* [:parameters :p])
       (join :inner [:parameter_types :t] {:p.parameter_type :t.id})
-      (fields :p.description :p.id :p.name :p.label :p.is_visible [:t.name :type])))
+      (fields [:p.description   :description]
+              [:p.id            :id]
+              [:p.name          :name]
+              [:p.label         :label]
+              [:p.is_visible    :is_visible]
+              [:p.omit_if_blank :omit_if_blank]
+              [:t.name          :type])))
 
 (defn get-default-value
   [type param-values]
@@ -97,6 +103,15 @@
                (join :inner [:parameter_groups :pg] {:p.parameter_group_id :pg.id})
                (join :inner [:tasks :task] {:pg.task_id :task.id})
                (join :inner [:app_steps :s] {:task.id :s.task_id})
-               (fields [:s.id :step_id])
+               (join :left [:file_parameters :fp] {:p.id :fp.parameter_id})
+               (join :left [:info_type :it] {:fp.info_type :it.id})
+               (join :left [:data_formats :df] {:fp.data_format :df.id})
+               (join :left [:data_source :ds] {:fp.data_source_id :ds.id})
+               (fields [:s.id           :step_id]
+                       [:fp.retain      :retain]
+                       [:fp.is_implicit :is_implicit]
+                       [:it.name        :info_type]
+                       [:df.name        :data_format]
+                       [:ds.name        :data_source])
                (where {:s.app_id app-id}))
        (mapv add-default-value)))
