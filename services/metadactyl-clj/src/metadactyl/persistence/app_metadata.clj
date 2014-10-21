@@ -282,10 +282,10 @@
 
 (defn add-file-parameter
   "Adds file parameter fields to the database."
-  [{info-type :file_info_type data-format :format data-source :data_source :as parameter}]
+  [{info-type :file_info_type data-format :format data-source :data_source :as file-parameter}]
   (insert file_parameters
     (values (filter-valid-file-parameter-values
-              (assoc parameter
+              (assoc file-parameter
                 :info_type (get-info-type-id info-type)
                 :data_format (get-data-format-id data-format)
                 :data_source_id (get-data-source-id data-source))))))

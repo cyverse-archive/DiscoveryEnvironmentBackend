@@ -215,6 +215,7 @@
   [group-id display-order {param-id :id
                            default-value :defaultValue
                            param-type :type
+                           file-parameter :file_parameters
                            validators :validators
                            arguments :arguments
                            :as parameter}]
@@ -241,7 +242,7 @@
     (dorun (map (partial add-validation-rule param-id) validators))
 
     (when (contains? persistence/param-file-types param-type)
-      (persistence/add-file-parameter (assoc parameter :parameter_id param-id)))
+      (persistence/add-file-parameter (assoc file-parameter :parameter_id param-id)))
 
     (remove-nil-vals
         (assoc parameter
