@@ -189,9 +189,6 @@
    (GET "/get-analysis-categories/:category-set" [category-set :as req]
         (trap #(get-app-categories req category-set)))
 
-   (POST "/can-export-analysis" [:as req]
-         (trap #(can-export-app req)))
-
    (POST "/add-analysis-to-group" [:as req]
          (trap #(add-app-to-group req)))
 

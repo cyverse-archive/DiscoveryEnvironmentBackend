@@ -9,8 +9,10 @@
         [metadactyl.util.config :only [workspace-dev-app-group-index]]
         [metadactyl.util.conversions :only [remove-nil-vals convert-rule-argument]]
         [metadactyl.validation :only [verify-app-editable verify-app-ownership]]
-        [metadactyl.workspace :only [get-workspace]])
-  (:require [metadactyl.persistence.app-metadata :as persistence]
+        [metadactyl.workspace :only [get-workspace]]
+        [slingshot.slingshot :only [throw+]])
+  (:require [clojure-commons.error-codes :as cc-errs]
+            [metadactyl.persistence.app-metadata :as persistence]
             [metadactyl.util.service :as service]))
 
 (def ^:private copy-prefix "Copy of ")
@@ -41,7 +43,8 @@
                    (with info_type)
                    (with data_formats)
                    (with data_source))
-                 (with parameter_types)
+                 (with parameter_types
+                   (with value_type))
                  (with validation_rules
                    (with rule_type)
                    (with validation_rule_arguments
@@ -68,6 +71,7 @@
                          [:is_visible :isVisible]
                          :omit_if_blank
                          [:parameter_types.name :type]
+                         [:value_type.name :value_type]
                          [:info_type.name :file_info_type]
                          :file_parameters.is_implicit
                          [:data_source.name :data_source]
@@ -131,13 +135,19 @@
     param))
 
 (defn- format-param
-  [param]
-  (let [param-type (:type param)
-        param-values (:parameter_values param)
-        param (-> param
+  [{param-type :type
+    value-type :value_type
+    param-values :parameter_values
+    validation-rules :validation_rules
+    :as param}]
+  (when-not value-type
+    (throw+ {:code    cc-errs/ERR_NOT_WRITEABLE
+             :message "App contains Parameters that cannot be copied or modified at this time."}))
+  (let [param (-> param
                   format-file-params
-                  (assoc :validators (map format-validator (:validation_rules param)))
-                  (dissoc :parameter_values
+                  (assoc :validators (map format-validator validation-rules))
+                  (dissoc :value_type
+                          :parameter_values
                           :validation_rules
                           :format
                           :file_info_type
@@ -154,16 +164,18 @@
   (remove-nil-vals
     (update-in group [:parameters] (partial map format-param))))
 
-(defn- format-app
+(defn- format-app-for-editing
   [app]
   (let [app (get-app-details (:id app))
-        task (first (:tasks app))
-        groups (map format-group (:parameter_groups task))]
+        task (first (:tasks app))]
+    (when (empty? tasks)
+      (throw+ {:code    cc-errs/ERR_NOT_WRITEABLE
+               :message "App contains no steps and cannot be copied or modified."}))
     (remove-nil-vals
       (-> app
           (assoc :references (map :reference_text (:app_references app))
-                 :tools (persistence/get-app-tools (:id app))
-                 :groups groups)
+                 :tools      (persistence/get-app-tools (:id app))
+                 :groups     (map format-group (:parameter_groups task)))
           (dissoc :app_references
                   :tasks)))))
 
@@ -172,7 +184,7 @@
   [app-id]
   (let [app (persistence/get-app app-id)]
     (verify-app-editable app)
-    (service/success-response (format-app app))))
+    (service/success-response (format-app-for-editing app))))
 
 (defn- update-parameter-argument
   "Adds a selection parameter's argument, and any of its child arguments and groups."
@@ -386,7 +398,7 @@
   "Removes ID fields from a client formatted App, its groups, parameters, and parameter arguments,
    and formats appropriate app fields to prepare it for saving as a copy."
   [app]
-  (let [app (format-app app)]
+  (let [app (format-app-for-editing app)]
     (-> app
         (dissoc :id)
         (assoc :name   (app-copy-name (:name app))

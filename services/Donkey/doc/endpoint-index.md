@@ -35,7 +35,6 @@
 * [POST /callbacks/agave-job/{job-uuid}](endpoints/callbacks.md#receiving-agave-job-status-updates)
 * [POST /callbacks/de-job](endpoints/callbacks.md#receiving-de-job-status-updates)
 * [POST /callbacks/notification](endpoints/callbacks.md#receiving-de-notifications)
-* [POST /can-export-analysis](endpoints/app-metadata.md#determining-if-an-analysis-can-be-exported)
 * [POST /delete-categories](endpoints/app-metadata.md#deleting-categories)
 * [POST /export-deployed-components](endpoints/app-metadata.md#exporting-selected-deployed-components)
 * [GET /export-workflow/{analysis-id}](endpoints/app-metadata.md#exporting-an-analysis)

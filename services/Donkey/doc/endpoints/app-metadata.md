@@ -9,7 +9,6 @@
     * [Listing File Parameters in an App](#listing-file-parameters-in-an-app)
     * [Categorizing Apps](#categorizing-apps)
     * [Listing Analysis Categorizations](#listing-analysis-categorizations)
-    * [Determining if an Analysis Can be Exported](#determining-if-an-analysis-can-be-exported)
     * [Adding Analyses to Analysis Groups](#adding-analyses-to-analysis-groups)
     * [Creating an App for the Current User](#creating-an-app-for-the-current-user)
     * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
@@ -184,15 +183,6 @@ Please see the metadactyl documentation for more information.
 Unsecured Endpoint: GET /get-analysis-categories/{category-set}
 
 Delegates to metadactyl: GET /get-analysis-categories/{category-set}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Determining if an Analysis Can be Exported
-
-Unsecured Endpoint: POST /can-export-analysis
-
-Delegates to metadactyl: POST /can-export-analysis
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.

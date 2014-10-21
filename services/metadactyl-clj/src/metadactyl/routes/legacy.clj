@@ -45,9 +45,6 @@
   (GET "/get-analysis-categories/:category-set" [category-set]
        (trap #(throw+ '("get-app-categories" category-set))))
 
-  (POST "/can-export-analysis" [:as {body :body}]
-        (trap #(throw+ '("can-export-app" body))))
-
   (POST "/add-analysis-to-group" [:as {body :body}]
         (trap #(throw+ '("add-app-to-group" body))))
 
