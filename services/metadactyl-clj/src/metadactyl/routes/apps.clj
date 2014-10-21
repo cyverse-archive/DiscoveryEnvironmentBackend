@@ -120,14 +120,6 @@
          :notes "This service can be used to make a copy of an App in the user's workspace."
          (ce/trap uri #(copy-app app-id)))
 
-  (GET* "/:app-id/details" []
-        :path-params [app-id :- AppIdPathParam]
-        :query [params SecuredQueryParams]
-        :return AppDetails
-        :summary "Get App Details"
-        :notes "This service is used by the DE to obtain high-level details about a single App"
-        (service/trap #(get-app-details app-id)))
-
   (GET* "/:app-id/description" []
         :path-params [app-id :- AppIdPathParam]
         :query [params SecuredQueryParams]
@@ -136,6 +128,14 @@
         notifications. There is no request body and the response body contains only the App
         description, with no special formatting."
         (service/trap #(get-app-description app-id)))
+
+  (GET* "/:app-id/details" []
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :return AppDetails
+        :summary "Get App Details"
+        :notes "This service is used by the DE to obtain high-level details about a single App"
+        (service/trap #(get-app-details app-id)))
 
   (GET* "/:app-id/file-parameters" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]
