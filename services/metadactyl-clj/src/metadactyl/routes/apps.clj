@@ -2,6 +2,7 @@
   (:use [metadactyl.app-listings :only [get-all-app-ids
                                         get-app-details
                                         get-app-description
+                                        get-file-parameters-for-app
                                         search-apps]]
         [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
@@ -135,6 +136,18 @@
         notifications. There is no request body and the response body contains only the App
         description, with no special formatting."
         (service/trap #(get-app-description app-id)))
+
+  (GET* "/:app-id/file-parameters" [:as {uri :uri}]
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :return AppFileParameterListing
+        :summary "List File Parameters in an App"
+        :notes "When a pipeline is being created, the UI needs to know what types of files are
+        consumed by and what types of files are produced by each App in the pipeline. This service
+        provides that information. The response body contains the App identifier, the App name, a
+        list of inputs (types of files consumed by the service) and a list of outputs (types of
+        files produced by the service)."
+        (ce/trap uri #(get-file-parameters-for-app app-id)))
 
   (GET* "/:app-id/is-publishable" [app-id]
         :path-params [app-id :- AppIdPathParam]

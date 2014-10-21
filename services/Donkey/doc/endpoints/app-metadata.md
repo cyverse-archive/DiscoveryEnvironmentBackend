@@ -6,7 +6,7 @@
     * [Listing App Identifiers](#listing-app-identifiers)
     * [Deleting Categories](#deleting-categories)
     * [Valiating Analyses for Pipelines](#valiating-analyses-for-pipelines)
-    * [Listing Data Objects in an Analysis](#listing-data-objects-in-an-analysis)
+    * [Listing File Parameters in an App](#listing-file-parameters-in-an-app)
     * [Categorizing Apps](#categorizing-apps)
     * [Listing Analysis Categorizations](#listing-analysis-categorizations)
     * [Determining if an Analysis Can be Exported](#determining-if-an-analysis-can-be-exported)
@@ -96,13 +96,13 @@ Delegates to metadactyl: GET /validate-analysis-for-pipelines/{analysis-id}
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Listing Data Objects in an Analysis
+## Listing File Parameters in an App
 
-Secured Endpoint: GET /secured/apps/{app-id}/data-objects
+Secured Endpoint: GET /apps/{app-id}/file-parameters
 
 This service obtains the lists of inputs and outputs for an app. For apps that
 run within the DE itself, this service delegates to the metadactyl endpoint,
-`GET /apps/{app-id}/data-objects`. For other apps, the response is assembled
+`GET /apps/{app-id}/file-parameters`. For other apps, the response is assembled
 within Donkey from information received from remote services. Here's an
 example:
 

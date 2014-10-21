@@ -78,6 +78,9 @@
     (GET "/apps/:app-id/details" [app-id]
          (trap #(apps/get-app-details app-id)))
 
+    (GET "/apps/:app-id/file-parameters" [app-id :as {:keys [uri]}]
+         (ce/trap uri #(apps/list-app-file-parameters app-id)))
+
     (GET "/apps/:app-id/is-publishable" [app-id]
          (trap #(app-publishable? app-id)))
 
@@ -123,9 +126,6 @@
 
    (GET "/logout" [:as {params :params}]
         (trap #(logout params)))
-
-   (GET "/apps/:app-id/data-objects" [app-id :as {:keys [uri]}]
-        (ce/trap uri #(apps/list-app-data-objects app-id)))
 
    (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {:keys [body uri]}]
         (ce/trap uri #(apps/submit-job workspace-id body)))

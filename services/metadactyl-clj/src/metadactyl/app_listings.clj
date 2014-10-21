@@ -6,7 +6,7 @@
         [kameleon.app-groups]
         [kameleon.app-listing]
         [kameleon.uuids :only [uuidify]]
-        [metadactyl.persistence.app-metadata :only [get-app-tools]]
+        [metadactyl.persistence.app-metadata :only [get-app get-app-tools]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config]
         [metadactyl.util.conversions :only [to-long remove-nil-vals]]
@@ -276,3 +276,55 @@
   "This service obtains the description of an app."
   [app-id]
   (:description (first (select apps (where {:id app-id}))) ""))
+
+(defn- with-task-params
+  "Includes a list of related file parameters in the query's result set,
+   with fields required by the client."
+  [query task-param-entity]
+  (with query task-param-entity
+              (join data_formats {:data_format :data_formats.id})
+              (join :parameter_values {:parameter_values.parameter_id :id})
+              (fields :id
+                      :name
+                      :label
+                      :description
+                      :required
+                      :parameter_values.value
+                      [:data_formats.name :format])))
+
+(defn- get-tasks
+  "Fetches a list of tasks for the given IDs with their inputs and outputs."
+  [task-ids]
+  (select tasks
+    (fields :id
+            :name
+            :description)
+    (with-task-params inputs)
+    (with-task-params outputs)
+    (where (in :id task-ids))))
+
+(defn- format-task
+  [task]
+  (-> task
+    (update-in [:inputs] (partial map remove-nil-vals))
+    (update-in [:outputs] (partial map remove-nil-vals))))
+
+(defn get-tasks-with-file-params
+  "Fetches a formatted list of tasks for the given IDs with their inputs and outputs."
+  [task-ids]
+  (map format-task (get-tasks task-ids)))
+
+(defn- format-app-file-param-listing
+  [{app-id :id :as app}]
+  (let [task-ids (map :task_id (select :app_steps (fields :task_id) (where {:app_id app-id})))
+        task     (first (get-tasks-with-file-params task-ids))]
+    (-> app
+        (select-keys [:id :name :description])
+        (assoc :inputs (:inputs task)
+               :outputs (:outputs task)))))
+
+(defn get-file-parameters-for-app
+  "A service used to list the file parameters in an app."
+  [app-id]
+  (let [app (get-app app-id)]
+    (service/success-response (format-app-file-param-listing app))))

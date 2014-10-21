@@ -149,7 +149,7 @@
     (metadactyl/get-app-details app-id))
 
   (listAppDataObjects [_ app-id]
-    (metadactyl/list-app-data-objects))
+    (metadactyl/list-app-file-parameters app-id))
 
   (editWorkflow [_ app-id]
     (metadactyl/edit-workflow app-id))
@@ -236,7 +236,7 @@
 
   (listAppDataObjects [_ app-id]
     (if (is-uuid? app-id)
-      (metadactyl/list-app-data-objects app-id)
+      (metadactyl/list-app-file-parameters app-id)
       (.listAppDataObjects agave-client app-id)))
 
   (editWorkflow [_ app-id]
@@ -537,7 +537,7 @@
   (with-db db/de
     (service/success-response (.getAppRerunInfo (get-app-lister) job-id))))
 
-(defn list-app-data-objects
+(defn list-app-file-parameters
   [app-id]
   (with-db db/de
     (service/success-response (.listAppDataObjects (get-app-lister) app-id))))

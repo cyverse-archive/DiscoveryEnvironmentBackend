@@ -4,6 +4,7 @@
         [kameleon.core]
         [kameleon.entities]
         [kameleon.uuids :only [uuid]]
+        [metadactyl.app-listings :only [get-tasks-with-file-params]]
         [metadactyl.persistence.app-metadata :only [add-app
                                                     add-mapping
                                                     add-step
@@ -15,38 +16,6 @@
         [metadactyl.workspace :only [get-workspace]]
         [metadactyl.zoidberg.app-edit :only [add-app-to-user-dev-category app-copy-name]])
   (:require [metadactyl.util.service :as service]))
-
-(defn- with-task-params
-  "Includes a list of related file parameters in the query's result set,
-   with fields required by the client."
-  [query task-param-entity]
-  (with query task-param-entity
-    (join data_formats {:data_format :data_formats.id})
-    (join :parameter_values {:parameter_values.parameter_id :id})
-    (fields :id
-            :name
-            :label
-            :description
-            :required
-            :parameter_values.value
-            [:data_formats.name :format])))
-
-(defn- get-tasks
-  "Fetches a list of tasks for the given IDs with their inputs and outputs."
-  [task-ids]
-  (select tasks
-          (fields :id
-                  :name
-                  :description)
-          (with-task-params inputs)
-          (with-task-params outputs)
-          (where (in :id task-ids))))
-
-(defn- format-task
-  [task]
-  (-> task
-      (update-in [:inputs] (partial map remove-nil-vals))
-      (update-in [:outputs] (partial map remove-nil-vals))))
 
 (defn- add-app-type
   [step]
@@ -136,7 +105,7 @@
   [app]
   (let [app (format-workflow-app app)
         task-ids (set (map :task_id (:steps app)))
-        tasks (map format-task (get-tasks task-ids))]
+        tasks (get-tasks-with-file-params task-ids)]
     {:apps [app]
      :tasks tasks}))
 

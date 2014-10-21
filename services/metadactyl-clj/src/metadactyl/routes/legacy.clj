@@ -42,9 +42,6 @@
   (GET "/validate-analysis-for-pipelines/:app-id" [app-id]
        (trap #(throw+ '("validate-app-for-pipelines" app-id))))
 
-  (GET "/apps/:app-id/data-objects" [app-id]
-       (trap #(throw+ '("get-data-objects-for-app" app-id))))
-
   (GET "/get-analysis-categories/:category-set" [category-set]
        (trap #(throw+ '("get-app-categories" category-set))))
 
