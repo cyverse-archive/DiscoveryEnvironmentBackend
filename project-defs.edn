@@ -437,4 +437,15 @@
   :uberjar? false
   :install? false
   :language :sql
+  :archive? true}
+
+ "jex-db"
+ {:type     :database
+  :path     "databases/jex-db"
+  :build    :shell
+  :rpm?     false
+  :tarball? false
+  :uberjar? false
+  :install? false
+  :language :sql
   :archive? true}}
