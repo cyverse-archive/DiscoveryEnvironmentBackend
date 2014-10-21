@@ -24,3 +24,4 @@ ADD build_profiles.clj /root/.lein/profiles.clj
 RUN chmod a+x /usr/bin/lein
 RUN gem install fpm
 RUN npm install -g grunt-cli
+RUN lein help
