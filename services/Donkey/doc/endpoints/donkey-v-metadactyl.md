@@ -59,21 +59,17 @@ forwards requests.
 
 ## A Simple Example
 
-One of the simplest endpoints in both Donkey and metadactyl is the bootstrap
-endpoint, which is used to initialize the user's workspace in the DE. This
-service requires one query-string parameter aside from the four listed above,
-`ip-address`, which contains the IP address of the user's machine. This
-parameter allows the service to record the source of the user's last session in
-order to help users determine when their accounts may have been compromized.
+One of the simplest endpoints in both Donkey and metadactyl is the /apps/categories endpoint, which
+is used to obtain the list of app categories that are visible to the user.
 
 The call to the Donkey service would look like this:
 
 ```
-$ curl "http://by-tor:8888/secured/bootstrap?proxyToken=$(cas-ticket)&ip-address=127.0.0.1"
+$ curl "http://by-tor:8888/secured/app-groups?proxyToken=$(cas-ticket)"
 ```
 
 The equivalent call to the metadactyl service would look like this:
 
 ```
-$ curl "http://by-tor:9999/secured/bootstrap?user=nobody&email=nobody@iplantcollaborative.org&first-name=Nobody&last-name=Inparticular&ip-address=127.0.0.1"
+$ curl "http://by-tor:9999/apps/categories?user=nobody&email=nobody@iplantcollaborative.org&first-name=Nobody&last-name=Inparticular"
 ```

@@ -49,6 +49,14 @@
     (let [handler ((memoize routes-fn))]
       (handler req))))
 
+(defn secured-routes-no-context
+  []
+  (flagged-routes
+    (app-category-routes)
+    (apps-routes)
+    (analysis-routes)
+    (tool-request-routes)))
+
 (defn secured-routes
   []
   (flagged-routes
@@ -81,6 +89,10 @@
        config/pgt-callback-base
        config/pgt-callback-path)))
 
+(def secured-handler-no-context
+  (-> (delayed-handler secured-routes-no-context)
+      (cas-store-user)))
+
 (def secured-handler
   (-> (delayed-handler secured-routes)
       (cas-store-user)))
@@ -94,9 +106,8 @@
    (unsecured-tree-viewer-routes)
    (unsecured-fileio-routes)
    (unsecured-callback-routes)
-
    (context "/secured" [] secured-handler)
-
+   secured-handler-no-context
    (route/not-found (unrecognized-path-response))))
 
 (defn start-nrepl

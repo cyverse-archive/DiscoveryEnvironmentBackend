@@ -45,34 +45,7 @@
 (defroutes email-routes
   (GET "/" [] "Welcome to iPlant Email!")
 
-  (POST "/" {body :body}
-        (log/debug (str "Received request with body: " (cheshire/encode body)))
-        (cond
-          (not (jv/valid? body {:template string?}))
-          {:status 500 :body body}
-
-          :else
-          (try
-            (let [template-name   (:template body)
-                  template-values (:values body)
-                  to-addr         (:to body)
-                  cc-addr         (:cc body)
-                  subject         (:subject body)
-                  from-addr       (or (:from-addr body) (smtp-from-addr))
-                  from-name       (:from-name body)
-                  email-body      (tmpl/create-email template-name template-values)]
-              (sm/send-email
-                {:host (smtp-host)
-                 :to-addr to-addr
-                 :cc-addr cc-addr
-                 :from-addr from-addr
-                 :from-name from-name
-                 :subject subject
-                 :body email-body})
-              (log/debug (str "Successfully sent email for request: " (cheshire/encode body)))
-              {:status 200 :body "Email sent."})
-            (catch Exception e
-              (format-exception e))))))
+  (POST "/" {body :body} (sm/do-send-email body)))
 
 (defn site-handler [routes]
   (-> routes

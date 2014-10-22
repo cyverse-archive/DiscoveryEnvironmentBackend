@@ -44,9 +44,8 @@
 
 (defn- output-prop-translation
   [prop]
-  (let [data-obj (:data_object prop)]
-    (when (and (not (:is_implicit data-obj)) (= (:data_source data-obj) "file"))
-      (default-prop-translation prop))))
+  (when (and (not (:is_implicit prop)) (= (:data_source prop) "file"))
+    (default-prop-translation prop)))
 
 (def ^:private prop-translation-fns
   [[#(= "Flag" %)                flag-prop-translation]
@@ -69,11 +68,11 @@
 
 (defn- translate-prop-group
   [group]
-  (mapcat translate-prop (:properties group)))
+  (mapcat translate-prop (:parameters group)))
 
 (defn translate-template
   [template]
   {:params
-   (->> (get-property-groups template)
+   (->> (:groups template)
         (mapcat translate-prop-group)
         (remove nil?))})

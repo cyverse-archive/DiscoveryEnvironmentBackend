@@ -8,13 +8,14 @@
             [clj-http.client :as client]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [donkey.util.time :as ut]))
+            [donkey.util.time :as ut]
+            [donkey.util.transformers :as xforms]))
 
 (defn- app-description-url
   "Builds a URL that can be used to fetch the description for the App with the
    given ID."
   [app-id]
-  (build-url (metadactyl-unprotected-base-url) "get-app-description" app-id))
+  (build-url (metadactyl-unprotected-base-url) "apps" app-id "description"))
 
 (defn- get-app-description
   "Gets an app description from the database."
@@ -22,7 +23,8 @@
   (log/debug "looking up the description for app" app-id)
   (if (empty? app-id)
     ""
-    (:body (client/get (app-description-url app-id)))))
+    (:body (client/get (app-description-url app-id)
+                       {:query-params (xforms/add-current-user-to-map {})}))))
 
 (defn- add-app-details-to-message
   "Adds application details to a single message."

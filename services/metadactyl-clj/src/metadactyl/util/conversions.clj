@@ -1,6 +1,9 @@
 (ns metadactyl.util.conversions
-  (:use [clojure.string :only [blank?]])
-  (:import [java.sql Timestamp]))
+  (:use [clojure.string :only [blank?]]
+        [medley.core :only [remove-vals]])
+  (:require [clojure.string :as string])
+  (:import [java.sql Timestamp]
+           [com.google.common.primitives Doubles Ints]))
 
 (defn to-long
   "Converts a string to a long integer."
@@ -19,7 +22,16 @@
 
 (defn long->timestamp
   "Converts a long value, which may contain an empty string, into an instance
-   of java.sql.Timestamp."
+  of java.sql.Timestamp."
   [ms]
   (let [ms (str ms)]
     (when-not (blank? ms) (Timestamp. (to-long ms)))))
+
+(def remove-nil-vals (partial remove-vals nil?))
+
+(defn convert-rule-argument
+  [arg]
+  (let [arg (string/trim arg)]
+    (->> [(Ints/tryParse arg) (Doubles/tryParse arg) (identity arg)]
+         (remove nil?)
+         (first))))

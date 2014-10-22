@@ -10,6 +10,6 @@ CREATE TABLE job_steps (
     start_date timestamp,
     end_date timestamp,
     status character varying(64) NOT NULL,
-    job_type_id bigint NOT NULL,
+    job_type_id uuid NOT NULL,
     app_step_number integer NOT NULL
 );

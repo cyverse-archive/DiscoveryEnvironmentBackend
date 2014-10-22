@@ -40,6 +40,24 @@
        (merge oauth-info)
        (call-token-callback)))
 
+(defn- credentials-token-request
+  [{:keys [token-uri redirect-uri client-key client-secret]} username password timeout]
+  (:body (http/post token-uri
+                    {:basic-auth     [client-key client-secret]
+                     :form-params    {:grant_type "client_credentials"
+                                      :username   username
+                                      :password   password}
+                     :as             :json
+                     :conn-timeout   timeout
+                     :socket-timeout timeout})))
+
+(defn get-access-token-for-credentials
+  [oauth-info username password & {:keys [timeout] or {timeout 5000}}]
+  (->> (credentials-token-request oauth-info username password timeout)
+       (format-token-info)
+       (merge oauth-info)
+       (call-token-callback)))
+
 (defn- send-refresh-token-request
   [{:keys [token-uri client-key client-secret refresh-token]} timeout]
   (:body (http/post token-uri

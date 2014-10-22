@@ -5,7 +5,7 @@ SET search_path = public, pg_catalog;
 ---
 CREATE TABLE access_tokens (
     webapp VARCHAR(64) NOT NULL,
-    user_id BIGINT NOT NULL,
+    user_id UUID NOT NULL,
     token BYTEA NOT NULL,
     expires_at TIMESTAMP,
     refresh_token BYTEA

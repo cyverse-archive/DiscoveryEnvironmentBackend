@@ -1,24 +1,12 @@
 SET search_path = public, pg_catalog;
 
 --
--- id SERIAL type for workspace table
---
-CREATE SEQUENCE workspace_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MAXVALUE
-    NO MINVALUE
-    CACHE 1;
-
-
---
 -- workspace table
 --
 CREATE TABLE workspace (
-    id bigint DEFAULT nextval('workspace_id_seq'::regclass) NOT NULL,
-    home_folder bigint,
-    root_analysis_group_id bigint,
+    id uuid NOT NULL DEFAULT uuid_generate_v1(),
+    root_category_id uuid,
     is_public boolean DEFAULT false,
-    user_id bigint
+    user_id uuid NOT NULL
 );
 

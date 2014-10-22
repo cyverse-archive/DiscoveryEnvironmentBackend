@@ -1,52 +1,45 @@
 # Table of Contents
 
 * [Application Metadata Endpoints](#application-metadata-endpoints)
-    * [Listing Workflow Elements](#listing-workflow-elements)
+    * [Listing App Elements](#listing-app-elements)
     * [Searching for Deployed Components](#searching-for-deployed-components)
-    * [Listing Analysis Identifiers](#listing-analysis-identifiers)
+    * [Listing App Identifiers](#listing-app-identifiers)
     * [Deleting Categories](#deleting-categories)
     * [Valiating Analyses for Pipelines](#valiating-analyses-for-pipelines)
-    * [Listing Data Objects in an Analysis](#listing-data-objects-in-an-analysis)
-    * [Categorizing Analyses](#categorizing-analyses)
+    * [Listing File Parameters in an App](#listing-file-parameters-in-an-app)
+    * [Categorizing Apps](#categorizing-apps)
     * [Listing Analysis Categorizations](#listing-analysis-categorizations)
-    * [Determining if an Analysis Can be Exported](#determining-if-an-analysis-can-be-exported)
     * [Adding Analyses to Analysis Groups](#adding-analyses-to-analysis-groups)
+    * [Creating an App for the Current User](#creating-an-app-for-the-current-user)
     * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
     * [Getting App Details](#getting-app-details)
-    * [Listing Analysis Groups](#listing-analysis-groups)
-    * [Listing Individual Analyses](#listing-individual-analyses)
-    * [Exporting a Template](#exporting-a-template)
+    * [Listing App Groups](#listing-app-groups)
     * [Exporting an Analysis](#exporting-an-analysis)
     * [Exporting Selected Deployed Components](#exporting-selected-deployed-components)
-    * [Permanently Deleting an Analysis](#permanently-deleting-an-analysis)
-    * [Logically Deleting an Analysis](#logically-deleting-an-analysis)
+    * [Permanently Deleting an App](#permanently-deleting-an-app)
+    * [Logically Deleting Apps](#logically-deleting-apps)
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
-    * [Updating an Existing Template](#updating-an-existing-template)
-    * [Updating an Analysis](#updating-an-analysis)
-    * [Forcing an Analysis to be Updated](#forcing-an-analysis-to-be-updated)
+    * [Updating a Single-Step App](#updating-a-single-step-app)
+    * [Creating a Pipeline](#creating-a-pipeline)
+    * [Updating a Pipeline](#updating-a-pipeline)
     * [Updating App Labels](#updating-app-labels)
-    * [Importing a Template](#importing-a-template)
-    * [Importing an Analysis](#importing-an-analysis)
     * [Importing Deployed Components](#importing-deployed-components)
-    * [Updating Top-Level Analysis Information](#updating-top-level-analysis-information)
-    * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
-    * [Rating Analyses](#rating-analyses)
-    * [Deleting Analysis Ratings](#deleting-analysis-ratings)
-    * [Searching for Analyses](#searching-for-analyses)
-    * [Listing Analyses in an Analysis Group](#listing-analyses-in-an-analysis-group)
-    * [Listing Analyses that may be Included in a Pipeline](#listing-analyses-that-may-be-included-in-a-pipeline)
+    * [Rating Apps](#rating-apps)
+    * [Deleting App Ratings](#deleting-app-ratings)
+    * [Searching for Apps](#searching-for-apps)
+    * [Previewing Command Line Arguments](#previewing-command-line-arguments)
+    * [Listing Apps in an App Group](#listing-apps-in-an-app-group)
     * [Listing Deployed Components in an Analysis](#listing-deployed-components-in-an-analysis)
     * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
-    * [Making an Analysis Available for Editing in Tito](#making-an-analysis-available-for-editing-in-tito)
-    * [Making a Copy of an Analysis Available for Editing in Tito](#making-a-copy-of-an-analysis-available-for-editing-in-tito)
+    * [Making a Copy of an App Available for Editing](#making-a-copy-of-an-app-available-for-editing)
     * [Submitting an Analysis for Public Use](#submitting-an-analysis-for-public-use)
-    * [Determining if an Analysis Can be Made Public](#determining-if-an-analysis-can-be-made-public)
+    * [Determining if an App Can be Made Public](#determining-if-an-app-can-be-made-public)
+    * [Obtaining an App Representation for Editing](#obtaining-an-app-representation-for-editing)
     * [Making a Pipeline Available for Editing](#making-a-pipeline-available-for-editing)
     * [Making a Copy of a Pipeline Available for Editing](#making-a-copy-of-a-pipeline-available-for-editing)
     * [Requesting Installation of a Tool](#requesting-installation-of-a-tool)
-    * [Updating a Tool Installation Request (User)](#updating-a-tool-installation-request-(user))
-    * [Updating a Tool Installation Request (Administrator)](#updating-a-tool-installation-request-(administrator))
+    * [Updating a Tool Installation Request](#updating-a-tool-installation-request)
     * [Listing Tool Installation Requests](#listing-tool-installation-requests)
     * [Listing Tool Installation Request Details](#listing-tool-installation-request-details)
     * [Listing Tool Request Status Codes](#listing-tool-request-status-codes)
@@ -57,14 +50,14 @@ Note that secured endpoints in Donkey and metadactyl are a little different from
 each other. Please see [Donkey Vs. Metadactyl](donkey-v-metadactyl.md) for more
 information.
 
-## Listing Workflow Elements
+## Listing App Elements
 
-Unsecured Endpoint: GET /get-workflow-elements/{element-type}
+Secured Endpoint: GET /apps/elements/{element-type}
 
-Delegates to metadactyl: GET /get-workflow-elements/{element-type}
+Delegates to metadactyl: GET /apps/elements/{element-type}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Searching for Deployed Components
 
@@ -75,14 +68,14 @@ Delegates to metadactyl: GET /search-deployed-components{search-term}
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Listing Analysis Identifiers
+## Listing App Identifiers
 
-Unsecured Endpoint: GET /get-all-analysis-ids
+Secured Endpoint: GET /apps/ids
 
-Delegates to metadactyl: GET /get-all-analysis-ids
+Delegates to metadactyl: GET /apps/ids
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Deleting Categories
 
@@ -90,7 +83,7 @@ Unsecured Endpoint: POST /delete-categories
 
 Delegates to metadactyl: POST /delete-categories
 
-This endpoint is a passthrough to the metactyl endpoint using the same
+This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
 ## Valiating Analyses for Pipelines
@@ -102,13 +95,13 @@ Delegates to metadactyl: GET /validate-analysis-for-pipelines/{analysis-id}
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Listing Data Objects in an Analysis
+## Listing File Parameters in an App
 
-Secured Endpoint: GET /secured/apps/{app-id}/data-objects
+Secured Endpoint: GET /apps/{app-id}/file-parameters
 
 This service obtains the lists of inputs and outputs for an app. For apps that
 run within the DE itself, this service delegates to the metadactyl endpoint,
-`GET /apps/{app-id}/data-objects`. For other apps, the response is assembled
+`GET /apps/{app-id}/file-parameters`. For other apps, the response is assembled
 within Donkey from information received from remote services. Here's an
 example:
 
@@ -176,29 +169,20 @@ $ curl -s "http://by-tor:8888/secured/apps/wc-osg-1.00u1/data-objects?proxyToken
 
 ```
 
-## Categorizing Analyses
+## Categorizing Apps
 
-Unsecured Endpoint: POST /categorize-analyses
+Secured Endpoint: POST /admin/apps
 
-Delegates to metadactyl: POST /categorize-analyses
+Delegates to metadactyl: POST /admin/apps
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Listing Analysis Categorizations
 
 Unsecured Endpoint: GET /get-analysis-categories/{category-set}
 
 Delegates to metadactyl: GET /get-analysis-categories/{category-set}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Determining if an Analysis Can be Exported
-
-Unsecured Endpoint: POST /can-export-analysis
-
-Delegates to metadactyl: POST /can-export-analysis
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -212,101 +196,40 @@ Delegates to metadactyl: POST /add-analysis-to-group
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
+## Creating an App for the Current User
+
+Secured Endpoint: POST /apps
+
+Delegates to metadactyl: POST /apps
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
+
 ## Getting Analyses in the JSON Format Required by the DE
 
-Unsecured Endpoint: GET /get-analysis/{analysis-id}
+Secured Endpoint: GET /apps/{app-id}
 
-Delegates to metadactyl: GET /get-analysis/{analysis-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This service handles three different classes of apps. Apps that run exclusively in the DE, apps
+that run exclusively in Agave, and apps that contain both DE steps and Agave steps.  In all
+three cases, the response format is the same as in the corresponding metadactyl endpoint, `GET
+/apps/{app-id}`. Please see the metadactyl documentation for more information about the format
+of the response body.
 
 ## Getting App Details
 
-Secured Endpoint: GET /secured/app-details/{app-id}
+Secured Endpoint: GET /apps/{app-id}/details
 
 This service is used by the DE to obtain high-level details about a single
-analysis. The response body is in the following format:
+analysis.
 
-```json
-{
-    "components": [
-        {
-            "id": "component-id",
-            "name": "component-name",
-            "description": "component-description",
-            "location": "component-location",
-            "type": "executable",
-            "version": "component-version",
-            "attribution": "component-attribution"
-        }
-    ],
-    "description": "analysis-description",
-    "edited_date": "edited-date-milliseconds",
-    "id": "analysis-id",
-    "label": "analysis-label",
-    "name": "analysis-name",
-    "published_date": "published-date-milliseconds",
-    "references": [
-        "reference-1",
-        "reference-2",
-        ...,
-        "reference-n"
-    ],
-    "groups": [
-        {
-            "name": "Beta",
-            "id": "g5401bd146c144470aedd57b47ea1b979"
-        }
-    ],
-    "tito": "analysis-id",
-    "type": "component-type"
-}
-```
+For DE apps, this service delegates the call to the metadactyl endpoint, `/apps/{app-id}/details`.
+Please see the metadactyl documentation for more information about its response format.
 
-For DE apps, this service delegates the call to the metadactyl endpoint,
-`/analysis-details/:app-id`. For Agave apps, this service retrieves the
-information it needs to format the response from Agave.
-
-Here's an example of a DE app listing:
-
-```
-$ curl -s "http://by-tor:8888/secured/app-details/0309394C-37C9-4A64-A806-C12674D2D4F8?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "components": [
-        {
-            "attribution": "Rice P, Longden I, Bleasby A. EMBOSS: the European Molecular Biology Open Software Suite. Trends Genet. 2000 Jun;16(6):276-7",
-            "description": "Needleman-Wunsch global alignment",
-            "id": "c3610c827b37d4c4ba5f18cc1edeb72e5",
-            "location": "/usr/local3/bin/emboss/bin",
-            "name": "needle",
-            "type": "executable",
-            "version": "6.4.0"
-        }
-    ],
-    "description": "needle reads two input sequences and writes their optimal global sequence alignment to file.",
-    "edited_date": "1334734950952",
-    "groups": [
-        {
-            "id": "4B3A8586-9A55-441C-8ED2-D730D60BF5F1",
-            "name": "EMBOSS"
-        }
-    ],
-    "id": "0309394C-37C9-4A64-A806-C12674D2D4F8",
-    "label": "",
-    "name": "EMBOSS Needle",
-    "published_date": "1334734995546",
-    "references": [],
-    "success": true,
-    "suggested_groups": [],
-    "tito": "0309394C-37C9-4A64-A806-C12674D2D4F8"
-}
-```
-
+For Agave apps, this service retrieves the information it needs to format the response from Agave.
 Here's an example of an Agave app listing:
 
 ```
- curl -s "http://gargery:31325/secured/app-details/wc-1.00u1?proxyToken=$(cas-ticket)" | python -mjson.tool
+ curl -s "http://gargery:31325/apps/wc-1.00u1/details?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "components": [
         {
@@ -343,36 +266,14 @@ Here's an example of an Agave app listing:
 }
 ```
 
-## Listing Analysis Groups
+## Listing App Groups
 
-Secured Endpoint: GET /secured/app-groups
+Secured Endpoint: GET /apps/categories
 
-Delegates to metadactyl: GET /secured/app-groups
+Delegates to metadactyl: GET /apps/categories
 
-Unsecured Endpoint: GET /public-app-groups
-
-Delegates to metadactyl: GET /public-app-groups
-
-These endpoints are passthroughs to the metadactyl endpoints using the same
-paths. Please see the metadactyl documentation for more information.
-
-## Listing Individual Analyses
-
-Unsecured Endpoint: GET /list-analysis/{analysis-id}
-
-Delegates to metadactyl: GET /list-analysis/{analysis-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Exporting a Template
-
-Unsecured Endpoint: GET /export-template/{template-id}
-
-Delegates to metadactyl: GET /export-template/{template-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Exporting an Analysis
 
@@ -392,23 +293,25 @@ Delegates to metadactyl: POST /export-deployed-components
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Permanently Deleting an Analysis
+## Permanently Deleting an App
 
-Secured Endpoint: POST /secured/permanently-delete-workflow
+Secured Endpoint: POST /admin/apps/shredder
 
-Delegates to metadactyl: POST /secured/permanently-delete-workflow
+Delegates to metadactyl: POST /admin/apps/shredder
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
-## Logically Deleting an Analysis
+## Logically Deleting Apps
 
-Secured Endpoint: POST /secured/delete-workflow
+Secured Endpoint: DELETE /apps/{app-id}
+Delegates to metadactyl: DELETE /apps/{app-id}
 
-Delegates to metadactyl: POST /secured/delete-workflow
+Secured Endpoint: POST /apps/shredder
+Delegates to metadactyl: POST /apps/shredder
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+These endpoints are passthroughs to their corresponding metadactyl endpoint.
+Please see the metadactyl documentation for more information.
 
 ## Previewing Templates
 
@@ -428,63 +331,41 @@ Delegates to metadactyl: POST /preview-workflow
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Updating an Existing Template
+## Updating a Single-Step App
 
-Unsecured Endpoint: POST /update-template
+*Secured Endpoint:* PUT /apps/{app-id}
 
-Delegates to metadactyl: POST /update-template
+*Delegates to metadactyl:* PUT /apps/{app-id}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
-## Updating an Analysis
+## Creating a Pipeline
 
-Unsecured Endpoint: POST /update-workflow
+Secured Endpoint: POST /apps/pipelines
 
-Delegates to metadactyl: POST /update-workflow
+Delegates to metadactyl: POST /apps/pipelines
 
-Secured Endpoint: POST /secured/update-workflow
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
-Delegates to metadactyl: POST /secured/update-workflow
+## Updating a Pipeline
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+Secured Endpoint: PUT /apps/pipelines/{app-id}
 
-## Forcing an Analysis to be Updated
+Delegates to metadactyl: PUT /apps/pipelines/{app-id}
 
-Unsecured Endpoint: POST /force-update-workflow
-
-Delegates to metadactyl: POST /force-update-workflow
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Updating App Labels
 
-Unsecured Endpoint: POST /update-app-labels
+Secured Endpoint: PATCH /apps/{app-id}
 
-Delegates to metadactyl: POST /update-app-labels
+Delegates to metadactyl: PATCH /apps/{app-id}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Importing a Template
-
-Unsecured Endpoint: POST /import-template
-
-Delegates to metadactyl: POST /import-template
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Importing an Analysis
-
-Unsecured Endpoint: POST /import-workflow
-
-Delegates to metadactyl: POST /import-workflow
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Importing Deployed Components
 
@@ -610,72 +491,50 @@ $ curl -sd '
 Though it is possible to import analyses using this endpoint, this practice is
 not recommended because it can cause spurious notifications to be sent.
 
-## Updating Top-Level Analysis Information
+## Rating Apps
 
-Unsecured Endpoint: POST /update-analysis
+Secured Endpoint: POST /apps/{app-id}/rating
 
-Delegates to metadactyl: POST /update-analysis
+Delegates to metadactyl: POST /apps/{app-id}/rating
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
-## Getting Analyses in the JSON Format Required by the DE
+## Deleting App Ratings
 
-Secured Endpoint: GET /secured/template/{analysis-id}
+Secured Endpoint: DELETE /apps/{app-id}/rating
 
-Delegates to metadactyl: GET /secured/template/{analysis-id}
+Delegates to metadactyl: DELETE /apps/{app-id}/rating
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
-## Rating Analyses
+## Searching for Apps
 
-Secured Endpoint: POST /secured/rate-analysis
+Secured Endpoint: GET /apps?search={term}
 
-Delegates to metadactyl: POST /secured/rate-analysis
+Delegates to metadactyl: GET /apps?search={term}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
-## Deleting Analysis Ratings
+## Previewing Command Line Arguments
 
-Secured Endpoint: POST /secured/delete-rating
+Unsecured Endpoint: POST /apps/arg-preview
 
-Delegates to metadactyl: POST /secured/delete-rating
+Delegates to metadactyl: POST /apps/arg-preview
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
-## Searching for Analyses
+## Listing Apps in an App Group
 
-Secured Endpoint: GET /secured/search-analyses
+Secured Endpoint: GET /apps/categories/{group-id}
 
-Delegates to metadactyl: GET /secured/search-analyses
+Delegates to metadactyl: GET /apps/categories/{group-id}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Listing Analyses in an Analysis Group
-
-Secured Endpoint: GET /secured/get-analyses-in-group/{group-id}
-
-Delegates to metadactyl: GET /secured/get-analyses-in-group/{group-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Listing Analyses that may be Included in a Pipeline
-
-Secured Endpoint: GET /secured/list-analyses-for-pipeline/{group-id}
-
-Delegates to metadactyl: GET /secured/list-analyses-for-pipeline/{group-id}
-
-This service is an alias for the `/get-analyses-in-group/{group-id}` service.
-At one time, this was a different service that returned additional information
-that was normally omitted for the sake of efficiency. Some recent efficiency
-improvements have eliminated the need to omit this information from the more
-commonly used endpoint, however. This endpoint is currently being retained for
-backward compatibility.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Listing Deployed Components in an Analysis
 
@@ -695,23 +554,14 @@ Delegates to metadactyl: POST /secured/update-favorites
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Making an Analysis Available for Editing in Tito
+## Making a Copy of an App Available for Editing
 
-Secured Endpoint: GET /secured/edit-template/{analysis-id}
+Secured Endpoint: POST /apps/{app-id}/copy
 
-Delegates to metadactyl: GET /secured/edit-template/{analysis-id}
+Delegates to metadactyl: POST /apps/{app-id}/copy
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Making a Copy of an Analysis Available for Editing in Tito
-
-Secured Endpoint: GET /secured/copy-template/{analysis-id}
-
-Delegates to metadactyl: GET /secured/copy-template/{analysis-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Submitting an Analysis for Public Use
 
@@ -722,38 +572,47 @@ Delegates to metadactyl: POST /secured/make-analysis-public
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Determining if an Analysis Can be Made Public
+## Determining if an App Can be Made Public
 
-Secured Endpoint: GET /secured/is-publishable/{analysis-id}
+Secured Endpoint: GET /apps/{app-id}/is-publishable
 
-Delegates to metadactyl: GET /secured/is-publishable/{analysis-id}
+Delegates to metadactyl: GET /apps/{app-id}/is-publishable
+
+This endpoint is a passthrough to the metadactyl endpoint using the path above.
+Please see the metadactyl documentation for more information.
+
+## Obtaining an App Representation for Editing
+
+Secured Endpoint: GET /apps/{app-id}/ui
+
+Delegates to metadactyl: GET /apps/{app-id}/ui
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
 
 ## Making a Pipeline Available for Editing
 
-Secured Endpoint: GET /secured/edit-workflow/{analysis-id}
+Secured Endpoint: GET /apps/pipelines/{app-id}/ui
 
-Delegates to metadactyl: GET /secured/edit-workflow/{analysis-id}
+Delegates to metadactyl: GET /apps/pipelines/{app-id}/ui
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Making a Copy of a Pipeline Available for Editing
 
-Secured Endpoint: GET /secured/copy-workflow/{analysis-id}
+Secured Endpoint: POST /apps/pipelines/{app-id}/copy
 
-Delegates to metadactyl: GET /secured/copy-workflow/{analysis-id}
+Delegates to metadactyl: POST /apps/pipelines/{app-id}/copy
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Requesting Installation of a Tool
 
-Secured Endpoint: PUT /secured/tool-request
+Secured Endpoint: POST /tool-requests
 
-Delegates to metadactyl: PUT /secured/tool-request
+Delegates to metadactyl: POST /tool-requests
 
 This service is primarily a passthrough to the metadactyl endpoint using the
 same path. The only difference is that this endpoint also sends a message to the
@@ -761,20 +620,11 @@ tool request email address and generates a notification for the new tool request
 indicating that the tool request was successfully submitted. Please see the
 metadactyl documentation for more details.
 
-## Updating a Tool Installation Request (User)
+## Updating a Tool Installation Request
 
-Secured Endpoint: POST /secured/tool-request
+Secured Endpoint: POST /admin/tool-requests/{tool-request-id}/status
 
-Delegates to metadactyl: POST /secured/tool-request
-
-This service is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more details.
-
-## Updating a Tool Installation Request (Administrator)
-
-Unsecured Endpoint: POST /tool-request
-
-Delegates to metadactyl: POST /tool-request
+Delegates to metadactyl: POST /admin/tool-requests/{tool-request-id}/status
 
 This service is primarily a passthrough to the metadactyl endpoint using the
 same path. The only difference is that this endpoint also generates a
@@ -783,29 +633,29 @@ documentation for more details.
 
 ## Listing Tool Installation Requests
 
-Unsecured Endpoint: GET /tool-requests
+Secured Endpoint: GET /tool-requests
 
 Delegates to metadactyl: GET /tool-requests
 
-Secured Endpoint: GET /secured/tool-requests
+Secured Endpoint: GET /admin/tool-requests
 
-Delegates to metadactyl: GET /secured/tool-requests
+Delegates to metadactyl: GET /admin/tool-requests
 
 These services are passthroughs to the metadactyl endpoints using the same path.
 Please see the metadactyl documentation for more details.
 
 ## Listing Tool Installation Request Details
 
-Unsecured Endpoint: GET /tool-request/{tool-request-id}
+Secured Endpoint: GET /admin/tool-requests/{tool-request-id}
 
-Delegates to metadactyl: GET /tool-request/{tool-request-id}
+Delegates to metadactyl: GET /admin/tool-requests/{tool-request-id}
 
-This service is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more details.
+This service is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more details.
 
 ## Listing Tool Request Status Codes
 
-Unsecured Endpoint: GET /tool-request-status-codes
+Secured Endpoint: GET /tool-requests/status-codes
 
-This service is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more details.
+This service is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more details.

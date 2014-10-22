@@ -1,0 +1,190 @@
+(ns metadactyl.routes.apps
+  (:use [metadactyl.app-listings :only [get-all-app-ids
+                                        get-app-details
+                                        get-app-description
+                                        get-file-parameters-for-app
+                                        search-apps]]
+        [metadactyl.app-validation :only [app-publishable?]]
+        [metadactyl.routes.domain.app]
+        [metadactyl.routes.domain.app.rating]
+        [metadactyl.routes.params]
+        [metadactyl.zoidberg.app-edit :only [add-app copy-app edit-app update-app]]
+        [compojure.api.sweet]
+        [ring.swagger.schema :only [describe]])
+  (:require [clojure-commons.error-codes :as ce]
+            [metadactyl.metadata.job-view :as jv]
+            [metadactyl.service.app-metadata :as app-metadata]
+            [metadactyl.util.service :as service]
+            [compojure.route :as route]
+            [ring.swagger.schema :as ss]
+            [schema.core :as s]))
+
+(defroutes* apps
+  (GET* "/" []
+        :query [params AppSearchParams]
+        :summary "Search Apps"
+        :return AppListing
+        :notes "This service allows users to search for Apps based on a part of the App name or
+        description. The response body contains an `apps` array that is in the same format as
+        the `apps` array in the /apps/categories/:category-id endpoint response."
+        (service/trap #(search-apps params)))
+
+  (POST* "/" [:as {uri :uri}]
+         :query [params SecuredQueryParamsEmailRequired]
+         :body [body (describe AppRequest "The App to add.")]
+         :return App
+         :summary "Add a new App."
+         :notes "This service adds a new App to the user's workspace."
+         (ce/trap uri #(add-app body)))
+
+  (POST* "/arg-preview" [:as {uri :uri}]
+         :query [params SecuredQueryParams]
+         :body [body (describe AppPreviewRequest "The App to preview.")]
+         :summary "Preview Command Line Arguments"
+         :notes "The app integration utility in the DE uses this service to obtain an example list
+         of command-line arguments so that the user can tell what the command-line might look like
+         without having to run a job using the app that is being integrated first. The App request
+         body also requires that each parameter contain a `value` field that contains the parameter
+         value to include on the command line. The response body is in the same format as the
+         `/arg-preview` service in the JEX. Please see the JEX documentation for more information."
+         (ce/trap uri #(service/success-response (app-metadata/preview-command-line body))))
+
+  (GET* "/ids" []
+        :query [params SecuredQueryParams]
+        :return AppIdList
+        :summary "List All App Identifiers"
+        :notes "The export script needs to have a way to obtain the identifiers of all of the apps
+        in the Discovery Environment, deleted or not. This service provides that information."
+        (service/trap #(get-all-app-ids)))
+
+  (POST* "/shredder" []
+         :query [params SecuredQueryParams]
+         :body [body (describe AppDeletionRequest "List of App IDs to delete.")]
+         :summary "Logically Deleting Apps"
+         :notes "One or more Apps can be marked as deleted in the DE without being completely
+         removed from the database using this service. <b>Note</b>: an attempt to delete an app that
+         is already marked as deleted is treated as a no-op rather than an error condition. If the
+         App doesn't exist in the database at all, however, then that is treated as an error
+         condition."
+         (ce/trap "apps-shredder" #(app-metadata/delete-apps body)))
+
+  (GET* "/:app-id" []
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :summary "Obtain an app description."
+        :return AppJobView
+        :notes "This service allows the Discovery Environment user interface to obtain an
+        app description that can be used to construct a job submission form."
+        (ce/trap "get-app" #(service/success-response (jv/get-app app-id))))
+
+  (DELETE* "/:app-id" []
+           :path-params [app-id :- AppIdPathParam]
+           :query [params SecuredQueryParams]
+           :summary "Logically Deleting an App"
+           :notes "An app can be marked as deleted in the DE without being completely removed from
+           the database using this service. <b>Note</b>: an attempt to delete an App that is already
+           marked as deleted is treated as a no-op rather than an error condition. If the App
+           doesn't exist in the database at all, however, then that is treated as an error condition."
+           (ce/trap "delete-app" #(app-metadata/delete-app app-id)))
+
+  (PATCH* "/:app-id" []
+          :path-params [app-id :- AppIdPathParam]
+          :query [params SecuredQueryParamsEmailRequired]
+          :body [body (describe App "The App to update.")]
+          :summary "Update App Labels"
+          :notes "This service is capable of updating just the labels within a single-step app, and
+          it allows apps that have already been made available for public use to be updated, which
+          helps to eliminate administrative thrash for app updates that only correct typographical
+          errors. Upon success, the response body contains just a success flag. Upon error, the
+          response body contains an error code along with some additional information about the
+          error. <b>Note</b>: Although this endpoint accepts all App fields, only the 'name' (except
+          in parameters and parameter arguments), 'description', 'label', and 'display' (only in
+          parameter arguments) fields will be processed and updated by this endpoint."
+          (ce/trap "update-app-labels" #(app-metadata/relabel-app (assoc body :id app-id))))
+
+  (PUT* "/:app-id" [:as {uri :uri}]
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParamsEmailRequired]
+        :body [body (describe AppRequest "The App to update.")]
+        :return App
+        :summary "Update an App"
+        :notes "This service updates a single-step App in the database, as long as the App has not
+        been submitted for public use."
+        (ce/trap uri #(update-app (assoc body :id app-id))))
+
+  (POST* "/:app-id/copy" [:as {uri :uri}]
+         :path-params [app-id :- AppIdPathParam]
+         :query [params SecuredQueryParamsEmailRequired]
+         :return App
+         :summary "Make a Copy of an App Available for Editing"
+         :notes "This service can be used to make a copy of an App in the user's workspace."
+         (ce/trap uri #(copy-app app-id)))
+
+  (GET* "/:app-id/description" []
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :summary "Get an App Description"
+        :notes "This service is used by Donkey to get App descriptions for job status update
+        notifications. There is no request body and the response body contains only the App
+        description, with no special formatting."
+        (service/trap #(get-app-description app-id)))
+
+  (GET* "/:app-id/details" []
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :return AppDetails
+        :summary "Get App Details"
+        :notes "This service is used by the DE to obtain high-level details about a single App"
+        (service/trap #(get-app-details app-id)))
+
+  (GET* "/:app-id/file-parameters" [:as {uri :uri}]
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :return AppFileParameterListing
+        :summary "List File Parameters in an App"
+        :notes "When a pipeline is being created, the UI needs to know what types of files are
+        consumed by and what types of files are produced by each App in the pipeline. This service
+        provides that information. The response body contains the App identifier, the App name, a
+        list of inputs (types of files consumed by the service) and a list of outputs (types of
+        files produced by the service)."
+        (ce/trap uri #(get-file-parameters-for-app app-id)))
+
+  (GET* "/:app-id/is-publishable" [app-id]
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :summary "Determine if an App Can be Made Public"
+        :notes "A multi-step App can't be made public if any of the Tasks that are included in it
+        are not public. This endpoint returns a true flag if the App is a single-step App or it's a
+        multistep App in which all of the Tasks included in the pipeline are public."
+        (ce/trap "is-publishable" #(hash-map :publishable (first (app-publishable? app-id)))))
+
+  (DELETE* "/:app-id/rating" [:as {uri :uri}]
+           :path-params [app-id :- AppIdPathParam]
+           :query [params SecuredQueryParams]
+           :return RatingResponse
+           :summary "Delete an App Rating"
+           :notes "The DE uses this service to remove a rating that a user has previously made. This
+           service deletes the authenticated user's rating for the corresponding app-id."
+           (ce/trap uri #(service/success-response (app-metadata/delete-app-rating app-id))))
+
+  (POST* "/:app-id/rating" [:as {uri :uri}]
+         :path-params [app-id :- AppIdPathParam]
+         :query [params SecuredQueryParams]
+         :body [body (describe RatingRequest "The user's new rating for this App.")]
+         :return RatingResponse
+         :summary "Rate an App"
+         :notes "Users have the ability to rate an App for its usefulness, and this service provides
+         the means to store the App rating. This service accepts a rating level between one and
+         five, inclusive, and a comment identifier that refers to a comment in iPlant's Confluence
+         wiki. The rating is stored in the database and associated with the authenticated user."
+         (ce/trap uri #(service/success-response (app-metadata/rate-app app-id body))))
+
+  (GET* "/:app-id/ui" []
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParamsEmailRequired]
+        :return App
+        :summary "Make an App Available for Editing"
+        :notes "The app integration utility in the DE uses this service to obtain the App
+        description JSON so that it can be edited. The App must have been integrated by the
+        requesting user, and it must not already be public."
+        (service/trap #(edit-app app-id))))

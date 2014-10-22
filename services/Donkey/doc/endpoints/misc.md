@@ -39,21 +39,20 @@ $ curl -s http://by-tor:8888/
 Welcome to Donkey!  I've mastered the stairs!
 ```
 
-## Initializing a User's Workspace
+## Initializing a User's Workspace and Preferences
 
 Secured Endpoint: GET /secured/bootstrap
 
-This endpoint gets user information from the metadactyl endpoint using the same
-path, and adds the user's home path, the user's trash path, and the base trash
-path to the response.
-Please see the [metadactyl documentation](https://github.com/iPlantCollaborativeOpenSource/metadactyl-clj/blob/master/doc/endpoints/misc.md#initializing-a-users-workspace) for more information.
+The DE calls this service as soon as the user logs in to initialize the user's workspace if the user
+has never logged in before, and returns user information, including the user's preferences, the
+user's home path, the user's trash path, and the base trash. This service always records the fact
+that the user logged in.
 
-Note that the `ip-address` query parameter that has to be passed to the
-metadactyl service cannot be obtained automatically in most cases. Because of
-this, the `ip-address` parameter must be passed to this service in addition to
-the `proxyToken` parameter. Here's an example:
+Note that the required `ip-address` query parameter cannot be obtained automatically in most cases.
+Because of this, the `ip-address` parameter must be passed to this service in addition to the
+`proxyToken` parameter. Here's an example:
 
-```
+```json
 $ curl "http://by-tor:8888/secured/bootstrap?proxyToken=$(cas-ticket)&ip-address=127.0.0.1" | python -mjson.tool
 {
     "action": "bootstrap",
@@ -67,7 +66,17 @@ $ curl "http://by-tor:8888/secured/bootstrap?proxyToken=$(cas-ticket)&ip-address
     "lastName": "Dog",
     "userHomePath": "/iplant/home/snow-dog",
     "userTrashPath": "/iplant/trash/snow-dog",
-    "baseTrashPath": "/iplant/trash"
+    "baseTrashPath": "/iplant/trash",
+    "preferences": {
+        "systemDefaultOutputDir": {
+            "id": "/iplant/home/snow-dog/analyses",
+            "path": "/iplant/home/snow-dog/analyses"
+        },
+        "defaultOutputFolder": {
+            "id": "/iplant/home/snow-dog/analyses",
+            "path": "/iplant/home/snow-dog/analyses"
+        }
+    }
 }
 ```
 
@@ -75,15 +84,15 @@ $ curl "http://by-tor:8888/secured/bootstrap?proxyToken=$(cas-ticket)&ip-address
 
 Secured Endpoint: GET /secured/logout
 
-Delegates to metadactyl: GET /secured/logout
+The DE calls this service when the user explicitly logs out. This service simply records the time
+that the user logged out in the login record created by the `/secured/bootstrap` service.
+Note that this service requires these query-string parameters, which cannot be obtained
+automatically in most cases, in addition to the `proxyToken` parameter:
 
-This endpoint is a passthrough to the metadactyl endpoint using the same path.
-Please see the metadactyl documentation for more information.
+* ip-address - the source IP address of the logout request
+* login-time - the login timestamp that was returned by the bootstrap service
 
-Note that the `ip-address` and `login-time` query parameters that have to be
-passed to the metadactyl service cannot be obtained automatically in most cases.
-Because of this, these parameters must be passed to this service in addition to
-the `proxyToken` parameter. Here's an example:
+Here's an example:
 
 ```
 $ curl -s "http://by-tor:8888/secured/logout?proxyToken=$(cas-ticket)&ip-address=127.0.0.1&login-time=1374190755304" | python -mjson.tool

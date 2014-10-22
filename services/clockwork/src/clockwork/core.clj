@@ -1,8 +1,8 @@
 (ns clockwork.core
   (:gen-class)
-  (:use [clojure.tools.cli :only [cli]]
-        [slingshot.slingshot :only [try+]])
+  (:use [slingshot.slingshot :only [try+]])
   (:require [clojure.tools.logging :as log]
+            [clojure.tools.cli :as cli]
             [clojure.string :as string]
             [clojure-commons.error-codes :as ce]
             [clockwork.config :as config]

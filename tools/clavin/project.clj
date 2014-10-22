@@ -1,8 +1,18 @@
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
 (defproject org.iplantc/clavin "3.2.10"
   :description "A command-line tool for loading service configurations."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
+  :manifest {"Git-Ref" ~(git-ref)}
   :dependencies [[org.antlr/stringtemplate "4.0.2"]
                  [org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.cli "0.2.1"]

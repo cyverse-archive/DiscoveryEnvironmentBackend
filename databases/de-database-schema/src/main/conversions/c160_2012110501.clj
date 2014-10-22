@@ -1,7 +1,6 @@
 (ns facepalm.c160-2012110501
   (:use [korma.core]
-        [kameleon.core]
-        [kameleon.entities :only [template_group]])
+        [kameleon.core])
   (:require [clojure.string :as string]))
 
 (def ^:private version
@@ -15,7 +14,7 @@
    that's quite a bit slower."
   []
   (println "\t* renaming app groups containing the word \"applications.\"")
-  (update template_group
+  (update :template_group
           (set-fields {:name (sqlfn regexp_replace :name "Applications" "Apps")})
           (where {:name [like "%Applications%"]})))
 

@@ -1,9 +1,19 @@
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
 (defproject org.iplantc/dewey "3.2.10"
   :description "This is a RabbitMQ client responsible for keeping an elasticsearch index
                 synchronized with an iRODS repository using messages produced by iRODS."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
+  :manifest {"Git-Ref" ~(git-ref)}
   :aot [dewey.core]
   :main dewey.core
   :dependencies [[org.clojure/clojure "1.6.0"]

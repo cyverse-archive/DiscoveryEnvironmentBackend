@@ -96,8 +96,8 @@
 
 (defprotocol AppLister
   "Used to list apps available to the Discovery Environment."
-  (listAppGroups [_])
-  (listApps [_ group-id params])
+  (listAppGroups [_ params])
+  (listApps [_ category-id params])
   (searchApps [_ search-term])
   (updateFavorites [_ app-id favorite?])
   (rateApp [_ app-id rating comment-id])
@@ -108,7 +108,7 @@
   (listAppDataObjects [_ app-id])
   (editWorkflow [_ app-id])
   (copyWorkflow [_ app-id])
-  (submitJob [_ workspace-id submission])
+  (submitJob [_ submission])
   (countJobs [_ filter])
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
@@ -121,11 +121,11 @@
 (deftype DeOnlyAppLister []
   AppLister
 
-  (listAppGroups [_]
-    (metadactyl/get-only-app-groups))
+  (listAppGroups [_ params]
+    (metadactyl/get-app-categories params))
 
-  (listApps [_ group-id params]
-    (metadactyl/apps-in-group group-id params))
+  (listApps [_ category-id params]
+    (metadactyl/apps-in-category category-id params))
 
   (searchApps [_ search-term]
     (metadactyl/search-apps search-term))
@@ -149,7 +149,7 @@
     (metadactyl/get-app-details app-id))
 
   (listAppDataObjects [_ app-id]
-    (metadactyl/list-app-data-objects))
+    (metadactyl/list-app-file-parameters app-id))
 
   (editWorkflow [_ app-id]
     (metadactyl/edit-workflow app-id))
@@ -157,8 +157,8 @@
   (copyWorkflow [_ app-id]
     (metadactyl/copy-workflow app-id))
 
-  (submitJob [_ workspace-id submission]
-    (da/submit-job workspace-id submission))
+  (submitJob [_ submission]
+    (da/submit-job submission))
 
   (countJobs [_ filter]
     (count-de-jobs filter))
@@ -185,23 +185,23 @@
 (deftype DeHpcAppLister [agave-client user-has-access-token?]
   AppLister
 
-  (listAppGroups [_]
-    (-> (metadactyl/get-only-app-groups)
-        (update-in [:groups] conj (.hpcAppGroup agave-client))))
+  (listAppGroups [_ params]
+    (-> (metadactyl/get-app-categories params)
+        (update-in [:categories] conj (.hpcAppGroup agave-client))))
 
-  (listApps [_ group-id params]
-    (if (= group-id (:id (.hpcAppGroup agave-client)))
+  (listApps [_ category-id params]
+    (if (= category-id (:id (.hpcAppGroup agave-client)))
       (.listApps agave-client)
-      (metadactyl/apps-in-group group-id params)))
+      (metadactyl/apps-in-category category-id params)))
 
   (searchApps [_ search-term]
-    (let [def-result {:template_count 0 :templates {}}
+    (let [def-result {:app_count 0 :apps {}}
           de-apps    (metadactyl/search-apps search-term)
           hpc-apps   (if (user-has-access-token?)
                        (aa/search-apps agave-client search-term def-result)
                        def-result)]
-      {:template_count (apply + (map :template_count [de-apps hpc-apps]))
-       :templates      (mapcat :templates [de-apps hpc-apps])}))
+      {:app_count (apply + (map :app_count [de-apps hpc-apps]))
+       :apps      (mapcat :apps [de-apps hpc-apps])}))
 
   (updateFavorites [_ app-id favorite?]
     (if (is-uuid? app-id)
@@ -236,7 +236,7 @@
 
   (listAppDataObjects [_ app-id]
     (if (is-uuid? app-id)
-      (metadactyl/list-app-data-objects app-id)
+      (metadactyl/list-app-file-parameters app-id)
       (.listAppDataObjects agave-client app-id)))
 
   (editWorkflow [_ app-id]
@@ -245,8 +245,8 @@
   (copyWorkflow [_ app-id]
     (aa/add-workflow-templates agave-client (metadactyl/copy-workflow app-id)))
 
-  (submitJob [_ workspace-id submission]
-    (ca/submit-job agave-client workspace-id submission))
+  (submitJob [_ submission]
+    (ca/submit-job agave-client submission))
 
   (countJobs [_ filter]
     (count-jobs filter))
@@ -309,18 +309,18 @@
        (get-de-hpc-app-lister state-info username)
        (DeOnlyAppLister.))))
 
-(defn get-only-app-groups
-  []
+(defn get-app-categories
+  [params]
   (with-db db/de
     (transaction
-     (service/success-response (.listAppGroups (get-app-lister "type=apps"))))))
+     (service/success-response (.listAppGroups (get-app-lister "type=apps") params)))))
 
-(defn apps-in-group
-  [group-id params]
+(defn apps-in-category
+  [category-id params]
   (with-db db/de
     (transaction
-     (-> (get-app-lister (str "type=apps&app-category=" group-id))
-         (.listApps group-id params)
+     (-> (get-app-lister (str "type=apps&app-category=" category-id))
+         (.listApps category-id params)
          (service/success-response)))))
 
 (defn search-apps
@@ -342,21 +342,20 @@
                          (service/required-field request :user_favorite))))))
 
 (defn rate-app
-  [body]
+  [body app-id]
   (with-db db/de
     (transaction
      (let [request (service/decode-json body)]
        (.rateApp (get-app-lister)
-                 (service/required-field request :analysis_id)
+                 app-id
                  (service/required-field request :rating)
-                 (service/required-field request :comment_id))))))
+                 (:comment_id request))))))
 
 (defn delete-rating
-  [body]
+  [app-id]
   (with-db db/de
     (transaction
-     (let [request (service/decode-json body)]
-       (.deleteRating (get-app-lister) (service/required-field request :analysis_id))))))
+      (.deleteRating (get-app-lister) app-id))))
 
 (defn get-app
   [app-id]
@@ -377,11 +376,11 @@
      (service/success-response (.getAppDetails (get-app-lister) app-id)))))
 
 (defn submit-job
-  [workspace-id body]
+  [body]
   (with-db db/de
     (transaction
      (service/success-response
-      (.submitJob (get-app-lister) workspace-id (service/decode-json body))))))
+      (.submitJob (get-app-lister) (service/decode-json body))))))
 
 (defn list-jobs
   [{:keys [limit offset sort-field sort-order filter]
@@ -538,7 +537,7 @@
   (with-db db/de
     (service/success-response (.getAppRerunInfo (get-app-lister) job-id))))
 
-(defn list-app-data-objects
+(defn list-app-file-parameters
   [app-id]
   (with-db db/de
     (service/success-response (.listAppDataObjects (get-app-lister) app-id))))

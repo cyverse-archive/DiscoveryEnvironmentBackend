@@ -1,6 +1,8 @@
 (ns metadactyl.validation
-  (:use [clojure.string :only [blank?]]
-        [slingshot.slingshot :only [throw+]]))
+  (:use [metadactyl.user :only [current-user]]
+        [clojure.string :only [blank?]]
+        [slingshot.slingshot :only [throw+]])
+  (:require [clojure-commons.error-codes :as cc-errs]))
 
 (defn missing-json-field-exception
   "Thrown when a required field is missing from a JSON request body."
@@ -40,7 +42,7 @@
   "Validates a value, presumably obtained from the HTTP request."
   [is-valid-fn value exception-fn]
   (when-not (is-valid-fn value)
-    (throw+ exception-fn)))
+    (throw+ (exception-fn))))
 
 (defn- add-field
   "Adds a named field to a path.  The key into the path may be a keyword, a
@@ -176,3 +178,25 @@
      (validate-json-field m k ""))
   ([m k path]
      (validate-json-field* m k (add-field path k))))
+
+(defn- verify-app-not-public
+  "Verifies that an app has not been made public."
+  [app]
+  (if (:is_public app)
+    (throw+ {:code cc-errs/ERR_NOT_WRITEABLE,
+             :message (str "Workflow, " (:id app) ", is public and may not be edited")})))
+
+(defn verify-app-ownership
+  "Verifies that the current user owns the app that is being edited."
+  [app]
+  (let [owner (:integrator_email app)]
+    (if (not= owner (:email current-user))
+      (throw+ {:code cc-errs/ERR_NOT_OWNER,
+               :username (:username current-user),
+               :message (str (:shortUsername current-user) " does not own app " (:id app))}))))
+
+(defn verify-app-editable
+  "Verifies that the app is allowed to be edited by the current user."
+  [app]
+  (verify-app-ownership app)
+  (verify-app-not-public app))

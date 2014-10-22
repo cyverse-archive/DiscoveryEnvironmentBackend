@@ -9,10 +9,8 @@
         * [Template JSON - Validators](#template-json---validators)
     * [Template JSON Example](#template-json-example)
 * [Updated Administrative Services](#updated-administrative-services)
-    * [Updating or Importing a Single-Step App](#updating-or-importing-a-single-step-app)
     * [Obtaining an App Representation for Editing](#obtaining-an-app-representation-for-editing)
     * [Obtaining App Information for Job Submission](#obtaining-app-information-for-job-submission)
-    * [Previewing Command Line Arguments](#previewing-command-line-arguments)
 
 # Overview
 
@@ -440,112 +438,6 @@ Please see the [examples file](examples.md#updated-template-json).
 
 # Updated Administrative Services
 
-## Updating or Importing a Single-Step App
-
-*Secured Endpoint:* PUT /secured/update-app
-
-This service either imports a new single-step app or updates an existing one in
-the database. For more information about the format of the request body, please
-see [Template JSON](#template-json) above.
-
-Here's an example:
-
-```
-$ curl -X PUT -sd @app.json "http://by-tor:8888/secured/update-app?user=nobody&email=nobody@iplantcollaborative.org" && echo
-A750DD7B-7EBC-4809-B9EC-6F717220A1D1
-```
-
-## Obtaining an App Representation for Editing
-
-*Secured Endpoint:* GET /secured/edit-app/{app-id}
-
-The app integration utility in the DE uses this service to obtain the app
-description JSON so that the analysis can be edited. The app must have been
-integrated by the requesting user. For editing apps with more than 1 step, the
-client uses the
-[edit-workflow](editing.md#making-a-pipeline-available-for-editing) endpoint.
-Please see [Template JSON](#template-json) above for more information about the
-format of the response body.
-
-Here's an example:
-
-```
-$ curl -s "http://by-tor:8888/secured/edit-app/A750DD7B-7EBC-4809-B9EC-6F717220A1D1?user=nobody&email=nobody@iplantcollaborative.org" | python -mjson.tool
-{
-    "component": "",
-    "description": "Testing new /*-app endpoints.",
-    "edited_date": "",
-    "groups": [
-        {
-            "description": "",
-            "id": "BF640C7B-E5EA-4232-AC88-7F7D2768E3C1",
-            "isVisible": true,
-            "label": "Grp1",
-            "name": "",
-            "properties": [
-                {
-                    "arguments": [],
-                    "data_object": {
-                        "data_source": "file",
-                        "file_info_type": "File",
-                        "format": "Unspecified",
-                        "is_implicit": false,
-                        "retain": false
-                    },
-                    "defaultValue": "",
-                    "description": "File input tool tip",
-                    "id": "2A72C63F-569A-4C6E-9572-E075F705DD3D",
-                    "isVisible": true,
-                    "label": "Input File",
-                    "name": "-f",
-                    "omit_if_blank": true,
-                    "order": 1,
-                    "required": true,
-                    "type": "FileInput",
-                    "validators": []
-                },
-                {
-                    "arguments": [],
-                    "defaultValue": "",
-                    "description": "TextBox tool tip",
-                    "id": "DA067538-535A-44FF-B927-0558DBD5E1D5",
-                    "isVisible": true,
-                    "label": "TextBox",
-                    "name": "-b",
-                    "omit_if_blank": true,
-                    "order": 2,
-                    "required": false,
-                    "type": "Text",
-                    "validators": []
-                },
-                {
-                    "arguments": [],
-                    "defaultValue": "",
-                    "description": "checkbox tool tip",
-                    "id": "01DBA927-0A02-48D2-9B85-CE77A66B2D63",
-                    "isVisible": true,
-                    "label": "Checkbox",
-                    "name": "-c",
-                    "omit_if_blank": true,
-                    "order": 3,
-                    "required": false,
-                    "type": "Flag",
-                    "validators": []
-                }
-            ],
-            "type": ""
-        }
-    ],
-    "id": "A750DD7B-7EBC-4809-B9EC-6F717220A1D1",
-    "label": "App Endpoint Test",
-    "name": "App Endpoint Test",
-    "published_date": "",
-    "references": [],
-    "tito": "A750DD7B-7EBC-4809-B9EC-6F717220A1D1",
-    "type": ""
-}
-```
-
 ## Obtaining App Information for Job Submission
 
 *Secured Endpoint:* GET /secured/app/{app-id}
@@ -613,29 +505,3 @@ $ curl -s "http://by-tor:8888/secured/app/A750DD7B-7EBC-4809-B9EC-6F717220A1D1?u
     "type": ""
 }
 ```
-
-## Previewing Command Line Arguments
-
-*Unsecured Endpoint:* POST /arg-preview
-
-The app integration utility in the DE uses this service to obtain an example
-list of command-line arguments so that the user can tell what the command-line
-might look like without having to run a job using the app that is being
-integrated first. The request body is in the format described by
-[Template JSON](#template-json), above, except that each property also contains
-a `value` field that contains the value of the property to include on the
-command line. The response body is in the same format as the `/arg-preview`
-service in the JEX. Please see the JEX documentation for more information.
-
-Here's an example:
-
-```
-$ curl -sd @app-with-values.json http://by-tor:8888/arg-preview | python -mjson.tool
-{
-    "action": "arg-preview",
-    "params": "-f '/path/to/foo.txt' -b 'bar' -c ",
-    "status": "success"
-}
-```
-
-A copy of app-with-values.json can be found [here](app-with-values.json).

@@ -5,7 +5,7 @@
   []
   (or (System/getenv "GIT_COMMIT")
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
-            ""))
+      ""))
 
 (defproject org.iplantc/conrad "3.2.10"
   :description "Back-End Services for the iPlant Administrative Console"

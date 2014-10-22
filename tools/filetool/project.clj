@@ -1,8 +1,18 @@
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
 (defproject org.iplantc/porklock "3.2.10"
   :description "A command-line tool for interacting with iRODS."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
+  :manifest {"Git-Ref" ~(git-ref)}
   :main porklock.core
   :aot [porklock.core]
   :classifiers [["javadoc" :javadoc]

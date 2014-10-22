@@ -16,7 +16,7 @@
   {:status 200})
 
 (defn error-body [e]
-  (cheshire/encode {:success false :reason (.getMessage e)}))
+  (cheshire/encode {:reason (.getMessage e)}))
 
 (defn success?
   "Returns true if status-code is between 200 and 299, inclusive."
@@ -48,7 +48,7 @@
 (defn- donkey-response-from-map
   [e status-code]
   {:status  status-code
-   :body    (cheshire/encode (assoc e :success (success? status-code)))
+   :body    (cheshire/encode e)
    :headers {"Content-Type" default-content-type}})
 
 (defn- error-resp?
@@ -75,8 +75,7 @@
    If a response map is passed in and is missing the content-type field,
    then the content-type is set to application/json.
 
-   If it's a map but not a response map, then the :success field is merged in,
-   then is JSON encoded, and it is finally used as the body of the response.
+   If it's a map but not a response map then it's JSON encoded and used as the body of the response.
 
    Otherwise, the value is preserved and is wrapped in a response map."
   [e status-code]
@@ -113,8 +112,7 @@
 
 (defn invalid-arg-response [arg val reason]
   {:status       400
-   :body         (cheshire/encode {:success false
-                                   :code    "INVALID-ARGUMENT"
+   :body         (cheshire/encode {:code    "INVALID-ARGUMENT"
                                    :reason  reason
                                    :arg     (name arg)
                                    :val      val})
@@ -123,16 +121,14 @@
 (defn invalid-cfg-response
   [reason]
   {:status       500
-   :body         (cheshire/encode {:success    false
-                                   :error_code ce/ERR_CONFIG_INVALID
+   :body         (cheshire/encode {:error_code ce/ERR_CONFIG_INVALID
                                    :reason     reason})
    :content-type :json})
 
 (defn missing-arg-response [arg]
   (log/error "missing required argument:" (name arg))
   {:status       400
-   :body         (cheshire/encode {:success false
-                                   :code    "MISSING-REQUIRED-ARGUMENT"
+   :body         (cheshire/encode {:code    "MISSING-REQUIRED-ARGUMENT"
                                    :arg     (name arg)})
    :content-type :json})
 
@@ -141,8 +137,7 @@
              "using base name" base)
   {:status       500
    :content-type :json
-   :body         (cheshire/encode {:success    false
-                                   :error_code "ERR-TEMP-DIR-CREATION"
+   :body         (cheshire/encode {:error_code "ERR-TEMP-DIR-CREATION"
                                    :parent     parent
                                    :prefix     prefix
                                    :base       base})})
@@ -150,8 +145,7 @@
 (defn tree-file-parse-err-response [{:keys [details]}]
   {:status       400
    :content-type :json
-   :body         (cheshire/encode {:success    false
-                                   :error_code "ERR-TREE-FILE-PARSE"
+   :body         (cheshire/encode {:error_code "ERR-TREE-FILE-PARSE"
                                    :details    details})})
 
 (defn common-error-code [exception]
@@ -181,7 +175,7 @@
   "Builds the response to send for an unrecognized service path."
   []
   (let [msg "unrecognized service path"]
-    (cheshire/encode {:success false :reason msg})))
+    (cheshire/encode {:reason msg})))
 
 (defn build-url-with-query
   "Builds a URL from a base URL and one or more URL components.  Any query
@@ -239,6 +233,13 @@
      (forward-put addr request (slurp (:body request))))
   ([addr request body]
      (client/put addr (prepare-forwarded-request request body))))
+
+(defn forward-patch
+  "Forwards a PATCH request to a remote service."
+  ([addr request]
+   (forward-patch addr request (slurp (:body request))))
+  ([addr request body]
+   (client/patch addr (prepare-forwarded-request request body))))
 
 (defn forward-delete
   "Forwards a DELETE request to a remote service."
@@ -318,6 +319,15 @@
   (when-not valid?
     (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
              :message    (string/join " " msgs)})))
+
+(defn string->long
+  "Converts a String to a long."
+  [string & msgs]
+  (try
+    (Long/parseLong string)
+    (catch NumberFormatException e
+           (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
+                    :message    (string/join " " msgs)}))))
 
 (defn request-failure
   "Throws an exception indicating that a request failed for an unexpected reason."

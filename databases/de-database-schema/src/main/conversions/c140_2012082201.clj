@@ -1,9 +1,6 @@
 (ns facepalm.c140-2012082201
   (:use [korma.core]
         [kameleon.core]
-        [kameleon.entities
-         :only [data_object property property_group validator template
-                transformation_activity]]
         [facepalm.error-codes :only [conversion-validation-error]])
   (:require [clojure.string :as string])
   (:import [java.util UUID]))
@@ -14,14 +11,14 @@
 
 ;; An entity that can be used to find duplicated validator IDs.
 (defentity validator_count
-  (table (subselect validator
+  (table (subselect :validator
                     (fields :id [(sqlfn count :id) :count])
                     (group :id))
          :validator_count))
 
 ;; An entity that can be used to find duplicated property group IDs.
 (defentity property_group_count
-  (table (subselect property_group
+  (table (subselect :property_group
                     (fields :id [(sqlfn count :id) :count])
                     (group :id))
          :property_group_count))
@@ -40,7 +37,7 @@
 (defn- update-validator-id
   "Updates the identifier of a validator."
   [{:keys [hid]}]
-  (update validator
+  (update :validator
           (set-fields {:id (uuid)})
           (where {:hid hid})))
 
@@ -51,7 +48,7 @@
      (dorun (map fix-duplicated-validator-ids (find-duplicated-validator-ids))))
   ([id]
      (dorun (map update-validator-id
-                 (drop 1 (select validator (where {:id id})))))))
+                 (drop 1 (select :validator (where {:id id})))))))
 
 (defn- find-duplicated-property-group-ids
   "Finds the list of duplicated property group identifiers in the database."
@@ -61,7 +58,7 @@
 (defn- update-property-group-id
   "Updates the identifier of a property group."
   [{:keys [hid]}]
-  (update property_group
+  (update :property_group
           (set-fields {:id (uuid)})
           (where {:hid hid})))
 
@@ -73,7 +70,7 @@
                  (find-duplicated-property-group-ids))))
   ([id]
      (dorun (map update-property-group-id
-                 (drop 1 (select property_group (where {:id id})))))))
+                 (drop 1 (select :property_group (where {:id id})))))))
 
 (defn- load-props-for-template
   "Loads the list of properties associated with a template."
@@ -94,7 +91,7 @@
 (defn- count-props
   "Counts the number of properties with the given identifier."
   [id]
-  (:count (first (select property
+  (:count (first (select :property
                          (aggregate (count :*) :count)
                          (where {:id id})))))
 
@@ -103,7 +100,7 @@
    data object then the data object's property should have the same ID."
   [{:keys [hid]}]
   (let [new-id (uuid)]
-    (update property
+    (update :property
             (set-fields {:id new-id})
             (where {:hid hid}))
     new-id))
@@ -220,10 +217,10 @@
   "Removes duplicated property identifiers from the database."
   []
   (println "\t* eliminating duplicate property IDs; this could take a while")
-  (let [template-ids (map :id (select template (fields :id)))
+  (let [template-ids (map :id (select :template (fields :id)))
         prop-maps    (into {} (map #(vector % (update-property-ids-for %))
                                    template-ids))
-        app-ids      (map :id (select transformation_activity (fields :id)))]
+        app-ids      (map :id (select :transformation_activity (fields :id)))]
     (dorun (map #(update-app-property-references prop-maps %) app-ids))))
 
 (defn- fix-dataobject-ids
@@ -309,9 +306,9 @@
   "Counts the number of data objects for which the ID is not the same as the ID
    of the parent property."
   []
-  (-> (select property
+  (-> (select :property
               (aggregate (count :*) :count)
-              (join data_object)
+              (join :data_object)
               (where {:property.id [not= :data_object.id]}))
       first
       :count))

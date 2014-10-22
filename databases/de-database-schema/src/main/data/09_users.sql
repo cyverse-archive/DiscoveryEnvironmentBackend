@@ -1,1 +1,1 @@
-INSERT INTO users (id, username) VALUES (0, '<public>');
+INSERT INTO users (id, username) VALUES ('00000000-0000-0000-0000-000000000000', '<public>');

@@ -4,8 +4,8 @@ SET search_path = public, pg_catalog;
 -- A table of synonyms for metadata attributes.
 --
 CREATE TABLE metadata_attr_synonyms (
-    attribute_id uuid NOT NULL REFERENCES metadata_attributes(id),
-    synonym_id uuid NOT NULL REFERENCES metadata_attributes(id)
+    attribute_id uuid NOT NULL,
+    synonym_id uuid NOT NULL
 );
 
 --

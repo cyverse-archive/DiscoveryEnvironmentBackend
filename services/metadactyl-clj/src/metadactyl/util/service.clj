@@ -7,6 +7,9 @@
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]))
 
+(def ^:private default-content-type-header
+  {"Content-Type" "application/json; charset=utf-8"})
+
 (defn empty-response []
   {:status 200})
 
@@ -14,18 +17,18 @@
   ([map]
      (charset
       {:status       200
-       :body         (cheshire/encode (merge {:success true} map))
-       :content-type :json}
+       :body         map
+       :headers default-content-type-header}
       "UTF-8"))
   ([]
-     (success-response {})))
+     (success-response nil)))
 
 (defn failure-response [e]
   (log/error e "bad request")
   (charset
    {:status       400
-    :body         (cheshire/encode {:success false :reason (.getMessage e)})
-    :content-type :json}
+    :body         (cheshire/encode {:reason (.getMessage e)})
+    :headers default-content-type-header}
    "UTF-8"))
 
 (defn slingshot-failure-response [m]
@@ -33,9 +36,8 @@
   (charset
    {:status       400
     :body         (cheshire/encode (assoc (dissoc m :type)
-                                     :code    (upper-case (name (or (:type m) (:code m))))
-                                     :success false))
-    :content-type :json}
+                                     :code    (upper-case (name (or (:type m) (:code m))))))
+    :headers default-content-type-header}
    "UTF-8"))
 
 (defn forbidden-response [e]
@@ -46,14 +48,14 @@
   (log/error e "internal error")
   (charset
    {:status 500
-    :body (cheshire/encode {:success false :reason (.getMessage e)})
-    :content-type :json}
+    :body (cheshire/encode {:reason (.getMessage e)})
+    :headers default-content-type-header}
    "UTF-8"))
 
 (defn unrecognized-path-response []
   "Builds the response to send for an unrecognized service path."
   (let [msg "unrecognized service path"]
-    (cheshire/encode {:success false :reason msg})))
+    (cheshire/encode {:reason msg})))
 
 (defn trap
   "Traps any exception thrown by a service and returns an appropriate
@@ -78,8 +80,7 @@
 (defn prepare-forwarded-request
   "Prepares a request to be forwarded to a remote service."
   [request body]
-  {:content-type (get-in request [:headers :content-type])
-   :headers (dissoc (:headers request) "content-length" "content-type")
+  {:headers (dissoc (:headers request) "content-length")
    :body body})
 
 (defn parse-json

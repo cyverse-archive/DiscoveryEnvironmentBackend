@@ -3,19 +3,14 @@
         [korma.core]
         [kameleon.core]
         [kameleon.entities]
-        [kameleon.queries :only [property-types-for-tool-type]])
-  (:require [clojure.string :as string])
-  (:import [org.iplantc.persistence.dto.components DeployedComponent]
-           [org.iplantc.workflow MissingDeployedComponentException
-            UnknownDeployedComponentException]
-           [org.iplantc.workflow.integration.validation
-            UnsupportedPropertyTypeException]))
+        [kameleon.queries :only [parameter-types-for-tool-type]])
+  (:require [clojure.string :as string]))
 
 (defn- get-tool-type-from-database
   "Gets the tool type for the deployed component with the given identifier from
    the database."
   [component-id]
-  (first (select deployed_components
+  (first (select tools
                  (fields :tool_types.id :tool_types.name)
                  (join tool_types)
                  (where {:id component-id}))))
@@ -24,15 +19,16 @@
   "Gets the deployed component for the deployed component with the given identifer
    from the database."
   [component-id]
-  (first (select deployed_components
+  (first (select tools
                  (where {:id component-id}))))
 
+;; FIXME
 (defn- get-tool-type-from-registry
   "Gets the tool type for the deployed component with the given identifier from
    the given registry."
   [registry component-id]
   (when-not (nil? registry)
-    (let [components (.getRegisteredObjects registry DeployedComponent)
+    (let [components (throw+ "Reimplement: (.getRegisteredObjects registry DeployedComponent)")
           component  (first (filter #(= component-id (.getId %)) components))
           tool-type  (when-not (nil? component) (.getToolType component))]
       (when-not (nil? tool-type)
@@ -48,55 +44,49 @@
 (defn- get-valid-ptype-names
   "Gets the valid property type names for a given tool type."
   [{tool-type-id :id}]
-  (map :name (property-types-for-tool-type tool-type-id)))
+  (map :name (parameter-types-for-tool-type tool-type-id)))
 
+;; FIXME
 (defn validate-template-property-types
   "Validates the property types in a template that is being imported."
   [template registry]
   (when-let [tool-type (get-tool-type registry (.getComponent template))]
     (let [valid-ptypes (into #{} (get-valid-ptype-names tool-type))
           properties   (mapcat #(.getProperties %) (.getPropertyGroups template))]
-      (dorun (map #(throw (UnsupportedPropertyTypeException. % (:name tool-type)))
+      (dorun (map #(throw+ {:type ::UnsupportedPropertyTypeException :property-type % :name (:name tool-type)})
                   (filter #(nil? (valid-ptypes %))
                           (map #(.getPropertyTypeName %) properties)))))))
 
+;; FIXME
 (defn validate-template-deployed-component
   "Validates a deployed component that is associated with a template."
   [template]
   (let [component-id (.getComponent template)]
    (when (string/blank? component-id)
-     (throw (MissingDeployedComponentException. (.getId template))))
+     (throw+ {:type ::MissingDeployedComponentException :template-id (.getId template)}))
    (when (nil? (get-deployed-component-from-database component-id))
-     (throw (UnknownDeployedComponentException. component-id)))))
+     (throw+ {:type ::UnknownDeployedComponentException :component-id component-id}))))
 
-(defn- template-ids-for-app
-  "Get the list of template IDs associated with an app."
+(defn- task-ids-for-app
+  "Get the list of task IDs associated with an app."
   [app-id]
-  (map :template_id
-       (select [:analysis_listing :a]
-               (fields :tx.template_id)
-               (join [:transformation_task_steps :tts]
-                     {:a.hid :tts.transformation_task_id})
-               (join [:transformation_steps :ts]
-                     {:tts.transformation_step_id :ts.id})
-               (join [:transformations :tx]
-                     {:ts.transformation_id :tx.id})
+  (map :task_id
+       (select [:apps :a]
+               (fields :step.task_id)
+               (join [:app_steps :step]
+                     {:a.id :step.app_id})
                (where {:a.id app-id}))))
 
 (defn- private-apps-for
-  "Finds private single-step apps for a list of template IDs."
-  [template-ids]
-  (select [:analysis_listing :a]
+  "Finds private single-step apps for a list of task IDs."
+  [task-ids]
+  (select [:app_listing :a]
           (fields :a.id :a.name)
-          (join [:transformation_task_steps :tts]
-                {:a.hid :tts.transformation_task_id})
-          (join [:transformation_steps :ts]
-                {:tts.transformation_step_id :ts.id})
-          (join [:transformations :tx]
-                {:ts.transformation_id :tx.id})
-          (where {:tx.template_id [in template-ids]
-                  :a.step_count   1
-                  :a.is_public    false})))
+          (join [:app_steps :step]
+                {:a.id :step.app_id})
+          (where {:step.task_id [in task-ids]
+                  :a.step_count 1
+                  :a.is_public  false})))
 
 (defn app-publishable?
   "Determines whether or not an app can be published. An app is publishable if none of the
@@ -104,11 +94,9 @@
    a flag indicating whether or not the app is publishable along with the reason the app isn't
    publishable if it's not."
   [app-id]
-  (if (string/blank? app-id)
-    [false "no app ID provided"]
-    (let [template-ids (template-ids-for-app app-id)
-          private-apps (private-apps-for template-ids)]
-      (cond (zero? (count template-ids)) [false "no app ID provided"]
-            (= 1 (count template-ids))   [true]
-            (pos? (count private-apps))  [false "contains private apps" private-apps]
-            :else                        [true]))))
+  (let [task-ids (task-ids-for-app app-id)
+        private-apps (private-apps-for task-ids)]
+    (cond (zero? (count task-ids))    [false "no app ID provided"]
+          (= 1 (count task-ids))      [true]
+          (pos? (count private-apps)) [false "contains private apps" private-apps]
+          :else                       [true])))

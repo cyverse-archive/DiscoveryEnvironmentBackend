@@ -1,7 +1,6 @@
 (ns facepalm.c140-2012071301
   (:use [korma.core]
-        [kameleon.core]
-        [kameleon.entities :only [data_object data_source]]))
+        [kameleon.core]))
 
 (def ^:private version
   "The destination database version."
@@ -39,7 +38,7 @@
   "Populates the data source table."
   []
   (println "\t* populating the data_source table")
-  (insert data_source
+  (insert :data_source
           (values [{:uuid        "8D6B8247-F1E7-49DB-9FFE-13EAD7C1AED6"
                     :name        "file"
                     :label       "File"
@@ -56,7 +55,7 @@
 (defn- get-data-source-id
   "Gets the internal data source identifier for the given UUID."
   [uuid]
-  (first (map :id (select data_source (where {:uuid uuid})))))
+  (first (map :id (select :data_source (where {:uuid uuid})))))
 
 (defn- initialize-data-source-for-existing-data-objects
   "Initializes the data source for all existing data objects.  Only regular
@@ -65,7 +64,7 @@
   []
   (println "\t* initializing the data source for existing data objects")
   (let [data-source (get-data-source-id "8D6B8247-F1E7-49DB-9FFE-13EAD7C1AED6")]
-    (update data_object (set-fields {:data_source_id data-source}))))
+    (update :data_object (set-fields {:data_source_id data-source}))))
 
 (defn convert
   "Performs the conversions for database version 1.40:20120713.01."

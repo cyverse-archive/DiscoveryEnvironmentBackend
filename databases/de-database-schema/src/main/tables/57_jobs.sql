@@ -4,7 +4,7 @@ SET search_path = public, pg_catalog;
 -- Records jobs that the user has submitted.
 --
 CREATE TABLE jobs (
-    id uuid NOT NULL,
+    id uuid NOT NULL DEFAULT uuid_generate_v1(),
     job_name character varying(255) NOT NULL,
     job_description text DEFAULT '',
     app_name character varying(255),
@@ -16,6 +16,7 @@ CREATE TABLE jobs (
     end_date timestamp,
     status character varying(64) NOT NULL,
     deleted boolean DEFAULT FALSE NOT NULL,
-    user_id bigint NOT NULL,
+    user_id uuid NOT NULL,
     submission json
 );
+

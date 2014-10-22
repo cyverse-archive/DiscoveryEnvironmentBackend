@@ -15,6 +15,10 @@
   [uuid]
   (java.util.UUID/fromString uuid))
 
+(defmethod uuidify clojure.lang.Keyword
+  [uuid]
+  (uuidify (name uuid)))
+
 (defmethod uuidify :default
   [uuid]
   nil)

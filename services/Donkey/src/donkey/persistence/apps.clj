@@ -1,15 +1,16 @@
 (ns donkey.persistence.apps
   "Functions for storing and retrieving information about apps that can be executed
    within the DE, excluding external apps such as Agave apps."
-  (:use [kameleon.entities :only [analysis_listing]]
+  (:use [kameleon.entities :only [app_listing]]
         [korma.core]
         [korma.db :only [with-db]])
-  (:require [donkey.util.db :as db]))
+  (:require [donkey.util.db :as db])
+  (:import [java.util UUID]))
 
 (defn load-app-details
   [app-ids]
   (with-db db/de
-    (select analysis_listing
+    (select app_listing
             (where {:id [in app-ids]}))))
 
 (defn get-app-properties
@@ -80,15 +81,13 @@
 (defn load-app-steps
   [app-id]
   (with-db db/de
-    (select [:transformation_activity :a]
-            (join [:transformation_task_steps :tts] {:a.hid :tts.transformation_task_id})
-            (join [:transformation_steps :ts] {:tts.transformation_step_id :ts.id})
-            (join [:transformations :tx] {:ts.transformation_id :tx.id})
-            (fields [:ts.id              :step_id]
-                    [:ts.name            :step_name]
-                    [:tx.template_id     :template_id]
-                    [:tx.external_app_id :external_app_id])
-            (where {:a.id app-id}))))
+    (select [:apps :a]
+            (join [:app_steps :s] {:a.id :s.app_id})
+            (join [:tasks :t] {:s.task_id :t.id})
+            (fields [:s.id              :step_id]
+                    [:t.tool_id         :tool_id]
+                    [:t.external_app_id :external_app_id])
+            (where {:a.id (UUID/fromString app-id)}))))
 
 (defn load-app-info
   [app-id]
@@ -99,22 +98,20 @@
 
 (defn- mapping-base-query
   []
-  (-> (select* [:input_output_mapping :iom])
-      (join [:transformation_steps :source] {:iom.source :source.id})
-      (join [:transformation_steps :target] {:iom.target :target.id})
-      (join [:dataobject_mapping :dom] {:iom.hid :dom.mapping_id})
-      (fields [:dom.input    :input_id]
-              [:target.id    :target_id]
-              [:target.name  :target_name]
-              [:dom.output   :output_id]
-              [:source.id    :source_id]
-              [:source.name  :source_name])))
+  (-> (select* [:workflow_io_maps :wim])
+      (join [:input_output_mapping :iom] {:wim.id :iom.mapping_id})
+      (fields [:wim.source_step     :source_id]
+              [:wim.target_step     :target_id]
+              [:iom.input           :input_id]
+              [:iom.external_input  :external_input_id]
+              [:iom.output          :output_id]
+              [:iom.external_output :external_output_id])))
 
 (defn load-target-step-mappings
   [step-id]
   (with-db db/de
     (select (mapping-base-query)
-            (where {:iom.target step-id}))))
+            (where {:wim.target_step step-id}))))
 
 (defn load-app-mappings
   [app-id]

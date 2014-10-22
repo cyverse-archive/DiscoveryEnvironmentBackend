@@ -2,7 +2,6 @@
 
 * [App Categorization Endpoints](#app-categorization-endpoints)
     * [Deleting Categories](#deleting-categories)
-    * [Categorizing Analyses](#categorizing-analyses)
     * [Listing Analysis Categorizations](#listing-analysis-categorizations)
     * [Adding Analyses to Analysis Groups](#adding-analyses-to-analysis-groups)
 
@@ -59,115 +58,6 @@ $ curl -sd '
 ' http://by-tor:8888/delete-categories | python -mjson.tool
 {
     "failures": []
-}
-```
-
-## Categorizing Analyses
-
-*Unsecured Endpoint:* POST /categorize-analyses
-
-When services are exported and re-imported, the analysis categorization
-information also needs to be exported and re-imported. This service allows the
-categorization information to be imported. Strictly speaking, this service can
-also be used to move analyses to new categories, but this service hasn't been
-used for that purpose since Belphegor and Conrad were created. This service is
-documented in detail in the Analysis Categorization Services section of the
-[tool integration services wiki page](https://pods.iplantcollaborative.org/wiki/display/coresw/Tool+Integration+Services).
-
-The request body for this service is in this format:
-
-```json
-{
-    "categories": [
-        {
-            "category_path": {
-                "path": [
-                    "root-category-name",
-                    "first-subcategory-name",
-                    ...,
-                    "nth-subcategory-name"
-                ],
-                "username": "username"
-            }
-            "analysis": {
-                "name": "analysis-name",
-                "id": "analysis-id"
-            }
-        },
-        ...
-    ]
-}
-```
-
-The response body format is identical to the request body format except that
-only failed categorizations are listed and each categorization contains the
-reason for the categorization failure. Here's the format:
-
-```json
-{
-    "failed_categorizations": [
-        {
-            "reason": reason-for-failure,
-            "category_path": {
-                "path": [
-                    root-category-name,
-                    first-subcategory-name,
-                    ...,
-                    nth-subcategory-name
-                ],
-                "username": username
-            }
-            "analysis": {
-                "name": analysis-name,
-                "id": analysis-id
-            }
-        },
-        ...
-    ]
-}
-```
-
-Here's an example:
-
-```
-$ curl -sd '
-{
-    "categories": [
-        {
-            "analysis": {
-                "id": "Foo",
-                "name": "Foo"
-            },
-            "category_path": {
-                "username": "nobody@iplantcollaborative.org",
-                "path": [
-                    "Public Apps",
-                    "Foo"
-                ]
-            }
-        }
-    ]
-}
-' http://by-tor:8888/categorize-analyses | python -mjson.tool
-{
-    "failed_categorizations": [
-        {
-            "categorization": {
-                "analysis": {
-                    "id": "Foo",
-                    "name": "Foo"
-                },
-                "category_path": {
-                    "path": [
-                        "Public Apps",
-                        "Foo"
-                    ],
-                    "username": "nobody@iplantcollaborative.org"
-                }
-            },
-            "reason": "analysis Foo not found"
-        }
-    ]
 }
 ```
 

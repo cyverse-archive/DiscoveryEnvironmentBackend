@@ -4,12 +4,10 @@
 
 (defn hpc-app-group
   []
-  {:description    c/hpc-group-description
-   :id             c/hpc-group-id
-   :is_public      true
-   :name           c/hpc-group-name
-   :template_count -1
-   :workspace_id   0})
+  {:id           c/hpc-group-id
+   :is_public    true
+   :name         c/hpc-group-name
+   :app_count    -1})
 
 (defn get-app-name
   [{:keys [name id]}]
@@ -40,7 +38,7 @@
             :is_favorite          false
             :is_public            (:isPublic listing)
             :pipeline_eligibility {:is_valid true}
-            :rating               {:average 0.0}
+            :rating               {:average 0.0 :total 0}
             :step-count           1
             :wiki_url             ""))))
 
@@ -50,5 +48,5 @@
         total    (count listing)
         listing  (map (partial format-app-listing statuses jobs-enabled?) listing)]
     (assoc (hpc-app-group)
-      :templates      listing
-      :template_count total)))
+      :apps      listing
+      :app_count total)))

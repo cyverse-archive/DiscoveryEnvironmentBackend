@@ -88,7 +88,7 @@
      :param_name       (:label param)}))
 
 (defn- prep-agave-param
-  [step-name agave-app-id param]
+  [step-id agave-app-id param]
   (let [is-file-param? (re-find #"^(?:File|Folder)" (:type param))]
     {:data_format     (when is-file-param? "Unspecified")
      :info_type       (when is-file-param? "PlainText")
@@ -99,19 +99,19 @@
      :external_app_id agave-app-id
      :ordering        (:order param)
      :type            (:type param)
-     :step_name       step-name
+     :step_id         step-id
      :label           (:label param)
      :id              (:id param)
      :description     (:description param)
      :default_value   (:defaultValue param)}))
 
 (defn- load-agave-app-params
-  [agave-client {step-name :step_name agave-app-id :external_app_id}]
+  [agave-client {step-id :step_id agave-app-id :external_app_id}]
   (mu/assert-agave-enabled agave-client)
   (->> (.getApp agave-client agave-app-id)
        (:groups)
        (mapcat :properties)
-       (map (partial prep-agave-param step-name agave-app-id))))
+       (map (partial prep-agave-param step-id agave-app-id))))
 
 (defn- load-agave-pipeline-params
   [agave-client app-id]

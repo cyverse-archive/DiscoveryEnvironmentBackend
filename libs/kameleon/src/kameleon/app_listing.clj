@@ -6,30 +6,22 @@
   (:require [clojure.tools.logging :as log]
             [clojure.string :as str]))
 
-(defn- get-group-hid-subselect
-  "Gets a subselect that fetches the hid for the given template_group ID."
-  [app_group_id]
-  (subselect :template_group
-             (fields :hid)
-             (where {:id app_group_id})))
-
 (defn- get-all-group-ids-subselect
-  "Gets a subselect that fetches the template_group and its subgroup IDs with
-   the stored procedure APP_GROUP_HIERARCHY_IDS."
+  "Gets a subselect that fetches the app_categories and its subgroup IDs with
+   the stored procedure app_category_hierarchy_ids."
   [app_group_id]
   (subselect
-    (sqlfn :app_group_hierarchy_ids
-           (get-group-hid-subselect app_group_id))))
+    (sqlfn :app_category_hierarchy_ids app_group_id)))
 
 (defn- get-fav-group-id-subselect
   "Gets a subselect that fetches the ID for the Favorites group at the given
-   index under the template_group with the given ID."
+   index under the app_categories with the given ID."
   [workspace_root_group_id favorites_group_index]
   (subselect
-    :template_group_group
-    (fields :subgroup_id)
-    (where {:parent_group_id workspace_root_group_id
-            :hid favorites_group_index})))
+    :app_category_group
+    (fields :child_category_id)
+    (where {:parent_category_id workspace_root_group_id
+            :child_index favorites_group_index})))
 
 (defn- get-is-fav-sqlfn
   "Gets a sqlfn that retuns true if the App ID in its subselect is found in the
@@ -40,10 +32,10 @@
                                  favorites_group_index)]
     (sqlfn* :exists
             (subselect
-              :template_group_template
-              (where {:template_group_template.template_id
-                      :analysis_listing.hid})
-              (where {:template_group_template.template_group_id
+              :app_category_app
+              (where {:app_category_app.app_id
+                      :app_listing.id})
+              (where {:app_category_app.app_category_id
                       fav_group_id_subselect})))))
 
 (defn- add-app-group-where-clause
@@ -51,10 +43,10 @@
    an app group and all of its descendents."
   [base_listing_query app_group_id]
   (-> base_listing_query
-    (join :template_group_template
-          (= :template_group_template.template_id
-             :analysis_listing.hid))
-    (where {:template_group_template.template_group_id
+    (join :app_category_app
+          (= :app_category_app.app_id
+             :app_listing.id))
+    (where {:app_category_app.app_category_id
             [in (get-all-group-ids-subselect app_group_id)]})))
 
 (defn- add-app-group-plus-public-apps-where-clause
@@ -63,10 +55,10 @@
    integrated by a user."
   [query app-group-id email]
   (-> query
-    (join :template_group_template
-          (= :template_group_template.template_id
-             :analysis_listing.hid))
-    (where (or {:template_group_template.template_group_id
+    (join :app_category_app
+          (= :app_category_app.app_id
+             :app_listing.id))
+    (where (or {:app_category_app.app_category_id
                 [in (get-all-group-ids-subselect app-group-id)]}
                {:integrator_email email
                 :is_public        true}))))
@@ -81,11 +73,11 @@
 
 (defn- get-app-count-base-query
   "Returns a base query for counting the total number of apps in the
-   analysis_listing table."
+   app_listing table."
   [query-opts]
   (->
-    (select* analysis_listing)
-    (fields (raw "count(DISTINCT analysis_listing.id) AS total"))
+    (select* app_listing)
+    (fields (raw "count(DISTINCT app_listing.id) AS total"))
     (where {:deleted false})
     (add-agave-pipeline-where-clause query-opts)))
 
@@ -103,21 +95,21 @@
         (select)))))
 
 (defn- get-app-listing-base-query
-  "Gets an analysis_listing select query, setting any query limits and sorting
+  "Gets an app_listing select query, setting any query limits and sorting
    found in the query_opts, using the given workspace (as returned by
    fetch-workspace-by-user-id) to mark whether each app is a favorite and to
    include the user's rating in each app.."
   [workspace favorites_group_index query_opts]
   (let [user_id (:user_id workspace)
-        workspace_root_group_id (:root_analysis_group_id workspace)
-        row_offset (try (Integer/parseInt (:offset query_opts)) (catch Exception e 0))
-        row_limit (try (Integer/parseInt (:limit query_opts)) (catch Exception e -1))
-        sort_field (keyword (or (:sortField query_opts) (:sortfield query_opts)))
-        sort_dir (keyword (or (:sortDir query_opts) (:sortdir query_opts)))
+        workspace_root_group_id (:root_category_id workspace)
+        row_offset (or (:offset query_opts) 0)
+        row_limit (or (:limit query_opts) -1)
+        sort_field (keyword (or (:sort-field query_opts) (:sortfield query_opts)))
+        sort_dir (keyword (or (:sort-dir query_opts) (:sortdir query_opts)))
 
         ;; Bind the final query
         listing_query (->
-                        (select* analysis_listing)
+                        (select* app_listing)
                         (modifier "DISTINCT")
                         (fields :id
                                 :name
@@ -128,10 +120,11 @@
                                 :edited_date
                                 [:wikiurl :wiki_url]
                                 :average_rating
+                                :total_ratings
                                 :is_public
                                 :step_count
-                                :component_count
-                                :template_count
+                                :tool_count
+                                :task_count
                                 :deleted
                                 :disabled
                                 :overall_job_type)
@@ -151,8 +144,8 @@
                         (fields [:ratings.rating :user_rating]
                                 :ratings.comment_id)
                         (join ratings
-                              (and (= :ratings.transformation_activity_id
-                                      :analysis_listing.hid)
+                              (and (= :ratings.app_id
+                                      :app_listing.id)
                                    (= :ratings.user_id
                                       user_id))))]
 
@@ -178,12 +171,12 @@
       (select))))
 
 (defn- get-public-group-ids-subselect
-  "Gets a subselect that fetches the workspace template_group ID, public root
+  "Gets a subselect that fetches the workspace app_categories ID, public root
    group IDs, and their subgroup IDs with the stored procedure
-   APP_GROUP_HIERARCHY_IDS."
+   app_category_hierarchy_ids."
   [workspace_id]
   (let [root_app_ids (get-visible-root-app-group-ids workspace_id)
-        select-ids-fn #(str "SELECT * FROM APP_GROUP_HIERARCHY_IDS(" % ")")
+        select-ids-fn #(str "SELECT * FROM app_category_hierarchy_ids('" % "')")
         union_select_ids (str/join
                            " UNION "
                            (map select-ids-fn root_app_ids))]
@@ -195,10 +188,10 @@
   [search_term]
   (sqlfn* :exists
           (subselect
-            :deployed_component_listing
-            (where {:analysis_listing.hid
-                    :deployed_component_listing.analysis_id})
-            (where {(sqlfn lower :deployed_component_listing.name)
+            :tool_listing
+            (where {:app_listing.id
+                    :tool_listing.app_id})
+            (where {(sqlfn lower :tool_listing.name)
                     [like (sqlfn lower search_term)]}))))
 
 (defn- add-search-where-clauses
@@ -217,10 +210,10 @@
         sql-lower #(sqlfn lower %)]
     (->
       base_search_query
-      (join :template_group_template
-            (= :template_group_template.template_id
-               :analysis_listing.hid))
-      (where {:template_group_template.template_group_id
+      (join :app_category_app
+            (= :app_category_app.app_id
+               :app_listing.id))
+      (where {:app_category_app.app_category_id
               [in (get-public-group-ids-subselect workspace_id)]})
       (where
         (or
@@ -262,7 +255,7 @@
   "Counts the number of apps integrated by a user."
   [email params]
   ((comp :count first)
-   (-> (select* analysis_listing)
+   (-> (select* app_listing)
        (aggregate (count :*) :count)
        (where {:deleted false})
        (add-public-apps-by-user-where-clause email)

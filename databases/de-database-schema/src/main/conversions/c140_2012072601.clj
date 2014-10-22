@@ -1,9 +1,6 @@
 (ns facepalm.c140-2012072601
   (:use [korma.core]
-        [kameleon.core]
-        [kameleon.entities
-         :only [deployed_components property_type rule_type tool_types
-                value_type]]))
+        [kameleon.core]))
 
 (def ^:private version
   "The destination database version."
@@ -40,7 +37,7 @@
   "Populates the tool_types table."
   []
   (println "\t* populating the tool_types table")
-  (insert tool_types
+  (insert :tool_types
           (values {:name        "executable"
                    :label       "UA"
                    :description "Run at the University of Arizona"})
@@ -60,15 +57,15 @@
   "Associates existing deployed components with tool types."
   []
   (println "\t* associating existing deployed components with tool types")
-  (update deployed_components
+  (update :deployed_components
           (set-fields
-           {:tool_type_id (subselect tool_types
+           {:tool_type_id (subselect :tool_types
                                      (fields :id)
                                      (where {:deployed_components.type
                                              :tool_types.name}))}))
-  (update deployed_components
+  (update :deployed_components
           (set-fields
-           {:tool_type_id (subselect tool_types
+           {:tool_type_id (subselect :tool_types
                                      (fields :id)
                                      (where {:name "executable"}))})
           (where {:tool_type_id nil})))
@@ -195,7 +192,7 @@
   "Associates a rule type with a value type."
   [rt-name vt-hid]
   (insert :rule_type_value_type
-          (values {:rule_type_id  (subselect rule_type
+          (values {:rule_type_id  (subselect :rule_type
                                              (fields :hid)
                                              (where {:name rt-name}))
                    :value_type_id vt-hid})))
@@ -206,13 +203,13 @@
   []
   (println "\t* adding property and value types for environment variables")
   (let [vt-desc "An environment variable that is set before running a job"]
-    (insert value_type
+    (insert :value_type
             (values {:hid         6
                      :id          "96DE7B1E-FE29-468F-85C0-A9458CE66FB1"
                      :name        "EnvironmentVariable"
                      :description vt-desc})))
   (let [pt-desc "An environment variable that is set before running a job"]
-    (insert property_type
+    (insert :property_type
             (values {:hid           19
                      :id            "A024716E-1F18-4AF7-B59E-0745786D1B69"
                      :name          "EnvironmentVariable"
@@ -228,10 +225,10 @@
   "Generates the base query used to find the values for tool-property
    associations."
   []
-  (-> (select* tool_types)
+  (-> (select* :tool_types)
       (fields [:tool_types.id :tool_type_id]
               [:property_type.hid :property_type_id])
-      (join property_type true)
+      (join :property_type true)
       (order [:tool_types.id :property_type.hid])))
 
 (defn- insert-tool-property-associations
