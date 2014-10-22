@@ -71,7 +71,7 @@
   [err-obj]
   (if-let [header-fn (http-header-fn-for (:error_code err-obj))]
     (header-fn err-obj)
-    {}))
+    {"Content-Type" "application/json; charset=utf-8"}))
 
 (defn error?
   [obj]
