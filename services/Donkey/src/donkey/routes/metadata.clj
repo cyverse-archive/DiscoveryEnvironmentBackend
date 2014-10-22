@@ -93,6 +93,14 @@
     (GET "/apps/:app-id/ui" [app-id]
          (trap #(edit-app app-id)))))
 
+(defn analysis-routes
+  []
+  (optional-routes
+   [config/app-routes-enabled]
+
+   (POST "/analyses" [:as {:keys [body uri]}]
+         (ce/trap uri #(apps/submit-job body)))))
+
 (defn tool-request-routes
   []
   (optional-routes
@@ -126,9 +134,6 @@
 
    (GET "/logout" [:as {params :params}]
         (trap #(logout params)))
-
-   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {:keys [body uri]}]
-        (ce/trap uri #(apps/submit-job workspace-id body)))
 
    (GET "/workspaces/:workspace-id/executions/list" [_ :as {:keys [params uri]}]
         (ce/trap uri #(apps/list-jobs params)))

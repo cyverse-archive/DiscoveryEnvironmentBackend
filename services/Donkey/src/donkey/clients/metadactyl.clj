@@ -154,12 +154,12 @@
       (service/decode-json)))
 
 (defn submit-job
-  [workspace-id submission]
-  (-> (client/put (secured-url "workspaces" workspace-id "newexperiment")
-                  {:query-params (secured-params)
-                   :content-type :json
-                   :body         (cheshire/encode submission)
-                   :as           :stream})
+  [submission]
+  (-> (client/post (metadactyl-url "analyses")
+                   {:query-params (secured-params)
+                    :content-type :json
+                    :body         (cheshire/encode submission)
+                    :as           :stream})
       (:body)
       (service/decode-json)))
 
@@ -180,8 +180,8 @@
 (defn- rate-app-request
   [rating comment-id]
   (xforms/remove-nil-vals
-    {:rating      rating
-     :comment_id  comment-id}))
+   {:rating      rating
+    :comment_id  comment-id}))
 
 (defn rate-app
   [app-id rating comment-id]

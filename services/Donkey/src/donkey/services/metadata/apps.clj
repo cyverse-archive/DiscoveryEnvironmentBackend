@@ -108,7 +108,7 @@
   (listAppDataObjects [_ app-id])
   (editWorkflow [_ app-id])
   (copyWorkflow [_ app-id])
-  (submitJob [_ workspace-id submission])
+  (submitJob [_ submission])
   (countJobs [_ filter])
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
@@ -157,8 +157,8 @@
   (copyWorkflow [_ app-id]
     (metadactyl/copy-workflow app-id))
 
-  (submitJob [_ workspace-id submission]
-    (da/submit-job workspace-id submission))
+  (submitJob [_ submission]
+    (da/submit-job submission))
 
   (countJobs [_ filter]
     (count-de-jobs filter))
@@ -245,8 +245,8 @@
   (copyWorkflow [_ app-id]
     (aa/add-workflow-templates agave-client (metadactyl/copy-workflow app-id)))
 
-  (submitJob [_ workspace-id submission]
-    (ca/submit-job agave-client workspace-id submission))
+  (submitJob [_ submission]
+    (ca/submit-job agave-client submission))
 
   (countJobs [_ filter]
     (count-jobs filter))
@@ -376,11 +376,11 @@
      (service/success-response (.getAppDetails (get-app-lister) app-id)))))
 
 (defn submit-job
-  [workspace-id body]
+  [body]
   (with-db db/de
     (transaction
      (service/success-response
-      (.submitJob (get-app-lister) workspace-id (service/decode-json body))))))
+      (.submitJob (get-app-lister) (service/decode-json body))))))
 
 (defn list-jobs
   [{:keys [limit offset sort-field sort-order filter]
