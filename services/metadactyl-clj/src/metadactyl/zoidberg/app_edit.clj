@@ -174,7 +174,7 @@
     (remove-nil-vals
       (-> app
           (assoc :references (map :reference_text (:app_references app))
-                 :tools      (persistence/get-app-tools (:id app))
+                 :tools      (remove-nil-vals (persistence/get-app-tools (:id app)))
                  :groups     (map format-group (:parameter_groups task)))
           (dissoc :app_references
                   :tasks)))))

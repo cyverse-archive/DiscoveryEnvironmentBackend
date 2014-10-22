@@ -234,7 +234,7 @@
       (assoc :name                 (:name details "")
              :description          (:description details "")
              :references           (map :reference_text (:app_references details))
-             :tools                tools
+             :tools                (remove-nil-vals tools)
              :categories           (get-groups-for-app app-id)
              :suggested_categories (get-suggested-groups-for-app app-id)))))
 
