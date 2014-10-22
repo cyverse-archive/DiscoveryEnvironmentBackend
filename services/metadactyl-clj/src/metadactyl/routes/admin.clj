@@ -16,24 +16,24 @@
   (:import [java.util UUID]))
 
 (defroutes* tool-requests
-  (GET* "/" []
+  (GET* "/" [:as {uri :uri}]
         :query [params ToolRequestListingParams]
         :return ToolRequestListing
         :summary "List Tool Requests"
         :notes "This endpoint lists high level details about tool requests that have been submitted.
         Administrators may use this endpoint to track tool requests for all users."
-        (service/trap #(list-tool-requests params)))
+        (ce/trap uri #(list-tool-requests params)))
 
-  (GET* "/:request-id" []
+  (GET* "/:request-id" [:as {uri :uri}]
         :path-params [request-id :- ToolRequestIdParam]
         :query [params SecuredQueryParams]
         :return ToolRequestDetails
         :summary "Obtain Tool Request Details"
         :notes "This service obtains detailed information about a tool request. This is the service
         that the DE support team uses to obtain the request details."
-        (service/trap #(get-tool-request request-id)))
+        (ce/trap uri #(get-tool-request request-id)))
 
-  (POST* "/:request-id/status" []
+  (POST* "/:request-id/status" [:as {uri :uri}]
          :path-params [request-id :- ToolRequestIdParam]
          :query [params SecuredQueryParams]
          :body [body (describe ToolRequestStatusUpdate "A Tool Request status update.")]
@@ -41,19 +41,19 @@
          :summary "Update the Status of a Tool Request"
          :notes "This endpoint is used by Discovery Environment administrators to update the status
          of a tool request."
-         (service/trap
+         (ce/trap uri
            #(update-tool-request request-id (config/uid-domain) (:username current-user) body)))
 
   (route/not-found (service/unrecognized-path-response)))
 
 (defroutes* admin-apps
-  (POST* "/" [:as {body :body}]
+  (POST* "/" [:as {uri :uri}]
          :query [params SecuredQueryParams]
          :body [body (describe AppCategorizationRequest "An App Categorization Request.")]
          :summary "Categorize Apps"
          :notes "This endpoint is used by the Admin interface to add or move Apps to into multiple
          Categories."
-         (service/trap #(categorize-apps body)))
+         (ce/trap uri #(categorize-apps body)))
 
   (POST* "/shredder" [:as {uri :uri}]
          :query [params SecuredQueryParams]
