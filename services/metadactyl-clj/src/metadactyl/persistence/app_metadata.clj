@@ -201,8 +201,10 @@
 
 (defn get-app-group
   "Fetches an App group."
-  [group-id]
-  (first (select parameter_groups (where {:id group-id}))))
+  ([group-id]
+   (first (select parameter_groups (where {:id group-id}))))
+  ([group-id task-id]
+   (first (select parameter_groups (where {:id group-id, :task_id task-id})))))
 
 (defn add-app-group
   "Adds an App group to the database."
@@ -256,8 +258,10 @@
 
 (defn get-app-parameter
   "Fetches an App parameter."
-  [parameter-id]
-  (first (select parameters (where {:id parameter-id}))))
+  ([parameter-id]
+   (first (select parameters (where {:id parameter-id}))))
+  ([parameter-id group-id]
+   (first (select parameters (where {:id parameter-id, :parameter_group_id group-id})))))
 
 (defn add-app-parameter
   "Adds an App parameter to the parameters table."

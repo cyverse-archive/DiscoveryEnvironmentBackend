@@ -232,7 +232,7 @@
                            arguments :arguments
                            :as parameter}]
   (let [update-values (assoc parameter :parameter_group_id group-id :display_order display-order)
-        param-exists (and param-id (persistence/get-app-parameter param-id))
+        param-exists (and param-id (persistence/get-app-parameter param-id group-id))
         param-id (if param-exists
                    param-id
                    (-> update-values
@@ -265,7 +265,7 @@
   "Adds or updates an App group and its parameters."
   [task-id display-order {group-id :id parameters :parameters :as group}]
   (let [update-values (assoc group :task_id task-id :display_order display-order)
-        group-exists (and group-id (persistence/get-app-group group-id))
+        group-exists (and group-id (persistence/get-app-group group-id task-id))
         group-id (if group-exists group-id (:id (persistence/add-app-group update-values)))]
     (when group-exists
       (persistence/update-app-group update-values))
