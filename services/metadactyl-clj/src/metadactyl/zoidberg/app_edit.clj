@@ -312,7 +312,7 @@
   (transaction
     (persistence/update-app app)
     (let [app-id (:id app)
-          tool-id (:tool_id app)
+          tool-id (->> app :tools first :id)
           references (:references app)
           task-id (->> app-id
                        (get-app-details)
@@ -346,12 +346,15 @@
   [{references :references groups :groups :as app}]
   (transaction
     (let [app-id (:id (persistence/add-app app))
+          tool-id (->> app :tools first :id)
           task-id (-> (assoc app :id app-id)
                       (add-single-step-task)
                       (:id))]
       (add-app-to-user-dev-category app-id)
       (when-not (empty? references)
         (persistence/set-app-references app-id references))
+      (when-not (nil? tool-id)
+        (persistence/set-task-tool task-id tool-id))
       (dorun (map-indexed (partial update-app-group task-id) groups))
       (edit-app app-id))))
 
