@@ -306,10 +306,9 @@
   {:id                   (describe UUID "A UUID that is used to identify the Parameter")
    :name                 (describe String "The Parameter's name")
    :description          (describe String "The Parameter's description")
-   :label                (describe String "The Parameter's label")
-   (optional-key :value) (describe String "The Output Parameter's value.")
-   :format               (describe String "The Parameter's file format.")
-   :required             (describe Boolean "Whether or not a value is required for this Parameter.")})
+   :label                (describe String "The Input Parameter's label or the Output Parameter's value")
+   :format               (describe String "The Parameter's file format")
+   :required             (describe Boolean "Whether or not a value is required for this Parameter")})
 
 (defschema AppFileParameterListing
   (merge AppBase

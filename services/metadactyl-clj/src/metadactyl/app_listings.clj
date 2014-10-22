@@ -303,11 +303,21 @@
     (with-task-params outputs)
     (where (in :id task-ids))))
 
+(defn- format-task-file-param
+  [file-parameter]
+  (dissoc file-parameter :value))
+
+(defn- format-task-output
+  [{value :value :as output}]
+  (-> output
+    (assoc :label value)
+    format-task-file-param))
+
 (defn- format-task
   [task]
   (-> task
-    (update-in [:inputs] (partial map remove-nil-vals))
-    (update-in [:outputs] (partial map remove-nil-vals))))
+    (update-in [:inputs] (partial map (comp remove-nil-vals format-task-file-param)))
+    (update-in [:outputs] (partial map (comp remove-nil-vals format-task-output)))))
 
 (defn get-tasks-with-file-params
   "Fetches a formatted list of tasks for the given IDs with their inputs and outputs."
