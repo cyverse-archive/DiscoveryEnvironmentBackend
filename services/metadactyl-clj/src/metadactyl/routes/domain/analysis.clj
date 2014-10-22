@@ -20,6 +20,9 @@
    :debug
    (describe Bool "A flag indicating whether or not job debugging should be enabled.")
 
+   (optional-key :description)
+   (describe String "An optional description of the analysis.")
+
    :name
    (describe String "The name assigned to the analysis by the user.")
 
@@ -27,11 +30,11 @@
    (describe Bool (str "Indicates whether the user wants to receive job status update "
                        "notifications."))
 
-   (optional-key :description)
-   (describe String "An optional description of the analysis.")
-
    :output_dir
    (describe String "The path to the analysis output directory in the data store.")
+
+   (optional-key :starting_step)
+   (describe Long "The ordinal number of the step to start the job with.")
 
    (optional-key :uuid)
    (describe UUID (str "The UUID of the analysis. A random UUID will be assigned if one isn't "
