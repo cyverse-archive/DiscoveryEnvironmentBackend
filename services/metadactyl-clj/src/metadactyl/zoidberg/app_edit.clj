@@ -307,19 +307,16 @@
 (defn update-app
   "This service will update a single-step App, including the information at its top level and the
    tool used by its single task, as long as the App has not been submitted for public use."
-  [app]
-  (verify-app-editable (persistence/get-app (:id app)))
+  [{app-id :id :keys [references groups] :as app}]
+  (verify-app-editable (persistence/get-app app-id))
   (transaction
     (persistence/update-app app)
-    (let [app-id (:id app)
-          tool-id (->> app :tools first :id)
-          references (:references app)
-          task-id (->> app-id
-                       (get-app-details)
-                       (:tasks)
-                       (first)
-                       (:id))
-          updated-groups (doall (map-indexed (partial update-app-group task-id) (:groups app)))]
+    (let [tool-id (->> app :tools first :id)
+          task-id (->> (get-app-details app-id)
+                       :tasks
+                       first
+                       :id)
+          updated-groups (doall (map-indexed (partial update-app-group task-id) groups))]
       (delete-app-orphans task-id updated-groups)
       (when-not (empty? references)
         (persistence/set-app-references app-id references))
@@ -343,7 +340,7 @@
 
 (defn add-app
   "This service will add a single-step App, including the information at its top level."
-  [{references :references groups :groups :as app}]
+  [{:keys [references groups] :as app}]
   (transaction
     (let [app-id (:id (persistence/add-app app))
           tool-id (->> app :tools first :id)
