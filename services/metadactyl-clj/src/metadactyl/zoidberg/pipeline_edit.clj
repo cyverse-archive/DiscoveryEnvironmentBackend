@@ -31,30 +31,32 @@
   "Fetches the steps for the given app ID, including their task ID and
    source/target mapping IDs and step names."
   [app-id]
-  (map (comp fix-task-id add-app-type)
-    (select app_steps
-            (with input_mapping
-                  (fields :source_step
-                          :target_step)
-                  (group :source_step
-                         :target_step))
-            (join [:tasks :t]
-                  {:task_id :t.id})
-            (join [:apps :app]
-                  {:app_id :app.id})
-            (fields :app_steps.id
-                    :step
-                    :t.name
-                    :t.description
-                    :task_id
-                    :t.external_app_id)
-            (where {:app.id app-id})
-            (order :step :ASC))))
+  (select app_steps
+    (with input_mapping
+          (fields :source_step
+                  :target_step)
+          (group :source_step
+                 :target_step))
+    (join [:tasks :t]
+          {:task_id :t.id})
+    (join [:apps :app]
+          {:app_id :app.id})
+    (fields :app_steps.id
+            :step
+            :t.name
+            :t.description
+            :task_id
+            :t.external_app_id)
+    (where {:app.id app-id})
+    (order :step :ASC)))
 
 (defn- format-step
   "Formats step fields for the client."
   [step]
-  (dissoc step :id :step :input_mapping))
+  (-> step
+      fix-task-id
+      add-app-type
+      (dissoc :id :step :input_mapping)))
 
 (defn- get-input-output-mappings
   "Fetches the output->input mapping UUIDs for the given source and target IDs."
