@@ -129,9 +129,9 @@
       (:body)
       (service/decode-json)))
 
-(defn list-app-file-parameters
+(defn list-app-tasks
   [app-id]
-  (-> (client/get (metadactyl-url "apps" app-id "file-parameters")
+  (-> (client/get (metadactyl-url "apps" app-id "tasks")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)

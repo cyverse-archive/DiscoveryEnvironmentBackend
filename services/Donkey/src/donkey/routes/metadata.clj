@@ -78,9 +78,6 @@
     (GET "/apps/:app-id/details" [app-id :as {:keys [uri]}]
          (ce/trap uri #(apps/get-app-details app-id)))
 
-    (GET "/apps/:app-id/file-parameters" [app-id :as {:keys [uri]}]
-         (ce/trap uri #(apps/list-app-file-parameters app-id)))
-
     (GET "/apps/:app-id/is-publishable" [app-id :as {:keys [uri]}]
          (ce/trap uri #(app-publishable? app-id)))
 
@@ -89,6 +86,9 @@
 
     (POST "/apps/:app-id/rating" [app-id :as {:keys [body uri]}]
           (ce/trap uri #(apps/rate-app body app-id)))
+
+    (GET "/apps/:app-id/tasks" [app-id :as {:keys [uri]}]
+         (ce/trap uri #(apps/list-app-tasks app-id)))
 
     (GET "/apps/:app-id/ui" [app-id :as {:keys [uri]}]
          (ce/trap uri #(edit-app app-id)))))
