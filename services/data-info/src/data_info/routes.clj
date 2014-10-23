@@ -30,10 +30,9 @@
 
   (POST "/cart" [user folder] (cart/cart user folder))
 
-  (HEAD "/entries/id/:entry-id" [entry-id user] (entry/entry entry-id user))
+  (HEAD "/entries/id/:entry-id" [entry-id user ] (entry/id-entry entry-id user))
 
-  (GET "/entries/path/:zone/*" [* :as req]
-    (util/controller req (partial entry/get-by-path *) :params))
+  (GET "/entries/path/:zone/*" [zone *] (entry/path-entry zone *))
 
   (POST "/existence-marker" [:as req]
     (util/controller req exists/do-exists :params :body))

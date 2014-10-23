@@ -20,12 +20,16 @@
   [f]
   (try+
     (determine-response (f))
-    (catch [:error_code ce/ERR_NOT_A_USER] err (svc/failure-response err))
+    (catch [:error_code ce/ERR_NOT_A_USER] err
+      (svc/failure-response err))
     (catch ce/error? err
       (when (>= 500 (ce/get-http-status (:error_code err)))
         (log/error (ce/format-exception (:throwable &throw-context))))
       (svc/error-response err (ce/get-http-status (:error_code err))))
-    (catch Object o (svc/error-response (Exception. (str "unexpected error: " o))))))
+    (catch Throwable o
+      (svc/error-response o))
+    (catch Object o
+      (svc/error-response (Exception. (str "unexpected error: " o))))))
 
 
 (defn trap-handler

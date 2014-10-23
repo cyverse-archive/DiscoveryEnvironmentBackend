@@ -1,28 +1,26 @@
 (ns data-info.services.entry
   "This namespace provides the business logic for all entries endpoints."
-  (:require [clojure.set :as set]
-            [clojure.string :as str]
-            [clojure.tools.logging :as log]
-            [dire.core :refer [with-pre-hook! with-post-hook!]]
+  (:require [clojure.string :as str]
+            [cheshire.core :as json]
             [liberator.core :refer [defresource]]
-            [slingshot.slingshot :refer [throw+ try+]]
+            [liberator.representation :as rep]
+            [slingshot.slingshot :refer [try+]]
             [clj-icat-direct.icat :as icat]
             [clj-jargon.init :as init]
             [clj-jargon.item-info :as item]
             [clj-jargon.item-ops :as ops]
             [clj-jargon.permissions :as perm]
             [clj-jargon.users :as user]
+            [clj-jargon.validations :as jv]
             [clojure-commons.error-codes :as error]
             [clojure-commons.file-utils :as file]
-            [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
-            [data-info.util.logging :as dul]
             [data-info.util.irods :as irods]
             [data-info.util.validators :as duv])
   (:import [java.util UUID]))
 
 
-(defn- allowed?
+(defn- id-allowed?
   [url-id user _]
   (try+
     (init/with-jargon (cfg/jargon-cfg) [cm]
@@ -36,55 +34,206 @@
       {::processable? false})))
 
 
-(defresource entry [url-id user]
+(defresource id-entry [url-id user]
   :allowed-methods       [:head]
-  :allowed?              (partial allowed? url-id user)
+  :allowed?              (partial id-allowed? url-id user)
   :exists?               #(::exists? %)
-  :malformed?            (fn [_] (not user))
-  :media-type-available? (fn [_] true)
+  :malformed?            (not user)
+  :media-type-available? true
   :processable?          #(::processable? %))
 
 
-(defn- download-file
-  [user file-path]
+(defn- available-media-types
+  [zone path-in-zone ctx]
+  (when (::exists? ctx)
+    (let [path (irods/abs-path zone path-in-zone)]
+      (init/with-jargon (cfg/jargon-cfg) [cm]
+        (if (item/is-dir? cm path)
+          ["application/json"]
+          [(irods/detect-media-type cm path)])))))
+
+
+(defn- uri-too-long?
+  [zone path-in-zone _]
+  (> (count (irods/abs-path zone path-in-zone)) jv/max-path-length))
+
+
+(defn- malformed?
+  [zone path-in-zone {req :request}]
   (init/with-jargon (cfg/jargon-cfg) [cm]
-    (duv/path-readable cm user file-path)
-    (if (zero? (item/file-size cm file-path))
-      ""
-      (ops/input-stream cm file-path))))
+    (let [full-path      (irods/abs-path zone path-in-zone)
+          req-params     (if (and (item/exists? cm full-path)
+                                  (item/is-dir? cm full-path))
+                           [:user :limit]
+                           [:user])
+          missing-params (remove #(contains? (:params req) %) req-params)]
+      (when-not (empty? missing-params)
+        {:representation {:media-type "application/json"}
+         :message        {:error_code error/ERR_MISSING_QUERY_PARAMETER
+                          :parameters missing-params}}))))
 
 
-(defn- get-disposition
-  [path attachment]
-  (let [filename (str \" (file/basename path) \")]
-    (if (or (nil? attachment) (Boolean/parseBoolean attachment))
-      (str "attachment; filename=" filename)
-      (str "filename=" filename))))
+(defn- path-allowed?
+  [zone path-in-zone ctx]
+  (let [path (irods/abs-path zone path-in-zone)
+        user (get-in ctx [:request :params :user])]
+    (init/with-jargon (cfg/jargon-cfg) [cm]
+      (if-not (user/user-exists? cm user)
+        {::user-exists? false}
+        (if-not (item/exists? cm path)
+          {::exists? false}
+          (when (perm/is-readable? cm user path)
+            {::exists? true}))))))
+
+
+(defn- canonicalize-str
+  [str]
+  (when str (str/lower-case str)))
+
+
+(defn- resolve-attachment
+  [attachment-param]
+  (if-let [attachment-str (canonicalize-str attachment-param)]
+    (when (contains? #{"true" "false"} attachment-str)
+      (read-string attachment-str))
+    false))
+
+
+(defn- resolve-file-params
+  [path params]
+  {::entry-type :file
+   ::path       path
+   ::attachment (resolve-attachment (:attachment params))})
+
+
+(defn- resolve-filter-names
+  [filter-name-params]
+  (cond
+    (nil? filter-name-params)    #{}
+    (string? filter-name-params) #{filter-name-params}
+    :else                        (set filter-name-params)))
+
+
+(defn- resolve-filter-paths
+  [filter-path-params]
+  (letfn [(fmt-path [path-param]
+            (if (= "/" path-param)
+              "/"
+              (let [res (file/rm-last-slash
+                          (if (= \/ (first path-param))
+                            path-param
+                            (str \/ path-param)))]
+                (when-not (empty? res) res))))]
+    (if (string? filter-path-params)
+      #{(fmt-path filter-path-params)}
+      (->> filter-path-params (map fmt-path) (remove nil?) set))))
+
+
+(defn- resolve-nonnegative
+  [nonnegative-param & [default]]
+  (if-not nonnegative-param
+    default
+    (try+
+      (let [val (Long/parseLong nonnegative-param)]
+        (when (>= val 0)
+          val))
+      (catch NumberFormatException _))))
+
+
+(defn- resolve-sort-field
+  [sort-field-param]
+  (if-not sort-field-param
+    :base-name
+    (case (canonicalize-str sort-field-param)
+      "datecreated"  :create-ts
+      "datemodified" :modify-ts
+      "name"         :base-name
+      "path"         :full-path
+      "size"         :data-size
+                     nil)))
+
+
+(defn- resolve-sort-order
+  [sort-order-param]
+  (if-not sort-order-param
+    :asc
+    (case (canonicalize-str sort-order-param)
+      "asc"  :asc
+      "desc" :desc
+             nil)))
+
+
+(defn- resolve-folder-params
+  [path params]
+  {::entry-type   :folder
+   ::path         path
+   ::filter-chars (set (:filter-chars params))
+   ::filter-names (resolve-filter-names (:filter-name params))
+   ::filter-paths (resolve-filter-paths (:filter-path params))
+   ::sort-field   (resolve-sort-field (:sort-field params))
+   ::sort-order   (resolve-sort-order (:sort-order params))
+   ::offset       (resolve-nonnegative (:offset params) 0)
+   ::limit        (resolve-nonnegative (:limit params))})
+
+
+(defn- processable?
+  [zone path-in-zone ctx]
+  (if (false? (::exists? ctx))
+    true
+    (when-not (false? (::user-exists? ctx))
+      (init/with-jargon (cfg/jargon-cfg) [cm]
+        (let [params     (get-in ctx [:request :params])
+              path       (irods/abs-path zone path-in-zone)
+              resolution (if (item/is-dir? cm path)
+                           (resolve-folder-params path params)
+                           (resolve-file-params path params))]
+          (when (not-any? nil? (vals resolution))
+            resolution))))))
+
+
+(defn- handle-unprocessable-entity
+  [zone path-in-zone ctx]
+  (if (false? (::user-exists? ctx))
+    {:error_code error/ERR_NOT_A_USER
+     :user       (get-in ctx [:request :params :user])}
+    (init/with-jargon (cfg/jargon-cfg) [cm]
+      (let [path       (irods/abs-path zone path-in-zone)
+            params     (get-in ctx [:request :params])
+            resolution (if (item/is-dir? cm path)
+                         (resolve-folder-params path params)
+                         (resolve-file-params path params))
+            bad-params (->> resolution
+                         (filter #(nil? (second %)))
+                         (map #(keyword (name (first %)))))]
+        {:error_code error/ERR_BAD_QUERY_PARAMETER :parameters bad-params}))))
+
+
+(defn- as-response
+  [data ctx]
+  (if (and (map? data) (:error_code data))
+    (rep/as-response data (assoc-in ctx [:representation :media-type] "application/json"))
+    (let [fmt-disposition (fn []
+                            (let [filename (str \" (file/basename (::path ctx)) \")]
+                              (if (::attachment ctx)
+                                (str "attachment; filename=" filename)
+                                (str "filename=" filename))))
+          response        (rep/as-response data ctx)]
+      (if (= :file (::entry-type ctx))
+        (assoc-in response [:headers "Content-Disposition"] (fmt-disposition))
+        response))))
 
 
 (defn- get-file
-  [path {:keys [attachment user]}]
-  (let [content-type (future (irods/detect-media-type path))]
-    {:status  200
-     :body    (download-file user path)
-     :headers {"Content-Disposition" (get-disposition path attachment)
-               "Content-Type"        @content-type}}))
-
-(with-pre-hook! #'get-file
-  (fn [path params]
-    (dul/log-call "get-file" path params)
-    (cv/validate-map params {:user string?})
-    (when-let [attachment (:attachment params)]
-      (duv/valid-bool-param "attachment" attachment))
-    (log/info "User for download: " (:user params))
-    (log/info "Path to download: " path)))
-
-(with-post-hook! #'get-file (dul/log-func "get-file"))
+  [{path ::path}]
+  (init/with-jargon (cfg/jargon-cfg) [cm]
+    (if (zero? (item/file-size cm path))
+      ""
+      (ops/input-stream cm path))))
 
 
 (defn- fmt-entry
   [id date-created date-modified filter path permission size]
-  {:id           id
+  {:id           (str id)
    :dateCreated  date-created
    :dateModified date-modified
    :filter       filter
@@ -120,8 +269,8 @@
   "Returns true if the map is okay to include in a directory listing."
   [filter path]
   (or (contains? (:paths filter) path)
-      (contains? (:names filter) (file/basename path))
-      (not (duv/good-string? (:chars filter) path))))
+    (contains? (:names filter) (file/basename path))
+    (not (duv/good-string? (:chars filter) path))))
 
 
 (defn- total-filtered
@@ -134,115 +283,50 @@
 
 (defn- paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
-  [user path limit offset sfield sord filters]
-  (log/info "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
+  [user path filter sfield sord offset limit]
   (init/with-jargon (cfg/jargon-cfg) [cm]
-    (duv/user-exists cm user)
-    (duv/path-readable cm user path)
     (let [id      (irods/lookup-uuid cm path)
-          filter  (should-filter? filters path)
+          filter? (should-filter? filter path)
           perm    (perm/permission-for cm user path)
           stat    (item/stat cm path)
           zone    (cfg/irods-zone)
           pager   (icat/paged-folder-listing user zone path sfield sord limit offset)]
-      (merge (fmt-entry id (:date-created stat) (:date-modified stat) filter path perm 0)
-             (page->map (partial should-filter? filters) pager)
-             {:total         (icat/number-of-items-in-folder user zone path)
-              :totalFiltered (total-filtered user zone path filters)}))))
-
-
-(def ^:private api-field->db-col
-  {"datecreated"  :create-ts
-   "datemodified" :modify-ts
-   "name"         :base-name
-   "path"         :full-path
-   "size"         :data-size
-   nil            :base-name})
-
-
-(def ^:private api-order->db-order
-  {"asc"  :asc
-   "desc" :desc
-   nil    :asc})
-
-
-(defn- canonicalize-str
-  [str]
-  (when str (str/lower-case str)))
-
-
-(defn- resolve-str-set
-  [str-vals]
-  (cond
-    (nil?    str-vals) #{}
-    (string? str-vals) #{str-vals}
-    :else              (set str-vals)))
-
-
-(defn- resolve-sort-field
-  [sort-field]
-  (get api-field->db-col (canonicalize-str sort-field)))
-
-
-(defn- resolve-sort-order
-  [sort-order]
-  (get api-order->db-order (canonicalize-str sort-order)))
-
-
-(defn- validate-sort-field
-  [sort-field]
-  (when-not (contains? api-field->db-col (canonicalize-str sort-field))
-    (log/warn "invalid sort field" sort-field)
-    (throw+ {:error_code error/ERR_BAD_QUERY_PARAMETER
-             :parameter  "sort-field"
-             :value      sort-field})))
-
-
-(defn- validate-sort-order
-  [sort-order]
-  (when-not (contains? api-order->db-order (canonicalize-str sort-order))
-    (log/warn "invalid sort order" sort-order)
-    (throw+ {:error_code error/ERR_BAD_QUERY_PARAMETER
-             :parameter  "sort-order"
-             :value      sort-order})))
+      (merge (fmt-entry id (:date-created stat) (:date-modified stat) filter? path perm 0)
+        (page->map (partial should-filter? filter) pager)
+        {:total         (icat/number-of-items-in-folder user zone path)
+         :totalFiltered (total-filtered user zone path filter)}))))
 
 
 (defn- get-folder
-  [path {:keys [filter-chars filter-name filter-path limit offset sort-field sort-order user]}]
-  (let [path       (file/rm-last-slash path)
-        filter     {:chars (set filter-chars)
-                    :names (resolve-str-set filter-name)
-                    :paths (resolve-str-set filter-path)}
-        limit      (Integer/parseInt limit)
-        offset     (Integer/parseInt offset)
-        sort-field (resolve-sort-field sort-field)
-        sort-order (resolve-sort-order sort-order)]
-    (paged-dir-listing user path limit offset sort-field sort-order filter)))
-
-(with-pre-hook! #'get-folder
-  (fn [path params]
-    (dul/log-call "get-folder" path params)
-    (cv/validate-map params {:limit  cv/nonnegative-int?
-                             :offset cv/nonnegative-int?
-                             :user   string?})
-    (when-let [field (:sort-field params)]
-      (validate-sort-field field))
-    (when-let [order (:sort-order params)]
-      (validate-sort-order order))))
-
-(with-post-hook! #'get-folder (dul/log-func "get-folder"))
+  [ctx]
+  (let [user       (get-in ctx [:request :params :user])
+        path       (::path ctx)
+        filter     {:chars (::filter-chars ctx)
+                    :names (::filter-names ctx)
+                    :paths (::filter-paths ctx)}
+        sort-field (::sort-field ctx)
+        sort-order (::sort-order ctx)
+        offset     (::offset ctx)
+        limit      (::limit ctx)]
+    (paged-dir-listing user path filter sort-field sort-order offset limit)))
 
 
-(defn get-by-path
-  [path-in-zone {zone :zone :as params}]
-  (let [full-path (irods/abs-path zone path-in-zone)
+(defn- handle-ok
+  [ctx]
+  (case (::entry-type ctx)
+    :file   (get-file   ctx)
+    :folder (get-folder ctx)))
 
-        ;; detecting if the path is a folder happens in a separate connection to iRODS on purpose.
-        ;; It appears that downloading a file after detecting its type causes the download to fail.
-        ; TODO after migrating to jargon 4, check to see if this error still occurs.
-        folder? (init/with-jargon (cfg/jargon-cfg) [cm]
-                  (duv/path-exists cm full-path)
-                  (item/is-dir? cm full-path))]
-    (if folder?
-      (get-folder full-path params)
-      (get-file full-path params))))
+
+(defresource path-entry [zone path-in-zone]
+  :allowed-methods             [:get]
+  :available-media-types       (partial available-media-types zone path-in-zone)
+  :uri-too-long?               (partial uri-too-long? zone path-in-zone)
+  :malformed?                  (partial malformed? zone path-in-zone)
+  :allowed?                    (partial path-allowed? zone path-in-zone)
+  :processable?                (partial processable? zone path-in-zone)
+  :exists?                     ::exists?
+  :as-response                 as-response
+  :handle-ok                   handle-ok
+  :handle-malformed            #(json/encode (:message %))
+  :handle-unprocessable-entity (partial handle-unprocessable-entity zone path-in-zone))
