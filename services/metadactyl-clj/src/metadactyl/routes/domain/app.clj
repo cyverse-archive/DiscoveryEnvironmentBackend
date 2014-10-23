@@ -203,6 +203,24 @@
           (optional-key :references) (describe [String] "The App's references")
           OptionalGroupsKey          (describe [AppGroup] GroupListDocs)}))
 
+(defschema AppFileParameterDetails
+  {:id          (describe UUID "A UUID that is used to identify the Parameter")
+   :name        (describe String "The Parameter's name")
+   :description (describe String "The Parameter's description")
+   :label       (describe String "The Input Parameter's label or the Output Parameter's value")
+   :format      (describe String "The Parameter's file format")
+   :required    (describe Boolean "Whether or not a value is required for this Parameter")})
+
+(defschema AppTask
+  {:id          (describe UUID "A UUID that is used to identify the Task")
+   :name        (describe String "The Task's name")
+   :description (describe String "The Task's description")
+   :inputs      (describe [AppFileParameterDetails] "The Task's input parameters")
+   :outputs     (describe [AppFileParameterDetails] "The Task's output parameters")})
+
+(defschema AppTaskListing
+  (assoc AppBase :tasks (describe [AppTask] "The App's tasks")))
+
 (defschema AppParameterJobView
   (assoc AppParameter
     :id
@@ -301,19 +319,6 @@
 
 (defschema AppIdList
   {:app_ids (describe [UUID] "A List of UUIDs used to identify Apps")})
-
-(defschema AppFileParameterDetails
-  {:id                   (describe UUID "A UUID that is used to identify the Parameter")
-   :name                 (describe String "The Parameter's name")
-   :description          (describe String "The Parameter's description")
-   :label                (describe String "The Input Parameter's label or the Output Parameter's value")
-   :format               (describe String "The Parameter's file format")
-   :required             (describe Boolean "Whether or not a value is required for this Parameter")})
-
-(defschema AppFileParameterListing
-  (merge AppBase
-    {:inputs      (describe [AppFileParameterDetails] "The App's input parameters")
-     :outputs     (describe [AppFileParameterDetails] "The App's output parameters")}))
 
 (defschema AppDeletionRequest
   (merge AppIdList

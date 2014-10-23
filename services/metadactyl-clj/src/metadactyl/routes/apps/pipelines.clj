@@ -15,6 +15,7 @@
   (POST* "/" [:as {uri :uri}]
          :query [params SecuredQueryParamsEmailRequired]
          :body [body (describe PipelineCreateRequest "The Pipeline to create.")]
+         :return Pipeline
          :summary "Create a Pipeline"
          :notes "This service adds a new Pipeline."
          (ce/trap uri #(add-pipeline body)))
@@ -23,6 +24,7 @@
         :path-params [app-id :- AppIdPathParam]
         :query [params SecuredQueryParamsEmailRequired]
         :body [body (describe PipelineUpdateRequest "The Pipeline to update.")]
+        :return Pipeline
         :summary "Update a Pipeline"
         :notes "This service updates an existing Pipeline in the database, as long as the Pipeline
         has not been submitted for public use."

@@ -324,17 +324,16 @@
   [task-ids]
   (map format-task (get-tasks task-ids)))
 
-(defn- format-app-file-param-listing
+(defn- format-app-task-listing
   [{app-id :id :as app}]
   (let [task-ids (map :task_id (select :app_steps (fields :task_id) (where {:app_id app-id})))
-        task     (first (get-tasks-with-file-params task-ids))]
+        tasks    (get-tasks-with-file-params task-ids)]
     (-> app
         (select-keys [:id :name :description])
-        (assoc :inputs (:inputs task)
-               :outputs (:outputs task)))))
+        (assoc :tasks tasks))))
 
-(defn get-file-parameters-for-app
+(defn get-app-task-listing
   "A service used to list the file parameters in an app."
   [app-id]
   (let [app (get-app app-id)]
-    (service/success-response (format-app-file-param-listing app))))
+    (service/success-response (format-app-task-listing app))))

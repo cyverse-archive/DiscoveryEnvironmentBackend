@@ -87,27 +87,19 @@
   (let [step-indexes (into {} (map #(vector (:id %) (:step %)) steps))]
     (mapcat (partial get-formatted-mapping step-indexes) steps)))
 
-(defn- format-workflow-app
-  "Adds the steps and mappings fields to the app."
-  [app]
-  (let [steps (get-steps (:id app))
-        mappings (get-mappings steps)
-        steps (map format-step steps)]
-    (-> app
-        (select-keys [:id :name :description])
-        (assoc :steps steps)
-        (assoc :mappings mappings)
-        (dissoc :integrator_email
-                :step_count))))
-
 (defn- format-workflow
   "Prepares a JSON response for editing a Workflow in the client."
   [app]
-  (let [app (format-workflow-app app)
-        task-ids (set (map :task_id (:steps app)))
-        tasks (get-tasks-with-file-params task-ids)]
-    {:apps [app]
-     :tasks tasks}))
+  (let [steps (get-steps (:id app))
+        mappings (get-mappings steps)
+        task-ids (set (map :task_id steps))
+        tasks (get-tasks-with-file-params task-ids)
+        steps (map format-step steps)]
+    (-> app
+        (select-keys [:id :name :description])
+        (assoc :tasks tasks
+               :steps steps
+               :mappings mappings))))
 
 (defn- convert-app-to-copy
   "Adds copies of the steps and mappings fields to the app, and formats
@@ -161,13 +153,13 @@
 
 (defn add-pipeline
   [workflow]
-  (let [app-ids (map add-pipeline-app (:apps workflow))]
-    {:apps app-ids}))
+  (let [app-id (add-pipeline-app workflow)]
+    (edit-pipeline app-id)))
 
 (defn update-pipeline
   [workflow]
-  (let [app-ids (map update-pipeline-app (:apps workflow))]
-    {:apps app-ids}))
+  (let [app-id (update-pipeline-app workflow)]
+    (edit-pipeline app-id)))
 
 (defn copy-pipeline
   "This service makes a copy of a Pipeline for the current user and returns the JSON for editing the

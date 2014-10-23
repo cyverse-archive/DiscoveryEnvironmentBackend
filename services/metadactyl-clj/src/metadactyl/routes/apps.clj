@@ -2,7 +2,7 @@
   (:use [metadactyl.app-listings :only [get-all-app-ids
                                         get-app-details
                                         get-app-description
-                                        get-file-parameters-for-app
+                                        get-app-task-listing
                                         search-apps]]
         [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
@@ -137,18 +137,6 @@
         :notes "This service is used by the DE to obtain high-level details about a single App"
         (ce/trap uri #(get-app-details app-id)))
 
-  (GET* "/:app-id/file-parameters" [:as {uri :uri}]
-        :path-params [app-id :- AppIdPathParam]
-        :query [params SecuredQueryParams]
-        :return AppFileParameterListing
-        :summary "List File Parameters in an App"
-        :notes "When a pipeline is being created, the UI needs to know what types of files are
-        consumed by and what types of files are produced by each App in the pipeline. This service
-        provides that information. The response body contains the App identifier, the App name, a
-        list of inputs (types of files consumed by the service) and a list of outputs (types of
-        files produced by the service)."
-        (ce/trap uri #(get-file-parameters-for-app app-id)))
-
   (GET* "/:app-id/is-publishable" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]
         :query [params SecuredQueryParams]
@@ -178,6 +166,16 @@
          five, inclusive, and a comment identifier that refers to a comment in iPlant's Confluence
          wiki. The rating is stored in the database and associated with the authenticated user."
          (ce/trap uri #(service/success-response (app-metadata/rate-app app-id body))))
+
+  (GET* "/:app-id/tasks" [:as {uri :uri}]
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :return AppTaskListing
+        :summary "List Tasks with File Parameters in an App"
+        :notes "When a pipeline is being created, the UI needs to know what types of files are
+        consumed by and what types of files are produced by each App's task in the pipeline. This
+        service provides that information."
+        (ce/trap uri #(get-app-task-listing app-id)))
 
   (GET* "/:app-id/ui" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]
