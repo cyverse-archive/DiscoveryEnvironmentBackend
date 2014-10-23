@@ -235,10 +235,7 @@
         param-exists (and param-id (persistence/get-app-parameter param-id group-id))
         param-id (if param-exists
                    param-id
-                   (-> update-values
-                       (dissoc :id)
-                       (persistence/add-app-parameter)
-                       (:id)))
+                   (:id (persistence/add-app-parameter update-values)))
         parameter (assoc parameter :id param-id)]
     (when param-exists
       (persistence/update-app-parameter update-values)

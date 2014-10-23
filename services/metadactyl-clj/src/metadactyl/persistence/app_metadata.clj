@@ -37,7 +37,7 @@
   [group]
   (-> group
       (set/rename-keys {:isVisible :is_visible})
-      (select-keys [:task_id :name :description :label :display_order :is_visible])))
+      (select-keys [:id :task_id :name :description :label :display_order :is_visible])))
 
 (defn- filter-valid-app-parameter-values
   "Filters and renames valid keys from the given App parameter for inserting or updating in the
@@ -46,7 +46,8 @@
   (-> parameter
       (set/rename-keys {:isVisible :is_visible
                         :order :ordering})
-      (select-keys [:parameter_group_id
+      (select-keys [:id
+                    :parameter_group_id
                     :name
                     :description
                     :label
@@ -115,7 +116,7 @@
   [app]
   (let [integration-data-id (:id (get-integration-data current-user))
         app (-> app
-                (select-keys [:name :description])
+                (select-keys [:id :name :description])
                 (assoc :integration_data_id integration-data-id
                        :edited_date (sqlfn now)))]
     (insert apps (values app))))
