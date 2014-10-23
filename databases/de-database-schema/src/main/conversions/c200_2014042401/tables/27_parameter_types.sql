@@ -13,3 +13,5 @@ ALTER TABLE ONLY parameter_types ALTER COLUMN id SET DEFAULT uuid_generate_v1();
 ALTER TABLE ONLY parameter_types ALTER COLUMN description TYPE TEXT;
 ALTER TABLE ONLY parameter_types ADD COLUMN value_type_id UUID;
 
+-- The 'Info' parameter type should no longer be marked as deprecated.
+UPDATE parameter_types SET deprecated = FALSE WHERE name = 'Info';
