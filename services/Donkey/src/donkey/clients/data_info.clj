@@ -1,11 +1,8 @@
 (ns donkey.clients.data-info
   (:use [donkey.auth.user-attributes :only [current-user]]
-        [slingshot.slingshot :only [throw+ try+]])
+        [slingshot.slingshot :only [throw+]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [cemerick.url :as url]
-            [clj-http.client :as client]
-            [me.raynes.fs :as fs]
             [clojure-commons.error-codes :as error]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
@@ -16,9 +13,7 @@
             [donkey.services.filesystem.stat :as st]
             [donkey.services.filesystem.status :as status]
             [donkey.services.filesystem.users :as users]
-            [donkey.services.filesystem.uuids :as uuids]
-            [donkey.util.config :as cfg]
-            [donkey.util.service :as svc])
+            [donkey.services.filesystem.uuids :as uuids])
   (:import [clojure.lang IPersistentMap ISeq]
            [java.util UUID]))
 
@@ -265,30 +260,3 @@
                     :reason - the reason access wasn't removed"
   [^String user ^ISeq unshare-withs ^ISeq fpaths]
   (sharing/unshare user unshare-withs fpaths))
-
-
-(defn ^IPersistentMap download-file
-  "This function calls data-info's /entry/path/<zone>/<rel-path> endpoints to download a file.
-
-   Parameters:
-     user - the username of the person authorized to download the file.
-     file - the absolute path to the file to download.
-
-   Returns:
-     It returns a map of with the following members.
-
-       :content-type - the media type of the file being downloaded
-       :file-stream  - an open input stream containing the file."
-  [^String user ^String file]
-  (try+
-    (let [nodes   (map url/url-encode (next (fs/split file)))
-          url-str (str (apply url/url (cfg/data-info-base-url) "entries" "path" nodes))
-          resp    (client/get url-str {:query-params {:user user}
-                                       :as           :stream})]
-      {:content-type (:content-type resp)
-       :file-stream  (:body resp)})
-    (catch [:status 404] {}
-      (throw+ {:error_code error/ERR_DOES_NOT_EXIST :path file}))
-    (catch Object o
-      (log/error o "failed to download" file "for" user)
-      (svc/request-failure "failed to download" file "for" user))))

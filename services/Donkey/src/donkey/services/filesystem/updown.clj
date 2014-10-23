@@ -8,9 +8,9 @@
             [cheshire.core :as json]
             [clj-http.client :as http]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [me.raynes.fs :as fs]
             [clojure-commons.error-codes :as error]
             [clojure-commons.file-utils :as ft]
-            [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
             [donkey.util.service :as svc]))
 
@@ -29,7 +29,7 @@
     (svc/request-failure full-msg)))
 
 
-(defn- handle-unprocessable-entity
+(defn- handle-unprocessable-cart
   [err resource handle-not-a-folder]
   (let [body (json/decode (:body err) true)]
     (if (and handle-not-a-folder
@@ -68,7 +68,7 @@
       (catch [:status 415] err
         (handle-internal-error err url-str "does not serve JSON content"))
       (catch [:status 422] err
-        (handle-unprocessable-entity err url-str handle-not-a-folder))
+        (handle-unprocessable-cart err url-str handle-not-a-folder))
       (catch [:status 500] err
         (handle-data-info-error "had an internal error related to the /cart resource"))
       (catch [:status 501] err
@@ -125,11 +125,55 @@
 
 (with-post-hook! #'do-upload (log-func "do-upload"))
 
+
+(defn- download-file
+  [user file]
+  (let [nodes   (map url/url-encode (next (fs/split file)))
+        url-str (str (apply url/url (cfg/data-info-base-url) "entries" "path" nodes))]
+    (try+
+      (http/get url-str
+                {:query-params {:user user}
+                 :as           :stream})
+      (catch [:status 400] err
+        (handle-internal-error err "bad request to" url-str))
+      (catch [:status 401] err
+        (handle-internal-error err "haven't authorized for" url-str))
+      (catch [:status 403] err
+        (throw+ {:error_code error/ERR_NOT_FOUND :path file}))
+      (catch [:status 404] err
+        (throw+ {:error_code error/ERR_NOT_FOUND :path file}))
+      (catch [:status 405] err
+        (handle-internal-error err url-str "doesn't support GET"))
+      (catch [:status 406] err
+        (handle-internal-error err url-str "cannot generate acceptable content"))
+      (catch [:status 409] err
+        (handle-internal-error err url-str "conflicted"))
+      (catch [:status 410] err
+        (handle-internal-error err url-str "no longer exists"))
+      (catch [:status 412] err
+        (handle-internal-error err url-str "precondition failed"))
+      (catch [:status 413] err
+        (handle-internal-error err "request to" url-str "too large"))
+      (catch [:status 414] err
+        (handle-internal-error err "URI too long:" url-str))
+      (catch [:status 415] err
+        (handle-internal-error err url-str "does not serve JSON content"))
+      (catch [:status 422] err
+        (handle-internal-error err "unprocessable entity provided to" url-str))
+      (catch [:status 500] err
+        (handle-data-info-error "had an internal error related to the /cart resource"))
+      (catch [:status 501] err
+        (handle-data-info-error "has not implemented POST /cart"))
+      (catch [:status 503] err
+        (handle-data-info-error "temporarily unavailable")))))
+
+
 (defn- attachment?
   [params]
   (if-not (contains? params :attachment)
     true
     (if (= "1" (:attachment params)) true false)))
+
 
 (defn- get-disposition
   [params]
@@ -146,9 +190,9 @@
 
 (defn do-special-download
   [{user :user path :path :as params}]
-  (let [resp (data/download-file user path)]
+  (let [resp (download-file user path)]
     {:status  200
-     :body    (:file-stream resp)
+     :body    (:body resp)
      :headers {"Content-Disposition" (get-disposition params)
                "Content-Type"        (:content-type resp)}}))
 
