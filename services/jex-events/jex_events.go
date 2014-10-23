@@ -255,11 +255,29 @@ func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, 
 	}()
 }
 
+// Event contains an event received from the AMQP broker and parsed from JSON.
 type Event struct {
-	Event string
-	Hash  string
+	Event       string
+	Hash        string
+	EventNumber string
+	ID          string
+	Date        string
+	Time        string
+	Msg         string
 }
 
+func (e *Event) String() string {
+	retval := fmt.Sprintf("EventNumber: %s\tID: %s\tDate: %s\tTime: %s\tMsg: %s",
+		e.EventNumber,
+		e.ID,
+		e.Date,
+		e.Time,
+		e.Msg,
+	)
+	return retval
+}
+
+// EventHandler processes incoming event messages
 func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int) {
 	for {
 		select {
@@ -270,24 +288,36 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int) {
 			err := json.Unmarshal(body, &event)
 			if err != nil {
 				log.Print(err)
-				//log.Print(string(body[:]))
+				log.Print(string(body[:]))
 			}
-			//log.Println(string(event.Event[:]))
-			strings := EventNumberString(event.Event)
-			for _, s := range strings {
-				fmt.Println(s)
-			}
-			//log.Println(EventNumberString(event.Event))
+			EventParser(&event)
+			log.Println(event.String())
 		case <-quit:
 			break
 		}
 	}
 }
 
-func EventNumberString(event string) []string {
-	r := regexp.MustCompile("^([0-9]{3}) (\\([0-9]+(?:\\.[0-9]+){2}\\)) [0-9/]+ [0-9:]+ (.*)\\n")
-	matches := r.FindStringSubmatch(event)
-	return matches
+// EventParser extracts info from an event string.
+func EventParser(event *Event) {
+	r := regexp.MustCompile("^([0-9]{3}) (\\([0-9]+(?:\\.[0-9]+){2}\\)) ([0-9/]+) ([0-9:]+) (.*)\\n")
+	matches := r.FindStringSubmatch(event.Event)
+	matchesLength := len(matches)
+	if matchesLength >= 2 {
+		event.EventNumber = matches[1]
+	}
+	if matchesLength >= 3 {
+		event.ID = matches[2]
+	}
+	if matchesLength >= 4 {
+		event.Date = matches[3]
+	}
+	if matchesLength >= 5 {
+		event.Time = matches[4]
+	}
+	if matchesLength >= 6 {
+		event.Msg = matches[5]
+	}
 }
 
 func main() {
