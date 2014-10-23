@@ -371,9 +371,9 @@
 
 (defn- build-submission
   [user email submission app]
-  {:analysis_details     (:description app)
-   :analysis_id          (:id app)
-   :analysis_name        (:name app)
+  {:app_description      (:description app)
+   :app_id               (:id app)
+   :app_name             (:name app)
    :callback             (:callback submission)
    :create_output_subdir (:create_output_subdir submission true)
    :description          (:description submission "")

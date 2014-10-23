@@ -62,13 +62,13 @@
 
 ;; TODO: nuke this when it's no longer needed.
 (defschema JexSubmission
-  {:analysis_details
+  {:app_description
    (describe String "The app description from the database.")
 
-   :analysis_id
+   :app_id
    (describe UUID "The identifier of the app used in the submission.")
 
-   :analysis_name
+   :app_name
    (describe String "The name of the app used in the submission.")
 
    (optional-key :callback)
