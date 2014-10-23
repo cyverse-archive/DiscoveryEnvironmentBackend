@@ -2,18 +2,19 @@
   (:use [compojure.core]
         [donkey.services.collaborators]
         [donkey.util])
-  (:require [donkey.util.config :as config]))
+  (:require [clojure-commons.error-codes :as ce]
+            [donkey.util.config :as config]))
 
 (defn secured-collaborator-routes
   []
   (optional-routes
    [config/collaborator-routes-enabled]
 
-   (GET "/collaborators" [:as req]
-        (trap #(get-collaborators req)))
+   (GET "/collaborators" [:as {:keys [uri] :as req}]
+        (ce/trap uri #(get-collaborators req)))
 
-   (POST "/collaborators" [:as req]
-         (trap #(add-collaborators req)))
+   (POST "/collaborators" [:as {:keys [uri] :as req}]
+         (ce/trap uri #(add-collaborators req)))
 
-   (POST "/remove-collaborators" [:as req]
-         (trap #(remove-collaborators req)))))
+   (POST "/remove-collaborators" [:as {:keys [uri] :as req}]
+         (ce/trap uri #(remove-collaborators req)))))

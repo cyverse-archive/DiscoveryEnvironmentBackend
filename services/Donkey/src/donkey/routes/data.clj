@@ -4,7 +4,8 @@
         [donkey.services.sharing :only [share unshare]]
         [donkey.auth.user-attributes]
         [donkey.util])
-  (:require [donkey.util.config :as config]
+  (:require [clojure-commons.error-codes :as ce]
+            [donkey.util.config :as config]
             [donkey.services.garnish.controllers :as garnish]
             [donkey.clients.saved-searches :as saved]))
 
@@ -14,40 +15,41 @@
   (optional-routes
    [config/data-routes-enabled]
 
-   (GET "/filetypes/type" [:as req]
-        (trap #(garnish/get-types (:params req))))
+   (GET "/filetypes/type" [:as {:keys [uri params]}]
+        (ce/trap uri #(garnish/get-types params)))
 
-   (POST "/filetypes/type" [:as req]
-         (trap #(garnish/add-type (:body req) (:params req))))
+   (POST "/filetypes/type" [:as {:keys [uri body params]}]
+         (ce/trap uri #(garnish/add-type body params)))
 
-   (DELETE "/filetypes/type" [:as req]
-           (trap #(garnish/delete-type (:params req))))
+   (DELETE "/filetypes/type" [:as {:keys [uri params]}]
+           (ce/trap uri #(garnish/delete-type params)))
 
-   (GET "/filetypes/type-list" []
-        (trap #(garnish/get-type-list)))
+   (GET "/filetypes/type-list" [:as {:keys [uri]}]
+        (ce/trap uri #(garnish/get-type-list)))
 
-   (GET "/filetypes/type/paths" [:as req]
-        (trap #(garnish/find-typed-paths (:params req))))
-   
-   (GET "/filetypes/auto-type" [:as req]
-        (trap #(garnish/preview-auto-type (:params req))))
-   
-   (POST "/filetypes/auto-type" [:as req]
-         (trap #(garnish/set-auto-type (:body req) (:params req))))
+   (GET "/filetypes/type/paths" [:as {:keys [uri params]}]
+        (ce/trap uri #(garnish/find-typed-paths params)))
 
-   (POST "/share" [:as req]
-         (trap #(share req)))
+   (GET "/filetypes/auto-type" [:as {:keys [uri params]}]
+        (ce/trap uri #(garnish/preview-auto-type params)))
 
-   (POST "/unshare" [:as req]
-         (trap #(unshare req)))
+   (POST "/filetypes/auto-type" [:as {:keys [uri body params]}]
+         (ce/trap uri #(garnish/set-auto-type body params)))
 
-   (GET "/saved-searches" []
-        (trap #(saved/get-saved-searches (:username current-user))))
+   (POST "/share" [:as {:keys [uri] :as req}]
+         (ce/trap uri #(share req)))
 
-    (POST "/saved-searches" [:as req]
-          (trap #(saved/set-saved-searches (:username current-user) (:body req))))
+   (POST "/unshare" [:as {:keys [uri] :as req}]
+         (ce/trap #(unshare req)))
 
-    (DELETE "/saved-searches" []
-            (trap (fn []
-                    (saved/delete-saved-searches (:username current-user))
-                    {})))))
+   (GET "/saved-searches" [:as {:keys [uri]}]
+        (ce/trap uri #(saved/get-saved-searches (:username current-user))))
+
+   (POST "/saved-searches" [:as {:keys [uri body]}]
+         (ce/trap uri #(saved/set-saved-searches (:username current-user) body)))
+
+   (DELETE "/saved-searches" [:as {:keys [uri]}]
+           (ce/trap uri
+                    (fn []
+                      (saved/delete-saved-searches (:username current-user))
+                      {})))))

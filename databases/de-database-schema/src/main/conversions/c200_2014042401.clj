@@ -452,7 +452,7 @@
            a.id_v187 AS \"old-id\",
            j.submission AS \"submission\"
     FROM jobs j
-    JOIN apps a ON j.app_id = CAST(a.id AS character varying)"
+    LEFT JOIN apps a ON j.app_id = CAST(a.id AS character varying)"
    :results))
 
 (defn- build-step-name-id-map
@@ -499,6 +499,15 @@
                           (or (param-id-map param-id) param-id))))
    v])
 
+(defn- fix-submission
+  [old-id new-id new-config submission]
+  (-> (assoc submission
+        "app_id"          (or new-id old-id)
+        "app_name"        (submission "analysis_name")
+        "app_description" (submission "analysis_details")
+        "config"          new-config)
+      (dissoc "analysis_id" "analysis_name" "analysis_details")))
+
 (defn- update-job-submission
   [step-name-id-maps param-id-maps {:keys [job-id new-id old-id submission]}]
   (when-not (nil? submission)
@@ -507,8 +516,8 @@
           key-pattern  (config-key-pattern name-id-map)
           param-id-map (param-id-maps new-id {})
           fix-key      (partial fix-config-key key-pattern name-id-map param-id-map)
-          new-config   (into {} (map fix-key (submission "config")))
-          submission   (assoc submission "analysis_id" new-id "config" new-config)]
+          new-config   (into {} (map fix-key (or (submission "config") {})))
+          submission   (fix-submission old-id new-id new-config submission)]
       (exec-raw ["UPDATE jobs SET submission = CAST ( ? AS json ) WHERE id = ?"
                  [(cast Object (cheshire/encode submission)) job-id]]))))
 

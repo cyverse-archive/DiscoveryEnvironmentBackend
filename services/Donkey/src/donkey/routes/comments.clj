@@ -1,6 +1,7 @@
 (ns donkey.routes.comments
   (:use [compojure.core :only [GET PATCH POST]])
-  (:require [donkey.services.metadata.comments :as comments]
+  (:require [clojure-commons.error-codes :as ce]
+            [donkey.services.metadata.comments :as comments]
             [donkey.util :as util]
             [donkey.util.config :as config]))
 
@@ -10,11 +11,13 @@
   (util/optional-routes
     [#(and (config/filesystem-routes-enabled) (config/metadata-routes-enabled))]
 
-    (GET "/filesystem/entry/:entry-id/comments" [entry-id]
-      (util/trap #(comments/list-comments entry-id)))
+    (GET "/filesystem/entry/:entry-id/comments" [entry-id :as {:keys [uri]}]
+         (ce/trap uri #(comments/list-comments entry-id)))
 
-    (POST "/filesystem/entry/:entry-id/comments" [entry-id :as {body :body}]
-      (util/trap #(comments/add-comment entry-id body)))
+    (POST "/filesystem/entry/:entry-id/comments" [entry-id :as {:keys [uri body]}]
+          (ce/trap uri #(comments/add-comment entry-id body)))
 
-    (PATCH "/filesystem/entry/:entry-id/comments/:comment-id" [entry-id comment-id retracted]
-      (util/trap #(comments/update-retract-status entry-id comment-id retracted)))))
+    ;; TODO: determine where the value of "retracted" comes from.
+    (PATCH "/filesystem/entry/:entry-id/comments/:comment-id"
+           [entry-id comment-id retracted :as {:keys [uri]}]
+           (ce/trap uri #(comments/update-retract-status entry-id comment-id retracted)))))
