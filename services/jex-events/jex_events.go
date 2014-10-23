@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 
 	"github.com/streadway/amqp"
 )
@@ -256,9 +257,10 @@ func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, 
 
 type Event struct {
 	Event string
+	Hash  string
 }
 
-func PrintHandler(deliveries <-chan amqp.Delivery, quit <-chan int) {
+func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int) {
 	for {
 		select {
 		case delivery := <-deliveries:
@@ -268,13 +270,24 @@ func PrintHandler(deliveries <-chan amqp.Delivery, quit <-chan int) {
 			err := json.Unmarshal(body, &event)
 			if err != nil {
 				log.Print(err)
-				log.Print(body)
+				//log.Print(string(body[:]))
 			}
-			log.Println(event.Event)
+			//log.Println(string(event.Event[:]))
+			strings := EventNumberString(event.Event)
+			for _, s := range strings {
+				fmt.Println(s)
+			}
+			//log.Println(EventNumberString(event.Event))
 		case <-quit:
 			break
 		}
 	}
+}
+
+func EventNumberString(event string) []string {
+	r := regexp.MustCompile("^([0-9]{3}) (\\([0-9]+(?:\\.[0-9]+){2}\\)) [0-9/]+ [0-9:]+ (.*)\\n")
+	matches := r.FindStringSubmatch(event)
+	return matches
 }
 
 func main() {
@@ -293,11 +306,11 @@ func main() {
 	connErrChan := make(chan ConnectionErrorChannel)
 	quitHandler := make(chan int)
 	consumer := NewAMQPConsumer(config)
-	consumer.SetupReconnection(connErrChan, PrintHandler, quitHandler)
+	consumer.SetupReconnection(connErrChan, EventHandler, quitHandler)
 	deliveries, err := consumer.Connect(connErrChan)
 	if err != nil {
 		log.Print(err)
 		os.Exit(-1)
 	}
-	PrintHandler(deliveries, quitHandler)
+	EventHandler(deliveries, quitHandler)
 }
