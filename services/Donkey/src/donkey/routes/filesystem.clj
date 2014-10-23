@@ -193,4 +193,3 @@
 
    (DELETE "/filesystem/:data-id/template-avus/:template-id/:avu-id" [data-id template-id avu-id :as req]
         (controller req do-remove-metadata-template-avus :params data-id template-id avu-id))))
-

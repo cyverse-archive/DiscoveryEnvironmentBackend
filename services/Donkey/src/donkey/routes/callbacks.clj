@@ -1,6 +1,6 @@
 (ns donkey.routes.callbacks
   (:use [compojure.core]
-        [donkey.util :only [trap optional-routes flagged-routes]])
+        [donkey.util :only [optional-routes flagged-routes]])
   (:require [clojure-commons.error-codes :as ce]
             [donkey.services.callbacks :as svc]
             [donkey.util.config :as config]))

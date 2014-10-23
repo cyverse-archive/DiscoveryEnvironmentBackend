@@ -1,7 +1,8 @@
 (ns donkey.routes.oauth
   (:use [compojure.core]
         [donkey.util])
-  (:require [donkey.services.oauth :as oauth]
+  (:require [clojure-commons.error-codes :as ce]
+            [donkey.services.oauth :as oauth]
             [donkey.util.config :as config]))
 
 (defn secured-oauth-routes
@@ -11,5 +12,5 @@
    through a servlet in the Discovery Environment backend."
   []
   (routes
-   (GET "/oauth/access-code/agave" [:as {params :params}]
-        (trap #(oauth/get-access-token (config/agave-oauth-settings) params)))))
+   (GET "/oauth/access-code/agave" [:as {:keys [uri params]}]
+        (ce/trap uri #(oauth/get-access-token (config/agave-oauth-settings) params)))))

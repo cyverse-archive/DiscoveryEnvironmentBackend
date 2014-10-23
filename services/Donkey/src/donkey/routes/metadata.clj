@@ -13,11 +13,11 @@
   (optional-routes
     [config/app-routes-enabled]
 
-    (GET "/apps/categories" [:as {params :params}]
-         (trap #(apps/get-app-categories params)))
+    (GET "/apps/categories" [:as {:keys [uri params]}]
+         (ce/trap uri #(apps/get-app-categories params)))
 
-    (GET "/apps/categories/:app-group-id" [app-group-id :as {params :params}]
-         (ce/trap "get-analyses-in-group" #(apps/apps-in-category app-group-id params)))))
+    (GET "/apps/categories/:app-group-id" [app-group-id :as {:keys [uri params]}]
+         (ce/trap uri #(apps/apps-in-category app-group-id params)))))
 
 (defn apps-routes
   []
