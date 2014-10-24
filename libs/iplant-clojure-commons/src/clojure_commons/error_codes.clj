@@ -137,7 +137,7 @@
     (catch error? err
       (log/error (format-exception (:throwable &throw-context)))
       (err-resp action (:object &throw-context)))
-    (catch java.lang.Exception e
+    (catch Object e
       (log/error (format-exception (:throwable &throw-context)))
       (err-resp action (unchecked &throw-context)))))
 
