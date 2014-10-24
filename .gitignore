@@ -29,4 +29,5 @@ node_modules/
 .idea
 *.iml
 .DS_Store
-services/Donkey/donkey-build
+services/*/*-build
+*.rpm
