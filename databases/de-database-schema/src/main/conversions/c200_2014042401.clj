@@ -452,7 +452,7 @@
            a.id_v187 AS \"old-id\",
            j.submission AS \"submission\"
     FROM jobs j
-    JOIN apps a ON j.app_id = CAST(a.id AS character varying)"
+    LEFT JOIN apps a ON j.app_id = CAST(a.id AS character varying)"
    :results))
 
 (defn- build-step-name-id-map
@@ -490,25 +490,41 @@
   (let [name-pattern (string/join "|" (map #(Pattern/quote %) (keys name-id-map)))]
     (re-pattern (str "\\A(" name-pattern ")_(.*)\\z"))))
 
+(defn- fix-config-key*
+  [key-pattern name-id-map param-id-map k]
+  (string/replace (name k) key-pattern
+                  (fn [[_ step-name param-id]]
+                    (str (or (name-id-map step-name) step-name)
+                         "_"
+                         (or (param-id-map param-id) param-id)))))
 (defn- fix-config-key
   [key-pattern name-id-map param-id-map [k v]]
-  [(string/replace k key-pattern
-                   (fn [[_ step-name param-id]]
-                     (str (or (name-id-map step-name) step-name)
-                          "_"
-                          (or (param-id-map param-id) param-id))))
-   v])
+  [(keyword (fix-config-key* key-pattern name-id-map param-id-map k)) v])
+
+(defn- fix-submission
+  [old-id new-id new-config submission]
+  (-> (assoc submission
+        :app_id          (or new-id old-id)
+        :app_name        (:analysis_name submission)
+        :app_description (:analysis_details submission)
+        :config          new-config)
+      (dissoc :analysis_id :analysis_name :analysis_details)))
+
+(defn- remove-vals
+  [pred m]
+  (into {} (remove (comp pred val) m)))
 
 (defn- update-job-submission
   [step-name-id-maps param-id-maps {:keys [job-id new-id old-id submission]}]
   (when-not (nil? submission)
-    (let [submission   (cheshire/decode (.getValue submission))
+    (let [submission   (cheshire/decode (.getValue submission) true)
           name-id-map  (step-name-id-maps new-id {})
           key-pattern  (config-key-pattern name-id-map)
           param-id-map (param-id-maps new-id {})
           fix-key      (partial fix-config-key key-pattern name-id-map param-id-map)
-          new-config   (into {} (map fix-key (submission "config")))
-          submission   (assoc submission "analysis_id" new-id "config" new-config)]
+          old-config   (:config submission)
+          new-config   (when-not (nil? old-config) (into {} (map fix-key old-config)))
+          submission   (remove-vals nil? (fix-submission old-id new-id new-config submission))]
       (exec-raw ["UPDATE jobs SET submission = CAST ( ? AS json ) WHERE id = ?"
                  [(cast Object (cheshire/encode submission)) job-id]]))))
 

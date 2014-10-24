@@ -532,7 +532,7 @@
                    " --destination " (quote-value output-dir))})
 
 (defn meta-analysis-id
-  [{analysis-id :analysis_id :as condor-map}]
+  [{analysis-id :app_id :as condor-map}]
   (if-not (nil? analysis-id)
     (assoc condor-map :file-metadata
            (conj (:file-metadata condor-map)
@@ -552,7 +552,7 @@
     condor-map))
 
 (defn add-analysis-metadata
-  [{analysis-id :analysis_id uuid :uuid :as condor-map}]
+  [{analysis-id :app_id uuid :uuid :as condor-map}]
   (-> condor-map meta-analysis-id meta-app-execution))
 
 (defn shotgun-job-map

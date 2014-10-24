@@ -3,19 +3,20 @@
         [metadactyl.routes.domain.app.category]
         [metadactyl.routes.params]
         [compojure.api.sweet])
-  (:require [metadactyl.util.service :as service]
+  (:require [clojure-commons.error-codes :as ce]
+            [metadactyl.util.service :as service]
             [compojure.route :as route]))
 
 (defroutes* app-categories
-  (GET* "/" []
+  (GET* "/" [:as {uri :uri}]
         :query [params CategoryListingParams]
         :return AppCategoryListing
         :summary "List App Categories"
         :notes "This service is used by the DE to obtain the list of app categories that
          are visible to the user."
-        (service/trap #(get-app-groups params)))
+        (ce/trap uri #(get-app-groups params)))
 
-  (GET* "/:category-id" []
+  (GET* "/:category-id" [:as {uri :uri}]
         :path-params [category-id :- AppCategoryIdPathParam]
         :query [params SecuredPagingParamsEmailRequired]
         :return AppCategoryAppListing
@@ -25,6 +26,6 @@
          clicks on a category in the _Apps_ window.
          This endpoint accepts optional URL query parameters to limit and sort Apps,
          which will allow pagination of results."
-        (service/trap #(list-apps-in-group category-id params)))
+        (ce/trap uri #(list-apps-in-group category-id params)))
 
   (route/not-found (service/unrecognized-path-response)))

@@ -49,17 +49,17 @@
    value pair."
   [field value]
   (case field
-    "analysis_name" ['like (sqlfn :lower (str "%" value "%"))]
-    "name"          ['like (sqlfn :lower (str "%" value "%"))]
-    "id"            (UUID/fromString value)
+    "app_name" ['like (sqlfn :lower (str "%" value "%"))]
+    "name"     ['like (sqlfn :lower (str "%" value "%"))]
+    "id"       (UUID/fromString value)
     value))
 
 (defn- filter-field->where-field
   "Returns a field key for use in a job query where-clause map, based on the given filter field."
   [field]
   (case field
-    "analysis_name" (sqlfn :lower :j.app_name)
-    "name"          (sqlfn :lower :j.job_name)
+    "app_name" (sqlfn :lower :j.app_name)
+    "name"     (sqlfn :lower :j.job_name)
     (keyword (str "j." field))))
 
 (defn- filter-map->where-clause
@@ -183,11 +183,11 @@
   "Translates the sort field sent to get-jobs to a value that can be used in the query."
   [field]
   (case field
-    :name          :j.job_name
-    :analysis_name :j.app_name
-    :startdate     :j.start_date
-    :enddate       :j.end_date
-    :status        :j.status))
+    :name      :j.job_name
+    :app_name  :j.app_name
+    :startdate :j.start_date
+    :enddate   :j.end_date
+    :status    :j.status))
 
 (defn- job-base-query
   "The base query used for retrieving job information from the database."

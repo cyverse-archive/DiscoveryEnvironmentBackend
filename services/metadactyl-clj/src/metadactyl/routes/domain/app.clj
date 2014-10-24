@@ -13,6 +13,7 @@
 (def OptionalParametersKey (optional-key :parameters))
 (def OptionalParameterArgumentsKey (optional-key :arguments))
 
+(def ToolListDocs "The tools used to execute the App")
 (def GroupListDocs "The list of Parameter Groups associated with the App")
 (def ParameterListDocs
   ;; KLUDGE
@@ -74,6 +75,27 @@
       Parameter contains a value that is an integer greater than zero, you would use a validation
       rule of type `IntAbove` along with a parameter list of `[0]`")})
 
+(defschema AppFileParameters
+  {(optional-key :format)
+   (describe String "The Input/Output Parameter's file format")
+
+   (optional-key :file_info_type)
+   (describe String "The Input/Output Parameter's info type")
+
+   (optional-key :is_implicit)
+   (describe Boolean
+     "Whether the Output Parameter name is specified on the command line (but still be referenced in
+      Pipelines), or implicitly determined by the app itself. If the output file name is implicit
+      then the output file name either must always be the same or it must follow a naming convention
+      that can easily be matched with a glob pattern")
+
+   (optional-key :data_source)
+   (describe String "The Output Parameter's source")
+
+   (optional-key :retain)
+   (describe Boolean
+     "Whether or not the Input should be copied back to the job output directory in iRODS")})
+
 (defschema AppParameter
   {:id
    (describe UUID "A UUID that is used to identify the Parameter")
@@ -127,25 +149,8 @@
       database. You can get the list of defined and undeprecated Parameter types using the
       `parameter-types` endpoint")
 
-   (optional-key :file_info_type)
-   (describe String "The Input/Output Parameter's info type")
-
-   (optional-key :is_implicit)
-   (describe Boolean
-     "Whether the Output Parameter name is specified on the command line (but still be referenced in
-      Pipelines), or implicitly determined by the app itself. If the output file name is implicit
-      then the output file name either must always be the same or it must follow a naming convention
-      that can easily be matched with a glob pattern")
-
-   (optional-key :data_source)
-   (describe String "The Output Parameter's source")
-
-   (optional-key :retain)
-   (describe Boolean
-     "Whether or not the Input should be copied back to the job output directory in iRODS")
-
-   (optional-key :format)
-   (describe String "The Input/Output Parameter's file format")
+   (optional-key :file_parameters)
+   (describe AppFileParameters "The File Parameter specific details")
 
    OptionalParameterArgumentsKey
    (describe [AppParameterListItemOrTree] ListItemOrTreeDocs)
@@ -176,6 +181,15 @@
    OptionalParametersKey
    (describe [AppParameter] ParameterListDocs)})
 
+(defschema ToolDetails
+  {:id          ToolIdParam
+   :name        (describe String "The Tool's name")
+   :description (describe String "The Tool's description")
+   :location    (describe String "The Tool's installed location")
+   :type        (describe String "The Tool's type")
+   :version     (describe String "The Tool's version")
+   :attribution (describe String "The Tool's attribution information")})
+
 (defschema AppBase
   {:id                              AppIdParam
    :name                            (describe String "The App's name")
@@ -185,10 +199,27 @@
 
 (defschema App
   (merge AppBase
-         {(optional-key :tool)       (describe String "The tool used to execute the App")
-          (optional-key :tool_id)    (describe UUID "A UUID that is used to identify the App's tool")
+         {(optional-key :tools)      (describe [ToolDetails] ToolListDocs)
           (optional-key :references) (describe [String] "The App's references")
           OptionalGroupsKey          (describe [AppGroup] GroupListDocs)}))
+
+(defschema AppFileParameterDetails
+  {:id          (describe UUID "A UUID that is used to identify the Parameter")
+   :name        (describe String "The Parameter's name")
+   :description (describe String "The Parameter's description")
+   :label       (describe String "The Input Parameter's label or the Output Parameter's value")
+   :format      (describe String "The Parameter's file format")
+   :required    (describe Boolean "Whether or not a value is required for this Parameter")})
+
+(defschema AppTask
+  {:id          (describe UUID "A UUID that is used to identify the Task")
+   :name        (describe String "The Task's name")
+   :description (describe String "The Task's description")
+   :inputs      (describe [AppFileParameterDetails] "The Task's input parameters")
+   :outputs     (describe [AppFileParameterDetails] "The Task's output parameters")})
+
+(defschema AppTaskListing
+  (assoc AppBase :tasks (describe [AppTask] "The App's tasks")))
 
 (defschema AppParameterJobView
   (assoc AppParameter
@@ -210,15 +241,6 @@
     :disabled         (describe Boolean "A flag indicating whether the App is disabled")
     OptionalGroupsKey (describe [AppGroupJobView] GroupListDocs)))
 
-(defschema ToolDetails
-  {:id          ToolIdParam
-   :name        (describe String "The Tool's name")
-   :description (describe String "The Tool's description")
-   :location    (describe String "The Tool's installed location")
-   :type        (describe String "The Tool's type")
-   :version     (describe String "The Tool's version")
-   :attribution (describe String "The Tool's attribution information")})
-
 (defschema AppDetailCategory
   {:id AppCategoryIdPathParam
    :name (describe String "The App Category's name")})
@@ -226,7 +248,7 @@
 (defschema AppDetails
   (merge AppBase
          {:tools
-          (describe [ToolDetails] "The tools used to execute the App")
+          (describe [ToolDetails] ToolListDocs)
 
           :references
           (describe [String] "The App's references")

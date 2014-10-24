@@ -4,6 +4,7 @@
         [kameleon.core]
         [kameleon.entities]
         [kameleon.uuids :only [uuid]]
+        [metadactyl.app-listings :only [get-tasks-with-file-params]]
         [metadactyl.persistence.app-metadata :only [add-app
                                                     add-mapping
                                                     add-step
@@ -15,38 +16,6 @@
         [metadactyl.workspace :only [get-workspace]]
         [metadactyl.zoidberg.app-edit :only [add-app-to-user-dev-category app-copy-name]])
   (:require [metadactyl.util.service :as service]))
-
-(defn- with-task-params
-  "Includes a list of related file parameters in the query's result set,
-   with fields required by the client."
-  [query task-param-entity]
-  (with query task-param-entity
-    (join data_formats {:data_format :data_formats.id})
-    (join :parameter_values {:parameter_values.parameter_id :id})
-    (fields :id
-            :name
-            :label
-            :description
-            :required
-            :parameter_values.value
-            [:data_formats.name :format])))
-
-(defn- get-tasks
-  "Fetches a list of tasks for the given IDs with their inputs and outputs."
-  [task-ids]
-  (select tasks
-          (fields :id
-                  :name
-                  :description)
-          (with-task-params inputs)
-          (with-task-params outputs)
-          (where (in :id task-ids))))
-
-(defn- format-task
-  [task]
-  (-> task
-      (update-in [:inputs] (partial map remove-nil-vals))
-      (update-in [:outputs] (partial map remove-nil-vals))))
 
 (defn- add-app-type
   [step]
@@ -62,30 +31,32 @@
   "Fetches the steps for the given app ID, including their task ID and
    source/target mapping IDs and step names."
   [app-id]
-  (map (comp fix-task-id add-app-type)
-    (select app_steps
-            (with input_mapping
-                  (fields :source_step
-                          :target_step)
-                  (group :source_step
-                         :target_step))
-            (join [:tasks :t]
-                  {:task_id :t.id})
-            (join [:apps :app]
-                  {:app_id :app.id})
-            (fields :app_steps.id
-                    :step
-                    :t.name
-                    :t.description
-                    :task_id
-                    :t.external_app_id)
-            (where {:app.id app-id})
-            (order :step :ASC))))
+  (select app_steps
+    (with input_mapping
+          (fields :source_step
+                  :target_step)
+          (group :source_step
+                 :target_step))
+    (join [:tasks :t]
+          {:task_id :t.id})
+    (join [:apps :app]
+          {:app_id :app.id})
+    (fields :app_steps.id
+            :step
+            :t.name
+            :t.description
+            :task_id
+            :t.external_app_id)
+    (where {:app.id app-id})
+    (order :step :ASC)))
 
 (defn- format-step
   "Formats step fields for the client."
   [step]
-  (dissoc step :id :step :input_mapping))
+  (-> step
+      fix-task-id
+      add-app-type
+      (dissoc :id :step :input_mapping)))
 
 (defn- get-input-output-mappings
   "Fetches the output->input mapping UUIDs for the given source and target IDs."
@@ -118,27 +89,19 @@
   (let [step-indexes (into {} (map #(vector (:id %) (:step %)) steps))]
     (mapcat (partial get-formatted-mapping step-indexes) steps)))
 
-(defn- format-workflow-app
-  "Adds the steps and mappings fields to the app."
-  [app]
-  (let [steps (get-steps (:id app))
-        mappings (get-mappings steps)
-        steps (map format-step steps)]
-    (-> app
-        (select-keys [:id :name :description])
-        (assoc :steps steps)
-        (assoc :mappings mappings)
-        (dissoc :integrator_email
-                :step_count))))
-
 (defn- format-workflow
   "Prepares a JSON response for editing a Workflow in the client."
   [app]
-  (let [app (format-workflow-app app)
-        task-ids (set (map :task_id (:steps app)))
-        tasks (map format-task (get-tasks task-ids))]
-    {:apps [app]
-     :tasks tasks}))
+  (let [steps (get-steps (:id app))
+        mappings (get-mappings steps)
+        task-ids (set (map :task_id steps))
+        tasks (get-tasks-with-file-params task-ids)
+        steps (map format-step steps)]
+    (-> app
+        (select-keys [:id :name :description])
+        (assoc :tasks tasks
+               :steps steps
+               :mappings mappings))))
 
 (defn- convert-app-to-copy
   "Adds copies of the steps and mappings fields to the app, and formats
@@ -192,13 +155,13 @@
 
 (defn add-pipeline
   [workflow]
-  (let [app-ids (map add-pipeline-app (:apps workflow))]
-    {:apps app-ids}))
+  (let [app-id (add-pipeline-app workflow)]
+    (edit-pipeline app-id)))
 
 (defn update-pipeline
   [workflow]
-  (let [app-ids (map update-pipeline-app (:apps workflow))]
-    {:apps app-ids}))
+  (let [app-id (update-pipeline-app workflow)]
+    (edit-pipeline app-id)))
 
 (defn copy-pipeline
   "This service makes a copy of a Pipeline for the current user and returns the JSON for editing the

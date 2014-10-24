@@ -6,6 +6,7 @@
         [kameleon.app-groups]
         [kameleon.app-listing]
         [kameleon.uuids :only [uuidify]]
+        [metadactyl.persistence.app-metadata :only [get-app get-app-tools]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config]
         [metadactyl.util.conversions :only [to-long remove-nil-vals]]
@@ -224,46 +225,24 @@
                  (with app_references)
                  (where {:id app-id}))))
 
-(defn- load-tools
-  "Loads information about the deployed components associated with an app."
-  [app-id]
-  (select tool_listing
-          (fields
-            [:tool_id :id]
-            :name
-            :description
-            :location
-            :type
-            :version
-            :attribution)
-          (where {:app_id app-id})))
-
-(defn- timestamp-to-millis
-  "Converts a timestamp, which may be nil, to the number of milliseconds since January 1, 1970."
-  [timestamp]
-  (if (nil? timestamp)
-    nil
-    (.getTime timestamp)))
-
 (defn- format-app-details
   "Formats information for the get-app-details service."
   [details tools]
   (let [app-id (:id details)]
-    {:id                   app-id
-     :name                 (:name details "")
-     :description          (:description details "")
-     :integration_date     (timestamp-to-millis (:integration_date details))
-     :edited_date          (timestamp-to-millis (:edited_date details))
-     :references           (map :reference_text (:app_references details))
-     :tools                tools
-     :categories           (get-groups-for-app app-id)
-     :suggested_categories (get-suggested-groups-for-app app-id)}))
+    (-> details
+      (select-keys [:id :integration_date :edited_date])
+      (assoc :name                 (:name details "")
+             :description          (:description details "")
+             :references           (map :reference_text (:app_references details))
+             :tools                (remove-nil-vals tools)
+             :categories           (get-groups-for-app app-id)
+             :suggested_categories (get-suggested-groups-for-app app-id)))))
 
 (defn get-app-details
   "This service obtains the high-level details of an app."
   [app-id]
   (let [details (load-app-details app-id)
-        tools   (load-tools app-id)]
+        tools   (get-app-tools app-id)]
     (when (nil? details)
       (throw (IllegalArgumentException. (str "app, " app-id ", not found"))))
     (when (empty? tools)
@@ -297,3 +276,64 @@
   "This service obtains the description of an app."
   [app-id]
   (:description (first (select apps (where {:id app-id}))) ""))
+
+(defn- with-task-params
+  "Includes a list of related file parameters in the query's result set,
+   with fields required by the client."
+  [query task-param-entity]
+  (with query task-param-entity
+              (join data_formats {:data_format :data_formats.id})
+              (join :parameter_values {:parameter_values.parameter_id :id})
+              (fields :id
+                      :name
+                      :label
+                      :description
+                      :required
+                      :parameter_values.value
+                      [:data_formats.name :format])))
+
+(defn- get-tasks
+  "Fetches a list of tasks for the given IDs with their inputs and outputs."
+  [task-ids]
+  (select tasks
+    (fields :id
+            :name
+            :description)
+    (with-task-params inputs)
+    (with-task-params outputs)
+    (where (in :id task-ids))))
+
+(defn- format-task-file-param
+  [file-parameter]
+  (dissoc file-parameter :value))
+
+(defn- format-task-output
+  [{value :value :as output}]
+  (-> output
+    (assoc :label value)
+    format-task-file-param))
+
+(defn- format-task
+  [task]
+  (-> task
+    (update-in [:inputs] (partial map (comp remove-nil-vals format-task-file-param)))
+    (update-in [:outputs] (partial map (comp remove-nil-vals format-task-output)))))
+
+(defn get-tasks-with-file-params
+  "Fetches a formatted list of tasks for the given IDs with their inputs and outputs."
+  [task-ids]
+  (map format-task (get-tasks task-ids)))
+
+(defn- format-app-task-listing
+  [{app-id :id :as app}]
+  (let [task-ids (map :task_id (select :app_steps (fields :task_id) (where {:app_id app-id})))
+        tasks    (get-tasks-with-file-params task-ids)]
+    (-> app
+        (select-keys [:id :name :description])
+        (assoc :tasks tasks))))
+
+(defn get-app-task-listing
+  "A service used to list the file parameters in an app."
+  [app-id]
+  (let [app (get-app app-id)]
+    (service/success-response (format-app-task-listing app))))

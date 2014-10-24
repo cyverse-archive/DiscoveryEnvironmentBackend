@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/conrad "4.0.1"
+(defproject org.iplantc/conrad "4.0.2"
   :description "Back-End Services for the iPlant Administrative Console"
   :url "http://www.iplantcollaborative.org"
   :uberjar-name "conrad-standalone.jar"
@@ -17,10 +17,10 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.6"]
                  [org.clojure/java.jdbc "0.2.3"]
-                 [org.iplantc/clj-cas "4.0.1"]
-                 [org.iplantc/kameleon "4.0.1"]
-                 [org.iplantc/clojure-commons "4.0.1"]
-                 [org.iplantc/common-cli "4.0.1"]
+                 [org.iplantc/clj-cas "4.0.2"]
+                 [org.iplantc/kameleon "4.0.2"]
+                 [org.iplantc/clojure-commons "4.0.2"]
+                 [org.iplantc/common-cli "4.0.2"]
                  [me.raynes/fs "1.4.4"]
                  [cheshire "5.0.2"]
                  [compojure "1.1.5"]
@@ -30,7 +30,7 @@
                  [korma/korma "0.3.0-RC5"]
                  [ring/ring-jetty-adapter "1.1.0"]
                  [postgresql/postgresql "9.0-801.jdbc4"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "4.0.1"]
+  :plugins [[org.iplantc/lein-iplant-rpm "4.0.2"]
             [lein-ring "0.8.3"]
             [lein-swank "1.4.5"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}

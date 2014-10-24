@@ -28,9 +28,9 @@
   (jp/save-job {:id                 job-id
                 :job-name           (:name job)
                 :description        (:description job)
-                :app-id             (:analysis_id job)
-                :app-name           (:analysis_name job)
-                :app-description    (:analysis_details job)
+                :app-id             (:app_id job)
+                :app-name           (:app_name job)
+                :app-description    (:app_details job)
                 :app-wiki-url       (:wiki_url job)
                 :result-folder-path (:resultfolderid job)
                 :start-date         (db/timestamp-from-str (str (:startdate job)))
@@ -59,10 +59,10 @@
     :callback (de-job-callback-url)))
 
 (defn submit-job
-  [workspace-id submission]
+  [submission]
   (let [job-id     (UUID/randomUUID)
         submission (prepare-submission submission job-id)
-        job        (metadactyl/submit-job workspace-id submission)
+        job        (metadactyl/submit-job submission)
         username   (:shortUsername current-user)
         email      (:email current-user)]
     (store-submitted-de-job job-id job submission)
@@ -74,9 +74,9 @@
      :start-date (time-utils/millis-from-str (str (:startdate job)))}))
 
 (defn submit-job-step
-  [workspace-id job-info job-step submission]
+  [job-info job-step submission]
   (->> (prepare-submission submission (UUID/randomUUID))
-       (metadactyl/submit-job workspace-id)
+       (metadactyl/submit-job)
        (:id)))
 
 (defn load-de-job-states

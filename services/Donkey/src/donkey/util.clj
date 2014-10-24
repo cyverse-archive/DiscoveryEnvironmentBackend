@@ -27,33 +27,10 @@
   [{:keys [status body]}]
   (and (number? status) ((comp not nil?) body)))
 
-(defn trap
-  "Traps any exception thrown by a service and returns an appropriate
-   repsonse."
-  [f]
-  (try+
-   (determine-response (f))
-   (catch [:type :error-status] {:keys [res]} res)
-   (catch [:type :missing-argument] {:keys [arg]} (missing-arg-response arg))
-   (catch [:type :invalid-argument] {:keys [arg val reason]}
-     (invalid-arg-response arg val reason))
-   (catch [:type :invalid-configuration] {:keys [reason]} (invalid-cfg-response reason))
-   (catch [:type :temp-dir-failure] err (temp-dir-failure-response err))
-   (catch [:type :tree-file-parse-err] err (tree-file-parse-err-response err))
-   (catch ce/error? err
-     (log/error (ce/format-exception (:throwable &throw-context)))
-     (error-response err (ce/get-http-status (:error_code err))))
-
-   (catch IllegalArgumentException e (failure-response e))
-   (catch IllegalStateException e (failure-response e))
-   (catch Throwable t (error-response t))
-   (catch clj-http-error? o o)
-   (catch Object o (error-response (Exception. (str "unexpected error: " o))))))
-
 (defn trap-handler
   [handler]
-  (fn [req]
-    (trap #(handler req))))
+  (fn [{:keys [uri] :as req}]
+    (ce/trap uri #(handler req))))
 
 (defn req-logger
   [handler]
@@ -90,11 +67,11 @@
       req)))
 
 (defn- ctlr
-  [req slurp? func & args]
+  [{:keys [uri] :as req} slurp? func & args]
   (let [req     (pre-process-request req :slurp? slurp?)
         get-arg (fn [arg] (if (keyword? arg) (get req arg) arg))
         argv    (mapv get-arg args)]
-    (trap #(apply func argv))))
+    (ce/trap uri #(apply func argv))))
 
 (defn controller
   [req func & args]

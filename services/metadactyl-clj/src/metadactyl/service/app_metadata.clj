@@ -58,6 +58,15 @@
   (when-not (:root_deletion_request req)
     (dorun (map (partial validate-app-ownership (:username current-user)) (:app_ids req)))))
 
+(defn permanently-delete-apps
+  "This service removes apps from the database rather than merely marking them as deleted."
+  [req]
+  (validate-deletion-request req)
+  (transaction
+    (dorun (map amp/permanently-delete-app (:app_ids req)))
+    (amp/remove-workflow-map-orphans))
+  nil)
+
 (defn delete-apps
   "This service marks existing apps as deleted in the database."
   [req]

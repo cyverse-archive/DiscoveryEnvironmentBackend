@@ -162,17 +162,17 @@
                               :start-date  (db/now)}))
 
 (defn- submit-job-step
-  [agave workspace-id job-info {:keys [app-step-number] :as job-step} submission]
+  [agave job-info {:keys [app-step-number] :as job-step} submission]
   (doto (if (is-de-job-step? job-step)
           (let [output-dir (:result-folder-path job-info)
                 submission (assoc (mu/update-submission-result-folder submission output-dir)
                              :starting_step app-step-number)]
-            (da/submit-job-step workspace-id job-info job-step submission))
+            (da/submit-job-step job-info job-step submission))
           (let [app-steps     (ap/load-app-steps (:app-id job-info))
                 curr-app-step (nth app-steps (dec app-step-number))
                 output-dir    (:result-folder-path job-info)
                 submission    (assoc (mu/update-submission-result-folder submission output-dir)
-                                :analysis_id (:external_app_id curr-app-step)
+                                :app_id (:external_app_id curr-app-step)
                                 :paramPrefix (:step_id curr-app-step))]
             (aa/submit-job-step agave job-info job-step submission)))
     (record-step-submission job-info job-step)))
@@ -180,7 +180,7 @@
 (defn- submit-de-job
   "Submits a DE job to the remote system. A DE job is a job using any app defined in the DE
    database, which may consist of Agave steps, DE steps or both."
-  [agave workspace-id app-id submission]
+  [agave app-id submission]
   (let [app-info  (service/assert-found (ap/load-app-info app-id) "app" app-id)
         job-id    (UUID/randomUUID)
         job-info  (build-job-save-info (mu/build-result-folder-path submission)
@@ -188,7 +188,7 @@
         job-steps (map (partial build-job-step-save-info job-id)
                        (validate-job-steps app-id (load-job-steps app-id)))]
     (jp/save-multistep-job job-info job-steps submission)
-    (submit-job-step agave workspace-id job-info (first job-steps) submission)
+    (submit-job-step agave job-info (first job-steps) submission)
     (mu/send-job-status-notification job-info (first job-steps) jp/submitted-status nil)
     {:id         job-id
      :name       (:job-name job-info)
@@ -198,10 +198,10 @@
 (defn submit-job
   "Submits a job for execution. The job may run exclusively in Agave, exclusively in the DE, or it
    may have steps that run on both systems."
-  [agave workspace-id submission]
-  (let [app-id (:analysis_id submission)]
+  [agave submission]
+  (let [app-id (:app_id submission)]
     (if (util/is-uuid? app-id)
-      (submit-de-job agave workspace-id app-id submission)
+      (submit-de-job agave (UUID/fromString app-id) submission)
       (aa/submit-agave-job agave submission))))
 
 (defn- get-job-submission-config
@@ -312,10 +312,9 @@
         next-app-step    (nth app-steps (dec app-step-number))
         mapped-inputs    (ap/load-target-step-mappings (:step_id next-app-step))
         submission       (service/decode-json (.getValue (:submission job)))
-        submission       (add-mapped-inputs agave job submission app-steps mapped-inputs)
-        workspace-id     (:id (wp/workspace-for-user username))]
+        submission       (add-mapped-inputs agave job submission app-steps mapped-inputs)]
     (try+
-     (submit-job-step agave workspace-id job next-step submission)
+     (submit-job-step agave job next-step submission)
      (catch Object o
        (log/warn (str "unable to submit the next step in job " (:id job)))
        (update-job-status agave username job next-step jp/failed-status (db/now))

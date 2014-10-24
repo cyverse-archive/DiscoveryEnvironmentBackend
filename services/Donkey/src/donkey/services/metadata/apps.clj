@@ -108,7 +108,7 @@
   (listAppDataObjects [_ app-id])
   (editWorkflow [_ app-id])
   (copyWorkflow [_ app-id])
-  (submitJob [_ workspace-id submission])
+  (submitJob [_ submission])
   (countJobs [_ filter])
   (listJobs [_ limit offset sort-field sort-order filter])
   (syncJobStatus [_ job])
@@ -149,7 +149,7 @@
     (metadactyl/get-app-details app-id))
 
   (listAppDataObjects [_ app-id]
-    (metadactyl/list-app-data-objects))
+    (metadactyl/list-app-tasks app-id))
 
   (editWorkflow [_ app-id]
     (metadactyl/edit-workflow app-id))
@@ -157,8 +157,8 @@
   (copyWorkflow [_ app-id]
     (metadactyl/copy-workflow app-id))
 
-  (submitJob [_ workspace-id submission]
-    (da/submit-job workspace-id submission))
+  (submitJob [_ submission]
+    (da/submit-job submission))
 
   (countJobs [_ filter]
     (count-de-jobs filter))
@@ -236,7 +236,7 @@
 
   (listAppDataObjects [_ app-id]
     (if (is-uuid? app-id)
-      (metadactyl/list-app-data-objects app-id)
+      (metadactyl/list-app-tasks app-id)
       (.listAppDataObjects agave-client app-id)))
 
   (editWorkflow [_ app-id]
@@ -245,8 +245,8 @@
   (copyWorkflow [_ app-id]
     (aa/add-workflow-templates agave-client (metadactyl/copy-workflow app-id)))
 
-  (submitJob [_ workspace-id submission]
-    (ca/submit-job agave-client workspace-id submission))
+  (submitJob [_ submission]
+    (ca/submit-job agave-client submission))
 
   (countJobs [_ filter]
     (count-jobs filter))
@@ -376,11 +376,11 @@
      (service/success-response (.getAppDetails (get-app-lister) app-id)))))
 
 (defn submit-job
-  [workspace-id body]
+  [body]
   (with-db db/de
     (transaction
      (service/success-response
-      (.submitJob (get-app-lister) workspace-id (service/decode-json body))))))
+      (.submitJob (get-app-lister) (service/decode-json body))))))
 
 (defn list-jobs
   [{:keys [limit offset sort-field sort-order filter]
@@ -537,7 +537,7 @@
   (with-db db/de
     (service/success-response (.getAppRerunInfo (get-app-lister) job-id))))
 
-(defn list-app-data-objects
+(defn list-app-tasks
   [app-id]
   (with-db db/de
     (service/success-response (.listAppDataObjects (get-app-lister) app-id))))

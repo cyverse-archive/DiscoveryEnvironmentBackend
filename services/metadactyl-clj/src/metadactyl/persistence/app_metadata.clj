@@ -7,7 +7,8 @@
         [metadactyl.user :only [current-user]]
         [metadactyl.util.assertions]
         [metadactyl.util.conversions :only [remove-nil-vals]])
-  (:require [metadactyl.persistence.app-metadata.relabel :as relabel]
+  (:require [metadactyl.persistence.app-metadata.delete :as delete]
+            [metadactyl.persistence.app-metadata.relabel :as relabel]
             [clojure.set :as set]))
 
 (def param-input-types #{"FileInput" "FolderInput" "MultiFileSelector"})
@@ -36,7 +37,7 @@
   [group]
   (-> group
       (set/rename-keys {:isVisible :is_visible})
-      (select-keys [:task_id :name :description :label :display_order :is_visible])))
+      (select-keys [:id :task_id :name :description :label :display_order :is_visible])))
 
 (defn- filter-valid-app-parameter-values
   "Filters and renames valid keys from the given App parameter for inserting or updating in the
@@ -45,7 +46,8 @@
   (-> parameter
       (set/rename-keys {:isVisible :is_visible
                         :order :ordering})
-      (select-keys [:parameter_group_id
+      (select-keys [:id
+                    :parameter_group_id
                     :name
                     :description
                     :label
@@ -96,12 +98,25 @@
     (insert integration_data (values {:integrator_name (str first-name " " last-name)
                                       :integrator_email email}))))
 
+(defn get-app-tools
+  "Loads information about the tools associated with an app."
+  [app-id]
+  (select tool_listing
+          (fields [:tool_id :id]
+                  :name
+                  :description
+                  :location
+                  :type
+                  :version
+                  :attribution)
+          (where {:app_id app-id})))
+
 (defn add-app
   "Adds top-level app info to the database and returns the new app info, including its new ID."
   [app]
   (let [integration-data-id (:id (get-integration-data current-user))
         app (-> app
-                (select-keys [:name :description])
+                (select-keys [:id :name :description])
                 (assoc :integration_data_id integration-data-id
                        :edited_date (sqlfn now)))]
     (insert apps (values app))))
@@ -164,6 +179,13 @@
   [app-id]
   (delete app_steps (where {:app_id app-id})))
 
+(defn remove-workflow-map-orphans
+  "Removes any orphaned workflow_io_maps table entries."
+  []
+  (delete :workflow_io_maps
+    (where (not (exists (subselect [:input_output_mapping :iom]
+                          (where {:iom.mapping_id :workflow_io_maps.id})))))))
+
 (defn remove-parameter-mappings
   "Removes all input-output mappings associated with the given parameter ID, then removes any
    orphaned workflow_io_maps table entries."
@@ -171,10 +193,7 @@
   (transaction
     (delete :input_output_mapping (where (or {:input parameter-id}
                                              {:output parameter-id})))
-    (delete :workflow_io_maps
-      (where (not (exists
-                    (subselect [:input_output_mapping :iom]
-                      (where {:iom.mapping_id :workflow_io_maps.id}))))))))
+    (remove-workflow-map-orphans)))
 
 (defn update-app-labels
   "Updates the labels in an app."
@@ -183,8 +202,10 @@
 
 (defn get-app-group
   "Fetches an App group."
-  [group-id]
-  (first (select parameter_groups (where {:id group-id}))))
+  ([group-id]
+   (first (select parameter_groups (where {:id group-id}))))
+  ([group-id task-id]
+   (first (select parameter_groups (where {:id group-id, :task_id task-id})))))
 
 (defn add-app-group
   "Adds an App group to the database."
@@ -238,8 +259,10 @@
 
 (defn get-app-parameter
   "Fetches an App parameter."
-  [parameter-id]
-  (first (select parameters (where {:id parameter-id}))))
+  ([parameter-id]
+   (first (select parameters (where {:id parameter-id}))))
+  ([parameter-id group-id]
+   (first (select parameters (where {:id parameter-id, :parameter_group_id group-id})))))
 
 (defn add-app-parameter
   "Adds an App parameter to the parameters table."
@@ -264,10 +287,10 @@
 
 (defn add-file-parameter
   "Adds file parameter fields to the database."
-  [{info-type :file_info_type data-format :format data-source :data_source :as parameter}]
+  [{info-type :file_info_type data-format :format data-source :data_source :as file-parameter}]
   (insert file_parameters
     (values (filter-valid-file-parameter-values
-              (assoc parameter
+              (assoc file-parameter
                 :info_type (get-info-type-id info-type)
                 :data_format (get-data-format-id data-format)
                 :data_source_id (get-data-source-id data-source))))))
@@ -338,6 +361,11 @@
                      {:w.user_id :u.id})
                (fields :u.username)
                (where {:a.id app-id}))))
+
+(defn permanently-delete-app
+  "Permanently removes an app from the metadata database."
+  [app-id]
+  (delete/permanently-delete-app ((comp :id get-app) app-id)))
 
 (defn delete-app
   "Marks an app as deleted in the metadata database."

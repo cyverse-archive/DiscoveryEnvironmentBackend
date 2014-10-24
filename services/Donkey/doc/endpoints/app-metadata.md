@@ -6,10 +6,9 @@
     * [Listing App Identifiers](#listing-app-identifiers)
     * [Deleting Categories](#deleting-categories)
     * [Valiating Analyses for Pipelines](#valiating-analyses-for-pipelines)
-    * [Listing Data Objects in an Analysis](#listing-data-objects-in-an-analysis)
+    * [Listing Tasks in an App](#listing-tasks-in-an-app)
     * [Categorizing Apps](#categorizing-apps)
     * [Listing Analysis Categorizations](#listing-analysis-categorizations)
-    * [Determining if an Analysis Can be Exported](#determining-if-an-analysis-can-be-exported)
     * [Adding Analyses to Analysis Groups](#adding-analyses-to-analysis-groups)
     * [Creating an App for the Current User](#creating-an-app-for-the-current-user)
     * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
@@ -17,6 +16,7 @@
     * [Listing App Groups](#listing-app-groups)
     * [Exporting an Analysis](#exporting-an-analysis)
     * [Exporting Selected Deployed Components](#exporting-selected-deployed-components)
+    * [Permanently Deleting an App](#permanently-deleting-an-app)
     * [Logically Deleting Apps](#logically-deleting-apps)
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
@@ -95,13 +95,13 @@ Delegates to metadactyl: GET /validate-analysis-for-pipelines/{analysis-id}
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Listing Data Objects in an Analysis
+## Listing Tasks in an App
 
-Secured Endpoint: GET /secured/apps/{app-id}/data-objects
+Secured Endpoint: GET /apps/{app-id}/tasks
 
 This service obtains the lists of inputs and outputs for an app. For apps that
 run within the DE itself, this service delegates to the metadactyl endpoint,
-`GET /apps/{app-id}/data-objects`. For other apps, the response is assembled
+`GET /apps/{app-id}/tasks`. For other apps, the response is assembled
 within Donkey from information received from remote services. Here's an
 example:
 
@@ -183,15 +183,6 @@ Please see the metadactyl documentation for more information.
 Unsecured Endpoint: GET /get-analysis-categories/{category-set}
 
 Delegates to metadactyl: GET /get-analysis-categories/{category-set}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Determining if an Analysis Can be Exported
-
-Unsecured Endpoint: POST /can-export-analysis
-
-Delegates to metadactyl: POST /can-export-analysis
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
@@ -301,6 +292,15 @@ Delegates to metadactyl: POST /export-deployed-components
 
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
+
+## Permanently Deleting an App
+
+Secured Endpoint: POST /admin/apps/shredder
+
+Delegates to metadactyl: POST /admin/apps/shredder
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Logically Deleting Apps
 

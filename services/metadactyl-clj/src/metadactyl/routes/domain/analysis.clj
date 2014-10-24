@@ -20,6 +20,9 @@
    :debug
    (describe Bool "A flag indicating whether or not job debugging should be enabled.")
 
+   (optional-key :description)
+   (describe String "An optional description of the analysis.")
+
    :name
    (describe String "The name assigned to the analysis by the user.")
 
@@ -27,11 +30,11 @@
    (describe Bool (str "Indicates whether the user wants to receive job status update "
                        "notifications."))
 
-   (optional-key :description)
-   (describe String "An optional description of the analysis.")
-
    :output_dir
    (describe String "The path to the analysis output directory in the data store.")
+
+   (optional-key :starting_step)
+   (describe Long "The ordinal number of the step to start the job with.")
 
    (optional-key :uuid)
    (describe UUID (str "The UUID of the analysis. A random UUID will be assigned if one isn't "
@@ -59,13 +62,13 @@
 
 ;; TODO: nuke this when it's no longer needed.
 (defschema JexSubmission
-  {:analysis_description
+  {:app_description
    (describe String "The app description from the database.")
 
-   :analysis_id
+   :app_id
    (describe UUID "The identifier of the app used in the submission.")
 
-   :analysis_name
+   :app_name
    (describe String "The name of the app used in the submission.")
 
    (optional-key :callback)
@@ -98,7 +101,7 @@
    (describe String "The type of request being sent to the JEX.")
 
    (optional-key :starting_step)
-   (describe Integer "The ordinal number of the step to start the job with.")
+   (describe Long "The ordinal number of the step to start the job with.")
 
    :steps
    (describe [JexSubmissionStep] "The set of steps in the analysis.")
@@ -107,7 +110,10 @@
    (describe UUID "The UUID of the analysis.")
 
    :username
-   (describe String "The username of the user who submitted the analysis.")})
+   (describe String "The username of the user who submitted the analysis.")
+
+   :wiki_url
+   (describe String "A link to the app's documentation page.")})
 
 (defschema SubmissionResponse
   {:id

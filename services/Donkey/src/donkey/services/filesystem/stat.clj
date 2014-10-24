@@ -56,7 +56,7 @@
   (if-not (is-dir? cm path)
     (-> stat-map
       (merge {:info-type (filetypes/get-types cm user path)})
-      (merge {:mime-type (detect-content-type cm path)}))
+      (merge {:content-type (detect-content-type cm path)}))
     stat-map))
 
 (defn path-is-dir?

@@ -9,8 +9,10 @@
         [metadactyl.util.config :only [workspace-dev-app-group-index]]
         [metadactyl.util.conversions :only [remove-nil-vals convert-rule-argument]]
         [metadactyl.validation :only [verify-app-editable verify-app-ownership]]
-        [metadactyl.workspace :only [get-workspace]])
-  (:require [metadactyl.persistence.app-metadata :as persistence]
+        [metadactyl.workspace :only [get-workspace]]
+        [slingshot.slingshot :only [throw+]])
+  (:require [clojure-commons.error-codes :as cc-errs]
+            [metadactyl.persistence.app-metadata :as persistence]
             [metadactyl.util.service :as service]))
 
 (def ^:private copy-prefix "Copy of ")
@@ -27,10 +29,7 @@
                    :edited_date)
            (with app_references)
            (with tasks
-             (join :tools {:tools.id :tasks.tool_id})
-             (fields :id
-                     :tasks.tool_id
-                     [:tools.name :tool])
+             (fields :id)
              (with parameter_groups
                (order :display_order)
                (fields :id
@@ -44,7 +43,8 @@
                    (with info_type)
                    (with data_formats)
                    (with data_source))
-                 (with parameter_types)
+                 (with parameter_types
+                   (with value_type))
                  (with validation_rules
                    (with rule_type)
                    (with validation_rule_arguments
@@ -71,6 +71,7 @@
                          [:is_visible :isVisible]
                          :omit_if_blank
                          [:parameter_types.name :type]
+                         [:value_type.name :value_type]
                          [:info_type.name :file_info_type]
                          :file_parameters.is_implicit
                          [:data_source.name :data_source]
@@ -123,14 +124,36 @@
                 param)]
     (assoc param :arguments param-args)))
 
+(defn- format-file-params
+  [{param-type :type :as param}]
+  (if (contains? persistence/param-file-types param-type)
+    (assoc param :file_parameters (select-keys param [:format
+                                                      :file_info_type
+                                                      :is_implicit
+                                                      :data_source
+                                                      :retain]))
+    param))
+
 (defn- format-param
-  [param]
-  (let [param-type (:type param)
-        param-values (:parameter_values param)
-        param (-> param
-                  (assoc :validators (map format-validator (:validation_rules param)))
-                  (dissoc :parameter_values
-                          :validation_rules)
+  [{param-type :type
+    value-type :value_type
+    param-values :parameter_values
+    validation-rules :validation_rules
+    :as param}]
+  (when-not value-type
+    (throw+ {:code    cc-errs/ERR_NOT_WRITEABLE
+             :message "App contains Parameters that cannot be copied or modified at this time."}))
+  (let [param (-> param
+                  format-file-params
+                  (assoc :validators (map format-validator validation-rules))
+                  (dissoc :value_type
+                          :parameter_values
+                          :validation_rules
+                          :format
+                          :file_info_type
+                          :is_implicit
+                          :data_source
+                          :retain)
                   remove-nil-vals)]
     (if (contains? persistence/param-list-types param-type)
       (format-list-param param param-values)
@@ -141,17 +164,18 @@
   (remove-nil-vals
     (update-in group [:parameters] (partial map format-param))))
 
-(defn- format-app
+(defn- format-app-for-editing
   [app]
   (let [app (get-app-details (:id app))
-        task (first (:tasks app))
-        groups (map format-group (:parameter_groups task))]
+        task (first (:tasks app))]
+    (when (empty? tasks)
+      (throw+ {:code    cc-errs/ERR_NOT_WRITEABLE
+               :message "App contains no steps and cannot be copied or modified."}))
     (remove-nil-vals
       (-> app
           (assoc :references (map :reference_text (:app_references app))
-                 :tool (:tool task)
-                 :tool_id (:tool_id task)
-                 :groups groups)
+                 :tools      (remove-nil-vals (persistence/get-app-tools (:id app)))
+                 :groups     (map format-group (:parameter_groups task)))
           (dissoc :app_references
                   :tasks)))))
 
@@ -160,7 +184,7 @@
   [app-id]
   (let [app (persistence/get-app app-id)]
     (verify-app-editable app)
-    (service/success-response (format-app app))))
+    (service/success-response (format-app-for-editing app))))
 
 (defn- update-parameter-argument
   "Adds a selection parameter's argument, and any of its child arguments and groups."
@@ -203,17 +227,15 @@
   [group-id display-order {param-id :id
                            default-value :defaultValue
                            param-type :type
+                           file-parameter :file_parameters
                            validators :validators
                            arguments :arguments
                            :as parameter}]
   (let [update-values (assoc parameter :parameter_group_id group-id :display_order display-order)
-        param-exists (and param-id (persistence/get-app-parameter param-id))
+        param-exists (and param-id (persistence/get-app-parameter param-id group-id))
         param-id (if param-exists
                    param-id
-                   (-> update-values
-                       (dissoc :id)
-                       (persistence/add-app-parameter)
-                       (:id)))
+                   (:id (persistence/add-app-parameter update-values)))
         parameter (assoc parameter :id param-id)]
     (when param-exists
       (persistence/update-app-parameter update-values)
@@ -229,7 +251,7 @@
     (dorun (map (partial add-validation-rule param-id) validators))
 
     (when (contains? persistence/param-file-types param-type)
-      (persistence/add-file-parameter (assoc parameter :parameter_id param-id)))
+      (persistence/add-file-parameter (assoc file-parameter :parameter_id param-id)))
 
     (remove-nil-vals
         (assoc parameter
@@ -240,7 +262,7 @@
   "Adds or updates an App group and its parameters."
   [task-id display-order {group-id :id parameters :parameters :as group}]
   (let [update-values (assoc group :task_id task-id :display_order display-order)
-        group-exists (and group-id (persistence/get-app-group group-id))
+        group-exists (and group-id (persistence/get-app-group group-id task-id))
         group-id (if group-exists group-id (:id (persistence/add-app-group update-values)))]
     (when group-exists
       (persistence/update-app-group update-values))
@@ -282,19 +304,16 @@
 (defn update-app
   "This service will update a single-step App, including the information at its top level and the
    tool used by its single task, as long as the App has not been submitted for public use."
-  [app]
-  (verify-app-editable (persistence/get-app (:id app)))
+  [{app-id :id :keys [references groups] :as app}]
+  (verify-app-editable (persistence/get-app app-id))
   (transaction
     (persistence/update-app app)
-    (let [app-id (:id app)
-          tool-id (:tool_id app)
-          references (:references app)
-          task-id (->> app-id
-                       (get-app-details)
-                       (:tasks)
-                       (first)
-                       (:id))
-          updated-groups (doall (map-indexed (partial update-app-group task-id) (:groups app)))]
+    (let [tool-id (->> app :tools first :id)
+          task-id (->> (get-app-details app-id)
+                       :tasks
+                       first
+                       :id)
+          updated-groups (doall (map-indexed (partial update-app-group task-id) groups))]
       (delete-app-orphans task-id updated-groups)
       (when-not (empty? references)
         (persistence/set-app-references app-id references))
@@ -318,15 +337,18 @@
 
 (defn add-app
   "This service will add a single-step App, including the information at its top level."
-  [{references :references groups :groups :as app}]
+  [{:keys [references groups] :as app}]
   (transaction
     (let [app-id (:id (persistence/add-app app))
+          tool-id (->> app :tools first :id)
           task-id (-> (assoc app :id app-id)
                       (add-single-step-task)
                       (:id))]
       (add-app-to-user-dev-category app-id)
       (when-not (empty? references)
         (persistence/set-app-references app-id references))
+      (when-not (nil? tool-id)
+        (persistence/set-task-tool task-id tool-id))
       (dorun (map-indexed (partial update-app-group task-id) groups))
       (edit-app app-id))))
 
@@ -373,7 +395,7 @@
   "Removes ID fields from a client formatted App, its groups, parameters, and parameter arguments,
    and formats appropriate app fields to prepare it for saving as a copy."
   [app]
-  (let [app (format-app app)]
+  (let [app (format-app-for-editing app)]
     (-> app
         (dissoc :id)
         (assoc :name   (app-copy-name (:name app))

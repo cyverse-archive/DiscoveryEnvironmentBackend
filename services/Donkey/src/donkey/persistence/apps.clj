@@ -4,8 +4,7 @@
   (:use [kameleon.entities :only [app_listing]]
         [korma.core]
         [korma.db :only [with-db]])
-  (:require [donkey.util.db :as db])
-  (:import [java.util UUID]))
+  (:require [donkey.util.db :as db]))
 
 (defn load-app-details
   [app-ids]
@@ -13,68 +12,61 @@
     (select app_listing
             (where {:id [in app-ids]}))))
 
-(defn get-app-properties
+(defn- default-value-subselect
+  []
+  (subselect [:parameter_values :pv]
+             (fields [:pv.value :default_value])
+             (where {:pv.parameter_id :p.id
+                     :pv.is_default   true})))
+
+(defn get-app-parameters
   [app-id]
   (with-db db/de
-    (select [:transformation_activity :app]
+    (select [:apps :app]
             (fields :p.id
                     :p.name
                     :p.description
                     :p.label
-                    [:p.defalut_value :default_value]
+                    [(default-value-subselect) :default_value]
                     :p.is_visible
                     :p.ordering
                     :p.omit_if_blank
                     [:pt.name :type]
-                    :d.is_implicit
+                    :fp.is_implicit
                     [:info_type.name :info_type]
                     [:df.name :data_format]
-                    [:ts.name :step_name]
-                    [:tx.external_app_id :external_app_id])
-            (join [:transformation_task_steps :tts]
-                  {:app.hid :tts.transformation_task_id})
-            (join [:transformation_steps :ts]
-                  {:tts.transformation_step_id :ts.id})
-            (join [:transformations :tx]
-                  {:ts.transformation_id :tx.id})
-            (join [:template :t]
-                  {:tx.template_id :t.id})
-            (join [:template_property_group :tpg]
-                  {:tpg.template_id :t.hid})
-            (join [:property_group :pg]
-                  {:pg.hid :tpg.property_group_id})
-            (join [:property_group_property :pgp]
-                  {:pgp.property_group_id :pg.hid})
-            (join [:property :p]
-                  {:p.hid :pgp.property_id})
-            (join [:property_type :pt]
-                  {:p.property_type :pt.hid})
-            (join [:dataobjects :d]
-                  {:d.hid :p.dataobject_id})
+                    [:s.id :step_id]
+                    [:t.external_app_id :external_app_id])
+            (join [:app_steps :s]
+                  {:app.id :s.app_id})
+            (join [:tasks :t]
+                  {:s.task_id :t.id})
+            (join [:parameter_groups :pg]
+                  {:pg.task_id :t.id})
+            (join [:parameters :p]
+                  {:p.parameter_group_id :pg.id})
+            (join [:parameter_types :pt]
+                  {:p.parameter_type :pt.id})
+            (join [:file_parameters :fp]
+                  {:fp.parameter_id :p.id})
             (join [:data_formats :df]
-                  {:df.id :d.data_format})
+                  {:df.id :fp.data_format})
             (join :info_type
-                  {:info_type.hid :d.info_type})
+                  {:info_type.id :fp.info_type})
             (where {:app.id app-id}))))
 
-(defn- default-output-name-base-query
-  []
-  (-> (select* [:template :t])
-      (join [:template_property_group :tpg] {:t.hid :tpg.template_id})
-      (join [:property_group :pg] {:tpg.property_group_id :pg.hid})
-      (join [:property_group_property :pgp] {:pg.hid :pgp.property_group_id})
-      (join [:property :p] {:pgp.property_id :p.hid})
-      (join [:dataobjects :d] {:p.dataobject_id :d.hid})
-      (join [:property_type :pt] {:p.property_type :pt.hid})
-      (fields [:d.name :default_value])
-      (where {:pt.name "Output"})))
-
 (defn get-default-output-name
-  [template-id property-id]
+  [task-id parameter-id]
   (with-db db/de
-    (some->> (select (default-output-name-base-query)
-                     (where {:t.id template-id
-                             :p.id property-id}))
+    (some->> (-> (select* [:tasks :t])
+                 (join [:parameter_groups :pg] {:t.id :pg.task_id})
+                 (join [:parameters :p] {:pg.id :p.parameter_group_id})
+                 (join [:parameter_values :pv] {:p.id :pv.parameter_id})
+                 (fields [:pv.value :default_value])
+                 (where {:pv.is_default true
+                         :t.id          task-id
+                         :p.id          parameter-id})
+                 (select))
              (first)
              (:default_value))))
 
@@ -87,14 +79,13 @@
             (fields [:s.id              :step_id]
                     [:t.tool_id         :tool_id]
                     [:t.external_app_id :external_app_id])
-            (where {:a.id (UUID/fromString app-id)}))))
+            (where {:a.id app-id}))))
 
 (defn load-app-info
   [app-id]
   (first
    (with-db db/de
-     (select [:transformation_activity :a]
-             (where {:id app-id})))))
+     (select [:apps :a] (where {:id app-id})))))
 
 (defn- mapping-base-query
   []
@@ -117,6 +108,4 @@
   [app-id]
   (with-db db/de
     (select (mapping-base-query)
-            (join [:transformation_task_steps :tts] {:iom.target :tts.transformation_step_id})
-            (join [:transformation_activity :a] {:tts.transformation_task_id :a.hid})
-            (where {:a.id app-id}))))
+            (where {:wim.app_id app-id}))))

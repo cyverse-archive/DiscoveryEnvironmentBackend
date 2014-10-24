@@ -52,6 +52,7 @@
   (flagged-routes
     (app-category-routes)
     (apps-routes)
+    (analysis-routes)
     (tool-request-routes)))
 
 (defn secured-routes

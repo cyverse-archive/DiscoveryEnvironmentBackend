@@ -112,10 +112,10 @@
 
 (defn invalid-arg-response [arg val reason]
   {:status       400
-   :body         (cheshire/encode {:code    "INVALID-ARGUMENT"
-                                   :reason  reason
-                                   :arg     (name arg)
-                                   :val      val})
+   :body         (cheshire/encode {:error_code ce/ERR_ILLEGAL_ARGUMENT
+                                   :reason     reason
+                                   :arg        (name arg)
+                                   :val        val})
    :content-type :json})
 
 (defn invalid-cfg-response
@@ -128,8 +128,8 @@
 (defn missing-arg-response [arg]
   (log/error "missing required argument:" (name arg))
   {:status       400
-   :body         (cheshire/encode {:code    "MISSING-REQUIRED-ARGUMENT"
-                                   :arg     (name arg)})
+   :body         (cheshire/encode {:error_code ce/ERR_MISSING_QUERY_PARAMETER
+                                   :arg        (name arg)})
    :content-type :json})
 
 (defn temp-dir-failure-response [{:keys [parent prefix base]}]
@@ -137,7 +137,7 @@
              "using base name" base)
   {:status       500
    :content-type :json
-   :body         (cheshire/encode {:error_code "ERR-TEMP-DIR-CREATION"
+   :body         (cheshire/encode {:error_code ce/ERR_REQUEST_FAILED
                                    :parent     parent
                                    :prefix     prefix
                                    :base       base})})
@@ -145,7 +145,7 @@
 (defn tree-file-parse-err-response [{:keys [details]}]
   {:status       400
    :content-type :json
-   :body         (cheshire/encode {:error_code "ERR-TREE-FILE-PARSE"
+   :body         (cheshire/encode {:error_code ce/ERR_ILLEGAL_ARGUMENT
                                    :details    details})})
 
 (defn common-error-code [exception]

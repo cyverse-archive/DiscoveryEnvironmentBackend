@@ -104,12 +104,6 @@
   (let [url (build-metadactyl-unprotected-url req "get-analysis-categories" category-set)]
     (forward-get url req)))
 
-(defn can-export-app
-  "A service used to determine whether or not an app can be exported to Tito."
-  [req]
-  (let [url (build-metadactyl-unprotected-url req "can-export-analysis")]
-    (forward-post url req)))
-
 (defn add-app-to-group
   "A service used to add an existing app to an app group."
   [req]
@@ -192,6 +186,13 @@
   "This service will logically remove a list of apps from the DE."
   [req]
   (let [url (metadactyl-url {} "apps" "shredder")
+        req (metadactyl-request req)]
+    (forward-post url req)))
+
+(defn permanently-delete-apps
+  "This service will permanently remove a list of apps from the DE."
+  [req]
+  (let [url (metadactyl-url {} "admin" "apps" "shredder")
         req (metadactyl-request req)]
     (forward-post url req)))
 
