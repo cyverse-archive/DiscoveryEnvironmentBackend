@@ -321,6 +321,7 @@
   :handle-unprocessable-entity handle-unprocessable-folder)
 
 
+; TODO verify that each name in the path is not too large
 (defn dispatch-path-to-resource
   [zone path-in-zone]
   (let [path (file/rm-last-slash (irods/abs-path zone path-in-zone))]
