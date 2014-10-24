@@ -205,20 +205,6 @@
         sort-order (if sort-order sort-order "ASC")]
     (paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order)))
 
-(defn do-unsecured-paged-listing
-  "Entrypoint for the API that calls (paged-dir-listing)."
-  [{path       :path
-    limit      :limit
-    offset     :offset
-    sort-col   :sort-col
-    sort-order :sort-order}]
-  (let [user       "ipctest"
-        limit      (Integer/parseInt limit)
-        offset     (Integer/parseInt offset)
-        sort-col   (if sort-col sort-col "NAME")
-        sort-order (if sort-order sort-order "ASC")]
-    (paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order)))
-
 (with-pre-hook! #'do-directory
   (fn [params]
     (paths/log-call "do-directory" params)
@@ -232,10 +218,3 @@
     (validate-map params {:user string? :path string? :limit string? :offset string?})))
 
 (with-post-hook! #'do-paged-listing (paths/log-func "do-paged-listing"))
-
-(with-pre-hook! #'do-unsecured-paged-listing
-  (fn [params]
-    (paths/log-call "do-unsecured-paged-listing" params)
-    (validate-map params {:path string? :limit string? :offset string?})))
-
-(with-post-hook! #'do-unsecured-paged-listing (paths/log-func "do-unsecured-paged-listing"))
