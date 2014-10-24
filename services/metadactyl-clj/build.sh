@@ -9,7 +9,7 @@ BINNAME=metadactyl
 BUILDDIR=$BINNAME-build
 BINDIR=/usr/local/lib/$BINNAME
 LOGDIR=/var/log/$BINNAME
-CONDIR=/etc/metadactyl
+CONFDIR=/etc/metadactyl
 REPODIR=conf/main
 
 VERSION=$(cat version | sed -e 's/^ *//' -e 's/ *$//')

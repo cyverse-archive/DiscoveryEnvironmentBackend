@@ -10,6 +10,7 @@ BUILDDIR=clockwork-build
 BINDIR=/usr/local/lib/clockwork
 LOGDIR=/var/log/clockwork
 REPODIR=resources/main
+CONFDIR=/etc/clockwork
 
 VERSION=$(cat version | sed -e 's/^ *//' -e 's/ *$//')
 if [ -d "$BUILDDIR" ]; then
