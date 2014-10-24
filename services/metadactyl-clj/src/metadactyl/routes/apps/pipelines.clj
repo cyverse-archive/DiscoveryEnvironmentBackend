@@ -13,7 +13,7 @@
 
 (defroutes* pipelines
   (POST* "/" [:as {uri :uri}]
-         :query [params SecuredQueryParamsEmailRequired]
+         :query [params SecuredQueryParamsRequired]
          :body [body (describe PipelineCreateRequest "The Pipeline to create.")]
          :return Pipeline
          :summary "Create a Pipeline"
@@ -32,7 +32,7 @@
 
   (POST* "/:app-id/copy" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]
-         :query [params SecuredQueryParamsEmailRequired]
+         :query [params SecuredQueryParamsRequired]
          :return Pipeline
          :summary "Make a Copy of a Pipeline Available for Editing"
          :notes "This service can be used to make a copy of a Pipeline in the user's workspace. This

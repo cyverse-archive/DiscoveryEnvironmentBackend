@@ -30,7 +30,7 @@
         (ce/trap uri #(search-apps params)))
 
   (POST* "/" [:as {uri :uri}]
-         :query [params SecuredQueryParamsEmailRequired]
+         :query [params SecuredQueryParamsRequired]
          :body [body (describe AppRequest "The App to add.")]
          :return App
          :summary "Add a new App."
@@ -114,7 +114,7 @@
 
   (POST* "/:app-id/copy" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]
-         :query [params SecuredQueryParamsEmailRequired]
+         :query [params SecuredQueryParamsRequired]
          :return App
          :summary "Make a Copy of an App Available for Editing"
          :notes "This service can be used to make a copy of an App in the user's workspace."
