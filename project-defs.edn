@@ -448,4 +448,15 @@
   :uberjar? false
   :install? false
   :language :sql
-  :archive? true}}
+  :archive? true}
+
+  "data-info"
+  {:type     :service
+   :path     "services/data-info"
+   :build    :lein
+   :rpm?     true
+   :tarball? false
+   :uberjar? true
+   :install? false
+   :language :clojure
+   :archive? true}}
