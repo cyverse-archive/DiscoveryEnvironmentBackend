@@ -190,6 +190,14 @@
     :else
     (list-directories user path)))
 
+(with-pre-hook! #'do-directory
+  (fn [params]
+    (paths/log-call "do-directory" params)
+    (validate-map params {:user string?})))
+
+(with-post-hook! #'do-directory (paths/log-func "do-directory"))
+
+
 (defn do-paged-listing
   "Entrypoint for the API that calls (paged-dir-listing)."
   [{user       :user
@@ -204,13 +212,6 @@
         sort-col   (if sort-col sort-col "NAME")
         sort-order (if sort-order sort-order "ASC")]
     (paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order)))
-
-(with-pre-hook! #'do-directory
-  (fn [params]
-    (paths/log-call "do-directory" params)
-    (validate-map params {:user string?})))
-
-(with-post-hook! #'do-directory (paths/log-func "do-directory"))
 
 (with-pre-hook! #'do-paged-listing
   (fn [params]
