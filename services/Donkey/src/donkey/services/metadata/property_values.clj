@@ -130,7 +130,7 @@
 (defn- get-job-params
   [agave-client app-id job-id config]
   (let [agave-params   (load-agave-pipeline-params agave-client app-id)
-        de-params      (filter (comp nil? :external_app_id) (ap/get-app-properties app-id))
+        de-params      (filter (comp nil? :external_app_id) (ap/get-app-parameters app-id))
         params         (concat agave-params de-params)
         mapped-params  (load-mapped-params app-id)]
     (->> (concat agave-params de-params)
@@ -141,5 +141,5 @@
 (defn format-job-params
   [agave-client app-id job-id config]
   (format-property-values-response
-   {:analysis_id app-id
+   {:app_id     app-id
     :parameters (get-job-params agave-client app-id job-id config)}))

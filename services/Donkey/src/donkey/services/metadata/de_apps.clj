@@ -28,9 +28,9 @@
   (jp/save-job {:id                 job-id
                 :job-name           (:name job)
                 :description        (:description job)
-                :app-id             (:analysis_id job)
-                :app-name           (:analysis_name job)
-                :app-description    (:analysis_details job)
+                :app-id             (:app_id job)
+                :app-name           (:app_name job)
+                :app-description    (:app_details job)
                 :app-wiki-url       (:wiki_url job)
                 :result-folder-path (:resultfolderid job)
                 :start-date         (db/timestamp-from-str (str (:startdate job)))

@@ -172,7 +172,7 @@
                 curr-app-step (nth app-steps (dec app-step-number))
                 output-dir    (:result-folder-path job-info)
                 submission    (assoc (mu/update-submission-result-folder submission output-dir)
-                                :analysis_id (:external_app_id curr-app-step)
+                                :app_id (:external_app_id curr-app-step)
                                 :paramPrefix (:step_id curr-app-step))]
             (aa/submit-job-step agave job-info job-step submission)))
     (record-step-submission job-info job-step)))
@@ -199,9 +199,9 @@
   "Submits a job for execution. The job may run exclusively in Agave, exclusively in the DE, or it
    may have steps that run on both systems."
   [agave submission]
-  (let [app-id (:analysis_id submission)]
+  (let [app-id (:app_id submission)]
     (if (util/is-uuid? app-id)
-      (submit-de-job agave app-id submission)
+      (submit-de-job agave (UUID/fromString app-id) submission)
       (aa/submit-agave-job agave submission))))
 
 (defn- get-job-submission-config

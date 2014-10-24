@@ -29,8 +29,8 @@
 (defn- add-app-details-to-message
   "Adds application details to a single message."
   [msg]
-  (let [app-id (get-in msg [:payload :analysis_id])]
-    (assoc-in msg [:payload :analysis-details]
+  (let [app-id (get-in msg [:payload :app_id])]
+    (assoc-in msg [:payload :app_description]
               (get-app-description app-id))))
 
 (defn- add-app-details-to-messages
@@ -140,7 +140,7 @@
       :email_template "analysis_status_change"
       :payload        (assoc job-info
                         :analysisname          (:name job-info)
-                        :analysisdescription   (:analysis_details job-info)
+                        :analysisdescription   (:description job-info)
                         :analysisstatus        (:status job-info)
                         :analysisstartdate     (ut/format-timestamp (:startdate job-info))
                         :analysisresultsfolder (:resultfolderid job-info)
