@@ -1,4 +1,4 @@
-(ns metadactyl.routes.domain.tool-requests
+(ns metadactyl.routes.domain.tool
   (:use [metadactyl.routes.params]
         [ring.swagger.schema :only [describe]]
         [schema.core :only [defschema optional-key enum Any]])

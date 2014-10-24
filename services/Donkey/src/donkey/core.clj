@@ -53,7 +53,7 @@
     (app-category-routes)
     (apps-routes)
     (analysis-routes)
-    (tool-request-routes)))
+    (tool-routes)))
 
 (defn secured-routes
   []

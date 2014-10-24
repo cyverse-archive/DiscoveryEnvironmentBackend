@@ -1,6 +1,6 @@
-(ns metadactyl.routes.tool-requests
+(ns metadactyl.routes.tools
   (:use [metadactyl.metadata.tool-requests]
-        [metadactyl.routes.domain.tool-requests]
+        [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
@@ -9,8 +9,8 @@
             [metadactyl.util.service :as service]
             [compojure.route :as route]))
 
-(defroutes* tool-requests
-  (GET* "/" [:as {uri :uri}]
+(defroutes* tools
+  (GET* "/tool-requests" [:as {uri :uri}]
         :query [params ToolRequestListingParams]
         :return ToolRequestListing
         :summary "List Tool Requests"
@@ -18,7 +18,7 @@
         A user may track their own tool requests with this endpoint."
         (ce/trap uri #(list-tool-requests (assoc params :username (:username current-user)))))
 
-  (POST* "/" [:as {uri :uri}]
+  (POST* "/tool-requests" [:as {uri :uri}]
          :query [params SecuredQueryParams]
          :body [body (describe ToolRequest
                        "A tool installation request. One of `source_url` or `source_upload_file`
@@ -30,7 +30,7 @@
          related to the tool request will be tracked in the Discovery Environment database."
          (ce/trap uri #(submit-tool-request (:username current-user) body)))
 
-  (GET* "/status-codes" [:as {uri :uri}]
+  (GET* "/tool-requests/status-codes" [:as {uri :uri}]
         :query [params StatusCodeListingParams]
         :summary "List Tool Request Status Codes"
         :return StatusCodeListing

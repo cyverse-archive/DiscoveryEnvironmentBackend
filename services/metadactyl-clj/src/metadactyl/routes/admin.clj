@@ -3,7 +3,7 @@
         [metadactyl.metadata.tool-requests]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.category]
-        [metadactyl.routes.domain.tool-requests]
+        [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
         [metadactyl.service.app-metadata :only [permanently-delete-apps]]
         [metadactyl.user :only [current-user]]
@@ -15,8 +15,8 @@
             [compojure.route :as route])
   (:import [java.util UUID]))
 
-(defroutes* tool-requests
-  (GET* "/" [:as {uri :uri}]
+(defroutes* tools
+  (GET* "/tool-requests" [:as {uri :uri}]
         :query [params ToolRequestListingParams]
         :return ToolRequestListing
         :summary "List Tool Requests"
@@ -24,7 +24,7 @@
         Administrators may use this endpoint to track tool requests for all users."
         (ce/trap uri #(list-tool-requests params)))
 
-  (GET* "/:request-id" [:as {uri :uri}]
+  (GET* "/tool-requests/:request-id" [:as {uri :uri}]
         :path-params [request-id :- ToolRequestIdParam]
         :query [params SecuredQueryParams]
         :return ToolRequestDetails
@@ -33,7 +33,7 @@
         that the DE support team uses to obtain the request details."
         (ce/trap uri #(get-tool-request request-id)))
 
-  (POST* "/:request-id/status" [:as {uri :uri}]
+  (POST* "/tool-requests/:request-id/status" [:as {uri :uri}]
          :path-params [request-id :- ToolRequestIdParam]
          :query [params SecuredQueryParams]
          :body [body (describe ToolRequestStatusUpdate "A Tool Request status update.")]

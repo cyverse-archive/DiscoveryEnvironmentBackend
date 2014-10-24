@@ -8,7 +8,7 @@
         [metadactyl.routes.domain.app.element]
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.pipeline]
-        [metadactyl.routes.domain.tool-requests]
+        [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
         [metadactyl.user :only [store-current-user]]
         [ring.middleware keyword-params nested-params]
@@ -20,7 +20,7 @@
             [metadactyl.routes.apps.categories :as app-category-routes]
             [metadactyl.routes.apps.elements :as app-element-routes]
             [metadactyl.routes.apps.pipelines :as pipeline-routes]
-            [metadactyl.routes.tool-requests :as tool-request-routes]
+            [metadactyl.routes.tools :as tool-routes]
             [metadactyl.routes.legacy :as legacy-routes]))
 
 (defapi app
@@ -50,15 +50,15 @@
     (swaggered "analyses"
       :description "Analysis endpoints."
       (context "/analyses" [] analysis-routes/analyses))
-    (swaggered "tool-requests"
-      :description "Tool Request endpoints."
-      (context "/tool-requests" [] tool-request-routes/tool-requests))
+    (swaggered "tools"
+      :description "Tool endpoints."
+      tool-routes/tools)
     (swaggered "admin-apps"
       :description "Admin App endpoints."
       (context "/admin/apps" [] admin-routes/admin-apps))
-    (swaggered "admin-tool-requests"
-      :description "Admin Tool Request endpoints."
-      (context "/admin/tool-requests" [] admin-routes/tool-requests))
+    (swaggered "admin-tools"
+      :description "Admin Tool endpoints."
+      (context "/admin" [] admin-routes/tools))
     (swaggered "secured"
       :description "Secured App endpoints."
       (context "/secured" [] legacy-routes/secured-routes))

@@ -101,7 +101,7 @@
    (POST "/analyses" [:as {:keys [body uri]}]
          (ce/trap uri #(apps/submit-job body)))))
 
-(defn tool-request-routes
+(defn tool-routes
   []
   (optional-routes
     [config/app-routes-enabled]
