@@ -51,7 +51,7 @@
 
 (defn submit-job
   [agave submission]
-  (let [app-id (:analysis_id submission)
+  (let [app-id (:app_id submission)
         app    (.getApp agave app-id)]
     (->> (jobs/prepare-submission agave app submission)
          (.submitJob agave)

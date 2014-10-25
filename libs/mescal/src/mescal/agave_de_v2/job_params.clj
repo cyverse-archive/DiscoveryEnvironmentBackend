@@ -53,6 +53,6 @@
   [agave job app-id app]
   (let [format-input (partial format-input-param-value agave (:inputs job))
         format-opt   (partial format-opt-param-value (:parameters job))]
-    {:analysis_id app-id
-     :parameters  (concat (mapv format-input (:inputs app))
-                          (mapv format-opt   (:parameters app)))}))
+    {:app_id     app-id
+     :parameters (concat (mapv format-input (:inputs app))
+                         (mapv format-opt   (:parameters app)))}))

@@ -66,7 +66,7 @@
   [agave app submission]
   (->> (assoc (prepare-params agave app (:paramPrefix submission) (:config submission))
          :name          (:name submission)
-         :appId         (:analysis_id submission)
+         :appId         (:app_id submission)
          :archive       true
          :archivePath   (.agaveFilePath agave (:outputDirectory submission))
          :archiveSystem (.storageSystem agave)
@@ -88,18 +88,18 @@
   ([agave jobs-enabled? app-info-map job]
      (let [app-id   (:appId job)
            app-info (app-info-map app-id {})]
-       {:id               (str (:id job))
-        :analysis_id      app-id
-        :analysis_details (:shortDescription app-info "")
-        :analysis_name    (app-listings/get-app-name app-info)
-        :description      ""
-        :enddate          (or (str (util/parse-timestamp (:endTime job))) "")
-        :name             (:name job)
-        :raw_status       (:status job)
-        :resultfolderid   (get-result-folder-id agave job)
-        :startdate        (or (str (util/parse-timestamp (:startTime job))) "")
-        :status           (job-status-translations (:status job) "")
-        :wiki_url         ""}))
+       {:id              (str (:id job))
+        :app_id          app-id
+        :app_description (:shortDescription app-info "")
+        :app_name        (app-listings/get-app-name app-info)
+        :description     ""
+        :enddate         (or (str (util/parse-timestamp (:endTime job))) "")
+        :name            (:name job)
+        :raw_status      (:status job)
+        :resultfolderid  (get-result-folder-id agave job)
+        :startdate       (or (str (util/parse-timestamp (:startTime job))) "")
+        :status          (job-status-translations (:status job) "")
+        :wiki_url        ""}))
   ([agave jobs-enabled? statuses app-info-map job]
      (let [app-id   (:appId job)
            app-info (app-info-map app-id {})]
@@ -116,7 +116,7 @@
         app        (.getApp agave app-id)
         job-params (:parameters (params/format-params agave job app-id app))
         cfg-entry  (juxt (comp keyword :param_id) (comp :value :param_value))]
-    {:analysis_id          app-id
+    {:app_id               app-id
      :name                 (:name job)
      :debug                false
      :notify               false
