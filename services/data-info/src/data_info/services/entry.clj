@@ -4,6 +4,7 @@
             [cheshire.core :as json]
             [liberator.core :refer [defresource]]
             [liberator.representation :as rep]
+            [me.raynes.fs :as fs]
             [clj-icat-direct.icat :as icat]
             [clj-jargon.init :as init]
             [clj-jargon.item-info :as item]
@@ -212,11 +213,12 @@
 
 
 (defn- fmt-entry
-  [id date-created date-modified filter path permission size]
+  [id date-created date-modified filter path name permission size]
   {:id           (str id)
    :dateCreated  date-created
    :dateModified date-modified
    :filter       filter
+   :name         name
    :path         path
    :permission   permission
    :size         size})
@@ -225,12 +227,12 @@
 (defn- page-entry->map
   "Turns a entry in a paged listing result into a map containing file/directory information that can
    be consumed by the front-end."
-  [filter? {:keys [access_type_id create_ts data_size full_path modify_ts uuid]}]
+  [filter? {:keys [access_type_id base_name create_ts data_size full_path modify_ts uuid]}]
   (let [created  (* (Integer/parseInt create_ts) 1000)
         modified (* (Integer/parseInt modify_ts) 1000)
         filter   (filter? full_path)
         perm     (perm/fmt-perm access_type_id)]
-    (fmt-entry uuid created modified filter full_path perm data_size)))
+    (fmt-entry uuid created modified filter full_path base_name perm data_size)))
 
 
 (defn- page->map
@@ -269,11 +271,12 @@
         perm    (perm/permission-for irods user path)
         stat    (item/stat irods path)
         zone    (cfg/irods-zone)
+        name    (fs/base-name path)
         pager   (icat/paged-folder-listing user zone path sfield sord limit offset)]
-    (merge (fmt-entry id (:date-created stat) (:date-modified stat) filter? path perm 0)
-      (page->map (partial should-filter? filter) pager)
-      {:total         (icat/number-of-items-in-folder user zone path)
-       :totalFiltered (total-filtered user zone path filter)})))
+    (merge (fmt-entry id (:date-created stat) (:date-modified stat) filter? path name perm 0)
+           (page->map (partial should-filter? filter) pager)
+           {:total         (icat/number-of-items-in-folder user zone path)
+            :totalFiltered (total-filtered user zone path filter)})))
 
 
 (defn- get-folder
