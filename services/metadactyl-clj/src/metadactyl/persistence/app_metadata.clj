@@ -92,11 +92,14 @@
 
 (defn get-integration-data
   "Retrieves integrator info from the database, adding it first if not already there."
-  [{:keys [email first-name last-name]}]
-  (if-let [integration-data (first (select integration_data (where {:integrator_email email})))]
-    integration-data
-    (insert integration_data (values {:integrator_name (str first-name " " last-name)
-                                      :integrator_email email}))))
+  ([{:keys [email first-name last-name]}]
+   (get-integration-data email (str first-name " " last-name)))
+  ([integrator-email integrator-name]
+   (if-let [integration-data (first (select integration_data
+                                      (where {:integrator_email integrator-email})))]
+     integration-data
+     (insert integration_data (values {:integrator_email integrator-email
+                                       :integrator_name  integrator-name})))))
 
 (defn get-app-tools
   "Loads information about the tools associated with an app."
@@ -110,6 +113,32 @@
                   :version
                   :attribution)
           (where {:app_id app-id})))
+
+(defn get-tool-type-id
+  "Gets the ID of the given tool type name."
+  [tool-type]
+  (:id (first (select tool_types (fields :id) (where {:name tool-type})))))
+
+(defn add-tool-data-file
+  "Adds a tool's test data files to the database"
+  [tool-id input-file filename]
+  (insert tool_test_data_files (values {:tool_id tool-id
+                                        :input_file input-file
+                                        :filename filename})))
+
+(defn add-tool
+  "Adds a new tool and its test data files to the database"
+  [{type :type {:keys [implementor_email implementor test]} :implementation :as tool}]
+  (transaction
+    (let [integration-data-id (:id (get-integration-data implementor_email implementor))
+          tool (-> tool
+                   (select-keys [:id :name :description :attribution :location :version])
+                   (assoc :integration_data_id integration-data-id
+                          :tool_type_id (get-tool-type-id type)))
+          tool-id (:id (insert tools (values tool)))]
+      (dorun (map (partial add-tool-data-file tool-id true) (:input_files test)))
+      (dorun (map (partial add-tool-data-file tool-id false) (:output_files test)))
+      tool-id)))
 
 (defn add-app
   "Adds top-level app info to the database and returns the new app info, including its new ID."

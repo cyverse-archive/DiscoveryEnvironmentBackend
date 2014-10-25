@@ -6,6 +6,7 @@
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
         [metadactyl.service.app-metadata :only [permanently-delete-apps]]
+        [metadactyl.tools]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
@@ -16,6 +17,13 @@
   (:import [java.util UUID]))
 
 (defroutes* tools
+  (POST* "/tools" [:as {uri :uri}]
+         :query [params SecuredQueryParams]
+         :body [body (describe ToolsImportRequest "The Tools to import.")]
+         :summary "Add new Tools."
+         :notes "This service adds new Tools to the DE."
+         (ce/trap uri #(add-tools body)))
+
   (GET* "/tool-requests" [:as {uri :uri}]
         :query [params ToolRequestListingParams]
         :return ToolRequestListing
@@ -42,9 +50,7 @@
          :notes "This endpoint is used by Discovery Environment administrators to update the status
          of a tool request."
          (ce/trap uri
-           #(update-tool-request request-id (config/uid-domain) (:username current-user) body)))
-
-  (route/not-found (service/unrecognized-path-response)))
+           #(update-tool-request request-id (config/uid-domain) (:username current-user) body))))
 
 (defroutes* admin-apps
   (POST* "/" [:as {uri :uri}]
@@ -61,6 +67,4 @@
          :summary "Permanently Deleting Apps"
          :notes "This service physically removes an App from the database, which allows
          administrators to completely remove Apps that are causing problems."
-         (ce/trap uri #(permanently-delete-apps body)))
-
-  (route/not-found (service/unrecognized-path-response)))
+         (ce/trap uri #(permanently-delete-apps body))))

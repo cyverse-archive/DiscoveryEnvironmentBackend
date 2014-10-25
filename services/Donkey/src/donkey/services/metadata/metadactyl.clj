@@ -149,9 +149,10 @@
   [req]
   (let [json-string (slurp (:body req))
         json-obj    (cheshire/decode json-string true)
-        url (build-metadactyl-unprotected-url req "import-tools")]
+        url (metadactyl-url {} "admin" "tools")
+        req (metadactyl-request req)]
     (forward-post url req json-string)
-    (dorun (map #(dn/send-tool-notification %) (:components json-obj))))
+    (dorun (map #(dn/send-tool-notification %) (:tools json-obj))))
   (success-response))
 
 (defn create-pipeline

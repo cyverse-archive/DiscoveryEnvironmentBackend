@@ -37,6 +37,4 @@
         :notes "Tool request status codes are largely arbitrary, but once they've been used once,
         they're stored in the database so that they can be reused easily. This endpoint allows the
         caller to list the known status codes."
-        (ce/trap uri #(list-tool-request-status-codes params)))
-
-  (route/not-found (service/unrecognized-path-response)))
+        (ce/trap uri #(list-tool-request-status-codes params))))

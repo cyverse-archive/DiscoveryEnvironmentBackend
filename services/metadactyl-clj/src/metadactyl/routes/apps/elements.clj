@@ -1,6 +1,7 @@
 (ns metadactyl.routes.apps.elements
   (:use [metadactyl.metadata.element-listings :only [list-elements]]
         [metadactyl.routes.domain.app.element]
+        [metadactyl.routes.domain.tool :only [ToolListing]]
         [metadactyl.routes.params]
         [compojure.api.sweet])
   (:require [clojure-commons.error-codes :as ce]

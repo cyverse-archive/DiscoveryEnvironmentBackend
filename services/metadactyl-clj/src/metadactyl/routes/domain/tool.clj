@@ -5,9 +5,43 @@
   (:import [java.util UUID]))
 
 (def ToolRequestIdParam (describe UUID "The Tool Requests's UUID"))
+(def ToolNameParam (describe String "The Tool's name (should be the file name)"))
+(def ToolDescriptionParam (describe String "A brief description of the Tool"))
+(def VersionParam (describe String "The Tool's version"))
+(def AttributionParam (describe String "The Tool's author or publisher"))
 (def SubmittedByParam (describe String "The username of the user that submitted the Tool Request"))
-(def NameParam (describe String "The name of the tool being installed (should be the file name)"))
-(def VersionParam (describe String "The tool's version string"))
+
+(defschema ToolTestData
+  {(optional-key :params) (describe [String] "The list of command-line parameters")
+   :input_files           (describe [String] "The list of paths to test input files in iRODS")
+   :output_files          (describe [String] "The list of paths to expected output files in iRODS")})
+
+(defschema ToolImplementation
+  {:implementor       (describe String "The name of the implementor")
+   :implementor_email (describe String "The email address of the implementor")
+   :test              (describe ToolTestData "The test data for the Tool")})
+
+(defschema Tool
+  {:id                         (describe UUID "A UUID that is used to identify the Tool")
+   :name                       ToolNameParam
+   (optional-key :description) ToolDescriptionParam
+   (optional-key :attribution) AttributionParam
+   :location                   (describe String "The path of the directory containing the Tool")
+   (optional-key :version)     VersionParam
+   :type                       (describe String "The Tool Type name")})
+
+(defschema ToolImportRequest
+  (-> Tool
+      (->optional-param :id)
+      (merge
+        {:implementation (describe ToolImplementation
+                           "Information about the user who integrated the Tool into the DE")})))
+
+(defschema ToolsImportRequest
+  {:tools (describe [ToolImportRequest] "zero or more Tool definitions")})
+
+(defschema ToolListing
+  {:tools (describe [Tool] "Listing of App Tools")})
 
 (defschema ToolRequestStatus
   {(optional-key :status)
@@ -38,10 +72,10 @@
    (describe String "The phone number of the user submitting the request")
 
    :name
-   NameParam
+   ToolNameParam
 
    :description
-   (describe String "A brief description of the tool")
+   ToolDescriptionParam
 
    (optional-key :source_url)
    (describe String "A link that can be used to obtain the tool")
@@ -56,7 +90,7 @@
    VersionParam
 
    (optional-key :attribution)
-   (describe String "The people or organizations that produced the tool")
+   AttributionParam
 
    (optional-key :multithreaded)
    (describe Boolean
@@ -95,7 +129,7 @@
 
 (defschema ToolRequestSummary
   {:id             ToolRequestIdParam
-   :name           NameParam
+   :name           ToolNameParam
    :version        VersionParam
    :requested_by   SubmittedByParam
    :date_submitted (describe Long "The timestamp of the Tool Request submission")

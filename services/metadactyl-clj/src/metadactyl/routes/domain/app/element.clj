@@ -1,16 +1,7 @@
 (ns metadactyl.routes.domain.app.element
   (:use [ring.swagger.schema :only [describe]]
-   [schema.core :only [defschema optional-key enum Any]])
+        [schema.core :only [defschema optional-key enum Any]])
   (:import [java.util UUID]))
-
-(defschema Tool
-  {:id                         (describe UUID "A UUID that is used to identify the Tool")
-   :name                       (describe String "The Tool's name")
-   (optional-key :description) (describe String "The Tool's description")
-   (optional-key :attribution) (describe String "The Tool's author or publisher")
-   (optional-key :location)    (describe String "The Tool's installed location")
-   (optional-key :version)     (describe String "The Tool's version")
-   :type                       (describe String "The Tool's type")})
 
 (defschema DataSource
   {:id          (describe UUID "A UUID that is used to identify the Data Source")
@@ -67,9 +58,6 @@
 
 (defschema RuleTypeListing
   {:rule_types (describe [RuleType] "Listing of App Parameter Rule Types")})
-
-(defschema ToolListing
-  {:tools (describe [Tool] "Listing of App Tools")})
 
 (defschema ToolTypeListing
   {:tool_types (describe [ToolType] "Listing of App Tool Types")})

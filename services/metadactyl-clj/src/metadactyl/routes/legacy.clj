@@ -60,7 +60,4 @@
   (POST "/preview-workflow" [:as {body :body}]
         (trap #(throw+ '("preview-workflow" body))))
 
-  (POST "/import-tools" [:as {body :body}]
-        (trap #(throw+ '("import-tools" body))))
-
   (route/not-found (unrecognized-path-response)))

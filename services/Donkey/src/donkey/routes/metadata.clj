@@ -106,6 +106,9 @@
   (optional-routes
     [config/app-routes-enabled]
 
+    (POST "/admin/tools" [:as {:keys [uri] :as req}]
+          (ce/trap uri #(import-tools req)))
+
     (GET "/admin/tool-requests" [:as {:keys [params uri]}]
          (ce/trap uri #(admin-list-tool-requests params)))
 
@@ -210,7 +213,4 @@
          (ce/trap uri #(preview-template req)))
 
    (POST "/preview-workflow" [:as {:keys [uri] :as req}]
-         (ce/trap uri #(preview-workflow req)))
-
-   (POST "/import-tools" [:as {:keys [uri] :as req}]
-         (ce/trap uri #(import-tools req)))))
+         (ce/trap uri #(preview-workflow req)))))

@@ -24,7 +24,7 @@
     * [Creating a Pipeline](#creating-a-pipeline)
     * [Updating a Pipeline](#updating-a-pipeline)
     * [Updating App Labels](#updating-app-labels)
-    * [Importing Deployed Components](#importing-deployed-components)
+    * [Importing Tools](#importing-tools)
     * [Rating Apps](#rating-apps)
     * [Deleting App Ratings](#deleting-app-ratings)
     * [Searching for Apps](#searching-for-apps)
@@ -367,20 +367,19 @@ Delegates to metadactyl: PATCH /apps/{app-id}
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
 
-## Importing Deployed Components
+## Importing Tools
 
-Unsecured Endpoint: POST /import-tools
+Secured Endpoint: POST /tools
 
-Delegates to metadactyl: POST /import-tools
+Delegates to metadactyl: POST /tools
 
-This service is an extension of the /import-workflow endpoint that also sends a
-notification for every deployed component that is imported provided that a
-username and e-mail address is provided for the notification. The request body
-should be in the following format:
+This service imports the given list of tools into the database and also sends a notification for
+every tool that is imported, provided that a username and e-mail address is provided for the
+notification. The request body should be in the following format:
 
 ```json
 {
-    "components": [
+    "tools": [
         {
             "name": "component-name",
             "location": "component-location",
@@ -416,22 +415,18 @@ should be in the following format:
 }
 ```
 
-Note that this format is identical to the one used by the /import-workflow
-endpoint except that the `user` and `email` fields have been added to allow
-notifications to be generated automatically. If either of these fields is
-missing or empty, a notification will not be sent even if the deployed component
-is imported successfully.
+If either the `user` or `email` fields is missing or empty, a notification will not be sent even if
+the tool is imported successfully.
 
-The response body for this service contains a success flag along with a brief
-description of the reason for the failure if the deployed components can't be
-imported.
+The response body for this service contains a brief description of the reason for the failure if the
+tools can't be imported.
 
 Here's an example of a successful import:
 
 ```
 $ curl -sd '
 {
-    "components": [
+    "tools": [
         {
             "name": "foo",
             "location": "/usr/local/bin",
@@ -454,9 +449,6 @@ $ curl -sd '
     ]
 }
 ' http://by-tor:8888/import-tools | python -mjson.tool
-{
-    "success": true
-}
 ```
 
 Here's an example of an unsuccessful import:
@@ -464,7 +456,7 @@ Here's an example of an unsuccessful import:
 ```
 $ curl -sd '
 {
-    "components": [
+    "tools": [
         {
             "name": "foo",
             "location": "/usr/local/bin",
@@ -483,13 +475,9 @@ $ curl -sd '
 }
 ' http://by-tor:8888/import-tools | python -mjson.tool
 {
-    "reason": "org.json.JSONException: JSONObject[\"test\"] not found.",
-    "success": false
+    "reason": "org.json.JSONException: JSONObject[\"test\"] not found."
 }
 ```
-
-Though it is possible to import analyses using this endpoint, this practice is
-not recommended because it can cause spurious notifications to be sent.
 
 ## Rating Apps
 
