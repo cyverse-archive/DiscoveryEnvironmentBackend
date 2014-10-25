@@ -385,7 +385,7 @@ ALTER TABLE ONLY tools
 ALTER TABLE ONLY tool_test_data_files
     ADD CONSTRAINT tool_test_data_files_tool_id_fkey
     FOREIGN KEY (tool_id)
-    REFERENCES tools(id);
+    REFERENCES tools(id) ON DELETE CASCADE;
 
 --
 -- Name: workflow_io_maps_unique; Type: CONSTRAINT; Schema: public; Owner: de;
