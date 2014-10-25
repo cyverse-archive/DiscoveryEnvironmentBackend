@@ -118,6 +118,9 @@
     (POST "/admin/tool-requests/:request-id/status" [request-id :as {:keys [uri] :as req}]
           (ce/trap uri #(update-tool-request req request-id)))
 
+    (GET "/tools" [:as {:keys [uri] :as req}]
+         (ce/trap uri #(search-tools req)))
+
     (GET "/tool-requests" [:as {:keys [uri]}]
          (ce/trap uri #(list-tool-requests)))
 
@@ -184,9 +187,6 @@
   []
   (optional-routes
    [config/app-routes-enabled]
-
-   (GET "/search-deployed-components/:search-term" [search-term :as {:keys [uri] :as req}]
-        (ce/trap uri #(search-deployed-components req search-term)))
 
    (POST "/delete-categories" [:as {:keys [uri] :as req}]
          (ce/trap uri #(delete-categories req)))

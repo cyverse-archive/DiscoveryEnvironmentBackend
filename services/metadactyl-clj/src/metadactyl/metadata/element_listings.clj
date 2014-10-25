@@ -2,6 +2,7 @@
   (:use [kameleon.core]
         [kameleon.entities]
         [kameleon.queries]
+        [metadactyl.tools :only [tool-listing-base-query]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
         [korma.core]
         [slingshot.slingshot :only [throw+]])
@@ -66,17 +67,7 @@
 (defn- list-tools
   "Obtains a listing of tools for the metadata element listing service."
   [_]
-  {:tools
-   (map remove-nil-vals
-     (select tools
-             (fields [:tools.id :id]
-                     [:tools.name :name]
-                     [:tools.description :description]
-                     [:tools.location :location]
-                     [:tool_types.name :type]
-                     [:tools.version :version]
-                     [:tools.attribution :attribution])
-             (join tool_types)))})
+  {:tools (map remove-nil-vals (select (tool-listing-base-query)))})
 
 (defn- list-info-types
   "Obtains a listing of information types for the metadata element listing service."

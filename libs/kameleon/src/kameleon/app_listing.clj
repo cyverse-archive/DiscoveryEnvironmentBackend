@@ -2,6 +2,7 @@
   (:use [korma.core]
         [kameleon.entities]
         [kameleon.queries]
+        [kameleon.util.search]
         [kameleon.app-groups :only [get-visible-root-app-group-ids]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as str]))
@@ -199,13 +200,7 @@
    that contain search_term in their name or description, in all public groups
    and groups under the given workspace_id."
   [base_search_query search_term workspace_id]
-  (let [search_term (str/replace
-                      search_term
-                      #"[%_*?]"
-                      {"%" "\\%",
-                       "_" "\\_",
-                       "*" "%",
-                       "?" "_"})
+  (let [search_term (format-query-wildcards search_term)
         search_term (str "%" search_term "%")
         sql-lower #(sqlfn lower %)]
     (->

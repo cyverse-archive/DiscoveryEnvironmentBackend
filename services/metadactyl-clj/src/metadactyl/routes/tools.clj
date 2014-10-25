@@ -2,6 +2,7 @@
   (:use [metadactyl.metadata.tool-requests]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
+        [metadactyl.tools :only [search-tools]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
@@ -10,6 +11,14 @@
             [compojure.route :as route]))
 
 (defroutes* tools
+  (GET* "/tools" [:as {uri :uri}]
+        :query [params ToolSearchParams]
+        :return ToolListing
+        :summary "Search Tools"
+        :notes "This endpoint allows users to search for a tool with a name or description that
+        contains the given search term."
+        (ce/trap uri #(search-tools params)))
+
   (GET* "/tool-requests" [:as {uri :uri}]
         :query [params ToolRequestListingParams]
         :return ToolRequestListing

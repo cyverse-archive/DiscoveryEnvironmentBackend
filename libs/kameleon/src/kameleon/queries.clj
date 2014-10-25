@@ -39,18 +39,16 @@
   "Returns select_query with an OFFSET clause added if offset_val is 0 or more;
    otherwise the original select_query is returned."
   [select_query offset_val]
-  (if (>= offset_val 0)
-    (-> select_query
-        (offset offset_val))
+  (if (and offset_val (>= offset_val 0))
+    (offset select_query offset_val)
     select_query))
 
 (defn add-query-limit
   "Returns select_query with a LIMIT clause added if limit_val is more than 0;
    otherwise the original select_query is returned."
   [select_query limit_val]
-  (if (> limit_val 0)
-    (-> select_query
-        (limit limit_val))
+  (if (and limit_val (> limit_val 0))
+    (limit select_query limit_val)
     select_query))
 
 (defn add-query-sorting
@@ -61,8 +59,7 @@
     (let [sort-dir (if (= sort-dir :DESC)
                      sort-dir
                      :ASC)]
-      (-> select_query
-          (order sort-field sort-dir)))
+      (order select_query sort-field sort-dir))
     select_query))
 
 (defn get-collaborators

@@ -6,7 +6,7 @@
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
         [metadactyl.service.app-metadata :only [permanently-delete-apps]]
-        [metadactyl.tools]
+        [metadactyl.tools :only [add-tools]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])

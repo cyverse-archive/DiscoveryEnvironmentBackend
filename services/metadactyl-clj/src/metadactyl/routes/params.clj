@@ -71,6 +71,10 @@
   (merge SecuredPagingParams
          {:search (ss/describe String "The pattern to match in an App's Name or Description.")}))
 
+(s/defschema ToolSearchParams
+  (merge SecuredPagingParams
+    {:search (ss/describe String "The pattern to match in an Tool's Name or Description.")}))
+
 (s/defschema AppParameterTypeParams
   (merge SecuredQueryParams
     {(s/optional-key :tool-type) (ss/describe String "Filters results by tool type")

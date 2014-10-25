@@ -2,7 +2,7 @@
 
 * [Application Metadata Endpoints](#application-metadata-endpoints)
     * [Listing App Elements](#listing-app-elements)
-    * [Searching for Deployed Components](#searching-for-deployed-components)
+    * [Searching for Tools](#searching-for-tools)
     * [Listing App Identifiers](#listing-app-identifiers)
     * [Deleting Categories](#deleting-categories)
     * [Valiating Analyses for Pipelines](#valiating-analyses-for-pipelines)
@@ -59,14 +59,14 @@ Delegates to metadactyl: GET /apps/elements/{element-type}
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
 
-## Searching for Deployed Components
+## Searching for Tools
 
-Unsecured Endpoint: GET /search-deployed-components/{search-term}
+Unsecured Endpoint: GET /tools?search={search-term}
 
-Delegates to metadactyl: GET /search-deployed-components{search-term}
+Delegates to metadactyl: GET /tools?search={search-term}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Listing App Identifiers
 

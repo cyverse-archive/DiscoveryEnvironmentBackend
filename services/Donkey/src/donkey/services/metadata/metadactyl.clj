@@ -4,6 +4,7 @@
         [donkey.util.transformers]
         [donkey.auth.user-attributes]
         [donkey.clients.user-info :only [get-user-details]]
+        [donkey.clients.metadactyl :only [metadactyl-sort-params]]
         [donkey.persistence.workspaces :only [get-or-create-workspace]]
         [donkey.services.fileio.actions :only [upload]]
         [donkey.services.user-prefs :only [user-prefs]]
@@ -66,10 +67,11 @@
   (client/get (metadactyl-url {} "apps" "elements" element-type)
               {:as :stream}))
 
-(defn search-deployed-components
-  "A service to search information about deployed components."
-  [req search-term]
-  (let [url (build-metadactyl-unprotected-url req "search-deployed-components" search-term)]
+(defn search-tools
+  "A service to search information about tools."
+  [{params :params :as req}]
+  (let [url (metadactyl-url (select-keys params (conj metadactyl-sort-params :search)) "tools")
+        req (metadactyl-request req)]
     (forward-get url req)))
 
 (defn get-all-app-ids
