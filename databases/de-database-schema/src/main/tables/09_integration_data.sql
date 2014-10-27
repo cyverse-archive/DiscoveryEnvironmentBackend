@@ -5,7 +5,7 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE integration_data (
     id uuid NOT NULL DEFAULT uuid_generate_v1(),
-    integrator_name character varying(255),
-    integrator_email character varying(255)
+    integrator_name character varying(255) NOT NULL,
+    integrator_email character varying(255) NOT NULL
 );
 
