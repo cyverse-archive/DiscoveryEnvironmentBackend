@@ -121,6 +121,9 @@
     (GET "/tools" [:as {:keys [uri] :as req}]
          (ce/trap uri #(search-tools req)))
 
+    (GET "/tools/:tool-id" [tool-id :as {:keys [uri] :as req}]
+         (ce/trap uri #(get-tool req tool-id)))
+
     (GET "/tool-requests" [:as {:keys [uri]}]
          (ce/trap uri #(list-tool-requests)))
 
@@ -205,9 +208,6 @@
 
    (GET "/export-workflow/:app-id" [app-id :as {:keys [uri] :as req}]
         (ce/trap uri #(export-workflow req app-id)))
-
-   (POST "/export-deployed-components" [:as {:keys [uri] :as req}]
-         (ce/trap uri #(export-deployed-components req)))
 
    (POST "/preview-template" [:as {:keys [uri] :as req}]
          (ce/trap uri #(preview-template req)))

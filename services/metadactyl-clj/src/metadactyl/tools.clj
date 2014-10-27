@@ -4,6 +4,7 @@
         [kameleon.queries]
         [kameleon.util.search]
         [metadactyl.persistence.app-metadata :only [add-tool]]
+        [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
         [clojure.string :only [upper-case]]
         [korma.core]
@@ -51,6 +52,14 @@
     {:tools
      (map remove-nil-vals
        (select (tool-listing-base-query params)))}))
+
+(defn get-tool
+  "Obtains a tool by ID."
+  [tool-id]
+  (->> (first (select (tool-listing-base-query) (where {:tools.id tool-id})))
+       (assert-not-nil [:tool-id tool-id])
+       remove-nil-vals
+       service/success-response))
 
 (defn add-tools
   "Adds a list of tools to the database, returning a list of IDs of the tools added."

@@ -5,7 +5,6 @@
 * [GET /apps/{app-id}/data-objects](endpoints/app-metadata/listing.md#listing-data-objects-in-an-analysis)
 * [POST /can-export-analysis](endpoints/app-metadata/validation.md#determining-if-an-analysis-can-be-exported)
 * [POST /delete-categories](endpoints/app-metadata/categorization.md#deleting-categories)
-* [POST /export-deployed-components](endpoints/app-metadata/admin.md#exporting-selected-deployed-components)
 * [GET /export-workflow/{analysis-id}](endpoints/app-metadata/admin.md#exporting-an-analysis)
 * [GET /get-analysis-categories/{category-set}](endpoints/app-metadata/categorization.md#listing-analysis-categorizations)
 * [POST /import-tools](endpoints/app-metadata/admin.md#importing-tools)

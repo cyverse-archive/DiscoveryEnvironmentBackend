@@ -124,11 +124,12 @@
   (let [url (build-metadactyl-unprotected-url req "export-workflow" app-id)]
     (forward-get url req)))
 
-(defn export-deployed-components
-  "This service will export all or selected deployed components."
-  [req]
-  (let [url (build-metadactyl-unprotected-url req "export-deployed-components")]
-    (forward-post url req)))
+(defn get-tool
+  "This service will get a tool by ID."
+  [req tool-id]
+  (let [url (metadactyl-url {} "tools" tool-id)
+        req (metadactyl-request req)]
+    (forward-get url req)))
 
 (defn preview-template
   "This service will convert a JSON document in the format consumed by

@@ -59,7 +59,6 @@
     * [App JSON for UI Example](#app-json-for-ui-example)
 * [App Metadata Administration Services](#app-metadata-administration-services)
     * [Exporting an Analysis](#exporting-an-analysis)
-    * [Exporting Selected Deployed Components](#exporting-selected-deployed-components)
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
     * [Importing Tools](#importing-tools)
@@ -2793,122 +2792,6 @@ $ curl -s http://by-tor:8888/export-workflow/2976DE6C-03E3-4109-AECD-3D9CAEDD312
             "published_date": "",
             "tito": "2976DE6C-03E3-4109-AECD-3D9CAEDD3122",
             "type": ""
-        }
-    ]
-}
-```
-
-## Exporting Selected Deployed Components
-
-*Unsecured Endpoint:* POST /export-deployed-components
-
-This service exports deployed components matching search criteria that are
-provided in the request body. Searches can be performed by identifier, name,
-location, or name and location combined. If no search criteria are provided then
-all existing deployed components will be provided.
-
-The request body should be a string representing a JSON object. The keys are:
-`id` for the identifier, `name` for the name and `location` for the location.
-The `name` and `location` fields may be specified either together or by
-themselves. If the `id` field is specified then it must be the only field that
-is specified. An empty JSON object indicates that no search criteria are
-specified, meaning that all deployed components will be exported.
-
-The response for this service is in the following format:
-
-```json
-{
-    "components": [
-        {
-            "location": "location",
-            "version": "version",
-            "attribution": "attribution",
-            "name": "name",
-            "description": "description",
-            "implementation": {
-                "test": {
-                    "input_files": [
-                        "input-file-1",
-                        "input-file-2",
-                        ...,
-                        "input-file-n"
-                    ],
-                    "output_files": [
-                        "output-file-1",
-                        "output-file-2",
-                        ...,
-                        "output-file-n"
-                    ]
-                },
-                "implementor": {
-                    "implementor": "implementor-name",
-                    "implementor_email": "implementor-email"
-                }
-            }
-            "id": "id",
-            "type": "type"
-        },
-        ...
-    ]
-}
-```
-
-Here are some examples:
-
-```
-$ curl -sd '
-{
-    "name":"printargs"
-}
-' http://by-tor:8888/export-deployed-components | python -mjson.tool
-{
-    "components": [
-        {
-            "attribution": "Insane Membranes, Inc.",
-            "description": "Print command-line arguments.",
-            "id": "c49bccf303e7f46e0bbf4c05fd4b2d9a7",
-            "implementation": {
-                "implementor": "Nobody",
-                "implementor_email": "nobody@iplantcollaborative.org",
-                "test": {
-                    "input_files": [],
-                    "output_files": []
-                }
-            },
-            "location": "/usr/local2/bin",
-            "name": "printargs",
-            "type": "executable",
-            "version": "0.0.1"
-        }
-    ]
-}
-```
-
-```
-$ curl -sd '
-{
-    "name":"printargs",
-    "location": "/usr/local2/bin"
-}
-' http://by-tor:8888/export-deployed-components | python -mjson.tool
-{
-    "components": [
-        {
-            "attribution": "Insane Membranes, Inc.",
-            "description": "Print command-line arguments.",
-            "id": "c49bccf303e7f46e0bbf4c05fd4b2d9a7",
-            "implementation": {
-                "implementor": "Nobody",
-                "implementor_email": "nobody@iplantcollaborative.org",
-                "test": {
-                    "input_files": [],
-                    "output_files": []
-                }
-            },
-            "location": "/usr/local2/bin",
-            "name": "printargs",
-            "type": "executable",
-            "version": "0.0.1"
         }
     ]
 }

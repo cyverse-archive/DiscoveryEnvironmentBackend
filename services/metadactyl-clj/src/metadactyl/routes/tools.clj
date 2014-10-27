@@ -2,7 +2,7 @@
   (:use [metadactyl.metadata.tool-requests]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
-        [metadactyl.tools :only [search-tools]]
+        [metadactyl.tools :only [get-tool search-tools]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
@@ -18,6 +18,14 @@
         :notes "This endpoint allows users to search for a tool with a name or description that
         contains the given search term."
         (ce/trap uri #(search-tools params)))
+
+  (GET* "/tools/:tool-id" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam]
+        :query [params SecuredQueryParams]
+        :return Tool
+        :summary "Get a Tool"
+        :notes "This endpoint returns the details for one tool."
+        (ce/trap uri #(get-tool tool-id)))
 
   (GET* "/tool-requests" [:as {uri :uri}]
         :query [params ToolRequestListingParams]

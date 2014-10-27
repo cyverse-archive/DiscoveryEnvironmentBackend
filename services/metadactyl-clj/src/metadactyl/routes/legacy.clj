@@ -48,9 +48,6 @@
   (GET "/export-workflow/:app-id" [app-id]
        (trap #(throw+ '("export-workflow" app-id))))
 
-  (POST "/export-deployed-components" [:as {body :body}]
-        (trap #(throw+ '("export-deployed-components" body))))
-
   (POST "/preview-template" [:as {body :body}]
         (trap #(throw+ '("preview-template" body))))
 

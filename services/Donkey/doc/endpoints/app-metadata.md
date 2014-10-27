@@ -15,7 +15,7 @@
     * [Getting App Details](#getting-app-details)
     * [Listing App Groups](#listing-app-groups)
     * [Exporting an Analysis](#exporting-an-analysis)
-    * [Exporting Selected Deployed Components](#exporting-selected-deployed-components)
+    * [Get a Tool by ID](#get-a-tool-by-id)
     * [Permanently Deleting an App](#permanently-deleting-an-app)
     * [Logically Deleting Apps](#logically-deleting-apps)
     * [Previewing Templates](#previewing-templates)
@@ -284,14 +284,14 @@ Delegates to metadactyl: GET /export-workflow/{analysis-id}
 This endpoint is a passthrough to the metadactyl endpoint using the same
 path. Please see the metadactyl documentation for more information.
 
-## Exporting Selected Deployed Components
+## Get a Tool by ID
 
-Unsecured Endpoint: POST /export-deployed-components
+Secured Endpoint: GET /tools/{tool-id}
 
-Delegates to metadactyl: POST /export-deployed-components
+Delegates to metadactyl: GET /tools/{tool-id}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Permanently Deleting an App
 

@@ -1,12 +1,12 @@
 (ns metadactyl.routes.domain.app
   (:use [metadactyl.routes.params]
         [metadactyl.routes.domain.app.rating]
+        [metadactyl.routes.domain.tool :only [Tool]]
         [ring.swagger.schema :only [describe]]
         [schema.core :only [defschema optional-key enum Any]])
   (:import [java.util UUID Date]))
 
 (def AppIdParam (describe UUID "A UUID that is used to identify the App"))
-(def ToolIdParam (describe UUID "A UUID that is used to identify the Tool"))
 (def OptionalIdParam (describe UUID "An optional UUID identifier"))
 
 (def OptionalGroupsKey (optional-key :groups))
@@ -181,15 +181,6 @@
    OptionalParametersKey
    (describe [AppParameter] ParameterListDocs)})
 
-(defschema ToolDetails
-  {:id          ToolIdParam
-   :name        (describe String "The Tool's name")
-   :description (describe String "The Tool's description")
-   :location    (describe String "The Tool's installed location")
-   :type        (describe String "The Tool's type")
-   :version     (describe String "The Tool's version")
-   :attribution (describe String "The Tool's attribution information")})
-
 (defschema AppBase
   {:id                              AppIdParam
    :name                            (describe String "The App's name")
@@ -199,7 +190,7 @@
 
 (defschema App
   (merge AppBase
-         {(optional-key :tools)      (describe [ToolDetails] ToolListDocs)
+         {(optional-key :tools)      (describe [Tool] ToolListDocs)
           (optional-key :references) (describe [String] "The App's references")
           OptionalGroupsKey          (describe [AppGroup] GroupListDocs)}))
 
@@ -248,7 +239,7 @@
 (defschema AppDetails
   (merge AppBase
          {:tools
-          (describe [ToolDetails] ToolListDocs)
+          (describe [Tool] ToolListDocs)
 
           :references
           (describe [String] "The App's references")

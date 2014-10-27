@@ -4,6 +4,7 @@
         [schema.core :only [defschema optional-key enum Any]])
   (:import [java.util UUID]))
 
+(def ToolIdParam (describe UUID "A UUID that is used to identify the Tool"))
 (def ToolRequestIdParam (describe UUID "The Tool Requests's UUID"))
 (def ToolNameParam (describe String "The Tool's name (should be the file name)"))
 (def ToolDescriptionParam (describe String "A brief description of the Tool"))
@@ -22,7 +23,7 @@
    :test              (describe ToolTestData "The test data for the Tool")})
 
 (defschema Tool
-  {:id                         (describe UUID "A UUID that is used to identify the Tool")
+  {:id                         ToolIdParam
    :name                       ToolNameParam
    (optional-key :description) ToolDescriptionParam
    (optional-key :attribution) AttributionParam
