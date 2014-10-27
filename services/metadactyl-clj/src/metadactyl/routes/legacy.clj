@@ -33,9 +33,6 @@
   (route/not-found (unrecognized-path-response)))
 
 (defroutes* metadactyl-routes
-  (GET "/search-deployed-components/:search-term" [search-term]
-       (trap #(throw+ '("search-deployed-components" search-term))))
-
   (POST "/delete-categories" [:as {body :body}]
         (trap #(throw+ '("delete-categories" body))))
 

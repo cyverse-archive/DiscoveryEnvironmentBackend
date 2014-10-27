@@ -1,41 +1,10 @@
 # Table of Contents
 
 * [App Metadata Listing Services](#app-metadata-listing-services)
-    * [Search Deployed Components](#search-deployed-components)
     * [Listing Data Objects in an Analysis](#listing-data-objects-in-an-analysis)
     * [Listing Deployed Components in an Analysis](#listing-deployed-components-in-an-analysis)
 
 # App Metadata Listing Services
-
-## Search Deployed Components
-
-*Unsecured Endpoint:* GET /search-deployed-components/{search-term}
-
-The `/search-deployed-components/{search-term}` endpoint is used by Tito to
-search for a deployed component with a name or description that contains the
-given search-term.
-
-The response format is the same as the /get-workflow-elements/components
-endpoint:
-
-```
-$ curl -s http://by-tor:8888/search-deployed-components/example | python -mjson.tool
-{
-    "components": [
-        {
-            "name": "foo-example.pl",
-            "description": "You'll find out!",
-            ...
-        },
-        {
-            "name": "foo-bar.pl",
-            "description": "Another Example Script",
-            ...
-        },
-        ...
-    ]
-}
-```
 
 ## Listing Data Objects in an Analysis
 
