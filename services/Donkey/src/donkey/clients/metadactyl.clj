@@ -113,9 +113,9 @@
       (:body)
       (service/decode-json)))
 
-(defn get-deployed-components-in-app
+(defn get-tools-in-app
   [app-id]
-  (-> (client/get (secured-url "get-components-in-analysis" app-id)
+  (-> (client/get (metadactyl-url "apps" app-id "tools")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)

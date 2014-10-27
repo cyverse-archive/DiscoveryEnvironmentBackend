@@ -10,7 +10,6 @@
 * [POST /preview-template](endpoints/app-metadata/admin.md#previewing-templates)
 * [POST /preview-workflow](endpoints/app-metadata/admin.md#previewing-analyses)
 * [GET /secured/app/{app-id}](endpoints/app-metadata/updated-admin.md#obtaining-app-information-for-job-submission)
-* [GET /secured/get-components-in-analysis/{analysis-id}](endpoints/app-metadata/listing.md#listing-deployed-components-in-an-analysis)
 * [POST /secured/make-analysis-public](endpoints/app-metadata/editing.md#submitting-an-analysis-for-public-use)
 * [GET /secured/reference-genomes](endpoints/reference-genomes.md#exporting-reference-genomes)
 * [PUT /secured/reference-genomes](endpoints/reference-genomes.md#importing-reference-genomes)

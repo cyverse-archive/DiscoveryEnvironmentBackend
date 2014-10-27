@@ -10,7 +10,7 @@
 App categorization is strongly related to app listing in that, when apps are
 listed, they're often listed by category. The endpoints related specifically to
 categorizations are included in this document, but we've kept the app listing
-endpoints in the [App Metadata Listing Services](listing.md) document.
+endpoints in the `App Metadata Listing Services` documentation.
 
 ## Deleting Categories
 

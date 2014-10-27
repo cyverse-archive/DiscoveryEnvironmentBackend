@@ -3,10 +3,12 @@
                                         get-app-details
                                         get-app-description
                                         get-app-task-listing
+                                        get-app-tool-listing
                                         search-apps]]
         [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.rating]
+        [metadactyl.routes.domain.tool :only [ToolListing]]
         [metadactyl.routes.params]
         [metadactyl.zoidberg.app-edit :only [add-app copy-app edit-app update-app]]
         [compojure.api.sweet]
@@ -176,6 +178,15 @@
         consumed by and what types of files are produced by each App's task in the pipeline. This
         service provides that information."
         (ce/trap uri #(get-app-task-listing app-id)))
+
+  (GET* "/:app-id/tools" [:as {uri :uri}]
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :return ToolListing
+        :summary "List Tools used by an App"
+        :notes "This service lists information for all of the tools that are associated with an App.
+        This information used to be included in the results of the App listing service."
+        (ce/trap uri #(get-app-tool-listing app-id)))
 
   (GET* "/:app-id/ui" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]

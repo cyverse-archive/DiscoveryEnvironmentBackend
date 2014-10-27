@@ -12,7 +12,6 @@ Request and response bodies are in JSON format unless otherwise noted.
 
 * [Miscellaneous Endpoints](endpoints/misc.md)
 * [App Metadata Endpoints](endpoints/app-metadata.md)
-    * [App Metadata Listing and Searching Services](endpoints/app-metadata/listing.md)
     * [App Categorization Services](endpoints/app-metadata/categorization.md)
     * [App Validation Services](endpoints/app-metadata/validation.md)
     * [App Information Services](endpoints/app-metadata/information.md)

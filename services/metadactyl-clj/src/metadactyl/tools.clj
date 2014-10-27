@@ -17,12 +17,11 @@
    given search term in their name or description."
   [base-query search-term]
   (let [search-term (format-query-wildcards search-term)
-        search-term (str "%" search-term "%")
-        sql-lower #(sqlfn lower %)]
+        search-term (str "%" search-term "%")]
     (where base-query
       (or
-        {(sql-lower :tools.name) [like (sqlfn lower search-term)]}
-        {(sql-lower :tools.description) [like (sqlfn lower search-term)]}))))
+        {(sqlfn lower :tools.name) [like (sqlfn lower search-term)]}
+        {(sqlfn lower :tools.description) [like (sqlfn lower search-term)]}))))
 
 (defn tool-listing-base-query
   "Obtains a listing query for tools, with optional search and paging params."
@@ -60,6 +59,12 @@
        (assert-not-nil [:tool-id tool-id])
        remove-nil-vals
        service/success-response))
+
+(defn get-tools-by-id
+  "Obtains a listing of tools for the given list of IDs."
+  [tool-ids]
+  (map remove-nil-vals
+    (select (tool-listing-base-query) (where {:tools.id [in tool-ids]}))))
 
 (defn add-tools
   "Adds a list of tools to the database, returning a list of IDs of the tools added."

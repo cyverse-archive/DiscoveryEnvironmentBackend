@@ -15,9 +15,6 @@
   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
        (throw+ '("run-experiment" body workspace-id)))
 
-  (GET "/get-components-in-analysis/:app-id" [app-id]
-       (throw+ '("list-deployed-components-in-app" app-id)))
-
   (POST "/update-favorites" [:as {body :body}]
         (throw+ '("update-favorites" body)))
 

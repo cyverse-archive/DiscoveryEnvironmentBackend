@@ -30,7 +30,7 @@
     * [Searching for Apps](#searching-for-apps)
     * [Previewing Command Line Arguments](#previewing-command-line-arguments)
     * [Listing Apps in an App Group](#listing-apps-in-an-app-group)
-    * [Listing Deployed Components in an Analysis](#listing-deployed-components-in-an-analysis)
+    * [Listing Tools in an App](#listing-tools-in-an-app)
     * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
     * [Making a Copy of an App Available for Editing](#making-a-copy-of-an-app-available-for-editing)
     * [Submitting an Analysis for Public Use](#submitting-an-analysis-for-public-use)
@@ -524,14 +524,14 @@ Delegates to metadactyl: GET /apps/categories/{group-id}
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
 
-## Listing Deployed Components in an Analysis
+## Listing Tools in an App
 
-Secured Endpoint: GET /secured/get-components-in-analysis/{analysis-id}
+Secured Endpoint: GET /apps/{app-id}/tools
 
-Delegates to metadactyl: GET /secured/get-components-in-analysis/{analysis-id}
+Delegates to metadactyl: GET /apps/{app-id}/tools
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Updating the Favorite Analyses List
 

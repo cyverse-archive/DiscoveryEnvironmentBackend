@@ -90,6 +90,9 @@
     (GET "/apps/:app-id/tasks" [app-id :as {:keys [uri]}]
          (ce/trap uri #(apps/list-app-tasks app-id)))
 
+    (GET "/apps/:app-id/tools" [app-id :as {:keys [uri]}]
+         (ce/trap uri #(apps/get-tools-in-app app-id)))
+
     (GET "/apps/:app-id/ui" [app-id :as {:keys [uri]}]
          (ce/trap uri #(edit-app app-id)))))
 
@@ -161,9 +164,6 @@
 
    (DELETE "/stop-analysis/:uuid" [uuid :as {:keys [uri]}]
            (ce/trap uri #(apps/stop-job uuid)))
-
-   (GET "/get-components-in-analysis/:app-id" [app-id :as {:keys [uri]}]
-        (ce/trap uri #(apps/get-deployed-components-in-app app-id)))
 
    (POST "/update-favorites" [:as {:keys [uri body]}]
          (ce/trap uri #(apps/update-favorites body)))

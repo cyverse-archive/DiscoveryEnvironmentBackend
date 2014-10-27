@@ -2,7 +2,6 @@
 
 ## Documentation Links
 
-* [App Metadata Listing and Searching Services](app-metadata/listing.md)
 * [App Categorization Services](app-metadata/categorization.md)
 * [App Validation Services](app-metadata/validation.md)
 * [App Information Services](app-metadata/information.md)
