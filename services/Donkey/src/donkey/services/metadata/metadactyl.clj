@@ -413,10 +413,10 @@
     (forward-put url req)))
 
 (defn make-app-public
-  "This service copies an app from a user's private workspace to the public
-   workspace."
-  [req]
-  (let [url (build-metadactyl-secured-url req "make-analysis-public")]
+  "This service copies an app from a user's private workspace to the public workspace."
+  [req app-id]
+  (let [url (metadactyl-url {} "apps" app-id "publish")
+        req (metadactyl-request req)]
     (forward-post url req)))
 
 (defn app-publishable?

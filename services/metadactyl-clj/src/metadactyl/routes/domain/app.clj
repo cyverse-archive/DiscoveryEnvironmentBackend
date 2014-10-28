@@ -8,6 +8,7 @@
 
 (def AppIdParam (describe UUID "A UUID that is used to identify the App"))
 (def OptionalIdParam (describe UUID "An optional UUID identifier"))
+(def AppReferencesParam (describe [String] "The App's references"))
 
 (def OptionalGroupsKey (optional-key :groups))
 (def OptionalParametersKey (optional-key :parameters))
@@ -191,7 +192,7 @@
 (defschema App
   (merge AppBase
          {(optional-key :tools)      (describe [Tool] ToolListDocs)
-          (optional-key :references) (describe [String] "The App's references")
+          (optional-key :references) AppReferencesParam
           OptionalGroupsKey          (describe [AppGroup] GroupListDocs)}))
 
 (defschema AppFileParameterDetails
@@ -242,7 +243,7 @@
           (describe [Tool] ToolListDocs)
 
           :references
-          (describe [String] "The App's references")
+          AppReferencesParam
 
           :categories
           (describe [AppDetailCategory]
@@ -355,3 +356,15 @@
     (->optional-param :name)
     (->optional-param :description)
     (assoc OptionalGroupsKey (describe [AppGroupRequest] GroupListDocs))))
+
+(defschema AppCategoryIdListing
+  {:categories (describe [UUID] "A listing of App Category IDs")})
+
+(defschema PublishAppRequest
+  (-> AppBase
+    (->optional-param :id)
+    (->optional-param :name)
+    (->optional-param :description)
+    (assoc :wiki_url (describe String "The App's documentation URL")
+           :references AppReferencesParam)
+    (merge AppCategoryIdListing)))

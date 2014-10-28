@@ -3,7 +3,8 @@
         [korma.core]
         [kameleon.core]
         [kameleon.entities]
-        [kameleon.queries :only [parameter-types-for-tool-type]])
+        [kameleon.queries :only [parameter-types-for-tool-type]]
+        [metadactyl.persistence.app-metadata :only [get-app]])
   (:require [clojure.string :as string]))
 
 (defn- get-tool-type-from-database
@@ -94,9 +95,11 @@
    a flag indicating whether or not the app is publishable along with the reason the app isn't
    publishable if it's not."
   [app-id]
-  (let [task-ids (task-ids-for-app app-id)
+  (let [app (get-app app-id)
+        task-ids (task-ids-for-app app-id)
         private-apps (private-apps-for task-ids)]
-    (cond (zero? (count task-ids))    [false "no app ID provided"]
+    (cond (:is_public app)            [false "app is already public"]
+          (zero? (count task-ids))    [false "no app ID provided"]
           (= 1 (count task-ids))      [true]
           (pos? (count private-apps)) [false "contains private apps" private-apps]
           :else                       [true])))

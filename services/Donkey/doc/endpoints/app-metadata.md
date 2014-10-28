@@ -34,7 +34,7 @@
     * [Adding an App Favorite](#adding-an-app-favorite)
     * [Removing an App Favorite](#removing-an-app-favorite)
     * [Making a Copy of an App Available for Editing](#making-a-copy-of-an-app-available-for-editing)
-    * [Submitting an Analysis for Public Use](#submitting-an-analysis-for-public-use)
+    * [Submitting an App for Public Use](#submitting-an-app-for-public-use)
     * [Determining if an App Can be Made Public](#determining-if-an-app-can-be-made-public)
     * [Obtaining an App Representation for Editing](#obtaining-an-app-representation-for-editing)
     * [Making a Pipeline Available for Editing](#making-a-pipeline-available-for-editing)
@@ -561,14 +561,14 @@ Delegates to metadactyl: POST /apps/{app-id}/copy
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
 
-## Submitting an Analysis for Public Use
+## Submitting an App for Public Use
 
-Secured Endpoint: POST /secured/make-analysis-public
+Secured Endpoint: POST /apps/:app-id/publish
 
-Delegates to metadactyl: POST /secured/make-analysis-public
+Delegates to metadactyl: POST /apps/:app-id/publish
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Determining if an App Can be Made Public
 

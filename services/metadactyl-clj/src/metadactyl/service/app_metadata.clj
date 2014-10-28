@@ -3,11 +3,15 @@
   (:use [clojure.java.io :only [reader]]
         [clojure-commons.validators]
         [kameleon.app-groups :only [add-app-to-category
+                                    decategorize-app
                                     get-app-subcategory-id
                                     remove-app-from-category]]
         [kameleon.queries :only [get-existing-user-id]]
+        [kameleon.uuids :only [uuidify]]
+        [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.user :only [current-user]]
-        [metadactyl.util.config :only [workspace-favorites-app-group-index]]
+        [metadactyl.util.config :only [workspace-beta-app-category-id
+                                       workspace-favorites-app-group-index]]
         [metadactyl.util.service :only [build-url success-response parse-json]]
         [metadactyl.validation :only [verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
@@ -146,6 +150,25 @@
         fav-category-id (get-favorite-category-id)]
   (remove-app-from-category fav-category-id app-id))
   nil)
+
+(defn- publish-app
+  [{app-id :id :keys [wiki_url references categories] :as app}]
+  (transaction
+    (amp/update-app (assoc app :wikiurl wiki_url) true)
+    (amp/set-app-references app-id references)
+    (amp/set-app-suggested-categories app-id categories)
+    (decategorize-app app-id)
+    (add-app-to-category (uuidify (workspace-beta-app-category-id)) app-id))
+  nil)
+
+(defn make-app-public
+  [{app-id :id :as app}]
+  (verify-app-ownership (validate-app-existence app-id))
+  (let [[publishable? reason] (app-publishable? app-id)]
+    (if publishable?
+      (publish-app app)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     reason}))))
 
 (defn get-app
   "This service obtains an app description that can be used to build a job submission form in

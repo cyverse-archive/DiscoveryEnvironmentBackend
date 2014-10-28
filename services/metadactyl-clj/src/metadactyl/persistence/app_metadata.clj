@@ -172,13 +172,16 @@
 
 (defn update-app
   "Updates top-level app info in the database."
-  [app]
-  (let [app-id (:id app)
-        app (-> app
-                (select-keys [:name :description])
-                (assoc :edited_date (sqlfn now))
-                (remove-nil-vals))]
-    (update apps (set-fields app) (where {:id app-id}))))
+  ([app]
+   (update-app app false))
+  ([app publish?]
+   (let [app-id (:id app)
+         app (-> app
+                 (select-keys [:name :description :wikiurl])
+                 (assoc :edited_date (sqlfn now)
+                        :integration_date (when publish? (sqlfn now)))
+                 (remove-nil-vals))]
+     (update apps (set-fields app) (where {:id app-id})))))
 
 (defn add-app-reference
   "Adds an App's reference to the database."
@@ -190,7 +193,19 @@
   [app-id references]
   (transaction
     (delete app_references (where {:id app-id}))
-    (map (partial add-app-reference app-id) references)))
+    (dorun (map (partial add-app-reference app-id) references))))
+
+(defn add-app-suggested-category
+  "Adds an App's suggested category to the database."
+  [app-id category-id]
+  (insert :suggested_groups (values {:app_id app-id, :app_category_id category-id})))
+
+(defn set-app-suggested-categories
+  "Resets the given App's suggested categories with the given category ID list."
+  [app-id category-ids]
+  (transaction
+    (delete :suggested_groups (where {:app_id app-id}))
+    (dorun (map (partial add-app-suggested-category app-id) category-ids))))
 
 (defn add-task
   "Adds a task to the database."

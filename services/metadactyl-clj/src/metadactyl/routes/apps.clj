@@ -165,6 +165,18 @@
         multistep App in which all of the Tasks included in the pipeline are public."
         (ce/trap uri #(hash-map :publishable (first (app-publishable? app-id)))))
 
+  (POST* "/:app-id/publish" [:as {uri :uri}]
+         :path-params [app-id :- AppIdPathParam]
+         :query [params SecuredQueryParamsEmailRequired]
+         :body [body (describe PublishAppRequest "The user's Publish App Request.")]
+         :summary "Submit an App for Public Use"
+         :notes "This service can be used to submit a private App for public use. The user supplies
+         basic information about the App and a suggested location for it. The service records the
+         information and suggested location then places the App in the Beta category. A Tito
+         administrator can subsequently move the App to the suggested location at a later time if it
+         proves to be useful."
+         (ce/trap uri #(app-metadata/make-app-public (assoc body :id app-id))))
+
   (DELETE* "/:app-id/rating" [:as {uri :uri}]
            :path-params [app-id :- AppIdPathParam]
            :query [params SecuredQueryParams]

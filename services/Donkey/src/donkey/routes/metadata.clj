@@ -87,6 +87,9 @@
     (GET "/apps/:app-id/is-publishable" [app-id :as {:keys [uri]}]
          (ce/trap uri #(app-publishable? app-id)))
 
+    (POST "/apps/:app-id/publish" [app-id :as {:keys [uri] :as req}]
+          (ce/trap uri #(make-app-public req app-id)))
+
     (DELETE "/apps/:app-id/rating" [app-id :as {:keys [uri]}]
             (ce/trap uri #(apps/delete-rating app-id)))
 
@@ -170,9 +173,6 @@
 
    (DELETE "/stop-analysis/:uuid" [uuid :as {:keys [uri]}]
            (ce/trap uri #(apps/stop-job uuid)))
-
-   (POST "/make-analysis-public" [:as {:keys [uri] :as req}]
-         (ce/trap uri #(make-app-public req)))
 
    (GET "/default-output-dir" [:as {:keys [uri]}]
         (ce/trap uri #(get-default-output-dir)))

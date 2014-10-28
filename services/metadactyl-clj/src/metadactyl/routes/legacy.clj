@@ -15,9 +15,6 @@
   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
        (throw+ '("run-experiment" body workspace-id)))
 
-  (POST "/make-analysis-public" [:as {body :body}]
-        (trap #(throw+ '("make-app-public" body))))
-
   (GET "/reference-genomes" []
        (throw+ '("list-reference-genomes")))
 
