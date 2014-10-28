@@ -3,15 +3,18 @@
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info]
         [clj-jargon.permissions]
-        [slingshot.slingshot :only [try+ throw+]])
+        [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
+            [cheshire.core :as json]
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [clojure-commons.error-codes :as error]
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.persistence.metadata :as meta]
             [clj-icat-direct.icat :as icat]
+            [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as jargon])
@@ -70,76 +73,8 @@
     {:files   (mapv xformer do)
      :folders (mapv xformer collections)}))
 
-(defn- user-col->api-col
-  [sort-col]
-  (case sort-col
-    "NAME"         :base-name
-    "ID"           :full-path
-    "LASTMODIFIED" :modify-ts
-    "DATECREATED"  :create-ts
-    "SIZE"         :data-size
-    "PATH"         :full-path
-                   :base-name))
 
-(defn- user-order->api-order
-  [sort-order]
-  (case sort-order
-    "ASC"  :asc
-    "DESC" :desc
-           :asc))
-
-(defn paged-dir-listing
-  "Provides paged directory listing as an alternative to (list-dir). Always contains files."
-  [user path limit offset & {:keys [sort-col sort-order]
-                             :or {:sort-col   "NAME"
-                                  :sort-order "ASC"}}]
-  (log/warn "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
-  (let [path      (ft/rm-last-slash path)
-        sort-col  (string/upper-case sort-col)
-        sort-order (string/upper-case sort-order)]
-    (with-jargon (jargon/jargon-cfg) [cm]
-      (validators/user-exists cm user)
-      (validators/path-exists cm path)
-      (validators/path-readable cm user path)
-      (validators/path-is-dir cm path)
-
-      (when-not (contains? #{"NAME" "ID" "LASTMODIFIED" "DATECREATED" "SIZE" "PATH"} sort-col)
-        (log/warn "invalid sort column" sort-col)
-        (throw+ {:error_code "ERR_INVALID_SORT_COLUMN"
-                 :column sort-col}))
-
-      (when-not (contains? #{"ASC" "DESC"} sort-order)
-        (log/warn "invalid sort order" sort-order)
-        (throw+ {:error_code "ERR_INVALID_SORT_ORDER"
-                 :sort-order sort-order}))
-
-      (let [stat (stat cm path)
-            scol (user-col->api-col sort-col)
-            sord (user-order->api-order sort-order)
-            zone (cfg/irods-zone)
-            uuid (:uuid (uuids/uuid-for-path cm user path))]
-        (merge
-         (hash-map
-          :id               uuid
-          :path             path
-          :label            (paths/id->label user path)
-          :isFavorite       (meta/is-favorite? user (UUID/fromString uuid))
-          :filter           (should-filter? user path)
-          :permission       (permission-for cm user path)
-          :hasSubDirs       true
-          :date-created     (:date-created stat)
-          :date-modified    (:date-modified stat)
-          :file-size        0
-          :total            (icat/number-of-items-in-folder user zone path)
-          :total_filtered   (icat/number-of-filtered-items-in-folder user
-                                                                     zone
-                                                                     path
-                                                                     (cfg/fs-filter-chars)
-                                                                     (cfg/fs-filter-files)
-                                                                     (filtered-paths user)))
-         (page->map user (log/spy (icat/paged-folder-listing user zone path scol sord limit offset))))))))
-
-(defn list-directories
+(defn- list-directories
   "Lists the directories contained under path."
   [user path]
   (let [path (ft/rm-last-slash path)]
@@ -198,6 +133,81 @@
 (with-post-hook! #'do-directory (paths/log-func "do-directory"))
 
 
+(defn- format-entry
+  [user entry]
+  (println entry)
+  (let [id   (:id entry)
+        path (:path entry)]
+    {:id            id
+     :path          path
+     :label         (paths/id->label user path)
+     :isFavorite    (meta/is-favorite? user (UUID/fromString id))
+     :filter        (:filter entry)
+     :permission    (:permission entry)
+     :date-created  (:dateCreated entry)
+     :date-modified (:dateModified entry)
+     :file-size     (:size entry)}))
+
+
+(defn- format-page
+  [user page]
+  (assoc (format-entry user page)
+    :hasSubDirs     true
+    :files          (map #(format-entry user %) (:files page))
+    :folders        (map #(format-entry user %) (:folders page))
+    :total          (:total page)
+    :total_filtered (:totalFiltered page)))
+
+
+(defn- paged-dir-listing
+  "Provides paged directory listing as an alternative to (list-dir). Always contains files."
+  [user path limit offset sort-field sort-order]
+  (log/warn "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
+  (let [url-path         (data/mk-entries-path-url-path path)
+        req-map          {:query-params {:user         user
+                                         :limit        limit
+                                         :offset       offset
+                                         :filter-chars (cfg/fs-filter-chars)
+                                         :filter-name  (cfg/fs-filter-files)
+                                         :filter-path  (filtered-paths user)
+                                         :sort-field   sort-field
+                                         :sort-order   sort-order}}
+        handle-not-found (fn [_ _ _] (throw+ {:error_code error/ERR_NOT_FOUND :path path}))]
+    (data/request :get url-path req-map
+      :403 handle-not-found
+      :404 handle-not-found
+      :410 handle-not-found
+      :414 handle-not-found)))
+
+
+(defn- resolve-sort-field
+  [sort-col]
+  (if-not sort-col
+    "NAME"
+    (case (string/upper-case sort-col)
+      "DATECREATED"  "DATECREATED"
+      "ID"           "PATH"
+      "LASTMODIFIED" "DATEMODIFIED"
+      "NAME"         "NAME"
+      "PATH"         "PATH"
+      "SIZE"         "SIZE"
+                     (do
+                       (log/warn "invalid sort column" sort-col)
+                       (throw+ {:error_code "ERR_INVALID_SORT_COLUMN" :column sort-col})))))
+
+
+(defn- resolve-sort-order
+  [sort-order]
+  (if-not sort-order
+    "ASC"
+    (let [sort-order (string/upper-case sort-order)]
+      (when-not (contains? #{"ASC" "DESC"} (string/upper-case sort-order))
+        (log/warn "invalid sort order" sort-order)
+        (throw+ {:error_code "ERR_INVALID_SORT_ORDER" :sort-order sort-order}))
+      sort-order)))
+
+
+; TODO validate limit >= 0, offset >= 0
 (defn do-paged-listing
   "Entrypoint for the API that calls (paged-dir-listing)."
   [{user       :user
@@ -205,13 +215,14 @@
     limit      :limit
     offset     :offset
     sort-col   :sort-col
-    sort-order :sort-order
-    :as params}]
-  (let [limit      (Integer/parseInt limit)
-        offset     (Integer/parseInt offset)
-        sort-col   (if sort-col sort-col "NAME")
-        sort-order (if sort-order sort-order "ASC")]
-    (paged-dir-listing user path limit offset :sort-col sort-col :sort-order sort-order)))
+    sort-order :sort-order}]
+  (Integer/parseInt limit)
+  (Integer/parseInt offset)
+  (let [path       (ft/rm-last-slash path)
+        sort-field (resolve-sort-field sort-col)
+        sort-order (resolve-sort-order sort-order)
+        resp       (paged-dir-listing user path limit offset sort-field sort-order)]
+    (format-page user (json/decode (:body resp) true))))
 
 (with-pre-hook! #'do-paged-listing
   (fn [params]
