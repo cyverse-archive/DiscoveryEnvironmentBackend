@@ -99,7 +99,8 @@
   (listAppGroups [_ params])
   (listApps [_ category-id params])
   (searchApps [_ search-term])
-  (updateFavorites [_ app-id favorite?])
+  (addFavoriteApp [_ app-id])
+  (removeFavoriteApp [_ app-id])
   (rateApp [_ app-id rating comment-id])
   (deleteRating [_ app-id])
   (getApp [_ app-id])
@@ -130,8 +131,11 @@
   (searchApps [_ search-term]
     (metadactyl/search-apps search-term))
 
-  (updateFavorites [_ app-id favorite?]
-    (metadactyl/update-favorites app-id favorite?))
+  (addFavoriteApp [_ app-id]
+    (metadactyl/add-favorite-app app-id))
+
+  (removeFavoriteApp [_ app-id]
+    (metadactyl/remove-favorite-app app-id))
 
   (rateApp [_ app-id rating comment-id]
     (metadactyl/rate-app app-id rating comment-id))
@@ -203,9 +207,15 @@
       {:app_count (apply + (map :app_count [de-apps hpc-apps]))
        :apps      (mapcat :apps [de-apps hpc-apps])}))
 
-  (updateFavorites [_ app-id favorite?]
+  (addFavoriteApp [_ app-id]
     (if (is-uuid? app-id)
-      (metadactyl/update-favorites app-id favorite?)
+      (metadactyl/add-favorite-app app-id)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "HPC apps cannot be marked as favorites"})))
+
+  (removeFavoriteApp [_ app-id]
+    (if (is-uuid? app-id)
+      (metadactyl/remove-favorite-app app-id)
       (throw+ {:error_code ce/ERR_BAD_REQUEST
                :reason     "HPC apps cannot be marked as favorites"})))
 
@@ -332,14 +342,17 @@
     (transaction
      (service/success-response (.searchApps (get-app-lister) search-term)))))
 
-(defn update-favorites
-  [body]
+(defn add-favorite-app
+  [app-id]
   (with-db db/de
     (transaction
-     (let [request (service/decode-json body)]
-       (.updateFavorites (get-app-lister)
-                         (service/required-field request :analysis_id)
-                         (service/required-field request :user_favorite))))))
+      (.addFavoriteApp (get-app-lister) app-id))))
+
+(defn remove-favorite-app
+  [app-id]
+  (with-db db/de
+    (transaction
+      (.removeFavoriteApp (get-app-lister) app-id))))
 
 (defn rate-app
   [body app-id]

@@ -31,7 +31,8 @@
     * [Previewing Command Line Arguments](#previewing-command-line-arguments)
     * [Listing Apps in an App Group](#listing-apps-in-an-app-group)
     * [Listing Tools in an App](#listing-tools-in-an-app)
-    * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
+    * [Adding an App Favorite](#adding-an-app-favorite)
+    * [Removing an App Favorite](#removing-an-app-favorite)
     * [Making a Copy of an App Available for Editing](#making-a-copy-of-an-app-available-for-editing)
     * [Submitting an Analysis for Public Use](#submitting-an-analysis-for-public-use)
     * [Determining if an App Can be Made Public](#determining-if-an-app-can-be-made-public)
@@ -533,14 +534,23 @@ Delegates to metadactyl: GET /apps/{app-id}/tools
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
 
-## Updating the Favorite Analyses List
+## Adding an App Favorite
 
-Secured Endpoint: POST /secured/update-favorites
+Secured Endpoint: PUT /apps/{app-id}/favorite
 
-Delegates to metadactyl: POST /secured/update-favorites
+Delegates to metadactyl: PUT /apps/{app-id}/favorite
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
+
+## Removing an App Favorite
+
+Secured Endpoint: DELETE /apps/{app-id}/favorite
+
+Delegates to metadactyl: DELETE /apps/{app-id}/favorite
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Making a Copy of an App Available for Editing
 

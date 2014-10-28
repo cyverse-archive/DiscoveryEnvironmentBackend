@@ -62,7 +62,6 @@
     * [Previewing Templates](#previewing-templates)
     * [Previewing Analyses](#previewing-analyses)
     * [Importing Tools](#importing-tools)
-    * [Updating the Favorite Analyses List](#updating-the-favorite-analyses-list)
 
 # Overview
 
@@ -2982,89 +2981,3 @@ This service imports deployed components into the DE. In metadactyl, this
 service is identical to the `/import-workflow` service; and is provided for the
 sake the clarity of the code in the SCM repository. Please see
 [Importing an Analysis](#importing-an-analysis) for more information.
-
-## Updating the Favorite Analyses List
-
-*Secured Endpoint:* POST /secured/update-favorites
-
-Analyses can be marked as favorites in the DE, which allows users to access them
-without having to search. This service is used to add or remove analyses from a
-user's favorites list. The request body is in the following format:
-
-```json
-{
-    "workspace_id": "workspace-id",
-    "analysis_id": "analysis-id",
-    "user_favorite": "favorite-flag"
-}
-```
-
-The action performed by this service is controlled by the `user_favorite` field
-value. If the field value is `false` then the analysis will be added to the
-user's favorites list. If the field value is `true` then the analysis will be
-removed from the user's favorites list. If this service fails then the response
-will be in the usual format for failed service calls. If the service succeeds
-then the response conntains only a success flag:
-
-```json
-{
-    "success": true
-}
-```
-
-Here are some examples:
-
-
-```
-$ curl -sd '
-{
-    "workspace_id": 4,
-    "analysis_id": "F99526B9-CC88-46DA-84B3-0743192DCB7B",
-    "user_favorite": true
-}
-' "http://by-tor:8888/secured/update-favorites?user=snow-dog&email=sd@example.org" | python -mjson.tool
-{
-    "success": true
-}
-```
-
-```
-$ curl -sd '
-{
-    "workspace_id": 4,
-    "analysis_id": "F99526B9-CC88-46DA-84B3-0743192DCB7B",
-    "user_favorite": true
-}
-' "http://by-tor:8888/secured/update-favorites?user=snow-dog&email=sd@example.org" | python -mjson.tool
-{
-    "reason": "analysis, F99526B9-CC88-46DA-84B3-0743192DCB7B, is already a favorite",
-    "success": false
-}
-```
-
-```
-$ curl -sd '
-{
-    "workspace_id": 4,
-    "analysis_id": "F99526B9-CC88-46DA-84B3-0743192DCB7B",
-    "user_favorite": false
-}
-' "http://by-tor:8888/secured/update-favorites?user=snow-dog&email=sd@example.org" | python -mjson.tool
-{
-    "success": true
-}
-```
-
-```
-$ curl -sd '
-{
-    "workspace_id": 4,
-    "analysis_id": "FOO",
-    "user_favorite": false
-}
-' "http://by-tor:8888/secured/update-favorites?user=snow-dog&email=sd@example.org" | python -mjson.tool
-{
-    "reason": "analysis, FOO not found",
-    "success": false
-}
-```

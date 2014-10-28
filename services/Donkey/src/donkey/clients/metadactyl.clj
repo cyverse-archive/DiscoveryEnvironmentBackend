@@ -163,19 +163,21 @@
       (:body)
       (service/decode-json)))
 
-(defn- update-favorites-request
-  [app-id favorite?]
-  {:analysis_id   app-id
-   :user_favorite favorite?})
-
-(defn update-favorites
-  [app-id favorite?]
-  (-> (client/post (secured-url "update-favorites")
-                   {:query-params (secured-params)
-                    :body         (cheshire/encode (update-favorites-request app-id favorite?))
-                    :as           :stream})
+(defn add-favorite-app
+  [app-id]
+  (-> (client/put (metadactyl-url "apps" app-id "favorite")
+                  {:query-params (secured-params)
+                   :as           :stream})
       (:body)
       (service/decode-json)))
+
+(defn remove-favorite-app
+  [app-id]
+  (-> (client/delete (metadactyl-url "apps" app-id "favorite")
+                     {:query-params (secured-params)
+                      :as           :stream})
+    (:body)
+    (service/decode-json)))
 
 (defn- rate-app-request
   [rating comment-id]

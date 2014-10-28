@@ -2,10 +2,15 @@
   "DE app metadata services."
   (:use [clojure.java.io :only [reader]]
         [clojure-commons.validators]
+        [kameleon.app-groups :only [add-app-to-category
+                                    get-app-subcategory-id
+                                    remove-app-from-category]]
         [kameleon.queries :only [get-existing-user-id]]
         [metadactyl.user :only [current-user]]
+        [metadactyl.util.config :only [workspace-favorites-app-group-index]]
         [metadactyl.util.service :only [build-url success-response parse-json]]
         [metadactyl.validation :only [verify-app-ownership]]
+        [metadactyl.workspace :only [get-workspace]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
@@ -118,6 +123,29 @@
   (let [user-id (get-valid-user-id (:username current-user))]
     (amp/delete-app-rating app-id user-id)
     (amp/get-app-avg-rating app-id)))
+
+(defn- get-favorite-category-id
+  "Gets the current user's Favorites category ID."
+  []
+  (get-app-subcategory-id
+    (:root_category_id (get-workspace))
+    (workspace-favorites-app-group-index)))
+
+(defn add-app-favorite
+  "Adds the given app to the current user's favorites list."
+  [app-id]
+  (let [app (amp/get-app app-id)
+        fav-category-id (get-favorite-category-id)]
+    (add-app-to-category fav-category-id app-id))
+  nil)
+
+(defn remove-app-favorite
+  "Removes the given app from the current user's favorites list."
+  [app-id]
+  (let [app (amp/get-app app-id)
+        fav-category-id (get-favorite-category-id)]
+  (remove-app-from-category fav-category-id app-id))
+  nil)
 
 (defn get-app
   "This service obtains an app description that can be used to build a job submission form in

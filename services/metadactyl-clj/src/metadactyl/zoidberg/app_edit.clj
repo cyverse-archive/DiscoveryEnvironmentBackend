@@ -1,7 +1,7 @@
 (ns metadactyl.zoidberg.app-edit
   (:use [korma.core]
         [korma.db :only [transaction]]
-        [kameleon.app-groups :only [add-app-to-group get-app-subcategory-id]]
+        [kameleon.app-groups :only [add-app-to-category get-app-subcategory-id]]
         [kameleon.core]
         [kameleon.entities]
         [kameleon.uuids :only [uuidify]]
@@ -326,7 +326,7 @@
   [app-id]
   (let [workspace-category-id (:root_category_id (get-workspace))
         dev-group-id (get-app-subcategory-id workspace-category-id (workspace-dev-app-group-index))]
-    (add-app-to-group dev-group-id app-id)))
+    (add-app-to-category dev-group-id app-id)))
 
 (defn- add-single-step-task
   "Adds a task as a single step to the given app, using the app's name, description, and label."

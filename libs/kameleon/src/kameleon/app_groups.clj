@@ -93,20 +93,27 @@
   (first (select apps
                  (where {:id id}))))
 
-(defn app-in-group?
-  "Determines whether or not an app is in an app group."
-  [group-hid app-hid]
+(defn app-in-category?
+  "Determines whether or not an app is in an app category."
+  [category-id app-id]
   (not (empty? (first (select :app_category_app
-                              (where {:app_category_id group-hid
-                                      :app_id          app-hid}))))))
+                              (where {:app_category_id category-id
+                                      :app_id          app-id}))))))
 
-(defn add-app-to-group
-  "Adds an app to an app group."
-  [group-id app-id]
-  (when-not (app-in-group? group-id app-id)
+(defn add-app-to-category
+  "Adds an app to an app category."
+  [category-id app-id]
+  (when-not (app-in-category? category-id app-id)
     (insert :app_category_app
-            (values {:app_category_id group-id
+            (values {:app_category_id category-id
                      :app_id          app-id}))))
+
+(defn remove-app-from-category
+  "Removes an app from an app category."
+  [category-id app-id]
+  (delete :app_category_app
+    (where {:app_category_id category-id
+            :app_id          app-id})))
 
 (defn get-groups-for-app
   "Retrieves a listing of all groups the app with the given ID is listed under."

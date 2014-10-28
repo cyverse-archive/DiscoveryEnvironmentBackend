@@ -78,6 +78,12 @@
     (GET "/apps/:app-id/details" [app-id :as {:keys [uri]}]
          (ce/trap uri #(apps/get-app-details app-id)))
 
+    (DELETE "/apps/:app-id/favorite" [app-id :as {:keys [uri]}]
+            (ce/trap uri #(apps/remove-favorite-app app-id)))
+
+    (PUT "/apps/:app-id/favorite" [app-id :as {:keys [uri]}]
+         (ce/trap uri #(apps/add-favorite-app app-id)))
+
     (GET "/apps/:app-id/is-publishable" [app-id :as {:keys [uri]}]
          (ce/trap uri #(app-publishable? app-id)))
 
@@ -164,9 +170,6 @@
 
    (DELETE "/stop-analysis/:uuid" [uuid :as {:keys [uri]}]
            (ce/trap uri #(apps/stop-job uuid)))
-
-   (POST "/update-favorites" [:as {:keys [uri body]}]
-         (ce/trap uri #(apps/update-favorites body)))
 
    (POST "/make-analysis-public" [:as {:keys [uri] :as req}]
          (ce/trap uri #(make-app-public req)))

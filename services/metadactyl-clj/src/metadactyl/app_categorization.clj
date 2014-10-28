@@ -191,7 +191,7 @@
         workspace     (resolve-workspace hierarchy username root)
         category      (resolve-category workspace path)
         cat-id        (:id category)]
-    (add-app-to-group cat-id app-id)))
+    (add-app-to-category cat-id app-id)))
 
 (defn- extract-app-id
   "Extracts an app ID from a category definition."

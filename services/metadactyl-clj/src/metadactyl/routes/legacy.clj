@@ -15,9 +15,6 @@
   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
        (throw+ '("run-experiment" body workspace-id)))
 
-  (POST "/update-favorites" [:as {body :body}]
-        (throw+ '("update-favorites" body)))
-
   (POST "/make-analysis-public" [:as {body :body}]
         (trap #(throw+ '("make-app-public" body))))
 

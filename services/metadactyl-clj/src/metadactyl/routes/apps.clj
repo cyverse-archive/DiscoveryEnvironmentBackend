@@ -139,6 +139,23 @@
         :notes "This service is used by the DE to obtain high-level details about a single App"
         (ce/trap uri #(get-app-details app-id)))
 
+  (DELETE* "/:app-id/favorite" [:as {uri :uri}]
+           :path-params [app-id :- AppIdPathParam]
+           :query [params SecuredQueryParams]
+           :summary "Removing an App as a Favorite"
+           :notes "Apps can be marked as favorites in the DE, which allows users to access them
+           without having to search. This service is used to remove an App from a user's favorites
+           list."
+           (ce/trap uri #(app-metadata/remove-app-favorite app-id)))
+
+  (PUT* "/:app-id/favorite" [:as {uri :uri}]
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :summary "Marking an App as a Favorite"
+        :notes "Apps can be marked as favorites in the DE, which allows users to access them without
+        having to search. This service is used to add an App to a user's favorites list."
+        (ce/trap uri #(app-metadata/add-app-favorite app-id)))
+
   (GET* "/:app-id/is-publishable" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]
         :query [params SecuredQueryParams]

@@ -13,5 +13,4 @@
 * [POST /secured/make-analysis-public](endpoints/app-metadata/editing.md#submitting-an-analysis-for-public-use)
 * [GET /secured/reference-genomes](endpoints/reference-genomes.md#exporting-reference-genomes)
 * [PUT /secured/reference-genomes](endpoints/reference-genomes.md#importing-reference-genomes)
-* [POST /secured/update-favorites](endpoints/app-metadata/admin.md#updating-the-favorite-analyses-list)
 * [GET /validate-analysis-for-pipelines/{analysis-id}](endpoints/app-metadata/validation.md#validating-analyses-for-pipelines)
