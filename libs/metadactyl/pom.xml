@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.iplantc.core</groupId>
     <artifactId>metadactyl</artifactId>
-    <version>3.2.10</version>
+    <version>4.0.3</version>
     <packaging>jar</packaging>
     <name>metadactyl</name>
     <url>http://www.iplantcollaborative.org</url>
