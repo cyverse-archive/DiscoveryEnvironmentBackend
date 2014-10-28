@@ -1,8 +1,11 @@
 (ns donkey.clients.data-info
   (:use [donkey.auth.user-attributes :only [current-user]]
-        [slingshot.slingshot :only [throw+]])
+        [slingshot.slingshot :only [throw+ try+]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [cemerick.url :as url]
+            [clj-http.client :as http]
+            [me.raynes.fs :as fs]
             [clojure-commons.error-codes :as error]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
@@ -13,8 +16,10 @@
             [donkey.services.filesystem.stat :as st]
             [donkey.services.filesystem.status :as status]
             [donkey.services.filesystem.users :as users]
-            [donkey.services.filesystem.uuids :as uuids])
-  (:import [clojure.lang IPersistentMap ISeq]
+            [donkey.services.filesystem.uuids :as uuids]
+            [donkey.util.config :as cfg]
+            [donkey.util.service :as svc])
+  (:import [clojure.lang IPersistentMap ISeq Keyword]
            [java.util UUID]))
 
 
@@ -260,3 +265,121 @@
                     :reason - the reason access wasn't removed"
   [^String user ^ISeq unshare-withs ^ISeq fpaths]
   (sharing/unshare user unshare-withs fpaths))
+
+
+(defn- fmt-method
+  [method]
+  (string/upper-case (name method)))
+
+
+(defn- handle-service-error
+  [method url msg]
+  (let [full-msg (str method " " url " had a service error: " msg)]
+    (log/error full-msg)
+    (svc/request-failure full-msg)))
+
+
+(defn- handle-client-error
+  [method url err msg]
+  (let [full-msg (str "interal error related to usage of " method " " url ": " msg)]
+    (log/error err full-msg)
+    (svc/request-failure full-msg)))
+
+
+(defn ^String mk-entries-path-url-path
+  "This function constructs the url path to the resource backing a given data entry.
+
+   Parameters:
+     path - the absolute iRODS path to the data entry
+
+   Returns:
+     It returns the data-info URL path to the corresponding resource"
+  [^String path]
+  (let [nodes (fs/split path)
+        nodes (if (= "/" (first nodes)) (next nodes) nodes)]
+    (str "entries/path/" (string/join "/" (map url/url-encode nodes)))))
+
+
+(defn respond-with-default-error
+  "This function generates the default responses for errors returned from a data-info request.
+
+   Parameters:
+     status - the data-info HTTP response code
+     method - the HTTP method called
+     url    - the URL called
+     err    - the clj-http stone wrapping the error
+
+   Throws:
+     It always throws a slingshot stone with the following fields.
+
+       :error_code - ERR_REQUEST_FAILED
+       :message    - a message describing the error"
+  [^Integer status method url ^IPersistentMap err]
+  (let [method (fmt-method method)
+        url    (str url)]
+    (case status
+       400 (handle-client-error method url err "bad request")
+       403 (handle-client-error method url err "user not allowed")
+       404 (handle-client-error method url err "URL not found")
+       405 (handle-client-error method url err "method not supported")
+       406 (handle-client-error method url err "doesn't support requested content type")
+       409 (handle-client-error method url err "request would conflict")
+       410 (handle-client-error method url err "no longer exists")
+       412 (handle-client-error method url err "provided precondition failed")
+       413 (handle-client-error method url err "request body too large")
+       414 (handle-client-error method url err "URL too long")
+       415 (handle-client-error method url err "doesn't support request body's content type")
+       422 (handle-client-error method url err "the request was not processable")
+       500 (handle-service-error method url "internal error")
+       501 (handle-service-error method url "not implemented")
+       503 (handle-service-error method url "temporarily unavailable")
+           (handle-client-error method url err "unexpected response code"))))
+
+
+(defn- handle-error
+  [method url err handlers]
+  (let [status (:status err)]
+    (if-let [handler ((keyword (str status)) handlers)]
+      (handler method url err)
+      (respond-with-default-error status method url err))))
+
+
+(defn- resolve-http-call
+  [method]
+  (case method
+    :delete   http/delete
+    :get      http/get
+    :head     http/head
+    :options  http/options
+    :patch    http/patch
+    :post     http/post
+    :put      http/put))
+
+
+(defn request
+  "This function makes an HTTP request to the data-info service. It uses clj-http to make the
+   request. It traps any errors and provides a response to it. A custom error handler may be
+   provided for each type of error.
+
+   The handler needs to be a function with the following signature.
+
+     (fn [^Keyword method ^String url ^IPersistentMap err])
+
+     method - is the unaltered method parameter passed in the the request function.
+     url    - is the URL of the data-info resource.
+     err    - is the clj-http stone wrapping the error response.
+
+   Parameters:
+     method         - The HTTP method (:delete|:get|:head|:options|:patch|:post|:put)
+     url-path       - The path to the data info resource being accessed
+     req-map        - The ring request
+     error-handlers - (OPTIONAL) zero or more handlers for different error responses. They are
+                      provided as named parameters where the name is a keyword based on the error
+                      code. For example, :404 handle-404 would define the function handle-404 for
+                      handling 404 error responses."
+  [^Keyword method ^String url-path ^IPersistentMap req-map & {:as error-handlers}]
+  (let [url (url/url (cfg/data-info-base-url) url-path)]
+    (try+
+      ((resolve-http-call method) (str url) req-map)
+      (catch #(not (nil? (:status %))) err
+        (handle-error method url err error-handlers)))))
