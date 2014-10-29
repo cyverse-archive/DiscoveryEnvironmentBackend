@@ -7,11 +7,14 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Databaser is a type used to interact with the database.
 type Databaser struct {
 	db         *sql.DB
 	ConnString string
 }
 
+// NewDatabaser returns a pointer to a Databaser instnace that has already
+// connected to the database by calling Ping().
 func NewDatabaser(connString string) (*Databaser, error) {
 	db, err := sql.Open("postgres", connString)
 	if err != nil {
@@ -28,6 +31,7 @@ func NewDatabaser(connString string) (*Databaser, error) {
 	return databaser, nil
 }
 
+// JobRecord is a type that contains info that goes into the jobs table.
 type JobRecord struct {
 	ID               string
 	BatchID          string
@@ -43,6 +47,7 @@ type JobRecord struct {
 	FailureCount     int64
 }
 
+// InsertJob adds a new JobRecord to the database.
 func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 	query := `
   INSERT INTO jobs (
@@ -97,6 +102,7 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 	return id, err
 }
 
+// DeleteJob removes a JobRecord from the database.
 func (d *Databaser) DeleteJob(uuid string) error {
 	query := `DELETE FROM jobs WHERE id = cast($1 as uuid)`
 	_, err := d.db.Exec(query, uuid)
@@ -106,6 +112,7 @@ func (d *Databaser) DeleteJob(uuid string) error {
 	return nil
 }
 
+// GetJob returns a JobRecord from the database.
 func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	query := `
 	SELECT cast(id as varchar),
