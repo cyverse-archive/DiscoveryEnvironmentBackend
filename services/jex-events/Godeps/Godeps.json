@@ -1,0 +1,19 @@
+{
+	"ImportPath": "backend/services/jex-events",
+	"GoVersion": "go1.3.1",
+	"Deps": [
+		{
+			"ImportPath": "code.google.com/p/go-uuid/uuid",
+			"Comment": "null-12",
+			"Rev": "7dda39b2e7d5e265014674c5af696ba4186679e9"
+		},
+		{
+			"ImportPath": "github.com/lib/pq",
+			"Rev": "7175accbed18058468c07811f76440d6e8d7cf19"
+		},
+		{
+			"ImportPath": "github.com/streadway/amqp",
+			"Rev": "7d6d1802c7710be39564a287f860360c6328f956"
+		}
+	]
+}
