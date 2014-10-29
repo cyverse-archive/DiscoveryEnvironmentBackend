@@ -43,9 +43,9 @@ func TestInsertGetDeleteRecord(t *testing.T) {
 	jr := &JobRecord{
 		BatchID:       "",
 		Submitter:     "unit_tests",
-		DateSubmitted: submitted.Format(time.RFC822Z),
-		DateStarted:   started.Format(time.RFC822Z),
-		DateCompleted: completed.Format(time.RFC822Z),
+		DateSubmitted: submitted,
+		DateStarted:   started,
+		DateCompleted: completed,
 		AppID:         uuid.New(),
 		CommandLine:   "this --is -a --test",
 		EnvVariables:  "TEST=true",
@@ -70,13 +70,13 @@ func TestInsertGetDeleteRecord(t *testing.T) {
 	if newJR.Submitter != jr.Submitter {
 		t.Errorf("Submitters didn't match")
 	}
-	if newJR.DateSubmitted != jr.DateSubmitted {
+	if newJR.DateSubmitted.Format(time.RFC822Z) != jr.DateSubmitted.Format(time.RFC822Z) {
 		t.Errorf("Submitted dates didn't match")
 	}
-	if newJR.DateStarted != jr.DateStarted {
+	if newJR.DateStarted.Format(time.RFC822Z) != jr.DateStarted.Format(time.RFC822Z) {
 		t.Errorf("DateStarteds didn't match")
 	}
-	if newJR.DateCompleted != jr.DateCompleted {
+	if newJR.DateCompleted.Format(time.RFC822Z) != jr.DateCompleted.Format(time.RFC822Z) {
 		t.Errorf("DateCompleteds didn't match")
 	}
 	if newJR.AppID != jr.AppID {

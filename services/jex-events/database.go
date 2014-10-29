@@ -36,9 +36,9 @@ type JobRecord struct {
 	ID               string
 	BatchID          string
 	Submitter        string
-	DateSubmitted    string
-	DateStarted      string
-	DateCompleted    string
+	DateSubmitted    time.Time
+	DateStarted      time.Time
+	DateCompleted    time.Time
 	AppID            string
 	CommandLine      string
 	EnvVariables     string
@@ -160,9 +160,9 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	jr := JobRecord{
 		ID:               id,
 		Submitter:        submitter,
-		DateSubmitted:    datesubmitted.Format(time.RFC822Z),
-		DateStarted:      datestarted.Format(time.RFC822Z),
-		DateCompleted:    datecompleted.Format(time.RFC822Z),
+		DateSubmitted:    datesubmitted,
+		DateStarted:      datestarted,
+		DateCompleted:    datecompleted,
 		AppID:            appid,
 		CommandLine:      commandline,
 		EnvVariables:     envvariables,
