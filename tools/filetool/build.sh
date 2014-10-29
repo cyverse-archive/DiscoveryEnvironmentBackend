@@ -24,6 +24,6 @@ lein uberjar
 cp curl_wrapper.pl $BUILDDIR/$PATHBIN
 cp porklock $BUILDDIR/$PATHBIN
 cp target/$BINNAME-standalone.jar $BUILDDIR/$BINDIR
-chmod 755 $BUILDDIR/$BINDIR/curl_wrapper.pl
-chmod 755 $BUILDDIR/$BINDIR/porklock
+chmod 755 $BUILDDIR/$PATHBIN/curl_wrapper.pl
+chmod 755 $BUILDDIR/$PATHBIN/porklock
 fpm -s dir -t rpm --directories $LOGDIR -d java-1.7.0-openjdk --version $VERSION --iteration $ITERATION --epoch 0 --prefix / --name $BINNAME --verbose -C $BUILDDIR --rpm-user $USER --rpm-group $GROUP -f .
