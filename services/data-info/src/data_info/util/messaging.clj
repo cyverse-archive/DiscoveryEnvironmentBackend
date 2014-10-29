@@ -5,12 +5,13 @@
             [clojure-commons.error-codes :as ce]))
 
 
-(defn dataobject-added
+(defn- dataobject-added
   "Event handler for 'data-object.added' events."
   [^bytes payload]
   (ftype/filetype-message-handler (String. payload "UTF-8")))
 
-(defn message-handler
+
+(defn- message-handler
   "A langohr compatible message callback. This will push out message handling to other functions
    based on the value of the routing-key. This will allow us to pull in the full iRODS event
    firehose later and delegate execution to handlers without having to deal with AMQPs object
@@ -23,6 +24,7 @@
   (case routing-key
     "data-object.add" (dataobject-added payload)
     nil))
+
 
 (defn- receive
   "Configures the AMQP connection. This is wrapped in a function because we want to start

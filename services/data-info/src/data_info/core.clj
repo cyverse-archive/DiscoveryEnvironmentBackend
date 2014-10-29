@@ -117,6 +117,6 @@
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
     (config/load-config-from-file (:config options))
-    #_(messages/messaging-initialization)
+    (messages/messaging-initialization)
     (icat/configure-icat)
     (jetty/run-jetty (app) {:port (config/listen-port)})))

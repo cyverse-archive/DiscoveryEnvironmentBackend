@@ -29,7 +29,7 @@
   "Determines the filetype of path. Reads in a chunk, writes it to a temp file, runs it
    against the configured script. If the script can't identify it, it's passed to Tika."
   [cm path]
-  (log/info "in content-type")
+  (log/trace "in content-type")
 
   (let [script-type (get-file-type cm path)]
     (log/info "Path " path " has a type of " script-type " from the script.")
