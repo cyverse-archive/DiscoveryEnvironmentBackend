@@ -67,11 +67,11 @@
       req)))
 
 (defn- ctlr
-  [{:keys [uri] :as req} slurp? func & args]
+  [req slurp? func & args]
   (let [req     (pre-process-request req :slurp? slurp?)
         get-arg (fn [arg] (if (keyword? arg) (get req arg) arg))
         argv    (mapv get-arg args)]
-    (ce/trap uri #(apply func argv))))
+    (apply func argv)))
 
 (defn controller
   [req func & args]

@@ -4,7 +4,6 @@
         [donkey.util])
   (:require [donkey.util.config :as config]
             [donkey.services.admin :as admin]
-            [clojure-commons.error-codes :as ce]
             [clojure.tools.logging :as log]))
 
 (defn secured-admin-routes
@@ -13,8 +12,8 @@
   (optional-routes
     [config/admin-routes-enabled]
 
-    (GET "/admin/config" [:as {:keys [uri] :as req}]
-         (ce/trap uri #(admin/config)))
+    (GET "/admin/config" []
+         (admin/config))
 
-    (GET "/admin/status" [:as {:keys [uri] :as req}]
-         (ce/trap uri #(admin/status req)))))
+    (GET "/admin/status" [:as req]
+         (admin/status req))))

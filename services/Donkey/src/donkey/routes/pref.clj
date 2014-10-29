@@ -10,20 +10,20 @@
   (optional-routes
    [config/pref-routes-enabled]
 
-   (GET "/preferences" [:as {:keys [uri]}]
-        (ce/trap uri do-get-prefs))
+   (GET "/preferences" []
+        (do-get-prefs))
 
-   (POST "/preferences" [:as {:keys [uri body]}]
-         (ce/trap uri #(do-post-prefs (slurp body))))
+   (POST "/preferences" [:as {body :body}]
+         (do-post-prefs (slurp body)))
 
-   (DELETE "/preferences" [:as {:keys [uri]}]
-           (ce/trap uri remove-prefs))
+   (DELETE "/preferences" []
+           (remove-prefs))
 
-   #_(GET "/search-history" [:as {:keys [uri]}]
-        (ce/trap uri search-history))
+   #_(GET "/search-history" []
+        (search-history))
 
-   #_(POST "/search-history" [:as {:keys [uri body]}]
-         (ce/trap uri #(search-history (slurp body))))
+   #_(POST "/search-history" [:as {body :body}]
+         (search-history (slurp body)))
 
-   #_(DELETE "/search-history" [:as {:keys [uri]}]
-           (ce/trap uri clear-search-history))))
+   #_(DELETE "/search-history" []
+           (clear-search-history))))
