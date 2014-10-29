@@ -71,11 +71,11 @@
   (let [req     (pre-process-request req :slurp? slurp?)
         get-arg (fn [arg] (if (keyword? arg) (get req arg) arg))
         argv    (mapv get-arg args)]
-    (apply func argv)))
+    (determine-response (apply func argv))))
 
 (defn controller
   [req func & args]
   (let [p (if (contains? (set args) :body)
             (partial ctlr req true func)
             (partial ctlr req false func))]
-      (apply p args)))
+    (apply p args)))
