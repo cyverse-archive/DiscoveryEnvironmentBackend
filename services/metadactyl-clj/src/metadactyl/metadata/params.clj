@@ -66,6 +66,7 @@
               [:p.label         :label]
               [:p.is_visible    :is_visible]
               [:p.omit_if_blank :omit_if_blank]
+              [:p.ordering      :order]
               [:t.name          :type])))
 
 (defn get-default-value
