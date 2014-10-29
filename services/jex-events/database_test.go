@@ -30,7 +30,7 @@ func TestNewDatabaser(t *testing.T) {
 	}
 }
 
-func TestInsertGetDeleteRecord(t *testing.T) {
+func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 	connString := ConnString()
 	d, err := NewDatabaser(connString)
 	if err != nil {
@@ -100,7 +100,14 @@ func TestInsertGetDeleteRecord(t *testing.T) {
 	if newJR.ID != newUUID {
 		t.Errorf("IDs didn't match")
 	}
-
+	newJR.DateCompleted = time.Now()
+	updated, err := d.UpdateJob(newJR)
+	if err != nil {
+		t.Error(err)
+	}
+	if updated.DateCompleted.Format(time.RFC822Z) != newJR.DateCompleted.Format(time.RFC822Z) {
+		t.Errorf("Updated date completed fields don't match")
+	}
 	err = d.DeleteJob(newUUID)
 	if err != nil {
 		t.Error(err)

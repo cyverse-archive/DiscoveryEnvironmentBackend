@@ -177,3 +177,53 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	}
 	return &jr, err
 }
+
+// UpdateJob updates a job instance in the database
+func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
+	query := `
+	UPDATE jobs
+	   SET batch_id = cast($1 as uuid),
+		     submitter = $2,
+				 date_submitted = $3,
+				 date_started = $4,
+				 date_completed = $5,
+				 app_id = cast($6 as uuid),
+				 command_line = $7,
+				 env_variables = $8,
+				 exit_code = $9,
+				 failure_threshold = $10,
+				 failure_count = $11
+	 WHERE id = cast($12 as uuid)
+	 RETURNING id
+	`
+	var id string
+	var batchid *string
+	if jr.BatchID == "" {
+		batchid = nil
+	} else {
+		batchid = &jr.BatchID
+	}
+	err := d.db.QueryRow(
+		query,
+		batchid,
+		jr.Submitter,
+		jr.DateSubmitted,
+		jr.DateStarted,
+		jr.DateCompleted,
+		jr.AppID,
+		jr.CommandLine,
+		jr.EnvVariables,
+		jr.ExitCode,
+		jr.FailureThreshold,
+		jr.FailureCount,
+		jr.ID,
+	).Scan(&id)
+	if err != nil {
+		return nil, err
+	}
+	updated, err := d.GetJob(id)
+	if err != nil {
+		return updated, err
+	}
+	return updated, nil
+}
