@@ -15,12 +15,6 @@
   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
        (throw+ '("run-experiment" body workspace-id)))
 
-  (GET "/reference-genomes" []
-       (throw+ '("list-reference-genomes")))
-
-  (PUT "/reference-genomes" [:as {body :body}]
-       (throw+ '("replace-reference-genomes" (slurp body))))
-
   (route/not-found (unrecognized-path-response)))
 
 (defroutes* metadactyl-routes

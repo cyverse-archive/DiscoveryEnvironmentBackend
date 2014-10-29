@@ -1,8 +1,10 @@
 (ns metadactyl.routes.admin
   (:use [metadactyl.app-categorization :only [categorize-apps]]
+        [metadactyl.metadata.reference-genomes :only [replace-reference-genomes]]
         [metadactyl.metadata.tool-requests]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.category]
+        [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
         [metadactyl.service.app-metadata :only [permanently-delete-apps]]
@@ -68,3 +70,13 @@
          :notes "This service physically removes an App from the database, which allows
          administrators to completely remove Apps that are causing problems."
          (ce/trap uri #(permanently-delete-apps body))))
+
+(defroutes* reference-genomes
+  (PUT* "/" [:as {uri :uri}]
+            :query [params SecuredQueryParams]
+            :body [body (describe ReferenceGenomesSetRequest "List of Reference Genomes to set.")]
+            :return ReferenceGenomesList
+            :summary "Replace Reference Genomes."
+            :notes "This endpoint replaces ALL the Reference Genomes in the Discovery Environment,
+            so if a genome is not listed in the request, it will not show up in the DE."
+            (ce/trap uri #(replace-reference-genomes body))))

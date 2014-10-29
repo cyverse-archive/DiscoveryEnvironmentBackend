@@ -112,6 +112,17 @@
    (POST "/analyses" [:as {body :body}]
          (apps/submit-job body))))
 
+(defn reference-genomes-routes
+  []
+  (optional-routes
+    [config/app-routes-enabled]
+
+    (PUT "/admin/reference-genomes" [:as req]
+         (replace-reference-genomes req))
+
+    (GET "/reference-genomes" [:as req]
+         (list-reference-genomes req))))
+
 (defn tool-routes
   []
   (optional-routes
@@ -178,12 +189,6 @@
 
    (POST "/default-output-dir" [:as {body :body}]
          (reset-default-output-dir body))
-
-   (GET "/reference-genomes" [:as req]
-        (list-reference-genomes req))
-
-   (PUT "/reference-genomes" [:as req]
-        (replace-reference-genomes req))
 
    (PUT "/feedback" [:as {body :body}]
         (provide-user-feedback body))))

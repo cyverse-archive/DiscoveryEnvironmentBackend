@@ -20,4 +20,3 @@ Request and response bodies are in JSON format unless otherwise noted.
     * [Updated App Administration Services](endpoints/app-metadata/updated-admin.md)
 * [App Execution Endpoints](endpoints/app-execution.md)
 * [Collaborator List Management Endpoints](endpoints/collaborators.md)
-* [Reference Genome Endpoints](endpoints/reference-genomes.md)

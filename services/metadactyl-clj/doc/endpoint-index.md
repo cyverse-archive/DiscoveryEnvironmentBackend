@@ -10,6 +10,4 @@
 * [POST /preview-template](endpoints/app-metadata/admin.md#previewing-templates)
 * [POST /preview-workflow](endpoints/app-metadata/admin.md#previewing-analyses)
 * [GET /secured/app/{app-id}](endpoints/app-metadata/updated-admin.md#obtaining-app-information-for-job-submission)
-* [GET /secured/reference-genomes](endpoints/reference-genomes.md#exporting-reference-genomes)
-* [PUT /secured/reference-genomes](endpoints/reference-genomes.md#importing-reference-genomes)
 * [GET /validate-analysis-for-pipelines/{analysis-id}](endpoints/app-metadata/validation.md#validating-analyses-for-pipelines)
