@@ -15,6 +15,7 @@
   :manifest {"Git-Ref" ~(git-ref)}
   :main porklock.core
   :aot [porklock.core]
+  :uberjar-name "porklock-standalone.jar"
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]

@@ -22,4 +22,3 @@
 (defmethod uuidify :default
   [uuid]
   nil)
-

@@ -9,6 +9,7 @@ BINNAME=porklock
 BUILDDIR=$BINNAME-build
 BINDIR=/usr/local/lib/$BINNAME
 LOGDIR=/var/log/$BINNAME
+PATHBIN=/usr/local/bin
 
 VERSION=$(cat version | sed -e 's/^ *//' -e 's/ *$//')
 if [ -d "$BUILDDIR" ]; then
@@ -16,8 +17,11 @@ if [ -d "$BUILDDIR" ]; then
 fi
 mkdir -p $BUILDDIR/$BINDIR
 mkdir -p $BUILDDIR/$LOGDIR
+mkdir -p $BUILDDIR/$PATHBIN
 lein clean
 lein deps
 lein uberjar
-cp target/$BINNAME-*-standalone.jar $BUILDDIR/$BINDIR
+cp curl_wrapper.pl $BUILDDIR/$PATHBIN
+cp porklock $BUILDDIR/$PATHBIN
+cp target/$BINNAME-standalone.jar $BUILDDIR/$BINDIR
 fpm -s dir -t rpm --directories $LOGDIR -d java-1.7.0-openjdk --version $VERSION --iteration $ITERATION --epoch 0 --prefix / --name $BINNAME --verbose -C $BUILDDIR --rpm-user $USER --rpm-group $GROUP -f .

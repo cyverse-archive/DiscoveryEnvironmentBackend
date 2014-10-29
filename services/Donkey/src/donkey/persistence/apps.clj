@@ -2,6 +2,7 @@
   "Functions for storing and retrieving information about apps that can be executed
    within the DE, excluding external apps such as Agave apps."
   (:use [kameleon.entities :only [app_listing]]
+        [kameleon.uuids :only [uuidify]]
         [korma.core]
         [korma.db :only [with-db]])
   (:require [donkey.util.db :as db]))
@@ -10,7 +11,7 @@
   [app-ids]
   (with-db db/de
     (select app_listing
-            (where {:id [in app-ids]}))))
+            (where {:id [in (map uuidify app-ids)]}))))
 
 (defn- default-value-subselect
   []
@@ -53,7 +54,7 @@
                   {:df.id :fp.data_format})
             (join :info_type
                   {:info_type.id :fp.info_type})
-            (where {:app.id app-id}))))
+            (where {:app.id (uuidify app-id)}))))
 
 (defn get-default-output-name
   [task-id parameter-id]
@@ -79,13 +80,13 @@
             (fields [:s.id              :step_id]
                     [:t.tool_id         :tool_id]
                     [:t.external_app_id :external_app_id])
-            (where {:a.id app-id}))))
+            (where {:a.id (uuidify app-id)}))))
 
 (defn load-app-info
   [app-id]
   (first
    (with-db db/de
-     (select [:apps :a] (where {:id app-id})))))
+     (select [:apps :a] (where {:id (uuidify app-id)})))))
 
 (defn- mapping-base-query
   []
@@ -108,4 +109,4 @@
   [app-id]
   (with-db db/de
     (select (mapping-base-query)
-            (where {:wim.app_id app-id}))))
+            (where {:wim.app_id (uuidify app-id)}))))

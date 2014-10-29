@@ -10,11 +10,11 @@
   (optional-routes
    [config/session-routes-enabled]
 
-   (GET "/sessions" [:as {:keys [uri]}]
-        (ce/trap uri user-session))
+   (GET "/sessions" []
+        (user-session))
 
-   (POST "/sessions" [:as {:keys [uri body]}]
-         (ce/trap uri #(user-session (slurp body))))
+   (POST "/sessions" [:as {body :body}]
+         (user-session (slurp body)))
 
-   (DELETE "/sessions" [:as {:keys [uri]}]
-           (ce/trap uri remove-session))))
+   (DELETE "/sessions" []
+           (remove-session))))
