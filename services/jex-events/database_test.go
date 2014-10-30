@@ -418,6 +418,35 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	retLJ, err := d.GetLastCondorJobEvent(lj.JobID)
+	if err != nil {
+		t.Error(err)
+	}
+	if retLJ.JobID != lj.JobID {
+		t.Errorf("JobIDs don't match")
+	}
+	if retLJ.CondorJobEventID != lj.CondorJobEventID {
+		t.Errorf("CondorJobEventIDs don't match")
+	}
+	newcje := &CondorJobEvent{
+		JobID:            jr.ID,
+		CondorEventID:    ce.ID,
+		CondorRawEventID: cr.ID,
+		DateTriggered:    time.Now(),
+	}
+	newJobEventUUID, err := d.InsertCondorJobEvent(newcje)
+	if err != nil {
+		t.Error(err)
+	}
+	newcje.ID = newJobEventUUID
+	lj.CondorJobEventID = newcje.ID
+	updatedLJ, err := d.UpdateLastCondorJobEvent(lj)
+	if updatedLJ.JobID != lj.JobID {
+		t.Errorf("JobIDs don't match after update")
+	}
+	if updatedLJ.CondorJobEventID != lj.CondorJobEventID {
+		t.Errorf("CondorJobEventIDs don't match")
+	}
 	err = d.DeleteLastCondorJobEvent(lj.JobID)
 	if err != nil {
 		t.Error(err)
