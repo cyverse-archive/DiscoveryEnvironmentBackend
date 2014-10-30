@@ -142,7 +142,7 @@
   [app-id]
   (let [app (amp/get-app app-id)
         fav-category-id (get-favorite-category-id)]
-    (add-app-to-category fav-category-id app-id))
+    (add-app-to-category app-id fav-category-id))
   nil)
 
 (defn remove-app-favorite
@@ -150,7 +150,7 @@
   [app-id]
   (let [app (amp/get-app app-id)
         fav-category-id (get-favorite-category-id)]
-  (remove-app-from-category fav-category-id app-id))
+  (remove-app-from-category app-id fav-category-id))
   nil)
 
 (defn- publish-app
@@ -160,7 +160,7 @@
     (amp/set-app-references app-id references)
     (amp/set-app-suggested-categories app-id categories)
     (decategorize-app app-id)
-    (add-app-to-category (uuidify (workspace-beta-app-category-id)) app-id))
+    (add-app-to-category app-id (uuidify (workspace-beta-app-category-id))))
   nil)
 
 (defn make-app-public

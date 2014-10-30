@@ -102,22 +102,22 @@
 
 (defn app-in-category?
   "Determines whether or not an app is in an app category."
-  [category-id app-id]
+  [app-id category-id]
   (not (empty? (first (select :app_category_app
                               (where {:app_category_id category-id
                                       :app_id          app-id}))))))
 
 (defn add-app-to-category
   "Adds an app to an app category."
-  [category-id app-id]
-  (when-not (app-in-category? category-id app-id)
+  [app-id category-id]
+  (when-not (app-in-category? app-id category-id)
     (insert :app_category_app
             (values {:app_category_id category-id
                      :app_id          app-id}))))
 
 (defn remove-app-from-category
   "Removes an app from an app category."
-  [category-id app-id]
+  [app-id category-id]
   (delete :app_category_app
     (where {:app_category_id category-id
             :app_id          app-id})))

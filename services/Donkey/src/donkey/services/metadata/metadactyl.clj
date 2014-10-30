@@ -101,18 +101,6 @@
         req (metadactyl-request req)]
     (forward-post url req)))
 
-(defn get-app-categories
-  "A service used to get a list of app categories."
-  [req category-set]
-  (let [url (build-metadactyl-unprotected-url req "get-analysis-categories" category-set)]
-    (forward-get url req)))
-
-(defn add-app-to-group
-  "A service used to add an existing app to an app group."
-  [req]
-  (let [url (build-metadactyl-unprotected-url req "add-analysis-to-group")]
-    (forward-post url req)))
-
 (defn get-app
   "A service used to get an app in the format required by the DE."
   [req app-id]

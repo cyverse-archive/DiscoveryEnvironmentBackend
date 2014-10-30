@@ -201,12 +201,6 @@
   (optional-routes
    [config/app-routes-enabled]
 
-   (GET "/get-analysis-categories/:category-set" [category-set :as req]
-        (get-app-categories req category-set))
-
-   (POST "/add-analysis-to-group" [:as req]
-         (add-app-to-group req))
-
    (GET "/get-analysis/:app-id" [app-id :as req]
         (get-app req app-id))
 
