@@ -353,7 +353,7 @@ type CondorRawEvent struct {
 // InsertCondorRawEvent adds an unparsed event record to the database.
 func (d *Databaser) InsertCondorRawEvent(re *CondorRawEvent) (string, error) {
 	query := `
-	INSERT INTO condor_raw_event (
+	INSERT INTO condor_raw_events (
 		job_id,
 		event_text,
 		date_triggered
@@ -379,7 +379,7 @@ func (d *Databaser) InsertCondorRawEvent(re *CondorRawEvent) (string, error) {
 // DeleteCondorRawEvent removes an unparsed job event from the database.
 func (d *Databaser) DeleteCondorRawEvent(uuid string) error {
 	query := `
-	DELETE FROM condor_raw_event WHERE id = cast($1 as uuid)
+	DELETE FROM condor_raw_events WHERE id = cast($1 as uuid)
 	`
 	_, err := d.db.Exec(query, uuid)
 	if err != nil {
@@ -395,7 +395,7 @@ func (d *Databaser) GetCondorRawEvent(uuid string) (*CondorRawEvent, error) {
 	       job_id,
 				 event_text,
 				 date_triggered
-	  FROM condor_raw_event
+	  FROM condor_raw_events
 	 WHERE id = cast($1 as uuid)
 	`
 	var id string
@@ -436,6 +436,7 @@ func (d *Databaser) UpdateCondorRawEvent(re *CondorRawEvent) (*CondorRawEvent, e
 		re.JobID,
 		re.EventText,
 		re.DateTriggered,
+		re.ID,
 	).Scan(&id)
 	if err != nil {
 		return nil, err

@@ -164,3 +164,80 @@ func TestCRUDCondorEvents(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestCRUDCondorRawEvents(t *testing.T) {
+	connString := ConnString()
+	d, err := NewDatabaser(connString)
+	if err != nil {
+		t.Error(err)
+	}
+	defer d.db.Close()
+	submitted := time.Now()
+	started := time.Now()
+	completed := time.Now()
+	jr := &JobRecord{
+		BatchID:       "",
+		Submitter:     "unit_tests",
+		DateSubmitted: submitted,
+		DateStarted:   started,
+		DateCompleted: completed,
+		AppID:         uuid.New(),
+		CommandLine:   "this --is -a --test",
+		EnvVariables:  "TEST=true",
+	}
+	newUUID, err := d.InsertJob(jr)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	if newUUID == "" {
+		t.Errorf("InsertJob returned an empty UUID.")
+		t.Fail()
+	}
+	jr.ID = newUUID
+
+	ce := &CondorRawEvent{
+		JobID:         jr.ID,
+		EventText:     "this is a unit test event",
+		DateTriggered: time.Now(),
+	}
+	rawEventID, err := d.InsertCondorRawEvent(ce)
+	if err != nil {
+		t.Error(err)
+	}
+	ce.ID = rawEventID
+	rawEvent, err := d.GetCondorRawEvent(rawEventID)
+	if err != nil {
+		t.Error(err)
+	}
+	if rawEvent.EventText != ce.EventText {
+		t.Errorf("EventTexts don't match")
+	}
+	if rawEvent.DateTriggered.Format(time.RFC822Z) != ce.DateTriggered.Format(time.RFC822Z) {
+		t.Errorf("EventDescs don't match")
+	}
+	if rawEvent.JobID != ce.JobID {
+		t.Errorf("JobIDs don't match")
+	}
+	ce.EventText = "another unit test text"
+	updated, err := d.UpdateCondorRawEvent(ce)
+	if err != nil {
+		t.Error(err)
+	}
+	if updated.EventText != ce.EventText {
+		t.Errorf("EventTexts don't match after update")
+	}
+	if updated.DateTriggered.Format(time.RFC822Z) != ce.DateTriggered.Format(time.RFC822Z) {
+		t.Errorf("EventDescs don't match after update")
+	}
+	if updated.JobID != ce.JobID {
+		t.Errorf("JobIDs don't match after update")
+	}
+	if updated.ID != ce.ID {
+		t.Errorf("IDs don't match after update")
+	}
+	err = d.DeleteCondorRawEvent(rawEventID)
+	if err != nil {
+		t.Error(err)
+	}
+}
