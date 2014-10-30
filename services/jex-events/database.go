@@ -292,7 +292,7 @@ func (d *Databaser) GetCondorEvent(uuid string) (*CondorEvent, error) {
 	var eventDesc string
 	err := d.db.QueryRow(
 		query,
-		id,
+		uuid,
 	).Scan(
 		&id,
 		&eventNumber,
@@ -329,6 +329,7 @@ func (d *Databaser) UpdateCondorEvent(ce *CondorEvent) (*CondorEvent, error) {
 		ce.EventNumber,
 		ce.EventName,
 		ce.EventDesc,
+		ce.ID,
 	).Scan(&id)
 	if err != nil {
 		return nil, err
@@ -775,6 +776,41 @@ func (d *Databaser) UpdateCondorJobStopRequest(jr *CondorJobStopRequest) (*Condo
 type CondorJobDep struct {
 	SuccessorID   string
 	PredecessorID string
+}
+
+// InsertCondorJobDep adds a job dependency to the database.
+func (d *Databaser) InsertCondorJobDep(jd *CondorJobDep) (string, error) {
+	query := `
+	INSERT INTO condor_job_deps (
+		successor_id,
+		predecessor_id
+	) VALUES (
+		cast($1 as uuid),
+		cast($2 as uuid)
+	) RETURNING id
+	`
+	var id string
+	err := d.db.QueryRow(
+		query,
+		jd.SuccessorID,
+		jd.PredecessorID,
+	).Scan(&id)
+	if err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
+// DeleteCondorJobDep removes a job dependency from the database.
+func (d *Databaser) DeleteCondorJobDep(predUUID, succUUID string) error {
+	query := `
+	DELETE FROM condor_job_deps WHERE successor_id = cast($1 as uuid) AND predecessor_id = cast($2 as uuid)
+	`
+	_, err := d.db.Exec(query, succUUID, predUUID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Version contains info about the version of the database in use.

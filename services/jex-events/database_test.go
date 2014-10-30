@@ -114,3 +114,53 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestCRUDCondorEvents(t *testing.T) {
+	connString := ConnString()
+	d, err := NewDatabaser(connString)
+	if err != nil {
+		t.Error(err)
+	}
+	defer d.db.Close()
+	ce := &CondorEvent{
+		EventNumber: 9001,
+		EventName:   "test_event",
+		EventDesc:   "event for unit tests",
+	}
+	newUUID, err := d.InsertCondorEvent(ce)
+	if err != nil {
+		t.Error(err)
+	}
+	ce.ID = newUUID
+	getCE, err := d.GetCondorEvent(newUUID)
+	if err != nil {
+		t.Error(err)
+	}
+	if getCE.EventNumber != ce.EventNumber {
+		t.Errorf("EventNumbers don't match")
+	}
+	if getCE.EventName != ce.EventName {
+		t.Errorf("EventNames don't match")
+	}
+	if getCE.EventDesc != ce.EventDesc {
+		t.Errorf("EventDescs don't match")
+	}
+	ce.EventNumber = 9002
+	updated, err := d.UpdateCondorEvent(ce)
+	if err != nil {
+		t.Error(err)
+	}
+	if updated.EventNumber != ce.EventNumber {
+		t.Errorf("EventNumbers don't match after update")
+	}
+	if updated.EventName != ce.EventName {
+		t.Errorf("EventNames don't match after update")
+	}
+	if updated.EventDesc != ce.EventDesc {
+		t.Errorf("EventDescs don't match after update")
+	}
+	err = d.DeleteCondorEvent(updated.ID)
+	if err != nil {
+		t.Error(err)
+	}
+}
