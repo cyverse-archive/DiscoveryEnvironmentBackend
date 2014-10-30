@@ -221,3 +221,20 @@
    (generate-extra-arg 1 "--jobName=" job-name :job-name)
    (generate-extra-arg 1 "--archive" "" :archive)
    (generate-extra-arg 1 "--archivePath=" (remove-irods-home output-dir) :archive-path)])
+
+(defprotocol ParamFormatter
+  "A protocol for formatting parameters in JEX job requests."
+  (buildParams [_ config io-maps outputs defaults params]))
+
+(deftype DeParamFormatter []
+  ParamFormatter
+
+  (buildParams [_ submission io-maps outputs defaults params]
+    (build-params (:config submission) io-maps outputs defaults params)))
+
+(deftype FapiParamFormatter [user]
+  ParamFormatter
+
+  (buildParams [_ submission io-maps outputs defaults params]
+    (concat (build-extra-fapi-args user (:name submission) (:output_dir submission))
+            (build-params (:config submission) io-maps outputs defaults params))))

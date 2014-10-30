@@ -46,3 +46,7 @@
 (defn executable?
   [component-type]
   (= component-type "executable"))
+
+(defn fapi-app?
+  [{job-type :overall_job_type}]
+  (= job-type "fAPI"))
