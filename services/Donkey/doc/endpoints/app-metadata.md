@@ -5,7 +5,6 @@
     * [Searching for Tools](#searching-for-tools)
     * [Listing App Identifiers](#listing-app-identifiers)
     * [Deleting Categories](#deleting-categories)
-    * [Valiating Analyses for Pipelines](#valiating-analyses-for-pipelines)
     * [Listing Tasks in an App](#listing-tasks-in-an-app)
     * [Categorizing Apps](#categorizing-apps)
     * [Listing Analysis Categorizations](#listing-analysis-categorizations)
@@ -18,8 +17,6 @@
     * [Get a Tool by ID](#get-a-tool-by-id)
     * [Permanently Deleting an App](#permanently-deleting-an-app)
     * [Logically Deleting Apps](#logically-deleting-apps)
-    * [Previewing Templates](#previewing-templates)
-    * [Previewing Analyses](#previewing-analyses)
     * [Updating a Single-Step App](#updating-a-single-step-app)
     * [Creating a Pipeline](#creating-a-pipeline)
     * [Updating a Pipeline](#updating-a-pipeline)
@@ -86,15 +83,6 @@ Delegates to metadactyl: POST /admin/apps/categories/shredder
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
-
-## Valiating Analyses for Pipelines
-
-Unsecured Endpoint: GET /validate-analysis-for-pipelines/{analysis-id}
-
-Delegates to metadactyl: GET /validate-analysis-for-pipelines/{analysis-id}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
 
 ## Listing Tasks in an App
 
@@ -313,24 +301,6 @@ Delegates to metadactyl: POST /apps/shredder
 
 These endpoints are passthroughs to their corresponding metadactyl endpoint.
 Please see the metadactyl documentation for more information.
-
-## Previewing Templates
-
-Unsecured Endpoint: POST /preview-template
-
-Delegates to metadactyl: POST /preview-template
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Previewing Analyses
-
-Unsecured Endpoint: POST /preview-workflow
-
-Delegates to metadactyl: POST /preview-workflow
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
 
 ## Updating a Single-Step App
 

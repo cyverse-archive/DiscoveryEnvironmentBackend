@@ -45,8 +45,6 @@
 * [GET /export-workflow/{analysis-id}](endpoints/app-metadata.md#exporting-an-analysis)
 * [POST /fileio/upload](endpoints/fileio.md#uploading)
 * [GET /get-analysis-categories/{category-set}](endpoints/app-metadata.md#listing-analysis-categorizations)
-* [POST /preview-template](endpoints/app-metadata.md#previewing-templates)
-* [POST /preview-workflow](endpoints/app-metadata.md#previewing-analyses)
 * [GET /reference-genomes](endpoints/reference-genomes.md#exporting-reference-genomes)
 * [GET /secured/admin/config](endpoints/admin.md#listing-the-config-for-donkey-)
 * [GET /secured/admin/status](endpoints/admin.md#status-check-)
@@ -186,4 +184,3 @@
 * [GET /tool-requests/status-codes](endpoints/app-metadata.md#listing-tool-request-status-codes)
 * [POST /tree-viewer-urls](endpoints/tree-viewing.md#obtaining-tree-viewer-urls-for-a-post-body)
 * [GET /uuid](endpoints/misc.md#obtaining-identifiers)
-* [GET /validate-analysis-for-pipelines/{analysis-id}](endpoints/app-metadata.md#valiating-analyses-for-pipelines)

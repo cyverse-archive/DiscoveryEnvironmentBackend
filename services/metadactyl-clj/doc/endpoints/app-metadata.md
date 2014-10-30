@@ -3,8 +3,5 @@
 ## Documentation Links
 
 * [App Categorization Services](app-metadata/categorization.md)
-* [App Validation Services](app-metadata/validation.md)
-* [App Information Services](app-metadata/information.md)
 * [App Administration Services](app-metadata/admin.md)
-* [Tool Request Services](app-metadata/tool-requests.md)
 * [Updated App Administration Services](app-metadata/updated-admin.md)

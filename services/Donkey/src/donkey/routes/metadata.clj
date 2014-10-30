@@ -201,9 +201,6 @@
   (optional-routes
    [config/app-routes-enabled]
 
-   (GET "/validate-analysis-for-pipelines/:app-id" [app-id :as req]
-        (validate-app-for-pipelines req app-id))
-
    (GET "/get-analysis-categories/:category-set" [category-set :as req]
         (get-app-categories req category-set))
 
@@ -214,10 +211,4 @@
         (get-app req app-id))
 
    (GET "/export-workflow/:app-id" [app-id :as req]
-        (export-workflow req app-id))
-
-   (POST "/preview-template" [:as req]
-         (preview-template req))
-
-   (POST "/preview-workflow" [:as req]
-         (preview-workflow req))))
+        (export-workflow req app-id))))
