@@ -5,8 +5,12 @@
         [kameleon.queries :only [get-user-id]]
         [korma.core]
         [korma.db]
+        [metadactyl.user :only [current-user]]
         [metadactyl.util.conversions :only [date->long long->timestamp]]
+        [metadactyl.util.service :only [success-response]]
         [slingshot.slingshot :only [throw+]])
+  (:require [clojure-commons.error-codes :as error-codes]
+            [clojure.tools.logging :as log])
   (:import [java.sql Timestamp]))
 
 (defn- format-reference-genome
@@ -20,7 +24,7 @@
   "The base query used to list reference genomes."
   []
   (-> (select* genome_reference)
-      (fields :uuid :name :path :deleted :created_on :last_modified_on
+      (fields :id :name :path :deleted :created_on :last_modified_on
               [:created_by.username :created_by]
               [:last_modified_by.username :last_modified_by])
       (join created_by)
@@ -35,8 +39,16 @@
              (where {:uuid [in uuids]}))
      (select (reference-genome-base-query)))))
 
+(defn list-reference-genomes
+  "Lists the reference genomes in the database."
+  []
+  (success-response {:genomes (get-reference-genomes)}))
+
+(def ^:private valid-insert-fields
+  [:id :name :path :deleted :created_by :created_on :last_modified_by :last_modified_on])
+
 (def ^:prvate required-fields
-  [:uuid :name :path :created_by :last_modified_by])
+  [:name :path :created_by :last_modified_by])
 
 (def ^:private username-fields
   [:created_by :last_modified_by])
@@ -44,26 +56,19 @@
 (defn- validate-field
   "Validates a single field in a reference genome."
   [genome field]
-  (when (nil? (genome field))
-    (throw+ {:action ::insert_reference_genome
-             :type   ::missing_required_field
-             :genome genome
-             :field  field}))
   (when (blank? (genome field))
-    (throw+ {:action ::insert_reference_genome
-             :type   ::empty_required_field
-             :genome genome
-             :field  field})))
+    (throw+ {:error_code error-codes/ERR_BAD_OR_MISSING_FIELD
+             field "empty required field"
+             :genome genome})))
 
 (defn- validate-username
   "Validates a username field in a reference genome."
   [genome field]
   (let [username (genome field)]
     (when-not (or (= "<public>" username) (re-find #"@" username))
-      (throw+ {:action ::insert_reference_genome
-               :type   ::username_not_fully_qualified
-               :genome genome
-               :field  field}))))
+      (throw+ {:error_code error-codes/ERR_BAD_OR_MISSING_FIELD
+               field "username not fully qualified"
+               :genome genome}))))
 
 (defn- validate-reference-genome
   "Validates a reference genome for the reference genome replacement service."
@@ -72,28 +77,16 @@
   (dorun (map #(validate-username genome %) username-fields))
   genome)
 
-(defn- get-user-ids
-  "Gets the user IDs for the provided usernames."
-  [genome]
-  (assoc genome
-    :created_by       (get-user-id (:created_by genome))
-    :last_modified_by (get-user-id (:last_modified_by genome))))
-
-(defn- parse-timestamps
-  "Parses the timestamps in a reference genome."
-  [genome]
+(defn- format-valid-genome-fields
+  "Formats the valid reference genome fields for insertion into the database."
+  [{:keys [created_by last_modified_by created_on last_modified_on] :as genome}]
   (let [now (Timestamp. (System/currentTimeMillis))]
-    (assoc genome
-      :created_on       (or (long->timestamp (:created_on genome)) now)
-      :last_modified_on (or (long->timestamp (:last_modified_on genome)) now))))
-
-(defn- extract-known-fields
-  "Extracts only the fields that we know about from a reference genome
-   definition."
-  [genome]
-  (let [known-fields #{:uuid :name :path :deleted :created_by :created_on
-                       :last_modified_by :last_modified_on}]
-    (into {} (filter #(known-fields (key %)) genome))))
+    (-> genome
+        (select-keys valid-insert-fields)
+        (assoc :created_by       (get-user-id created_by)
+               :last_modified_by (get-user-id last_modified_by)
+               :created_on       (or (long->timestamp created_on) now)
+               :last_modified_on (or (long->timestamp last_modified_on) now)))))
 
 (defn- parse-reference-genome
   "Parses a reference genome for the reference genome replacement service.  The
@@ -101,10 +94,8 @@
    reference table."
   [genome]
   (-> genome
-      extract-known-fields
       validate-reference-genome
-      get-user-ids
-      parse-timestamps))
+      format-valid-genome-fields))
 
 (defn put-reference-genomes
   "Replaces the existing reference genomes in the database."
@@ -113,3 +104,10 @@
    (exec-raw "TRUNCATE genome_reference")
    (insert genome_reference
            (values (map parse-reference-genome genomes)))))
+
+(defn replace-reference-genomes
+  "Replaces the reference genomes in the database with a new set of reference genomes."
+  [body]
+  (log/warn (:username current-user) "replacing reference genomes")
+  (put-reference-genomes (:genomes body))
+  (list-reference-genomes))

@@ -83,7 +83,8 @@
 (defn delete-categories
   "A service used to delete app categories."
   [req]
-  (let [url (build-metadactyl-unprotected-url req "delete-categories")]
+  (let [url (metadactyl-url {} "admin" "apps" "categories" "shredder")
+        req (metadactyl-request req)]
     (forward-post url req)))
 
 (defn validate-app-for-pipelines
@@ -427,14 +428,14 @@
 (defn list-reference-genomes
   "Lists the reference genomes in the database."
   [req]
-  (let [url (build-metadactyl-secured-url req "reference-genomes")]
-    (forward-get url req)))
+  (client/get (metadactyl-url {} "reference-genomes")
+              {:as :stream}))
 
 (defn replace-reference-genomes
-  "Replaces the reference genomes in the database with a new set of reference
-   genomes."
+  "Replaces the reference genomes in the database with a new set of reference genomes."
   [req]
-  (let [url (build-metadactyl-secured-url req "reference-genomes")]
+  (let [url (metadactyl-url {} "admin" "reference-genomes")
+        req (metadactyl-request req)]
     (forward-put url req)))
 
 (defn- extract-uploaded-path

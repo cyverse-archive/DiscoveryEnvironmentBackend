@@ -4,6 +4,8 @@
         [clojure-commons.validators]
         [kameleon.app-groups :only [add-app-to-category
                                     decategorize-app
+                                    delete-app-category
+                                    get-app-category
                                     get-app-subcategory-id
                                     remove-app-from-category]]
         [kameleon.queries :only [get-existing-user-id]]
@@ -176,3 +178,25 @@
   [app-id]
   (->> (amp/get-app app-id)
        (success-response)))
+
+(defn- delete-valid-app-category
+  [category-id]
+  (let [category (get-app-category category-id)]
+    (if category
+      (do
+        (delete-app-category category-id)
+        (log/warn (:username current-user)
+                  "deleting category"
+                  (:name category)
+                  "(" category-id ")"
+                  "and all of its subcategoires"))
+      category-id)))
+
+(defn delete-categories
+  "Deletes App Categories and all of their subcategories. Returns a list of category IDs that could
+  not (or no longer) be found in the database, including subcategories of a category already deleted
+  earlier in the list."
+  [body]
+  (transaction
+    (let [failed-ids (remove nil? (map delete-valid-app-category (:category_ids body)))]
+      (success-response {:category_ids failed-ids}))))

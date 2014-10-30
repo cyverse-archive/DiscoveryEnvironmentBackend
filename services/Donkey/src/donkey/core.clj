@@ -53,6 +53,7 @@
     (app-category-routes)
     (apps-routes)
     (analysis-routes)
+    (reference-genomes-routes)
     (tool-routes)))
 
 (defn secured-routes

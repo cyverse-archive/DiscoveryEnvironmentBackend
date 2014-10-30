@@ -30,6 +30,9 @@
 (defschema AppCategoryListing
   {:categories (describe [AppCategory] "A listing of App Categories visisble to the requesting user")})
 
+(defschema AppCategoryIdList
+  {:category_ids (describe [UUID] "A List of UUIDs used to identify App Categories")})
+
 (defschema AppCategoryAppListing
   (merge (dissoc AppCategory :categories)
          {:apps (describe [AppListingDetail] "A listing of Apps under this Category")}))

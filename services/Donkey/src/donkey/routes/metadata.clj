@@ -26,6 +26,9 @@
     (POST "/admin/apps" [:as req]
           (categorize-apps req))
 
+    (POST "/admin/apps/categories/shredder" [:as req]
+          (delete-categories req))
+
     (POST "/admin/apps/shredder" [:as req]
           (permanently-delete-apps req))
 
@@ -112,6 +115,17 @@
    (POST "/analyses" [:as {body :body}]
          (apps/submit-job body))))
 
+(defn reference-genomes-routes
+  []
+  (optional-routes
+    [config/app-routes-enabled]
+
+    (PUT "/admin/reference-genomes" [:as req]
+         (replace-reference-genomes req))
+
+    (GET "/reference-genomes" [:as req]
+         (list-reference-genomes req))))
+
 (defn tool-routes
   []
   (optional-routes
@@ -179,12 +193,6 @@
    (POST "/default-output-dir" [:as {body :body}]
          (reset-default-output-dir body))
 
-   (GET "/reference-genomes" [:as req]
-        (list-reference-genomes req))
-
-   (PUT "/reference-genomes" [:as req]
-        (replace-reference-genomes req))
-
    (PUT "/feedback" [:as {body :body}]
         (provide-user-feedback body))))
 
@@ -192,12 +200,6 @@
   []
   (optional-routes
    [config/app-routes-enabled]
-
-   (POST "/delete-categories" [:as req]
-         (delete-categories req))
-
-   (GET "/validate-analysis-for-pipelines/:app-id" [app-id :as req]
-        (validate-app-for-pipelines req app-id))
 
    (GET "/get-analysis-categories/:category-set" [category-set :as req]
         (get-app-categories req category-set))
@@ -209,10 +211,4 @@
         (get-app req app-id))
 
    (GET "/export-workflow/:app-id" [app-id :as req]
-        (export-workflow req app-id))
-
-   (POST "/preview-template" [:as req]
-         (preview-template req))
-
-   (POST "/preview-workflow" [:as req]
-         (preview-workflow req))))
+        (export-workflow req app-id))))

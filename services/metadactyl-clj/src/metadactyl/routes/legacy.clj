@@ -15,21 +15,9 @@
   (PUT "/workspaces/:workspace-id/newexperiment" [workspace-id :as {body :body}]
        (throw+ '("run-experiment" body workspace-id)))
 
-  (GET "/reference-genomes" []
-       (throw+ '("list-reference-genomes")))
-
-  (PUT "/reference-genomes" [:as {body :body}]
-       (throw+ '("replace-reference-genomes" (slurp body))))
-
   (route/not-found (unrecognized-path-response)))
 
 (defroutes* metadactyl-routes
-  (POST "/delete-categories" [:as {body :body}]
-        (trap #(throw+ '("delete-categories" body))))
-
-  (GET "/validate-analysis-for-pipelines/:app-id" [app-id]
-       (trap #(throw+ '("validate-app-for-pipelines" app-id))))
-
   (GET "/get-analysis-categories/:category-set" [category-set]
        (trap #(throw+ '("get-app-categories" category-set))))
 
@@ -38,11 +26,5 @@
 
   (GET "/export-workflow/:app-id" [app-id]
        (trap #(throw+ '("export-workflow" app-id))))
-
-  (POST "/preview-template" [:as {body :body}]
-        (trap #(throw+ '("preview-template" body))))
-
-  (POST "/preview-workflow" [:as {body :body}]
-        (trap #(throw+ '("preview-workflow" body))))
 
   (route/not-found (unrecognized-path-response)))

@@ -75,6 +75,13 @@
                        (where {:parent_category_id parent-group-id
                                :child_category_id  subgroup-id})))))
 
+(defn delete-app-category
+  "Deletes an App Category and all of its subcategories from the database. Delete will cascade to
+  the app_category_group table and app categorizations in app_category_app table."
+  [category-id]
+  (delete app_categories
+    (where {:id [in (subselect (sqlfn :app_category_hierarchy_ids category-id))]})))
+
 (defn set-root-app-group
   "Sets the root app group for a workspace."
   [workspace-id root-group-id]

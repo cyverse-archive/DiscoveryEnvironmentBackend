@@ -1,11 +1,13 @@
 (ns metadactyl.routes.admin
   (:use [metadactyl.app-categorization :only [categorize-apps]]
+        [metadactyl.metadata.reference-genomes :only [replace-reference-genomes]]
         [metadactyl.metadata.tool-requests]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.category]
+        [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
-        [metadactyl.service.app-metadata :only [permanently-delete-apps]]
+        [metadactyl.service.app-metadata :only [delete-categories permanently-delete-apps]]
         [metadactyl.tools :only [add-tools]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
@@ -61,6 +63,17 @@
          Categories."
          (ce/trap uri #(categorize-apps body)))
 
+  (POST* "/categories/shredder" [:as {uri :uri}]
+         :query [params SecuredQueryParams]
+         :body [body (describe AppCategoryIdList "A List of App Category IDs to delete.")]
+         :return AppCategoryIdList
+         :summary "Delete App Categories"
+         :notes "App Categories can be deleted using this endpoint. The App Category and all of its
+         subcategories will be deleted by this service, but no Apps will be removed. The response
+         contains a list of Category IDs for which the deletion failed (including any subcategories
+         of a Category already included in the request)."
+         (ce/trap uri #(delete-categories body)))
+
   (POST* "/shredder" [:as {uri :uri}]
          :query [params SecuredQueryParams]
          :body [body (describe AppDeletionRequest "List of App IDs to delete.")]
@@ -68,3 +81,13 @@
          :notes "This service physically removes an App from the database, which allows
          administrators to completely remove Apps that are causing problems."
          (ce/trap uri #(permanently-delete-apps body))))
+
+(defroutes* reference-genomes
+  (PUT* "/" [:as {uri :uri}]
+            :query [params SecuredQueryParams]
+            :body [body (describe ReferenceGenomesSetRequest "List of Reference Genomes to set.")]
+            :return ReferenceGenomesList
+            :summary "Replace Reference Genomes."
+            :notes "This endpoint replaces ALL the Reference Genomes in the Discovery Environment,
+            so if a genome is not listed in the request, it will not show up in the DE."
+            (ce/trap uri #(replace-reference-genomes body))))

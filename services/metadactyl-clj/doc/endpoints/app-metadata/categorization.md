@@ -1,7 +1,6 @@
 # Table of Contents
 
 * [App Categorization Endpoints](#app-categorization-endpoints)
-    * [Deleting Categories](#deleting-categories)
     * [Listing Analysis Categorizations](#listing-analysis-categorizations)
     * [Adding Analyses to Analysis Groups](#adding-analyses-to-analysis-groups)
 
@@ -11,55 +10,6 @@ App categorization is strongly related to app listing in that, when apps are
 listed, they're often listed by category. The endpoints related specifically to
 categorizations are included in this document, but we've kept the app listing
 endpoints in the `App Metadata Listing Services` documentation.
-
-## Deleting Categories
-
-*Unsecured Endpoint:* POST /delete-categories
-
-Analysis categories can be deleted using the `/delete-categories` entpoint.
-This service accepts a list of analysis category identifiers and deletes all
-corresponding analysis categories.  The request body is in the following
-format:
-
-```json
-{
-    "category_ids": [
-        "category-id-1",
-        "category-id-2",
-        ...
-        "category-id-n"
-    ]
-}
-```
-
-The response contains a list of category ids for which the deletion failed in
-the following format:
-
-```json
-{
-    "failures": [
-        "category-id-1",
-        "category-id-2",
-        ...
-        "category-id-n"
-    ]
-}
-```
-
-Here's an example:
-
-```
-$ curl -sd '
-{
-    "category_ids": [
-        "D901F356-D33E-4AE9-8F92-0A07CE9AD70E"
-    ]
-}
-' http://by-tor:8888/delete-categories | python -mjson.tool
-{
-    "failures": []
-}
-```
 
 ## Listing Analysis Categorizations
 
