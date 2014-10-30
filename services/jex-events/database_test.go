@@ -347,3 +347,79 @@ func TestCRUDCondorJobEvent(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestCRUDLastCondorJobEvent(t *testing.T) {
+	connString := ConnString()
+	d, err := NewDatabaser(connString)
+	if err != nil {
+		t.Error(err)
+	}
+	defer d.db.Close()
+	submitted := time.Now()
+	started := time.Now()
+	completed := time.Now()
+	jr := &JobRecord{
+		BatchID:       "",
+		Submitter:     "unit_tests",
+		DateSubmitted: submitted,
+		DateStarted:   started,
+		DateCompleted: completed,
+		AppID:         uuid.New(),
+		CommandLine:   "this --is -a --test",
+		EnvVariables:  "TEST=true",
+	}
+	jobID, err := d.InsertJob(jr)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	if jobID == "" {
+		t.Errorf("InsertJob returned an empty UUID.")
+		t.Fail()
+	}
+	jr.ID = jobID
+	ce := &CondorEvent{
+		EventNumber: 9001,
+		EventName:   "test_event",
+		EventDesc:   "event for unit tests",
+	}
+	eventID, err := d.InsertCondorEvent(ce)
+	if err != nil {
+		t.Error(err)
+	}
+	ce.ID = eventID
+	cr := &CondorRawEvent{
+		JobID:         jr.ID,
+		EventText:     "this is a unit test event",
+		DateTriggered: time.Now(),
+	}
+	rawEventID, err := d.InsertCondorRawEvent(cr)
+	if err != nil {
+		t.Error(err)
+	}
+	cr.ID = rawEventID
+	cje := &CondorJobEvent{
+		JobID:            jr.ID,
+		CondorEventID:    ce.ID,
+		CondorRawEventID: cr.ID,
+		DateTriggered:    time.Now(),
+	}
+	jobEventUUID, err := d.InsertCondorJobEvent(cje)
+	if err != nil {
+		t.Error(err)
+	}
+	cje.ID = jobEventUUID
+
+	lj := &LastCondorJobEvent{
+		JobID:            jr.ID,
+		CondorJobEventID: cje.ID,
+	}
+	_, err = d.InsertLastCondorJobEvent(lj)
+	if err != nil {
+		t.Error(err)
+	}
+	err = d.DeleteLastCondorJobEvent(lj.JobID)
+	if err != nil {
+		t.Error(err)
+	}
+}
