@@ -83,13 +83,25 @@
     (decorate-stat cm user (stat cm path))))
 
 
+(defn- fmt-stat-response
+  [user data-resp]
+  (let [data-stat-map (get (json/decode data-resp) "paths")
+        paths         (keys data-stat-map)
+        data-stats    (vals data-stat-map)
+        stats         (map #(assoc % :label (paths/id->label user (get % "path")))
+                           data-stats)]
+    {:paths (zipmap paths stats) :success true}))
+
+
 (defn do-stat
-  [params body]
+  [{user :user :as params} body]
   (let [url     (url/url (cfg/data-info-base-url) "stat-gatherer")
         req-map {:query-params params
                  :content-type :json
                  :body         (json/encode body)}]
-    (:body (http/post (str url) req-map))))
+    (->> (http/post (str url) req-map)
+      :body
+      (fmt-stat-response user))))
 
 (with-pre-hook! #'do-stat
   (fn [params body]
