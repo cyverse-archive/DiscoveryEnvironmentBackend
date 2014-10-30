@@ -3,7 +3,6 @@
 * [GET /](endpoints/misc.md#verifying-that-metadactyl-clj-is-running)
 * [POST /add-analysis-to-group](endpoints/app-metadata/categorization.md#adding-analyses-to-analysis-groups)
 * [POST /can-export-analysis](endpoints/app-metadata/validation.md#determining-if-an-analysis-can-be-exported)
-* [POST /delete-categories](endpoints/app-metadata/categorization.md#deleting-categories)
 * [GET /export-workflow/{analysis-id}](endpoints/app-metadata/admin.md#exporting-an-analysis)
 * [GET /get-analysis-categories/{category-set}](endpoints/app-metadata/categorization.md#listing-analysis-categorizations)
 * [POST /import-tools](endpoints/app-metadata/admin.md#importing-tools)

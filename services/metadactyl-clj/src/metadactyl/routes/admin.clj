@@ -7,7 +7,7 @@
         [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
-        [metadactyl.service.app-metadata :only [permanently-delete-apps]]
+        [metadactyl.service.app-metadata :only [delete-categories permanently-delete-apps]]
         [metadactyl.tools :only [add-tools]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
@@ -62,6 +62,17 @@
          :notes "This endpoint is used by the Admin interface to add or move Apps to into multiple
          Categories."
          (ce/trap uri #(categorize-apps body)))
+
+  (POST* "/categories/shredder" [:as {uri :uri}]
+         :query [params SecuredQueryParams]
+         :body [body (describe AppCategoryIdList "A List of App Category IDs to delete.")]
+         :return AppCategoryIdList
+         :summary "Delete App Categories"
+         :notes "App Categories can be deleted using this endpoint. The App Category and all of its
+         subcategories will be deleted by this service, but no Apps will be removed. The response
+         contains a list of Category IDs for which the deletion failed (including any subcategories
+         of a Category already included in the request)."
+         (ce/trap uri #(delete-categories body)))
 
   (POST* "/shredder" [:as {uri :uri}]
          :query [params SecuredQueryParams]

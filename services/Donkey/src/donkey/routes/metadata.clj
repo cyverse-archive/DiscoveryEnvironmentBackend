@@ -26,6 +26,9 @@
     (POST "/admin/apps" [:as req]
           (categorize-apps req))
 
+    (POST "/admin/apps/categories/shredder" [:as req]
+          (delete-categories req))
+
     (POST "/admin/apps/shredder" [:as req]
           (permanently-delete-apps req))
 
@@ -197,9 +200,6 @@
   []
   (optional-routes
    [config/app-routes-enabled]
-
-   (POST "/delete-categories" [:as req]
-         (delete-categories req))
 
    (GET "/validate-analysis-for-pipelines/:app-id" [app-id :as req]
         (validate-app-for-pipelines req app-id))

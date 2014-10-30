@@ -83,7 +83,8 @@
 (defn delete-categories
   "A service used to delete app categories."
   [req]
-  (let [url (build-metadactyl-unprotected-url req "delete-categories")]
+  (let [url (metadactyl-url {} "admin" "apps" "categories" "shredder")
+        req (metadactyl-request req)]
     (forward-post url req)))
 
 (defn validate-app-for-pipelines

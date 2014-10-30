@@ -80,12 +80,12 @@ Please see the metadactyl documentation for more information.
 
 ## Deleting Categories
 
-Unsecured Endpoint: POST /delete-categories
+Secured Endpoint: POST /admin/apps/categories/shredder
 
-Delegates to metadactyl: POST /delete-categories
+Delegates to metadactyl: POST /admin/apps/categories/shredder
 
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Valiating Analyses for Pipelines
 

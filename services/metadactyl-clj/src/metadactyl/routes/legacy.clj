@@ -18,9 +18,6 @@
   (route/not-found (unrecognized-path-response)))
 
 (defroutes* metadactyl-routes
-  (POST "/delete-categories" [:as {body :body}]
-        (trap #(throw+ '("delete-categories" body))))
-
   (GET "/validate-analysis-for-pipelines/:app-id" [app-id]
        (trap #(throw+ '("validate-app-for-pipelines" app-id))))
 
