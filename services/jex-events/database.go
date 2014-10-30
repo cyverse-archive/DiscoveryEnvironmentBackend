@@ -460,17 +460,17 @@ type CondorJobEvent struct {
 // InsertCondorJobEvent adds a parsed job event to the database.
 func (d *Databaser) InsertCondorJobEvent(je *CondorJobEvent) (string, error) {
 	query := `
-	INSERT INO condor_job_events (
+	INSERT INTO condor_job_events (
 		job_id,
 		condor_event_id,
 		condor_raw_event_id,
 		date_triggered
-		) VALUES (
-			cast($1 as uuid),
-			cast($2 as uuid),
-			cast($3 as uuid),
-			$4
-	  ) RETURNING id
+	) VALUES (
+	  cast($1 as uuid),
+		cast($2 as uuid),
+		cast($3 as uuid),
+		$4
+	) RETURNING id
 	`
 	var id string
 	err := d.db.QueryRow(
@@ -545,7 +545,7 @@ func (d *Databaser) UpdateCondorJobEvent(je *CondorJobEvent) (*CondorJobEvent, e
 		     condor_event_id = cast($2 as uuid),
 				 condor_raw_event_id = cast($3 as uuid),
 				 date_triggered = $4
-	 WHERE id = cast($1 as uuid)
+	 WHERE id = cast($5 as uuid)
 	RETURNING id
 	`
 	var id string
@@ -555,6 +555,7 @@ func (d *Databaser) UpdateCondorJobEvent(je *CondorJobEvent) (*CondorJobEvent, e
 		je.CondorEventID,
 		je.CondorRawEventID,
 		je.DateTriggered,
+		je.ID,
 	).Scan(&id)
 	if err != nil {
 		return nil, err

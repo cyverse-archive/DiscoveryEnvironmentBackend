@@ -241,3 +241,109 @@ func TestCRUDCondorRawEvents(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestCRUDCondorJobEvent(t *testing.T) {
+	connString := ConnString()
+	d, err := NewDatabaser(connString)
+	if err != nil {
+		t.Error(err)
+	}
+	defer d.db.Close()
+	submitted := time.Now()
+	started := time.Now()
+	completed := time.Now()
+	jr := &JobRecord{
+		BatchID:       "",
+		Submitter:     "unit_tests",
+		DateSubmitted: submitted,
+		DateStarted:   started,
+		DateCompleted: completed,
+		AppID:         uuid.New(),
+		CommandLine:   "this --is -a --test",
+		EnvVariables:  "TEST=true",
+	}
+	jobID, err := d.InsertJob(jr)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	if jobID == "" {
+		t.Errorf("InsertJob returned an empty UUID.")
+		t.Fail()
+	}
+	jr.ID = jobID
+	ce := &CondorEvent{
+		EventNumber: 9001,
+		EventName:   "test_event",
+		EventDesc:   "event for unit tests",
+	}
+	eventID, err := d.InsertCondorEvent(ce)
+	if err != nil {
+		t.Error(err)
+	}
+	ce.ID = eventID
+	cr := &CondorRawEvent{
+		JobID:         jr.ID,
+		EventText:     "this is a unit test event",
+		DateTriggered: time.Now(),
+	}
+	rawEventID, err := d.InsertCondorRawEvent(cr)
+	if err != nil {
+		t.Error(err)
+	}
+	cr.ID = rawEventID
+	cje := &CondorJobEvent{
+		JobID:            jr.ID,
+		CondorEventID:    ce.ID,
+		CondorRawEventID: cr.ID,
+		DateTriggered:    time.Now(),
+	}
+	jobEventUUID, err := d.InsertCondorJobEvent(cje)
+	if err != nil {
+		t.Error(err)
+	}
+	cje.ID = jobEventUUID
+	jobEvent, err := d.GetCondorJobEvent(jobEventUUID)
+	if err != nil {
+		t.Error(err)
+	}
+	if jobEvent.ID != cje.ID {
+		t.Errorf("IDs don't match")
+	}
+	if jobEvent.JobID != cje.JobID {
+		t.Errorf("JobIDs don't match")
+	}
+	if jobEvent.CondorEventID != cje.CondorEventID {
+		t.Errorf("CondorEventIDs don't match")
+	}
+	if jobEvent.CondorRawEventID != cje.CondorRawEventID {
+		t.Errorf("CondorRawEventIDs don't match")
+	}
+	if jobEvent.DateTriggered.Format(time.RFC822Z) != cje.DateTriggered.Format(time.RFC822Z) {
+		t.Errorf("DateTriggereds don't match")
+	}
+	cje.DateTriggered = time.Now()
+	updatedCJE, err := d.UpdateCondorJobEvent(cje)
+	if err != nil {
+		t.Error(err)
+	}
+	if updatedCJE.ID != cje.ID {
+		t.Errorf("IDs don't match after update")
+	}
+	if updatedCJE.JobID != cje.JobID {
+		t.Errorf("JobIDs don't match after update")
+	}
+	if updatedCJE.CondorEventID != cje.CondorEventID {
+		t.Errorf("CondorEventIDs don't match after update")
+	}
+	if updatedCJE.CondorRawEventID != cje.CondorRawEventID {
+		t.Errorf("CondorRawEventIDs don't match after update")
+	}
+	if updatedCJE.DateTriggered.Format(time.RFC822Z) != cje.DateTriggered.Format(time.RFC822Z) {
+		t.Errorf("DateTriggereds don't match after update")
+	}
+	err = d.DeleteCondorJobEvent(cje.ID)
+	if err != nil {
+		t.Error(err)
+	}
+}
