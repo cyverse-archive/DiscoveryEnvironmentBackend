@@ -20,7 +20,7 @@
 (defn configure-icat
   "Configures the connection pool to the ICAT database."
   []
-  (log/warn "[ICAT] set up ICAT connection.")
+  (log/info "[ICAT] set up ICAT connection.")
   (setup-icat (spec)))
 
 

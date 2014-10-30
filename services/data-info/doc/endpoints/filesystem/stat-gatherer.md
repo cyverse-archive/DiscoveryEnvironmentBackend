@@ -36,7 +36,7 @@ __Response Body__:
             "file-size": 1.0822742e+07,
             "id": "0dfcac40-df8a-11e3-bfa5-6abdce5a08d5",
             "info-type": "",
-            "mime-type": "application/octet-stream",
+            "content-type": "application/octet-stream",
             "path": "/iplant/home/wregglej/BTSync.dmg",
             "permission": "own",
             "share-count": 1,

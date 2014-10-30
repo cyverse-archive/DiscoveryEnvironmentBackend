@@ -44,8 +44,8 @@
   [stat-map cm user path]
   (if-not (is-dir? cm path)
     (assoc stat-map
-      :info-type (filetypes/get-types cm user path)
-      :mime-type (irods/detect-media-type cm path))
+      :info-type    (filetypes/get-types cm user path)
+      :content-type (irods/detect-media-type cm path))
     stat-map))
 
 

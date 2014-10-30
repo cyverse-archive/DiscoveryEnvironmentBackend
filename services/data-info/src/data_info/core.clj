@@ -79,7 +79,7 @@
 (defn lein-ring-init
   []
   (load-configuration-from-file)
-  (messages/messaging-initialization)
+  #_(messages/messaging-initialization)
   (icat/configure-icat)
   (start-nrepl))
 

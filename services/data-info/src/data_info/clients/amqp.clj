@@ -110,7 +110,7 @@
   (dosync
     (when (or (not (connection-okay? @amqp-conn)) 
               (not (channel-okay? @amqp-channel)))
-      (log/warn "[amqp/configure] configuring message connection")
+      (log/info "[AMQP] configuring message connection")
       (let [conn (get-connection)
             chan (get-channel)
             q    (declare-queue @amqp-channel)]
