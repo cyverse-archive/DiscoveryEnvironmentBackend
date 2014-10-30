@@ -491,6 +491,45 @@ func TestCondorJobStopRequest(t *testing.T) {
 		t.Error(err)
 	}
 	sr.ID = srID
+	newSR, err := d.GetCondorJobStopRequest(sr.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	if newSR.ID != sr.ID {
+		t.Errorf("IDs don't match")
+	}
+	if newSR.JobID != sr.JobID {
+		t.Errorf("JobIDs don't match")
+	}
+	if newSR.Username != sr.Username {
+		t.Errorf("Usernames don't match")
+	}
+	if newSR.DateRequested.Format(time.RFC822Z) != sr.DateRequested.Format(time.RFC822Z) {
+		t.Errorf("DateRequesteds don't match")
+	}
+	if newSR.Reason != sr.Reason {
+		t.Errorf("Reasons don't match")
+	}
+	sr.Reason = "poop"
+	updated, err := d.UpdateCondorJobStopRequest(sr)
+	if err != nil {
+		t.Error(err)
+	}
+	if updated.ID != sr.ID {
+		t.Errorf("IDs don't match after update")
+	}
+	if updated.JobID != sr.JobID {
+		t.Errorf("JobIDs don't match after update")
+	}
+	if updated.Username != sr.Username {
+		t.Errorf("Usernames don't match after update")
+	}
+	if updated.DateRequested.Format(time.RFC822Z) != sr.DateRequested.Format(time.RFC822Z) {
+		t.Errorf("DateRequesteds don't match after update")
+	}
+	if updated.Reason != sr.Reason {
+		t.Errorf("Reasons don't match after update")
+	}
 	err = d.DeleteCondorJobStopRequest(sr.ID)
 	if err != nil {
 		t.Error(err)

@@ -763,6 +763,7 @@ func (d *Databaser) UpdateCondorJobStopRequest(jr *CondorJobStopRequest) (*Condo
 		jr.Username,
 		jr.DateRequested,
 		jr.Reason,
+		jr.ID,
 	).Scan(&id)
 	if err != nil {
 		return nil, err
