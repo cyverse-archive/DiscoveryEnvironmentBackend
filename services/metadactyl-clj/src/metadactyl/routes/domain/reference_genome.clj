@@ -2,7 +2,7 @@
   (:use [metadactyl.routes.params]
         [ring.swagger.schema :only [describe]]
         [schema.core :only [defschema optional-key]])
-  (:import [java.util UUID]))
+  (:import [java.util Date UUID]))
 
 (defschema ReferenceGenome
   {:id
@@ -21,13 +21,13 @@
    (describe String "The username of the user that added the Reference Genome")
 
    (optional-key :created_on)
-   (describe Long "The timestamp of the date the Reference Genome was added")
+   (describe Date "The date the Reference Genome was added")
 
    :last_modified_by
    (describe String "The username of the user that updated the Reference Genome")
 
    (optional-key :last_modified_on)
-   (describe Long "The timestamp of last modification to the Reference Genome")})
+   (describe Date "The date of last modification to the Reference Genome")})
 
 (defschema ReferenceGenomesList
   {:genomes (describe [ReferenceGenome] "Listing of Reference Genomes.")})

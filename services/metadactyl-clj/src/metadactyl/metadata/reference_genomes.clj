@@ -6,19 +6,11 @@
         [korma.core]
         [korma.db]
         [metadactyl.user :only [current-user]]
-        [metadactyl.util.conversions :only [date->long long->timestamp]]
+        [metadactyl.util.conversions :only [date->timestamp]]
         [metadactyl.util.service :only [success-response]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as error-codes]
-            [clojure.tools.logging :as log])
-  (:import [java.sql Timestamp]))
-
-(defn- format-reference-genome
-  "Formats a reference genome for the reference genome listing service."
-  [genome]
-  (assoc genome
-    :created_on        (date->long (:created_on genome) "")
-    :last_modified_on  (date->long (:last_modified_on genome) "")))
+            [clojure.tools.logging :as log]))
 
 (defn- reference-genome-base-query
   "The base query used to list reference genomes."
@@ -33,11 +25,10 @@
 (defn get-reference-genomes
   "Lists all of the reference genomes in the database."
   [& uuids]
-  (map format-reference-genome
-   (if (seq uuids)
-     (select (reference-genome-base-query)
-             (where {:uuid [in uuids]}))
-     (select (reference-genome-base-query)))))
+  (if (seq uuids)
+    (select (reference-genome-base-query)
+            (where {:uuid [in uuids]}))
+    (select (reference-genome-base-query))))
 
 (defn list-reference-genomes
   "Lists the reference genomes in the database."
@@ -80,13 +71,12 @@
 (defn- format-valid-genome-fields
   "Formats the valid reference genome fields for insertion into the database."
   [{:keys [created_by last_modified_by created_on last_modified_on] :as genome}]
-  (let [now (Timestamp. (System/currentTimeMillis))]
-    (-> genome
-        (select-keys valid-insert-fields)
-        (assoc :created_by       (get-user-id created_by)
-               :last_modified_by (get-user-id last_modified_by)
-               :created_on       (or (long->timestamp created_on) now)
-               :last_modified_on (or (long->timestamp last_modified_on) now)))))
+  (-> genome
+      (select-keys valid-insert-fields)
+      (assoc :created_by       (get-user-id created_by)
+             :last_modified_by (get-user-id last_modified_by)
+             :created_on       (or (date->timestamp created_on) (sqlfn now))
+             :last_modified_on (or (date->timestamp last_modified_on) (sqlfn now)))))
 
 (defn- parse-reference-genome
   "Parses a reference genome for the reference genome replacement service.  The
