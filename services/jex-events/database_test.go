@@ -452,3 +452,47 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestCondorJobStopRequest(t *testing.T) {
+	connString := ConnString()
+	d, err := NewDatabaser(connString)
+	if err != nil {
+		t.Error(err)
+	}
+	defer d.db.Close()
+	submitted := time.Now()
+	started := time.Now()
+	completed := time.Now()
+	jr := &JobRecord{
+		BatchID:       "",
+		Submitter:     "unit_tests",
+		DateSubmitted: submitted,
+		DateStarted:   started,
+		DateCompleted: completed,
+		AppID:         uuid.New(),
+		CommandLine:   "this --is -a --test",
+		EnvVariables:  "TEST=true",
+	}
+	newUUID, err := d.InsertJob(jr)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	jr.ID = newUUID
+
+	sr := &CondorJobStopRequest{
+		JobID:         jr.ID,
+		Username:      "unit_tests",
+		DateRequested: time.Now(),
+		Reason:        "unit tests",
+	}
+	srID, err := d.InsertCondorJobStopRequest(sr)
+	if err != nil {
+		t.Error(err)
+	}
+	sr.ID = srID
+	err = d.DeleteCondorJobStopRequest(sr.ID)
+	if err != nil {
+		t.Error(err)
+	}
+}

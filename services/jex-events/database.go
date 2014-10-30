@@ -677,7 +677,7 @@ func (d *Databaser) InsertCondorJobStopRequest(jr *CondorJobStopRequest) (string
 			cast($1 as uuid),
 			$2,
 			$3,
-			$5
+			$4
 	) RETURNING id
 	`
 	var id string
@@ -697,7 +697,7 @@ func (d *Databaser) InsertCondorJobStopRequest(jr *CondorJobStopRequest) (string
 // DeleteCondorJobStopRequest deletes the record of a job stop request.
 func (d *Databaser) DeleteCondorJobStopRequest(uuid string) error {
 	query := `
-	DELETE FROM codnor_job_stop_requests WHERE id = cast($1 as uuid)
+	DELETE FROM condor_job_stop_requests WHERE id = cast($1 as uuid)
 	`
 	_, err := d.db.Exec(query, uuid)
 	if err != nil {
