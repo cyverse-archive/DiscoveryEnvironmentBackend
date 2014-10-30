@@ -79,7 +79,7 @@
 (defn lein-ring-init
   []
   (load-configuration-from-file)
-  (messages/messaging-initialization)
+  #_(messages/messaging-initialization)
   (icat/configure-icat)
   (start-nrepl))
 
@@ -117,6 +117,6 @@
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
     (config/load-config-from-file (:config options))
-    (messages/messaging-initialization)
+    #_(messages/messaging-initialization)
     (icat/configure-icat)
     (jetty/run-jetty (app) {:port (config/listen-port)})))
