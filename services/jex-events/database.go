@@ -782,7 +782,7 @@ type CondorJobDep struct {
 }
 
 // InsertCondorJobDep adds a job dependency to the database.
-func (d *Databaser) InsertCondorJobDep(jd *CondorJobDep) (string, error) {
+func (d *Databaser) InsertCondorJobDep(jd *CondorJobDep) error {
 	query := `
 	INSERT INTO condor_job_deps (
 		successor_id,
@@ -790,18 +790,77 @@ func (d *Databaser) InsertCondorJobDep(jd *CondorJobDep) (string, error) {
 	) VALUES (
 		cast($1 as uuid),
 		cast($2 as uuid)
-	) RETURNING id
+	)
 	`
-	var id string
-	err := d.db.QueryRow(
+	_, err := d.db.Exec(
 		query,
 		jd.SuccessorID,
 		jd.PredecessorID,
-	).Scan(&id)
+	)
 	if err != nil {
-		return "", err
+		return err
 	}
-	return id, nil
+	return nil
+}
+
+// GetPredecessors will return a []JobRecord containing the JobRecords for jobs
+// that are predecessors of the job whose ID is passed in.
+func (d *Databaser) GetPredecessors(successor string) ([]JobRecord, error) {
+	query := `
+	SELECT successor_id,
+	       predecessor_id
+	  FROM condor_job_deps
+	 WHERE successor_id = cast($1 as uuid)
+	`
+	rows, err := d.db.Query(query, successor)
+	if err != nil {
+		return nil, err
+	}
+	var retval []JobRecord
+	for rows.Next() {
+		var successorID string
+		var predecessorID string
+		err := rows.Scan(&successorID, &predecessorID)
+		if err != nil {
+			return nil, err
+		}
+		record, err := d.GetJob(predecessorID)
+		if err != nil {
+			return nil, err
+		}
+		retval = append(retval, *record)
+	}
+	return retval, nil
+}
+
+// GetSuccessors returns a []JobRecord of all jobs that are successors of the
+// job whose ID is passed into the function.
+func (d *Databaser) GetSuccessors(predecessor string) ([]JobRecord, error) {
+	query := `
+	SELECT successor_id,
+	       predecessor_id
+	  FROM condor_job_deps
+	 WHERE predecessor_id = cast($1 as uuid)
+	`
+	rows, err := d.db.Query(query, predecessor)
+	if err != nil {
+		return nil, err
+	}
+	var retval []JobRecord
+	for rows.Next() {
+		var successorID string
+		var predecessorID string
+		err := rows.Scan(&successorID, &predecessorID)
+		if err != nil {
+			return nil, err
+		}
+		record, err := d.GetJob(successorID)
+		if err != nil {
+			return nil, err
+		}
+		retval = append(retval, *record)
+	}
+	return retval, nil
 }
 
 // DeleteCondorJobDep removes a job dependency from the database.

@@ -535,3 +535,136 @@ func TestCondorJobStopRequest(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestCRUDJobDeps(t *testing.T) {
+	connString := ConnString()
+	d, err := NewDatabaser(connString)
+	if err != nil {
+		t.Error(err)
+	}
+	defer d.db.Close()
+	submitted := time.Now()
+	started := time.Now()
+	completed := time.Now()
+	jr1 := &JobRecord{
+		BatchID:       "",
+		Submitter:     "unit_tests",
+		DateSubmitted: submitted,
+		DateStarted:   started,
+		DateCompleted: completed,
+		AppID:         uuid.New(),
+		CommandLine:   "this --is -a --test",
+		EnvVariables:  "TEST=true",
+	}
+	jobID, err := d.InsertJob(jr1)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	if jobID == "" {
+		t.Errorf("InsertJob returned an empty UUID.")
+		t.Fail()
+	}
+	jr1.ID = jobID
+	jr2 := &JobRecord{
+		BatchID:       "",
+		Submitter:     "unit_tests",
+		DateSubmitted: submitted,
+		DateStarted:   started,
+		DateCompleted: completed,
+		AppID:         uuid.New(),
+		CommandLine:   "this --is -a --test",
+		EnvVariables:  "TEST=true",
+	}
+	job2ID, err := d.InsertJob(jr2)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	if job2ID == "" {
+		t.Errorf("InsertJob returned an empty UUID.")
+		t.Fail()
+	}
+	jr2.ID = job2ID
+	jr3 := &JobRecord{
+		BatchID:       "",
+		Submitter:     "unit_tests",
+		DateSubmitted: submitted,
+		DateStarted:   started,
+		DateCompleted: completed,
+		AppID:         uuid.New(),
+		CommandLine:   "this --is -a --test",
+		EnvVariables:  "TEST=true",
+	}
+	job3ID, err := d.InsertJob(jr3)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	if job3ID == "" {
+		t.Errorf("InsertJob returned an empty UUID.")
+		t.Fail()
+	}
+	jr3.ID = job3ID
+	dep1 := &CondorJobDep{
+		PredecessorID: jr1.ID,
+		SuccessorID:   jr2.ID,
+	}
+	dep2 := &CondorJobDep{
+		PredecessorID: jr1.ID,
+		SuccessorID:   jr3.ID,
+	}
+	err = d.InsertCondorJobDep(dep1)
+	if err != nil {
+		t.Error(err)
+	}
+	err = d.InsertCondorJobDep(dep2)
+	if err != nil {
+		t.Error(err)
+	}
+
+	preds, err := d.GetPredecessors(jr3.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(preds) != 1 {
+		t.Errorf("Number of predecessors returned wasn't 1: %d", len(preds))
+	}
+	if preds[0].ID != jr1.ID {
+		t.Errorf("ID of the predecessor was %s and should have been %s", preds[0].ID, jr1.ID)
+	}
+
+	succs, err := d.GetSuccessors(jr1.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(succs) != 2 {
+		t.Errorf("Number of successors returned wasn't 2: %d", len(succs))
+	}
+	found2 := false
+	found3 := false
+	for _, s := range succs {
+		if s.ID == jr2.ID {
+			found2 = true
+		}
+		if s.ID == jr3.ID {
+			found3 = true
+		}
+	}
+	if !found2 {
+		t.Errorf("Neither successor had an ID of %s", jr2.ID)
+	}
+	if !found3 {
+		t.Errorf("Neither successor had an ID of %s", jr3.ID)
+	}
+
+	err = d.DeleteCondorJobDep(dep1.PredecessorID, dep1.SuccessorID)
+	if err != nil {
+		t.Error(err)
+	}
+	err = d.DeleteCondorJobDep(dep2.PredecessorID, dep2.SuccessorID)
+	if err != nil {
+		t.Error(err)
+	}
+
+}
