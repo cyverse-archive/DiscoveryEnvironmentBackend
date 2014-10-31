@@ -45,6 +45,18 @@
    :firstName     (System/getenv "IPLANT_CAS_FIRST")
    :lastName      (System/getenv "IPLANT_CAS_LAST")})
 
+(defn store-current-admin-user
+  "Authenticates the user using validate-cas-group-membership and binds current-user to a map that
+   is built from the user attributes that validate-cas-proxy-ticket stores in the request."
+  [handler cas-server-fn server-name-fn group-attr-name-fn allowed-groups-fn
+   pgt-callback-base-fn pgt-callback-path-fn]
+  (cas/validate-cas-group-membership
+    (fn [request]
+      (binding [current-user (user-from-attributes request)]
+        (handler request)))
+    cas-server-fn server-name-fn group-attr-name-fn allowed-groups-fn
+    pgt-callback-base-fn pgt-callback-path-fn))
+
 (defn store-current-user
   "Authenticates the user using validate-cas-proxy-ticket and binds
    current-user to a map that is built from the user attributes that
@@ -58,7 +70,8 @@
 
 (defn fake-store-current-user
   "Fake storage of a user"
-  [handler cas-server-fn server-name-fn pgt-callback-base-fn pgt-callback-path-fn]
+  [handler & cas-config-fns]
+  (log/debug "Storing current user from IPLANT_CAS_* env vars.")
   (fn [req]
     (binding [current-user (fake-user-from-attributes req)]
       (handler req))))

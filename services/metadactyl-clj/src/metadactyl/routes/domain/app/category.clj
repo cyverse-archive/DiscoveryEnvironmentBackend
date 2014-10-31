@@ -37,16 +37,9 @@
   (merge (dissoc AppCategory :categories)
          {:apps (describe [AppListingDetail] "A listing of Apps under this Category")}))
 
-(defschema AppCategoryPath
-  {:username (describe String "A specific username or '&lt;public&gt;' for public Apps")
-   :path (describe [String] "The Category path split into a list, starting with the root")})
-
-(defschema AppCategorizationAppInfo
-  {:id AppIdParam})
-
 (defschema AppCategorization
-  {:category_path (describe AppCategoryPath "")
-   :app (describe AppCategorizationAppInfo "The App to be Categorized")})
+  (merge AppCategoryIdList
+    {:app_id (describe UUID "The UUID of the App to be Categorized")}))
 
 (defschema AppCategorizationRequest
   {:categories (describe [AppCategorization] "Apps and the Categories they should be listed under")})

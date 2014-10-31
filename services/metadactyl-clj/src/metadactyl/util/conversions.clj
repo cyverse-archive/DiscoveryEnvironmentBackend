@@ -27,6 +27,11 @@
   (let [ms (str ms)]
     (when-not (blank? ms) (Timestamp. (to-long ms)))))
 
+(defn date->timestamp
+  "Converts a date value into an instance of java.sql.Timestamp."
+  [date]
+  (when-not (nil? date) (Timestamp. (.getTime date))))
+
 (def remove-nil-vals (partial remove-vals nil?))
 
 (defn convert-rule-argument

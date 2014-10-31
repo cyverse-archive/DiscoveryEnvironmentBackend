@@ -53,6 +53,16 @@
   [props config-valid configs]
   "donkey.cas.server-name")
 
+(cc/defprop-str group-attr-name
+  "The name of the user attribute containing group membership information."
+  [props config-valid configs]
+  "donkey.cas.group-attr-name")
+
+(cc/defprop-vec allowed-groups
+  "The names of the groups that are permitted to access secured admin services."
+  [props config-valid configs]
+  "donkey.cas.allowed-groups")
+
 (cc/defprop-str uid-domain
   "The domain name to append to the user identifier to get the fully qualified
    user identifier."

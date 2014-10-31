@@ -3,8 +3,8 @@ set -x
 set -e
 
 ITERATION=$1
-USER=iplant
-GROUP=iplant
+USER=condor
+GROUP=condor
 BINNAME=panopticon
 BUILDDIR=panopticon-build
 BINDIR=/usr/local/lib/panopticon
