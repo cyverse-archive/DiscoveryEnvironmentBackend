@@ -143,7 +143,10 @@
    Returns:
      It returns the stat info formatted for the HTTP response."
   [^String user ^String path]
-  (-> (st/do-stat {:user user :paths [path]}) :paths first path))
+  (-> (st/do-stat {:user user :paths [path]})
+    :paths
+    first
+    (get path)))
 
 
 (defn ^IPersistentMap stat-by-uuid
