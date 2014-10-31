@@ -12,8 +12,8 @@
   (optional-routes
     [config/admin-routes-enabled]
 
-    (GET "/admin/config" []
+    (GET "/config" []
          (admin/config))
 
-    (GET "/admin/status" [:as req]
+    (GET "/status" [:as req]
          (admin/status req))))

@@ -24,13 +24,13 @@
     [#(and (config/admin-routes-enabled)
            (config/app-routes-enabled))]
 
-    (POST "/admin/apps" [:as req]
+    (POST "/apps" [:as req]
           (categorize-apps req))
 
-    (POST "/admin/apps/categories/shredder" [:as req]
+    (POST "/apps/categories/shredder" [:as req]
           (delete-categories req))
 
-    (POST "/admin/apps/shredder" [:as req]
+    (POST "/apps/shredder" [:as req]
           (permanently-delete-apps req))))
 
 (defn apps-routes
@@ -127,7 +127,7 @@
     [#(and (config/admin-routes-enabled)
            (config/app-routes-enabled))]
 
-    (PUT "/admin/reference-genomes" [:as req]
+    (PUT "/reference-genomes" [:as req]
          (replace-reference-genomes req))))
 
 (defn reference-genomes-routes
@@ -147,16 +147,16 @@
     [#(and (config/admin-routes-enabled)
         (config/app-routes-enabled))]
 
-    (POST "/admin/tools" [:as req]
+    (POST "/tools" [:as req]
           (import-tools req))
 
-    (GET "/admin/tool-requests" [:as {params :params}]
+    (GET "/tool-requests" [:as {params :params}]
          (admin-list-tool-requests params))
 
-    (GET "/admin/tool-requests/:request-id" [request-id]
+    (GET "/tool-requests/:request-id" [request-id]
          (get-tool-request request-id))
 
-    (POST "/admin/tool-requests/:request-id/status" [request-id :as req]
+    (POST "/tool-requests/:request-id/status" [request-id :as req]
           (update-tool-request req request-id))))
 
 (defn tool-routes

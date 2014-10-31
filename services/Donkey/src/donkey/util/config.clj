@@ -2,6 +2,7 @@
   (:use [slingshot.slingshot :only [throw+]])
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
+            [clojure.string :as string]
             [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]))
 
@@ -698,6 +699,11 @@
   (memoize
     (fn []
       (cheshire/decode (workspace-default-app-categories) true))))
+
+(def get-allowed-groups
+  (memoize
+    (fn []
+      (map #(string/replace (string/trim %) #"^'(.*)'$" "$1") (allowed-groups)))))
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."

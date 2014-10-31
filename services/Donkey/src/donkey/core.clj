@@ -102,7 +102,7 @@
       config/cas-server
       config/server-name
       config/group-attr-name
-      config/allowed-groups
+      config/get-allowed-groups
       config/pgt-callback-base
       config/pgt-callback-path)))
 
@@ -127,9 +127,9 @@
    (unsecured-tree-viewer-routes)
    (unsecured-fileio-routes)
    (unsecured-callback-routes)
+   (context "/admin" [] admin-handler)
    (context "/secured" [] secured-handler)
    secured-handler-no-context
-   admin-handler
    (route/not-found (unrecognized-path-response))))
 
 (defn start-nrepl
