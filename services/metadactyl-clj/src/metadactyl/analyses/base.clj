@@ -3,6 +3,7 @@
         [metadactyl.util.assertions :only [assert-not-nil]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [me.raynes.fs :as fs]
             [metadactyl.analyses.common :as ca]
             [metadactyl.analyses.params :as params]
             [metadactyl.analyses.util :as util]
@@ -11,6 +12,15 @@
 
 (defprotocol JobRequestFormatter
   "A protocol for formatting JEX job requests."
+  (buildTreeSelectionArgs [_ param param-value])
+  (buildSelectionArgs [_ param param-value])
+  (buildFlagArgs [_ param param-value])
+  (buildInputArgs [_ param param-value])
+  (buildOutputArgs [_ param param-value])
+  (buildReferenceGenomeArgs [_ param param-value])
+  (buildReferenceSequenceArgs [_ param param-value])
+  (buildReferenceAnnotationArgs [_ param param-value])
+  (buildGenericArgs [_ param param-value])
   (buildInputs [_ params])
   (buildOutputs [_ params])
   (buildParams [_ params outputs])
@@ -21,12 +31,41 @@
   (buildSteps [_])
   (buildSubmission [_]))
 
-(deftype JobRequestFormatterImpl [user email submission app io-maps defaults params
-                                  param-formatter]
+;;
+;; The job request formatter for DE jobs.
+;;
+(deftype DeJobRequestFormatter [user email submission app io-maps defaults params]
   JobRequestFormatter
 
+  (buildTreeSelectionArgs [_ param param-value]
+    (params/tree-selection-args param param-value))
+
+  (buildSelectionArgs [_ param param-value]
+    (params/selection-args param param-value))
+
+  (buildFlagArgs [_ param param-value]
+    (params/flag-args param param-value))
+
+  (buildInputArgs [_ param param-value]
+    (params/input-args param param-value fs/base-name))
+
+  (buildOutputArgs [_ param param-value]
+    (params/output-args param param-value))
+
+  (buildReferenceGenomeArgs [_ param param-value]
+    (params/reference-genome-args param param-value))
+
+  (buildReferenceSequenceArgs [_ param param-value]
+    (params/reference-sequence-args param param-value))
+
+  (buildReferenceAnnotationArgs [_ param param-value]
+    (params/reference-annotation-args param param-value))
+
+  (buildGenericArgs [_ param param-value]
+    (params/generic-args param param-value))
+
   (buildParams [this params outputs]
-    (.buildParams param-formatter submission io-maps outputs defaults params))
+    (params/build-params this (:config submission) io-maps outputs defaults params))
 
   (buildInputs [this params]
     (params/build-inputs (:config submission) params))
@@ -55,25 +94,89 @@
 
   (buildSubmission [this]
     (ca/build-submission this user email submission app)))
+;;
+;; End of DeJobRequestFormatter
+;;
 
-(defn- param-formatter-for-app
-  [app user]
-  (if (util/fapi-app? app)
-    (metadactyl.analyses.params.FapiParamFormatter. user)
-    (metadactyl.analyses.params.DeParamFormatter.)))
+;;
+;; The job request formatter for Foundation API jobs.
+;;
+(deftype FapiJobRequestFormatter [user email submission app io-maps defaults params]
+  JobRequestFormatter
+
+  (buildTreeSelectionArgs [_ param param-value]
+    (params/tree-selection-args param param-value))
+
+  (buildSelectionArgs [_ param param-value]
+    (params/selection-args param param-value))
+
+  (buildFlagArgs [_ param param-value]
+    (params/flag-args param param-value))
+
+  (buildInputArgs [_ param param-value]
+    (params/input-args param param-value params/remove-irods-home))
+
+  (buildOutputArgs [_ param param-value]
+    (params/output-args param param-value))
+
+  (buildReferenceGenomeArgs [_ param param-value]
+    (params/reference-genome-args param param-value))
+
+  (buildReferenceSequenceArgs [_ param param-value]
+    (params/reference-sequence-args param param-value))
+
+  (buildReferenceAnnotationArgs [_ param param-value]
+    (params/reference-annotation-args param param-value))
+
+  (buildGenericArgs [_ param param-value]
+    (params/generic-args param param-value))
+
+  (buildParams [this params outputs]
+    (concat (params/build-extra-fapi-args user (:name submission) (:output_dir submission))
+            (params/build-params this (:config submission) io-maps outputs defaults params)))
+
+  (buildInputs [_ _]
+    [])
+
+  (buildOutputs [_ _]
+    [params/log-output])
+
+  (buildConfig [this step]
+    (let [params-for-step  (params (:id step))
+          outputs-for-step (.buildOutputs this params-for-step)
+          inputs-for-step  (.buildInputs this params-for-step)
+          params-for-step  (.buildParams this params-for-step outputs-for-step)]
+      (ca/build-config inputs-for-step outputs-for-step params-for-step)))
+
+  (buildEnvironment [this step]
+    (ca/build-environment (:config submission) defaults (params (:id step))))
+
+  (buildComponent [this step]
+    (ca/build-component step))
+
+  (buildStep [this step]
+    (ca/build-step this step))
+
+  (buildSteps [this]
+    (ca/build-steps this app submission))
+
+  (buildSubmission [this]
+    (ca/build-submission this user email submission app)))
+;;
+;; End of FapiJobRequestFormatter
+;;
 
 (defn- build-job-request-formatter
-
   [user email submission]
-  (let [app-id          (:app_id submission)
-        app             (ap/get-app app-id)
-        io-maps         (ca/load-io-maps app-id)
-        params          (mp/load-app-params app-id)
-        defaults        (ca/build-default-values-map params)
-        params          (group-by :step_id params)
-        param-formatter (param-formatter-for-app app user)]
-    (JobRequestFormatterImpl. user email submission app io-maps defaults params
-                              param-formatter)))
+  (let [app-id   (:app_id submission)
+        app      (ap/get-app app-id)
+        io-maps  (ca/load-io-maps app-id)
+        params   (mp/load-app-params app-id)
+        defaults (ca/build-default-values-map params)
+        params   (group-by :step_id params)]
+    (if (util/fapi-app? app)
+      (FapiJobRequestFormatter. user email submission app io-maps defaults params)
+      (DeJobRequestFormatter. user email submission app io-maps defaults params))))
 
 (defn build-submission
   [user email submission]

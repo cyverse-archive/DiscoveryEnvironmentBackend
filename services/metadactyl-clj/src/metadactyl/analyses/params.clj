@@ -9,13 +9,13 @@
             [metadactyl.util.config :as config]))
 
 (def ^:private irods-home-pattern
-  (memoize #(re-pattern (str "\\A\\Q" (string/replace (config/irods-home) #"/+\z") ""))))
+  (memoize #(re-pattern (str "\\A\\Q" (string/replace (config/irods-home) #"/+\z" "")))))
 
-(defn- remove-irods-home
+(defn remove-irods-home
   [path]
   (string/replace path (irods-home-pattern) ""))
 
-(def ^:private log-output
+(def log-output
   {:multiplicity "collection"
    :name         "logs"
    :property     "logs"
@@ -87,16 +87,24 @@
   ([config default-values param]
      (value-for-param config {} {} default-values param)))
 
+(defn- determine-opt-arg
+  [param-name param-value]
+  (let [param-value (if (nil? param-value) "" param-value)]
+    (if (re-find #"=\z" param-name)
+     [""         (str param-name param-value)]
+     [param-name param-value])))
+
 (defn- build-arg
   ([param param-name param-value]
-     {:id    (:id param)
-      :name  param-name
-      :order (:order param 0)
-      :value (if (nil? param-value) "" param-value)})
+     (let [[opt-arg opt-val] (determine-opt-arg param-name param-value)]
+      {:id    (:id param)
+       :name  opt-arg
+       :order (:order param 0)
+       :value opt-val}))
   ([param param-value]
      (build-arg param (or (:name param) "") param-value)))
 
-(defn- generic-args
+(defn generic-args
   [param param-value]
   (if (or (util/not-blank? param-value) (not (:omit_if_blank param)))
     [(build-arg param param-value)]
@@ -108,18 +116,18 @@
        (or (seq (:name param-value))
            (seq (:value param-value)))))
 
-(defn- selection-args
+(defn selection-args
   [param param-value]
   (if (is-selection-arg? param-value)
     [(build-arg param (or (:name param-value) "") (or (:value param-value) ""))]
     []))
 
-(defn- tree-selection-args
+(defn tree-selection-args
   [param param-value]
   (let [selections (if (seq? param-value) param-value [])]
     (mapcat (partial selection-args param) selections)))
 
-(defn- flag-args
+(defn flag-args
   [param param-value]
   (let [selected?      (Boolean/parseBoolean (string/trim param-value))
         values         (string/split (:name param) #"\s*,\s*" 2)
@@ -128,13 +136,13 @@
       [(build-arg param selected-value)]
       [])))
 
-(defn- input-args
-  [param param-value]
+(defn input-args
+  [param param-value preprocessor]
   (let [values (if (seq? param-value) param-value [param-value])]
-    (mapv (comp (partial build-arg param) (fnil fs/base-name ""))
+    (mapv (comp (partial build-arg param) (fnil preprocessor ""))
           (if (:omit_if_blank param) (remove string/blank? values) values))))
 
-(defn- output-args
+(defn output-args
   [param param-value]
   (if (and (not (:is_implicit param)) (= (:data_source param) "file"))
     (generic-args param param-value)
@@ -148,7 +156,7 @@
           (build-arg param))]
     []))
 
-(def ^:private reference-genome-args
+(def reference-genome-args
   ;; FIXME: this is functionally a reimplementation of the code that resolves reference
   ;; genomes in the old metadactyl code, which is probably broken. When time permits,
   ;; look for uses of the 'ReferenceGenome' property type to see if and how it's being
@@ -156,48 +164,48 @@
   ;; work.
   (partial build-reference-genome-args ["annotation.gtf" "genome.fas"]))
 
-(def ^:private reference-sequence-args
+(def reference-sequence-args
   (partial build-reference-genome-args ["genome.fas"]))
 
-(def ^:private reference-annotation-args
+(def reference-annotation-args
   (partial build-reference-genome-args ["annotation.gtf"]))
 
 (defn- args-for-param
-  [config io-maps output-value-map default-values param]
+  [formatter config io-maps output-value-map default-values param]
   (let [param-value (value-for-param config io-maps output-value-map default-values param)
         param-type  (:type param)]
     (cond
      (= "TreeSelection" param-type)
-     (tree-selection-args param param-value)
+     (.buildTreeSelectionArgs formatter param param-value)
 
      (re-find #"Selection\z" param-type)
-     (selection-args param param-value)
+     (.buildSelectionArgs formatter param param-value)
 
      (= "Flag" param-type)
-     (flag-args param param-value)
+     (.buildFlagArgs formatter param param-value)
 
      (util/input-types param-type)
-     (input-args param param-value)
+     (.buildInputArgs formatter param param-value)
 
      (util/output-types param-type)
-     (output-args param param-value)
+     (.buildOutputArgs formatter param param-value)
 
      (= "ReferenceGenome" param-type)
-     (reference-genome-args param param-value)
+     (.buildReferenceGenomeArgs formatter param param-value)
 
      (= "ReferenceSequence" param-type)
-     (reference-sequence-args param param-value)
+     (.buildReferenceSequenceArgs formatter param param-value)
 
      (= "ReferenceAnnotation" param-type)
-     (reference-annotation-args param param-value)
+     (.buildReferenceAnnotationArgs formatter param param-value)
 
      :else
-     (generic-args param param-value))))
+     (.buildGenericArgs formatter param param-value))))
 
 (defn build-params
-  [config io-maps outputs default-values params]
+  [formatter config io-maps outputs default-values params]
   (let [output-value-map (into {} (map (juxt :qual-id :name) outputs))]
-    (mapcat (partial args-for-param config io-maps output-value-map default-values)
+    (mapcat (partial args-for-param formatter config io-maps output-value-map default-values)
             (remove (comp util/ignored-param-types :type) params))))
 
 (def ^:private generated-param-ids
@@ -221,20 +229,3 @@
    (generate-extra-arg 1 "--jobName=" job-name :job-name)
    (generate-extra-arg 1 "--archive" "" :archive)
    (generate-extra-arg 1 "--archivePath=" (remove-irods-home output-dir) :archive-path)])
-
-(defprotocol ParamFormatter
-  "A protocol for formatting parameters in JEX job requests."
-  (buildParams [_ config io-maps outputs defaults params]))
-
-(deftype DeParamFormatter []
-  ParamFormatter
-
-  (buildParams [_ submission io-maps outputs defaults params]
-    (build-params (:config submission) io-maps outputs defaults params)))
-
-(deftype FapiParamFormatter [user]
-  ParamFormatter
-
-  (buildParams [_ submission io-maps outputs defaults params]
-    (concat (build-extra-fapi-args user (:name submission) (:output_dir submission))
-            (build-params (:config submission) io-maps outputs defaults params))))

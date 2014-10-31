@@ -1,7 +1,7 @@
 (ns metadactyl.analyses.util
   (:require [clojure.string :as string]))
 
-(def not-blank? (complement string/blank?))
+(def not-blank? (comp (complement string/blank?) str))
 
 (def input-multiplicities
   {"FileInput"         "single"
