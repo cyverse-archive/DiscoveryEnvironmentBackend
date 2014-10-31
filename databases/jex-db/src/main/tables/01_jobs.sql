@@ -6,6 +6,7 @@ SET search_path = public, pg_catalog;
 CREATE TABLE jobs (
   id                uuid not null default uuid_generate_v1(), -- primary key
   batch_id          uuid, -- self-join foreign key
+  condor_id         character varying(32) not null,
   submitter         character varying(512) not null,
   date_submitted    timestamp with time zone,
   date_started      timestamp with time zone,
