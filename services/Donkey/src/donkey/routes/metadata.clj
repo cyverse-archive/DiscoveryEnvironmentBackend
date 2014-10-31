@@ -136,7 +136,10 @@
     [config/app-routes-enabled]
 
     (GET "/reference-genomes" [:as req]
-         (list-reference-genomes req))))
+         (list-reference-genomes req))
+
+    (GET "/reference-genomes/:reference-genome-id" [reference-genome-id]
+         (get-reference-genome reference-genome-id))))
 
 (defn admin-tool-routes
   []

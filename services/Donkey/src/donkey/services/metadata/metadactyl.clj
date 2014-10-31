@@ -419,6 +419,12 @@
   (client/get (metadactyl-url {} "reference-genomes")
               {:as :stream}))
 
+(defn get-reference-genome
+  "Gets a reference genome by its UUID."
+  [reference-genome-id]
+  (client/get (metadactyl-url {} "reference-genomes" reference-genome-id)
+              {:as :stream}))
+
 (defn replace-reference-genomes
   "Replaces the reference genomes in the database with a new set of reference genomes."
   [req]

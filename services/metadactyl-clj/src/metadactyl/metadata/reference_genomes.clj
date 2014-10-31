@@ -6,6 +6,7 @@
         [korma.core]
         [korma.db]
         [metadactyl.user :only [current-user]]
+        [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.conversions :only [date->timestamp]]
         [metadactyl.util.service :only [success-response]]
         [slingshot.slingshot :only [throw+]])
@@ -27,13 +28,18 @@
   [& uuids]
   (if (seq uuids)
     (select (reference-genome-base-query)
-            (where {:uuid [in uuids]}))
+            (where {:id [in uuids]}))
     (select (reference-genome-base-query))))
 
 (defn list-reference-genomes
   "Lists the reference genomes in the database."
   []
   (success-response {:genomes (get-reference-genomes)}))
+
+(defn get-reference-genome
+  [reference-genome-id]
+  (success-response (assert-not-nil [:reference-genome-id reference-genome-id]
+                      (first (get-reference-genomes [reference-genome-id])))))
 
 (def ^:private valid-insert-fields
   [:id :name :path :deleted :created_by :created_on :last_modified_by :last_modified_on])

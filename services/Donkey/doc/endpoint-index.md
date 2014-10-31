@@ -44,6 +44,7 @@
 * [GET /export-workflow/{analysis-id}](endpoints/app-metadata.md#exporting-an-analysis)
 * [POST /fileio/upload](endpoints/fileio.md#uploading)
 * [GET /reference-genomes](endpoints/reference-genomes.md#exporting-reference-genomes)
+* [GET /reference-genomes/{reference-genome-id}](endpoints/reference-genomes.md#get-a-reference-genome-by-id)
 * [GET /secured/admin/config](endpoints/admin.md#listing-the-config-for-donkey-)
 * [GET /secured/admin/status](endpoints/admin.md#status-check-)
 * [PATCH /secured/analysis/{analysis-id}](endpoints/app-execution.md#updating-analysis-information)

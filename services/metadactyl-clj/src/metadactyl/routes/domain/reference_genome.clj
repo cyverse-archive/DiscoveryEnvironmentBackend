@@ -4,9 +4,11 @@
         [schema.core :only [defschema optional-key]])
   (:import [java.util Date UUID]))
 
+(def ReferenceGenomeIdParam (describe UUID "A UUID that is used to identify the Reference Genome"))
+
 (defschema ReferenceGenome
   {:id
-   (describe UUID "A UUID that is used to identify the Reference Genome")
+   ReferenceGenomeIdParam
 
    :name
    (describe String "The Reference Genome's name")
