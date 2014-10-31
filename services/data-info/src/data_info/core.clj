@@ -8,7 +8,6 @@
             [clojure.java.io :as io]
             [ring.adapter.jetty :as jetty]
             [data-info.util.config :as config]
-            [data-info.util.messaging :as messages]
             [clojure.tools.nrepl.server :as nrepl]
             [liberator.dev :as liberator]
             [me.raynes.fs :as fs]
@@ -79,7 +78,6 @@
 (defn lein-ring-init
   []
   (load-configuration-from-file)
-  #_(messages/messaging-initialization)
   (icat/configure-icat)
   (start-nrepl))
 
@@ -117,6 +115,5 @@
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
     (config/load-config-from-file (:config options))
-    #_(messages/messaging-initialization)
     (icat/configure-icat)
     (jetty/run-jetty (app) {:port (config/listen-port)})))
