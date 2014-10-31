@@ -1,29 +1,21 @@
 (ns donkey.services.filesystem.home
   (:use [clojure-commons.validators]
-        [donkey.services.filesystem.common-paths]
-        [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-info :only [exists?]]
-        [clj-jargon.item-ops :only [mkdirs]])
-  (:require [clojure.tools.logging :as log]
-            [clojure-commons.file-utils :as ft]
+        [donkey.services.filesystem.common-paths])
+  (:require [cemerick.url :as url]
+            [cheshire.core :as json]
+            [clj-http.client :as http]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.util.config :as cfg]
-            [donkey.services.filesystem.icat :as icat]
-            [donkey.services.filesystem.validators :as validators]))
+            [donkey.util.config :as cfg]))
 
-(defn- user-home-path
-  [staging-dir user set-owner?]
-  (with-jargon (icat/jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (let [user-home (ft/path-join staging-dir user)]
-      (if (not (exists? cm user-home))
-        (mkdirs cm user-home))
-      {:id   (str "/root" user-home)
-       :path user-home})))
 
 (defn do-homedir
   [{user :user}]
-  (user-home-path (cfg/irods-home) user false))
+  (let [url       (url/url (cfg/data-info-base-url) "home")
+        req-map   {:query-params {:user user}}
+        resp      (http/get (str url) req-map)
+        home-path (:path (json/decode (:body resp) true))]
+    {:id   (str "/root" home-path)
+     :path home-path}))
 
 (with-pre-hook! #'do-homedir
   (fn [params]
