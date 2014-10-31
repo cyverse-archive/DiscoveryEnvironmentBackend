@@ -90,7 +90,7 @@
         data-stats    (vals data-stat-map)
         stats         (map #(assoc % :label (paths/id->label user (get % "path")))
                            data-stats)]
-    {:paths (zipmap paths stats) :success true}))
+    {:paths (zipmap paths stats)}))
 
 
 (defn do-stat
