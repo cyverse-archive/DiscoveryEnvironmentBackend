@@ -1,19 +1,17 @@
 (ns donkey.services.filesystem.exists
-  (:use [clojure-commons.error-codes]
-        [clojure-commons.validators]
+  (:use [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-info :only [exists?]]
-        [slingshot.slingshot :only [try+ throw+]])
-  (:require [clojure.tools.logging :as log]
-            [clojure.string :as string]
+        [clj-jargon.item-info :only [exists?]])
+  (:require [clj-http.client :as http]
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.services.filesystem.icat :as cfg]
-            [donkey.services.filesystem.validators :as validators]))
+            [donkey.util.config :as cfg]
+            [donkey.services.filesystem.icat :as icat]))
+
 
 (defn- url-encoded?
   [string-to-check]
@@ -30,15 +28,20 @@
      (path-exists? "" path))
   ([user path]
     (let [path (ft/rm-last-slash path)]
-      (with-jargon (cfg/jargon-cfg) [cm]
+      (with-jargon (icat/jargon-cfg) [cm]
         (exists? cm (url-decode path))))))
 
+
 (defn do-exists
-  [{user :user} {paths :paths}]
-  {:paths
-   (apply
-     conj {}
-     (map #(hash-map %1 (path-exists? user %1)) paths))})
+  [params body]
+  (let [url     (url/url (cfg/data-info-base-url) "existence-marker")
+        req-map {:query-params params
+                 :content-type :json
+                 :body         (json/encode body)}]
+    (-> (http/post (str url) req-map)
+      :body
+      json/decode
+      (select-keys ["paths"]))))
 
 (with-pre-hook! #'do-exists
   (fn [params body]
