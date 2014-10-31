@@ -240,6 +240,10 @@ func TestCRUDCondorRawEvents(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	err = d.DeleteJob(jr.ID)
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestCRUDCondorJobEvent(t *testing.T) {
@@ -343,6 +347,18 @@ func TestCRUDCondorJobEvent(t *testing.T) {
 		t.Errorf("DateTriggereds don't match after update")
 	}
 	err = d.DeleteCondorJobEvent(cje.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	err = d.DeleteCondorRawEvent(cr.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	err = d.DeleteCondorEvent(ce.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	err = d.DeleteJob(jr.ID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -451,6 +467,22 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	err = d.DeleteCondorJobEvent(newcje.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	err = d.DeleteCondorRawEvent(cr.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	err = d.DeleteCondorEvent(ce.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	err = d.DeleteJob(jr.ID)
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestCondorJobStopRequest(t *testing.T) {
@@ -531,6 +563,10 @@ func TestCondorJobStopRequest(t *testing.T) {
 		t.Errorf("Reasons don't match after update")
 	}
 	err = d.DeleteCondorJobStopRequest(sr.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	err = d.DeleteJob(jr.ID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -622,7 +658,6 @@ func TestCRUDJobDeps(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
 	preds, err := d.GetPredecessors(jr3.ID)
 	if err != nil {
 		t.Error(err)
@@ -633,7 +668,6 @@ func TestCRUDJobDeps(t *testing.T) {
 	if preds[0].ID != jr1.ID {
 		t.Errorf("ID of the predecessor was %s and should have been %s", preds[0].ID, jr1.ID)
 	}
-
 	succs, err := d.GetSuccessors(jr1.ID)
 	if err != nil {
 		t.Error(err)
@@ -657,7 +691,6 @@ func TestCRUDJobDeps(t *testing.T) {
 	if !found3 {
 		t.Errorf("Neither successor had an ID of %s", jr3.ID)
 	}
-
 	err = d.DeleteCondorJobDep(dep1.PredecessorID, dep1.SuccessorID)
 	if err != nil {
 		t.Error(err)
@@ -666,5 +699,16 @@ func TestCRUDJobDeps(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
+	err = d.DeleteJob(jr1.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	err = d.DeleteJob(jr2.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	err = d.DeleteJob(jr3.ID)
+	if err != nil {
+		t.Error(err)
+	}
 }
