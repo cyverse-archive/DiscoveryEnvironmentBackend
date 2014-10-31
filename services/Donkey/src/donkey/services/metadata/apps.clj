@@ -346,29 +346,29 @@
   [app-id]
   (with-db db/de
     (transaction
-      (.addFavoriteApp (get-app-lister) app-id))))
+      (service/success-response (.addFavoriteApp (get-app-lister) app-id)))))
 
 (defn remove-favorite-app
   [app-id]
   (with-db db/de
     (transaction
-      (.removeFavoriteApp (get-app-lister) app-id))))
+      (service/success-response (.removeFavoriteApp (get-app-lister) app-id)))))
 
 (defn rate-app
   [body app-id]
   (with-db db/de
     (transaction
      (let [request (service/decode-json body)]
-       (.rateApp (get-app-lister)
-                 app-id
-                 (service/required-field request :rating)
-                 (:comment_id request))))))
+       (service/success-response
+         (.rateApp (get-app-lister) app-id
+                                    (service/required-field request :rating)
+                                    (:comment_id request)))))))
 
 (defn delete-rating
   [app-id]
   (with-db db/de
     (transaction
-      (.deleteRating (get-app-lister) app-id))))
+      (service/success-response (.deleteRating (get-app-lister) app-id)))))
 
 (defn get-app
   [app-id]

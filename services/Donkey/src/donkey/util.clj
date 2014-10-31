@@ -17,12 +17,6 @@
   [id]
   (some #(re-find % id) uuid-regexes))
 
-(defn determine-response
-  [resp-val]
-  (if (and (map? resp-val) (number? (:status resp-val)))
-    (donkey-response resp-val (:status resp-val))
-    (success-response resp-val)))
-
 (defn clj-http-error?
   [{:keys [status body]}]
   (and (number? status) ((comp not nil?) body)))
@@ -71,7 +65,7 @@
   (let [req     (pre-process-request req :slurp? slurp?)
         get-arg (fn [arg] (if (keyword? arg) (get req arg) arg))
         argv    (mapv get-arg args)]
-    (determine-response (apply func argv))))
+    (success-response (apply func argv))))
 
 (defn controller
   [req func & args]

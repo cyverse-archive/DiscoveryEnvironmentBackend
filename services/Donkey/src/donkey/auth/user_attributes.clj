@@ -71,8 +71,8 @@
 (defn fake-store-current-user
   "Fake storage of a user"
   [handler & cas-config-fns]
-  (log/debug "Storing current user from IPLANT_CAS_* env vars.")
   (fn [req]
+    (log/info "Storing current user from IPLANT_CAS_* env vars.")
     (binding [current-user (fake-user-from-attributes req)]
       (handler req))))
 

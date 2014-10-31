@@ -201,7 +201,7 @@
         preferences (user-prefs (:username current-user))
         login-time  (with-db db/de
                       (record-login username ip-address user-agent))]
-    (cheshire/encode
+    (success-response
       {:workspaceId   (:id workspace)
        :newWorkspace  (:newWorkspace workspace)
        :loginTime     (str login-time)
@@ -224,7 +224,7 @@
     (record-logout (:username current-user)
                    ip-address
                    (string->long login-time "Long integer expected: login-time")))
-  {})
+  (success-response))
 
 (defn get-messages
   "This service forwards requests to the notification agent in order to
