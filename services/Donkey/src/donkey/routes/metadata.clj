@@ -18,10 +18,11 @@
     (GET "/apps/categories/:app-group-id" [app-group-id :as {params :params}]
          (apps/apps-in-category app-group-id params))))
 
-(defn apps-routes
+(defn admin-apps-routes
   []
   (optional-routes
-    [config/app-routes-enabled]
+    [#(and (config/admin-routes-enabled)
+           (config/app-routes-enabled))]
 
     (POST "/admin/apps" [:as req]
           (categorize-apps req))
@@ -30,7 +31,12 @@
           (delete-categories req))
 
     (POST "/admin/apps/shredder" [:as req]
-          (permanently-delete-apps req))
+          (permanently-delete-apps req))))
+
+(defn apps-routes
+  []
+  (optional-routes
+    [config/app-routes-enabled]
 
     (GET "/apps" [:as {params :params}]
          (apps/search-apps params))
@@ -115,21 +121,28 @@
    (POST "/analyses" [:as {body :body}]
          (apps/submit-job body))))
 
+(defn admin-reference-genomes-routes
+  []
+  (optional-routes
+    [#(and (config/admin-routes-enabled)
+           (config/app-routes-enabled))]
+
+    (PUT "/admin/reference-genomes" [:as req]
+         (replace-reference-genomes req))))
+
 (defn reference-genomes-routes
   []
   (optional-routes
     [config/app-routes-enabled]
 
-    (PUT "/admin/reference-genomes" [:as req]
-         (replace-reference-genomes req))
-
     (GET "/reference-genomes" [:as req]
          (list-reference-genomes req))))
 
-(defn tool-routes
+(defn admin-tool-routes
   []
   (optional-routes
-    [config/app-routes-enabled]
+    [#(and (config/admin-routes-enabled)
+        (config/app-routes-enabled))]
 
     (POST "/admin/tools" [:as req]
           (import-tools req))
@@ -141,7 +154,12 @@
          (get-tool-request request-id))
 
     (POST "/admin/tool-requests/:request-id/status" [request-id :as req]
-          (update-tool-request req request-id))
+          (update-tool-request req request-id))))
+
+(defn tool-routes
+  []
+  (optional-routes
+    [config/app-routes-enabled]
 
     (GET "/tools" [:as req]
          (search-tools req))
