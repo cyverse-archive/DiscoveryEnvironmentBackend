@@ -326,7 +326,7 @@
   [app-id]
   (let [workspace-category-id (:root_category_id (get-workspace))
         dev-group-id (get-app-subcategory-id workspace-category-id (workspace-dev-app-group-index))]
-    (add-app-to-category dev-group-id app-id)))
+    (add-app-to-category app-id dev-group-id)))
 
 (defn- add-single-step-task
   "Adds a task as a single step to the given app, using the app's name, description, and label."

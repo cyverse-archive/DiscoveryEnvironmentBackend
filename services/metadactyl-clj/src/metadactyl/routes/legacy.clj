@@ -18,12 +18,6 @@
   (route/not-found (unrecognized-path-response)))
 
 (defroutes* metadactyl-routes
-  (GET "/get-analysis-categories/:category-set" [category-set]
-       (trap #(throw+ '("get-app-categories" category-set))))
-
-  (POST "/add-analysis-to-group" [:as {body :body}]
-        (trap #(throw+ '("add-app-to-group" body))))
-
   (GET "/export-workflow/:app-id" [app-id]
        (trap #(throw+ '("export-workflow" app-id))))
 

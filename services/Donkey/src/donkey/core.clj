@@ -71,13 +71,20 @@
    (secured-filesystem-routes)
    (secured-filesystem-metadata-routes)
    (secured-coge-routes)
-   (secured-admin-routes)
    (secured-search-routes)
    (secured-oauth-routes)
    (secured-favorites-routes)
    (secured-tag-routes)
    (secured-comment-routes)
    (route/not-found (unrecognized-path-response))))
+
+(defn admin-routes
+  []
+  (flagged-routes
+    (secured-admin-routes)
+    (admin-apps-routes)
+    (admin-reference-genomes-routes)
+    (admin-tool-routes)))
 
 (defn cas-store-user
   [routes]
@@ -88,6 +95,17 @@
        config/pgt-callback-base
        config/pgt-callback-path)))
 
+(defn cas-store-admin-user
+  [routes]
+  (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user store-current-admin-user)]
+    (f routes
+      config/cas-server
+      config/server-name
+      config/group-attr-name
+      config/allowed-groups
+      config/pgt-callback-base
+      config/pgt-callback-path)))
+
 (def secured-handler-no-context
   (-> (delayed-handler secured-routes-no-context)
       (cas-store-user)))
@@ -95,6 +113,10 @@
 (def secured-handler
   (-> (delayed-handler secured-routes)
       (cas-store-user)))
+
+(def admin-handler
+  (-> (delayed-handler admin-routes)
+      (cas-store-admin-user)))
 
 (defn donkey-routes
   []
@@ -107,6 +129,7 @@
    (unsecured-callback-routes)
    (context "/secured" [] secured-handler)
    secured-handler-no-context
+   admin-handler
    (route/not-found (unrecognized-path-response))))
 
 (defn start-nrepl

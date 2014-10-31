@@ -1,7 +1,6 @@
 # Endpoint Index
 
 * [GET /](endpoints/misc.md#verifying-that-donkey-is-running)
-* [POST /add-analysis-to-group](endpoints/app-metadata.md#adding-analyses-to-analysis-groups)
 * [POST /admin/apps](endpoints/app-metadata.md#categorizing-apps)
 * [POST /admin/apps/categories/shredder](endpoints/app-metadata.md#deleting-categories)
 * [POST /admin/apps/shredder](endpoints/app-metadata.md#permanently-deleting-an-app)
@@ -44,8 +43,8 @@
 * [POST /callbacks/notification](endpoints/callbacks.md#receiving-de-notifications)
 * [GET /export-workflow/{analysis-id}](endpoints/app-metadata.md#exporting-an-analysis)
 * [POST /fileio/upload](endpoints/fileio.md#uploading)
-* [GET /get-analysis-categories/{category-set}](endpoints/app-metadata.md#listing-analysis-categorizations)
 * [GET /reference-genomes](endpoints/reference-genomes.md#exporting-reference-genomes)
+* [GET /reference-genomes/{reference-genome-id}](endpoints/reference-genomes.md#get-a-reference-genome-by-id)
 * [GET /secured/admin/config](endpoints/admin.md#listing-the-config-for-donkey-)
 * [GET /secured/admin/status](endpoints/admin.md#status-check-)
 * [PATCH /secured/analysis/{analysis-id}](endpoints/app-execution.md#updating-analysis-information)

@@ -1,5 +1,5 @@
 (ns metadactyl.routes.reference-genomes
-  (:use [metadactyl.metadata.reference-genomes :only [list-reference-genomes]]
+  (:use [metadactyl.metadata.reference-genomes :only [get-reference-genome list-reference-genomes]]
         [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.params]
         [compojure.api.sweet])
@@ -11,4 +11,12 @@
         :return ReferenceGenomesList
         :summary "List Reference Genomes."
         :notes "This endpoint may be used to obtain lists of all available Reference Genomes."
-        (ce/trap uri #(list-reference-genomes))))
+        (ce/trap uri #(list-reference-genomes)))
+
+  (GET* "/:reference-genome-id" [:as {uri :uri}]
+        :path-params [reference-genome-id :- ReferenceGenomeIdParam]
+        :query [params SecuredQueryParams]
+        :return ReferenceGenome
+        :summary "Get a Reference Genome."
+        :notes "This endpoint may be used to obtain a Reference Genome by its UUID."
+        (ce/trap uri #(get-reference-genome reference-genome-id))))

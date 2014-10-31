@@ -7,8 +7,6 @@
     * [Deleting Categories](#deleting-categories)
     * [Listing Tasks in an App](#listing-tasks-in-an-app)
     * [Categorizing Apps](#categorizing-apps)
-    * [Listing Analysis Categorizations](#listing-analysis-categorizations)
-    * [Adding Analyses to Analysis Groups](#adding-analyses-to-analysis-groups)
     * [Creating an App for the Current User](#creating-an-app-for-the-current-user)
     * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
     * [Getting App Details](#getting-app-details)
@@ -166,24 +164,6 @@ Delegates to metadactyl: POST /admin/apps
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
-
-## Listing Analysis Categorizations
-
-Unsecured Endpoint: GET /get-analysis-categories/{category-set}
-
-Delegates to metadactyl: GET /get-analysis-categories/{category-set}
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
-
-## Adding Analyses to Analysis Groups
-
-Unsecured Endpoint: POST /add-analysis-to-group
-
-Delegates to metadactyl: POST /add-analysis-to-group
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path. Please see the metadactyl documentation for more information.
 
 ## Creating an App for the Current User
 
