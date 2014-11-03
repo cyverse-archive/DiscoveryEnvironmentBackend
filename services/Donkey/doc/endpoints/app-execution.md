@@ -254,13 +254,12 @@ $ curl -s http://by-tor:8888/app-rerun-info/D3AE0C5C-CC74-4A98-8D26-224D6366F9D6
 
 ## Submitting a Job for Execution
 
-Secured Endpoint: PUT /secured/workspaces/{workspace-id}/newexperiment
+Secured Endpoint: POST /analyses
 
-Delegates to metadactyl: PUT /secured/workspaces/{workspace-id}/newexperiment
-Or submits a job to Foundation API.
-
-This endpoint is a passthrough to the metadactyl endpoint using the same
-path, or submits a job to Foundation API.
+For DE jobs, this endpoint forwards the request to metadactyl. For Agave jobs,
+this endpoint forwards a request to Agave. For jobs containing both DE and Agave
+job steps, this endpoint splits the job into multiple components and coordinates
+job submissions to both systems.
 
 The response body for this service is in the following format:
 
@@ -278,7 +277,7 @@ format.
 
 ## Listing Jobs
 
-*Secured Endpoint:* GET /secured/workspaces/{workspace-id}/executions/list
+*Secured Endpoint:* GET /analyses
 
 Information about the status of jobs that have previously been submitted for
 execution can be obtained using this service. The DE uses this service to
@@ -289,9 +288,9 @@ following format:
 {
     "analyses": [
         {
-            "analysis_details": "analysis-description",
-            "analysis_id": "analysis-id",
-            "analysis_name": "analysis-name",
+            "app_description": "analysis-description",
+            "app_id": "analysis-id",
+            "app_name": "analysis-name",
             "app_disabled": false,
             "description": "job-description",
             "enddate": "end-date-as-milliseconds-since-epoch",
@@ -300,21 +299,21 @@ following format:
             "resultfolderid": "path-to-result-folder",
             "startdate": "start-date-as-milliseconds-since-epoch",
             "status": "job-status-code",
+            "username": "fully-qualified-username",
             "wiki_url": "analysis-documentation-link"
         },
         ...
     ],
-    "success": true,
     "timestamp": "timestamp",
     "total": "total"
 }
 ```
 
-With no query string parameters aside from `user` and `email`, this service
-returns information about all jobs ever run by the user that haven't been marked
-as deleted in descending order by start time (that is, the `startdate` field in
-the result). Several query-string parameters are available to alter the way this
-service behaves:
+With no query string parameters aside from the authentication token, this
+service returns information about all jobs ever run by the user that haven't
+been marked as deleted in descending order by start time (that is, the
+`startdate` field in the result). Several query-string parameters are available
+to alter the way this service behaves:
 
 | Name | Description | Default |
 | ---- | ----------- | ------- |
@@ -347,61 +346,63 @@ With this function defined, a `curl` command to call this service with a filter
 can be simplified to something like this:
 
 ```
-curl -s "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket)&filter=$(urlencode '[{"field":"analysis_name","value":"cace"}]')" | python -mjson.tool
+curl -s "http://by-tor:8888/secured/analyses?proxyToken=$(cas-ticket)&filter=$(urlencode '[{"field":"analysis_name","value":"cace"}]')" | python -mjson.tool
 ```
 
 Here's an example using no parameters:
 
 ```
-$ curl -s "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -s "http://localhost:31325/analyses?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "analyses": [
         {
-            "analysis_details": "Count words in a file",
-            "analysis_id": "wc-1.00u1",
-            "analysis_name": "Word Count",
-            "app-disabled": false,
-            "description": "",
-            "enddate": "1382979411000",
-            "id": "31499",
-            "name": "wc_10280954",
-            "resultfolderid": "/iplant/home/snow-dog/analyses/wc_10280954",
-            "startdate": "1382979299935",
-            "status": "Completed",
-            "wiki_url": ""
+            "app_description": "Counts and summarizes the number of lines, words, and bytes in a target file",
+            "app_disabled": true,
+            "app_id": "c7f05682-23c8-4182-b9a2-e09650a5f49b",
+            "app_name": "Word Count",
+            "deleted": null,
+            "description": "Testing some jobs, yo.",
+            "enddate": "1415040070501",
+            "id": "6821c5c2-45b1-4f02-92fd-9c02992be7cc",
+            "name": "wc_10291330",
+            "resultfolderid": "/iplant/home/snow-dog/analyses/wc_10291330-2014-11-03-18-37-04.1",
+            "startdate": "1415039824186",
+            "status": "Failed",
+            "username": "snow-dog@iplantcollaborative.org",
+            "wiki_url": "https://pods.iplantcollaborative.org/wiki/display/DEapps/Word%20Count"
         },
         ...
     ],
-    "success": true,
-    "timestamp": "1383000130668",
-    "total": 23
+    "timestamp": "1415050735387",
+    "total": 19
 }
 ```
 
 Here's an example of a search with a limit of one result:
 
 ```
-$ curl -s "http://by-tor:8888/secured/workspaces/4/executions/list?proxyToken=$(cas-ticket)&limit=1" | python -mjson.tool
+$ curl -s "http://localhost:31325/analyses?proxyToken=$(cas-ticket)&limit=1" | python -mjson.tool
 {
     "analyses": [
         {
-            "analysis_details": "Count words in a file",
-            "analysis_id": "wc-1.00u1",
-            "analysis_name": "Word Count",
-            "app-disabled": false,
-            "description": "",
-            "enddate": "1382979411000",
-            "id": "31499",
-            "name": "wc_10280954",
-            "resultfolderid": "/iplant/home/snow-dog/analyses/wc_10280954",
-            "startdate": "1382979299935",
-            "status": "Completed",
-            "wiki_url": ""
+            "app_description": "Counts and summarizes the number of lines, words, and bytes in a target file",
+            "app_disabled": true,
+            "app_id": "c7f05682-23c8-4182-b9a2-e09650a5f49b",
+            "app_name": "Word Count",
+            "deleted": null,
+            "description": "Testing some jobs, yo.",
+            "enddate": "1415040070501",
+            "id": "6821c5c2-45b1-4f02-92fd-9c02992be7cc",
+            "name": "wc_10291330",
+            "resultfolderid": "/iplant/home/snow-dog/analyses/wc_10291330-2014-11-03-18-37-04.1",
+            "startdate": "1415039824186",
+            "status": "Failed",
+            "username": "snow-dog@iplantcollaborative.org",
+            "wiki_url": "https://pods.iplantcollaborative.org/wiki/display/DEapps/Word%20Count"
         }
     ],
-    "success": true,
-    "timestamp": "1383000130668",
-    "total": 23
+    "timestamp": "1415050829308",
+    "total": 19
 }
 ```
 

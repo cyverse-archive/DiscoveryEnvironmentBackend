@@ -11,7 +11,10 @@
     {(optional-key :deleted)
      (describe Boolean
        "Whether or not to include Reference Genomes that have been marked as deleted
-        (false by default).")}))
+        (false by default).")
+
+     (optional-key :created_by)
+     (describe String "Filters the Reference Genome listing by the user that added them.")}))
 
 (defschema ReferenceGenome
   {:id
