@@ -118,7 +118,10 @@
   (optional-routes
    [config/app-routes-enabled]
 
-   (POST "/analyses" [:as {body :body}]
+   (GET "/analyses" [:as {:keys [params]}]
+        (apps/list-jobs params))
+
+   (POST "/analyses" [:as {:keys [body]}]
          (apps/submit-job body))))
 
 (defn admin-reference-genomes-routes
@@ -189,9 +192,6 @@
 
    (GET "/logout" [:as {params :params}]
         (logout params))
-
-   (GET "/workspaces/:workspace-id/executions/list" [_ :as {params :params}]
-        (apps/list-jobs params))
 
    (PUT "/workspaces/:workspace-id/executions/delete" [_ :as {body :body}]
         (apps/delete-jobs body))
