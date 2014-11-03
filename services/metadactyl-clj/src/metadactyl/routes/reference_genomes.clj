@@ -7,11 +7,11 @@
 
 (defroutes* reference-genomes
   (GET* "/" [:as {uri :uri}]
-        :query [params SecuredQueryParams]
+        :query [params ReferenceGenomeListingParams]
         :return ReferenceGenomesList
         :summary "List Reference Genomes."
         :notes "This endpoint may be used to obtain lists of all available Reference Genomes."
-        (ce/trap uri #(list-reference-genomes)))
+        (ce/trap uri #(list-reference-genomes params)))
 
   (GET* "/:reference-genome-id" [:as {uri :uri}]
         :path-params [reference-genome-id :- ReferenceGenomeIdParam]

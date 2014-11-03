@@ -6,6 +6,13 @@
 
 (def ReferenceGenomeIdParam (describe UUID "A UUID that is used to identify the Reference Genome"))
 
+(defschema ReferenceGenomeListingParams
+  (merge SecuredQueryParams
+    {(optional-key :deleted)
+     (describe Boolean
+       "Whether or not to include Reference Genomes that have been marked as deleted
+        (false by default).")}))
+
 (defschema ReferenceGenome
   {:id
    ReferenceGenomeIdParam

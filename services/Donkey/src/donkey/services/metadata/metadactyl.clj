@@ -415,8 +415,8 @@
 
 (defn list-reference-genomes
   "Lists the reference genomes in the database."
-  [req]
-  (client/get (metadactyl-url {} "reference-genomes")
+  [params]
+  (client/get (metadactyl-url (select-keys params [:deleted]) "reference-genomes")
               {:as :stream}))
 
 (defn get-reference-genome

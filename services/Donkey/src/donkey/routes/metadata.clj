@@ -135,8 +135,8 @@
   (optional-routes
     [config/app-routes-enabled]
 
-    (GET "/reference-genomes" [:as req]
-         (list-reference-genomes req))
+    (GET "/reference-genomes" [:as {params :params}]
+         (list-reference-genomes params))
 
     (GET "/reference-genomes/:reference-genome-id" [reference-genome-id]
          (get-reference-genome reference-genome-id))))

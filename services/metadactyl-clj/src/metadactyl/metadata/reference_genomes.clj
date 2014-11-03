@@ -29,12 +29,21 @@
   (if (seq uuids)
     (select (reference-genome-base-query)
             (where {:id [in uuids]}))
-    (select (reference-genome-base-query))))
+    (select (reference-genome-base-query)
+            (where {:deleted false}))))
+
+(defn get-all-reference-genomes
+  "Lists all of the reference genomes in the database, including those marked as deleted."
+  []
+  (select (reference-genome-base-query)))
 
 (defn list-reference-genomes
   "Lists the reference genomes in the database."
-  []
-  (success-response {:genomes (get-reference-genomes)}))
+  [{:keys [deleted]}]
+  (let [reference-genomes (if deleted
+                            (get-all-reference-genomes)
+                            (get-reference-genomes))]
+    (success-response {:genomes reference-genomes})))
 
 (defn get-reference-genome
   [reference-genome-id]
