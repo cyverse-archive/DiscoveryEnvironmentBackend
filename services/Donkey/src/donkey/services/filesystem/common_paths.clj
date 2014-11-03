@@ -61,7 +61,7 @@
 
 (defn user-trash-path
   [user]
-  (item/trash-base-dir (cfg/irods-zone) user))
+  (ft/path-join (base-trash-path) user))
 
 
 (defn- user-trash-dir?
