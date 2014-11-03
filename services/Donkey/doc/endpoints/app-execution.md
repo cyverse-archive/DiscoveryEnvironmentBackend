@@ -266,7 +266,6 @@ The response body for this service is in the following format:
 
 ```json
 {
-    "success": true,
     "id": "job-id",
     "name": "Job Name",
     "status": "Submitted",
@@ -274,9 +273,8 @@ The response body for this service is in the following format:
 }
 ```
 
-Please see the
-[metadactyl documentation](http://github.com/iPlantCollaborativeOpenSource/metadactyl-clj/blob/master/doc/endpoints/app-execution.md#submitting-a-job-for-execution)
-for more information, including the request format.
+Please see the metadactyl documentation for information about the request body
+format.
 
 ## Listing Jobs
 
