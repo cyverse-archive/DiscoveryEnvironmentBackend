@@ -7,26 +7,20 @@ import (
 	"net/http"
 )
 
-// type JobJSON struct {
-// 	BatchID          string
-// 	Submitter        string
-// 	AppID            string
-// 	CommandLine      string
-// 	EnvVariables     string
-// 	FailureThreshold int64
-// 	DateSubmitted    string
-// 	Date
-// }
-
+// HTTPAPI stores the state that all of the API functionality will need.
 type HTTPAPI struct {
 	d *Databaser
 }
 
+// WriteRequestError writes out an error message to the writer and sets the
+// the HTTP status to 400.
 func WriteRequestError(writer http.ResponseWriter, msg string) {
 	writer.WriteHeader(http.StatusBadRequest)
 	writer.Write([]byte(msg))
 }
 
+// Route looks at the requests method and decides which function should handle
+// the request.
 func (h *HTTPAPI) Route(writer http.ResponseWriter, request *http.Request) {
 	switch request.Method {
 	case "GET":
@@ -44,6 +38,30 @@ func (h *HTTPAPI) JobHTTPGet(writer http.ResponseWriter, request *http.Request) 
 
 }
 
+// JobHTTPPost is responsible for parsing JSON and inserting a new job into the
+// database. The incoming JSON should have the following format:
+//    {
+//      "Submitter"   : "<string>",
+//      "AppID"       : "<uuid>",
+//      "CommandLine" : "<string>",
+//      "CondorID"    : "<string>"
+//    }
+// Those are the required fields. The following fields are also accepted:
+// 	  {
+//      "BatchID"          : "<uuid>",
+//      "DateSubmitted"    : "<timestamp>",
+//      "DateStarted"      : "<timestamp>",
+//      "DateCompleted"    : "<timestamp>",
+//      "EnvVariables"     : "<string>",
+//      "ExitCode"         : <int>,
+//      "FailureCount"     : <int>,
+//      "FailureThreshold" : <int>
+//    }
+// Any fields marked as <timestamp> must be a string formatted according to
+// RFC3339. Here's an example from the Go programming language docs:
+//    2006-01-02T15:04:05Z07:00
+// The timezone *is* stored with dates, so you'll probably want to convert to
+// UTC before sending the timestamps in the JSON.
 func (h *HTTPAPI) JobHTTPPost(writer http.ResponseWriter, request *http.Request) {
 	bytes, err := ioutil.ReadAll(request.Body)
 	if err != nil {
@@ -68,6 +86,10 @@ func (h *HTTPAPI) JobHTTPPost(writer http.ResponseWriter, request *http.Request)
 		WriteRequestError(writer, "The CommandLine field is required in the POST JSON")
 		return
 	}
+	if parsed.CondorID == "" {
+		WriteRequestError(writer, "The CondorID field is required in the POST JSON")
+		return
+	}
 	jobID, err := h.d.InsertJob(&parsed)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -77,6 +99,9 @@ func (h *HTTPAPI) JobHTTPPost(writer http.ResponseWriter, request *http.Request)
 	writer.Write([]byte(jobID))
 }
 
+// SetupHTTP configures a new HTTPAPI instance, registers handlers, and fires
+// off a goroutinge that listens for requests. Should probably only be called
+// once.
 func SetupHTTP(config *Configuration, d *Databaser) {
 	api := HTTPAPI{
 		d: d,
