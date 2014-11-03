@@ -35,6 +35,7 @@ func NewDatabaser(connString string) (*Databaser, error) {
 type JobRecord struct {
 	ID               string
 	BatchID          string
+	CondorID         string
 	Submitter        string
 	DateSubmitted    time.Time
 	DateStarted      time.Time
@@ -61,7 +62,8 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 		env_variables,
 		exit_code,
 		failure_threshold,
-		failure_count
+		failure_count,
+		condor_id
 	) VALUES (
 		cast($1 AS uuid),
 		$2,
@@ -73,7 +75,8 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 		$8,
 		$9,
 		$10,
-		$11
+		$11,
+		$12
 	) RETURNING id`
 	var fixedBatch *string
 	if jr.BatchID == "" {
@@ -95,6 +98,7 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 		jr.ExitCode,
 		jr.FailureThreshold,
 		jr.FailureCount,
+		jr.CondorID,
 	).Scan(&id)
 	if err != nil {
 		return "", err
@@ -126,7 +130,8 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 				env_variables,
 				exit_code,
 				failure_threshold,
-				failure_count
+				failure_count,
+				condor_id
 		FROM jobs
 	WHERE id = cast($1 as uuid)
 	`
@@ -143,6 +148,7 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	var exitcode int
 	var failurethreshold int64
 	var failurecount int64
+	var condorid string
 	err := rows.Scan(
 		&id,
 		&batchid,
@@ -156,6 +162,7 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 		&exitcode,
 		&failurethreshold,
 		&failurecount,
+		&condorid,
 	)
 	jr := JobRecord{
 		ID:               id,
@@ -169,6 +176,7 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 		ExitCode:         exitcode,
 		FailureThreshold: failurethreshold,
 		FailureCount:     failurecount,
+		CondorID:         condorid,
 	}
 	if batchid == nil {
 		jr.BatchID = ""
@@ -192,8 +200,9 @@ func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
 				env_variables = $8,
 				exit_code = $9,
 				failure_threshold = $10,
-				failure_count = $11
-	WHERE id = cast($12 as uuid)
+				failure_count = $11,
+				condor_id = $12
+	WHERE id = cast($13 as uuid)
 	RETURNING id
 	`
 	var id string
@@ -216,6 +225,7 @@ func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
 		jr.ExitCode,
 		jr.FailureThreshold,
 		jr.FailureCount,
+		jr.CondorID,
 		jr.ID,
 	).Scan(&id)
 	if err != nil {

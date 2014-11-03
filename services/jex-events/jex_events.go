@@ -22,8 +22,8 @@ func init() {
 
 // Configuration instance contain config values for jex-events.
 type Configuration struct {
-	AMQPURI                                                               string
-	ConsumerTag                                                           string
+	AMQPURI, DBURI                                                        string
+	ConsumerTag, HTTPListenPort                                           string
 	ExchangeName, ExchangeType, RoutingKey, QueueName, QueueBindingKey    string
 	ExchangeDurable, ExchangeAutodelete, ExchangeInternal, ExchangeNoWait bool
 	QueueDurable, QueueAutodelete, QueueExclusive, QueueNoWait            bool
@@ -140,7 +140,7 @@ type ConnectionErrorChannel struct {
 
 // MsgHandler functions will accept msgs from a Delivery channel and report
 // error on the error channel.
-type MsgHandler func(<-chan amqp.Delivery, <-chan int)
+type MsgHandler func(<-chan amqp.Delivery, <-chan int, *Databaser)
 
 // Connect sets up a connection to an AMQP exchange
 func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan amqp.Delivery, error) {
@@ -217,7 +217,7 @@ func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan
 
 // SetupReconnection fires up a goroutine that listens for Close() errors and
 // reconnects to the AMQP server if they're encountered.
-func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, handler MsgHandler, quitHandler chan int) {
+func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, handler MsgHandler, quitHandler chan int, d *Databaser) {
 	//errors := p.connection.NotifyClose(make(chan *amqp.Error))
 	go func() {
 		var exitChan chan *amqp.Error
@@ -237,7 +237,7 @@ func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, 
 						log.Print("Error reconnecting to server, exiting.")
 						log.Print(err)
 					}
-					handler(deliveries, quitHandler)
+					handler(deliveries, quitHandler, d)
 					reconfig = true //
 				} else {
 					log.Println(exitError)
@@ -247,7 +247,7 @@ func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, 
 						log.Print("Error reconnecting to server, exiting.")
 						log.Print(err)
 					}
-					handler(deliveries, quitHandler)
+					handler(deliveries, quitHandler, d)
 					reconfig = false
 				}
 			}
@@ -278,7 +278,7 @@ func (e *Event) String() string {
 }
 
 // EventHandler processes incoming event messages
-func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int) {
+func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser) {
 	for {
 		select {
 		case delivery := <-deliveries:
@@ -333,14 +333,20 @@ func main() {
 	if !config.Valid() {
 		os.Exit(-1)
 	}
+	databaser, err := NewDatabaser(config.DBURI)
+	if err != nil {
+		log.Print(err)
+		os.Exit(-1)
+	}
 	connErrChan := make(chan ConnectionErrorChannel)
 	quitHandler := make(chan int)
 	consumer := NewAMQPConsumer(config)
-	consumer.SetupReconnection(connErrChan, EventHandler, quitHandler)
+	consumer.SetupReconnection(connErrChan, EventHandler, quitHandler, databaser)
+	SetupHTTP(config, databaser)
 	deliveries, err := consumer.Connect(connErrChan)
 	if err != nil {
 		log.Print(err)
 		os.Exit(-1)
 	}
-	EventHandler(deliveries, quitHandler)
+	EventHandler(deliveries, quitHandler, databaser)
 }

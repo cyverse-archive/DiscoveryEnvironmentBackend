@@ -43,6 +43,7 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 	jr := &JobRecord{
 		BatchID:       "",
 		Submitter:     "unit_tests",
+		CondorID:      "test",
 		DateSubmitted: submitted,
 		DateStarted:   started,
 		DateCompleted: completed,
@@ -69,6 +70,9 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 	}
 	if newJR.Submitter != jr.Submitter {
 		t.Errorf("Submitters didn't match")
+	}
+	if newJR.CondorID != jr.CondorID {
+		t.Errorf("CondorIDs didn't match")
 	}
 	if newJR.DateSubmitted.Format(time.RFC822Z) != jr.DateSubmitted.Format(time.RFC822Z) {
 		t.Errorf("Submitted dates didn't match")
