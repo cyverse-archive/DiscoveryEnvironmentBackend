@@ -91,16 +91,18 @@
   [param-name param-value]
   (let [param-value (if (nil? param-value) "" param-value)]
     (if (re-find #"=\z" param-name)
-     [""         (str param-name param-value)]
-     [param-name param-value])))
+      [""         (str param-name param-value)]
+      [param-name param-value])))
 
 (defn- build-arg
   ([param param-name param-value]
-     (let [[opt-arg opt-val] (determine-opt-arg param-name param-value)]
-      {:id    (:id param)
-       :name  opt-arg
-       :order (:order param 0)
-       :value opt-val}))
+     (let [param-name        (string/trim param-name)
+           param-value       (string/trim (str param-value))
+           [opt-arg opt-val] (determine-opt-arg param-name param-value)]
+       {:id    (:id param)
+        :name  opt-arg
+        :order (:order param 0)
+        :value opt-val}))
   ([param param-value]
      (build-arg param (or (:name param) "") param-value)))
 
@@ -216,11 +218,12 @@
    :proxy-user   (uuidify "616D8815-C42A-4E53-885B-E7A594D4BDBD")})
 
 (defn- generate-extra-arg
-  [order name value id-key]
-  {:id    (generated-param-ids id-key)
-   :name  name
-   :order order
-   :value value})
+  [order param-name param-value id-key]
+  (let [[opt-arg opt-val] (determine-opt-arg param-name param-value)]
+    {:id    (generated-param-ids id-key)
+     :name  opt-arg
+     :order order
+     :value opt-val}))
 
 (defn build-extra-fapi-args
   [user job-name output-dir]
