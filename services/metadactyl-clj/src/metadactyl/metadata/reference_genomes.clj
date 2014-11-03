@@ -25,12 +25,23 @@
 
 (defn get-reference-genomes
   "Lists all of the reference genomes in the database."
+  [{:keys [deleted created_by]}]
+  (let [query (reference-genome-base-query)
+        query (if-not deleted
+                (where query {:deleted false})
+                query)
+        query (if created_by
+                (where query {:created_by.username created_by})
+                query)]
+    (select query)))
+
+(defn get-reference-genomes-by-id
+  "Lists all of the reference genomes in the database."
   [& uuids]
   (if (seq uuids)
     (select (reference-genome-base-query)
-            (where {:id [in uuids]}))
-    (select (reference-genome-base-query)
-            (where {:deleted false}))))
+      (where {:id [in uuids]}))
+    (select (reference-genome-base-query))))
 
 (defn get-all-reference-genomes
   "Lists all of the reference genomes in the database, including those marked as deleted."
@@ -39,16 +50,15 @@
 
 (defn list-reference-genomes
   "Lists the reference genomes in the database."
-  [{:keys [deleted]}]
-  (let [reference-genomes (if deleted
-                            (get-all-reference-genomes)
-                            (get-reference-genomes))]
+  [params]
+  (let [reference-genomes (get-reference-genomes params)]
+    (log/debug "reference-genomes count" (count reference-genomes))
     (success-response {:genomes reference-genomes})))
 
 (defn get-reference-genome
   [reference-genome-id]
   (success-response (assert-not-nil [:reference-genome-id reference-genome-id]
-                      (first (get-reference-genomes [reference-genome-id])))))
+                      (first (get-reference-genomes-by-id reference-genome-id)))))
 
 (def ^:private valid-insert-fields
   [:id :name :path :deleted :created_by :created_on :last_modified_by :last_modified_on])

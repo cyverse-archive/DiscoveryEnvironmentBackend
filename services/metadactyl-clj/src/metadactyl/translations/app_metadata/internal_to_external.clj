@@ -1,6 +1,6 @@
 (ns metadactyl.translations.app-metadata.internal-to-external
   (:use [metadactyl.translations.app-metadata.util]
-        [metadactyl.metadata.reference-genomes :only [get-reference-genomes]]
+        [metadactyl.metadata.reference-genomes :only [get-reference-genomes-by-id]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as ce]
             [clojure.string :as string]
@@ -40,7 +40,7 @@
   [property-value]
   (let [non-empty-string? (fn [s] (and (string? s) (not (string/blank? s))))]
     (cond (map? property-value)              property-value
-          (non-empty-string? property-value) (first (get-reference-genomes property-value))
+          (non-empty-string? property-value) (first (get-reference-genomes-by-id property-value))
           :else                              "")))
 
 (defn get-default-value
