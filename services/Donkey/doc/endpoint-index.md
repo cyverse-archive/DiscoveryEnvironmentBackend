@@ -8,6 +8,7 @@
 * [POST /admin/filesystem/index](endpoints/filesystem/search.md#endpoint)
 * [PUT /admin/reference-genomes](endpoints/reference-genomes.md#importing-reference-genomes)
 * [DELETE /admin/reference-genomes/{reference-genome-id}](endpoints/reference-genomes.md#deleting-reference-genomes)
+* [PATCH /admin/reference-genomes/{reference-genome-id}](endpoints/reference-genomes.md#updating-reference-genomes)
 * [POST /admin/tools](endpoints/app-metadata.md#importing-tools)
 * [GET /admin/tool-requests](endpoints/app-metadata.md#listing-tool-installation-requests)
 * [GET /admin/tool-requests/{tool-request-id}](endpoints/app-metadata.md#listing-tool-installation-request-details)

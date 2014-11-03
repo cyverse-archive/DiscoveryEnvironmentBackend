@@ -5,6 +5,7 @@
     * [Get a Reference Genome by ID](#get-a-reference-genome-by-id)
     * [Importing Reference Genomes](#importing-reference-genomes)
     * [Deleting Reference Genomes](#deleting-reference-genomes)
+    * [Updating Reference Genomes](#updating-reference-genomes)
 
 # Reference Genome endpoints
 
@@ -44,6 +45,15 @@ Please see the metadactyl documentation for more details.
 Secured Endpoint: DELETE /admin/reference-genomes/{reference-genome-id}
 
 Delegates to metadactyl: DELETE /admin/reference-genomes/{reference-genome-id}
+
+This endpoint is a passthrough to the metadactyl endpoint with the same path.
+Please see the metadactyl documentation for more details.
+
+## Updating Reference Genomes
+
+Secured Endpoint: PATCH /admin/reference-genomes/{reference-genome-id}
+
+Delegates to metadactyl: PATCH /admin/reference-genomes/{reference-genome-id}
 
 This endpoint is a passthrough to the metadactyl endpoint with the same path.
 Please see the metadactyl documentation for more details.

@@ -72,6 +72,17 @@
   (update genome_reference (set-fields {:deleted true}) (where {:id reference-genome-id}))
   nil)
 
+(defn update-reference-genome
+  "Updates the name, path, and deleted flag of a reference genome."
+  [{reference-genome-id :id :as reference-genome}]
+  (get-valid-reference-genome reference-genome-id)
+  (let [update-values (-> reference-genome
+                          (select-keys [:name :path :deleted])
+                          (assoc :last_modified_by (get-user-id (:username current-user))
+                                 :last_modified_on (sqlfn now)))]
+    (update genome_reference (set-fields update-values) (where {:id reference-genome-id}))
+    (get-reference-genome reference-genome-id)))
+
 (def ^:private valid-insert-fields
   [:id :name :path :deleted :created_by :created_on :last_modified_by :last_modified_on])
 

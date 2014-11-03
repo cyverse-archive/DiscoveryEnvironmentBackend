@@ -50,3 +50,8 @@
 
 (defschema ReferenceGenomesSetRequest
   {:genomes (describe [ReferenceGenomeRequest] "Listing of Reference Genomes.")})
+
+(defschema ReferenceGenomePatchRequest
+  (-> ReferenceGenomeRequest
+    (->optional-param :created_by)
+    (->optional-param :last_modified_by)))

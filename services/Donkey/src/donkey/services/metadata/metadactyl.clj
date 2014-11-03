@@ -438,6 +438,13 @@
   (client/delete (metadactyl-url {} "admin" "reference-genomes" reference-genome-id)
                  {:as :stream}))
 
+(defn update-reference-genome
+  "Updates a reference genome via metadactyl."
+  [req reference-genome-id]
+  (let [url (metadactyl-url {} "admin" "reference-genomes" reference-genome-id)
+        req (metadactyl-request req)]
+    (forward-patch url req)))
+
 (defn- extract-uploaded-path
   "Gets the file ID as a path from the given upload results."
   [upload]

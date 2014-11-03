@@ -1,7 +1,8 @@
 (ns metadactyl.routes.admin
   (:use [metadactyl.app-categorization :only [categorize-apps]]
         [metadactyl.metadata.reference-genomes :only [delete-reference-genome
-                                                      replace-reference-genomes]]
+                                                      replace-reference-genomes
+                                                      update-reference-genome]]
         [metadactyl.metadata.tool-requests]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.category]
@@ -92,6 +93,16 @@
             :notes "This endpoint replaces ALL the Reference Genomes in the Discovery Environment,
             so if a genome is not listed in the request, it will not show up in the DE."
             (ce/trap uri #(replace-reference-genomes body)))
+
+  (PATCH* "/:reference-genome-id" [:as {uri :uri}]
+          :path-params [reference-genome-id :- ReferenceGenomeIdParam]
+          :query [params SecuredQueryParams]
+          :body [body (describe ReferenceGenomePatchRequest "The Reference Genome fields to update.")]
+          :return ReferenceGenome
+          :summary "Update a Reference Genome."
+          :notes "This endpoint modifies the name, path, and deleted fields of a Reference Genome in
+          the Discovery Environment."
+          (ce/trap uri #(update-reference-genome (assoc body :id reference-genome-id))))
 
   (DELETE* "/:reference-genome-id" [:as {uri :uri}]
            :path-params [reference-genome-id :- ReferenceGenomeIdParam]

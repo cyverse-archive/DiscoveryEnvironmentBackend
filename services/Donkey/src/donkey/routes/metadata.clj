@@ -134,7 +134,10 @@
          (replace-reference-genomes req))
 
     (DELETE "/reference-genomes/:reference-genome-id" [reference-genome-id]
-            (delete-reference-genomes reference-genome-id))))
+            (delete-reference-genomes reference-genome-id))
+
+    (PATCH "/reference-genomes/:reference-genome-id" [reference-genome-id :as req]
+           (update-reference-genome req reference-genome-id))))
 
 (defn reference-genomes-routes
   []
