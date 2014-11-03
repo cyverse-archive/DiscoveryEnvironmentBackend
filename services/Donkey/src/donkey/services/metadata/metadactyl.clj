@@ -425,6 +425,13 @@
   (client/get (metadactyl-url {} "reference-genomes" reference-genome-id)
               {:as :stream}))
 
+(defn add-reference-genome
+  "Adds a reference genome via metadactyl."
+  [req]
+  (let [url (metadactyl-url {} "admin" "reference-genomes")
+        req (metadactyl-request req)]
+    (forward-post url req)))
+
 (defn replace-reference-genomes
   "Replaces the reference genomes in the database with a new set of reference genomes."
   [req]

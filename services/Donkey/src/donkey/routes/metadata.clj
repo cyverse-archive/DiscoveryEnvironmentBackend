@@ -130,6 +130,9 @@
     [#(and (config/admin-routes-enabled)
            (config/app-routes-enabled))]
 
+    (POST "/reference-genomes" [:as req]
+          (add-reference-genome req))
+
     (PUT "/reference-genomes" [:as req]
          (replace-reference-genomes req))
 

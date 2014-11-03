@@ -1,6 +1,7 @@
 (ns metadactyl.routes.admin
   (:use [metadactyl.app-categorization :only [categorize-apps]]
-        [metadactyl.metadata.reference-genomes :only [delete-reference-genome
+        [metadactyl.metadata.reference-genomes :only [add-reference-genome
+                                                      delete-reference-genome
                                                       replace-reference-genomes
                                                       update-reference-genome]]
         [metadactyl.metadata.tool-requests]
@@ -85,6 +86,14 @@
          (ce/trap uri #(permanently-delete-apps body))))
 
 (defroutes* reference-genomes
+  (POST* "/" [:as {uri :uri}]
+         :query [params SecuredQueryParams]
+         :body [body (describe ReferenceGenomeRequest "The Reference Genome to add.")]
+         :return ReferenceGenome
+         :summary "Add a Reference Genome."
+         :notes "This endpoint adds a Reference Genome to the Discovery Environment."
+         (ce/trap uri #(add-reference-genome body)))
+
   (PUT* "/" [:as {uri :uri}]
             :query [params SecuredQueryParams]
             :body [body (describe ReferenceGenomesSetRequest "List of Reference Genomes to set.")]
@@ -97,7 +106,7 @@
   (PATCH* "/:reference-genome-id" [:as {uri :uri}]
           :path-params [reference-genome-id :- ReferenceGenomeIdParam]
           :query [params SecuredQueryParams]
-          :body [body (describe ReferenceGenomePatchRequest "The Reference Genome fields to update.")]
+          :body [body (describe ReferenceGenomeRequest "The Reference Genome fields to update.")]
           :return ReferenceGenome
           :summary "Update a Reference Genome."
           :notes "This endpoint modifies the name, path, and deleted fields of a Reference Genome in

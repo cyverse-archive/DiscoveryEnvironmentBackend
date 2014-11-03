@@ -44,14 +44,14 @@
 (defschema ReferenceGenomesList
   {:genomes (describe [ReferenceGenome] "Listing of Reference Genomes.")})
 
-(defschema ReferenceGenomeRequest
+(defschema ReferenceGenomeSetRequest
   (-> ReferenceGenome
     (->optional-param :id)))
 
 (defschema ReferenceGenomesSetRequest
-  {:genomes (describe [ReferenceGenomeRequest] "Listing of Reference Genomes.")})
+  {:genomes (describe [ReferenceGenomeSetRequest] "Listing of Reference Genomes.")})
 
-(defschema ReferenceGenomePatchRequest
-  (-> ReferenceGenomeRequest
+(defschema ReferenceGenomeRequest
+  (-> ReferenceGenomeSetRequest
     (->optional-param :created_by)
     (->optional-param :last_modified_by)))

@@ -83,6 +83,19 @@
     (update genome_reference (set-fields update-values) (where {:id reference-genome-id}))
     (get-reference-genome reference-genome-id)))
 
+(defn add-reference-genome
+  "Adds a reference genome with the given name and path."
+  [reference-genome]
+  (let [user-id (get-user-id (:username current-user))
+        insert-values (-> reference-genome
+                          (select-keys [:name :path])
+                          (assoc :created_by       user-id
+                                 :last_modified_by user-id
+                                 :created_on       (sqlfn now)
+                                 :last_modified_on (sqlfn now)))
+        reference-genome-id (:id (insert genome_reference (values insert-values)))]
+    (get-reference-genome reference-genome-id)))
+
 (def ^:private valid-insert-fields
   [:id :name :path :deleted :created_by :created_on :last_modified_by :last_modified_on])
 

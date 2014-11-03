@@ -6,6 +6,7 @@
 * [POST /admin/apps/shredder](endpoints/app-metadata.md#permanently-deleting-an-app)
 * [GET /admin/filesystem/index](endpoints/filesystem/search.md#endpoints:)
 * [POST /admin/filesystem/index](endpoints/filesystem/search.md#endpoint)
+* [POST /admin/reference-genomes](endpoints/reference-genomes.md#adding-reference-genomes)
 * [PUT /admin/reference-genomes](endpoints/reference-genomes.md#importing-reference-genomes)
 * [DELETE /admin/reference-genomes/{reference-genome-id}](endpoints/reference-genomes.md#deleting-reference-genomes)
 * [PATCH /admin/reference-genomes/{reference-genome-id}](endpoints/reference-genomes.md#updating-reference-genomes)

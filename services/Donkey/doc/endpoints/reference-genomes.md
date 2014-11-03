@@ -3,6 +3,7 @@
 * [Reference Genome endpoints](#reference-genome-endpoints)
     * [Exporting Reference Genomes](#exporting-reference-genomes)
     * [Get a Reference Genome by ID](#get-a-reference-genome-by-id)
+    * [Adding Reference Genomes](#adding-reference-genomes)
     * [Importing Reference Genomes](#importing-reference-genomes)
     * [Deleting Reference Genomes](#deleting-reference-genomes)
     * [Updating Reference Genomes](#updating-reference-genomes)
@@ -27,6 +28,15 @@ Please see the metadactyl documentation for more details.
 Secured Endpoint: GET /reference-genomes/{reference-genome-id}
 
 Delegates to metadactyl: GET /reference-genomes/{reference-genome-id}
+
+This endpoint is a passthrough to the metadactyl endpoint with the same path.
+Please see the metadactyl documentation for more details.
+
+## Adding Reference Genomes
+
+Secured Endpoint: POST /admin/reference-genomes
+
+Delegates to metadactyl: POST /admin/reference-genomes
 
 This endpoint is a passthrough to the metadactyl endpoint with the same path.
 Please see the metadactyl documentation for more details.
