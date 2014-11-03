@@ -52,15 +52,6 @@
       descending (`DESC`) order, before limits and offsets are applied. Defaults to `ASC`.
       See http://www.postgresql.org/docs/9.3/interactive/queries-order.html")})
 
-(s/defschema CategoryListingParams
-  (merge SecuredQueryParamsEmailRequired
-         {(s/optional-key :public)
-          (ss/describe Boolean
-            "If set to 'true', then only app categories that are in a workspace that is marked as
-             public in the database are returned. If set to 'false', then only app categories that
-             are in the user's workspace are returned. If not set, then both public and the user's
-             private categories are returned.")}))
-
 (s/defschema SecuredPagingParams
   (merge SecuredQueryParams PagingParams))
 

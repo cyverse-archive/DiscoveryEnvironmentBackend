@@ -5,6 +5,15 @@
         [schema.core :only [defschema optional-key Any]])
   (:import [java.util UUID]))
 
+(defschema CategoryListingParams
+  (merge SecuredQueryParamsEmailRequired
+    {(optional-key :public)
+     (describe Boolean
+       "If set to 'true', then only app categories that are in a workspace that is marked as
+        public in the database are returned. If set to 'false', then only app categories that
+        are in the user's workspace are returned. If not set, then both public and the user's
+        private categories are returned.")}))
+
 (defschema AppCategory
   {:id
    AppCategoryIdPathParam

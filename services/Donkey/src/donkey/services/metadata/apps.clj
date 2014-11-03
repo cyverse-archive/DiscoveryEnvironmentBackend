@@ -189,9 +189,11 @@
 (deftype DeHpcAppLister [agave-client user-has-access-token?]
   AppLister
 
-  (listAppGroups [_ params]
-    (-> (metadactyl/get-app-categories params)
-        (update-in [:categories] conj (.hpcAppGroup agave-client))))
+  (listAppGroups [_ {hpc :hpc :as params}]
+    (let [categories (metadactyl/get-app-categories params)]
+      (if (and hpc (.equalsIgnoreCase hpc "false"))
+        categories
+        (update-in categories [:categories] conj (.hpcAppGroup agave-client)))))
 
   (listApps [_ category-id params]
     (if (= category-id (:id (.hpcAppGroup agave-client)))
