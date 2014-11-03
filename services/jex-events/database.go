@@ -178,6 +178,20 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 		FailureCount:     failurecount,
 		CondorID:         condorid,
 	}
+	// This evil has been perpetrated to avoid an issue where time.Time instances
+	// set to their zero value and stored in PostgreSQL with timezone info can
+	// come back as Time instances from __before__ the epoch. We need to re-zero
+	// the dates on the fly when that happens.
+	epoch := time.Unix(0, 0)
+	if jr.DateSubmitted.Before(epoch) {
+		jr.DateSubmitted = epoch
+	}
+	if jr.DateStarted.Before(epoch) {
+		jr.DateStarted = epoch
+	}
+	if jr.DateCompleted.Before(epoch) {
+		jr.DateCompleted = epoch
+	}
 	if batchid == nil {
 		jr.BatchID = ""
 	} else {

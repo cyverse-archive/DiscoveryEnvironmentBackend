@@ -2,9 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path"
+	"time"
+
+	"code.google.com/p/go-uuid/uuid"
 )
 
 // HTTPAPI stores the state that all of the API functionality will need.
@@ -22,6 +27,7 @@ func WriteRequestError(writer http.ResponseWriter, msg string) {
 // Route looks at the requests method and decides which function should handle
 // the request.
 func (h *HTTPAPI) Route(writer http.ResponseWriter, request *http.Request) {
+	log.Printf("Request received: %s %s", request.Method, request.URL.Path)
 	switch request.Method {
 	case "GET":
 		h.JobHTTPGet(writer, request)
@@ -34,8 +40,39 @@ func (h *HTTPAPI) Route(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// JobHTTPGet is responsible for retrieving a Job from the database and returning
+// its record as a JSON object. The UUID for the job is extracted from the basename
+// of the URL path and must be a valid UUID.
 func (h *HTTPAPI) JobHTTPGet(writer http.ResponseWriter, request *http.Request) {
-
+	log.Printf("Handling GET request for %s", request.URL.Path)
+	baseName := path.Base(request.URL.Path)
+	if baseName == "" {
+		WriteRequestError(writer, "The path must contain a job UUID")
+		return
+	}
+	log.Printf("Requested job UUID: %s", baseName)
+	if uuid.Parse(baseName) == nil {
+		WriteRequestError(writer, fmt.Sprintf("The base of the path must be a UUID: %s", baseName))
+		return
+	}
+	jr, err := h.d.GetJob(baseName)
+	if err != nil {
+		WriteRequestError(writer, err.Error())
+		return
+	}
+	if jr == nil {
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Write([]byte(fmt.Sprintf("Job %s was not found", baseName)))
+		return
+	}
+	marshalled, err := json.Marshal(jr)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(err.Error()))
+		return
+	}
+	log.Println(marshalled)
+	writer.Write(marshalled)
 }
 
 // JobHTTPPost is responsible for parsing JSON and inserting a new job into the
@@ -90,6 +127,15 @@ func (h *HTTPAPI) JobHTTPPost(writer http.ResponseWriter, request *http.Request)
 		WriteRequestError(writer, "The CondorID field is required in the POST JSON")
 		return
 	}
+	if parsed.DateSubmitted.IsZero() {
+		parsed.DateSubmitted = time.Now()
+	}
+	if parsed.DateCompleted.IsZero() {
+		parsed.DateCompleted = time.Now()
+	}
+	if parsed.DateStarted.IsZero() {
+		parsed.DateStarted = time.Now()
+	}
 	jobID, err := h.d.InsertJob(&parsed)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -106,7 +152,7 @@ func SetupHTTP(config *Configuration, d *Databaser) {
 	api := HTTPAPI{
 		d: d,
 	}
-	http.HandleFunc("/jobs", api.Route)
+	http.HandleFunc("/jobs/", api.Route)
 	go func() {
 		log.Fatal(http.ListenAndServe(config.HTTPListenPort, nil))
 	}()
