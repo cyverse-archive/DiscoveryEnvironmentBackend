@@ -50,7 +50,7 @@
 
 (defn- app-disabled?
   [app-tables app-id]
-  (let [disabled-flag (first (remove nil? (map #(% app-id) app-tables)))]
+  (let [disabled-flag (:disabled (first (remove nil? (map #(% app-id) app-tables))))]
     (if (nil? disabled-flag) true disabled-flag)))
 
 (defn format-job

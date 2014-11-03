@@ -89,7 +89,7 @@
 
 (defn load-app-details
   [ids]
-  (into {} (map (juxt :id identity)
+  (into {} (map (juxt (comp str :id) identity)
                 (ap/load-app-details ids))))
 
 (defn get-job-step-status
