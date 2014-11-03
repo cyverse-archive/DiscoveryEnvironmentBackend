@@ -261,15 +261,17 @@ type Event struct {
 	Hash        string
 	EventNumber string
 	ID          string
+	CondorID    string
 	Date        string
 	Time        string
 	Msg         string
 }
 
 func (e *Event) String() string {
-	retval := fmt.Sprintf("EventNumber: %s\tID: %s\tDate: %s\tTime: %s\tMsg: %s",
+	retval := fmt.Sprintf("EventNumber: %s\tID: %s\tCondorID: %s\tDate: %s\tTime: %s\tMsg: %s",
 		e.EventNumber,
 		e.ID,
+		e.CondorID,
 		e.Date,
 		e.Time,
 		e.Msg,
@@ -298,6 +300,17 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 	}
 }
 
+// ExtractCondorID will return the condor ID in the string that's passed in.
+func ExtractCondorID(id string) string {
+	r := regexp.MustCompile(`\(([0-9]+)\.[0-9]+\.[0-9]+\)`)
+	matches := r.FindStringSubmatch(id)
+	matchesLength := len(matches)
+	if matchesLength < 1 {
+		return ""
+	}
+	return matches[0]
+}
+
 // EventParser extracts info from an event string.
 func EventParser(event *Event) {
 	r := regexp.MustCompile("^([0-9]{3}) (\\([0-9]+(?:\\.[0-9]+){2}\\)) ([0-9/]+) ([0-9:]+) (.*)\\n")
@@ -317,6 +330,9 @@ func EventParser(event *Event) {
 	}
 	if matchesLength >= 6 {
 		event.Msg = matches[5]
+	}
+	if event.ID != "" {
+		event.CondorID = ExtractCondorID(event.ID)
 	}
 }
 
