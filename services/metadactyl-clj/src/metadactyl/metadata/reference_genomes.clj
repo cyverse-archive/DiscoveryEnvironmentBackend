@@ -55,10 +55,22 @@
     (log/debug "reference-genomes count" (count reference-genomes))
     (success-response {:genomes reference-genomes})))
 
-(defn get-reference-genome
+(defn- get-valid-reference-genome
   [reference-genome-id]
-  (success-response (assert-not-nil [:reference-genome-id reference-genome-id]
-                      (first (get-reference-genomes-by-id reference-genome-id)))))
+  (assert-not-nil [:reference-genome-id reference-genome-id]
+    (first (get-reference-genomes-by-id reference-genome-id))))
+
+(defn get-reference-genome
+  "Gets a reference genome by its ID."
+  [reference-genome-id]
+  (success-response (get-valid-reference-genome reference-genome-id)))
+
+(defn delete-reference-genome
+  "Logically deletes a reference genome by setting its 'deleted' flag to true."
+  [reference-genome-id]
+  (get-valid-reference-genome reference-genome-id)
+  (update genome_reference (set-fields {:deleted true}) (where {:id reference-genome-id}))
+  nil)
 
 (def ^:private valid-insert-fields
   [:id :name :path :deleted :created_by :created_on :last_modified_by :last_modified_on])

@@ -432,6 +432,12 @@
         req (metadactyl-request req)]
     (forward-put url req)))
 
+(defn delete-reference-genomes
+  "Logically deletes a reference genome in the database."
+  [reference-genome-id]
+  (client/delete (metadactyl-url {} "admin" "reference-genomes" reference-genome-id)
+                 {:as :stream}))
+
 (defn- extract-uploaded-path
   "Gets the file ID as a path from the given upload results."
   [upload]

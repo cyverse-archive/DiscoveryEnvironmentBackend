@@ -1,6 +1,7 @@
 (ns metadactyl.routes.admin
   (:use [metadactyl.app-categorization :only [categorize-apps]]
-        [metadactyl.metadata.reference-genomes :only [replace-reference-genomes]]
+        [metadactyl.metadata.reference-genomes :only [delete-reference-genome
+                                                      replace-reference-genomes]]
         [metadactyl.metadata.tool-requests]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.category]
@@ -90,4 +91,15 @@
             :summary "Replace Reference Genomes."
             :notes "This endpoint replaces ALL the Reference Genomes in the Discovery Environment,
             so if a genome is not listed in the request, it will not show up in the DE."
-            (ce/trap uri #(replace-reference-genomes body))))
+            (ce/trap uri #(replace-reference-genomes body)))
+
+  (DELETE* "/:reference-genome-id" [:as {uri :uri}]
+           :path-params [reference-genome-id :- ReferenceGenomeIdParam]
+           :query [params SecuredQueryParams]
+           :summary "Delete a Reference Genome."
+           :notes "A Reference Genome can be marked as deleted in the DE without being completely
+           removed from the database using this service. <b>Note</b>: an attempt to delete a
+           Reference Genome that is already marked as deleted is treated as a no-op rather than an
+           error condition. If the Reference Genome doesn't exist in the database at all, however,
+           then that is treated as an error condition."
+           (ce/trap uri #(delete-reference-genome reference-genome-id))))
