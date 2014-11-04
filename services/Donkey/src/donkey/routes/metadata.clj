@@ -228,14 +228,3 @@
 
    (PUT "/feedback" [:as {body :body}]
         (provide-user-feedback body))))
-
-(defn unsecured-metadata-routes
-  []
-  (optional-routes
-   [config/app-routes-enabled]
-
-   (GET "/get-analysis/:app-id" [app-id :as req]
-        (get-app req app-id))
-
-   (GET "/export-workflow/:app-id" [app-id :as req]
-        (export-workflow req app-id))))

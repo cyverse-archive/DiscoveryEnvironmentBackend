@@ -48,19 +48,6 @@
                               (secured-params query)
                               components))
 
-(defn- build-metadactyl-secured-url
-  "Adds the name and email of the currently authenticated user to the secured
-   metadactyl URL with the given relative URL path."
-  [{query :params} & components]
-  (apply build-url-with-query (metadactyl-base-url) (secured-params query) components))
-
-(defn- build-metadactyl-unprotected-url
-  "Builds an unsecured metadactyl URL from the given relative URL path.  Any
-   query-string parameters that are present in the request will be forwarded
-   to metadactyl."
-  [{query :params} & components]
-  (apply build-url-with-query (metadactyl-unprotected-base-url) query components))
-
 (defn get-workflow-elements
   "A service to get information about workflow elements."
   [element-type]
@@ -87,13 +74,6 @@
         req (metadactyl-request req)]
     (forward-post url req)))
 
-(defn validate-app-for-pipelines
-  "A service used to determine whether or not an app can be included in a
-   pipeline."
-  [req app-id]
-  (let [url (build-metadactyl-unprotected-url req "validate-analysis-for-pipelines" app-id)]
-    (forward-get url req)))
-
 (defn categorize-apps
   "A service used to recategorize apps."
   [req]
@@ -101,38 +81,12 @@
         req (metadactyl-request req)]
     (forward-post url req)))
 
-(defn get-app
-  "A service used to get an app in the format required by the DE."
-  [req app-id]
-  (let [url (build-metadactyl-unprotected-url req "get-analysis" app-id)]
-    (forward-get url req)))
-
-(defn export-workflow
-  "This service will export a workflow with the given identifier."
-  [req app-id]
-  (let [url (build-metadactyl-unprotected-url req "export-workflow" app-id)]
-    (forward-get url req)))
-
 (defn get-tool
   "This service will get a tool by ID."
   [req tool-id]
   (let [url (metadactyl-url {} "tools" tool-id)
         req (metadactyl-request req)]
     (forward-get url req)))
-
-(defn preview-template
-  "This service will convert a JSON document in the format consumed by
-   the import service into the format required by the DE."
-  [req]
-  (let [url (build-metadactyl-unprotected-url req "preview-template")]
-    (forward-post url req)))
-
-(defn preview-workflow
-  "This service will convert a JSON document in the format consumed by
-   the import service into the format required by the DE."
-  [req]
-  (let [url (build-metadactyl-unprotected-url req "preview-workflow")]
-    (forward-post url req)))
 
 (defn import-tools
   "This service will import deployed components into the DE and send

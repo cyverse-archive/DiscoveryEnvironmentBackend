@@ -125,7 +125,6 @@
   (flagged-routes
    (unsecured-misc-routes)
    (unsecured-notification-routes)
-   (unsecured-metadata-routes)
    (unsecured-tree-viewer-routes)
    (unsecured-fileio-routes)
    (unsecured-callback-routes)

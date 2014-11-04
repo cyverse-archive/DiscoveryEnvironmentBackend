@@ -21,14 +21,6 @@
   [& components]
   (str (apply curl/url (config/metadactyl-unprotected-base-url) components)))
 
-(defn- unsecured-url
-  [& components]
-  (str (apply curl/url (config/metadactyl-unprotected-base-url) components)))
-
-(defn- secured-url
-  [& components]
-  (str (apply curl/url (config/metadactyl-base-url) components)))
-
 (defn- add-agave-enabled-flag
   ([]
      (add-agave-enabled-flag {}))
