@@ -110,7 +110,7 @@
   (mu/assert-agave-enabled agave-client)
   (->> (.getApp agave-client agave-app-id)
        (:groups)
-       (mapcat :properties)
+       (mapcat :parameters)
        (map (partial prep-agave-param step-id agave-app-id))))
 
 (defn- load-agave-pipeline-params

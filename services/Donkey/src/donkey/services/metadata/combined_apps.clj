@@ -24,15 +24,15 @@
 
 (defn- remove-mapped-inputs
   [mapped-props group]
-  (assoc group :properties (remove (comp mapped-props :id) (:properties group))))
+  (assoc group :parameters (remove (comp mapped-props :id) (:parameters group))))
 
 (defn- reformat-group
   [app-name step-id group]
   (assoc group
     :name       (str app-name " - " (:name group))
     :label      (str app-name " - " (:label group))
-    :properties (mapv (fn [prop] (assoc prop :id (str step-id "_" (:id prop))))
-                      (:properties group))))
+    :parameters (mapv (fn [prop] (assoc prop :id (str step-id "_" (:id prop))))
+                      (:parameters group))))
 
 
 (defn- get-mapped-props
@@ -49,7 +49,7 @@
         mapped-props (get-mapped-props (:step_id step))]
     (->> (:categories app)
          (map (partial remove-mapped-inputs mapped-props))
-         (remove (comp empty? :properties))
+         (remove (comp empty? :parameters))
          (map (partial reformat-group (:name app) (:step_id step)))
          (doall))))
 
@@ -232,9 +232,9 @@
                              :defaultValue (values id))
                            %))
         update-props  #(map update-prop %)
-        update-group  #(update-in % [:properties] update-props)
+        update-group  #(update-in % [:parameters] update-props)
         update-groups #(map update-group %)]
-    (update-in app [:categories] update-groups)))
+    (update-in app [:groups] update-groups)))
 
 (defn- translate-job-status
   "Translates an Agave status code to something more consistent with the DE's status codes."
