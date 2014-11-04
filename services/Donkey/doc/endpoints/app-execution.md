@@ -5,7 +5,8 @@
     * [Obtaining Information to Rerun a Job](#obtaining-information-to-rerun-a-job)
     * [Submitting a Job for Execution](#submitting-a-job-for-execution)
     * [Listing Jobs](#listing-jobs)
-    * [Deleting Jobs](#deleting-jobs)
+    * [Deleting a Job](#deleting-a-job)
+    * [Deleting Multiple Jobs](#deleting-multiple-jobs)
     * [Updating Analysis Information](#updating-analysis-information)
     * [Stopping a Running Analysis](#stopping-a-running-analysis)
 
@@ -352,7 +353,7 @@ curl -s "http://by-tor:8888/secured/analyses?proxyToken=$(cas-ticket)&filter=$(u
 Here's an example using no parameters:
 
 ```
-$ curl -s "http://localhost:31325/analyses?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -s "http://by-tor:8888/analyses?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "analyses": [
         {
@@ -381,7 +382,7 @@ $ curl -s "http://localhost:31325/analyses?proxyToken=$(cas-ticket)" | python -m
 Here's an example of a search with a limit of one result:
 
 ```
-$ curl -s "http://localhost:31325/analyses?proxyToken=$(cas-ticket)&limit=1" | python -mjson.tool
+$ curl -s "http://by-tor:8888/analyses?proxyToken=$(cas-ticket)&limit=1" | python -mjson.tool
 {
     "analyses": [
         {
@@ -406,18 +407,28 @@ $ curl -s "http://localhost:31325/analyses?proxyToken=$(cas-ticket)&limit=1" | p
 }
 ```
 
-## Deleting Jobs
+## Deleting a Job
 
-*Secured Endpoint:* PUT /secured/workspaces/{workspace-id}/executions/delete
+*Secured Endpoint:* DELETE /analyses/{analysis-id}
 
-After a job has completed, a user may not want to view the job status
-information in the _Analyses_ window any longer. This service provides a way to
-mark job status information as deleted so that it no longer shows up. The
-request body for this service is in the following format:
+This endpoint marks a job as deleted in the DE database. After the job is
+deleted, it will no longer be displayed in the _Analyses_ window. Attempts to
+delete non-existent jobs and jobs that are already marked as deleted are no-ops,
+but warning messages will appear in the log files. An attempt to delete a job
+that was launched by another user will result in a n error. Upon success, the
+the response body for this endpoint is an empty JSON object.
+
+## Deleting Multiple Jobs
+
+*Secured Endpoint:* POST /analyses/shredder
+
+This endpoint is similar to `DELETE /analyses/{analysis-id}` except that it
+allows the caller to mark multiple jobs as deleted at once. The format of the
+request body is as follows:
 
 ```json
 {
-    "executions": [
+    "analyses": [
         "job-id-1",
         "job-id-2",
         ...,
@@ -426,29 +437,21 @@ request body for this service is in the following format:
 }
 ```
 
-The response body for this endpoint contains only a status flag if the service
+The response body for this endpoint is an empty JSON object if the service
 succeeds.
-
-It should be noted that this service does not fail if any of the job identifiers
-refers to a non-existent or deleted job. If the identifier refers to a deleted
-job then the update is essentially a no-op. If a job with the identifier can't
-be found then a warning message is logged in metadactyl-clj's log file, but the
-service does not indicate that a failure has occurred.
 
 Here's an example:
 
 ```
 $ curl -X PUT -sd '
 {
-    "executions": [
-        "84DFCC0E-03B9-4DF4-8484-55BFBD6FE841",
-        "FOO"
+    "analyses": [
+        "36df5b7e-3614-4c17-a0f9-3ad83d26a132",
+        "deadbeef-feed-dead-beef-feeddeadbeef"
     ]
 }
-' "http://by-tor:8888/secured/workspaces/4/executions/delete?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "success": true
-}
+' "http://by-tor:8888/analyses/shredder?proxyToken=$(cas-ticket)" | python -mjson.tool
+{}
 ```
 
 ## Updating Analysis Information

@@ -454,8 +454,10 @@
 (defn list-jobs-to-delete
   [ids]
   (select [:jobs :j]
-          (fields [:j.id      :id]
-                  [:j.deleted :deleted])
+          (join [:users :u] {:j.user_id :u.id})
+          (fields [:j.id       :id]
+                  [:j.deleted  :deleted]
+                  [:u.username :user])
           (where {:j.id [in ids]})))
 
 (defn delete-jobs

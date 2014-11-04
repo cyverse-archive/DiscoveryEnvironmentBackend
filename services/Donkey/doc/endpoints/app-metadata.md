@@ -320,9 +320,9 @@ Please see the metadactyl documentation for more information.
 
 ## Importing Tools
 
-Secured Endpoint: POST /tools
+Secured Endpoint: POST /admin/tools
 
-Delegates to metadactyl: POST /tools
+Delegates to metadactyl: POST /admin/tools
 
 This service imports the given list of tools into the database and also sends a notification for
 every tool that is imported, provided that a username and e-mail address is provided for the
@@ -371,64 +371,6 @@ the tool is imported successfully.
 
 The response body for this service contains a brief description of the reason for the failure if the
 tools can't be imported.
-
-Here's an example of a successful import:
-
-```
-$ curl -sd '
-{
-    "tools": [
-        {
-            "name": "foo",
-            "location": "/usr/local/bin",
-            "implementation": {
-                "implementor_email": "nobody@iplantcollaborative.org",
-                "implementor": "Nobody",
-                "test": {
-                    "params": [],
-                    "input_files": [],
-                    "output_files": []
-                }
-            },
-            "type": "executable",
-            "description": "the foo is in the bar",
-            "version": "1.2.3",
-            "attribution": "the foo needs no attribution",
-            "user": "nobody",
-            "email": "nobody@iplantcollaborative.org"
-        }
-    ]
-}
-' http://by-tor:8888/import-tools | python -mjson.tool
-```
-
-Here's an example of an unsuccessful import:
-
-```
-$ curl -sd '
-{
-    "tools": [
-        {
-            "name": "foo",
-            "location": "/usr/local/bin",
-            "implementation": {
-                "implementor_email": "nobody@iplantcollaborative.org",
-                "implementor": "Nobody"
-            },
-            "type": "executable",
-            "description": "the foo is in the bar",
-            "version": "1.2.3",
-            "attribution": "the foo needs no attribution",
-            "user": "nobody",
-            "email": "nobody@iplantcollaborative.org"
-        }
-    ]
-}
-' http://by-tor:8888/import-tools | python -mjson.tool
-{
-    "reason": "org.json.JSONException: JSONObject[\"test\"] not found."
-}
-```
 
 ## Rating Apps
 

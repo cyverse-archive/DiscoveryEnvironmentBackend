@@ -2,6 +2,7 @@
   (:use [clojure-commons.validators :only [validate-map]]
         [donkey.auth.user-attributes :only [current-user with-directory-user]]
         [donkey.util :only [is-uuid?]]
+        [kameleon.uuids :only [uuidify]]
         [korma.db :only [transaction with-db]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [cemerick.url :as curl]
@@ -348,13 +349,13 @@
   [app-id]
   (with-db db/de
     (transaction
-      (service/success-response (.addFavoriteApp (get-app-lister) app-id)))))
+     (service/success-response (.addFavoriteApp (get-app-lister) app-id)))))
 
 (defn remove-favorite-app
   [app-id]
   (with-db db/de
     (transaction
-      (service/success-response (.removeFavoriteApp (get-app-lister) app-id)))))
+     (service/success-response (.removeFavoriteApp (get-app-lister) app-id)))))
 
 (defn rate-app
   [body app-id]
@@ -362,15 +363,15 @@
     (transaction
      (let [request (service/decode-json body)]
        (service/success-response
-         (.rateApp (get-app-lister) app-id
-                                    (service/required-field request :rating)
-                                    (:comment_id request)))))))
+        (.rateApp (get-app-lister) app-id
+                  (service/required-field request :rating)
+                  (:comment_id request)))))))
 
 (defn delete-rating
   [app-id]
   (with-db db/de
     (transaction
-      (service/success-response (.deleteRating (get-app-lister) app-id)))))
+     (service/success-response (.deleteRating (get-app-lister) app-id)))))
 
 (defn get-app
   [app-id]
@@ -418,7 +419,7 @@
 
 (defn- get-unique-job-step
   "Gest a unique job step for an external ID. An exception is thrown if no job step
-   is found or if multiple job steps are found."
+  is found or if multiple job steps are found."
   [external-id]
   (let [job-steps (jp/get-job-steps-by-external-id external-id)]
     (when (empty? job-steps)
@@ -429,7 +430,7 @@
 
 (defn update-de-job-status
   "Updates the job status. Important note: this function currently assumes that the
-   external identifier is unique."
+  external identifier is unique."
   [external-id status end-date]
   (with-db db/de
     (transaction
@@ -485,24 +486,46 @@
        (log/error e "error while obtaining the list of jobs to synchronize."))))
   (log/warn "done syncrhonizing job statuses"))
 
-(defn- log-already-deleted-jobs
+(defn- validate-job-ownership
+  [{:keys [id user]}]
+  (let [authenticated-user (:username current-user)]
+    (when-not (= user authenticated-user)
+      (throw+ {:error_code ce/ERR_NOT_OWNER
+               :reason     (str authenticated-user " does not own job " id)}))))
+
+(defn- log-missing-job
+  [extant-ids id]
+  (when-not (extant-ids id)
+    (log/warn "attempt to delete missing job" id "ignored")))
+
+(defn- log-already-deleted-job
+  [{:keys [id deleted]}]
+  (when deleted (log/warn "attempt to delete deleted job" id "ignored")))
+
+(defn- validate-job-deletion-request
   [ids]
-  (let [jobs-by-id (into {} (map (juxt :id identity) (jp/list-jobs-to-delete ids)))
-        log-it     (fn [desc id] (log/warn "attempt to delete" desc "job" id "ignored"))]
-    (dorun (map (fn [id] (cond (nil? (jobs-by-id id))            (log-it "missing" id)
-                               (get-in jobs-by-id [id :deleted]) (log-it "deleted" id)))
-                ids))))
+  (let [jobs (jp/list-jobs-to-delete ids)]
+    (dorun (map validate-job-ownership jobs))
+    (dorun (map (partial log-missing-job (set (map :id jobs))) ids))
+    (dorun (log-already-deleted-job jobs))))
+
+(defn- delete-selected-jobs
+  [ids]
+  (with-db db/de
+    (transaction
+     (validate-job-deletion-request ids)
+     (jp/delete-jobs ids)
+     (service/success-response))))
 
 (defn delete-jobs
   [body]
-  (with-db db/de
-    (transaction
-     (let [body (service/decode-json body)
-           _    (validate-map body {:executions vector?})
-           ids  (set (map #(UUID/fromString %) (:executions body)))]
-       (log-already-deleted-jobs ids)
-       (jp/delete-jobs ids)
-       (service/success-response)))))
+  (let  [request (service/decode-json body)]
+    (validate-map request {:analyses vector?})
+    (delete-selected-jobs (map uuidify (:analyses request)))))
+
+(defn delete-job
+  [job-id]
+  (delete-selected-jobs [(uuidify job-id)]))
 
 (defn- validate-job-existence
   [id]

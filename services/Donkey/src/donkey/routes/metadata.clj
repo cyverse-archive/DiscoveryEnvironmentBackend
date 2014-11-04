@@ -122,7 +122,13 @@
         (apps/list-jobs params))
 
    (POST "/analyses" [:as {:keys [body]}]
-         (apps/submit-job body))))
+         (apps/submit-job body))
+
+   (DELETE "/analyses/:analysis-id" [analysis-id]
+           (apps/delete-job analysis-id))
+
+   (POST "/analyses/shredder" [:as {:keys [body]}]
+         (apps/delete-jobs body))))
 
 (defn admin-reference-genomes-routes
   []
@@ -201,9 +207,6 @@
 
    (GET "/logout" [:as {params :params}]
         (logout params))
-
-   (PUT "/workspaces/:workspace-id/executions/delete" [_ :as {body :body}]
-        (apps/delete-jobs body))
 
    (PATCH "/analysis/:analysis-id" [analysis-id :as {body :body}]
           (apps/update-job analysis-id body))
