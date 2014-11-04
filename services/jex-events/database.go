@@ -132,52 +132,27 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 				failure_threshold,
 				failure_count,
 				condor_id
-		FROM jobs
+	 FROM jobs
 	WHERE id = cast($1 as uuid)
 	`
+	jr := &JobRecord{}
 	rows := d.db.QueryRow(query, uuid)
-	var id string
 	var batchid interface{}
-	var submitter string
-	var datesubmitted time.Time
-	var datestarted time.Time
-	var datecompleted time.Time
-	var appid string
-	var commandline string
-	var envvariables string
-	var exitcode int
-	var failurethreshold int64
-	var failurecount int64
-	var condorid string
 	err := rows.Scan(
-		&id,
+		&jr.ID,
 		&batchid,
-		&submitter,
-		&datesubmitted,
-		&datestarted,
-		&datecompleted,
-		&appid,
-		&commandline,
-		&envvariables,
-		&exitcode,
-		&failurethreshold,
-		&failurecount,
-		&condorid,
+		&jr.Submitter,
+		&jr.DateSubmitted,
+		&jr.DateStarted,
+		&jr.DateCompleted,
+		&jr.AppID,
+		&jr.CommandLine,
+		&jr.EnvVariables,
+		&jr.ExitCode,
+		&jr.FailureThreshold,
+		&jr.FailureCount,
+		&jr.CondorID,
 	)
-	jr := JobRecord{
-		ID:               id,
-		Submitter:        submitter,
-		DateSubmitted:    datesubmitted,
-		DateStarted:      datestarted,
-		DateCompleted:    datecompleted,
-		AppID:            appid,
-		CommandLine:      commandline,
-		EnvVariables:     envvariables,
-		ExitCode:         exitcode,
-		FailureThreshold: failurethreshold,
-		FailureCount:     failurecount,
-		CondorID:         condorid,
-	}
 	// This evil has been perpetrated to avoid an issue where time.Time instances
 	// set to their zero value and stored in PostgreSQL with timezone info can
 	// come back as Time instances from __before__ the epoch. We need to re-zero
@@ -197,7 +172,66 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	} else {
 		jr.BatchID = batchid.(string)
 	}
-	return &jr, err
+	return jr, err
+}
+
+// GetJobByCondorID returns a JobRecord from the database.
+func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
+	query := `
+	SELECT cast(id as varchar),
+				batch_id,
+				submitter,
+				date_submitted,
+				date_started,
+				date_completed,
+				cast(app_id as varchar),
+				command_line,
+				env_variables,
+				exit_code,
+				failure_threshold,
+				failure_count,
+				condor_id
+ 	 FROM jobs
+	WHERE condor_id = $1
+	`
+	jr := &JobRecord{}
+	rows := d.db.QueryRow(query, condorID)
+	var batchid interface{}
+	err := rows.Scan(
+		&jr.ID,
+		&batchid,
+		&jr.Submitter,
+		&jr.DateSubmitted,
+		&jr.DateStarted,
+		&jr.DateCompleted,
+		&jr.AppID,
+		&jr.CommandLine,
+		&jr.EnvVariables,
+		&jr.ExitCode,
+		&jr.FailureThreshold,
+		&jr.FailureCount,
+		&jr.CondorID,
+	)
+	// This evil has been perpetrated to avoid an issue where time.Time instances
+	// set to their zero value and stored in PostgreSQL with timezone info can
+	// come back as Time instances from __before__ the epoch. We need to re-zero
+	// the dates on the fly when that happens.
+	epoch := time.Unix(0, 0)
+	if jr.DateSubmitted.Before(epoch) {
+		jr.DateSubmitted = epoch
+	}
+	if jr.DateStarted.Before(epoch) {
+		jr.DateStarted = epoch
+	}
+	if jr.DateCompleted.Before(epoch) {
+		jr.DateCompleted = epoch
+	}
+	if batchid == nil {
+		jr.BatchID = ""
+	} else {
+		jr.BatchID = batchid.(string)
+	}
+	return jr, err
 }
 
 // UpdateJob updates a job instance in the database
@@ -335,6 +369,42 @@ func (d *Databaser) GetCondorEvent(uuid string) (*CondorEvent, error) {
 	return ce, nil
 }
 
+// GetCondorEventByNumber gets a CondorEvent from the database and returns a pointer to
+// a filled out instance of CondorEvent.
+func (d *Databaser) GetCondorEventByNumber(number string) (*CondorEvent, error) {
+	query := `
+	SELECT id,
+				event_number,
+				event_name,
+				event_desc
+		FROM condor_events
+	WHERE event_number = $1
+	`
+	var id string
+	var eventNumber int
+	var eventName string
+	var eventDesc string
+	err := d.db.QueryRow(
+		query,
+		number,
+	).Scan(
+		&id,
+		&eventNumber,
+		&eventName,
+		&eventDesc,
+	)
+	if err != nil {
+		return nil, err
+	}
+	ce := &CondorEvent{
+		ID:          id,
+		EventNumber: eventNumber,
+		EventName:   eventName,
+		EventDesc:   eventDesc,
+	}
+	return ce, nil
+}
+
 // UpdateCondorEvent updates a CondorEvent in the database. The CondorEvent must
 // be fully filled out with information, not just the fields that you want to
 // update.
@@ -398,6 +468,21 @@ func (d *Databaser) InsertCondorRawEvent(re *CondorRawEvent) (string, error) {
 		return "", err
 	}
 	return id, nil
+}
+
+// AddCondorRawEvent adds a raw event to the database. You'll probably want to
+// use this instead of InsertCondorRawEvent.
+func (d *Databaser) AddCondorRawEvent(eventText string, jobID string) (string, error) {
+	re := &CondorRawEvent{
+		JobID:         jobID,
+		EventText:     eventText,
+		DateTriggered: time.Now(),
+	}
+	reID, err := d.InsertCondorRawEvent(re)
+	if err != nil {
+		return "", err
+	}
+	return reID, nil
 }
 
 // DeleteCondorRawEvent removes an unparsed job event from the database.
@@ -508,6 +593,22 @@ func (d *Databaser) InsertCondorJobEvent(je *CondorJobEvent) (string, error) {
 		return "", err
 	}
 	return id, nil
+}
+
+// AddCondorJobEvent adds a CondorJobEvent to the database. You'll probably want
+// to use this over InsertCondorJobEvent.
+func (d *Databaser) AddCondorJobEvent(jobID string, eventID string, rawEventID string) (string, error) {
+	je := &CondorJobEvent{
+		JobID:            jobID,
+		CondorEventID:    eventID,
+		CondorRawEventID: rawEventID,
+		DateTriggered:    time.Now(),
+	}
+	jeID, err := d.InsertCondorJobEvent(je)
+	if err != nil {
+		return "", err
+	}
+	return jeID, nil
 }
 
 // DeleteCondorJobEvent removes a parsed job event from the database.
@@ -678,6 +779,29 @@ func (d *Databaser) UpdateLastCondorJobEvent(je *LastCondorJobEvent) (*LastCondo
 		return nil, err
 	}
 	return updated, nil
+}
+
+// UpsertLastCondorJobEvent updates the last CondorJobEvent for a job if it's
+// already set, but will insert it if it isn't already set.
+func (d *Databaser) UpsertLastCondorJobEvent(jobEventID, jobID string) (string, error) {
+	je, err := d.GetLastCondorJobEvent(jobEventID)
+	if err == sql.ErrNoRows {
+		le := &LastCondorJobEvent{
+			JobID:            jobID,
+			CondorJobEventID: jobEventID,
+		}
+		leID, err := d.InsertLastCondorJobEvent(le)
+		if err != nil {
+			return "", err
+		}
+		return leID, err
+	}
+	je.CondorJobEventID = jobEventID
+	updated, err := d.UpdateLastCondorJobEvent(je)
+	if err != nil {
+		return "", err
+	}
+	return updated.JobID, nil
 }
 
 // CondorJobStopRequest records a request to stop a job.

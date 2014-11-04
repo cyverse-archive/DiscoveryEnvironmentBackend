@@ -284,6 +284,7 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 	for {
 		select {
 		case delivery := <-deliveries:
+			log.Print("Received message")
 			body := delivery.Body
 			delivery.Ack(false) //We're not doing batch deliveries, which is what the false means
 			var event Event
@@ -291,9 +292,35 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 			if err != nil {
 				log.Print(err)
 				log.Print(string(body[:]))
+				continue
 			}
 			EventParser(&event)
 			log.Println(event.String())
+			job, err := d.GetJobByCondorID(event.CondorID)
+			if err != nil {
+				log.Print(err)
+				continue
+			}
+			rawEventID, err := d.AddCondorRawEvent(event.Event, job.ID)
+			if err != nil {
+				log.Print(err)
+				continue
+			}
+			ce, err := d.GetCondorEventByNumber(event.EventNumber)
+			if err != nil {
+				log.Print(err)
+				continue
+			}
+			jobEventID, err := d.AddCondorJobEvent(job.ID, ce.ID, rawEventID)
+			if err != nil {
+				log.Print(err)
+				continue
+			}
+			_, err = d.UpsertLastCondorJobEvent(jobEventID, job.ID)
+			if err != nil {
+				log.Print(err)
+				continue
+			}
 		case <-quit:
 			break
 		}
@@ -358,7 +385,9 @@ func main() {
 	quitHandler := make(chan int)
 	consumer := NewAMQPConsumer(config)
 	consumer.SetupReconnection(connErrChan, EventHandler, quitHandler, databaser)
+	log.Print("Setting up HTTP")
 	SetupHTTP(config, databaser)
+	log.Print("Done setting up HTTP")
 	deliveries, err := consumer.Connect(connErrChan)
 	if err != nil {
 		log.Print(err)
