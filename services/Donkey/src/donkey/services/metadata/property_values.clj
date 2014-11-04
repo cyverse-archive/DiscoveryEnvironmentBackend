@@ -51,7 +51,7 @@
 
 (defn- get-full-param-id
   [param]
-  (str (:step_name param) "_" (:id param)))
+  (str (:step_id param) "_" (:id param)))
 
 (defn- blank->empty-str
   [value]

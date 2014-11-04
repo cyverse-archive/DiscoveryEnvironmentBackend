@@ -128,7 +128,10 @@
            (apps/delete-job analysis-id))
 
    (POST "/analyses/shredder" [:as {:keys [body]}]
-         (apps/delete-jobs body))))
+         (apps/delete-jobs body))
+
+   (GET "/analyses/:analysis-id/parameters" [analysis-id]
+        (apps/get-parameter-values analysis-id))))
 
 (defn admin-reference-genomes-routes
   []
@@ -210,9 +213,6 @@
 
    (PATCH "/analysis/:analysis-id" [analysis-id :as {body :body}]
           (apps/update-job analysis-id body))
-
-   (GET "/get-property-values/:job-id" [job-id]
-        (apps/get-property-values job-id))
 
    (GET "/app-rerun-info/:job-id" [job-id]
         (apps/get-app-rerun-info job-id))

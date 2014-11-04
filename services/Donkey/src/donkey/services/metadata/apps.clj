@@ -565,7 +565,7 @@
        (.stopJob (get-app-lister) job)
        (service/success-response {:id (str id)})))))
 
-(defn get-property-values
+(defn get-parameter-values
   [job-id]
   (with-db db/de
     (service/success-response (.getJobParams (get-app-lister) job-id))))
