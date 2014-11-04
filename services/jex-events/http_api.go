@@ -119,10 +119,6 @@ func (h *HTTPAPI) JobHTTPPost(writer http.ResponseWriter, request *http.Request)
 		WriteRequestError(writer, "The AppID field is required in the POST JSON")
 		return
 	}
-	if parsed.CommandLine == "" {
-		WriteRequestError(writer, "The CommandLine field is required in the POST JSON")
-		return
-	}
 	if parsed.CondorID == "" {
 		WriteRequestError(writer, "The CondorID field is required in the POST JSON")
 		return

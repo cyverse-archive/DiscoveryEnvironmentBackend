@@ -48,8 +48,6 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
-		CommandLine:   "this --is -a --test",
-		EnvVariables:  "TEST=true",
 	}
 	newUUID, err := d.InsertJob(jr)
 	if err != nil {
@@ -85,12 +83,6 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 	}
 	if newJR.AppID != jr.AppID {
 		t.Errorf("AppIDs didn't match")
-	}
-	if newJR.CommandLine != jr.CommandLine {
-		t.Errorf("CommandLines didn't match")
-	}
-	if newJR.EnvVariables != jr.EnvVariables {
-		t.Errorf("EnvVariables didn't match")
 	}
 	if newJR.ExitCode != jr.ExitCode {
 		t.Errorf("ExitCodes didn't match")
@@ -186,8 +178,6 @@ func TestCRUDCondorRawEvents(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
-		CommandLine:   "this --is -a --test",
-		EnvVariables:  "TEST=true",
 	}
 	newUUID, err := d.InsertJob(jr)
 	if err != nil {
@@ -267,8 +257,6 @@ func TestCRUDCondorJobEvent(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
-		CommandLine:   "this --is -a --test",
-		EnvVariables:  "TEST=true",
 	}
 	jobID, err := d.InsertJob(jr)
 	if err != nil {
@@ -385,8 +373,6 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
-		CommandLine:   "this --is -a --test",
-		EnvVariables:  "TEST=true",
 	}
 	jobID, err := d.InsertJob(jr)
 	if err != nil {
@@ -506,8 +492,6 @@ func TestCondorJobStopRequest(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
-		CommandLine:   "this --is -a --test",
-		EnvVariables:  "TEST=true",
 	}
 	newUUID, err := d.InsertJob(jr)
 	if err != nil {
@@ -593,8 +577,6 @@ func TestCRUDJobDeps(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
-		CommandLine:   "this --is -a --test",
-		EnvVariables:  "TEST=true",
 	}
 	jobID, err := d.InsertJob(jr1)
 	if err != nil {
@@ -613,8 +595,6 @@ func TestCRUDJobDeps(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
-		CommandLine:   "this --is -a --test",
-		EnvVariables:  "TEST=true",
 	}
 	job2ID, err := d.InsertJob(jr2)
 	if err != nil {
@@ -633,8 +613,6 @@ func TestCRUDJobDeps(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
-		CommandLine:   "this --is -a --test",
-		EnvVariables:  "TEST=true",
 	}
 	job3ID, err := d.InsertJob(jr3)
 	if err != nil {

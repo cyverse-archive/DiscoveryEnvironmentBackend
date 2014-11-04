@@ -41,8 +41,6 @@ type JobRecord struct {
 	DateStarted      time.Time
 	DateCompleted    time.Time
 	AppID            string
-	CommandLine      string
-	EnvVariables     string
 	ExitCode         int
 	FailureThreshold int64
 	FailureCount     int64
@@ -58,8 +56,6 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 		date_started,
 		date_completed,
 		app_id,
-		command_line,
-		env_variables,
 		exit_code,
 		failure_threshold,
 		failure_count,
@@ -74,9 +70,7 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 		$7,
 		$8,
 		$9,
-		$10,
-		$11,
-		$12
+		$10
 	) RETURNING id`
 	var fixedBatch *string
 	if jr.BatchID == "" {
@@ -93,8 +87,6 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 		jr.DateStarted,
 		jr.DateCompleted,
 		jr.AppID,
-		jr.CommandLine,
-		jr.EnvVariables,
 		jr.ExitCode,
 		jr.FailureThreshold,
 		jr.FailureCount,
@@ -126,8 +118,6 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 				date_started,
 				date_completed,
 				cast(app_id as varchar),
-				command_line,
-				env_variables,
 				exit_code,
 				failure_threshold,
 				failure_count,
@@ -146,8 +136,6 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 		&jr.DateStarted,
 		&jr.DateCompleted,
 		&jr.AppID,
-		&jr.CommandLine,
-		&jr.EnvVariables,
 		&jr.ExitCode,
 		&jr.FailureThreshold,
 		&jr.FailureCount,
@@ -185,8 +173,6 @@ func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
 				date_started,
 				date_completed,
 				cast(app_id as varchar),
-				command_line,
-				env_variables,
 				exit_code,
 				failure_threshold,
 				failure_count,
@@ -205,8 +191,6 @@ func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
 		&jr.DateStarted,
 		&jr.DateCompleted,
 		&jr.AppID,
-		&jr.CommandLine,
-		&jr.EnvVariables,
 		&jr.ExitCode,
 		&jr.FailureThreshold,
 		&jr.FailureCount,
@@ -244,13 +228,11 @@ func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
 				date_started = $4,
 				date_completed = $5,
 				app_id = cast($6 as uuid),
-				command_line = $7,
-				env_variables = $8,
-				exit_code = $9,
-				failure_threshold = $10,
-				failure_count = $11,
-				condor_id = $12
-	WHERE id = cast($13 as uuid)
+				exit_code = $7,
+				failure_threshold = $8,
+				failure_count = $9,
+				condor_id = $10
+	WHERE id = cast($11 as uuid)
 	RETURNING id
 	`
 	var id string
@@ -268,8 +250,6 @@ func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
 		jr.DateStarted,
 		jr.DateCompleted,
 		jr.AppID,
-		jr.CommandLine,
-		jr.EnvVariables,
 		jr.ExitCode,
 		jr.FailureThreshold,
 		jr.FailureCount,
