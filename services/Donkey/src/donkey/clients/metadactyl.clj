@@ -176,8 +176,8 @@
   (-> (client/delete (metadactyl-url "apps" app-id "favorite")
                      {:query-params (secured-params)
                       :as           :stream})
-    (:body)
-    (service/decode-json)))
+      (:body)
+      (service/decode-json)))
 
 (defn- rate-app-request
   [rating comment-id]

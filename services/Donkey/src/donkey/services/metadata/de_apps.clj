@@ -77,7 +77,7 @@
   [job-info job-step submission]
   (->> (prepare-submission submission (UUID/randomUUID))
        (metadactyl/submit-job)
-       (:id)))
+       (:uuid)))
 
 (defn load-de-job-states
   [de-jobs]
