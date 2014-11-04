@@ -75,12 +75,17 @@
         (merge-shares cm user path)
         (merge-counts cm user path))))
 
+
 (defn path-stat
-  [cm user path]
-  (let [path (ft/rm-last-slash path)]
-    (log/warn "[path-stat] user:" user "path:" path)
-    (validators/path-exists cm path)
-    (decorate-stat cm user (stat cm path))))
+  ([cm user path]
+   (let [path (ft/rm-last-slash path)]
+     (log/warn "[path-stat] user:" user "path:" path)
+     (validators/path-exists cm path)
+     (decorate-stat cm user (stat cm path))))
+
+  ([user path]
+   (with-jargon (jargon/jargon-cfg) [cm]
+     (path-stat cm user path))))
 
 
 (defn- fmt-stat-response

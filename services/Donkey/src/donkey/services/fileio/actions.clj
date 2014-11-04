@@ -117,7 +117,7 @@
           :admin-users        (cfg/irods-admins)
           :skip-source-perms? true)
         (set-owner cm new-path user)
-        {:file (data/path-stat user new-path)}))))
+        (json/encode {:file (data/path-stat user new-path)})))))
 
 
 (defn url-encoded?
