@@ -1,7 +1,6 @@
 (ns donkey.clients.notifications
   (:use [donkey.persistence.tool-requests :only [email-template-for]]
-        [donkey.util.config :only
-         [notificationagent-base-url metadactyl-base-url]]
+        [donkey.util.config :only [notificationagent-base-url]]
         [donkey.util.service :only [build-url build-url-with-query decode-stream]]
         [donkey.util.transformers :only [add-current-user-to-map]])
   (:require [cheshire.core :as cheshire]
