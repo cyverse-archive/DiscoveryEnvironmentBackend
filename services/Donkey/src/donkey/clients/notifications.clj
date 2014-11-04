@@ -1,7 +1,7 @@
 (ns donkey.clients.notifications
   (:use [donkey.persistence.tool-requests :only [email-template-for]]
         [donkey.util.config :only
-         [notificationagent-base-url metadactyl-unprotected-base-url]]
+         [notificationagent-base-url metadactyl-base-url]]
         [donkey.util.service :only [build-url build-url-with-query decode-stream]]
         [donkey.util.transformers :only [add-current-user-to-map]])
   (:require [cheshire.core :as cheshire]
@@ -15,7 +15,7 @@
   "Builds a URL that can be used to fetch the description for the App with the
    given ID."
   [app-id]
-  (build-url (metadactyl-unprotected-base-url) "apps" app-id "description"))
+  (build-url (metadactyl-base-url) "apps" app-id "description"))
 
 (defn- get-app-description
   "Gets an app description from the database."

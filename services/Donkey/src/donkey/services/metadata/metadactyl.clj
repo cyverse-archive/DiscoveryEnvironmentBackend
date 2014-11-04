@@ -44,7 +44,7 @@
   "Adds the name and email of the currently authenticated user to the metadactyl URL with the given
    relative URL path."
   [query & components]
-  (apply build-url-with-query (metadactyl-unprotected-base-url)
+  (apply build-url-with-query (metadactyl-base-url)
                               (secured-params query)
                               components))
 

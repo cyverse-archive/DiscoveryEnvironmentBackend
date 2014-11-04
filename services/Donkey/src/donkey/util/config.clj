@@ -190,11 +190,6 @@
   [props config-valid configs app-routes-enabled]
   "donkey.metadactyl.base-url")
 
-(cc/defprop-str metadactyl-unprotected-base-url
-  "The base URL to use when connecting to unsecured Metadactyl services."
-  [props config-valid configs app-routes-enabled]
-  "donkey.metadactyl.unprotected-base-url")
-
 (cc/defprop-str notificationagent-base-url
   "The base URL to use when connecting to the notification agent."
   [props config-valid configs notification-routes-enabled]

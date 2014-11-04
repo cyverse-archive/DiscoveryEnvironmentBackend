@@ -19,7 +19,7 @@
 
 (defn- metadactyl-url
   [& components]
-  (str (apply curl/url (config/metadactyl-unprotected-base-url) components)))
+  (str (apply curl/url (config/metadactyl-base-url) components)))
 
 (defn- add-agave-enabled-flag
   ([]
