@@ -184,22 +184,19 @@
   "This service forwards requests to the notification agent in order to
    retrieve notifications that the user may or may not have seen yet."
   [req]
-  (let [url (dn/notificationagent-url "messages" (:params req))]
-    (dn/add-app-details (forward-get url req))))
+  (forward-get (dn/notificationagent-url "messages" (:params req)) req))
 
 (defn get-unseen-messages
   "This service forwards requests to the notification agent in order to
    retrieve notifications that the user hasn't seen yet."
   [req]
-  (let [url (dn/notificationagent-url "unseen-messages")]
-    (dn/add-app-details (forward-get url req))))
+  (forward-get (dn/notificationagent-url "unseen-messages") req))
 
 (defn last-ten-messages
   "This service forwards requests for the ten most recent notifications to the
    notification agent."
   [req]
-  (let [url (dn/notificationagent-url "last-ten-messages" (:params req))]
-    (dn/add-app-details (forward-get url req))))
+  (forward-get (dn/notificationagent-url "last-ten-messages" (:params req)) req))
 
 (defn count-messages
   "This service forwards requests to the notification agent in order to

@@ -11,46 +11,6 @@
             [donkey.util.time :as ut]
             [donkey.util.transformers :as xforms]))
 
-(defn- app-description-url
-  "Builds a URL that can be used to fetch the description for the App with the
-   given ID."
-  [app-id]
-  (build-url (metadactyl-base-url) "apps" app-id "description"))
-
-(defn- get-app-description
-  "Gets an app description from the database."
-  [app-id]
-  (log/debug "looking up the description for app" app-id)
-  (if (empty? app-id)
-    ""
-    (:body (client/get (app-description-url app-id)
-                       {:query-params (xforms/add-current-user-to-map {})}))))
-
-(defn- add-app-details-to-message
-  "Adds application details to a single message."
-  [msg]
-  (let [app-id (get-in msg [:payload :app_id])]
-    (assoc-in msg [:payload :app_description]
-              (get-app-description app-id))))
-
-(defn- add-app-details-to-messages
-  "Adds application details to a list of messages."
-  [msgs]
-  (map add-app-details-to-message msgs))
-
-(defn- add-app-details-to-map
-  "Adds application details to a map."
-  [m]
-  (update-in m [:messages] add-app-details-to-messages))
-
-(defn add-app-details
-  "Adds application details to notifications in a response from the
-   notification agent."
-  [res]
-  (let [m (decode-stream (:body res))]
-    (log/debug "adding app details to notifications:" m)
-    (cheshire/encode (add-app-details-to-map m))))
-
 (defn notificationagent-url
   "Builds a URL that can be used to connect to the notification agent."
   ([relative-url]
