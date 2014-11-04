@@ -85,7 +85,8 @@
     (admin-apps-routes)
     (admin-notification-routes)
     (admin-reference-genomes-routes)
-    (admin-tool-routes)))
+    (admin-tool-routes)
+    (route/not-found (unrecognized-path-response))))
 
 (defn cas-store-user
   [routes]
