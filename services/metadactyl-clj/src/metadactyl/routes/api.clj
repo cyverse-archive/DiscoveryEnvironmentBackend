@@ -22,8 +22,7 @@
             [metadactyl.routes.apps.elements :as app-element-routes]
             [metadactyl.routes.apps.pipelines :as pipeline-routes]
             [metadactyl.routes.reference-genomes :as reference-genome-routes]
-            [metadactyl.routes.tools :as tool-routes]
-            [metadactyl.routes.legacy :as legacy-routes]))
+            [metadactyl.routes.tools :as tool-routes]))
 
 (defapi app
   (swagger-ui "/api")
@@ -66,10 +65,4 @@
       (context "/admin" [] admin-routes/tools))
     (swaggered "admin-reference-genomes"
       :description "Admin Reference Genome endpoints."
-      (context "/admin/reference-genomes" [] admin-routes/reference-genomes))
-    (swaggered "secured"
-      :description "Secured App endpoints."
-      (context "/secured" [] legacy-routes/secured-routes))
-    (swaggered "unsecured"
-      :description "Unsecured App endpoints."
-      legacy-routes/metadactyl-routes)))
+      (context "/admin/reference-genomes" [] admin-routes/reference-genomes))))

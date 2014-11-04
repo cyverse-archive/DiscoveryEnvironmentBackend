@@ -2,7 +2,6 @@
 
 * [Installing and Configuring metadactyl-clj](#installing-and-configuring-metadactyl-clj)
     * [Primary Configuration](#primary-configuration)
-    * [Zookeeper Connection Information](#zookeeper-connection-information)
     * [Logging Configuration](#logging-configuration)
 
 # Installing and Configuring metadactyl-clj
@@ -72,15 +71,6 @@ metadactyl.uid.domain = iplantcollaborative.org
 
 Generally, the database and service connection settings will have to be
 updated for each deployment.
-
-## Zookeeper Connection Information
-
-One piece of information that can't be stored in Zookeeper is the information
-required to connect to Zookeeper.  For metadactyl-clj and most other iPlant
-services, this information is stored in a single file:
-`/etc/iplant-services/zkhosts.properties`.  This file is automatically
-installed when the iplant-service-configs RPM is installed.  You may have to
-modify this file so that it points to the correct hosts.
 
 ## Logging Configuration
 
