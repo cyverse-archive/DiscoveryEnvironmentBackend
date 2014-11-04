@@ -6,9 +6,12 @@
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
+            [cemerick.url :as url]
             [cheshire.core :as json]
+            [clj-http.client :as http]
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [me.raynes.fs :as fs]
             [clojure-commons.error-codes :as error]
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.filesystem.uuids :as uuids]
@@ -18,7 +21,8 @@
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as jargon])
-  (:import [java.util UUID]))
+  (:import [java.util UUID]
+           [java.util.logging Filter]))
 
 
 (defn get-paths-in-folder
@@ -74,32 +78,45 @@
      :folders (mapv xformer collections)}))
 
 
+(defn- fmt-folder
+  [user entry]
+  (let [id   (:id entry)
+        path (:path entry)]
+    {:id            id
+     :path          path
+     :label         (paths/id->label user path)
+     :isFavorite    (meta/is-favorite? user (UUID/fromString id))
+     :filter        (or (should-filter? user path)
+                        (should-filter? user (fs/base-name path)))
+     :permission    (:permission entry)
+     :date-created  (:dateCreated entry)
+     :date-modified (:dateModified entry)
+     :file-size     0
+     :hasSubDirs    true}))
+
+
+(defn- fmt-dir-resp
+  [data-resp user]
+  (assoc (fmt-folder user data-resp) :folders (map #(fmt-folder user %) (:folders data-resp))))
+
+
+(defn- mk-nav-url
+  [path]
+  (let [nodes         (fs/split path)
+        nodes         (if (= "/" (first nodes)) (next nodes) nodes)
+        encoded-nodes (map url/url-encode nodes)]
+    (apply url/url (cfg/data-info-base-url) "navigation" "path" encoded-nodes)))
+
+
 (defn- list-directories
   "Lists the directories contained under path."
   [user path]
-  (let [path (ft/rm-last-slash path)]
-    (with-jargon (jargon/jargon-cfg) [cm]
-      (validators/user-exists cm user)
-      (validators/path-exists cm path)
-      (validators/path-readable cm user path)
-      (validators/path-is-dir cm path)
+    (-> (http/get (str (mk-nav-url path)) {:query-params {:user user}})
+      :body
+      (json/decode true)
+      :folder
+      (fmt-dir-resp user)))
 
-      (let [stat (stat cm path)
-            zone (cfg/irods-zone)
-            uuid (:uuid (uuids/uuid-for-path cm user path))]
-        (merge
-         (hash-map
-          :id            uuid
-          :path          path
-          :label         (paths/id->label user path)
-          :isFavorite    (meta/is-favorite? user (UUID/fromString uuid))
-          :filter        (should-filter? user path)
-          :permisssion   (permission-for cm user path)
-          :hasSubDirs    true
-          :date-created  (:date-created stat)
-          :date-modified (:date-modified stat)
-          :file-size     0)
-         (dissoc (page->map user (icat/list-folders-in-folder user zone path)) :files))))))
 
 (defn- top-level-listing
   [{user :user}]
@@ -112,9 +129,9 @@
   [path]
   (= (ft/add-trailing-slash path) (ft/add-trailing-slash (cfg/irods-home))))
 
+
 (defn do-directory
   [{:keys [user path] :or {path nil} :as params}]
-  (log/warn "path" path)
   (cond
     (nil? path)
     (top-level-listing params)

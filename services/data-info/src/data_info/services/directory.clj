@@ -32,11 +32,11 @@
 
 (defn- fmt-folder
   [{:keys [full_path modify_ts create_ts access_type_id uuid]}]
-  {:id            uuid
-   :path          full_path
-   :permission    (perm/fmt-perm access_type_id)
-   :date-created  (* (Integer/parseInt create_ts) 1000)
-   :date-modified (* (Integer/parseInt modify_ts) 1000)})
+  {:id           uuid
+   :path         full_path
+   :permission   (perm/fmt-perm access_type_id)
+   :dateCreated  (* (Integer/parseInt create_ts) 1000)
+   :dateModified (* (Integer/parseInt modify_ts) 1000)})
 
 
 (defn- list-directories
@@ -48,12 +48,12 @@
     (validators/path-readable cm user path)
     (validators/path-is-dir cm path)
     (let [stat (item/stat cm path)]
-      {:id            (irods/lookup-uuid cm path)
-       :path          path
-       :permisssion   (perm/permission-for cm user path)
-       :date-created  (:date-created stat)
-       :date-modified (:date-modified stat)
-       :folders       (map fmt-folder (icat/list-folders-in-folder user (cfg/irods-zone) path))})))
+      {:id           (irods/lookup-uuid cm path)
+       :path         path
+       :permission   (perm/permission-for cm user path)
+       :dateCreated  (:date-created stat)
+       :dateModified (:date-modified stat)
+       :folders      (map fmt-folder (icat/list-folders-in-folder user (cfg/irods-zone) path))})))
 
 
 (defn do-directory
