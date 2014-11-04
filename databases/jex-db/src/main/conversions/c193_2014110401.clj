@@ -1,7 +1,7 @@
 (ns facepalm.c193-2014110401
   (:use [korma.core]))
 
-(def :^private version
+(def ^:private version
   "The destination database version."
   "1.9.3:20141104.01")
 

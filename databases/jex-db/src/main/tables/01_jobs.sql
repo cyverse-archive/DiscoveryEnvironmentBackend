@@ -12,8 +12,6 @@ CREATE TABLE jobs (
   date_started      timestamp with time zone,
   date_completed    timestamp with time zone,
   app_id            uuid not null,
-  command_line      text not null,
-  env_variables     text,
   exit_code         integer, -- nullable because the job might be running
   failure_threshold integer NOT NULL,
   failure_count     integer
