@@ -59,25 +59,31 @@
          (delete-system-messages req))
 
    (DELETE "/notifications/system/delete-all" [:as req]
-           (delete-all-system-messages req))
+           (delete-all-system-messages req))))
 
-   (PUT "/notifications/admin/system" [:as req]
-        (admin-add-system-message req))
+(defn admin-notification-routes
+  []
+  (optional-routes
+    [#(and (config/admin-routes-enabled)
+           (config/notification-routes-enabled))]
 
-   (GET "/notifications/admin/system" [:as req]
-       (admin-list-system-messages req))
+    (PUT "/notifications/system" [:as req]
+         (admin-add-system-message req))
 
-   (GET "/notifications/admin/system/:uuid" [uuid :as req]
-        (admin-get-system-message req uuid))
+    (GET "/notifications/system" [:as req]
+         (admin-list-system-messages req))
 
-   (POST "/notifications/admin/system/:uuid" [uuid :as req]
-         (admin-update-system-message req uuid))
+    (GET "/notifications/system/:uuid" [uuid :as req]
+         (admin-get-system-message req uuid))
 
-   (DELETE "/notifications/admin/system/:uuid" [uuid :as req]
-           (admin-delete-system-message req uuid))
+    (POST "/notifications/system/:uuid" [uuid :as req]
+          (admin-update-system-message req uuid))
 
-   (GET "/notifications/admin/system-types" [:as req]
-        (admin-list-system-types req))))
+    (DELETE "/notifications/system/:uuid" [uuid :as req]
+            (admin-delete-system-message req uuid))
+
+    (GET "/notifications/system-types" [:as req]
+         (admin-list-system-types req))))
 
 (defn unsecured-notification-routes
   []

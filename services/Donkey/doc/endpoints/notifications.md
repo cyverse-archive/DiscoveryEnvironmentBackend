@@ -451,11 +451,10 @@ endpoint. Please see the notification agent documentation for more details.
 
 ## Endpoints for System Messages (a.k.a. System Notifications)
 
-The endpoints for the system messages are straight pass throughs to the
-corresponding calls in the Notification Agent. The only difference is that
-the endpoints in Donkey are prefixed with __/secured/notifications__ and that endpoints
-that require the __user__ query string parameter instead take the __proxyToken__
-parameter and its corresponding ticket string.
+The endpoints for the system messages are straight pass throughs to the corresponding calls in the
+Notification Agent. The only difference is that the endpoints in Donkey are prefixed with
+__/secured/notifications__ or __/admin/notifications__ and that endpoints that require the __user__
+query string parameter instead take the __proxyToken__ parameter and its corresponding ticket string.
 
 <table>
     <thead>
@@ -499,27 +498,27 @@ parameter and its corresponding ticket string.
             <td>DELETE /system/delete-all</td>
         </tr>
         <tr>
-            <td>PUT /secured/notifications/admin/system</td>
+            <td>PUT /admin/notifications/system</td>
             <td>PUT /admin/system</td>
         </tr>
         <tr>
-            <td>GET /secured/notifications/admin/system</td>
+            <td>GET /admin/notifications/system</td>
             <td>GET /admin/system</td>
         </tr>
         <tr>
-            <td>GET /secured/notifications/admin/system/:uuid</td>
+            <td>GET /admin/notifications/system/:uuid</td>
             <td>GET /admin/system/:uuid</td>
         </tr>
         <tr>
-            <td>POST /secured/notifications/admin/system/:uuid</td>
+            <td>POST /admin/notifications/system/:uuid</td>
             <td>POST /admin/system/:uuid</td>
         </tr>
         <tr>
-            <td>DELETE /secured/notifications/admin/system/:uuid</td>
+            <td>DELETE /admin/notifications/system/:uuid</td>
             <td>DELETE /admin/system/:uuid</td>
         </tr>
         <tr>
-            <td>GET /secured/notifications/admin/system-types</td>
+            <td>GET /admin/notifications/system-types</td>
             <td>GET /admin/system-types</td>
         </tr>
     </tbody>

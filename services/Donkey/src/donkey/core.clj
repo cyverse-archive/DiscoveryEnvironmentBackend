@@ -83,6 +83,7 @@
   (flagged-routes
     (secured-admin-routes)
     (admin-apps-routes)
+    (admin-notification-routes)
     (admin-reference-genomes-routes)
     (admin-tool-routes)))
 
