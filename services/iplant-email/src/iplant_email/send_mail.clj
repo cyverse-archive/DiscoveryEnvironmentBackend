@@ -3,7 +3,6 @@
   (:require [clojure.tools.logging :as log]
             [cheshire.core :as cheshire]
             [iplant-email.config :as cfg]
-            [iplant-email.send-mail :as sm]
             [iplant-email.json-validator :as jv]
             [iplant-email.templatize :as tmpl])
   (:import [javax.mail Session Message Transport Message$RecipientType]
@@ -12,7 +11,7 @@
 (defn set-props
   [host]
   (let [props (System/getProperties)]
-    (. props put "mail.smtp.host" host)
+    (.put props "mail.smtp.host" host)
     props))
 
 (defn msg->log
@@ -74,7 +73,7 @@
             from-addr       (or (:from-addr body) (cfg/smtp-from-addr))
             from-name       (:from-name body)
             email-body      (tmpl/create-email template-name template-values)]
-        (sm/send-email
+        (send-email
           {:host      (cfg/smtp-host)
            :to-addr   to-addr
            :cc-addr   cc-addr

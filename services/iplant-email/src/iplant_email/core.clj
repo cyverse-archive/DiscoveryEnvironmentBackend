@@ -5,7 +5,7 @@
             [compojure.route :as route]
             [compojure.handler :as handler]
             [clojure.tools.logging :as log]
-            [clojure-commons.config :as cfg]
+            [iplant-email.config :as cfg]
             [iplant-email.send-mail :as sm]
             [iplant-email.json-body :as jb]
             [ring.adapter.jetty :as jetty]
@@ -13,20 +13,6 @@
             [iplant-email.templatize :as tmpl]
             [common-cli.core :as ccli]
             [me.raynes.fs :as fs]))
-
-(def config (ref nil))
-
-(defn listen-port
-  []
-  (Integer/parseInt (get @config "iplant-email.app.listen-port")))
-
-(defn smtp-host
-  []
-  (get @config "iplant-email.smtp.host"))
-
-(defn smtp-from-addr
-  []
-  (get @config "iplant-email.smtp.from-address"))
 
 (defn format-exception
   "Formats a raised exception as a JSON object. Returns a response map."
@@ -71,5 +57,5 @@
       (ccli/exit 1 (str "The config file does not exist.")))
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
-    (cfg/load-config-from-file (:config options) config)
-    (jetty/run-jetty (site-handler email-routes) {:port (listen-port)})))
+    (cfg/load-config-from-file (:config options))
+    (jetty/run-jetty (site-handler email-routes) {:port (cfg/listen-port)})))
