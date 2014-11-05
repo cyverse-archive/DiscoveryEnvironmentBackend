@@ -26,9 +26,8 @@
   "Builds a single input for a step in an app. The current implementation performs the analysis
   configuration lookup twice (once in build-input and once in build-inputs), but the code seems
   clearest that way."
-  [config param]
-  (let [path     (config (util/param->qual-key param))
-        filename (when-not (nil? path) (fs/base-name path))]
+  [param path]
+  (let [filename (when-not (nil? path) (fs/base-name path))]
     {:id           (:id param)
      :multiplicity (util/input-multiplicities (:type param))
      :name         filename
@@ -37,13 +36,19 @@
      :type         (:type param)
      :value        path}))
 
+(defn- build-inputs-for-param
+  [config param]
+  (let [param-value (config (util/param->qual-key param))
+        paths       (if (sequential? param-value) param-value [param-value])]
+    (map (partial build-input param) paths)))
+
 (defn build-inputs
   "Builds the list of inputs for a step in an app. The current implementation performs the
   analysis configuration lookup twice, but the code seems clearest that way."
   [config params]
   (->> (filter util/input? params)
        (filter (comp config util/param->qual-key))
-       (map (partial build-input config))))
+       (mapcat (partial build-inputs-for-param config))))
 
 (defn- missing-output-filename
   [{step-id :step_id id :id}]
@@ -140,7 +145,7 @@
 
 (defn input-args
   [param param-value preprocessor]
-  (let [values (if (seq? param-value) param-value [param-value])]
+  (let [values (if (sequential? param-value) param-value [param-value])]
     (mapv (comp (partial build-arg param) (fnil preprocessor ""))
           (if (:omit_if_blank param) (remove string/blank? values) values))))
 
