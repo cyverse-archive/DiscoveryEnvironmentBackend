@@ -829,7 +829,7 @@ func (d *Databaser) UpdateLastCondorJobEvent(je *LastCondorJobEvent) (*LastCondo
 // UpsertLastCondorJobEvent updates the last CondorJobEvent for a job if it's
 // already set, but will insert it if it isn't already set.
 func (d *Databaser) UpsertLastCondorJobEvent(jobEventID, jobID string) (string, error) {
-	je, err := d.GetLastCondorJobEvent(jobEventID)
+	je, err := d.GetLastCondorJobEvent(jobID)
 	if err == sql.ErrNoRows {
 		le := &LastCondorJobEvent{
 			JobID:            jobID,
@@ -837,6 +837,7 @@ func (d *Databaser) UpsertLastCondorJobEvent(jobEventID, jobID string) (string, 
 		}
 		leID, err := d.InsertLastCondorJobEvent(le)
 		if err != nil {
+			log.Printf("Error inserting last condor job event: %s", err)
 			return "", err
 		}
 		return leID, err
@@ -844,6 +845,7 @@ func (d *Databaser) UpsertLastCondorJobEvent(jobEventID, jobID string) (string, 
 	je.CondorJobEventID = jobEventID
 	updated, err := d.UpdateLastCondorJobEvent(je)
 	if err != nil {
+		log.Printf("Error updating the last condor job event: %s", err)
 		return "", err
 	}
 	return updated.JobID, nil
