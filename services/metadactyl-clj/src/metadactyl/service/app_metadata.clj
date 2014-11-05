@@ -220,6 +220,7 @@
 (defn add-category
   "Adds an App Category to a parent Category, as long as that parent does not contain any Apps."
   [{:keys [name parent_id] :as category}]
+  (validate-app-category-existence parent_id)
   (when (category-contains-subcategory? parent_id name)
     (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
              :reason     "Parent App Category already contains a subcategory with that name"
