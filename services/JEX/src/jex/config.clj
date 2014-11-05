@@ -122,6 +122,11 @@
   [props config-valid configs]
   "jex.app.accounting-group")
 
+(cc/defprop-str jex-events-url
+  "The URL to the jobs endpoint of the jex-events service"
+  [props config-valid configs]
+  "jex.app.jex-events")
+
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []

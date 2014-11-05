@@ -8,6 +8,7 @@
             [clojure.tools.logging :as log]
             [clojure.java.shell :as sh]
             [clojure-commons.osm :as osm]
+            [clj-http.client :as http]
             [cheshire.core :as cheshire]))
 
 (defn failure [reason]
@@ -47,6 +48,15 @@
         result    (osm/add-callback osm-client doc-id "on_update" notif-url)]
     (log/warn result)
     doc-id))
+
+(defn push-job-to-jex-events
+  [condor-id submitter app-id]
+  (let [job-record {:condorid     condor-id
+                    :submitter    submitter
+                    :appid        app-id}
+        result     (http/post (cfg/jex-events-url) {:form-params job-record
+                                                    :content-type :json})]
+    (log/info result)))
 
 (defn condor-rm
   "Stops a condor job."
@@ -221,4 +231,6 @@
                     (xform-map-for-osm updated-map sub-id)
                     sub-result)]
     (log/warn "Submitted Job:" sub-id "OSM doc:" doc-id)
+    (log/warn "Pushing to jex-events:" sub-id (:username updated-map) (:app_id updated-map))
+    (push-job-to-jex-events sub-id (:username updated-map) (:app_id updated-map))
     [(:exit sub-result) sub-id doc-id]))
