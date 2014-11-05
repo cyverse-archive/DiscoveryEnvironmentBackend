@@ -213,11 +213,12 @@
 
 
 (defn- fmt-entry
-  [id date-created date-modified filter path name permission size]
+  [id date-created date-modified filter info-type path name permission size]
   {:id           (str id)
    :dateCreated  date-created
    :dateModified date-modified
    :filter       filter
+   :infoType     info-type
    :name         name
    :path         path
    :permission   permission
@@ -227,12 +228,13 @@
 (defn- page-entry->map
   "Turns a entry in a paged listing result into a map containing file/directory information that can
    be consumed by the front-end."
-  [filter? {:keys [access_type_id base_name create_ts data_size full_path modify_ts uuid]}]
+  [filter?
+   {:keys [access_type_id base_name create_ts data_size full_path info_type modify_ts uuid]}]
   (let [created  (* (Integer/parseInt create_ts) 1000)
         modified (* (Integer/parseInt modify_ts) 1000)
         filter   (filter? full_path)
         perm     (perm/fmt-perm access_type_id)]
-    (fmt-entry uuid created modified filter full_path base_name perm data_size)))
+    (fmt-entry uuid created modified filter info_type full_path base_name perm data_size)))
 
 
 (defn- page->map
@@ -243,6 +245,7 @@
         do          (get entry-types "dataobject")
         collections (get entry-types "collection")
         xformer     (partial page-entry->map filter?)]
+
     {:files   (mapv xformer do)
      :folders (mapv xformer collections)}))
 
@@ -266,14 +269,16 @@
 (defn- paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
   [irods user path filter sfield sord offset limit]
-  (let [id      (irods/lookup-uuid irods path)
-        filter? (should-filter? filter path)
-        perm    (perm/permission-for irods user path)
-        stat    (item/stat irods path)
-        zone    (cfg/irods-zone)
-        name    (fs/base-name path)
-        pager   (icat/paged-folder-listing user zone path sfield sord limit offset)]
-    (merge (fmt-entry id (:date-created stat) (:date-modified stat) filter? path name perm 0)
+  (let [id            (irods/lookup-uuid irods path)
+        filter?       (should-filter? filter path)
+        perm          (perm/permission-for irods user path)
+        stat          (item/stat irods path)
+        date-created  (:date-created stat)
+        date-modified (:date-modified stat)
+        zone          (cfg/irods-zone)
+        name          (fs/base-name path)
+        pager         (icat/paged-folder-listing user zone path sfield sord limit offset)]
+    (merge (fmt-entry id date-created date-modified filter? nil path name perm 0)
            (page->map (partial should-filter? filter) pager)
            {:total         (icat/number-of-items-in-folder user zone path)
             :totalFiltered (total-filtered user zone path filter)})))

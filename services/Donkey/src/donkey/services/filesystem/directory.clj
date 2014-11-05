@@ -152,12 +152,12 @@
 
 (defn- format-entry
   [user entry]
-  (println entry)
   (let [id   (:id entry)
         path (:path entry)]
     {:id            id
      :path          path
      :label         (paths/id->label user path)
+     :infoType      (:infoType entry)
      :isFavorite    (meta/is-favorite? user (UUID/fromString id))
      :filter        (:filter entry)
      :permission    (:permission entry)

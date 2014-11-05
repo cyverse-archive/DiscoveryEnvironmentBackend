@@ -274,63 +274,60 @@
 
    :paged-folder-listing
    "WITH user_groups AS ( SELECT g.*
-                            FROM r_user_main u
-                            JOIN r_user_group g ON g.user_id = u.user_id
-                           WHERE u.user_name = ?
-                             AND u.zone_name = ? ),
+                        FROM r_user_main AS u JOIN r_user_group AS g ON g.user_id = u.user_id
+                        WHERE u.user_name = ? AND u.zone_name = ? ),
 
-         parent      AS ( SELECT * from r_coll_main
-                           WHERE coll_name = ? ),
+         parent      AS ( SELECT * FROM r_coll_main WHERE coll_name = ? ),
 
          data_objs   AS ( SELECT *
-                            FROM r_data_main
-                           WHERE coll_id = ANY(ARRAY( SELECT coll_id FROM parent )))
+                            FROM r_data_main d1
+                            WHERE coll_id = ANY(ARRAY( SELECT coll_id FROM parent ))
+                              AND d1.data_repl_num = ( SELECT MIN(d2.data_repl_num)
+                                                         FROM r_data_main AS d2
+                                                         WHERE d2.data_id = d1.data_id )),
 
-    SELECT DISTINCT p.full_path,
-                    p.base_name,
-                    p.data_size,
-                    p.create_ts,
-                    p.modify_ts,
-                    p.uuid,
-                    p.type
-    FROM ( SELECT c.coll_name                       as dir_name,
-                  c.coll_name || '/' || d.data_name as full_path,
-                  d.data_name                       as base_name,
-                  (array_agg(d.create_ts))[1]       as create_ts,
-                  (array_agg(d.modify_ts))[1]       as modify_ts,
-                  'dataobject'                      as type,
-                  (array_agg(d.data_size))[1]       as data_size,
-                  m.meta_attr_value                 as uuid,
-                  (array_agg(a.access_type_id))[1]  as access_type_id
-             FROM r_objt_access a
-             JOIN data_objs d ON a.object_id = d.data_id
-             JOIN r_coll_main c ON c.coll_id = d.coll_id
-             JOIN r_objt_metamap om ON om.object_id = d.data_id
-             JOIN r_meta_main m ON m.meta_id = om.meta_id
-            WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-              AND a.object_id IN ( SELECT data_id FROM data_objs )
-              AND m.meta_attr_name = 'ipc_UUID'
-         GROUP BY c.coll_name, d.data_name, uuid
-            UNION
-           SELECT c.parent_coll_name                     as dir_name,
-                  c.coll_name                            as full_path,
-                  regexp_replace(c.coll_name, '.*/', '') as base_name,
-                  c.create_ts                            as create_ts,
-                  c.modify_ts                            as modify_ts,
-                  'collection'                           as type,
-                  0                                      as data_size,
-                  m.meta_attr_value                      as uuid,
-                  a.access_type_id                       as access_type_id
-             FROM r_coll_main c
-             JOIN r_objt_access a ON c.coll_id = a.object_id
-             JOIN parent p ON c.parent_coll_name = p.coll_name
-             JOIN r_objt_metamap om ON om.object_id = c.coll_id
-             JOIN r_meta_main m ON m.meta_id = om.meta_id
-            WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-              AND c.coll_type != 'linkPoint'
-              AND m.meta_attr_name = 'ipc_UUID') AS p
-    ORDER BY p.type ASC, %s %s
-       LIMIT ?
+         avus        AS ( SELECT *
+                            FROM r_objt_metamap om JOIN r_meta_main mm ON mm.meta_id = om.meta_id
+                            WHERE om.object_id = ANY(ARRAY( SELECT data_id FROM data_objs )))
+
+    SELECT *
+      FROM ( SELECT 'collection'                           AS type,
+                    m.meta_attr_value                      AS uuid,
+                    c.coll_name                            AS full_path,
+                    regexp_replace(c.coll_name, '.*/', '') AS base_name,
+                    NULL                                   AS info_type,
+                    0                                      AS data_size,
+                    c.create_ts                            AS create_ts,
+                    c.modify_ts                            AS modify_ts,
+                    a.access_type_id                       AS access_type_id
+               FROM r_coll_main c
+                 JOIN r_objt_access a ON c.coll_id = a.object_id
+                 JOIN parent p ON c.parent_coll_name = p.coll_name
+                 JOIN r_objt_metamap om ON om.object_id = c.coll_id
+                 JOIN r_meta_main m ON m.meta_id = om.meta_id
+               WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
+                 AND c.coll_type != 'linkPoint'
+                 AND m.meta_attr_name = 'ipc_UUID'
+             UNION
+             SELECT 'dataobject'                      AS type,
+                    m.meta_attr_value                 AS uuid,
+                    c.coll_name || '/' || d.data_name AS full_path,
+                    d.data_name                       AS base_name,
+                    f.meta_attr_value                 AS info_type,
+                    d.data_size                       AS data_size,
+                    d.create_ts                       AS create_ts,
+                    d.modify_ts                       AS modify_ts,
+                    a.access_type_id                  AS access_type_id
+               FROM r_objt_access a
+                 JOIN data_objs d ON a.object_id = d.data_id
+                 JOIN r_coll_main c ON c.coll_id = d.coll_id
+                 JOIN avus m ON m.object_id = d.data_id
+                 LEFT JOIN ( SELECT * FROM avus WHERE meta_attr_name = 'ipc-filetype' ) f
+                   ON f.object_id = d.data_id
+                 WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
+                   AND m.meta_attr_name = 'ipc_UUID' ) AS p
+      ORDER BY p.type ASC, %s %s
+      LIMIT ?
       OFFSET ?"
 
    :select-files-with-uuids
