@@ -303,10 +303,16 @@ Please see the metadactyl documentation for more information.
 
 ## Logically Deleting Apps
 
+Secured Endpoint: DELETE /admin/apps/{app-id}
+
+Delegates to metadactyl: DELETE /admin/apps/{app-id}
+
 Secured Endpoint: DELETE /apps/{app-id}
+
 Delegates to metadactyl: DELETE /apps/{app-id}
 
 Secured Endpoint: POST /apps/shredder
+
 Delegates to metadactyl: POST /apps/shredder
 
 These endpoints are passthroughs to their corresponding metadactyl endpoint.

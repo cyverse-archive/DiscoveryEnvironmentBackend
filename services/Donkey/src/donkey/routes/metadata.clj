@@ -46,7 +46,10 @@
           (categorize-apps req))
 
     (POST "/apps/shredder" [:as req]
-          (permanently-delete-apps req))))
+          (permanently-delete-apps req))
+
+    (DELETE "/apps/:app-id" [app-id]
+            (admin-delete-app app-id))))
 
 (defn apps-routes
   []

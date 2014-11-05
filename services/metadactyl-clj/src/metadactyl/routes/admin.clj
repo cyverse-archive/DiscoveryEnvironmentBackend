@@ -1,5 +1,6 @@
 (ns metadactyl.routes.admin
   (:use [metadactyl.app-categorization :only [categorize-apps]]
+        [metadactyl.conrad.admin-apps :only [delete-app]]
         [metadactyl.conrad.admin-categories :only [add-category
                                                    delete-categories
                                                    delete-category
@@ -76,7 +77,16 @@
          :summary "Permanently Deleting Apps"
          :notes "This service physically removes an App from the database, which allows
          administrators to completely remove Apps that are causing problems."
-         (ce/trap uri #(permanently-delete-apps body))))
+         (ce/trap uri #(permanently-delete-apps body)))
+
+  (DELETE* "/:app-id" [:as {uri :uri}]
+           :path-params [app-id :- AppIdPathParam]
+           :query [params SecuredQueryParams]
+           :summary "Logically Deleting an App"
+           :notes "An app can be marked as deleted in the DE without being completely removed from
+           the database using this service. This endpoint is the same as the non-admin endpoint,
+           except an error is not returned if the user does not own the App."
+           (ce/trap uri #(delete-app app-id))))
 
 (defroutes* admin-categories
   (POST* "/" [:as {uri :uri}]
