@@ -296,29 +296,29 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 			}
 			EventParser(&event)
 			log.Println(event.String())
-			job, err := d.GetJobByCondorID(event.CondorID)
+			job, err := d.AddJob(event.CondorID)
 			if err != nil {
-				log.Print(err)
+				log.Printf("Error adding job: %s", err)
 				continue
 			}
 			rawEventID, err := d.AddCondorRawEvent(event.Event, job.ID)
 			if err != nil {
-				log.Print(err)
+				log.Printf("Error adding raw event: %s", err)
 				continue
 			}
 			ce, err := d.GetCondorEventByNumber(event.EventNumber)
 			if err != nil {
-				log.Print(err)
+				log.Printf("Error getting condor event: %s", err)
 				continue
 			}
 			jobEventID, err := d.AddCondorJobEvent(job.ID, ce.ID, rawEventID)
 			if err != nil {
-				log.Print(err)
+				log.Printf("Error adding job event: %s", err)
 				continue
 			}
 			_, err = d.UpsertLastCondorJobEvent(jobEventID, job.ID)
 			if err != nil {
-				log.Print(err)
+				log.Printf("Error upserting last condor job event: %s", err)
 				continue
 			}
 		case <-quit:
@@ -332,10 +332,10 @@ func ExtractCondorID(id string) string {
 	r := regexp.MustCompile(`\(([0-9]+)\.[0-9]+\.[0-9]+\)`)
 	matches := r.FindStringSubmatch(id)
 	matchesLength := len(matches)
-	if matchesLength < 1 {
+	if matchesLength < 2 {
 		return ""
 	}
-	return matches[0]
+	return matches[1]
 }
 
 // EventParser extracts info from an event string.

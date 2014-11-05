@@ -24,10 +24,21 @@ func WriteRequestError(writer http.ResponseWriter, msg string) {
 	writer.Write([]byte(msg))
 }
 
+// LogAPIMsg prints a message to the log with associated request info.
+func LogAPIMsg(request *http.Request, msg string) {
+	log.Printf(
+		"Method: %s\tFrom: %s\tTo: %s\t Log: %s",
+		request.Method,
+		request.RemoteAddr,
+		request.RequestURI,
+		msg,
+	)
+}
+
 // Route looks at the requests method and decides which function should handle
 // the request.
 func (h *HTTPAPI) Route(writer http.ResponseWriter, request *http.Request) {
-	log.Printf("Request received: %s %s", request.Method, request.URL.Path)
+	LogAPIMsg(request, "Request received; routing")
 	switch request.Method {
 	case "GET":
 		h.JobHTTPGet(writer, request)
@@ -36,7 +47,7 @@ func (h *HTTPAPI) Route(writer http.ResponseWriter, request *http.Request) {
 	case "":
 		h.JobHTTPGet(writer, request)
 	default:
-		log.Printf("Method %s is not supported on /jobs", request.Method)
+		LogAPIMsg(request, fmt.Sprintf("Method %s is not supported on /jobs", request.Method))
 	}
 }
 
@@ -102,9 +113,11 @@ func (h *HTTPAPI) JobHTTPGet(writer http.ResponseWriter, request *http.Request) 
 func (h *HTTPAPI) JobHTTPPost(writer http.ResponseWriter, request *http.Request) {
 	bytes, err := ioutil.ReadAll(request.Body)
 	if err != nil {
+		LogAPIMsg(request, err.Error())
 		WriteRequestError(writer, err.Error())
 		return
 	}
+	LogAPIMsg(request, fmt.Sprintf("%s", string(bytes)))
 	var parsed JobRecord
 	err = json.Unmarshal(bytes, &parsed)
 	if err != nil {
@@ -112,15 +125,21 @@ func (h *HTTPAPI) JobHTTPPost(writer http.ResponseWriter, request *http.Request)
 		return
 	}
 	if parsed.Submitter == "" {
-		WriteRequestError(writer, "The Submitter field is required in the POST JSON")
+		errMsg := "The Submitter field is required in the POST JSON"
+		LogAPIMsg(request, errMsg)
+		WriteRequestError(writer, errMsg)
 		return
 	}
 	if parsed.AppID == "" {
-		WriteRequestError(writer, "The AppID field is required in the POST JSON")
+		errMsg := "The AppID field is required in the POST JSON"
+		LogAPIMsg(request, errMsg)
+		WriteRequestError(writer, errMsg)
 		return
 	}
 	if parsed.CondorID == "" {
-		WriteRequestError(writer, "The CondorID field is required in the POST JSON")
+		errMsg := "The CondorID field is required in the POST JSON"
+		LogAPIMsg(request, errMsg)
+		WriteRequestError(writer, errMsg)
 		return
 	}
 	if parsed.DateSubmitted.IsZero() {
@@ -132,24 +151,28 @@ func (h *HTTPAPI) JobHTTPPost(writer http.ResponseWriter, request *http.Request)
 	if parsed.DateStarted.IsZero() {
 		parsed.DateStarted = time.Now()
 	}
-	jobID, err := h.d.InsertJob(&parsed)
+	job, err := h.d.UpsertJob(&parsed)
 	if err != nil {
+		errMsg := fmt.Sprintf("Error upserting job: %s", err)
+		LogAPIMsg(request, errMsg)
 		writer.WriteHeader(http.StatusInternalServerError)
 		writer.Write([]byte(err.Error()))
 		return
 	}
-	writer.Write([]byte(jobID))
+	writer.Write([]byte(job.ID))
 }
 
 // SetupHTTP configures a new HTTPAPI instance, registers handlers, and fires
 // off a goroutinge that listens for requests. Should probably only be called
 // once.
 func SetupHTTP(config *Configuration, d *Databaser) {
-	api := HTTPAPI{
-		d: d,
-	}
-	http.HandleFunc("/jobs/", api.Route)
 	go func() {
+		api := HTTPAPI{
+			d: d,
+		}
+		http.HandleFunc("/jobs/", api.Route)
+		http.HandleFunc("/jobs", api.Route)
+		log.Printf("Listening for HTTP requests on %s", config.HTTPListenPort)
 		log.Fatal(http.ListenAndServe(config.HTTPListenPort, nil))
 	}()
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"log"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -78,6 +79,12 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 	} else {
 		fixedBatch = &jr.BatchID
 	}
+	var fixedAppID *string
+	if jr.AppID == "" {
+		fixedAppID = nil
+	} else {
+		fixedAppID = &jr.AppID
+	}
 	var id string
 	err := d.db.QueryRow(
 		query,
@@ -86,7 +93,7 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 		jr.DateSubmitted,
 		jr.DateStarted,
 		jr.DateCompleted,
-		jr.AppID,
+		fixedAppID,
 		jr.ExitCode,
 		jr.FailureThreshold,
 		jr.FailureCount,
@@ -96,6 +103,58 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 		return "", err
 	}
 	return id, err
+}
+
+// AddJob add a new JobRecord to the database in a more friendly way than
+// InsertJob. Only adds the job if it doesn't already exist.
+// Uses InsertJob under the hood. Used for new jobs.
+func (d *Databaser) AddJob(condorID string) (*JobRecord, error) {
+	job, err := d.GetJobByCondorID(condorID)
+	if err == sql.ErrNoRows {
+		jr := &JobRecord{
+			CondorID: condorID,
+		}
+		id, err := d.InsertJob(jr)
+		if err != nil {
+			log.Printf("Error inserting job: %s", err)
+			return nil, err
+		}
+		jr.ID = id
+		return jr, nil
+	}
+	if err != nil {
+		log.Printf("Error getting job by condor id: %s", err)
+		return nil, err
+	}
+	return job, nil
+}
+
+// UpsertJob updates a job if it already exists, otherwise it inserts a new job
+// into the database.
+func (d *Databaser) UpsertJob(jr *JobRecord) (*JobRecord, error) {
+	job, err := d.GetJobByCondorID(jr.CondorID)
+	if err == sql.ErrNoRows {
+		id, err := d.InsertJob(jr)
+		if err != nil {
+			log.Println("Error inserting job")
+			return nil, err
+		}
+		newJob, err := d.GetJob(id)
+		if err != nil {
+			return nil, err
+		}
+		return newJob, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	jr.ID = job.ID
+	updated, err := d.UpdateJob(jr)
+	if err != nil {
+		log.Println("Error updating job")
+		return nil, err
+	}
+	return updated, nil
 }
 
 // DeleteJob removes a JobRecord from the database.
@@ -112,18 +171,18 @@ func (d *Databaser) DeleteJob(uuid string) error {
 func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	query := `
 	SELECT cast(id as varchar),
-				batch_id,
-				submitter,
-				date_submitted,
-				date_started,
-				date_completed,
-				cast(app_id as varchar),
-				exit_code,
-				failure_threshold,
-				failure_count,
-				condor_id
-	 FROM jobs
-	WHERE id = cast($1 as uuid)
+				 batch_id,
+				 submitter,
+				 date_submitted,
+				 date_started,
+				 date_completed,
+				 app_id,
+				 exit_code,
+				 failure_threshold,
+				 failure_count,
+				 condor_id
+	  FROM jobs
+	 WHERE id = cast($1 as uuid)
 	`
 	jr := &JobRecord{}
 	rows := d.db.QueryRow(query, uuid)
@@ -172,7 +231,7 @@ func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
 				date_submitted,
 				date_started,
 				date_completed,
-				cast(app_id as varchar),
+				app_id,
 				exit_code,
 				failure_threshold,
 				failure_count,
@@ -242,6 +301,12 @@ func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
 	} else {
 		batchid = &jr.BatchID
 	}
+	var appid *string
+	if jr.AppID == "" {
+		appid = nil
+	} else {
+		appid = &jr.AppID
+	}
 	err := d.db.QueryRow(
 		query,
 		batchid,
@@ -249,7 +314,7 @@ func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
 		jr.DateSubmitted,
 		jr.DateStarted,
 		jr.DateCompleted,
-		jr.AppID,
+		appid,
 		jr.ExitCode,
 		jr.FailureThreshold,
 		jr.FailureCount,
