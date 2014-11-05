@@ -7,15 +7,6 @@ ALTER TABLE ONLY jobs
 
 
 --
--- Foreign key for the batch self-join on jobs
---
-ALTER TABLE ONLY jobs
-    ADD CONSTRAINT batch_id_fkey
-    FOREIGN KEY (batch_id)
-    REFERENCES jobs(id) ON DELETE CASCADE;
-
-
---
 -- Primary key for the condor_events table
 --
 ALTER TABLE ONLY condor_events
