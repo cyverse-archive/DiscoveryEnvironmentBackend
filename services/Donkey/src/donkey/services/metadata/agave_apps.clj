@@ -19,7 +19,7 @@
   [agave]
   (try+
    (->> (.listApps agave)
-        (:templates)
+        (:apps)
         (map (juxt :id identity))
         (into {}))
    (catch [:error_code ce/ERR_UNAVAILABLE] _
