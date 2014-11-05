@@ -1,5 +1,8 @@
 (ns metadactyl.routes.admin
   (:use [metadactyl.app-categorization :only [categorize-apps]]
+        [metadactyl.conrad.admin-categories :only [add-category
+                                                   delete-categories
+                                                   delete-category]]
         [metadactyl.metadata.reference-genomes :only [add-reference-genome
                                                       delete-reference-genome
                                                       replace-reference-genomes
@@ -10,10 +13,7 @@
         [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
-        [metadactyl.service.app-metadata :only [add-category
-                                                delete-categories
-                                                delete-category
-                                                permanently-delete-apps]]
+        [metadactyl.service.app-metadata :only [permanently-delete-apps]]
         [metadactyl.tools :only [add-tools]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
