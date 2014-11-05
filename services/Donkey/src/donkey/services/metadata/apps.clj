@@ -107,7 +107,7 @@
   (getApp [_ app-id])
   (getAppDeployedComponents [_ app-id])
   (getAppDetails [_ app-id])
-  (listAppDataObjects [_ app-id])
+  (listAppTasks [_ app-id])
   (editWorkflow [_ app-id])
   (copyWorkflow [_ app-id])
   (submitJob [_ submission])
@@ -153,7 +153,7 @@
   (getAppDetails [_ app-id]
     (metadactyl/get-app-details app-id))
 
-  (listAppDataObjects [_ app-id]
+  (listAppTasks [_ app-id]
     (metadactyl/list-app-tasks app-id))
 
   (editWorkflow [_ app-id]
@@ -247,10 +247,10 @@
       (metadactyl/get-app-details app-id)
       (.getAppDetails agave-client app-id)))
 
-  (listAppDataObjects [_ app-id]
+  (listAppTasks [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/list-app-tasks app-id)
-      (.listAppDataObjects agave-client app-id)))
+      (.listAppTasks agave-client app-id)))
 
   (editWorkflow [_ app-id]
     (aa/add-workflow-templates agave-client (metadactyl/edit-workflow app-id)))
@@ -578,7 +578,7 @@
 (defn list-app-tasks
   [app-id]
   (with-db db/de
-    (service/success-response (.listAppDataObjects (get-app-lister) app-id))))
+    (service/success-response (.listAppTasks (get-app-lister) app-id))))
 
 (defn edit-workflow
   [app-id]

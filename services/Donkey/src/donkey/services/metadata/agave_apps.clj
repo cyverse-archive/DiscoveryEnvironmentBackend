@@ -110,7 +110,7 @@
   [agave workflow]
   (->> (mapcat :steps (:analyses workflow))
        (filter (fn [step] (= "External" (:app_type step))))
-       (map (fn [step] (.listAppDataObjects agave (:template_id step))))
+       (map (fn [step] (.listAppTasks agave (:template_id step))))
        (map format-workflow-data-objects)))
 
 (defn add-workflow-templates

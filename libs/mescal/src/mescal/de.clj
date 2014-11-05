@@ -9,7 +9,7 @@
   (searchApps [_ search-term])
   (getApp [_ app-id])
   (getAppDetails [_ app-id])
-  (listAppDataObjects [_ app-id])
+  (listAppTasks [_ app-id])
   (getAppDeployedComponent [_ app-id])
   (submitJob [_ submission])
   (listJobs [_] [_ job-ids])
@@ -34,8 +34,8 @@
     (v2/get-app agave app-id))
   (getAppDetails [_ app-id]
     (v2/get-app-details agave app-id))
-  (listAppDataObjects [_ app-id]
-    (v2/list-app-data-objects agave app-id))
+  (listAppTasks [_ app-id]
+    (v2/list-app-tasks agave app-id))
   (getAppDeployedComponent [_ app-id]
     (v2/get-app-deployed-component agave app-id))
   (submitJob [_ submission]

@@ -41,9 +41,9 @@
   [agave app-id]
   (apps/format-app-details (.getApp agave app-id)))
 
-(defn list-app-data-objects
+(defn list-app-tasks
   [agave app-id]
-  (apps/format-app-data-objects (.getApp agave app-id)))
+  (apps/format-app-tasks (.getApp agave app-id)))
 
 (defn get-app-deployed-component
   [agave app-id]
