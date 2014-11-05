@@ -87,6 +87,16 @@
   (delete app_categories
     (where {:id [in (subselect (sqlfn :app_category_hierarchy_ids category-id))]})))
 
+(defn update-app-category
+  "Updates an app category's name in the database."
+  [category-id name]
+  (update app_categories (set-fields {:name name}) (where {:id category-id})))
+
+(defn decategorize-category
+  "Removes a subcategory from all parent categories in the database."
+  [category-id]
+  (delete :app_category_group (where {:child_category_id category-id})))
+
 (defn set-root-app-group
   "Sets the root app group for a workspace."
   [workspace-id root-group-id]

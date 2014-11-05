@@ -86,6 +86,13 @@
   (client/delete (metadactyl-url {} "admin" "apps" "categories" category-id)
                  {:as :stream}))
 
+(defn update-category
+  "A service used to update an app category by ID."
+  [req category-id]
+  (let [url (metadactyl-url {} "admin" "apps" "categories" category-id)
+        req (metadactyl-request req)]
+    (forward-patch url req)))
+
 (defn categorize-apps
   "A service used to recategorize apps."
   [req]

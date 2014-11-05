@@ -58,3 +58,8 @@
 (defschema AppCategoryRequest
   {:name      AppCategoryNameParam
    :parent_id (describe UUID "The UUID of the App Category's parent Category.")})
+
+(defschema AppCategoryPatchRequest
+  (-> AppCategoryRequest
+      (->optional-param :name)
+      (->optional-param :parent_id)))

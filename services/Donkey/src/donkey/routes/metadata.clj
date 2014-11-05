@@ -31,7 +31,10 @@
           (delete-categories req))
 
     (DELETE "/apps/categories/:category-id" [category-id]
-            (delete-category category-id))))
+            (delete-category category-id))
+
+    (PATCH "/apps/categories/:category-id" [category-id :as req]
+           (update-category req category-id))))
 
 (defn admin-apps-routes
   []

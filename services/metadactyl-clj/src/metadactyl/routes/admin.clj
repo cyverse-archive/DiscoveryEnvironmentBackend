@@ -2,7 +2,8 @@
   (:use [metadactyl.app-categorization :only [categorize-apps]]
         [metadactyl.conrad.admin-categories :only [add-category
                                                    delete-categories
-                                                   delete-category]]
+                                                   delete-category
+                                                   update-category]]
         [metadactyl.metadata.reference-genomes :only [add-reference-genome
                                                       delete-reference-genome
                                                       replace-reference-genomes
@@ -105,7 +106,16 @@
            :summary "Delete an App Category"
            :notes "This service physically removes an App Category from the database, along with all
            of its child Categories, as long as none of them contain any Apps."
-           (ce/trap uri #(delete-category category-id))))
+           (ce/trap uri #(delete-category category-id)))
+
+  (PATCH* "/:category-id" [:as {uri :uri}]
+          :path-params [category-id :- AppCategoryIdPathParam]
+          :query [params SecuredQueryParams]
+          :body [body (describe AppCategoryPatchRequest "The details of the App Category to update.")]
+          :summary "Update an App Category"
+          :notes "This service renames or moves an App Category to a new parent Category, depending
+          on the fields included in the request."
+          (ce/trap uri #(update-category (assoc body :id category-id)))))
 
 (defroutes* reference-genomes
   (POST* "/" [:as {uri :uri}]

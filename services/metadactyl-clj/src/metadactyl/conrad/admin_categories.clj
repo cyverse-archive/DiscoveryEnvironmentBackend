@@ -4,9 +4,10 @@
                                     category-contains-subcategory?
                                     category-hierarchy-contains-apps?
                                     create-app-group
-                                    decategorize-app
+                                    decategorize-category
                                     delete-app-category
-                                    get-app-category]]
+                                    get-app-category
+                                    update-app-category]]
         [kameleon.uuids :only [uuidify]]
         [metadactyl.app-listings :only [list-apps-in-group]]
         [metadactyl.user :only [current-user]]
@@ -18,10 +19,46 @@
   (:require [clojure-commons.error-codes :as ce]
             [clojure.tools.logging :as log]))
 
+(def ^:private max-app-category-name-len 255)
+
 (defn- validate-app-category-existence
   "Retrieves all app category fields from the database."
   [category-id]
   (assert-not-nil [:category_id category-id] (get-app-category category-id)))
+
+(defn- validate-app-category-name
+  "Validates the length of an App Category name."
+  [name]
+  (when (> (count name) max-app-category-name-len)
+    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
+             :reason     "App Category name too long."
+             :name       name})))
+
+(defn- validate-subcategory-name
+  "Validates that the given subcategory name is available under the given App Category parent ID."
+  [parent-id name]
+  (when (category-contains-subcategory? parent-id name)
+    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
+             :reason     "Parent App Category already contains a subcategory with that name"
+             :parent_id  parent-id
+             :name       name})))
+
+(defn- validate-category-empty
+  "Validates that the given App Category contains no Apps directly under it."
+  [parent-id]
+  (when (category-contains-apps? parent-id)
+    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
+             :reason     "Parent App Category already contains Apps"
+             :parent_id  parent-id})))
+
+(defn- validate-category-hierarchy-empty
+  "Validates that the given App Category and its subcategories contain no Apps."
+  [category-id requestor]
+  (when (category-hierarchy-contains-apps? category-id)
+    (throw+ {:error_code   ce/ERR_ILLEGAL_ARGUMENT
+             :reason       "App Category, or one of its subcategories, still contain Apps"
+             :category_id  category-id
+             :requested_by requestor})))
 
 (defn- delete-valid-app-category
   [category-id]
@@ -48,15 +85,9 @@
   "Adds an App Category to a parent Category, as long as that parent does not contain any Apps."
   [{:keys [name parent_id] :as category}]
   (validate-app-category-existence parent_id)
-  (when (category-contains-subcategory? parent_id name)
-    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-             :reason     "Parent App Category already contains a subcategory with that name"
-             :parent_id  parent_id
-             :name       name}))
-  (when (category-contains-apps? parent_id)
-    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-             :reason     "Parent App Category already contains Apps"
-             :parent_id  parent_id}))
+  (validate-app-category-name name)
+  (validate-subcategory-name parent_id name)
+  (validate-category-empty parent_id)
   (transaction
     (let [category-id (:id (create-app-group (uuidify (workspace-public-id)) category))]
       (add-subgroup parent_id category-id)
@@ -67,13 +98,24 @@
   [category-id]
   (let [requesting-user (:username current-user)
         category (validate-app-category-existence category-id)]
-    (when (category-hierarchy-contains-apps? category-id)
-      (throw+ {:error_code   ce/ERR_ILLEGAL_ARGUMENT
-               :reason       "App Category, or one of its subcategories, still contain Apps"
-               :category_id  category-id
-               :requested_by requesting-user}))
+    (validate-category-hierarchy-empty category-id requesting-user)
     (log/warn requesting-user "deleting category"
                               (:name category) "(" category-id ")"
                               "and all of its subcategoires")
     (delete-app-category category-id)
     (success-response)))
+
+(defn update-category
+  "Updates an App Category's name or parent Category."
+  [{category-id :id :keys [name parent_id] :as category}]
+  (transaction
+    (let [category (validate-app-category-existence category-id)]
+      (when name
+        (validate-app-category-name name)
+        (update-app-category category-id name))
+      (when parent_id
+        (validate-subcategory-name parent_id (or name (:name category)))
+        (validate-category-empty parent_id)
+        (decategorize-category category-id)
+        (add-subgroup parent_id category-id))
+      (list-apps-in-group category-id {}))))

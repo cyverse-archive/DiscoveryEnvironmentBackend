@@ -7,6 +7,7 @@
     * [Adding Categories](#adding-categories)
     * [Deleting Categories](#deleting-categories)
     * [Deleting a Category by ID](#deleting-a-category-by-id)
+    * [Updating an App Category](#updating-an-app-category)
     * [Listing Tasks in an App](#listing-tasks-in-an-app)
     * [Categorizing Apps](#categorizing-apps)
     * [Creating an App for the Current User](#creating-an-app-for-the-current-user)
@@ -98,6 +99,15 @@ Please see the metadactyl documentation for more information.
 Secured Endpoint: DELETE /admin/apps/categories/:uuid
 
 Delegates to metadactyl: DELETE /admin/apps/categories/:uuid
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
+
+## Updating an App Category
+
+Secured Endpoint: PATCH /admin/apps/categories/:uuid
+
+Delegates to metadactyl: PATCH /admin/apps/categories/:uuid
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
