@@ -135,6 +135,11 @@
   [props config-valid configs]
   "metadactyl.workspace.beta-app-category-id")
 
+(cc/defprop-str workspace-public-id
+  "The UUID of the default Beta app category."
+  [props config-valid configs]
+  "metadactyl.workspace.public-id")
+
 (cc/defprop-str uid-domain
   "The domain name to append to the user identifier to get the fully qualified
    user identifier."

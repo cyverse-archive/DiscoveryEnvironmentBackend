@@ -60,6 +60,9 @@
     (swaggered "admin-apps"
       :description "Admin App endpoints."
       (context "/admin/apps" [] admin-routes/admin-apps))
+    (swaggered "admin-categories"
+      :description "Admin App Category endpoints."
+      (context "/admin/apps/categories" [] admin-routes/admin-categories))
     (swaggered "admin-tools"
       :description "Admin Tool endpoints."
       (context "/admin" [] admin-routes/tools))

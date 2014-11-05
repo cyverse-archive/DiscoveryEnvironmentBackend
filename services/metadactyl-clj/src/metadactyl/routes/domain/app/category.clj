@@ -5,6 +5,8 @@
         [schema.core :only [defschema optional-key Any]])
   (:import [java.util UUID]))
 
+(def AppCategoryNameParam (describe String "The App Category's name"))
+
 (defschema CategoryListingParams
   (merge SecuredQueryParamsEmailRequired
     {(optional-key :public)
@@ -19,7 +21,7 @@
    AppCategoryIdPathParam
 
    :name
-   (describe String "The App Category's name")
+   AppCategoryNameParam
 
    :app_count
    (describe Long "The number of Apps under this Category and all of its children")
@@ -52,3 +54,7 @@
 
 (defschema AppCategorizationRequest
   {:categories (describe [AppCategorization] "Apps and the Categories they should be listed under")})
+
+(defschema AppCategoryRequest
+  {:name      AppCategoryNameParam
+   :parent_id (describe UUID "The UUID of the App Category's parent Category.")})

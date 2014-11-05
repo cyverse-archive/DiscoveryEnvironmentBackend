@@ -10,7 +10,9 @@
         [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
-        [metadactyl.service.app-metadata :only [delete-categories permanently-delete-apps]]
+        [metadactyl.service.app-metadata :only [add-category
+                                                delete-categories
+                                                permanently-delete-apps]]
         [metadactyl.tools :only [add-tools]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
@@ -66,7 +68,26 @@
          Categories."
          (ce/trap uri #(categorize-apps body)))
 
-  (POST* "/categories/shredder" [:as {uri :uri}]
+  (POST* "/shredder" [:as {uri :uri}]
+         :query [params SecuredQueryParams]
+         :body [body (describe AppDeletionRequest "List of App IDs to delete.")]
+         :summary "Permanently Deleting Apps"
+         :notes "This service physically removes an App from the database, which allows
+         administrators to completely remove Apps that are causing problems."
+         (ce/trap uri #(permanently-delete-apps body))))
+
+(defroutes* admin-categories
+  (POST* "/" [:as {uri :uri}]
+         :query [params SecuredQueryParams]
+         :body [body (describe AppCategoryRequest "The details of the App Category to add.")]
+         :return AppCategoryAppListing
+         :summary "Add an App Category"
+         :notes "This endpoint adds an App Category under the given parent App Category, as long as
+         that parent Category doesn't already have a subcategory with the given name and it doesn't
+         directly contain its own Apps."
+         (ce/trap uri #(add-category body)))
+
+  (POST* "/shredder" [:as {uri :uri}]
          :query [params SecuredQueryParams]
          :body [body (describe AppCategoryIdList "A List of App Category IDs to delete.")]
          :return AppCategoryIdList
@@ -75,15 +96,7 @@
          subcategories will be deleted by this service, but no Apps will be removed. The response
          contains a list of Category IDs for which the deletion failed (including any subcategories
          of a Category already included in the request)."
-         (ce/trap uri #(delete-categories body)))
-
-  (POST* "/shredder" [:as {uri :uri}]
-         :query [params SecuredQueryParams]
-         :body [body (describe AppDeletionRequest "List of App IDs to delete.")]
-         :summary "Permanently Deleting Apps"
-         :notes "This service physically removes an App from the database, which allows
-         administrators to completely remove Apps that are causing problems."
-         (ce/trap uri #(permanently-delete-apps body))))
+         (ce/trap uri #(delete-categories body))))
 
 (defroutes* reference-genomes
   (POST* "/" [:as {uri :uri}]

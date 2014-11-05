@@ -18,6 +18,18 @@
     (GET "/apps/categories/:app-group-id" [app-group-id :as {params :params}]
          (apps/apps-in-category app-group-id params))))
 
+(defn admin-category-routes
+  []
+  (optional-routes
+    [#(and (config/admin-routes-enabled)
+           (config/app-routes-enabled))]
+
+    (POST "/apps/categories" [:as req]
+          (add-category req))
+
+    (POST "/apps/categories/shredder" [:as req]
+          (delete-categories req))))
+
 (defn admin-apps-routes
   []
   (optional-routes
@@ -26,9 +38,6 @@
 
     (POST "/apps" [:as req]
           (categorize-apps req))
-
-    (POST "/apps/categories/shredder" [:as req]
-          (delete-categories req))
 
     (POST "/apps/shredder" [:as req]
           (permanently-delete-apps req))))

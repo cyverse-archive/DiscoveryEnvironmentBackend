@@ -3,17 +3,24 @@
   (:use [clojure.java.io :only [reader]]
         [clojure-commons.validators]
         [kameleon.app-groups :only [add-app-to-category
+                                    add-subgroup
+                                    category-contains-apps?
+                                    category-contains-subcategory?
+                                    create-app-group
                                     decategorize-app
                                     delete-app-category
                                     get-app-category
+                                    get-app-group-hierarchy
                                     get-app-subcategory-id
                                     remove-app-from-category]]
         [kameleon.queries :only [get-existing-user-id]]
         [kameleon.uuids :only [uuidify]]
+        [metadactyl.app-listings :only [list-apps-in-group]]
         [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config :only [workspace-beta-app-category-id
-                                       workspace-favorites-app-group-index]]
+                                       workspace-favorites-app-group-index
+                                       workspace-public-id]]
         [metadactyl.util.service :only [build-url success-response parse-json]]
         [metadactyl.validation :only [verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
@@ -200,3 +207,20 @@
   (transaction
     (let [failed-ids (remove nil? (map delete-valid-app-category (:category_ids body)))]
       (success-response {:category_ids failed-ids}))))
+
+(defn add-category
+  "Adds an App Category to a parent Category, as long as that parent does not contain any Apps."
+  [{:keys [name parent_id] :as category}]
+  (when (category-contains-subcategory? parent_id name)
+    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
+             :reason     "Parent App Category already contains a subcategory with that name"
+             :parent_id  parent_id
+             :name       name}))
+  (when (category-contains-apps? parent_id)
+    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
+             :reason     "Parent App Category already contains Apps"
+             :parent_id  parent_id}))
+  (transaction
+    (let [category-id (:id (create-app-group (uuidify (workspace-public-id)) category))]
+      (add-subgroup parent_id category-id)
+      (list-apps-in-group category-id {}))))

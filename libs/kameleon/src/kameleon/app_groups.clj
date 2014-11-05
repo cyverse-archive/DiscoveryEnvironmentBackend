@@ -2,6 +2,7 @@
   (:use [kameleon.entities]
         [kameleon.queries :only [add-agave-pipeline-where-clause]]
         [korma.core]
+        [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
   (:require [kameleon.uuids :refer [uuid]]))
 
@@ -51,22 +52,26 @@
 (defn create-app-group
   "Creates a database entry for an app group, with an UUID and the given
    workspace_id and name, and returns a map of the group with its id."
-  ([workspace-id m]
-     (create-app-group workspace-id (:name m) m))
-  ([workspace-id name {:keys [id description] :or {id (uuid)}}]
-     (insert app_categories (values {:id           id
-                                     :workspace_id workspace-id
-                                     :description  description
-                                     :name         name}))))
+  [workspace-id category]
+  (let [insert-values (-> category
+                          (select-keys [:id :name :description])
+                          (assoc :workspace_id workspace-id))]
+    (insert app_categories (values insert-values))))
 
 (defn add-subgroup
   "Adds a subgroup to a parent group, which should be listed at the given index
    position of the parent's subgroups."
-  [parent-group-id index subgroup-id]
+  ([parent-group-id subgroup-id]
+   (transaction
+     (let [index (:index (first (select :app_category_group
+                                        (aggregate (max :child_index) :index)
+                                        (where {:parent_category_id parent-group-id}))))]
+     (add-subgroup parent-group-id (if (not (nil? index)) (inc index) 0) subgroup-id))))
+  ([parent-group-id index subgroup-id]
   (insert :app_category_group
           (values {:parent_category_id parent-group-id
                    :child_category_id subgroup-id
-                   :child_index index})))
+                   :child_index index}))))
 
 (defn is-subgroup?
   "Determines if one group is a subgroup of another."
@@ -99,6 +104,20 @@
   [id]
   (first (select apps
                  (where {:id id}))))
+
+(defn category-contains-subcategory?
+  "Checks if the app category with the given ID contains a subcategory with the given name."
+  [category-id name]
+  (seq (select app_categories
+         (join [:app_category_group :acg]
+               {:acg.child_category_id :id})
+         (where {:acg.parent_category_id category-id
+                 :name name}))))
+
+(defn category-contains-apps?
+  "Checks if the app category with the given ID directly contains any apps."
+  [category-id]
+  (seq (select :app_category_app (where {:app_category_id category-id}))))
 
 (defn app-in-category?
   "Determines whether or not an app is in an app category."

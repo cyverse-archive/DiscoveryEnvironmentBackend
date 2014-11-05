@@ -2,6 +2,7 @@
 
 * [GET /](endpoints/misc.md#verifying-that-donkey-is-running)
 * [POST /admin/apps](endpoints/app-metadata.md#categorizing-apps)
+* [POST /admin/apps/categories](endpoints/app-metadata.md#adding-categories)
 * [POST /admin/apps/categories/shredder](endpoints/app-metadata.md#deleting-categories)
 * [POST /admin/apps/shredder](endpoints/app-metadata.md#permanently-deleting-an-app)
 * [GET /admin/filesystem/index](endpoints/filesystem/search.md#endpoints:)

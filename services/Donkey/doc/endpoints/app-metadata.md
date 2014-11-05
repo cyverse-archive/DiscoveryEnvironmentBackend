@@ -4,6 +4,7 @@
     * [Listing App Elements](#listing-app-elements)
     * [Searching for Tools](#searching-for-tools)
     * [Listing App Identifiers](#listing-app-identifiers)
+    * [Adding Categories](#adding-categories)
     * [Deleting Categories](#deleting-categories)
     * [Listing Tasks in an App](#listing-tasks-in-an-app)
     * [Categorizing Apps](#categorizing-apps)
@@ -69,6 +70,15 @@ Please see the metadactyl documentation for more information.
 Secured Endpoint: GET /apps/ids
 
 Delegates to metadactyl: GET /apps/ids
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
+
+## Adding Categories
+
+Secured Endpoint: POST /admin/apps/categories
+
+Delegates to metadactyl: POST /admin/apps/categories
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
