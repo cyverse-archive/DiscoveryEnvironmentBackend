@@ -145,17 +145,19 @@
 
 (defn format-app-tasks
   [app]
-  (let [app-name (get-app-name app)
-        inputs   (map (comp add-file-info (input-param-formatter)) (:inputs app))
-        outputs  (map (comp add-file-info (output-param-formatter)) (:outputs app))]
+  (let [app-name        (get-app-name app)
+        select-io-keys  #(select-keys % [:description :format :id :label :name :required])
+        format-io-field (comp select-io-keys add-file-info)
+        inputs          (map (comp format-io-field (input-param-formatter)) (:inputs app))
+        outputs         (map (comp format-io-field (output-param-formatter)) (:outputs app))]
     {:description (:shortDescription app)
      :id          (:id app)
      :name        (get-app-name app)
-     :tasks       {:description (:shortDescription app)
-                   :id          (:id app)
-                   :inputs      inputs
-                   :name        app-name
-                   :outputs     outputs}}))
+     :tasks       [{:description (:shortDescription app)
+                    :id          (:id app)
+                    :inputs      inputs
+                    :name        app-name
+                    :outputs     outputs}]}))
 
 (defn- format-rerun-value
   [p v]
