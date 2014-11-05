@@ -51,12 +51,16 @@
 
 (defn push-job-to-jex-events
   [condor-id submitter app-id]
-  (let [job-record {:condorid     condor-id
-                    :submitter    submitter
-                    :appid        app-id}
-        result     (http/post (cfg/jex-events-url) {:form-params job-record
-                                                    :content-type :json})]
-    (log/info result)))
+  (try
+    (let [job-record {:condorid     condor-id
+                      :submitter    submitter
+                      :appid        app-id}
+          result     (http/post (cfg/jex-events-url) {:form-params job-record
+                                                      :content-type :json}
+                                {:throw-exceptions false})]
+      (log/info result))
+    (catch Exception e
+      (log/error e))))
 
 (defn condor-rm
   "Stops a condor job."
