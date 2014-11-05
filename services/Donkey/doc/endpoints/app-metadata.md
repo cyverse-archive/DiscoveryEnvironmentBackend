@@ -6,6 +6,7 @@
     * [Listing App Identifiers](#listing-app-identifiers)
     * [Adding Categories](#adding-categories)
     * [Deleting Categories](#deleting-categories)
+    * [Deleting a Category by ID](#deleting-a-category-by-id)
     * [Listing Tasks in an App](#listing-tasks-in-an-app)
     * [Categorizing Apps](#categorizing-apps)
     * [Creating an App for the Current User](#creating-an-app-for-the-current-user)
@@ -88,6 +89,15 @@ Please see the metadactyl documentation for more information.
 Secured Endpoint: POST /admin/apps/categories/shredder
 
 Delegates to metadactyl: POST /admin/apps/categories/shredder
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
+
+## Deleting a Category by ID
+
+Secured Endpoint: DELETE /admin/apps/categories/:uuid
+
+Delegates to metadactyl: DELETE /admin/apps/categories/:uuid
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.

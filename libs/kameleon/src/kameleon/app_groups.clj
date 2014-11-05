@@ -119,6 +119,13 @@
   [category-id]
   (seq (select :app_category_app (where {:app_category_id category-id}))))
 
+(defn category-hierarchy-contains-apps?
+  "Checks if the app category with the given ID or any of its subcategories contain any apps."
+  [category-id]
+  (seq (select :app_category_app
+         (where {:app_category_id
+                 [in (subselect (sqlfn :app_category_hierarchy_ids category-id))]}))))
+
 (defn app-in-category?
   "Determines whether or not an app is in an app category."
   [app-id category-id]

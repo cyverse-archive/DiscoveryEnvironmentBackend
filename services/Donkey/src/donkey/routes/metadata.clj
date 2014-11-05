@@ -28,7 +28,10 @@
           (add-category req))
 
     (POST "/apps/categories/shredder" [:as req]
-          (delete-categories req))))
+          (delete-categories req))
+
+    (DELETE "/apps/categories/:category-id" [category-id]
+            (delete-category category-id))))
 
 (defn admin-apps-routes
   []

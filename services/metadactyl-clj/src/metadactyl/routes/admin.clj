@@ -12,6 +12,7 @@
         [metadactyl.routes.params]
         [metadactyl.service.app-metadata :only [add-category
                                                 delete-categories
+                                                delete-category
                                                 permanently-delete-apps]]
         [metadactyl.tools :only [add-tools]]
         [metadactyl.user :only [current-user]]
@@ -96,7 +97,15 @@
          subcategories will be deleted by this service, but no Apps will be removed. The response
          contains a list of Category IDs for which the deletion failed (including any subcategories
          of a Category already included in the request)."
-         (ce/trap uri #(delete-categories body))))
+         (ce/trap uri #(delete-categories body)))
+
+  (DELETE* "/:category-id" [:as {uri :uri}]
+           :path-params [category-id :- AppCategoryIdPathParam]
+           :query [params SecuredQueryParams]
+           :summary "Delete an App Category"
+           :notes "This service physically removes an App Category from the database, along with all
+           of its child Categories, as long as none of them contain any Apps."
+           (ce/trap uri #(delete-category category-id))))
 
 (defroutes* reference-genomes
   (POST* "/" [:as {uri :uri}]

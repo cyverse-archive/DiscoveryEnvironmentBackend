@@ -4,6 +4,7 @@
 * [POST /admin/apps](endpoints/app-metadata.md#categorizing-apps)
 * [POST /admin/apps/categories](endpoints/app-metadata.md#adding-categories)
 * [POST /admin/apps/categories/shredder](endpoints/app-metadata.md#deleting-categories)
+* [DELETE /admin/apps/categories/:uuid](endpoints/app-metadata.md#deleting-a-category-by-id)
 * [POST /admin/apps/shredder](endpoints/app-metadata.md#permanently-deleting-an-app)
 * [GET /admin/filesystem/index](endpoints/filesystem/search.md#endpoints:)
 * [POST /admin/filesystem/index](endpoints/filesystem/search.md#endpoint)
