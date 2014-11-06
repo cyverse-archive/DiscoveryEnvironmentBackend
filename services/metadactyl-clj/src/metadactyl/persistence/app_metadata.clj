@@ -195,7 +195,7 @@
   ([app publish?]
    (let [app-id (:id app)
          app (-> app
-                 (select-keys [:name :description :wikiurl :deleted :disabled])
+                 (select-keys [:name :description :wiki_url :deleted :disabled])
                  (assoc :edited_date (sqlfn now)
                         :integration_date (when publish? (sqlfn now)))
                  (remove-nil-vals))]

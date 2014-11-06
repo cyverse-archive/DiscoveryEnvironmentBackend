@@ -119,7 +119,7 @@
                                 :integrator_email
                                 :integration_date
                                 :edited_date
-                                [:wikiurl :wiki_url]
+                                :wiki_url
                                 :average_rating
                                 :total_ratings
                                 :is_public

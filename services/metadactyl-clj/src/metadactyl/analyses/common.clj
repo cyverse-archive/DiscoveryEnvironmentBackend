@@ -94,4 +94,4 @@
    :steps                (.buildSteps request-builder)
    :username             user
    :uuid                 (or (:uuid submission) (uuid))
-   :wiki_url             (:wikiurl app)})
+   :wiki_url             (:wiki_url app)})

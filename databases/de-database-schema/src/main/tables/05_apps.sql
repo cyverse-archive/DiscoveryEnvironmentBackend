@@ -10,7 +10,7 @@ CREATE TABLE apps (
     deleted boolean DEFAULT false NOT NULL,
     disabled boolean DEFAULT false NOT NULL,
     integration_data_id uuid NOT NULL,
-    wikiurl character varying(1024),
+    wiki_url character varying(1024),
     integration_date timestamp without time zone,
     edited_date timestamp without time zone
 );

@@ -135,7 +135,7 @@
    :app-id             (:id app-info)
    :app-name           (:name app-info)
    :app-description    (:description app-info)
-   :app-wiki-url       (:wikiurl app-info)
+   :app-wiki-url       (:wiki_url app-info)
    :result-folder-path result-folder-path
    :start-date         (db/now)
    :status             "Submitted"

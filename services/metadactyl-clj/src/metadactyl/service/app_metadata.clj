@@ -151,9 +151,9 @@
   nil)
 
 (defn- publish-app
-  [{app-id :id :keys [wiki_url references categories] :as app}]
+  [{app-id :id :keys [references categories] :as app}]
   (transaction
-    (amp/update-app (assoc app :wikiurl wiki_url) true)
+    (amp/update-app app true)
     (amp/set-app-references app-id references)
     (amp/set-app-suggested-categories app-id categories)
     (decategorize-app app-id)

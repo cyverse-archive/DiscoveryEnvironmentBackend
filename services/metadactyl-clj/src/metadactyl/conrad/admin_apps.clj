@@ -28,8 +28,8 @@
 (defn- update-app-details
   "Updates high-level details and labels in an App, including deleted and disabled flags in the
    database."
-  [{app-id :id :keys [wiki_url references groups] :as app}]
-  (persistence/update-app (assoc app :wikiurl wiki_url))
+  [{app-id :id :keys [references groups] :as app}]
+  (persistence/update-app app)
   (when-not (empty? references)
     (persistence/set-app-references app-id references))
   (when groups
@@ -44,9 +44,4 @@
     (if (empty? (select-keys app [:name :description :wiki_url :references :groups]))
       (update-app-deleted-disabled app)
       (update-app-details app))
-    (let [app-listing (persistence/get-app app-id)]
-      (-> app-listing
-          (assoc :wiki_url (:wikiurl app-listing))
-          (dissoc :wikiurl)
-          format-app-listing
-          success-response))))
+    (success-response (format-app-listing (persistence/get-app app-id)))))

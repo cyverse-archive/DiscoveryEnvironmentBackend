@@ -12,7 +12,7 @@ CREATE VIEW app_listing AS
            integration.integrator_email,
            apps.integration_date,
            apps.edited_date,
-           apps.wikiurl,
+           apps.wiki_url,
            (   SELECT CAST(COALESCE(AVG(rating), 0.0) AS DOUBLE PRECISION)
                FROM ratings
                WHERE app_id = apps.id
@@ -51,6 +51,6 @@ CREATE VIEW app_listing AS
              integration.integrator_email,
              apps.integration_date,
              apps.edited_date,
-             apps.wikiurl,
+             apps.wiki_url,
              apps.deleted,
              apps.disabled;
