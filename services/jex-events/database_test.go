@@ -138,7 +138,7 @@ func TestCRUDCondorEvents(t *testing.T) {
 	}
 	defer d.db.Close()
 	ce := &CondorEvent{
-		EventNumber: "001",
+		EventNumber: "999",
 		EventName:   "test_event",
 		EventDesc:   "event for unit tests",
 	}
@@ -160,7 +160,7 @@ func TestCRUDCondorEvents(t *testing.T) {
 	if getCE.EventDesc != ce.EventDesc {
 		t.Errorf("EventDescs don't match")
 	}
-	ce.EventNumber = "002"
+	ce.EventNumber = "998"
 	updated, err := d.UpdateCondorEvent(ce)
 	if err != nil {
 		t.Error(err)
@@ -173,6 +173,13 @@ func TestCRUDCondorEvents(t *testing.T) {
 	}
 	if updated.EventDesc != ce.EventDesc {
 		t.Errorf("EventDescs don't match after update")
+	}
+	number, err := d.GetCondorEventByNumber(ce.EventNumber)
+	if err != nil {
+		t.Errorf("Error from GetCondorEventByNumber: %s", err)
+	}
+	if number.ID != ce.ID {
+		t.Errorf("IDs don't match after GetCondorEventByNumber")
 	}
 	err = d.DeleteCondorEvent(updated.ID)
 	if err != nil {
