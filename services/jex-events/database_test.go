@@ -101,6 +101,17 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	updated.DateStarted = time.Now()
+	upserted, err := d.UpsertJob(updated)
+	if err != nil {
+		t.Error(err)
+	}
+	if upserted.ID != updated.ID {
+		t.Errorf("The IDs didn't match after an upsert")
+	}
+	if upserted.DateStarted == updated.DateStarted {
+		t.Errorf("The DateStarteds didn't match after an upsert")
+	}
 	if updated.DateCompleted.Format(time.RFC822Z) != newJR.DateCompleted.Format(time.RFC822Z) {
 		t.Errorf("Updated date completed fields don't match")
 	}
@@ -119,7 +130,7 @@ func TestCRUDCondorEvents(t *testing.T) {
 	}
 	defer d.db.Close()
 	ce := &CondorEvent{
-		EventNumber: 9001,
+		EventNumber: "001",
 		EventName:   "test_event",
 		EventDesc:   "event for unit tests",
 	}
@@ -141,7 +152,7 @@ func TestCRUDCondorEvents(t *testing.T) {
 	if getCE.EventDesc != ce.EventDesc {
 		t.Errorf("EventDescs don't match")
 	}
-	ce.EventNumber = 9002
+	ce.EventNumber = "002"
 	updated, err := d.UpdateCondorEvent(ce)
 	if err != nil {
 		t.Error(err)
@@ -269,7 +280,7 @@ func TestCRUDCondorJobEvent(t *testing.T) {
 	}
 	jr.ID = jobID
 	ce := &CondorEvent{
-		EventNumber: 9001,
+		EventNumber: "001",
 		EventName:   "test_event",
 		EventDesc:   "event for unit tests",
 	}
@@ -385,7 +396,7 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 	}
 	jr.ID = jobID
 	ce := &CondorEvent{
-		EventNumber: 9001,
+		EventNumber: "001",
 		EventName:   "test_event",
 		EventDesc:   "event for unit tests",
 	}

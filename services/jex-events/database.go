@@ -176,6 +176,15 @@ func FixAppID(jr *JobRecord, appid interface{}) {
 	}
 }
 
+// FixBatchID fixes the uuid for the BatchID field for the JobRecord.
+func FixBatchID(jr *JobRecord, batchid interface{}) {
+	if batchid == nil {
+		jr.BatchID = ""
+	} else {
+		jr.BatchID = string(batchid.([]uint8))
+	}
+}
+
 // GetJob returns a JobRecord from the database.
 func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	query := `
@@ -224,11 +233,7 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	if jr.DateCompleted.Before(epoch) {
 		jr.DateCompleted = epoch
 	}
-	if batchid == nil {
-		jr.BatchID = ""
-	} else {
-		jr.BatchID = batchid.(string)
-	}
+	FixBatchID(jr, batchid)
 	FixAppID(jr, appid)
 	return jr, err
 }
@@ -281,11 +286,7 @@ func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
 	if jr.DateCompleted.Before(epoch) {
 		jr.DateCompleted = epoch
 	}
-	if batchid == nil {
-		jr.BatchID = ""
-	} else {
-		jr.BatchID = batchid.(string)
-	}
+	FixBatchID(jr, batchid)
 	FixAppID(jr, appid)
 	return jr, err
 }
@@ -347,7 +348,7 @@ func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
 // CondorEvent contains info about an event that Condor emitted.
 type CondorEvent struct {
 	ID          string
-	EventNumber int
+	EventNumber string
 	EventName   string
 	EventDesc   string
 }
@@ -403,7 +404,7 @@ func (d *Databaser) GetCondorEvent(uuid string) (*CondorEvent, error) {
 	 WHERE id = cast($1 as uuid)
 	`
 	var id string
-	var eventNumber int
+	var eventNumber string
 	var eventName string
 	var eventDesc string
 	err := d.db.QueryRow(
@@ -439,7 +440,7 @@ func (d *Databaser) GetCondorEventByNumber(number string) (*CondorEvent, error) 
 	WHERE event_number = $1
 	`
 	var id string
-	var eventNumber int
+	var eventNumber string
 	var eventName string
 	var eventDesc string
 	err := d.db.QueryRow(
