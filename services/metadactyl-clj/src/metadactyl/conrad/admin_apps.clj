@@ -32,7 +32,7 @@
   (persistence/update-app app)
   (when-not (empty? references)
     (persistence/set-app-references app-id references))
-  (when groups
+  (when-not (empty? groups)
     (update-app-labels (select-keys app [:id :groups]))))
 
 (defn update-app
