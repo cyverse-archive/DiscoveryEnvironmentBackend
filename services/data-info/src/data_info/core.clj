@@ -18,13 +18,6 @@
             [data-info.util :as util]))
 
 
-(def svc-info
-  {:desc     "DE service for data information logic"
-   :app-name "data-info"
-   :group-id "org.iplantc"
-   :art-id   "data-info"})
-
-
 (defn- start-nrepl
   []
   (nrepl/start-server :port 7888))
@@ -109,7 +102,9 @@
 
 (defn -main
   [& args]
-  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args config/svc-info
+                                                                     args
+                                                                     cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The config file does not exist.")))
     (when-not (fs/readable? (:config options))

@@ -6,6 +6,13 @@
             [clojure-commons.error-codes :as ce]))
 
 
+(def svc-info
+  {:desc     "DE service for data information logic"
+   :app-name "data-info"
+   :group-id "org.iplantc"
+   :art-id   "data-info"})
+
+
 (def ^:private props
   "A ref for storing the configuration properties."
   (ref nil))

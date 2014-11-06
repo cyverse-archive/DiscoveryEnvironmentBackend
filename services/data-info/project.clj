@@ -29,6 +29,7 @@
                  [org.apache.tika/tika-core "1.6"]
                  [ring "1.3.1"]
                  [slingshot "0.11.0"]
+                 [trptcolin/versioneer "0.1.0"]
                  [org.iplantc/clj-icat-direct "4.0.4"]
                  [org.iplantc/clj-jargon "4.0.4"
                   :exclusions [[xerces/xmlParserAPIs]
