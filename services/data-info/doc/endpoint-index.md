@@ -1,6 +1,6 @@
 # Endpoint Index
 
-* [GET /](endpoints/misc.md#verifying-that-data-info-is-running)
+* [GET /](endpoints/service-info.md)
 * [POST /add-analysis-to-group](endpoints/app-metadata.md#adding-analyses-to-analysis-groups)
 * [POST /admin/apps](endpoints/app-metadata.md#categorizing-apps)
 * [GET /admin/filesystem/index](endpoints/filesystem/search.md#endpoints:)
