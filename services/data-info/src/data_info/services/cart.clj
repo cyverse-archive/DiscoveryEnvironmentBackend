@@ -83,7 +83,7 @@
    :home                   (path/user-home-dir user)
    :password               password
    :host                   (cfg/irods-host)
-   :port                   (cfg/irods-port)
+   :port                   (read-string (cfg/irods-port))
    :zone                   (cfg/irods-zone)
    :defaultStorageResource (cfg/irods-resc)})
 
@@ -103,11 +103,15 @@
 (defn- handle-unprocessable-entity
   [user folder _]
   (init/with-jargon (cfg/jargon-cfg) [cm]
-    (cond
-      (not (user/user-exists? cm user))     {:error_code error/ERR_NOT_A_USER :user user}
-      (not (folder-processable? cm folder)) {:error_code error/ERR_NOT_A_FOLDER :path folder}
-      :else                                 {:error_code error/ERR_BAD_OR_MISSING_FIELD
-                                             :fields     [:paths]})))
+    (let [[ec fields] (cond
+                        (not (user/user-exists? cm user))     [error/ERR_NOT_A_USER []]
+                        (not (folder-processable? cm folder)) [error/ERR_NOT_A_FOLDER []]
+                        :else                                 [error/ERR_BAD_OR_MISSING_FIELD
+                                                               [:paths]])]
+      {:error_code ec
+       :fields     fields
+       :path       folder
+       :user       user})))
 
 
 (defresource cart [user folder]

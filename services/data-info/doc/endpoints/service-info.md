@@ -1,24 +1,26 @@
 # Service Information
 
-`GET` `/`
+    /
 
 This resource provides the name of the service and its version.
 
-## Request Parameters
+## Request
 
-None
+### Method
 
-## Request Body
-
-None
+    GET
 
 ## Response
 
-### Content Type:
+Only the responses with custom bodies are documented.
+
+### OK (200)
+
+#### Content Type
 
     application/json
 
-### Schema
+#### Schema
 
     ServiceInfo {
       service (string):     the name of the service,
