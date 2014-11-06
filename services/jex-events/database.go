@@ -167,6 +167,15 @@ func (d *Databaser) DeleteJob(uuid string) error {
 	return nil
 }
 
+// FixAppID fixes the uuid for the AppID field for the JobRecord.
+func FixAppID(jr *JobRecord, appid interface{}) {
+	if appid == nil {
+		jr.AppID = ""
+	} else {
+		jr.AppID = string(appid.([]uint8))
+	}
+}
+
 // GetJob returns a JobRecord from the database.
 func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	query := `
@@ -187,6 +196,7 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	jr := &JobRecord{}
 	rows := d.db.QueryRow(query, uuid)
 	var batchid interface{}
+	var appid interface{}
 	err := rows.Scan(
 		&jr.ID,
 		&batchid,
@@ -194,7 +204,7 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 		&jr.DateSubmitted,
 		&jr.DateStarted,
 		&jr.DateCompleted,
-		&jr.AppID,
+		&appid,
 		&jr.ExitCode,
 		&jr.FailureThreshold,
 		&jr.FailureCount,
@@ -219,6 +229,7 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	} else {
 		jr.BatchID = batchid.(string)
 	}
+	FixAppID(jr, appid)
 	return jr, err
 }
 
@@ -242,6 +253,7 @@ func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
 	jr := &JobRecord{}
 	rows := d.db.QueryRow(query, condorID)
 	var batchid interface{}
+	var appid interface{}
 	err := rows.Scan(
 		&jr.ID,
 		&batchid,
@@ -249,7 +261,7 @@ func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
 		&jr.DateSubmitted,
 		&jr.DateStarted,
 		&jr.DateCompleted,
-		&jr.AppID,
+		&appid,
 		&jr.ExitCode,
 		&jr.FailureThreshold,
 		&jr.FailureCount,
@@ -274,6 +286,7 @@ func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
 	} else {
 		jr.BatchID = batchid.(string)
 	}
+	FixAppID(jr, appid)
 	return jr, err
 }
 

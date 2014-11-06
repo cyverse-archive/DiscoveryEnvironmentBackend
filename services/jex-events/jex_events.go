@@ -284,7 +284,6 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 	for {
 		select {
 		case delivery := <-deliveries:
-			log.Print("Received message")
 			body := delivery.Body
 			delivery.Ack(false) //We're not doing batch deliveries, which is what the false means
 			var event Event
