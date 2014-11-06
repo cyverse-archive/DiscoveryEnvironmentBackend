@@ -351,7 +351,11 @@ Secured Endpoint: PATCH /apps/{app-id}
 
 Delegates to metadactyl: PATCH /apps/{app-id}
 
-This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Secured Endpoint: PATCH /admin/apps/{app-id}
+
+Delegates to metadactyl: PATCH /apps/{app-id}
+
+These endpoints are passthroughs to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
 
 ## Importing Tools

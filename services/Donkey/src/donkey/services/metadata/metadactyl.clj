@@ -142,6 +142,14 @@
         req (metadactyl-request req)]
     (forward-patch url req)))
 
+(defn admin-update-app
+  "This service updates the high level details and labels in a single-step app. Both vetted and
+   unvetted apps can be modified using this service."
+  [req app-id]
+  (let [url (metadactyl-url {} "admin" "apps" app-id)
+        req (metadactyl-request req)]
+    (forward-patch url req)))
+
 (defn delete-app
   "This service will logically remove an app from the DE."
   [req app-id]

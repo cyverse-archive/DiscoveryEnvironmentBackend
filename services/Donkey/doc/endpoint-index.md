@@ -8,6 +8,7 @@
 * [PATCH /admin/apps/categories/:uuid](endpoints/app-metadata.md#updating-an-app-category)
 * [POST /admin/apps/shredder](endpoints/app-metadata.md#permanently-deleting-an-app)
 * [DELETE /admin/apps/{app-id}](endpoints/app-metadata.md#logically-deleting-apps)
+* [PATCH /admin/apps/{app-id}](endpoints/app-metadata.md#updating-app-labels)
 * [GET /admin/filesystem/index](endpoints/filesystem/search.md#endpoints:)
 * [POST /admin/filesystem/index](endpoints/filesystem/search.md#endpoint)
 * [GET /admin/notifications/system](endpoints/notifications.md#endpoints-for-system-messages-aka-system-notifications)

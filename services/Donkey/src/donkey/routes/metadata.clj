@@ -49,7 +49,10 @@
           (permanently-delete-apps req))
 
     (DELETE "/apps/:app-id" [app-id]
-            (admin-delete-app app-id))))
+            (admin-delete-app app-id))
+
+    (PATCH "/apps/:app-id" [app-id :as req]
+           (admin-update-app req app-id))))
 
 (defn apps-routes
   []

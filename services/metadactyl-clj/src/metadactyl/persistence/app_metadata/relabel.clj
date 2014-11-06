@@ -121,24 +121,18 @@
 
 (defn- update-task-labels
   "Updates the labels in a task."
-  [req task-id]
-  (update tasks
-          (set-fields
-           (remove-nil-vals
-            {:name        (:name req)
-             :description (:description req)
-             :label       (:label req)}))
-          (where {:id task-id}))
-  (dorun (map (partial update-parameter-group-labels task-id) (:groups req))))
+  [{:keys [name description label groups]} task-id]
+  (let [update-values (remove-nil-vals {:name        name
+                                        :description description
+                                        :label       label})]
+    (when-not (empty? update-values)
+      (update tasks (set-fields update-values) (where {:id task-id}))))
+  (dorun (map (partial update-parameter-group-labels task-id) groups)))
 
 (defn update-app-labels
   "Updates the labels in an app."
-  [req]
-  (update apps
-          (set-fields
-           (remove-nil-vals
-            {:name             (:name req)
-             :description      (:description req)
-             :edited_date      (long->timestamp (:edited_date req))}))
-          (where {:id (:id req)}))
-  (update-task-labels req (:id (get-single-task-for-app (:id req)))))
+  [{id :id :as req}]
+  (let [update-values (remove-nil-vals (select-keys req [:name :description]))]
+    (when-not (empty? update-values)
+      (update apps (set-fields (assoc update-values :edited_date (sqlfn now))) (where {:id id}))))
+  (update-task-labels req (:id (get-single-task-for-app id))))

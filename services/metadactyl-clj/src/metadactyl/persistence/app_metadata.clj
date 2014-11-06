@@ -177,7 +177,7 @@
   ([app publish?]
    (let [app-id (:id app)
          app (-> app
-                 (select-keys [:name :description :wikiurl])
+                 (select-keys [:name :description :wikiurl :deleted :disabled])
                  (assoc :edited_date (sqlfn now)
                         :integration_date (when publish? (sqlfn now)))
                  (remove-nil-vals))]
@@ -412,11 +412,18 @@
   (delete/permanently-delete-app ((comp :id get-app) app-id)))
 
 (defn delete-app
-  "Marks an app as deleted in the metadata database."
-  [app-id]
-  (update :apps
-          (set-fields {:deleted true})
-          (where {:id app-id})))
+  "Marks or unmarks an app as deleted in the metadata database."
+  ([app-id]
+   (delete-app true app-id))
+  ([deleted? app-id]
+   (update :apps (set-fields {:deleted deleted?}) (where {:id app-id}))))
+
+(defn disable-app
+  "Marks or unmarks an app as disabled in the metadata database."
+  ([app-id]
+   (disable-app true app-id))
+  ([disabled? app-id]
+   (update :apps (set-fields {:disabled disabled?}) (where {:id app-id}))))
 
 (defn rate-app
   "Adds or updates a user's rating and comment ID for the given app."

@@ -1,6 +1,7 @@
 (ns metadactyl.routes.admin
   (:use [metadactyl.app-categorization :only [categorize-apps]]
-        [metadactyl.conrad.admin-apps :only [delete-app]]
+        [metadactyl.conrad.admin-apps :only [delete-app
+                                             update-app]]
         [metadactyl.conrad.admin-categories :only [add-category
                                                    delete-categories
                                                    delete-category
@@ -86,7 +87,20 @@
            :notes "An app can be marked as deleted in the DE without being completely removed from
            the database using this service. This endpoint is the same as the non-admin endpoint,
            except an error is not returned if the user does not own the App."
-           (ce/trap uri #(delete-app app-id))))
+           (ce/trap uri #(delete-app app-id)))
+
+  (PATCH* "/:app-id" [:as {uri :uri}]
+          :path-params [app-id :- AppIdPathParam]
+          :query [params SecuredQueryParams]
+          :body [body (describe AdminAppPatchRequest "The App to update.")]
+          :return AppListingDetail
+          :summary "Update App Labels and Details"
+          :notes "This service is capable of updating high-level information of App, as well as just
+          the labels within a single-step app that has already been made available for public use.
+          <b>Note</b>: Although this endpoint accepts all App Group and Parameter fields, only their
+          'description', 'label', and 'display' (only in parameter arguments) fields will be
+          processed and updated by this endpoint."
+          (ce/trap uri #(update-app (assoc body :id app-id)))))
 
 (defroutes* admin-categories
   (POST* "/" [:as {uri :uri}]

@@ -8,7 +8,10 @@
 
 (def AppIdParam (describe UUID "A UUID that is used to identify the App"))
 (def OptionalIdParam (describe UUID "An optional UUID identifier"))
+(def AppDocUrlParam (describe String "The App's documentation URL"))
 (def AppReferencesParam (describe [String] "The App's references"))
+(def AppDeletedParam (describe Boolean "Whether the App is marked as deleted"))
+(def AppDisabledParam (describe Boolean "Whether the App is marked as disabled"))
 
 (def OptionalGroupsKey (optional-key :groups))
 (def OptionalParametersKey (optional-key :parameters))
@@ -276,10 +279,10 @@
         associated with it in order to run successfully")
 
      :deleted
-     (describe Boolean "Whether the App is marked as deleted")
+     AppDeletedParam
 
      :disabled
-     (describe Boolean "Whether the App is marked as disabled")
+     AppDisabledParam
 
      :integrator_email
      (describe String "The App integrator's email address")
@@ -287,7 +290,7 @@
      :integrator_name
      (describe String "The App integrator's full name")
 
-     :is_favorite
+     (optional-key :is_favorite)
      (describe Boolean "Whether the current user has marked the App as a favorite")
 
      :is_public
@@ -303,7 +306,7 @@
      (describe Long "The number of Tasks this App executes")
 
      (optional-key :wiki_url)
-     (describe String "The App's documentation URL")}))
+     AppDocUrlParam}))
 
 (defschema AppListing
   {:app_count (describe Long "The total number of Apps in the listing")
@@ -365,6 +368,17 @@
     (->optional-param :id)
     (->optional-param :name)
     (->optional-param :description)
-    (assoc :wiki_url (describe String "The App's documentation URL")
+    (assoc :wiki_url AppDocUrlParam
            :references AppReferencesParam)
     (merge AppCategoryIdListing)))
+
+(defschema AdminAppPatchRequest
+  (-> AppBase
+    (->optional-param :id)
+    (->optional-param :name)
+    (->optional-param :description)
+    (assoc (optional-key :wiki_url)   AppDocUrlParam
+           (optional-key :references) AppReferencesParam
+           (optional-key :deleted)    AppDeletedParam
+           (optional-key :disabled)   AppDisabledParam
+           OptionalGroupsKey          (describe [AppGroup] GroupListDocs))))

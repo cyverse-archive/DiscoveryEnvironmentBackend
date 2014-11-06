@@ -9,6 +9,7 @@
         [metadactyl.persistence.app-metadata :only [get-app get-app-tools]]
         [metadactyl.tools :only [get-tools-by-id]]
         [metadactyl.user :only [current-user]]
+        [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.config]
         [metadactyl.util.conversions :only [to-long remove-nil-vals]]
         [metadactyl.workspace])
@@ -150,7 +151,7 @@
                       :user user_rating
                       :comment_id comment_id}))))
 
-(defn- format-app
+(defn format-app-listing
   "Formats certain app fields into types more suitable for the client."
   [app]
   (-> (assoc app :can_run (= (:task_count app) (:tool_count app)))
@@ -166,7 +167,7 @@
   (let [group-key (keyword (str group-id))]
     (when-let [format-fns (virtual-group-fns group-key)]
       (-> ((:format-group format-fns) (:id workspace) params)
-          (assoc :apps (map format-app ((:format-listing format-fns) workspace params)))))))
+          (assoc :apps (map format-app-listing ((:format-listing format-fns) workspace params)))))))
 
 (defn- count-apps-in-group
   "Counts the number of apps in an app group, including virtual app groups that may be included."
@@ -189,7 +190,7 @@
   (let [app_group      (remove-nil-vals (get-app-category app_group_id))
         total          (count-apps-in-group workspace app_group params)
         apps_in_group  (get-apps-in-group workspace app_group params)
-        apps_in_group  (map format-app apps_in_group)]
+        apps_in_group  (map format-app-listing apps_in_group)]
     (assoc app_group
       :app_count total
       :apps apps_in_group)))
@@ -215,16 +216,15 @@
                         workspace
                         (workspace-favorites-app-group-index)
                         params)
-        search_results (map format-app search_results)]
+        search_results (map format-app-listing search_results)]
     (service/success-response {:app_count total
                                :apps search_results})))
 
 (defn- load-app-details
   "Retrieves the details for a single app."
   [app-id]
-  (first (select apps
-                 (with app_references)
-                 (where {:id app-id}))))
+  (assert-not-nil [:app-id app-id]
+    (first (select apps (with app_references) (where {:id app-id})))))
 
 (defn- format-app-details
   "Formats information for the get-app-details service."
@@ -244,8 +244,6 @@
   [app-id]
   (let [details (load-app-details app-id)
         tools   (get-app-tools app-id)]
-    (when (nil? details)
-      (throw (IllegalArgumentException. (str "app, " app-id ", not found"))))
     (when (empty? tools)
       (throw  (IllegalArgumentException. (str "no tools associated with app, " app-id))))
     (->> (format-app-details details tools)
