@@ -82,6 +82,10 @@
     (catch Exception e
       false)))
 
+(defn clj-http-error?
+  [{:keys [status body]}]
+  (and (number? status) ((comp not nil?) body)))
+
 (defn unchecked [throwable-map]
   {:error_code ERR_UNCHECKED_EXCEPTION
    :message (:message throwable-map)})
@@ -139,6 +143,7 @@
     (catch error? err
       (log/error (format-exception (:throwable &throw-context)))
       (err-resp action (:object &throw-context)))
+    (catch clj-http-error? o o)
     (catch Object e
       (log/error (format-exception (:throwable &throw-context)))
       (err-resp action (unchecked &throw-context)))))

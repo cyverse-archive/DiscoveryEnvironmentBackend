@@ -17,10 +17,6 @@
   [id]
   (some #(re-find % id) uuid-regexes))
 
-(defn clj-http-error?
-  [{:keys [status body]}]
-  (and (number? status) ((comp not nil?) body)))
-
 (defn trap-handler
   [handler]
   (fn [{:keys [uri] :as req}]

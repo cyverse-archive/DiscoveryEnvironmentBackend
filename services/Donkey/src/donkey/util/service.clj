@@ -12,9 +12,6 @@
             [ring.util.codec :as codec])
   (:import [clojure.lang IPersistentMap]))
 
-(defn empty-response []
-  {:status 200})
-
 (defn error-body [e]
   (cheshire/encode {:reason (.getMessage e)}))
 
