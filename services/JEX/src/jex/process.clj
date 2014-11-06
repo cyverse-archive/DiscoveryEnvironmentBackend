@@ -50,11 +50,12 @@
     doc-id))
 
 (defn push-job-to-jex-events
-  [condor-id submitter app-id]
+  [condor-id submitter app-id inv-id]
   (try
     (let [job-record {:condorid     condor-id
                       :submitter    submitter
-                      :appid        app-id}
+                      :appid        app-id
+                      :invocationid inv-id}
           result     (http/post (cfg/jex-events-url) {:form-params job-record
                                                       :content-type :json}
                                 {:throw-exceptions false})]
@@ -236,5 +237,5 @@
                     sub-result)]
     (log/warn "Submitted Job:" sub-id "OSM doc:" doc-id)
     (log/warn "Pushing to jex-events:" sub-id (:username updated-map) (:app_id updated-map))
-    (push-job-to-jex-events sub-id (:username updated-map) (:app_id updated-map))
+    (push-job-to-jex-events sub-id (:username updated-map) (:app_id updated-map) (:uuid updated-map))
     [(:exit sub-result) sub-id doc-id]))
