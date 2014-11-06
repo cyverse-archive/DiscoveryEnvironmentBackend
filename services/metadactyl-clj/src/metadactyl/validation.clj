@@ -200,3 +200,11 @@
   [app]
   (verify-app-ownership app)
   (verify-app-not-public app))
+
+(defn validate-external-app-step
+  "Verifies that an external app step in a pipeline has all of the required fields."
+  [step-number {external-app-id :external_app_id}]
+  (when (blank? external-app-id)
+    (throw+ {:code cc-errs/ERR_BAD_OR_MISSING_FIELD
+             :message (str "pipeline step " step-number " contians neither a task ID nor an "
+                           "external app ID")})))

@@ -8,11 +8,14 @@
         [metadactyl.persistence.app-metadata :only [add-app
                                                     add-mapping
                                                     add-step
+                                                    add-task
                                                     get-app
                                                     remove-app-steps
                                                     update-app]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
-        [metadactyl.validation :only [verify-app-editable verify-app-ownership]]
+        [metadactyl.validation :only [validate-external-app-step
+                                      verify-app-editable
+                                      verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
         [metadactyl.zoidberg.app-edit :only [add-app-to-user-dev-category app-copy-name]])
   (:require [metadactyl.util.service :as service]))
@@ -126,13 +129,32 @@
 (defn- add-app-mapping
   [app-id steps {:keys [source_step target_step map]}]
   (add-mapping {:app_id app-id
-                :source_step (:id (nth steps source_step))
-                :target_step (:id (nth steps target_step))
+                :source_step (nth steps source_step)
+                :target_step (nth steps target_step)
                 :map map}))
+
+(defn- generate-external-app-task
+  [step]
+  {:name            (:name step)
+   :description     (:description step)
+   :label           (:name step)
+   :external_app_id (:external_app_id step)})
+
+(defn- add-external-app-task
+  [step-number step]
+  (validate-external-app-step step-number step)
+  (-> step generate-external-app-task add-task))
+
+(defn- add-pipeline-step
+  [app-id step-number step]
+  (if (nil? (:task_id step))
+    (let [task-id (:id (add-external-app-task step-number step))]
+      (add-step app-id step-number (assoc step :task_id task-id)))
+    (add-step app-id step-number step)))
 
 (defn- add-app-steps-mappings
   [{app-id :id steps :steps mappings :mappings}]
-  (let [steps (map-indexed (partial add-step app-id) steps)]
+  (let [steps (map-indexed (partial add-pipeline-step app-id) steps)]
     (dorun (map (partial add-app-mapping app-id steps) mappings))))
 
 (defn- add-pipeline-app

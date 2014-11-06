@@ -30,7 +30,7 @@
 (defn- filter-valid-task-values
   "Filters valid keys from the given Task for inserting or updating in the database."
   [task]
-  (select-keys task [:name :description :label :tool_id]))
+  (select-keys task [:name :description :label :tool_id :external_app_id]))
 
 (defn- filter-valid-app-group-values
   "Filters and renames valid keys from the given App group for inserting or updating in the database."
@@ -159,16 +159,34 @@
                         :step step-number))]
     (insert app_steps (values step))))
 
+(defn- add-workflow-io-map
+  [mapping]
+  (insert :workflow_io_maps
+          (values {:app_id      (:app_id mapping)
+                   :source_step (get-in mapping [:source_step :id])
+                   :target_step (get-in mapping [:target_step :id])})))
+
+(defn- build-io-key
+  [step de-app-key external-app-key value]
+  (if (nil? (:external_app_id step))
+    [de-app-key       (uuidify value)]
+    [external-app-key value]))
+
+(defn- io-mapping-builder
+  [mapping-id mapping]
+  (fn [[input output]]
+    (into {} [(vector :mapping_id mapping-id)
+              (build-io-key (:target_step mapping) :input :external_input input)
+              (build-io-key (:source_step mapping) :output :external_output output)])))
+
 (defn add-mapping
   "Adds an input/output workflow mapping to the database for the given app source->target mapping."
   [mapping]
-  (let [workflow-map (select-keys mapping [:app_id :source_step :target_step])
-        mapping-id (:id (insert :workflow_io_maps (values workflow-map)))]
-    (dorun
-      (for [[input output] (:map mapping)]
-        (insert :input_output_mapping (values {:mapping_id mapping-id
-                                               :input (uuidify input)
-                                               :output (uuidify output)}))))))
+  (let [mapping-id (:id (add-workflow-io-map mapping))]
+    (->> (:map mapping)
+         (map (io-mapping-builder mapping-id mapping))
+         (map #(insert :input_output_mapping (values %)))
+         (dorun))))
 
 (defn update-app
   "Updates top-level app info in the database."

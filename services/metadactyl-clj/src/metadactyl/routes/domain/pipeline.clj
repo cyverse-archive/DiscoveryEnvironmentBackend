@@ -12,10 +12,22 @@
    :map (describe Any "The {'input-uuid': 'output-uuid'} mapping")})
 
 (defschema PipelineStep
-  {:name        (describe String "The Step's name")
-   :description (describe String "The Step's description")
-   :task_id     (describe UUID "A UUID that is used to identify this Step's Task")
-   :app_type    (describe String "The Step's App type")})
+  {:name
+   (describe String "The Step's name")
+
+   :description
+   (describe String "The Step's description")
+
+   (optional-key :task_id)
+   (describe UUID "A UUID that is used to identify this Step's Task. This field is required any
+                   time the external app ID isn't provided.")
+
+   (optional-key :external_app_id)
+   (describe String "A string referring to an external app that is used to perform the step. This
+                     field is required any time the task ID isn't provided.")
+
+   :app_type
+   (describe String "The Step's App type")})
 
 (defschema Pipeline
   (merge AppTaskListing
