@@ -142,6 +142,12 @@ func (h *HTTPAPI) JobHTTPPost(writer http.ResponseWriter, request *http.Request)
 		WriteRequestError(writer, errMsg)
 		return
 	}
+	if parsed.InvocationID == "" {
+		errMsg := "The InvocationID field is required in the POST JSON"
+		LogAPIMsg(request, errMsg)
+		WriteRequestError(writer, errMsg)
+		return
+	}
 	if parsed.DateSubmitted.IsZero() {
 		parsed.DateSubmitted = time.Now()
 	}
