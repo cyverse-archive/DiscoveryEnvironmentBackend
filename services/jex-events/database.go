@@ -42,6 +42,7 @@ type JobRecord struct {
 	DateStarted      time.Time
 	DateCompleted    time.Time
 	AppID            string
+	InvocationID     string
 	ExitCode         int
 	FailureThreshold int64
 	FailureCount     int64
@@ -60,7 +61,8 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 		exit_code,
 		failure_threshold,
 		failure_count,
-		condor_id
+		condor_id,
+		invocation_id
 	) VALUES (
 		cast($1 AS uuid),
 		$2,
@@ -71,7 +73,8 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 		$7,
 		$8,
 		$9,
-		$10
+		$10,
+		$11
 	) RETURNING id`
 	var fixedBatch *string
 	if jr.BatchID == "" {
@@ -84,6 +87,12 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 		fixedAppID = nil
 	} else {
 		fixedAppID = &jr.AppID
+	}
+	var fixedInvID *string
+	if jr.InvocationID == "" {
+		fixedInvID = nil
+	} else {
+		fixedInvID = &jr.InvocationID
 	}
 	var id string
 	err := d.db.QueryRow(
@@ -98,6 +107,7 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 		jr.FailureThreshold,
 		jr.FailureCount,
 		jr.CondorID,
+		fixedInvID,
 	).Scan(&id)
 	if err != nil {
 		return "", err
@@ -185,6 +195,15 @@ func FixBatchID(jr *JobRecord, batchid interface{}) {
 	}
 }
 
+// FixInvID fixes the InvocationID field for the JobRecord
+func FixInvID(jr *JobRecord, invid interface{}) {
+	if invid == nil {
+		jr.InvocationID = ""
+	} else {
+		jr.InvocationID = string(invid.([]uint8))
+	}
+}
+
 // GetJob returns a JobRecord from the database.
 func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	query := `
@@ -198,7 +217,8 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 				 exit_code,
 				 failure_threshold,
 				 failure_count,
-				 condor_id
+				 condor_id,
+				 invocation_id
 	  FROM jobs
 	 WHERE id = cast($1 as uuid)
 	`
@@ -206,6 +226,7 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	rows := d.db.QueryRow(query, uuid)
 	var batchid interface{}
 	var appid interface{}
+	var invid interface{}
 	err := rows.Scan(
 		&jr.ID,
 		&batchid,
@@ -218,6 +239,7 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 		&jr.FailureThreshold,
 		&jr.FailureCount,
 		&jr.CondorID,
+		&invid,
 	)
 	// This evil has been perpetrated to avoid an issue where time.Time instances
 	// set to their zero value and stored in PostgreSQL with timezone info can
@@ -235,6 +257,7 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	}
 	FixBatchID(jr, batchid)
 	FixAppID(jr, appid)
+	FixInvID(jr, invid)
 	return jr, err
 }
 
@@ -251,7 +274,8 @@ func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
 				exit_code,
 				failure_threshold,
 				failure_count,
-				condor_id
+				condor_id,
+				invocation_id
  	 FROM jobs
 	WHERE condor_id = $1
 	`
@@ -259,6 +283,7 @@ func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
 	rows := d.db.QueryRow(query, condorID)
 	var batchid interface{}
 	var appid interface{}
+	var invid interface{}
 	err := rows.Scan(
 		&jr.ID,
 		&batchid,
@@ -271,6 +296,7 @@ func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
 		&jr.FailureThreshold,
 		&jr.FailureCount,
 		&jr.CondorID,
+		&invid,
 	)
 	// This evil has been perpetrated to avoid an issue where time.Time instances
 	// set to their zero value and stored in PostgreSQL with timezone info can
@@ -288,6 +314,7 @@ func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
 	}
 	FixBatchID(jr, batchid)
 	FixAppID(jr, appid)
+	FixInvID(jr, invid)
 	return jr, err
 }
 
@@ -304,8 +331,9 @@ func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
 				exit_code = $7,
 				failure_threshold = $8,
 				failure_count = $9,
-				condor_id = $10
-	WHERE id = cast($11 as uuid)
+				condor_id = $10,
+				invocation_id = $11
+	WHERE id = cast($12 as uuid)
 	RETURNING id
 	`
 	var id string
@@ -321,6 +349,12 @@ func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
 	} else {
 		appid = &jr.AppID
 	}
+	var invid *string
+	if jr.InvocationID == "" {
+		invid = nil
+	} else {
+		invid = &jr.InvocationID
+	}
 	err := d.db.QueryRow(
 		query,
 		batchid,
@@ -333,6 +367,7 @@ func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
 		jr.FailureThreshold,
 		jr.FailureCount,
 		jr.CondorID,
+		invid,
 		jr.ID,
 	).Scan(&id)
 	if err != nil {
