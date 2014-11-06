@@ -40,10 +40,11 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 	submitted := time.Now()
 	started := time.Now()
 	completed := time.Now()
+	condorID := "999"
 	jr := &JobRecord{
 		BatchID:       "",
 		Submitter:     "unit_tests",
-		CondorID:      "test",
+		CondorID:      condorID,
 		DateSubmitted: submitted,
 		DateStarted:   started,
 		DateCompleted: completed,
@@ -114,6 +115,13 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 	}
 	if updated.DateCompleted.Format(time.RFC822Z) != newJR.DateCompleted.Format(time.RFC822Z) {
 		t.Errorf("Updated date completed fields don't match")
+	}
+	condor, err := d.GetJobByCondorID(condorID)
+	if err != nil {
+		t.Errorf("Error in GetJobByCondorID: %s", err)
+	}
+	if condor.ID != newUUID {
+		t.Errorf("The IDs didn't match after GetJobByCondorID: %s %s", condor.ID, newUUID)
 	}
 	err = d.DeleteJob(newUUID)
 	if err != nil {
