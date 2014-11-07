@@ -75,13 +75,10 @@
     (doall (mapcat (fn [step] (format-groups (group-name-prefix step) step)) app-steps))))
 
 (defn- format-app
-  [app]
-  {:id          (:id app)
-   :name        (:name app)
-   :label       (:name app)
-   :description (:description app)
-   :disabled    (:disabled app)
-   :groups      (remove (comp empty? :parameters) (format-steps (:id app)))})
+  [{app-id :id name :name :as app}]
+  (-> (select-keys app [:id :name :description :disabled :deleted])
+      (assoc :label  name
+             :groups (remove (comp empty? :parameters) (format-steps app-id)))))
 
 (defn get-app
   "This service obtains an app description in a format that is suitable for building the job

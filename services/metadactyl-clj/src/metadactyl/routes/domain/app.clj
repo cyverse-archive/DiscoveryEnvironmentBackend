@@ -233,7 +233,8 @@
 (defschema AppJobView
   (assoc AppBase
     :label            (describe String "An alias for the App's name")
-    :disabled         (describe Boolean "A flag indicating whether the App is disabled")
+    :deleted          AppDeletedParam
+    :disabled         AppDisabledParam
     OptionalGroupsKey (describe [AppGroupJobView] GroupListDocs)))
 
 (defschema AppDetailCategory
