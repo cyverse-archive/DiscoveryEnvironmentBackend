@@ -59,7 +59,7 @@
    "output = " (script-output working_dir) "\n"
    "error = " (script-error working_dir) "\n"
    "log = " (script-log local-log-dir) "\n"
-   "request_disk = " (cfg/request-disk) "\n" 
+   "request_disk = " (cfg/request-disk) "\n"
    "+IpcUuid = \"" uuid "\"\n"
    "+IpcJobId = \"generated_script\"\n"
    "+IpcUsername = \"" username "\"\n"
@@ -115,6 +115,7 @@
      "set -x\n"
      "readonly IPLANT_USER=" (:username analysis-map) "\n"
      "export IPLANT_USER\n"
+     "export SCRIPT_LOCATION=${BASH_SOURCE}\n"
      "mkdir -p logs\n"
      fail-script
      "touch logs/de-transfer-trigger.txt\n"

@@ -16,8 +16,6 @@
   :main porklock.core
   :aot [porklock.core]
   :uberjar-name "porklock-standalone.jar"
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.6"]
                  [org.iplantc/clojure-commons "4.0.4"]
