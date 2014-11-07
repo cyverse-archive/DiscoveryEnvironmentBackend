@@ -1,4 +1,5 @@
 (ns donkey.services.admin
+  (:use [donkey.util.service :only [success-response]])
   (:require [clojure.tools.logging :as log]
             [cemerick.url :as url]
             [cheshire.core :as json]
@@ -12,7 +13,7 @@
 (defn config
   "Returns JSON containing Donkey's configuration, passwords filtered out."
   []
-  (config/masked-config))
+  (success-response (config/masked-config)))
 
 
 (defn- check-irods?
@@ -109,5 +110,6 @@
     (status-irods)
     (status-jex)
     (status-metadactyl)
-    (status-notificationagent)))
+    (status-notificationagent)
+    success-response))
 
