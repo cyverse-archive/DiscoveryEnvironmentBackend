@@ -3,7 +3,7 @@
         [clojure-commons.file-utils :only [with-temp-dir-in]]
         [donkey.util.config :only [data-info-base-url scruffian-base-url tree-parser-url]]
         [donkey.services.buggalo.nexml :only [is-nexml? extract-trees-from-nexml]]
-        [donkey.util.service :only [success-response]]
+        [donkey.util.service :only [success-response temp-dir-failure-response]]
         [donkey.auth.user-attributes :only [current-user]]
         [donkey.clients.tree-urls]
         [slingshot.slingshot :only [throw+ try+]])
@@ -34,10 +34,9 @@
   "Handles the failure to create a temporary directory."
   [parent prefix base]
   (log/error "failed to create a temporary directory: base =" base)
-  (throw+ {:type   :temp-dir-failure
-           :parent parent
-           :prefix prefix
-           :base   base}))
+  (temp-dir-failure-response {:parent parent
+                              :prefix prefix
+                              :base   base}))
 
 (defn- tree-parser-error
   "Throws an exception indicating that the tree parser encountered an error."
@@ -47,10 +46,9 @@
               :message "unable to parse tree data"
               :details (:body res)
               :success false}]
-    (throw+ {:type :error-status
-             :res  {:status       (:status res)
-                    :content-type :json
-                    :body         (cheshire/generate-string body)}})))
+    (throw+ {:status       (:status res)
+             :content-type :json
+             :body         (cheshire/generate-string body)})))
 
 (defn- get-tree-viewer-url
   "Obtains a tree viewer URL for a single tree file."

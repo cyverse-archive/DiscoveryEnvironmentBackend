@@ -1,6 +1,7 @@
 (ns donkey.routes.search
   "the routing code for search-related URL resources"
-  (:use [compojure.core :only [GET]])
+  (:use [clojure-commons.error-codes :only [missing-arg-response]]
+        [compojure.core :only [GET]])
   (:require [donkey.auth.user-attributes :as user]
             [donkey.services.search :as search]
             [donkey.util :as util]
@@ -17,4 +18,4 @@
     (GET "/filesystem/index" [q tags & opts]
       (if (or q tags)
         (search/search (search/qualify-name (:shortUsername user/current-user)) q tags opts)
-        (svc/missing-arg-response "`q` or `tags`")))))
+        (missing-arg-response "`q` or `tags`")))))

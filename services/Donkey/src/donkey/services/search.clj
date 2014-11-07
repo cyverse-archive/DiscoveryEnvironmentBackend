@@ -1,6 +1,7 @@
 (ns donkey.services.search
   "provides the functions that forward search requests to Elastic Search"
-  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:use [clojure-commons.error-codes :only [invalid-arg-response]]
+        [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [cheshire.core :as json]
@@ -241,6 +242,6 @@
         (add-timing start)
         svc/success-response))
     (catch [:type :invalid-argument] {:keys [arg val reason]}
-      (svc/invalid-arg-response arg val reason))
+      (invalid-arg-response arg val reason))
     (catch [:type :invalid-query] {:keys []}
-      (svc/invalid-arg-response "q" query-str "This is not a valid elasticsearch query."))))
+      (invalid-arg-response "q" query-str "This is not a valid elasticsearch query."))))

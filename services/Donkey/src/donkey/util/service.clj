@@ -107,28 +107,6 @@
     (when (>= status 500) (log/error e "internal error"))
     (donkey-response e status)))
 
-(defn invalid-arg-response [arg val reason]
-  {:status       400
-   :body         (cheshire/encode {:error_code ce/ERR_ILLEGAL_ARGUMENT
-                                   :reason     reason
-                                   :arg        (name arg)
-                                   :val        val})
-   :content-type :json})
-
-(defn invalid-cfg-response
-  [reason]
-  {:status       500
-   :body         (cheshire/encode {:error_code ce/ERR_CONFIG_INVALID
-                                   :reason     reason})
-   :content-type :json})
-
-(defn missing-arg-response [arg]
-  (log/error "missing required argument:" (name arg))
-  {:status       400
-   :body         (cheshire/encode {:error_code ce/ERR_MISSING_QUERY_PARAMETER
-                                   :arg        (name arg)})
-   :content-type :json})
-
 (defn temp-dir-failure-response [{:keys [parent prefix base]}]
   (log/error "unable to create a temporary directory in" parent
              "using base name" base)

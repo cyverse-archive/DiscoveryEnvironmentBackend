@@ -98,12 +98,39 @@
   ([action err-obj]
    (err-resp err-obj)))
 
+(defn invalid-cfg-response
+  [reason]
+  {:status       500
+   :body         (cheshire/encode {:error_code ERR_CONFIG_INVALID
+                                   :reason     reason})
+   :content-type :json})
+
+(defn invalid-arg-response [arg val reason]
+  {:status       400
+   :body         (cheshire/encode {:error_code ERR_ILLEGAL_ARGUMENT
+                                   :reason     reason
+                                   :arg        (name arg)
+                                   :val        val})
+   :content-type :json})
+
+(defn missing-arg-response [arg]
+  (log/error "missing required argument:" (name arg))
+  {:status       400
+   :body         (cheshire/encode {:error_code ERR_MISSING_QUERY_PARAMETER
+                                   :arg        (name arg)})
+   :content-type :json})
+
+(defn- response-map?
+  "Returns true if 'm' can be used as a response map. We're defining a
+   response map as a map that contains a :status and :body field."
+  [m]
+  (and (map? m)
+       (contains? m :status)
+       (contains? m :body)))
+
 (defn success-resp [action retval]
   (cond
-   (= (:status retval) 200)
-   retval
-
-   (= (:status retval) 404)
+   (response-map? retval)
    retval
 
    :else
@@ -144,6 +171,7 @@
       (log/error (format-exception (:throwable &throw-context)))
       (err-resp action (:object &throw-context)))
     (catch clj-http-error? o o)
+    (catch [:type :invalid-configuration] {:keys [reason]} (invalid-cfg-response reason))
     (catch Object e
       (log/error (format-exception (:throwable &throw-context)))
       (err-resp action (unchecked &throw-context)))))

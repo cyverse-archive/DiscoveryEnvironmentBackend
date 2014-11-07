@@ -35,13 +35,11 @@
               :details details
               :success false}]
     (log/error "the COGE genome service encountered an error:" details)
-    (throw+ {:type :error-status
-             :res  {:status       (if (or (string? error)
-                                          (not (:status error)))
-                                    500
-                                    (:status error))
-                    :content-type :json
-                    :body         (cheshire/generate-string body)}})))
+    (throw+ {:status       (if (or (string? error) (not (:status error)))
+                             500
+                             (:status error))
+             :content-type :json
+             :body         (cheshire/generate-string body)})))
 
 (defn- share-paths
   "Shares the given paths with the COGE user so the genome viewer service can access them."
