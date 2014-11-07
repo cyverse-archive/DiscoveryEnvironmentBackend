@@ -44,10 +44,8 @@
    (GET "/saved-searches" []
         (saved/get-saved-searches (:username current-user)))
 
-   (POST "/saved-searches" [:as {:keys [uri body]}]
+   (POST "/saved-searches" [:as {:keys [body]}]
          (saved/set-saved-searches (:username current-user) body))
 
    (DELETE "/saved-searches" []
-           (fn []
-             (saved/delete-saved-searches (:username current-user))
-             {}))))
+           (saved/delete-saved-searches (:username current-user)))))

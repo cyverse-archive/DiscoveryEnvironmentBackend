@@ -5,6 +5,7 @@
         [clj-jargon.users :only [user-exists?]]
         [clojure-commons.error-codes]
         [clojure-commons.validators]
+        [donkey.util.service :only [success-response]]
         [donkey.util.validators]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [slingshot.slingshot :only [try+ throw+]])
@@ -151,7 +152,7 @@
             (jargon-ops/move cm tmp-file dest :user user :admin-users (cfg/irods-admins))
             (throw+)))
 
-        {:file (data/path-stat user dest)}))))
+        (success-response {:file (data/path-stat user dest)})))))
 
 (defn saveas
   [req-params req-body]
@@ -182,4 +183,4 @@
         (with-in-str cont
           (actions/store cm *in* user dest))
 
-        {:file (data/path-stat user dest)}))))
+        (success-response {:file (data/path-stat user dest)})))))

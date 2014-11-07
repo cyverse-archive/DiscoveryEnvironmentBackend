@@ -4,7 +4,7 @@
         [slingshot.slingshot :only [try+]]
         [clojure-commons.file-utils :only [basename]]
         [donkey.util.config :only [data-info-base-url]]
-        [donkey.util.service :only [build-url decode-stream]]
+        [donkey.util.service :only [build-url decode-stream success-response]]
         [donkey.util.transformers :only [add-current-user-to-url]]
         [donkey.auth.user-attributes])
   (:require [cheshire.core :as cheshire]
@@ -234,7 +234,7 @@
   [req]
   (let [sharing (decode-stream (:body req))]
     (walk share-with-user
-          #(cheshire/encode {:sharing %})
+          #(success-response {:sharing %})
           (:sharing sharing))))
 
 (defn unshare
@@ -242,5 +242,5 @@
   [req]
   (let [unshare (decode-stream (:body req))]
     (walk unshare-with-user
-          #(cheshire/encode {:unshare %})
+          #(success-response {:unshare %})
           (:unshare unshare))))

@@ -84,7 +84,7 @@
 
 (defn success-response
   ([]
-     (success-response {}))
+     (success-response nil))
   ([retval]
     (donkey-response retval 200)))
 

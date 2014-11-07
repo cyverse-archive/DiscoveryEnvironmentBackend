@@ -2,6 +2,7 @@
   (:use [clojure.string :only [split blank?]]
         [clojure-commons.validators]
         [donkey.util.config]
+        [donkey.util.service :only [success-response]]
         [byte-streams]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
@@ -59,7 +60,7 @@
      (let [results (map #(% search-string start end) search-fns)
            users (remove-duplicates (mapcat :users results))
            truncated (if (some :truncated results) true false)]
-       (cheshire/encode {:users users :truncated truncated}))))
+       (success-response {:users users :truncated truncated}))))
 
 (defn- add-user-info
   "Adds the information for a single user to a user-info lookup result."

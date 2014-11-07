@@ -2,6 +2,7 @@
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes]
         [clojure-commons.validators]
+        [donkey.util.service :only [success-response]]
         [donkey.util.transformers :only [add-current-user-to-map]])
   (:require [cheshire.core :as json]
             [heuristomancer.core :as hm]
@@ -26,7 +27,7 @@
         type?  #(or (string/blank? %1) (contains? (accepted-types) %1))]
     (validate-map params {:user string?})
     (validate-map body {:path string? :type type?})
-    (json/generate-string
+    (success-response
      (if-not (string/blank? (:type body))
        (prods/add-type (:user params) (:path body) (:type body))
        (prods/unset-types (:user params) (:path body))))))
@@ -40,7 +41,7 @@
     (validate-map params {:user string?
                           :type #(contains? (accepted-types) %)
                           :path string?})
-    (json/generate-string
+    (success-response
       (prods/delete-type (:user params) (:path params) (:type params)))))
 
 (defn get-types
@@ -48,19 +49,19 @@
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:path string?
                           :user string?})
-    (json/generate-string
+    (success-response
       {:type (prods/get-types (:user params) (:path params))})))
 
 (defn find-typed-paths
   [req-params]
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string? :type string?})
-    (json/generate-string
+    (success-response
       {:paths (prods/find-paths-with-type (:user params) (:type params))})))
 
 (defn get-type-list
   []
-  (json/generate-string {:types script-types}))
+  (success-response {:types script-types}))
 
 (defn set-auto-type
   [req-body req-params]
@@ -69,12 +70,12 @@
     (log/warn body)
     (validate-map params {:user string?})
     (validate-map body {:path string?})
-    (json/generate-string
+    (success-response
       (prods/auto-add-type (:user params) (:path body)))))
 
 (defn preview-auto-type
   [req-params]
   (let [params (add-current-user-to-map req-params)]
     (validate-map params {:user string? :path string?})
-    (json/generate-string
+    (success-response
       (prods/preview-auto-type (:user params) (:path params)))))

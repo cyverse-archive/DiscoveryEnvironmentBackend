@@ -13,14 +13,14 @@
   ([]
      (let [user (:username current-user)]
        (log/debug "Getting user session for" user)
-       (get-session user)))
+       (success-response (get-session user))))
   ([session]
      (let [user (:username current-user)]
        (log/debug "Setting user session for" user)
-       (set-session user session))))
+       (success-response (set-session user session)))))
 
 (defn remove-session
   []
   (let [user (:username current-user)]
     (log/debug "Deleting user session for" user)
-    (delete-session user)))
+    (success-response (delete-session user))))

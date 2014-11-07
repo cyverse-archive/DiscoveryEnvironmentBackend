@@ -129,7 +129,8 @@
 (defn remove-prefs
   "Deletes the preferences for the current user."
   []
-  (delete-prefs (:username current-user)))
+  (delete-prefs (:username current-user))
+  (success-response))
 
 (defn save-default-output-dir
   "Saves the path to the user's default output folder in the user's preferences."
@@ -148,8 +149,8 @@
 
 (defn do-get-prefs
   []
-  (cheshire/encode (user-prefs (:username current-user))))
+  (success-response (user-prefs (:username current-user))))
 
 (defn do-post-prefs
   [body]
-  (user-prefs (:username current-user) body))
+  (success-response (user-prefs (:username current-user) body)))

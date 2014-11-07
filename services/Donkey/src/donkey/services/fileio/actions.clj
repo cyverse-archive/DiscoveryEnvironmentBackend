@@ -6,6 +6,7 @@
         [clj-jargon.users :only [user-exists?]]
         [clj-jargon.permissions]
         [clojure-commons.error-codes]
+        [donkey.util.service :only [success-response]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cemerick.url :as url] 
             [cheshire.core :as json]
@@ -117,7 +118,7 @@
           :admin-users        (cfg/irods-admins)
           :skip-source-perms? true)
         (set-owner cm new-path user)
-        (json/encode {:file (data/path-stat user new-path)})))))
+        (success-response {:file (data/path-stat user new-path)})))))
 
 
 (defn url-encoded?
@@ -223,10 +224,11 @@
           (throw+ {:msg        jex-body
                    :error_code ERR_REQUEST_FAILED}))
         
-        {:msg    "Upload scheduled."
-         :url    address
-         :label  decoded-filename
-         :dest   dest-path}))))
+        (success-response
+          {:msg    "Upload scheduled."
+           :url    address
+           :label  decoded-filename
+           :dest   dest-path})))))
 
 (defn download
   "Returns a response map filled out with info that lets the client download
@@ -241,4 +243,5 @@
         (str "attachment; filename=\"" (ft/basename file-path) "\""))
       (rsp-utils/header
        "Content-Type"
-       "application/octet-stream"))))
+       "application/octet-stream")
+      success-response)))

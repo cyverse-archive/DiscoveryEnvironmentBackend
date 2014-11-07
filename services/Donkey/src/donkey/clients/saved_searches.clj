@@ -1,5 +1,6 @@
 (ns donkey.clients.saved-searches
   (:use [donkey.util.config]
+        [donkey.util.service :only [success-response]]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [throw+]])
   (:require [clj-http.client :as http]
@@ -27,7 +28,7 @@
      (throw+ {:error_code ERR_UNCHECKED_EXCEPTION :msg "Unknown error thrown by the saved-searches service"})
 
      :else
-     (:body resp))))
+     (success-response (:body resp)))))
 
 (defn set-saved-searches
   [user session]
@@ -52,7 +53,7 @@
      (throw+ {:error_code ERR_UNCHECKED_EXCEPTION :msg "Unknown error thrown by the saved-searches service"})
 
      :else
-     (json/parse-string (:body resp) true))))
+     (success-response (:body resp)))))
 
 (defn delete-saved-searches
   [user]
@@ -68,4 +69,7 @@
      (throw+ {:error_code ERR_UNCHECKED_EXCEPTION :msg "Error thrown by the saved-searches service"})
      
      (not (<= 200 (:status resp) 299))
-     (throw+ {:error_code ERR_UNCHECKED_EXCEPTION :msg "Unknown error thrown by the saved-searches service"}))))
+     (throw+ {:error_code ERR_UNCHECKED_EXCEPTION :msg "Unknown error thrown by the saved-searches service"})
+
+     :else
+     (success-response))))

@@ -1,6 +1,6 @@
 (ns donkey.services.coge
   (:use [donkey.auth.user-attributes]
-        [donkey.util.service :only [decode-json prepare-forwarded-request]]
+        [donkey.util.service :only [decode-json prepare-forwarded-request success-response]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
@@ -74,4 +74,4 @@
   [body]
   (let [paths (:paths (decode-json body))]
     (share-paths paths)
-    (parse-genome-viewer-response (request-coge-genome-url paths))))
+    (success-response (parse-genome-viewer-response (request-coge-genome-url paths)))))
