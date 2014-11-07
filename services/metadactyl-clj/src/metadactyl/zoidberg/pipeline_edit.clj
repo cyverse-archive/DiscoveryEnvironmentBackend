@@ -60,7 +60,8 @@
   (-> step
       add-app-type
       fix-task-id
-      (dissoc :id :step :input_mapping :external_app_id)))
+      (dissoc :id :step :input_mapping)
+      remove-nil-vals))
 
 (defn- get-input-output-mappings
   "Fetches the output->input mapping UUIDs for the given source and target IDs."

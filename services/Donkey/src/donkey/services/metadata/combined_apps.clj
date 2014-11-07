@@ -106,13 +106,13 @@
   [agave pipeline]
   (->> (update-in pipeline [:steps] (partial map prepare-pipeline-step))
        (metadactyl/create-pipeline)
-       (aa/add-workflow-templates agave)))
+       (aa/format-pipeline-tasks agave)))
 
 (defn update-pipeline
   [agave app-id pipeline]
   (->> (update-in pipeline [:steps] (partial map prepare-pipeline-step))
        (metadactyl/update-pipeline app-id)
-       (aa/add-workflow-templates agave)))
+       (aa/format-pipeline-tasks agave)))
 
 (defn- app-step-partitioner
   "Partitions app steps into units of execution. Each external app step has to run by itself.

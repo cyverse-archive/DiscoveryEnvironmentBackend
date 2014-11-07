@@ -261,10 +261,10 @@
       (.listAppTasks agave-client app-id)))
 
   (editWorkflow [_ app-id]
-    (aa/add-workflow-templates agave-client (metadactyl/edit-workflow app-id)))
+    (aa/format-pipeline-tasks agave-client (metadactyl/edit-workflow app-id)))
 
   (copyWorkflow [_ app-id]
-    (aa/add-workflow-templates agave-client (metadactyl/copy-workflow app-id)))
+    (aa/format-pipeline-tasks agave-client (metadactyl/copy-workflow app-id)))
 
   (createPipeline [_ pipeline]
     (ca/create-pipeline agave-client pipeline))
@@ -317,13 +317,17 @@
       :reauth-callback (partial agave-authorization-redirect state-info))
     (agave-authorization-redirect state-info)))
 
+(defn- get-agave-client
+  [state-info username]
+  (agave/de-agave-client-v2
+   (config/agave-base-url)
+   (config/agave-storage-system)
+   (partial get-access-token (config/agave-oauth-settings) state-info username)
+   (config/agave-jobs-enabled)))
+
 (defn- get-de-hpc-app-lister
   [state-info username]
-  (DeHpcAppLister. (agave/de-agave-client-v2
-                    (config/agave-base-url)
-                    (config/agave-storage-system)
-                    (partial get-access-token (config/agave-oauth-settings) state-info username)
-                    (config/agave-jobs-enabled))
+  (DeHpcAppLister. (get-agave-client state-info username)
                    (partial has-access-token (config/agave-oauth-settings) username)))
 
 (defn- get-app-lister
