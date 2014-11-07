@@ -182,7 +182,7 @@
       
       ;;; Transfer files from the NFS mount point into the logs
       ;;; directory of the destination
-      (if (System/getenv "SCRIPT_LOCATION")
+      (if (and (System/getenv "SCRIPT_LOCATION") (not skip-parent?))
         (let [script-loc  (ft/dirname (ft/abs-path (System/getenv "SCRIPT_LOCATION")))
               dest        (ft/path-join dest-dir "logs")
               exclude-map (merge options {:source script-loc})
