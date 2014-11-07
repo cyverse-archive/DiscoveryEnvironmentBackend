@@ -183,13 +183,16 @@
       ;;; Transfer files from the NFS mount point into the logs
       ;;; directory of the destination
       (if (System/getenv "SCRIPT_LOCATION")
-        (let [script-loc (ft/dirname (ft/abs-path (System/getenv "SCRIPT_LOCATION")))
-              dest       (ft/path-join dest-dir "logs")]
+        (let [script-loc  (ft/dirname (ft/abs-path (System/getenv "SCRIPT_LOCATION")))
+              dest        (ft/path-join dest-dir "logs")
+              exclude-map (merge options {:source script-loc})
+              exclusions  (set (exclude-files-from-dir exclude-map))]
+          (porkprint "Exclusions:\n" exclusions)
           (doseq [fileobj (file-seq (clojure.java.io/file script-loc))]
             (let [src (.getAbsolutePath fileobj)
                   dest-path (ft/path-join dest (ft/basename src))]
               (try+
-               (when-not (.isDirectory fileobj)
+               (when-not (or (.isDirectory fileobj) (contains? exclusions src)) 
                  (shell-out [(iput-path) "-f" "-P" src dest :env ic-env])
                  (jg-perms/set-owner cm dest-path (:user options))
                  (apply-metadata cm dest-path metadata))
