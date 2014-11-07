@@ -158,20 +158,29 @@
   (map :full_path (run-simple-query :folder-listing user zone folder-path)))
 
 
+(defn- fmt-info-type
+  [record]
+  (if (and (= "dataobject" (:type record))
+           (empty? (:info_type record)))
+    (assoc record :info_type "raw")
+    record))
+
+
 (defn paged-folder-listing
   "Returns a page from a folder listing."
-  [user zone folder-path sort-column sort-order limit offset]
+  [user zone folder-path sort-column sort-order limit offset & [file-types]]
   (if-not (contains? sort-columns sort-column)
     (throw (Exception. (str "Invalid sort-column " sort-column))))
 
   (if-not (contains? sort-orders sort-order)
     (throw (Exception. (str "Invalid sort-order " sort-order))))
 
-  (let [sc    (get sort-columns sort-column)
-        so    (get sort-orders sort-order)
-        query (format (:paged-folder-listing q/queries) sc so)
-        p     (partial add-permission user)]
-    (map p (run-query-string query user zone folder-path limit offset))))
+  (let [ft-join (q/mk-file-type-join file-types)
+        sc      (get sort-columns sort-column)
+        so      (get sort-orders sort-order)
+        query   (format (:paged-folder-listing q/queries) ft-join sc so)]
+    (map fmt-info-type (run-query-string query user zone folder-path limit offset))))
+
 
 (defn select-files-with-uuids
   "Given a set of UUIDs, it returns a list of UUID-path pairs for each UUID that corresponds to a

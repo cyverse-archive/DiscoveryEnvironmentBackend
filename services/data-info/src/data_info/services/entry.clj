@@ -159,6 +159,15 @@
       (->> filter-path-params (map fmt-path) (remove nil?) set))))
 
 
+; TODO should info-types be checked?
+(defn- resolve-info-types
+  [info-types]
+  (cond
+    (nil? info-types)    []
+    (string? info-types) [info-types]
+    :else                info-types))
+
+
 (defn- resolve-nonnegative
   [nonnegative-param & [default]]
   (if-not nonnegative-param
@@ -198,6 +207,7 @@
   {::filter-chars (set (:filter-chars params))
    ::filter-names (resolve-filter-names (:filter-name params))
    ::filter-paths (resolve-filter-paths (:filter-path params))
+   ::info-types   (resolve-info-types (:info-type params))
    ::sort-field   (resolve-sort-field (:sort-field params))
    ::sort-order   (resolve-sort-order (:sort-order params))
    ::offset       (resolve-nonnegative (:offset params) 0)
@@ -268,18 +278,18 @@
 
 (defn- paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
-  [irods user path filter sfield sord offset limit]
-  (let [id            (irods/lookup-uuid irods path)
-        filter?       (should-filter? filter path)
-        perm          (perm/permission-for irods user path)
-        stat          (item/stat irods path)
-        date-created  (:date-created stat)
-        date-modified (:date-modified stat)
-        zone          (cfg/irods-zone)
-        name          (fs/base-name path)
-        pager         (icat/paged-folder-listing user zone path sfield sord limit offset)]
-    (merge (fmt-entry id date-created date-modified filter? nil path name perm 0)
-           (page->map (partial should-filter? filter) pager)
+  [irods user path filter sfield sord offset limit info-types]
+  (let [id           (irods/lookup-uuid irods path)
+        filter?      (should-filter? filter path)
+        perm         (perm/permission-for irods user path)
+        stat         (item/stat irods path)
+        date-created (:date-created stat)
+        mod-date     (:date-modified stat)
+        zone         (cfg/irods-zone)
+        name         (fs/base-name path)
+        page         (icat/paged-folder-listing user zone path sfield sord limit offset info-types)]
+    (merge (fmt-entry id date-created mod-date filter? nil path name perm 0)
+           (page->map (partial should-filter? filter) page)
            {:total         (icat/number-of-items-in-folder user zone path)
             :totalFiltered (total-filtered user zone path filter)})))
 
@@ -293,8 +303,9 @@
         sort-field (::sort-field ctx)
         sort-order (::sort-order ctx)
         offset     (::offset ctx)
-        limit      (::limit ctx)]
-    (paged-dir-listing irods user path filter sort-field sort-order offset limit)))
+        limit      (::limit ctx)
+        info-types (::info-types ctx)]
+    (paged-dir-listing irods user path filter sort-field sort-order offset limit info-types)))
 
 
 (defn- as-folder-response

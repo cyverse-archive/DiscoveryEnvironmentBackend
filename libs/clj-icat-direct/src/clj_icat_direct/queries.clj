@@ -1,5 +1,7 @@
 (ns clj-icat-direct.queries
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string])
+  (:import  [clojure.lang ISeq]))
+
 
 (defn- get-folder-like-clause
   "Returns a LIKE clause for folder paths in the count-filtered-items-in-folder query."
@@ -42,12 +44,38 @@
                           "]" "\\]"})
          "]")))
 
-
 (defn prepare-text-set
   "Given a set, it prepares the elements for injection into an SQL query. It returns a string
    containing the quoted values separated by commas."
   [values]
   (string/join ", " (map #(str \' % \') values)))
+
+
+(defn ^String mk-file-type-join
+  "This function constructs the file type join for the paged folder listing query.
+
+   Parameters:
+     file-types - A list of file types used to filter on. A nil or empty list disables filtering.
+
+   Returns:
+     It returns a join clause to be added as the first format parameter in the paged-folder-listing
+     query template."
+  [^ISeq file-types]
+  (let [file-types       (mapv string/lower-case file-types)
+        fmt-ft           (prepare-text-set file-types)
+        [join-type filt] (cond
+                           (empty? file-types)
+                           ["LEFT" ""]
+
+                           (contains? file-types "raw")
+                           ["LEFT" (str "AND meta_attr_value IN ('', " fmt-ft ")")]
+
+                           :else
+                           ["INNER" (str "AND meta_attr_value IN (" fmt-ft ")")])]
+    (str join-type " JOIN (SELECT * FROM file_avus WHERE meta_attr_name = 'ipc-filetype' " filt ")
+                          AS f
+           ON f.object_id = d.data_id")))
+
 
 (def queries
   {:count-items-in-folder
@@ -286,7 +314,7 @@
                                                          FROM r_data_main AS d2
                                                          WHERE d2.data_id = d1.data_id )),
 
-         avus        AS ( SELECT *
+         file_avus   AS ( SELECT *
                             FROM r_objt_metamap om JOIN r_meta_main mm ON mm.meta_id = om.meta_id
                             WHERE om.object_id = ANY(ARRAY( SELECT data_id FROM data_objs )))
 
@@ -321,9 +349,8 @@
                FROM r_objt_access a
                  JOIN data_objs d ON a.object_id = d.data_id
                  JOIN r_coll_main c ON c.coll_id = d.coll_id
-                 JOIN avus m ON m.object_id = d.data_id
-                 LEFT JOIN ( SELECT * FROM avus WHERE meta_attr_name = 'ipc-filetype' ) f
-                   ON f.object_id = d.data_id
+                 JOIN file_avus m ON m.object_id = d.data_id
+                 %s
                  WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
                    AND m.meta_attr_name = 'ipc_UUID' ) AS p
       ORDER BY p.type ASC, %s %s
