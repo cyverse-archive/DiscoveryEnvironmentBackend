@@ -1,5 +1,5 @@
 (ns metadactyl.conrad.admin-apps
-  (:use [metadactyl.app-listings :only [format-app-listing]]
+  (:use [metadactyl.app-listings :only [get-app-details]]
         [metadactyl.persistence.app-metadata.relabel :only [update-app-labels]]
         [metadactyl.util.service :only [success-response]]
         [korma.db :only [transaction]])
@@ -44,4 +44,4 @@
     (if (empty? (select-keys app [:name :description :wiki_url :references :groups]))
       (update-app-deleted-disabled app)
       (update-app-details app))
-    (success-response (format-app-listing (persistence/get-app app-id)))))
+    (get-app-details app-id)))

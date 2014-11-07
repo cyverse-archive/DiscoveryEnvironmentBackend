@@ -94,7 +94,7 @@
           :path-params [app-id :- AppIdPathParam]
           :query [params SecuredQueryParams]
           :body [body (describe AdminAppPatchRequest "The App to update.")]
-          :return AppListingDetail
+          :return AppDetails
           :summary "Update App Labels and Details"
           :notes "This service is capable of updating high-level information of App, as well as just
           the labels within a single-step app that has already been made available for public use.

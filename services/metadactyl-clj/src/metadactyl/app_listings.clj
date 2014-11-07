@@ -252,7 +252,7 @@
   [details tools]
   (let [app-id (:id details)]
     (-> details
-      (select-keys [:id :integration_date :edited_date])
+      (select-keys [:id :integration_date :edited_date :deleted :disabled :wiki_url])
       (assoc :name                 (:name details "")
              :description          (:description details "")
              :references           (map :reference_text (:app_references details))

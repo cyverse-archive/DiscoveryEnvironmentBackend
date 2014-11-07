@@ -245,6 +245,15 @@
          {:tools
           (describe [Tool] ToolListDocs)
 
+          :deleted
+          AppDeletedParam
+
+          :disabled
+          AppDisabledParam
+
+          (optional-key :wiki_url)
+          AppDocUrlParam
+
           :references
           AppReferencesParam
 
