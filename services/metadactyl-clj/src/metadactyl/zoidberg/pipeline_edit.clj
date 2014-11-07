@@ -28,9 +28,8 @@
 
 (defn- fix-task-id
   [step]
-  (-> step
-      (assoc :task_id (first (remove nil? ((juxt :task_id :external_app_id) step))))
-      (dissoc :external_app_id)))
+  (assoc step
+    :task_id (first (remove nil? ((juxt :task_id :external_app_id) step)))))
 
 (defn- get-steps
   "Fetches the steps for the given app ID, including their task ID and
@@ -59,9 +58,9 @@
   "Formats step fields for the client."
   [step]
   (-> step
-      fix-task-id
       add-app-type
-      (dissoc :id :step :input_mapping)))
+      fix-task-id
+      (dissoc :id :step :input_mapping :external_app_id)))
 
 (defn- get-input-output-mappings
   "Fetches the output->input mapping UUIDs for the given source and target IDs."
