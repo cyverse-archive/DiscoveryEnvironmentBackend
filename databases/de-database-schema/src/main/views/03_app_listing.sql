@@ -31,6 +31,7 @@ CREATE VIEW app_listing AS
            ) AS is_public,
            COUNT(steps.*) AS step_count,
            COUNT(t.tool_id) AS tool_count,
+           COUNT(t.external_app_id) AS external_app_count,
            COUNT(t.id) AS task_count,
            apps.deleted,
            apps.disabled,
