@@ -212,7 +212,7 @@
   "Resets the given App's references with the given list."
   [app-id references]
   (transaction
-    (delete app_references (where {:id app-id}))
+    (delete app_references (where {:app_id app-id}))
     (dorun (map (partial add-app-reference app-id) references))))
 
 (defn add-app-suggested-category
