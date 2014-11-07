@@ -246,6 +246,33 @@
                (sql-only (select search_query)))
     (select search_query)))
 
+(defn- add-deleted-and-orphaned-where-clause
+  [query]
+  (where query
+    (or {:deleted true
+         :is_public true}
+      (raw "NOT EXISTS (SELECT * FROM app_category_app aca WHERE aca.app_id = app_listing.id)"))))
+
+(defn count-deleted-and-orphaned-apps
+  "Counts the number of deleted, public apps, plus apps that are not listed under any category."
+  []
+  ((comp :count first)
+   (-> (select* app_listing)
+       (aggregate (count :*) :count)
+       add-deleted-and-orphaned-where-clause
+       (select))))
+
+(defn list-deleted-and-orphaned-apps
+  "Fetches a list of deleted, public apps, plus apps that are not listed under any category."
+  [{:keys [limit offset sort-field sort-dir]}]
+  (-> (select* app_listing)
+      add-deleted-and-orphaned-where-clause
+      (add-query-limit limit)
+      (add-query-offset offset)
+      (add-query-sorting (when sort-field (keyword sort-field))
+                         (when sort-dir (keyword (str/upper-case sort-dir))))
+      (select)))
+
 (defn count-public-apps-by-user
   "Counts the number of apps integrated by a user."
   [email params]

@@ -18,6 +18,9 @@
             [clojure.tools.logging :as log]
             [metadactyl.util.service :as service]))
 
+(def my-public-apps-id (uuidify "00000000-0000-0000-0000-000000000000"))
+(def trash-category-id (uuidify "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"))
+
 (defn- add-subgroups
   [group groups]
   (let [subgroups (filter #(= (:id group) (:parent_id %)) groups)
@@ -26,13 +29,26 @@
         result    (dissoc result :parent_id :workspace_id :description)]
     result))
 
+(defn format-trash-category
+  "Formats the virtual group for the admin's deleted and orphaned apps category."
+  [workspace-id params]
+  {:id         trash-category-id
+   :name       "Trash"
+   :is_public  true
+   :app_count  (count-deleted-and-orphaned-apps)})
+
+(defn list-trashed-apps
+  "Lists the public, deleted apps and orphaned apps."
+  [workspace params]
+  (list-deleted-and-orphaned-apps params))
+
 (defn- format-my-public-apps-group
   "Formats the virtual group for the user's public apps."
   [workspace-id params]
-  {:id           (uuidify "00000000-0000-0000-0000-000000000000")
-   :name         "My public apps"
-   :is_public    false
-   :app_count    (count-public-apps-by-user (:email current-user) params)})
+  {:id        my-public-apps-id
+   :name      "My public apps"
+   :is_public false
+   :app_count (count-public-apps-by-user (:email current-user) params)})
 
 (defn list-my-public-apps
   "Lists the public apps belonging to the user with the given workspace."
@@ -44,18 +60,21 @@
    params))
 
 (def ^:private virtual-group-fns
-  {:00000000-0000-0000-0000-000000000000 {:format-group   format-my-public-apps-group
-                                          :format-listing list-my-public-apps}})
+  {(keyword (str my-public-apps-id)) {:format-group   format-my-public-apps-group
+                                      :format-listing list-my-public-apps}
+   (keyword (str trash-category-id)) {:format-group   format-trash-category
+                                      :format-listing list-trashed-apps}})
 
-(defn- format-virtual-groups
+(defn- format-private-virtual-groups
   "Formats any virtual groups that should appear in a user's workspace."
   [workspace-id params]
-  (map (fn [[_ {f :format-group}]] (f workspace-id params)) virtual-group-fns))
+  (remove :is_public
+    (map (fn [[_ {f :format-group}]] (f workspace-id params)) virtual-group-fns)))
 
-(defn- add-virtual-groups
+(defn- add-private-virtual-groups
   [group workspace-id params]
   (if current-user
-    (let [virtual-groups (format-virtual-groups workspace-id params)
+    (let [virtual-groups (format-private-virtual-groups workspace-id params)
           actual-count   (count-apps-in-group-for-user
                            (:id group)
                            (:email current-user)
@@ -72,7 +91,7 @@
         root   (first (filter #(= root-id (:id %)) groups))
         result (add-subgroups root groups)]
     (if (= user-workspace-id workspace-id)
-      (add-virtual-groups result workspace-id params)
+      (add-private-virtual-groups result workspace-id params)
       result)))
 
 (defn get-workspace-app-groups
@@ -186,8 +205,10 @@
 
 (defn- list-apps-in-real-group
   "This service lists all of the apps in a real app group and all of its descendents."
-  [workspace app_group_id params]
-  (let [app_group      (remove-nil-vals (get-app-category app_group_id))
+  [workspace category-id params]
+  (let [app_group      (->> (get-app-category category-id)
+                            (assert-not-nil [:category_id category-id])
+                            remove-nil-vals)
         total          (count-apps-in-group workspace app_group params)
         apps_in_group  (get-apps-in-group workspace app_group params)
         apps_in_group  (map format-app-listing apps_in_group)]

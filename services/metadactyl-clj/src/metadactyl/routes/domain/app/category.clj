@@ -32,7 +32,7 @@
       Workspace")
 
    ;; KLUDGE
-   :categories
+   (optional-key :categories)
    (describe [Any]
      "A listing of child App Categories under this App Category.
       <b>Note</b>: This will be a list of more categories like this one, but the documentation

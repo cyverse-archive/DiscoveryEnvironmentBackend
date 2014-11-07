@@ -13,7 +13,7 @@
     * [Creating an App for the Current User](#creating-an-app-for-the-current-user)
     * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
     * [Getting App Details](#getting-app-details)
-    * [Listing App Groups](#listing-app-groups)
+    * [Listing App Categories](#listing-app-categories)
     * [Exporting an Analysis](#exporting-an-analysis)
     * [Get a Tool by ID](#get-a-tool-by-id)
     * [Permanently Deleting an App](#permanently-deleting-an-app)
@@ -265,13 +265,17 @@ Here's an example of an Agave app listing:
 }
 ```
 
-## Listing App Groups
+## Listing App Categories
 
 Secured Endpoint: GET /apps/categories
 
 Delegates to metadactyl: GET /apps/categories
 
-This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Secured Endpoint: GET /admin/apps/categories
+
+Delegates to metadactyl: GET /admin/apps/categories
+
+These endpoints are passthroughs to the metadactyl endpoints using the same path.
 Please see the metadactyl documentation for more information.
 
 ## Exporting an Analysis

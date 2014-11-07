@@ -9,7 +9,9 @@
                                     get-app-category
                                     update-app-category]]
         [kameleon.uuids :only [uuidify]]
-        [metadactyl.app-listings :only [list-apps-in-group]]
+        [metadactyl.app-listings :only [get-visible-app-groups
+                                        format-trash-category
+                                        list-apps-in-group]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.config :only [workspace-public-id]]
@@ -119,3 +121,10 @@
         (decategorize-category category-id)
         (add-subgroup parent_id category-id))
       (list-apps-in-group category-id {}))))
+
+(defn get-admin-app-categories
+  "Lists public App Categories with the Trash Category"
+  [params]
+  (-> (get-visible-app-groups nil params)
+      (update-in [:categories] concat [(format-trash-category nil params)])
+      success-response))

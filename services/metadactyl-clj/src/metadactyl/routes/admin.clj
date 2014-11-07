@@ -5,6 +5,7 @@
         [metadactyl.conrad.admin-categories :only [add-category
                                                    delete-categories
                                                    delete-category
+                                                   get-admin-app-categories
                                                    update-category]]
         [metadactyl.metadata.reference-genomes :only [add-reference-genome
                                                       delete-reference-genome
@@ -103,6 +104,14 @@
           (ce/trap uri #(update-app (assoc body :id app-id)))))
 
 (defroutes* admin-categories
+  (GET* "/" [:as {uri :uri}]
+        :query [params CategoryListingParams]
+        :return AppCategoryListing
+        :summary "List App Categories"
+        :notes "This service is used by DE admins to obtain a list of public app categories along
+        with the 'Trash' virtual category."
+        (ce/trap uri #(get-admin-app-categories params)))
+
   (POST* "/" [:as {uri :uri}]
          :query [params SecuredQueryParams]
          :body [body (describe AppCategoryRequest "The details of the App Category to add.")]

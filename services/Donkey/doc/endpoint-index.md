@@ -2,6 +2,7 @@
 
 * [GET /](endpoints/misc.md#verifying-that-donkey-is-running)
 * [POST /admin/apps](endpoints/app-metadata.md#categorizing-apps)
+* [GET /admin/apps/categories](endpoints/app-metadata.md#listing-app-categories)
 * [POST /admin/apps/categories](endpoints/app-metadata.md#adding-categories)
 * [POST /admin/apps/categories/shredder](endpoints/app-metadata.md#deleting-categories)
 * [DELETE /admin/apps/categories/:uuid](endpoints/app-metadata.md#deleting-a-category-by-id)
@@ -34,7 +35,7 @@
 * [POST /apps](endpoints/app-metadata.md#creating-an-app-for-the-current-user)
 * [POST /apps/:app-id/publish](endpoints/app-metadata.md#submitting-an-app-for-public-use)
 * [POST /apps/arg-preview](endpoints/app-metadata.md#previewing-command-line-arguments)
-* [GET /apps/categories](endpoints/app-metadata.md#listing-app-groups)
+* [GET /apps/categories](endpoints/app-metadata.md#listing-app-categories)
 * [GET /apps/categories/{group-id}](endpoints/app-metadata.md#listing-apps-in-an-app-group)
 * [GET /apps/elements/{element-type}](endpoints/app-metadata.md#listing-app-elements)
 * [GET /apps/ids](endpoints/app-metadata.md#listing-app-identifiers)
