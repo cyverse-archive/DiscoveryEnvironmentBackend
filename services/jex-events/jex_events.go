@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strconv"
 
 	"github.com/streadway/amqp"
 )
@@ -22,7 +23,7 @@ func init() {
 
 // Configuration instance contain config values for jex-events.
 type Configuration struct {
-	AMQPURI, DBURI                                                        string
+	AMQPURI, DBURI, EventURL                                              string
 	ConsumerTag, HTTPListenPort                                           string
 	ExchangeName, ExchangeType, RoutingKey, QueueName, QueueBindingKey    string
 	ExchangeDurable, ExchangeAutodelete, ExchangeInternal, ExchangeNoWait bool
@@ -140,7 +141,7 @@ type ConnectionErrorChannel struct {
 
 // MsgHandler functions will accept msgs from a Delivery channel and report
 // error on the error channel.
-type MsgHandler func(<-chan amqp.Delivery, <-chan int, *Databaser)
+type MsgHandler func(<-chan amqp.Delivery, <-chan int, *Databaser, string)
 
 // Connect sets up a connection to an AMQP exchange
 func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan amqp.Delivery, error) {
@@ -217,7 +218,7 @@ func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan
 
 // SetupReconnection fires up a goroutine that listens for Close() errors and
 // reconnects to the AMQP server if they're encountered.
-func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, handler MsgHandler, quitHandler chan int, d *Databaser) {
+func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, handler MsgHandler, quitHandler chan int, d *Databaser, postURL string) {
 	//errors := p.connection.NotifyClose(make(chan *amqp.Error))
 	go func() {
 		var exitChan chan *amqp.Error
@@ -237,7 +238,7 @@ func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, 
 						log.Print("Error reconnecting to server, exiting.")
 						log.Print(err)
 					}
-					handler(deliveries, quitHandler, d)
+					handler(deliveries, quitHandler, d, postURL)
 					reconfig = true //
 				} else {
 					log.Println(exitError)
@@ -247,7 +248,7 @@ func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, 
 						log.Print("Error reconnecting to server, exiting.")
 						log.Print(err)
 					}
-					handler(deliveries, quitHandler, d)
+					handler(deliveries, quitHandler, d, postURL)
 					reconfig = false
 				}
 			}
@@ -257,14 +258,20 @@ func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, 
 
 // Event contains an event received from the AMQP broker and parsed from JSON.
 type Event struct {
-	Event       string
-	Hash        string
-	EventNumber string
-	ID          string
-	CondorID    string
-	Date        string
-	Time        string
-	Msg         string
+	Event        string
+	Hash         string
+	EventNumber  string
+	ID           string
+	CondorID     string
+	AppID        string
+	InvocationID string
+	User         string
+	Description  string
+	EventName    string
+	ExitCode     int
+	Date         string
+	Time         string
+	Msg          string
 }
 
 func (e *Event) String() string {
@@ -279,8 +286,91 @@ func (e *Event) String() string {
 	return retval
 }
 
+// IsFailure returns true if the event denotes a failed job.
+func (e *Event) IsFailure() bool {
+	switch e.EventNumber {
+	case "002":
+		return true
+	case "004":
+		return true
+	case "009":
+		return true
+	case "010":
+		return true
+	case "012":
+		return true
+	case "005": //Assume that Parse() has already been called.
+		return e.ExitCode != 0
+	default:
+		return false
+	}
+}
+
+const (
+	// EventCodeNotSet is the default exit code.
+	EventCodeNotSet = -9000
+)
+
+// setExitCode will parse out the exit code from the event text, if it's there.
+func (e *Event) setExitCode() {
+	r := regexp.MustCompile(`\(return value (.*)\)`)
+	matches := r.FindStringSubmatch(e.Event)
+	matchesLength := len(matches)
+	if matchesLength < 2 {
+		e.ExitCode = EventCodeNotSet
+	}
+	code, err := strconv.Atoi(matches[1])
+	if err != nil {
+		log.Printf("Error converting exit code to an integer: %s", matches[1])
+		e.ExitCode = EventCodeNotSet
+	}
+	e.ExitCode = code
+}
+
+// ExtractCondorID will return the condor ID in the string that's passed in.
+func (e *Event) setCondorID() {
+	r := regexp.MustCompile(`\(([0-9]+)\.[0-9]+\.[0-9]+\)`)
+	matches := r.FindStringSubmatch(e.ID)
+	matchesLength := len(matches)
+	if matchesLength < 2 {
+		e.CondorID = ""
+	}
+	e.CondorID = matches[1]
+}
+
+// Parse extracts info from an event string.
+func (e *Event) Parse() {
+	r := regexp.MustCompile("^([0-9]{3}) (\\([0-9]+(?:\\.[0-9]+){2}\\)) ([0-9/]+) ([0-9:]+) (.*)\\n")
+	matches := r.FindStringSubmatch(e.Event)
+	matchesLength := len(matches)
+	if matchesLength >= 2 {
+		e.EventNumber = matches[1]
+	}
+	if matchesLength >= 3 {
+		e.ID = matches[2]
+	}
+	if matchesLength >= 4 {
+		e.Date = matches[3]
+	}
+	if matchesLength >= 5 {
+		e.Time = matches[4]
+	}
+	if matchesLength >= 6 {
+		e.Msg = matches[5]
+	}
+	if e.ID != "" {
+		e.setCondorID()
+	}
+	if e.EventNumber == "005" { //This means that the job is in the Completed state.
+		e.setExitCode()
+	}
+}
+
 // EventHandler processes incoming event messages
-func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser) {
+func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser, postURL string) {
+	eventHandler := PostEventHandler{
+		PostURL: postURL,
+	}
 	for {
 		select {
 		case delivery := <-deliveries:
@@ -293,12 +383,25 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 				log.Print(string(body[:]))
 				continue
 			}
-			EventParser(&event)
+			event.Parse()
 			log.Println(event.String())
 			job, err := d.AddJob(event.CondorID)
 			if err != nil {
 				log.Printf("Error adding job: %s", err)
 				continue
+			}
+			job.ExitCode = event.ExitCode
+			job, err = d.UpdateJob(job) // Need to make sure the exit code gets stored.
+			if err != nil {
+				log.Printf("Error updating job")
+			}
+			event.CondorID = job.CondorID
+			event.InvocationID = job.InvocationID
+			event.AppID = job.AppID
+			event.User = job.Submitter
+			err = eventHandler.Route(&event)
+			if err != nil {
+				log.Printf("Error sending event upstream: %s", err)
 			}
 			rawEventID, err := d.AddCondorRawEvent(event.Event, job.ID)
 			if err != nil {
@@ -326,42 +429,6 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 	}
 }
 
-// ExtractCondorID will return the condor ID in the string that's passed in.
-func ExtractCondorID(id string) string {
-	r := regexp.MustCompile(`\(([0-9]+)\.[0-9]+\.[0-9]+\)`)
-	matches := r.FindStringSubmatch(id)
-	matchesLength := len(matches)
-	if matchesLength < 2 {
-		return ""
-	}
-	return matches[1]
-}
-
-// EventParser extracts info from an event string.
-func EventParser(event *Event) {
-	r := regexp.MustCompile("^([0-9]{3}) (\\([0-9]+(?:\\.[0-9]+){2}\\)) ([0-9/]+) ([0-9:]+) (.*)\\n")
-	matches := r.FindStringSubmatch(event.Event)
-	matchesLength := len(matches)
-	if matchesLength >= 2 {
-		event.EventNumber = matches[1]
-	}
-	if matchesLength >= 3 {
-		event.ID = matches[2]
-	}
-	if matchesLength >= 4 {
-		event.Date = matches[3]
-	}
-	if matchesLength >= 5 {
-		event.Time = matches[4]
-	}
-	if matchesLength >= 6 {
-		event.Msg = matches[5]
-	}
-	if event.ID != "" {
-		event.CondorID = ExtractCondorID(event.ID)
-	}
-}
-
 func main() {
 	if *cfgPath == "" {
 		fmt.Println("--config must be set.")
@@ -383,7 +450,7 @@ func main() {
 	connErrChan := make(chan ConnectionErrorChannel)
 	quitHandler := make(chan int)
 	consumer := NewAMQPConsumer(config)
-	consumer.SetupReconnection(connErrChan, EventHandler, quitHandler, databaser)
+	consumer.SetupReconnection(connErrChan, EventHandler, quitHandler, databaser, config.EventURL)
 	log.Print("Setting up HTTP")
 	SetupHTTP(config, databaser)
 	log.Print("Done setting up HTTP")
@@ -392,5 +459,5 @@ func main() {
 		log.Print(err)
 		os.Exit(-1)
 	}
-	EventHandler(deliveries, quitHandler, databaser)
+	EventHandler(deliveries, quitHandler, databaser, config.EventURL)
 }
