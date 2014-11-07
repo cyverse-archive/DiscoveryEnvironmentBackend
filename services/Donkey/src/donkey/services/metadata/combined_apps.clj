@@ -94,6 +94,26 @@
     (do (mu/assert-agave-enabled agave)
         (.getApp agave app-id))))
 
+(defn- prepare-pipeline-step
+  "Prepares a single step in a pipeline for submission to metadactyl. DE steps can be left as-is.
+   External steps need to have the task_id field moved to the external_app_id field."
+  [{app-type :app_type :as step}]
+  (if (= app-type "External")
+    (assoc (dissoc step :task_id) :external_app_id (:task_id step))
+    step))
+
+(defn create-pipeline
+  [agave pipeline]
+  (->> (update-in pipeline [:steps] (partial map prepare-pipeline-step))
+       (metadactyl/create-pipeline)
+       (aa/add-workflow-templates agave)))
+
+(defn update-pipeline
+  [agave app-id pipeline]
+  (->> (update-in pipeline [:steps] (partial map prepare-pipeline-step))
+       (metadactyl/update-pipeline app-id)
+       (aa/add-workflow-templates agave)))
+
 (defn- app-step-partitioner
   "Partitions app steps into units of execution. Each external app step has to run by itself.
    Consecutive DE app steps can be combined into a single step."

@@ -115,4 +115,4 @@
 
 (defn add-workflow-templates
   [agave workflow]
-  (update-in workflow [:templates] (partial concat (get-workflow-templates agave workflow))))
+  (update-in workflow [:tasks] (partial concat (get-workflow-templates agave workflow))))

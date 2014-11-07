@@ -9,7 +9,8 @@
         [metadactyl.util.conversions :only [remove-nil-vals]])
   (:require [metadactyl.persistence.app-metadata.delete :as delete]
             [metadactyl.persistence.app-metadata.relabel :as relabel]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [clojure.tools.logging :as log]))
 
 (def param-input-types #{"FileInput" "FolderInput" "MultiFileSelector"})
 (def param-output-types #{"FileOutput" "FolderOutput" "MultiFileOutput"})
@@ -168,9 +169,10 @@
 
 (defn- build-io-key
   [step de-app-key external-app-key value]
-  (if (nil? (:external_app_id step))
-    [de-app-key       (uuidify value)]
-    [external-app-key value]))
+  (let [stringify #(if (keyword? %) (name %) %)]
+    (if (= (:app_type step) "External")
+      [external-app-key (stringify value)]
+      [de-app-key       (uuidify value)])))
 
 (defn- io-mapping-builder
   [mapping-id mapping]

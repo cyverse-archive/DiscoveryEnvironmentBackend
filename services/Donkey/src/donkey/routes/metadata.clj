@@ -77,11 +77,11 @@
     (GET "/apps/elements/:element-type" [element-type]
          (get-workflow-elements element-type))
 
-    (POST "/apps/pipelines" [:as req]
-          (create-pipeline req))
+    (POST "/apps/pipelines" [:as {:keys [body]}]
+          (apps/create-pipeline body))
 
-    (PUT "/apps/pipelines/:app-id" [app-id :as req]
-         (update-pipeline req app-id))
+    (PUT "/apps/pipelines/:app-id" [app-id :as {:keys [body]}]
+         (apps/update-pipeline app-id body))
 
     (POST "/apps/pipelines/:app-id/copy" [app-id]
           (apps/copy-workflow app-id))

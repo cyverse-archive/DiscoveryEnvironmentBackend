@@ -145,6 +145,26 @@
       (:body)
       (service/decode-json)))
 
+(defn create-pipeline
+  [pipeline]
+  (-> (client/post (metadactyl-url "apps" "pipelines")
+                   {:query-params (secured-params)
+                    :content-type :json
+                    :body         (cheshire/encode pipeline)
+                    :as           :stream})
+      (:body)
+      (service/decode-json)))
+
+(defn update-pipeline
+  [app-id pipeline]
+  (-> (client/put (metadactyl-url "apps" "pipelines" app-id)
+                  {:query-params (secured-params)
+                   :content-type :json
+                   :body         (cheshire/encode pipeline)
+                   :as           :stream})
+      (:body)
+      (service/decode-json)))
+
 (defn submit-job
   [submission]
   (-> (client/post (metadactyl-url "analyses")

@@ -126,20 +126,6 @@
     (dorun (map #(dn/send-tool-notification %) (:tools json-obj))))
   (success-response))
 
-(defn create-pipeline
-  "This service will create a pipeline."
-  [req]
-  (let [url (metadactyl-url {} "apps" "pipelines")
-        req (metadactyl-request req)]
-    (forward-post url req)))
-
-(defn update-pipeline
-  "This service will update an existing pipeline."
-  [req app-id]
-  (let [url (metadactyl-url {} "apps" "pipelines" app-id)
-        req (metadactyl-request req)]
-    (forward-put url req)))
-
 (defn update-app-labels
   "This service updates the labels in a single-step app. Both vetted and unvetted apps can be
    modified using this service."

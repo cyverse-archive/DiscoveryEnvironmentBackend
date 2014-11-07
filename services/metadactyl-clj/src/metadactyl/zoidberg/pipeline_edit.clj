@@ -4,6 +4,7 @@
         [kameleon.core]
         [kameleon.entities]
         [kameleon.uuids :only [uuid]]
+        [medley.core :only [find-first]]
         [metadactyl.app-listings :only [get-tasks-with-file-params]]
         [metadactyl.persistence.app-metadata :only [add-app
                                                     add-mapping
@@ -18,7 +19,8 @@
                                       verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
         [metadactyl.zoidberg.app-edit :only [add-app-to-user-dev-category app-copy-name]])
-  (:require [metadactyl.util.service :as service]))
+  (:require [metadactyl.util.service :as service]
+            [clojure.tools.logging :as log]))
 
 (defn- add-app-type
   [step]
@@ -68,18 +70,29 @@
           (join [:input_output_mapping :map]
                 {:id :map.mapping_id})
           (fields :map.input
-                  :map.output)
+                  :map.external_input
+                  :map.output
+                  :map.external_output)
           (where {:source_step source
                   :target_step target})))
+
+(defn- find-first-key
+  [pred m ks]
+  (find-first pred ((apply juxt ks) m)))
+
+(defn- format-io-mapping
+  [m]
+  (let [first-defined (partial find-first-key (complement nil?))]
+    (vector (str (first-defined m [:input :external_input]))
+            (str (first-defined m [:output :external_output])))))
 
 (defn- format-mapping
   "Formats mapping fields for the client."
   [step-indexes {source-step-id :source_step target-step-id :target_step}]
-  (let [input-output-mappings (get-input-output-mappings source-step-id target-step-id)
-        input-output-reducer #(assoc %1 (:input %2) (:output %2))]
+  (let [input-output-mappings (get-input-output-mappings source-step-id target-step-id)]
     {:source_step (step-indexes source-step-id)
      :target_step (step-indexes target-step-id)
-     :map (reduce input-output-reducer {} input-output-mappings)}))
+     :map         (into {} (map format-io-mapping input-output-mappings))}))
 
 (defn- get-formatted-mapping
   "Formats a step's list of mapping IDs and step names to fields for the client."
@@ -127,7 +140,7 @@
     (service/success-response (format-workflow app))))
 
 (defn- add-app-mapping
-  [app-id steps {:keys [source_step target_step map]}]
+  [app-id steps {:keys [source_step target_step map] :as mapping}]
   (add-mapping {:app_id app-id
                 :source_step (nth steps source_step)
                 :target_step (nth steps target_step)
@@ -152,9 +165,19 @@
       (add-step app-id step-number (assoc step :task_id task-id)))
     (add-step app-id step-number step)))
 
+(defn- add-pipeline-steps
+  [app-id steps]
+  "Adds steps to a pipeline. The app type isn't stored in the database, but needs to be kept in
+   the list of steps so that external steps can be distinguished from DE steps. The two types of
+   steps normally can't be distinguished without examining the associated task."
+  (map-indexed (fn [step-number step]
+                 (assoc (add-pipeline-step app-id step-number step)
+                   :app_type (:app_type step)))
+               steps))
+
 (defn- add-app-steps-mappings
   [{app-id :id steps :steps mappings :mappings}]
-  (let [steps (map-indexed (partial add-pipeline-step app-id) steps)]
+  (let [steps (add-pipeline-steps app-id steps)]
     (dorun (map (partial add-app-mapping app-id steps) mappings))))
 
 (defn- add-pipeline-app

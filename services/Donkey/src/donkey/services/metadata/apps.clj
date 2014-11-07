@@ -110,6 +110,8 @@
   (listAppTasks [_ app-id])
   (editWorkflow [_ app-id])
   (copyWorkflow [_ app-id])
+  (createPipeline [_ pipeline])
+  (updatePipeline [_ app-id pipeline])
   (submitJob [_ submission])
   (countJobs [_ filter])
   (listJobs [_ limit offset sort-field sort-order filter])
@@ -161,6 +163,12 @@
 
   (copyWorkflow [_ app-id]
     (metadactyl/copy-workflow app-id))
+
+  (createPipeline [_ pipeline]
+    (metadactyl/create-pipeline pipeline))
+
+  (updatePipeline [_ app-id pipeline]
+    (metadactyl/update-pipeline app-id pipeline))
 
   (submitJob [_ submission]
     (da/submit-job submission))
@@ -257,6 +265,12 @@
 
   (copyWorkflow [_ app-id]
     (aa/add-workflow-templates agave-client (metadactyl/copy-workflow app-id)))
+
+  (createPipeline [_ pipeline]
+    (ca/create-pipeline agave-client pipeline))
+
+  (updatePipeline [_ app-id pipeline]
+    (ca/update-pipeline agave-client app-id pipeline))
 
   (submitJob [_ submission]
     (ca/submit-job agave-client submission))
@@ -589,3 +603,17 @@
   [app-id]
   (with-db db/de
     (service/success-response (.copyWorkflow (get-app-lister) app-id))))
+
+(defn create-pipeline
+  [body]
+  (with-db db/de
+    (-> (get-app-lister)
+        (.createPipeline (service/decode-json body))
+        (service/success-response))))
+
+(defn update-pipeline
+  [app-id body]
+  (with-db db/de
+    (-> (get-app-lister)
+        (.updatePipeline app-id (service/decode-json body))
+        (service/success-response))))
