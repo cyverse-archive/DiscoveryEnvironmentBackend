@@ -125,6 +125,7 @@
                                 :is_public
                                 :step_count
                                 :tool_count
+                                :external_app_count
                                 :task_count
                                 :deleted
                                 :disabled

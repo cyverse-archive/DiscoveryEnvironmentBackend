@@ -170,11 +170,15 @@
                       :user user_rating
                       :comment_id comment_id}))))
 
+(defn- app-can-run?
+  [{tool-count :tool_count external-app-count :external_app_count task-count :task_count}]
+  (= (+ tool-count external-app-count) task-count))
+
 (defn format-app-listing
   "Formats certain app fields into types more suitable for the client."
   [app]
-  (-> (assoc app :can_run (= (:task_count app) (:tool_count app)))
-      (dissoc :tool_count :task_count)
+  (-> (assoc app :can_run (app-can-run? app))
+      (dissoc :tool_count :task_count :external_app_count)
       (format-app-ratings)
       (format-app-pipeline-eligibility)
       (assoc :can_favor true :can_rate true :app_type "DE")
