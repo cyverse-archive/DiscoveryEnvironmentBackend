@@ -39,15 +39,15 @@
     (swaggered "app-categories"
       :description "App Category endpoints."
       (context "/apps/categories" [] app-category-routes/app-categories))
+    (swaggered "app-element-types"
+      :description "App Element endpoints."
+      (context "/apps/elements" [] app-element-routes/app-elements))
     (swaggered "apps"
       :description "App endpoints."
       (context "/apps" [] app-routes/apps))
     (swaggered "pipelines"
       :description "Pipeline endpoints."
       (context "/apps/pipelines" [] pipeline-routes/pipelines))
-    (swaggered "element-types"
-      :description "App Element endpoints."
-      (context "/apps/elements" [] app-element-routes/app-elements))
     (swaggered "analyses"
       :description "Analysis endpoints."
       (context "/analyses" [] analysis-routes/analyses))
