@@ -14,6 +14,7 @@
 (def de-job-type "DE")
 (def agave-job-type "Agave")
 
+(def pending-status "Pending")
 (def canceled-status "Canceled")
 (def failed-status "Failed")
 (def completed-status "Completed")
@@ -23,7 +24,8 @@
 (def completed-status-codes #{canceled-status failed-status completed-status})
 
 (def job-status-order
-  {submitted-status 1
+  {pending-status   0
+   submitted-status 1
    idle-status      2
    running-status   3
    completed-status 4

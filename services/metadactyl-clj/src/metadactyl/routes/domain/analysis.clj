@@ -112,7 +112,7 @@
    :username
    (describe String "The username of the user who submitted the analysis.")
 
-   :wiki_url
+   (optional-key :wiki_url)
    (describe String "A link to the app's documentation page.")})
 
 (defschema SubmissionResponse

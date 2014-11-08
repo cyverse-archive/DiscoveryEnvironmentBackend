@@ -165,7 +165,7 @@
   [job-id job-step]
   {:job-id          job-id
    :step-number     (:step_number job-step)
-   :status          "Pending"
+   :status          jp/pending-status
    :job-type        (:job_type job-step)
    :app-step-number (:app_step_number job-step)})
 

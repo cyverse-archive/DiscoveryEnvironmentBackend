@@ -13,7 +13,7 @@
 
 (defn- add-param-prefix
   [prefix param]
-  (if-not (string/blank? prefix)
+  (if-not (string/blank? (str prefix))
     (keyword (str prefix "_" (name param)))
     param))
 

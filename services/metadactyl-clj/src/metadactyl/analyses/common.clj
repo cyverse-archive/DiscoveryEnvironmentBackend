@@ -66,9 +66,16 @@
    :environment (.buildEnvironment request-builder step)
    :type        "condor"})
 
-(defn- load-steps
+(defn load-steps
   [app-id]
-  (select app_steps (where {:app_id app-id})))
+  (select [:app_steps :s]
+          (join [:tasks :t] {:s.task_id :t.id})
+          (fields [:s.id              :id]
+                  [:s.step            :step]
+                  [:s.task_id         :task_id]
+                  [:t.external_app_id :external_app_id])
+          (where {:s.app_id app-id})
+          (order :s.step)))
 
 (defn build-steps
   [request-builder app submission]
