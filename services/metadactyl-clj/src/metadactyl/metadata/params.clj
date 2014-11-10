@@ -65,6 +65,7 @@
               [:p.name          :name]
               [:p.label         :label]
               [:p.is_visible    :is_visible]
+              [:p.required      :required]
               [:p.omit_if_blank :omit_if_blank]
               [:p.ordering      :order]
               [:t.name          :type])))
