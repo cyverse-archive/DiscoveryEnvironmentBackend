@@ -5,8 +5,8 @@ then Donkey will respond with a standardized error message:
 
 ```json
 {
-    "success": false,
-    "reason": reason-for-error
+    "error_code": "ERR_UNCHECKED_EXCEPTION",
+    "message": reason-for-error
 }
 ```
 

@@ -15,7 +15,6 @@ __Response Body__:
 	    "donkey.app.environment-name": "de-2",
 	    "donkey.app.listen-port": "31325",
 	    <...>
-	    "success": true
 	}
 
 
@@ -39,8 +38,7 @@ __Response Body__:
 	    "iRODS": true,
 	    "jex": true,
 	    "metadactyl": true,
-	    "notificationagent": true,
-	    "success": true
+	    "notificationagent": true
 	}
 
 This check only checks to see if the services are responding to HTTP requests. It does not prove that the services are completely functional or configured correctly.

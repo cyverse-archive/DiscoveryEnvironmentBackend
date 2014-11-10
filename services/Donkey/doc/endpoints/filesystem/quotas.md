@@ -14,7 +14,6 @@ __Request Query Parameters__:
 __Response Body__:
 
     {
-        "status" : "success",
         "quotas" : [
             {
                 "zone" : "iplant",

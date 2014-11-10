@@ -180,8 +180,7 @@ $ curl -s "http://by-tor:8888/secured/apps/wc-osg-1.00u1/data-objects?proxyToken
             "type": "Output",
             "validators": []
         }
-    ],
-    "success": true
+    ]
 }
 
 ```
@@ -254,7 +253,6 @@ Here's an example of an Agave app listing:
     "name": "Word Count",
     "published_date": "1383351103584",
     "refrences": [],
-    "success": true,
     "suggested_groups": [
         {
             "id": "HPC",

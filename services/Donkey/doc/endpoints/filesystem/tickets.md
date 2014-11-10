@@ -26,7 +26,6 @@ __Request Body__:
 __Response Body__:
 
     {
-        "action" : "add-tickets",
         "user" : "<username>",
         "tickets" : [
             {

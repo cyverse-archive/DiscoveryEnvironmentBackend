@@ -28,7 +28,6 @@ __Response Body__:
 
 ```json
 {
-    "status": "success",
     "paths": [
         {
             "path": "/iplant/home/testuser/testfile",

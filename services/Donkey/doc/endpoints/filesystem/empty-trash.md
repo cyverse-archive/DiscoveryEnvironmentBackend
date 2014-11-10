@@ -13,8 +13,6 @@ __Request Query Parameters__:
 __Response__:
 
     {
-        "action" : "delete-trash",
-        "status" : "success",
         "trash" : "/path/to/user's/trash/dir/",
         "paths" : [
                 "/path/to/deleted/file",

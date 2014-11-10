@@ -66,8 +66,6 @@ The service will respond with a success or failure message per user and resource
                 {
                     "success": false,
                     "error": {
-                        "status": "failure",
-                        "action": "share",
                         "error_code": "ERR_DOES_NOT_EXIST",
                         "paths": [
                             "/path/to/shared/folder"
@@ -89,8 +87,6 @@ The service will respond with a success or failure message per user and resource
                 {
                     "success": false,
                     "error": {
-                        "status": "failure",
-                        "action": "share",
                         "error_code": "ERR_DOES_NOT_EXIST",
                         "paths": [
                             "/path/to/shared/folder"
@@ -151,8 +147,6 @@ The service will respond with a success or failure message per user:
                 {
                     "success": false,
                     "error": {
-                        "status": "failure",
-                        "action": "unshare",
                         "error_code": "ERR_DOES_NOT_EXIST",
                         "paths": [
                             "/path/to/shared/foo"

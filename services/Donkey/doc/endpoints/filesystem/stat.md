@@ -38,8 +38,7 @@ __Response Body__:
             "share-count": 1,
             "type": "file"
         }
-    },
-    "success": true
+    }
 }
 ```
 

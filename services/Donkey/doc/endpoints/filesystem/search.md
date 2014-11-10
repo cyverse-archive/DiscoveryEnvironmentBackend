@@ -151,7 +151,6 @@ $ curl \
     ],
     "execution-time" : 300,
     "offset": 1,
-    "success": true,
     "total": 7
 }
 ```
@@ -197,7 +196,6 @@ $ curl http://localhost:8888/secured/filesystem/index/status?proxyToken=$(cas-ti
     "lag": 11,
     "lastSyncTime": "2013-11-21T19:54:00.000Z",
     "size": 110432665,
-    "success": true,
     "syncProcessedCount": 0,
     "syncProcessingCount": 0,
     "syncState": "idle"
@@ -302,7 +300,6 @@ $ curl \
         }
     ],
     "offset": 1,
-    "success": true,
     "total": 7
 }
 ```
@@ -334,8 +331,5 @@ A successful response has no additional fields.
 ```
 $ curl -X POST http://localhost:8888/admin/filesystem/index?proxyToken=$(cas-ticket) \
 > | python -mjson.tool
-{
-    "success": true
-}
 ```
 

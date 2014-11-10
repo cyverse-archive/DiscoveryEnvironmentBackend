@@ -25,7 +25,6 @@ __Request Body__:
 __Response Body__:
 
     {
-        "status" : "success",
         "paths" : {
             "\/this\/is a\/path" : "\/this\/is_a\/path",
             "\/this\/is a\/path with spaces" : "\/this\/is_a\/path_with_spaces"

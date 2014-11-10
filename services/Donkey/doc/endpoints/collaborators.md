@@ -22,7 +22,6 @@ authenticated user. The response body is in the following format:
 
 ```json
 {
-    "success": true,
     "users": [
         {
             "email": "email-1",
@@ -40,7 +39,6 @@ Here's an example:
 ```
 $ curl -s "http://by-tor:8888/secured/collaborators?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
-    "success": true,
     "users": [
         {
             "email": "foo@iplantcollaborative.org",
@@ -101,9 +99,6 @@ $ curl -sd '
     ]
 }
 ' "http://by-tor:8888/secured/collaborators?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "success": true
-}
 ```
 
 ## Removing Collaborators
@@ -147,9 +142,6 @@ $ curl -sd '
     ]
 }
 ' "http://by-tor:8888/secured/remove-collaborators?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "success": true
-}
 ```
 
 ## Searching for Users

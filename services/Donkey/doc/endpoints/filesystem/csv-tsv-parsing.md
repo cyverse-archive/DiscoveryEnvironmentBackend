@@ -54,7 +54,6 @@ __Response Body__:
     "max-cols": "3",
     "number-pages": "3",
     "path": "/iplant/home/testuser/test-tsv",
-    "success": true,
     "user": "wregglej"
 }
 

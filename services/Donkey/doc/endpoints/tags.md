@@ -53,9 +53,8 @@ Upon success, the response body will be a JSON document with `"id"` and `"succes
 `"id"` field will contain the UUID the service assigned to the newly created tag. The `"success"`
 field will have the value `true`.
 
-Upon failure, a JSON document with `"success"` and `"reason"` fields will the returned. The
-`"success"` field will have the value `false`.  The `"reason"` field will provide a short, human
-readable explanation of the failure.
+Upon failure, a JSON document with a `"reason"` field will the returned. The `"reason"` field will
+provide a short, human readable explanation of the failure.
 
 ### Example
 
@@ -64,8 +63,7 @@ readable explanation of the failure.
 ```
 ```json
 {
-  "id"      : "f86700ac-df88-11e3-bf3b-6abdce5a08d1",
-  "success" : true
+  "id"      : "f86700ac-df88-11e3-bf3b-6abdce5a08d1"
 }
 ```
 
@@ -98,19 +96,12 @@ described in the following table.
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 | 413         | The `value` was too long or the request body was too large. |
 
-The response will be a JSON document with a `"success"` field indicating whether or not the request
-succeeded. If `"success"` is `false`, a `"reason"` field will exist as well, providing a short,
-human readable explanation of the failure.
+Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
 
 ### Example
 
 ```
 ? curl -XPATCH -d '{ "description" : "an example tag" }' localhost/secured/tags/user/f86700ac-df88-11e3-bf3b-6abdce5a08d1?proxyToken=fake-token
-```
-```json
-{
-  "success" : true
-}
 ```
 
 ## Delete a tag
@@ -133,17 +124,12 @@ ignored.
 | 200         | The tag was successfully deleted |
 | 404         | `tag-id` wasn't a UUID of a tag owned by the authenticated user |
 
-The response will be a JSON document with a `"success"` field indicating whether or not the request
-succeeded. If `"success"` is `false`, a `"reason"` field will exist as well, providing a short,
-human readable explanation of the failure.
+Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
 
 ### Example
 
 ```
 ? curl -X DELETE localhost/secured/tags/user/7cd71660-fe1a-11e3-89ea-23963e1ca21b?proxyToken=fake-token
-```
-```json
-{ "success" : true }
 ```
 
 ## Suggest a tag
@@ -175,13 +161,10 @@ Any body attached to the request will be ignored.
 | 400         | the `contains` parameter was missing or the `limit` parameter was set to a something other than a non-negative number. |
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 
-Upon success, the response body will be a JSON document with `"tags"` and `"success"` fields. The
-`"tags"` field will contain an array of the [tag](#tag) objects whose values contain the fragment
-from the request. The `"success"` field will have the value `true`.
+Upon success, the response body will be a JSON document with a `"tags"` field which will contain an
+array of the [tag](#tag) objects whose values contain the fragment from the request.
 
-Upon failure, a JSON document with `"success"` and `"reason"` fields will the returned. The
-`"success"` field will have the value `false`.  The `"reason"` field will provide a short, human
-readable explanation of the failure.
+Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
 
 ### Example
 
@@ -190,7 +173,6 @@ curl "localhost/secured/tags/suggestions?proxyToken=fake&contains=a"
 ```
 ```json
 {
-  "success" : true,
   "tags"    : [
     {
       "description" : "",
@@ -236,9 +218,7 @@ detached.
 | 404         | The `{entry-id}` UUID doesn't belong to a known file or folder or the file or folder isn't readable by the authenticated user. |
 
 
-The response will be a JSON document with a `"success"` field indicating whether or not the request
-succeeded. If `"success"` is `false`, a `"reason"` field will exist as well, providing a short,
-human readable explanation of the failure.
+Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
 
 ### Example
 
@@ -250,11 +230,6 @@ human readable explanation of the failure.
         "0e7a35ac-df8a-11e3-bfa5-6abdce5a08d5"
       ]
     }' "localhost/secured/filesystem/entry/f86700ac-df88-11e3-bf3b-6abdce5a08d5/tags?proxyToken=fake-token&type=attach"
-```
-```json
-{
-  "success" : true
-}
 ```
 
 ## Listing attached tags
@@ -282,12 +257,9 @@ Any body attached to the request will be ignored.
 
 Upon success, the response body will be a JSON document (media type `application/json`) that
 contains a `tags` field holding an array of [tag](#tag) objects. These are the tags that are
-attached to the file or folder with id `{entry-id}`. There will be an additional field `success`
-with the value `true`.
+attached to the file or folder with id `{entry-id}`.
 
-Upon failure, a JSON document with `success` and `reason` fields will the returned. The `success`
-field will have the value `false`.  The `reason` field will provide a short, human readable
-explanation of the failure.
+Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
 
 ### Example
 
@@ -296,7 +268,6 @@ explanation of the failure.
 ```
 ```json
 {
-  "success" : true,
   "tags"    : [
     {
       "description" : "",

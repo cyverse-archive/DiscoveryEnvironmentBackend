@@ -107,19 +107,12 @@ Any body attached to the request will be ignored.
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 | 404         | The `{favorite}` UUID doesn't belong to a known file or folder or the file or folder isn't readable by the authenticated user. |
 
-The response will be a JSON document with a `"success"` field indicating whether or not the request
-succeeded. If `"success"` is `false`, a `"reason"` field will exist as well, providing a short,
-human readable explanation of the failure.
+Error responses may contain a `"reason"` field, providing a short, human readable explanation of the failure.
 
 ### Example
 
 ```
 ? curl -XPUT localhost/secured/favorites/filesystem/f86700ac-df88-11e3-bf3b-6abdce5a08d1?proxyToken=fake-token
-```
-```json
-{
-  "success" : true
-}
 ```
 
 ## Removing a Data Resource from Being a Favorite
@@ -145,19 +138,12 @@ Any body attached to the request will be ignored.
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 | 404         | The file or folder corresponding to the `favorite` UUID wasn't marked as a favorite. |
 
-The response will be a JSON document with a `"success"` field indicating whether or not the request
-succeeded. If `"success"` is `false`, a `"reason"` field will exist as well, providing a short,
-human readable explanation of the failure.
+Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
 
 ### Example
 
 ```
 ? curl -XDELETE localhost/secured/favorites/filesystem/f86700ac-df88-11e3-bf3b-6abdce5a08d1?proxyToken=fake-token
-```
-```json
-{
-  "success" : true
-}
 ```
 
 ### Listing Stat Info for Favorite Data
@@ -193,12 +179,9 @@ Any body attached to the request will be ignored.
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 
 Upon success, the response body will be a [data collection](#favorite-data-collection) JSON document
-containing the stat information of the favorite files and folders with an additional field `success`
-with the value `true`.
+containing the stat information of the favorite files and folders.
 
-Upon failure, a JSON document with `"success"` and `"reason"` fields will the returned. The
-`"success"` field will have the value `false`.  The `"reason"` field will provide a short, human
-readable explanation of the failure.
+Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
 
 ### Example
 
@@ -226,8 +209,7 @@ readable explanation of the failure.
             }
         ],
         "total": 3
-    },
-    "success": true
+    }
 }
 ```
 
@@ -257,11 +239,9 @@ UUIDs for the files and folders to be filtered.
 
 Upon success, the response body will be a [data id collection](#data-id-collection) JSON document
 containing the UUIDs from the request body that correspond to favorite files and folders of the
-user. There will be an additional field `"success"` with the value `true`.
+user.
 
-Upon failure, a JSON document with `"success"` and `"reason"` fields will the returned. The
-`"success"` field will have the value `false`.  The `"reason"` field will provide a short, human
-readable explanation of the failure.
+Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
 
 ### Example
 
@@ -278,7 +258,6 @@ readable explanation of the failure.
 {
   "filesystem" : [
     "f86700ac-df88-11e3-bf3b-6abdce5a08d1"
-  ],
-  "success"    : true
+  ]
 }
 ```

@@ -23,8 +23,7 @@ __Response__:
 
     {
         "source":"/tempZone/home/wregglej/test3",
-        "dest":"/tempZone/home/wregglej/test2",
-        "status":"success"
+        "dest":"/tempZone/home/wregglej/test2"
     }
 
 

@@ -697,7 +697,6 @@ $ curl -sX PATCH "http://by-tor:8888/secured/analysis/2725F72B-2EC9-4FB8-BF72-05
     "job_type_id": 1,
     "start_date": "2014-05-10T04:02:58Z",
     "status": "Completed",
-    "success": true,
     "user_id": 2
 }
 ```
@@ -735,8 +734,7 @@ with the job identifier. Here's an example of a successful service call:
 ```
 $ curl -X DELETE -s "http://by-tor:8888/secured/stop-analysis/21dada70-acc3-4967-9c3f-73133e56724a?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
-    "id": "21dada70-acc3-4967-9c3f-73133e56724a",
-    "success": true
+    "id": "21dada70-acc3-4967-9c3f-73133e56724a"
 }
 ```
 
@@ -746,7 +744,6 @@ Here's an example of an unsuccessful service call:
 $ curl -X DELETE -s "http://by-tor:8888/secured/stop-analysis/21dada70-acc3-4967-9c3f-73133e56724a?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "error_code": "ERR_BAD_REQUEST",
-    "reason": "job, 21dada70-acc3-4967-9c3f-73133e56724a, is already completed or canceled",
-    "success": false
+    "reason": "job, 21dada70-acc3-4967-9c3f-73133e56724a, is already completed or canceled"
 }
 ```

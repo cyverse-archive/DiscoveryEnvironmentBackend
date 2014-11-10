@@ -55,10 +55,8 @@ Because of this, the `ip-address` parameter must be passed to this service in ad
 ```json
 $ curl "http://by-tor:8888/secured/bootstrap?proxyToken=$(cas-ticket)&ip-address=127.0.0.1" | python -mjson.tool
 {
-    "action": "bootstrap",
     "loginTime": "1374190755304",
     "newWorkspace": false,
-    "status": "success",
     "workspaceId": "4",
     "username": "snow-dog",
     "email": "sd@example.org",
@@ -96,11 +94,10 @@ Here's an example:
 
 ```
 $ curl -s "http://by-tor:8888/secured/logout?proxyToken=$(cas-ticket)&ip-address=127.0.0.1&login-time=1374190755304" | python -mjson.tool
-{
-    "action": "logout",
-    "status": "success"
-}
 ```
+
+Check the HTTP status of the response to tell if it succeeded.
+It should return a status in the 200 range.
 
 ## Saving User Session Data
 
@@ -185,8 +182,7 @@ $ curl -sd '{"appsKBShortcut":"A","rememberLastPath":true,"closeKBShortcut":"Q",
             "id": "/iplant/home/wregglej/analyses",
             "path": "/iplant/home/wregglej/analyses"
         }
-    },
-    "success": true
+    }
 }
 ```
 
@@ -278,9 +274,6 @@ Example:
 
 ```
 $ curl -XDELETE -s "http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)"
-{
-    "success" : true
-}
 ```
 
 ## Determining a User's Default Output Directory
@@ -324,8 +317,7 @@ Here's an example:
 ```
 $ curl -s "http://by-tor:8888/secured/default-output-dir?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
-    "path": "/iplant/home/ipctest/analyses",
-    "success": true
+    "path": "/iplant/home/ipctest/analyses"
 }
 ```
 
@@ -345,8 +337,7 @@ $ curl -sd '
     "path":"foon"
 }' "http://by-tor:8888/secured/default-output-dir?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
-    "path": "/iplant/home/ipctest/foon",
-    "success": true
+    "path": "/iplant/home/ipctest/foon"
 }
 ```
 
@@ -357,8 +348,7 @@ $ curl -sd '
 }' "http://by-tor:8888/secured/default-output-dir?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
     "arg": "path",
-    "code": "MISSING-REQUIRED-ARGUMENT",
-    "success": false
+    "code": "MISSING-REQUIRED-ARGUMENT"
 }
 ```
 
@@ -398,10 +388,7 @@ $ curl -XPUT -s "http://by-tor:8888/secured/feedback?proxyToken=$(cas-ticket)" -
     "What is the circumference of the Earth?": "Roughly 25000 miles.",
     "What are your favorite programming languages?": [ "Clojure", "Scala", "Perl" ]
 }
-' | python -mjson.tool
-{
-    "success": true
-}
+'
 ```
 
 ## Saved Searches
@@ -435,7 +422,6 @@ Response body:
 
 ```json
 {
-        "success" : true,
         "saved_searches" : {"foo":"bar"}
 }
 ```
@@ -444,7 +430,7 @@ Possible error codes: ERR_BAD_REQUEST, ERR_NOT_A_USER, ERR_UNCHECKED_EXCEPTION
 
 If you pass up invalid JSON, you'll get an error like the following:
 
-   {"success":false,"reason":"Cannot JSON encode object of class: class org.eclipse.jetty.server.HttpInput: org.eclipse.jetty.server.HttpInput@1cbeb264"}
+   {"reason":"Cannot JSON encode object of class: class org.eclipse.jetty.server.HttpInput: org.eclipse.jetty.server.HttpInput@1cbeb264"}
 
 ### Deleting saved searches
 
@@ -453,9 +439,3 @@ Secured endpoint : DELETE /secured/saved-searches
 Curl example:
 
      curl -X DELETE http://localhost:31325/secured/saved-searches?proxyToken=not-real
-
-You should get a response body back like the following:
-
-```json
-{"success":true}
-```

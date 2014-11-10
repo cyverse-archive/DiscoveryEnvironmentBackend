@@ -17,8 +17,6 @@ consists of a JSON object listing the paths to the TREE urls:
 
 ```json
 {
-    "action": "tree_manifest",
-    "success": true,
     "tree-urls": [
         {
             "label": "tree-label-1",
@@ -43,8 +41,6 @@ Here's an example of a successful call:
 ```
 $ curl -s --data-binary @Aquilegia.nex http://by-tor:8888/tree-viewer-urls | python -mjson.tool
 {
-    "action": "tree_manifest",
-    "success": true,
     "tree-urls": [
         {
             "label": "anthocyanin gene expression - ultrametric",
@@ -74,8 +70,6 @@ service call is successful then the response body will look something like this:
 
 ```json
 {
-    "action": "tree_manifest",
-    "success": true,
     "tree-urls": [
         {
             "label": tree-label-1,
@@ -102,8 +96,6 @@ Here's an example of a successful service call:
 ```
 $ curl -s "http://by-tor:8888/secured/tree-viewer-urls?proxyToken=$(cas-ticket)&path=/iplant/home/nobody/sample1.newick" | python -mjson.tool
 {
-    "action": "tree_manifest",
-    "success": true,
     "tree-urls": [
         {
             "label": "tree_0",

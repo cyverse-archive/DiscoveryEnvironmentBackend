@@ -25,7 +25,6 @@ __Request Body__:
 __Response__:
 
     {
-        "status" : "success",
         "paths" : {
             "\/this\/is\/a\/path\/" : false,
             "\/this\/is another\/path" : true,

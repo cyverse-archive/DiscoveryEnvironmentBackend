@@ -19,7 +19,6 @@ For example:
 
 ```json
 {
-    "success": true,
     "id": "/tempZone/home/rods/test3",
     "path": "/tempZone/home/rods/test3",
     "label": "test3",

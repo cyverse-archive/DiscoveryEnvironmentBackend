@@ -17,7 +17,6 @@ __Request Query Parameters__:
 __Response Body__:
 
     {
-        "status" : "success",
         "groups" : ["group1", "group2"]
     }
 

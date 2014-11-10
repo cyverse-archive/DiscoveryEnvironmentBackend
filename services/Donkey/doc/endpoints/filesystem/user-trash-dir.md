@@ -12,7 +12,6 @@ __Request Query Parameters__:
 __Response Body__:
 
     {
-        "status" : "success",
         "id" : "/root/iplant/trash/home/proxy-user/johnworth",
         "path" : "/iplant/trash/home/proxy-user/johnworth"
     }

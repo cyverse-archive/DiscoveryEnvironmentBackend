@@ -45,13 +45,10 @@ field. The user's comment should be the value of this field.
 | 404         | `entry-id` didn't correspond to an existing file or folder, or is not accessible by the user |
 | 413         | The request body is too large |
 
-Upon success, the response body will be a JSON document (media type `application/json`) with two
-fields. The `comment` field will contain the corresponding [comment](#comment) object, and the
-`success` field will have the value `true`.
+Upon success, the response body will be a JSON document (media type `application/json`) with a
+`comment` field that contains the corresponding [comment](#comment) object.
 
-Upon failure, a JSON document with `success` and `reason` fields will the returned. The `success`
-field will have the value `false`.  The `reason` field will provide a short, human readable
-explanation of the failure.
+Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
 
 ### Example
 
@@ -66,8 +63,7 @@ explanation of the failure.
     "post_time" : 1403093431927,
     "retracted" : false,
     "comment"   : "That was interesting."
-  },
-  "success" : true
+  }
 }
 ```
 
@@ -94,13 +90,11 @@ Any attached request body will be ignored.
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 | 404         | `entry-id` didn't correspond to an existing file or folder, or is not accessible by the user |
 
-Upon success, the response body will be a JSON document (media type `application/json`) with two
-fields. The `comments` field will contain an array of [comment](#comment) objects, and the `success`
-field will have the value `true`.
+Upon success, the response body will be a JSON document (media type `application/json`) with a
+`comments` field containing an array of [comment](#comment) objects.
 
-Upon failure, a JSON document with `success` and `reason` fields will the returned. The `success`
-field will have the value `false`.  The `reason` field will provide a short, human readable
-explanation of the failure.
+Upon failure, a JSON document with a `reason` field will the returned. The `reason` field will
+provide a short, human readable explanation of the failure.
 
 ### Example
 
@@ -124,8 +118,7 @@ explanation of the failure.
       "retracted" : false,
       "comment"   : "No it wasn't."
     }
-  ],
-  "success" : true
+  ]
 }
 ```
 
@@ -160,9 +153,7 @@ Any body attached to the request will be ignored.
 | 404         | `entry-id` doesn't exist or isn't accessible by the user, or `comment-id` doesn't exist.
 | 409         | One of the query parameters was passed more than once with different values. |
 
-The response will be a JSON document with a `success` field indicating whether or not the request
-succeeded. If `success` is `false`, a `reason` field will exist as well, providing a short, human
-readable explanation of the failure.
+Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
 
 #### 403
 
@@ -174,7 +165,4 @@ if the comment wasn't originally retracted by the user.
 
 ```
 curl -X PATCH "localhost/secured/filesystem/f86700ac-df88-11e3-bf3b-6abdce5a08d5/comments/79a6a1f0-0745-21e3-c125-73dece2a6989?proxyToken=fake-token&retracted=true"
-```
-```json
-{ "success" : true }
 ```

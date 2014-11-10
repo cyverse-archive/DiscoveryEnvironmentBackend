@@ -24,8 +24,6 @@ __Request Body__:
 __Response Body__:
 
     {
-        "action":"exists",
-        "status":"success",
         "paths":{
             "/iplant/home/wregglej/pom.xml2":false,
             "/iplant/home/wregglej/pom.xml":false

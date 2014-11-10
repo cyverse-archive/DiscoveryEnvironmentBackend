@@ -23,7 +23,6 @@ __Request Body__:
 __Response Body__:
 
     {
-        "status" : "success",
         "restored" : {
             "/iplant/trash/home/proxy-user/johnworth/foo.fq" :  {
                 "restored-path" : /iplant/home/johnworth/foo.fq",
@@ -67,7 +66,6 @@ __Request Body__:
 __Response__:
 
     {
-        "success" : true,
         "restored" : {
             "/iplant/trash/home/proxy-user/johnworth/foo.fq" :  {
                 "restored-path" : /iplant/home/johnworth/foo.fq",
@@ -83,7 +81,6 @@ __Response__:
 __Example ERR_TOO_MANY_PATHS Error Response__:
 
     {
-        "success": false,
         "error_code": "ERR_TOO_MANY_PATHS",
         "count": 250,
         "limit": 100

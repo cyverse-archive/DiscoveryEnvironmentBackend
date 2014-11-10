@@ -31,8 +31,7 @@ __Response__:
         "dest":"/tempZone/home/rods/test",
         "paths":[
             "/tempZone/home/rods/test1"
-        ],
-        "status" : "success"
+        ]
     }
 
 
@@ -73,14 +72,12 @@ __Response__:
         "paths":[
             "/tempZone/home/rods/test1/test2",
             "/tempZone/home/rods/test1/test3"
-        ],
-        "status" : "success"
+        ]
     }
 
 __Example ERR_TOO_MANY_PATHS Error Response__:
 
     {
-        "success": false,
         "error_code": "ERR_TOO_MANY_PATHS",
         "count": 250,
         "limit": 100

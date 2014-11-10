@@ -16,8 +16,6 @@ __Request Query Parameters__:
 __Response Body__:
 
     {
-        "action":"upload",
-        "status":"success",
         "data": {
                     "user":"muahaha",
                     "password":"c5dbff21fa123d5c726f27cff8279d70",

@@ -345,7 +345,6 @@ $ curl -sd '
 }
 ' "http://by-tor:8888/secured/notifications/seen?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
-    "success": true,
     "count": 0
 }
 ```
@@ -372,7 +371,6 @@ that are still marked as unseen. Here's an example:
 ```
 $ curl -sd '{}' "http://by-tor:8888/secured/notifications/mark-all-seen?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
-    "success": true,
     "count": 0
 }
 ```
@@ -410,10 +408,7 @@ $ curl -sd '
         "C15763CF-A5C9-48F5-BE4F-9FB3CB1897EB"
     ]
 }
-' "http://by-tor:8888/secured/notifications/delete?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "success": true
-}
+' "http://by-tor:8888/secured/notifications/delete?proxyToken=$(cas-ticket)"
 ```
 
 Note that the UUIDs provided in the request body must be obtained from the
@@ -437,7 +432,6 @@ that are still marked as unseen. Here's an example:
 ```
 $ curl -X DELETE -s "http://by-tor:8888/secured/notifications/delete-all?proxyToken=$(cas-ticket)" | python -mjson.tool
 {
-    "success": true,
     "count": 0
 }
 ```

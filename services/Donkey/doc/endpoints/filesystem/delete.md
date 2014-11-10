@@ -25,9 +25,7 @@ __Request Body__:
 __Response__:
 
     {
-        "action":"delete-dirs",
         "paths":["/tempZone/home/rods/test2"]
-        "status" : "success"
     }
 
 __Curl Command__:
@@ -64,14 +62,12 @@ __Response__:
         "paths":[
             "/tempZone/home/rods/test/test1",
             "/tempZone/home/rods/test/test2"
-        ],
-        "success" : true
+        ]
     }
 
 __Example ERR_TOO_MANY_PATHS Error Response__:
 
     {
-        "success": false,
         "error_code": "ERR_TOO_MANY_PATHS",
         "count": 250,
         "limit": 100

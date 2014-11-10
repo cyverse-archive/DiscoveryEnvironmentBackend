@@ -4,7 +4,6 @@ Error Codes
 When it encounters an error, filesystem will generally return a JSON object in the form:
 
     {
-        "status" : "failure",
         "error_code" : "ERR_CODE"
     }
 

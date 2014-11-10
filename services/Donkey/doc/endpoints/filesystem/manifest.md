@@ -15,7 +15,6 @@ __Request Query Parameters__:
 __Response Body__:
 
     {
-        "status" : "success",
         "content-type" : "text/plain",
         "preview":"file\/preview?user=johnw&path=\/iplant\/home\/johnw\/LICENSE.txt",
         "urls" : [],

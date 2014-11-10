@@ -22,7 +22,6 @@ __Request Body__:
 __Response__:
 
     {
-        "status"     : "success",
         "path"       : "/iplant/home/wregglej/testfile",
         "user"       : "wregglej",
         "start"      : "20",

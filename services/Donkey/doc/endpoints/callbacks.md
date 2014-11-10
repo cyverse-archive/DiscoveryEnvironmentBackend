@@ -48,9 +48,6 @@ $ curl -sd '{
     "user": "snow-dog"
 }
 ' http://by-tor:8888/callbacks/notification | python -mjson.tool
-{
-    "success": true
-}
 ```
 
 This service currently ignores any notifications that are not job status update
@@ -173,7 +170,6 @@ Upon success, the response to this service is in the following format:
 
 ```json
 {
-    "status": "success",
     "state_info": "{arbitrary-state-information}"
 }
 ```

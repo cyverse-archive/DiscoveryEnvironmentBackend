@@ -30,7 +30,6 @@ __Request Body__:
 __Response__:
 
     {
-        "status" : "success",
         "path"   : "\/iplant\/home\/johnw\/LICENSE.txt",
         "user"   : "johnw"
     }
@@ -87,7 +86,6 @@ Both "add" and "delete" lists must be present even if they are empty.
 __Response__:
 
     {
-        "status" : "success",
         "path"   : "\/iplant\/home\/wregglej\/LICENSE.txt",
         "user"   :" wregglej"
     }
@@ -113,7 +111,6 @@ __Request Query Parameters__:
 __Response__:
 
     {
-        "status": "success",
         "metadata": [
             {
                  "attr": "avu_name",
@@ -144,7 +141,6 @@ __Request Query Parameters__:
 __Response__:
 
     {
-        "status":"success",
         "path":"\/iplant\/home\/johnw\/LICENSE.txt",
         "user":"johnw"
     }
@@ -168,8 +164,7 @@ __Response__:
                 "id": "59bd3d26-34d5-4e75-99f5-840a20089caf",
                 "name": "iDS Genome Sequences"
             }
-        ],
-        "success": true
+        ]
     }
 
 __Curl Command__:
@@ -200,8 +195,7 @@ __Response__:
             ...
         ],
         "id": "59bd3d26-34d5-4e75-99f5-840a20089caf",
-        "name": "iDS Genome Sequences",
-        "success": true
+        "name": "iDS Genome Sequences"
     }
 
 __Curl Command__:
@@ -223,7 +217,6 @@ __Response__:
         "id": "33e3e3d8-cd48-4572-8b16-89207b1609ec",
         "name": "project",
         "required": true,
-        "success": true,
         "synonyms": [],
         "type": "String"
     }
@@ -244,7 +237,6 @@ __Response__:
 
 ```json
 {
-    "success": true,
     "data_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
     "templates": [
         {
@@ -309,7 +301,6 @@ __Response__:
 
 ```json
 {
-    "success": true,
     "data_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
     "user": "ipctest",
     "template_id": "40ac191f-bb36-4f4e-85fb-8b50abec8e10",
@@ -399,7 +390,6 @@ __Response__:
 
 ```json
 {
-    "success": true,
     "data_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
     "template_id": "40ac191f-bb36-4f4e-85fb-8b50abec8e10",
     "avus": [
@@ -460,12 +450,6 @@ __HTTP Method__: DELETE
 
 __Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER
 
-__Response__:
-
-```json
-{"success":true}
-```
-
 __Curl Command__:
 
     curl -X DELETE "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10?proxyToken=notReal"
@@ -477,12 +461,6 @@ __URL Path__: /secured/filesystem/:data-id/template-avus/:template-id/:avu-id
 __HTTP Method__: DELETE
 
 __Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER
-
-__Response__:
-
-```json
-{"success":true}
-```
 
 __Curl Command__:
 

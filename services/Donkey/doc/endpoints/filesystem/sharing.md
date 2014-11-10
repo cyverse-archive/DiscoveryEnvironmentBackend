@@ -30,7 +30,6 @@ __Response Body__:
 
 ```json
 {
-    "status": "success",
     "user": ["users shared with"],
     "path": ["the paths that were shared"],
     "permission": "write",
@@ -81,7 +80,6 @@ __Response Body__:
 
 ```json
 {
-    "status": "success",
     "path": ["/path/to/shared/file"],
     "user": ["shared-with-user"],
     "skipped": [
@@ -122,7 +120,6 @@ __Response Body__:
 
 ```json
 {
-    "status" : "success",
     "paths" : {
       "/path/to/a/file" : "http://URL-to-file/"
     },

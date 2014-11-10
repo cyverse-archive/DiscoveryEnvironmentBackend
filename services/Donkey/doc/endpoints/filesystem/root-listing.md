@@ -16,8 +16,6 @@ __Response Body__:
 
 ```json
 {
-    "action": "root",
-    "status": "success",
     "roots": [
         {
             "date-modified": "1340918988000",

@@ -66,7 +66,6 @@ __Response Body__:
     "isFavorite" : false,
     "filter": true,
     "permission": "own"
-    "success": true
     }
 
 __Curl Command__:
@@ -178,7 +177,6 @@ __Response Body__:
         "label": "wregglej",
         "isFavorite" : false,
         "permission": "own",
-        "success": true,
         "total" : 218
     }
 

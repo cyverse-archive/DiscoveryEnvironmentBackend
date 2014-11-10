@@ -25,7 +25,6 @@ __Request Body__:
 __Response Body__:
 
     {
-        "success": true,
         "coge_genome_url": "http://bit.ly/CoGeSample"
     }
 

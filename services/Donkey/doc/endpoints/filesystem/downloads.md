@@ -21,7 +21,6 @@ __Request Body__:
 __Response Body__:
 
     {
-        "status":"success",
         "data": {
                     "user":"muahaha",
                     "password":"cc181a5a97635c7b45a3b2b828f964fe",
@@ -63,7 +62,6 @@ __Request Body__:
 __Response Body__:
 
     {
-        "status":"success",
         "data": {
                     "user":"tester",
                     "password":"cc181a5a97635c7b45a3b2b828f964fe",

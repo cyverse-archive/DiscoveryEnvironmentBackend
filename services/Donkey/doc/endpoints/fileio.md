@@ -11,8 +11,7 @@ For all other errors, you should receive a 500 HTTP status code and a JSON body 
 
 ```json
     {
-        "error_code" : "<Scruffian error code>",
-        "status" : "failure"
+        "error_code" : "<Scruffian error code>"
     }
 ```
 
@@ -73,7 +72,6 @@ A success will return JSON like this:
 
 ```json
 {
-    "success": true,
     "file": {
         "id": "<path to the file>",
         "path": "<path to the file>",
@@ -128,8 +126,6 @@ __Response Body__:
 On success you should get JSON that looks like this:
 
     {
-        "status" : "success",
-        "action" : "url-upload",
         "msg" : "Upload scheduled.",
         "url" : "<URL>",
         "label" : "<URL base filename>",
@@ -139,8 +135,6 @@ On success you should get JSON that looks like this:
 On on error, you'll either get a stacktrace or JSON that looks like this:
 
     {
-        "status" : "failure",
-        "action" : "url-upload",
         "msg" : "<JSON passed in through the request>",
         "error_code" : "ERR_REQUEST_FAILED"
     }
@@ -148,8 +142,6 @@ On on error, you'll either get a stacktrace or JSON that looks like this:
 If the URL passed in is incorrect, then the error message will look like this:
 
     {
-        "status" : "failure",
-        "action" : "url-upload",
         "error_code" : "ERR_INVALID_URL",
         "url" : "<URL Passed in>"
     }
@@ -194,7 +186,6 @@ __Response Body__:
 
 ```json
 {
-    "success": true,
     "file": {
         "id": "<path to the file>",
         "path": "<path to the file>",
@@ -240,7 +231,6 @@ __Response Body__:
 
 ```json
 {
-    "success": true,
     "file": {
         "id": "<path to the file>",
         "path": "<path to the file>",
