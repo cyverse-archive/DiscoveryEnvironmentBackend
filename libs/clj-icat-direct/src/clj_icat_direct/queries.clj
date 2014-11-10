@@ -3,46 +3,87 @@
   (:import  [clojure.lang ISeq]))
 
 
-(defn- get-folder-like-clause
-  "Returns a LIKE clause for folder paths in the count-filtered-items-in-folder query."
-  []
-  "c.coll_name LIKE ?")
-
-(defn- get-folder-path-clause
-  "Returns an equals clause for folder paths in the count-filtered-items-in-folder query."
-  []
-  "c.coll_name = ?")
-
-(defn get-filtered-paths-where-clause
-  "Returns a LIKE clause for folder paths in the count-filtered-items-in-folder query."
-  [filter-files filtered-paths]
-  (let [clauses (concat (repeat (count filter-files) (get-folder-like-clause))
-                        (repeat (count filtered-paths) (get-folder-path-clause)))]
-    (if (empty? clauses)
-      "FALSE"
-      (string/join " OR " clauses))))
-
-
-(defn filter-files->query-args
-  "Converts the list of filter-files for use as arguments in the count-filtered-items-in-folder
-   query."
-  [filter-files]
-  (map (partial str "%/") filter-files))
-
-(defn filter-chars->sql-char-class
-  "Returns a regex character class set for use in the count-filtered-items-in-folder query
-   using the given characters."
+(defn- filter-chars->sql-char-class
   [filter-chars]
-  (if (empty? filter-chars)
-    "^$"
-    (str "["
-         (string/replace filter-chars
-                         #"'|\[|\]|\\"
-                         {"\\" "\\\\"
-                          "'" "\\'"
-                          "[" "\\["
-                          "]" "\\]"})
-         "]")))
+  (let [filter-chars (string/replace filter-chars #"'|\[|\]|\\" {"\\" "\\\\"
+                                                                 "'"  "\\'"
+                                                                 "["  "\\["
+                                                                 "]"  "\\]"})]
+    (str "[" filter-chars "]")))
+
+
+(defn- file-chars-cond
+  [_ filter-chars]
+  (str "d.data_name ~ '" (filter-chars->sql-char-class filter-chars) "'"))
+
+
+(defn- folder-chars-cond
+  [parent-path filter-chars]
+  (str "c.coll_name ~ '" parent-path "/.*" (filter-chars->sql-char-class filter-chars) "'"))
+
+
+(defn- file-name-cond
+  [_ name]
+  (str "d.data_name = '" name "'"))
+
+
+(defn- file-path-cond
+  [parent-path path]
+  (str "'" parent-path "' || '/' || d.data_name = '" path "'"))
+
+
+(defn- folder-name-cond
+  [parent-path name]
+  (str "c.coll_name = '" parent-path "/" name "'"))
+
+
+(defn- folder-path-cond
+  [_ path]
+  (str "c.coll_name = '" path "'"))
+
+
+(defn- mk-filter-cond
+  [mk-chars-cond mk-name-cond mk-path-cond parent-path filter-chars filter-names filter-paths]
+  (let [conds (concat (when-not (empty? filter-chars) [(mk-chars-cond parent-path filter-chars)])
+                      (map #(mk-name-cond parent-path %) filter-names)
+                      (map #(mk-path-cond parent-path %) filter-paths))
+        conds (remove nil? conds)]
+    (if (empty? conds)
+      "FALSE"
+      (string/join " OR " (map #(str "(" % ")") conds)))))
+
+
+(defn ^String mk-file-filter-cond
+  "Returns a WHERE condition for files in the count-filtered-items-in-folder query.
+
+   Parameters:
+     parent-path  - the absolute path to the folder containing the files
+     filter-chars - the characters that form part of the name filter
+     filter-names - the file names to filter
+     filter-paths - the file paths to filter
+
+   Returns:
+     It returns the condition."
+  [^String parent-path ^String filter-chars ^ISeq filter-names ^ISeq filter-paths]
+  (mk-filter-cond file-chars-cond file-name-cond file-path-cond
+                  parent-path filter-chars filter-names filter-paths))
+
+
+(defn ^String mk-folder-filter-cond
+  "Returns a WHERE condition for folders in the count-filtered-items-in-folder query.
+
+   Parameters:
+     parent-path  - the absolute path to the folder containing the folders
+     filter-chars - the characters that form part of the name filter
+     filter-names - the folder names to filter
+     filter-paths - the folder paths to filter
+
+   Returns:
+     It returns the condition."
+  [^String parent-path ^String filter-chars ^ISeq filter-names ^ISeq filter-paths]
+  (mk-filter-cond folder-chars-cond folder-name-cond folder-path-cond
+                  parent-path filter-chars filter-names filter-paths))
+
 
 (defn prepare-text-set
   "Given a set, it prepares the elements for injection into an SQL query. It returns a string
@@ -51,30 +92,27 @@
   (string/join ", " (map #(str \' % \') values)))
 
 
-(defn ^String mk-file-type-join
-  "This function constructs the file type join for the paged folder listing query.
+(defn ^String mk-file-type-cond
+  "This function constructs condition for search for files with a given file type.
 
    Parameters:
      file-types - A list of file types used to filter on. A nil or empty list disables filtering.
 
    Returns:
-     It returns a join clause to be added as the first format parameter in the paged-folder-listing
-     query template."
+     It returns a condition to be added as the first format parameter in the count-items-in-folder,
+     count-filtered-items-in-folder, and paged-folder-listing query templates."
   [^ISeq file-types]
-  (let [file-types       (mapv string/lower-case file-types)
-        fmt-ft           (prepare-text-set file-types)
-        [join-type filt] (cond
-                           (empty? file-types)
-                           ["LEFT" ""]
+  (let [file-types (mapv string/lower-case file-types)
+        fmt-ft     (prepare-text-set file-types)]
+    (cond
+      (empty? file-types)
+      ""
 
-                           (contains? file-types "raw")
-                           ["LEFT" (str "AND meta_attr_value IN ('', " fmt-ft ")")]
+      (some #(= "raw" %) file-types)
+      (str "AND (f.meta_attr_value IS NULL OR f.meta_attr_value IN ('', " fmt-ft "))")
 
-                           :else
-                           ["INNER" (str "AND meta_attr_value IN (" fmt-ft ")")])]
-    (str join-type " JOIN (SELECT * FROM file_avus WHERE meta_attr_name = 'ipc-filetype' " filt ")
-                          AS f
-           ON f.object_id = d.data_id")))
+      :else
+      (str "AND f.meta_attr_value IN (" fmt-ft ")"))))
 
 
 (def queries
@@ -90,15 +128,22 @@
 
          data_objs   AS ( SELECT *
                             FROM r_data_main
-                           WHERE coll_id = ANY(ARRAY( SELECT coll_id FROM parent )))
+                           WHERE coll_id = ANY(ARRAY( SELECT coll_id FROM parent ))),
+
+         file_types  AS ( SELECT *
+                            FROM r_objt_metamap om
+                            JOIN r_meta_main mm ON mm.meta_id = om.meta_id
+                           WHERE om.object_id = ANY(ARRAY( SELECT data_id FROM data_objs ))
+                             AND mm.meta_attr_name = 'ipc-filetype' )
 
     SELECT count(*) AS total
       FROM ( SELECT DISTINCT d.data_id FROM r_objt_access a
                JOIN data_objs d ON a.object_id = d.data_id
-              WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-                AND a.object_id IN ( SELECT data_id from data_objs )
+          LEFT JOIN file_types f ON d.data_id = f.object_id
+              WHERE a.user_id IN ( SELECT group_user_id FROM user_groups ) %s
               UNION
-             SELECT DISTINCT c.coll_id FROM r_coll_main c
+             SELECT c.coll_id
+               FROM r_coll_main c
                JOIN r_objt_access a ON c.coll_id = a.object_id
                JOIN parent p ON c.parent_coll_name = p.coll_name
               WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
@@ -144,16 +189,24 @@
 
          data_objs   AS ( SELECT *
                             FROM r_data_main
-                           WHERE coll_id = ANY(ARRAY( SELECT coll_id FROM parent )))
+                           WHERE coll_id = ANY(ARRAY( SELECT coll_id FROM parent ))),
+
+         file_types  AS ( SELECT *
+                            FROM r_objt_metamap om
+                            JOIN r_meta_main mm ON mm.meta_id = om.meta_id
+                           WHERE om.object_id = ANY(ARRAY( SELECT data_id FROM data_objs ))
+                             AND mm.meta_attr_name = 'ipc-filetype' )
 
     SELECT count(*) AS total_filtered
       FROM ( SELECT DISTINCT d.data_id FROM r_objt_access a
                JOIN data_objs d ON a.object_id = d.data_id
+          LEFT JOIN file_types f ON d.data_id = f.object_id
               WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-                AND a.object_id IN ( SELECT data_id FROM data_objs )
-                AND d.data_name ~ ?
+                %s
+                AND (%s)
               UNION
-             SELECT DISTINCT c.coll_id FROM r_coll_main c
+             SELECT c.coll_id
+               FROM r_coll_main c
                JOIN r_objt_access a ON c.coll_id = a.object_id
                JOIN parent p ON c.parent_coll_name = p.coll_name
               WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
@@ -302,20 +355,21 @@
 
    :paged-folder-listing
    "WITH user_groups AS ( SELECT g.*
-                        FROM r_user_main AS u JOIN r_user_group AS g ON g.user_id = u.user_id
-                        WHERE u.user_name = ? AND u.zone_name = ? ),
+                            FROM r_user_main AS u JOIN r_user_group AS g ON g.user_id = u.user_id
+                            WHERE u.user_name = ? AND u.zone_name = ? ),
 
          parent      AS ( SELECT * FROM r_coll_main WHERE coll_name = ? ),
 
          data_objs   AS ( SELECT *
-                            FROM r_data_main d1
+                            FROM r_data_main AS d1
                             WHERE coll_id = ANY(ARRAY( SELECT coll_id FROM parent ))
                               AND d1.data_repl_num = ( SELECT MIN(d2.data_repl_num)
                                                          FROM r_data_main AS d2
                                                          WHERE d2.data_id = d1.data_id )),
 
          file_avus   AS ( SELECT *
-                            FROM r_objt_metamap om JOIN r_meta_main mm ON mm.meta_id = om.meta_id
+                            FROM r_objt_metamap AS om
+                              JOIN r_meta_main AS mm ON mm.meta_id = om.meta_id
                             WHERE om.object_id = ANY(ARRAY( SELECT data_id FROM data_objs )))
 
     SELECT *
@@ -328,11 +382,11 @@
                     c.create_ts                            AS create_ts,
                     c.modify_ts                            AS modify_ts,
                     a.access_type_id                       AS access_type_id
-               FROM r_coll_main c
-                 JOIN r_objt_access a ON c.coll_id = a.object_id
-                 JOIN parent p ON c.parent_coll_name = p.coll_name
-                 JOIN r_objt_metamap om ON om.object_id = c.coll_id
-                 JOIN r_meta_main m ON m.meta_id = om.meta_id
+               FROM r_coll_main AS c
+                 JOIN r_objt_access AS a ON c.coll_id = a.object_id
+                 JOIN parent AS p ON c.parent_coll_name = p.coll_name
+                 JOIN r_objt_metamap AS om ON om.object_id = c.coll_id
+                 JOIN r_meta_main AS m ON m.meta_id = om.meta_id
                WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
                  AND c.coll_type != 'linkPoint'
                  AND m.meta_attr_name = 'ipc_UUID'
@@ -346,13 +400,15 @@
                     d.create_ts                       AS create_ts,
                     d.modify_ts                       AS modify_ts,
                     a.access_type_id                  AS access_type_id
-               FROM r_objt_access a
-                 JOIN data_objs d ON a.object_id = d.data_id
-                 JOIN r_coll_main c ON c.coll_id = d.coll_id
-                 JOIN file_avus m ON m.object_id = d.data_id
-                 %s
+               FROM r_objt_access AS a
+                 JOIN data_objs AS d ON a.object_id = d.data_id
+                 JOIN r_coll_main AS c ON c.coll_id = d.coll_id
+                 JOIN file_avus AS m ON m.object_id = d.data_id
+                 LEFT JOIN ( SELECT * FROM file_avus WHERE meta_attr_name = 'ipc-filetype' ) AS f
+                   ON d.data_id = f.object_id
                  WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-                   AND m.meta_attr_name = 'ipc_UUID' ) AS p
+                   AND m.meta_attr_name = 'ipc_UUID'
+                   %s ) AS p
       ORDER BY p.type ASC, %s %s
       LIMIT ?
       OFFSET ?"

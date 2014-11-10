@@ -1,6 +1,7 @@
 (ns data-info.services.entry
   "This namespace provides the business logic for all entries endpoints."
   (:require [clojure.string :as str]
+            [clojure.tools.logging :as log]
             [cheshire.core :as json]
             [liberator.core :refer [defresource]]
             [liberator.representation :as rep]
@@ -14,6 +15,7 @@
             [clj-jargon.validations :as jv]
             [clojure-commons.error-codes :as error]
             [clojure-commons.file-utils :as file]
+            [heuristomancer.core :as info]
             [data-info.util.config :as cfg]
             [data-info.util.irods :as irods]
             [data-info.util.validators :as duv])
@@ -159,13 +161,18 @@
       (->> filter-path-params (map fmt-path) (remove nil?) set))))
 
 
-; TODO should info-types be checked?
+
 (defn- resolve-info-types
-  [info-types]
-  (cond
-    (nil? info-types)    []
-    (string? info-types) [info-types]
-    :else                info-types))
+  [info-type-params]
+  (let [resolve-type     (fn [param] (when (some #(= param %) (info/supported-formats))
+                                       param))
+        info-type-params (cond
+                           (nil? info-type-params)    []
+                           (string? info-type-params) [info-type-params]
+                           :else                      info-type-params)
+        resolution       (map resolve-type info-type-params)]
+    (when (not-any? nil? resolution)
+      resolution)))
 
 
 (defn- resolve-nonnegative
@@ -205,9 +212,9 @@
 (defn- resolve-folder-params
   [params]
   {::filter-chars (set (:filter-chars params))
-   ::filter-names (resolve-filter-names (:filter-name params))
-   ::filter-paths (resolve-filter-paths (:filter-path params))
-   ::info-types   (resolve-info-types (:info-type params))
+   ::filter-name  (resolve-filter-names (:filter-name params))
+   ::filter-path  (resolve-filter-paths (:filter-path params))
+   ::info-type    (resolve-info-types (:info-type params))
    ::sort-field   (resolve-sort-field (:sort-field params))
    ::sort-order   (resolve-sort-order (:sort-order params))
    ::offset       (resolve-nonnegative (:offset params) 0)
@@ -269,11 +276,11 @@
 
 
 (defn- total-filtered
-  [user zone parent filter]
+  [user zone parent info-types filter]
   (let [cfilt (apply str (:chars filter))
         nfilt (:names filter)
         pfilt (:paths filter)]
-    (icat/number-of-filtered-items-in-folder user zone parent cfilt nfilt pfilt)))
+    (icat/number-of-filtered-items-in-folder user zone parent info-types cfilt nfilt pfilt)))
 
 
 (defn- paged-dir-listing
@@ -290,21 +297,21 @@
         page         (icat/paged-folder-listing user zone path sfield sord limit offset info-types)]
     (merge (fmt-entry id date-created mod-date filter? nil path name perm 0)
            (page->map (partial should-filter? filter) page)
-           {:total         (icat/number-of-items-in-folder user zone path)
-            :totalFiltered (total-filtered user zone path filter)})))
+           {:total         (icat/number-of-items-in-folder user zone path info-types)
+            :totalFiltered (total-filtered user zone path info-types filter)})))
 
 
 (defn- get-folder
   [irods path ctx]
   (let [user       (get-in ctx [:request :params :user])
         filter     {:chars (::filter-chars ctx)
-                    :names (::filter-names ctx)
-                    :paths (::filter-paths ctx)}
+                    :names (::filter-name ctx)
+                    :paths (::filter-path ctx)}
         sort-field (::sort-field ctx)
         sort-order (::sort-order ctx)
         offset     (::offset ctx)
         limit      (::limit ctx)
-        info-types (::info-types ctx)]
+        info-types (::info-type ctx)]
     (paged-dir-listing irods user path filter sort-field sort-order offset limit info-types)))
 
 

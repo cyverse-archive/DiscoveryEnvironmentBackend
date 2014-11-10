@@ -1,6 +1,7 @@
 (ns clj-icat-direct.icat
   (:use [clojure.java.io :only [file]])
   (:require [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [korma.db :as db]
             [korma.core :as k]
             [clj-icat-direct.queries :as q])
@@ -51,17 +52,20 @@
 
 (defn ^Integer number-of-items-in-folder
   "Returns the total number of files and folders in the specified folder that the user has access
-   to.
+   to and where the files have the given info types.
 
    Parameters:
      user        - the username of the user
      zone        - the user's authentication zone
      folder-path - the absolute path to the folder being inspected
+     info-types  - the info-types of the files to count, if empty, all files are counted
 
    Returns:
-     It returns the total number of items."
-  [^String user ^String zone ^String folder-path]
-  (-> (run-simple-query :count-items-in-folder user zone folder-path) first :total))
+     It returns the total number of folders combined with the total number of files with the given
+     info types."
+  [^String user ^String zone ^String folder-path ^ISeq info-types]
+  (let [query (format (:count-items-in-folder q/queries) (q/mk-file-type-cond info-types))]
+    (-> (run-query-string query user zone folder-path) first :total)))
 
 
 (defn number-of-all-items-under-folder
@@ -75,33 +79,36 @@
 
 (defn ^Integer number-of-filtered-items-in-folder
   "Returns the total number of files and folders in the specified folder that the user has access to
-   but should be filtered in the client.
+   and where the files have the given info types, but should be filtered in the client.
 
    Parameters:
-     user           - the username of the authorized user
-     zone           - the user's authentication zone
-     folder-path    - The absolute path to the folder of interest
-     filter-chars   - If a path contains one or more of these characters, it forms part of the
-                      filter
-     filter-files   - This is a sequence of names that form part of the filter
-     filtered-paths - This is an array of paths that form part of the filter."
+     user         - the username of the authorized user
+     zone         - the user's authentication zone
+     folder-path  - The absolute path to the folder of interest
+     info-types   - the info-types of the files to count, if empty, all files are considered
+     filter-chars - If a path contains one or more of these characters, it forms part of the filter
+     filter-names - This is a sequence of names that form part of the filter
+     filter-paths - This is an array of paths that form part of the filter.
+
+   Returns:
+     It returns the total."
   [^String user
    ^String zone
    ^String folder-path
+   ^ISeq   info-types
    ^String filter-chars
-   ^ISeq   filter-files
-   ^ISeq   filtered-paths]
-  (let [filtered-path-args (concat (q/filter-files->query-args filter-files) filtered-paths)
-        query              (format (:count-filtered-items-in-folder q/queries)
-                                   (q/get-filtered-paths-where-clause filter-files filtered-paths))]
-    (-> (apply run-query-string
-               query
-               user
-               zone
-               folder-path
-               (q/filter-chars->sql-char-class filter-chars)
-               filtered-path-args)
-      first :total_filtered)))
+   ^ISeq   filter-names
+   ^ISeq   filter-paths]
+  (let [filt-file-cond   (q/mk-file-filter-cond folder-path filter-chars filter-names filter-paths)
+        filt-folder-cond (q/mk-folder-filter-cond folder-path
+                                                  filter-chars
+                                                  filter-names
+                                                  filter-paths)
+        query            (format (:count-filtered-items-in-folder q/queries)
+                                 (q/mk-file-type-cond info-types)
+                                 filt-file-cond
+                                 filt-folder-cond)]
+    (-> (run-query-string query user zone folder-path) first :total_filtered)))
 
 
 (defn folder-permissions-for-user
@@ -175,10 +182,10 @@
   (if-not (contains? sort-orders sort-order)
     (throw (Exception. (str "Invalid sort-order " sort-order))))
 
-  (let [ft-join (q/mk-file-type-join file-types)
+  (let [ft-cond (q/mk-file-type-cond file-types)
         sc      (get sort-columns sort-column)
         so      (get sort-orders sort-order)
-        query   (format (:paged-folder-listing q/queries) ft-join sc so)]
+        query   (format (:paged-folder-listing q/queries) ft-cond sc so)]
     (map fmt-info-type (run-query-string query user zone folder-path limit offset))))
 
 
