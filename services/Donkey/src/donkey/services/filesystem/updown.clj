@@ -13,9 +13,7 @@
 
 (defn- fmt-cart-response
   [action response]
-  {:action action
-   :status "success"
-   :data   (json/decode (:body response) true)})
+  {:data   (json/decode (:body response) true)})
 
 
 (defn- handle-unprocessable-cart
