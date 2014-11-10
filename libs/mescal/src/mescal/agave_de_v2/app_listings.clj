@@ -39,7 +39,7 @@
             :is_public            (:isPublic listing)
             :pipeline_eligibility {:is_valid true}
             :rating               {:average 0.0 :total 0}
-            :step-count           1
+            :step_count           1
             :wiki_url             ""))))
 
 (defn list-apps
