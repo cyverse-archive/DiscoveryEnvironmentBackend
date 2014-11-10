@@ -4,6 +4,25 @@ condor-log-monitor
 The condor-log-monitor is a daemon that monitors a HTCondor EVENT_LOG for changes
 and pushes job updates out to an AMQP broker.
 
+# What does it do?
+
+condor-log-monitor (aka 'clm') periodically checks the last modified date of the
+configured HTCondor EVENT_LOG (configured as EventLog, as seen below) and will
+parse it for updates when the date changes. Each parsed out event is sent to the
+configured AMQP exchange, where interested services can receive the events.
+
+clm also stores a 'tombstone' file at __/tmp/condor-log-monitor.tombstone__.
+This file contains the record of the last parsed inode, the position that
+parsing ended on in that file, the date that the tombstone was made, and the
+last modified date of the file pointed to by the inode number.
+
+The tombstone is used to resume parsing if condor-log-monitor goes down for a
+while. It allows the condor-log-monitor to detect if the EVENT_LOG as rolled
+over while it was down and attempt to resume parsing from the rolled over logs.
+HTCondor needs to be configured to roll over the logs with a numerical suffix on
+the rolled logs (go to http://research.cs.wisc.edu/htcondor/manual/v7.8/3_3Configuration.html#SECTION004310000000000000000 and search for EVENT_LOG).
+
+
 # Configuration
 
 condor-log-monitor is configured with a JSON configuration file. The JSON file
@@ -55,4 +74,4 @@ To run the unit tests:
 
 ```bash
 go test
-``` 
+```
