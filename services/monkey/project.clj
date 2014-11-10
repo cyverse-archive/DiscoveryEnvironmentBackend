@@ -1,4 +1,4 @@
-(defproject org.iplantc/monkey "4.0.4"
+(defproject org.iplantc/monkey "4.0.5"
   :description "A metadata database crawler. It synchronizes the tag documents in the search data
                 index with the tag information inthe metadata database.  🐒"
   :url "http://www.iplantcollaborative.org"
@@ -15,10 +15,10 @@
                  [com.novemberain/langohr "2.11.0"]
                  [me.raynes/fs "1.4.6"]
                  [slingshot "0.10.3"]
-                 [org.iplantc/clojure-commons "4.0.4"]
-                 [org.iplantc/common-cli "4.0.4"]]
+                 [org.iplantc/clojure-commons "4.0.5"]
+                 [org.iplantc/common-cli "4.0.5"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
-  :plugins [[org.iplantc/lein-iplant-rpm "4.0.4"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "4.0.5"]]
   :iplant-rpm {:summary      "monkey"
                :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
                :config-files ["log4j.properties"]
