@@ -126,7 +126,7 @@
   [m]
   (and (map? m)
        (contains? m :status)
-       (contains? m :body)))
+       (number? (:status m))))
 
 (defn success-resp [action retval]
   (cond
