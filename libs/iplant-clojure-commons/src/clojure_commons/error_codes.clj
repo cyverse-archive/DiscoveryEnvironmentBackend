@@ -55,6 +55,7 @@
    ERR_BAD_REQUEST                        400
    ERR_BAD_QUERY_PARAMETER                400
    ERR_MISSING_QUERY_PARAMETER            400
+   ERR_NOT_AUTHORIZED                     401
    ERR_NOT_OWNER                          403
    ERR_NOT_FOUND                          404
    ERR_NOT_UNIQUE                         400

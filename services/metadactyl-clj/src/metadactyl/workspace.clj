@@ -12,6 +12,6 @@
   ([username]
    (if-let [workspace (fetch-workspace-by-user-id (get-existing-user-id username))]
      workspace
-     (throw+ {:code     cc-errs/ERR_NOT_FOUND,
+     (throw+ {:error_code cc-errs/ERR_NOT_FOUND,
               :username username,
               :message  "Workspace for user not found."}))))

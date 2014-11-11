@@ -2,6 +2,7 @@
   (:use [metadactyl.util.config :only [uid-domain]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as common-errors]
             [metadactyl.util.service :as service]))
 
 (def
@@ -15,8 +16,8 @@
   (log/debug user-attributes)
   (let [uid (user-attributes :user)]
     (if (empty? uid)
-      (throw+ {:type :metadactyl.util.service/unauthorized,
-               :user user-attributes,
+      (throw+ {:error_code common-errors/ERR_NOT_AUTHORIZED,
+               :user (dissoc user-attributes :password),
                :message "Invalid user credentials provided."}))
     (-> (select-keys user-attributes [:password :email :first-name :last-name])
         (assoc :username (str uid "@" (uid-domain))
@@ -33,6 +34,6 @@
    of org.iplantc.authn.user.User that is built from the user attributes found
    in the given params map, then passes request to the given handler."
   [handler & [opts]]
-  (fn [request]
-    (service/trap #(with-user [(:params request)] (handler request)))))
+  (fn [{uri :uri :as request}]
+    (common-errors/trap uri #(with-user [(:params request)] (handler request)))))
 

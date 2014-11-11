@@ -183,7 +183,7 @@
   "Verifies that an app has not been made public."
   [app]
   (if (:is_public app)
-    (throw+ {:code cc-errs/ERR_NOT_WRITEABLE,
+    (throw+ {:error_code cc-errs/ERR_NOT_WRITEABLE,
              :message (str "Workflow, " (:id app) ", is public and may not be edited")})))
 
 (defn verify-app-ownership
@@ -191,7 +191,7 @@
   [app]
   (let [owner (:integrator_email app)]
     (if (not= owner (:email current-user))
-      (throw+ {:code cc-errs/ERR_NOT_OWNER,
+      (throw+ {:error_code cc-errs/ERR_NOT_OWNER,
                :username (:username current-user),
                :message (str (:shortUsername current-user) " does not own app " (:id app))}))))
 
@@ -205,6 +205,6 @@
   "Verifies that an external app step in a pipeline has all of the required fields."
   [step-number {external-app-id :external_app_id}]
   (when (blank? external-app-id)
-    (throw+ {:code cc-errs/ERR_BAD_OR_MISSING_FIELD
+    (throw+ {:error_code cc-errs/ERR_BAD_OR_MISSING_FIELD
              :message (str "pipeline step " step-number " contians neither a task ID nor an "
                            "external app ID")})))

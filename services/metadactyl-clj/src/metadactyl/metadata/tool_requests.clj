@@ -8,6 +8,7 @@
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
+            [clojure-commons.error-codes :as error-codes]
             [kameleon.queries :as queries]
             [metadactyl.util.params :as params])
   (:import [java.util UUID]))
@@ -20,7 +21,7 @@
   [m & ks]
   (let [v (first (remove string/blank? (map m ks)))]
     (when (nil? v)
-      (throw+ {:code          ::missing_required_field
+      (throw+ {:error_code    error-codes/ERR_BAD_OR_MISSING_FIELD
                :accepted_keys ks}))
     v))
 
@@ -29,7 +30,7 @@
   [architecture]
   (let [id (:id (first (select tool_architectures (where {:name architecture}))))]
     (when (nil? id)
-      (throw+ {:code ::unknown_architecture
+      (throw+ {:error_code error-codes/ERR_NOT_FOUND
                :name architecture}))
     id))
 
@@ -76,7 +77,7 @@
   [uuid]
   (let [req (queries/get-tool-request-details uuid)]
     (when (nil? req)
-      (throw+ {:code ::tool_request_not_found
+      (throw+ {:error_code error-codes/ERR_NOT_FOUND
                :id   (string/upper-case (.toString uuid))}))
     req))
 
@@ -94,7 +95,8 @@
                         (order :trs.date_assigned :DESC)
                         (limit 1)))]
     (when (nil? status)
-      (throw+ {:code ::no_status_found_for_tool_request
+      (throw+ {:error_code error-codes/ERR_MISSING_DEPENDENCY
+               :message "no status found for tool request"
                :id (string/upper-case (.toString uuid))}))
     status))
 

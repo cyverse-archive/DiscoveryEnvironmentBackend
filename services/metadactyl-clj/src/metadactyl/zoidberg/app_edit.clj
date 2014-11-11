@@ -141,7 +141,7 @@
     validation-rules :validation_rules
     :as param}]
   (when-not value-type
-    (throw+ {:code    cc-errs/ERR_NOT_WRITEABLE
+    (throw+ {:error_code cc-errs/ERR_NOT_WRITEABLE
              :message "App contains Parameters that cannot be copied or modified at this time."}))
   (let [param (-> param
                   format-file-params
@@ -169,7 +169,7 @@
   (let [app (get-app-details (:id app))
         task (first (:tasks app))]
     (when (empty? tasks)
-      (throw+ {:code    cc-errs/ERR_NOT_WRITEABLE
+      (throw+ {:error_code cc-errs/ERR_NOT_WRITEABLE
                :message "App contains no steps and cannot be copied or modified."}))
     (remove-nil-vals
       (-> app
