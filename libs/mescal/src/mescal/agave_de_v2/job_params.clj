@@ -18,17 +18,21 @@
 
 (defn- get-default-param-value
   [param]
-  (let [{{default :default enum-values :enum_values} :value} param]
+  (let [value-obj   (:value param)
+        enum-values (util/get-enum-values value-obj)
+        default     (first (:default value-obj))]
     (if (mp/enum-param? param)
-      (mp/format-enum-element (first default) (mp/find-enum-element (first default) enum-values))
+      (mp/format-enum-element default (mp/find-enum-element default enum-values))
       default)))
 
 (defn- get-param-value
   [param-values param]
   (when-let [param-value (param-values (keyword (:id param)) "")]
     (if (mp/enum-param? param)
-      (let [{{default :default enum-values :enum_values} :value} param]
-        (mp/format-enum-element (first default) (mp/find-enum-element param-value enum-values)))
+      (let [{value-obj :value} param
+            enum-values        (util/get-enum-values value-obj)
+            default            (first (:default value-obj))]
+        (mp/format-enum-element default (mp/find-enum-element param-value enum-values)))
       param-value)))
 
 (defn- format-input-param-value

@@ -10,7 +10,7 @@
                  [clj-http "1.0.0"]
                  [clj-time "0.7.0"]
                  [com.cemerick/url "0.1.1"]
-                 [medley "0.2.1"]
+                 [medley "0.5.3"]
                  [org.iplantc/authy "4.0.5"]
                  [org.iplantc/clojure-commons "4.0.5"]
                  [slingshot "0.10.3"]]

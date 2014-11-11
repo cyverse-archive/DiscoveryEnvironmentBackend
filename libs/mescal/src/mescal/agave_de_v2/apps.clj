@@ -44,8 +44,9 @@
     (format-param get-type get-value get-args param)))
 
 (defn- get-default-enum-value
-  [{{enum-values :enum_values default :default} :value :as param}]
-  (let [default (first default)]
+  [{value-obj :value :as param}]
+  (let [enum-values (util/get-enum-values value-obj)
+        default     (first (:default value-obj))]
     (when-let [default-elem (mp/find-enum-element default enum-values)]
       (mp/format-enum-element default default-elem))))
 
@@ -56,10 +57,12 @@
     (get-in param [:value :default])))
 
 (defn- get-param-args
-  [{{enum-values :enum_values default :default} :value :as param}]
-  (if (mp/enum-param? param)
-    (map (partial mp/format-enum-element (first default)) enum-values)
-    []))
+  [{value-obj :value :as param}]
+  (let [enum-values (util/get-enum-values value-obj)
+        default     (first (:default value-obj))]
+    (if (mp/enum-param? param)
+      (map (partial mp/format-enum-element default) enum-values)
+      [])))
 
 (defn- input-param-formatter
   [& {:keys [get-default] :or {get-default (constantly "")}}]
@@ -163,7 +166,8 @@
   [p v]
   (when p
     (if (mp/enum-param? p)
-      (mp/format-enum-element v (mp/find-enum-element v (get-in p [:value :enum_values])))
+      (let [enum-values (util/get-enum-values (:value p))]
+        (mp/format-enum-element v (mp/find-enum-element v enum-values)))
       v)))
 
 (defn- app-rerun-value-getter
