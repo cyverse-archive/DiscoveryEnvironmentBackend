@@ -60,6 +60,6 @@
    Returns:
      It returns false if the string contains at least one problematic character, otherwise false."
   [^String to-check]
-  (let [bad-chars      (set (seq (cfg/fs-filter-chars)))
+  (let [bad-chars      (set (seq (cfg/fs-bad-chars)))
         chars-to-check (set (seq to-check))]
     (empty? (set/intersection bad-chars chars-to-check))))

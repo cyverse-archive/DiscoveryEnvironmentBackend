@@ -3,23 +3,23 @@
   (:import  [clojure.lang ISeq]))
 
 
-(defn- filter-chars->sql-char-class
-  [filter-chars]
-  (let [filter-chars (string/replace filter-chars #"'|\[|\]|\\" {"\\" "\\\\"
-                                                                 "'"  "\\'"
-                                                                 "["  "\\["
-                                                                 "]"  "\\]"})]
-    (str "[" filter-chars "]")))
+(defn- bad-chars->sql-char-class
+  [bad-chars]
+  (let [bad-chars (string/replace bad-chars #"'|\[|\]|\\" {"\\" "\\\\"
+                                                           "'"  "\\'"
+                                                           "["  "\\["
+                                                           "]"  "\\]"})]
+    (str "[" bad-chars "]")))
 
 
-(defn- file-chars-cond
-  [_ filter-chars]
-  (str "d.data_name ~ E'" (filter-chars->sql-char-class filter-chars) "'"))
+(defn- file-bad-chars-cond
+  [_ bad-chars]
+  (str "d.data_name ~ E'" (bad-chars->sql-char-class bad-chars) "'"))
 
 
-(defn- folder-chars-cond
-  [parent-path filter-chars]
-  (str "c.coll_name ~ E'" parent-path "/.*" (filter-chars->sql-char-class filter-chars) "'"))
+(defn- folder-bad-chars-cond
+  [parent-path bad-chars]
+  (str "c.coll_name ~ E'" parent-path "/.*" (bad-chars->sql-char-class bad-chars) "'"))
 
 
 (defn- file-name-cond
@@ -42,47 +42,47 @@
   (str "c.coll_name = '" path "'"))
 
 
-(defn- mk-filter-cond
-  [mk-chars-cond mk-name-cond mk-path-cond parent-path filter-chars filter-names filter-paths]
-  (let [conds (concat (when-not (empty? filter-chars) [(mk-chars-cond parent-path filter-chars)])
-                      (map #(mk-name-cond parent-path %) filter-names)
-                      (map #(mk-path-cond parent-path %) filter-paths))
+(defn- mk-bad-cond
+  [mk-bad-chars-cond mk-bad-name-cond mk-bad-path-cond parent-path bad-chars bad-names bad-paths]
+  (let [conds (concat (when-not (empty? bad-chars) [(mk-bad-chars-cond parent-path bad-chars)])
+                      (map #(mk-bad-name-cond parent-path %) bad-names)
+                      (map #(mk-bad-path-cond parent-path %) bad-paths))
         conds (remove nil? conds)]
     (if (empty? conds)
       "FALSE"
       (string/join " OR " (map #(str "(" % ")") conds)))))
 
 
-(defn ^String mk-file-filter-cond
-  "Returns a WHERE condition for files in the count-filtered-items-in-folder query.
+(defn ^String mk-bad-file-cond
+  "Returns a WHERE condition for files in the count-bad-items-in-folder query.
 
    Parameters:
-     parent-path  - the absolute path to the folder containing the files
-     filter-chars - the characters that form part of the name filter
-     filter-names - the file names to filter
-     filter-paths - the file paths to filter
+     parent-path - the absolute path to the folder containing the files
+     bad-chars   - the characters a name cannot contain
+     bad-names   - the bad names
+     bad-paths   - the bad paths
 
    Returns:
      It returns the condition."
-  [^String parent-path ^String filter-chars ^ISeq filter-names ^ISeq filter-paths]
-  (mk-filter-cond file-chars-cond file-name-cond file-path-cond
-                  parent-path filter-chars filter-names filter-paths))
+  [^String parent-path ^String bad-chars ^ISeq bad-names ^ISeq bad-paths]
+  (mk-bad-cond file-bad-chars-cond file-name-cond file-path-cond
+               parent-path bad-chars bad-names bad-paths))
 
 
-(defn ^String mk-folder-filter-cond
-  "Returns a WHERE condition for folders in the count-filtered-items-in-folder query.
+(defn ^String mk-bad-folder-cond
+  "Returns a WHERE condition for folders in the count-bad-items-in-folder query.
 
    Parameters:
-     parent-path  - the absolute path to the folder containing the folders
-     filter-chars - the characters that form part of the name filter
-     filter-names - the folder names to filter
-     filter-paths - the folder paths to filter
+     parent-path - the absolute path to the folder containing the folders
+     bad-chars   - the characters a name cannot contain
+     bad-names   - the bad names
+     bad-paths   - the bad paths
 
    Returns:
      It returns the condition."
-  [^String parent-path ^String filter-chars ^ISeq filter-names ^ISeq filter-paths]
-  (mk-filter-cond folder-chars-cond folder-name-cond folder-path-cond
-                  parent-path filter-chars filter-names filter-paths))
+  [^String parent-path ^String bad-chars ^ISeq bad-names ^ISeq bad-paths]
+  (mk-bad-cond folder-bad-chars-cond folder-name-cond folder-path-cond
+                  parent-path bad-chars bad-names bad-paths))
 
 
 (defn prepare-text-set
@@ -179,7 +179,7 @@
               WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
                 AND c.coll_type != 'linkPoint' ) AS contents"
 
-   :count-filtered-items-in-folder
+   :count-bad-items-in-folder
    "WITH user_groups AS ( SELECT g.* FROM r_user_main u
                             JOIN r_user_group g ON g.user_id = u.user_id
                            WHERE u.user_name = ?

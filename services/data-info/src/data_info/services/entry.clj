@@ -138,16 +138,16 @@
       {::missing-params missing-params})))
 
 
-(defn- resolve-filter-names
-  [filter-name-params]
+(defn- resolve-bad-names
+  [bad-name-params]
   (cond
-    (nil? filter-name-params)    #{}
-    (string? filter-name-params) #{filter-name-params}
-    :else                        (set filter-name-params)))
+    (nil? bad-name-params)    #{}
+    (string? bad-name-params) #{bad-name-params}
+    :else                     (set bad-name-params)))
 
 
-(defn- resolve-filter-paths
-  [filter-path-params]
+(defn- resolve-bad-paths
+  [bad-path-params]
   (letfn [(fmt-path [path-param]
             (if (= "/" path-param)
               "/"
@@ -156,9 +156,9 @@
                             path-param
                             (str \/ path-param)))]
                 (when-not (empty? res) res))))]
-    (if (string? filter-path-params)
-        #{(fmt-path filter-path-params)}
-      (->> filter-path-params (map fmt-path) (remove nil?) set))))
+    (if (string? bad-path-params)
+      #{(fmt-path bad-path-params)}
+      (->> bad-path-params (map fmt-path) (remove nil?) set))))
 
 
 (defn- resolve-info-types
@@ -210,14 +210,14 @@
 
 (defn- resolve-folder-params
   [params]
-  {::filter-chars (set (:filter-chars params))
-   ::filter-name  (resolve-filter-names (:filter-name params))
-   ::filter-path  (resolve-filter-paths (:filter-path params))
-   ::info-type    (resolve-info-types (:info-type params))
-   ::sort-field   (resolve-sort-field (:sort-field params))
-   ::sort-order   (resolve-sort-order (:sort-order params))
-   ::offset       (resolve-nonnegative (:offset params) 0)
-   ::limit        (resolve-nonnegative (:limit params))})
+  {::bad-chars  (set (:bad-chars params))
+   ::bad-name   (resolve-bad-names (:bad-name params))
+   ::bad-path   (resolve-bad-paths (:bad-path params))
+   ::info-type  (resolve-info-types (:info-type params))
+   ::sort-field (resolve-sort-field (:sort-field params))
+   ::sort-order (resolve-sort-order (:sort-order params))
+   ::offset     (resolve-nonnegative (:offset params) 0)
+   ::limit      (resolve-nonnegative (:limit params))})
 
 
 (defn- folder-processable?
@@ -229,11 +229,11 @@
 
 
 (defn- fmt-entry
-  [id date-created date-modified filter info-type path name permission size]
+  [id date-created date-modified bad? info-type path name permission size]
   {:id           (str id)
    :dateCreated  date-created
    :dateModified date-modified
-   :filter       filter
+   :badName      bad?
    :infoType     info-type
    :name         name
    :path         path
@@ -244,49 +244,49 @@
 (defn- page-entry->map
   "Turns a entry in a paged listing result into a map containing file/directory information that can
    be consumed by the front-end."
-  [filter?
+  [mark-bad?
    {:keys [access_type_id base_name create_ts data_size full_path info_type modify_ts uuid]}]
   (let [created  (* (Integer/parseInt create_ts) 1000)
         modified (* (Integer/parseInt modify_ts) 1000)
-        filter   (filter? full_path)
+        bad?     (mark-bad? full_path)
         perm     (perm/fmt-perm access_type_id)]
-    (fmt-entry uuid created modified filter info_type full_path base_name perm data_size)))
+    (fmt-entry uuid created modified bad? info_type full_path base_name perm data_size)))
 
 
 (defn- page->map
   "Transforms an entire page of results for a paged listing in a map that can be returned to the
    client."
-  [filter? page]
+  [mark-bad? page]
   (let [entry-types (group-by :type page)
         do          (get entry-types "dataobject")
         collections (get entry-types "collection")
-        xformer     (partial page-entry->map filter?)]
-
+        xformer     (partial page-entry->map mark-bad?)]
     {:files   (mapv xformer do)
      :folders (mapv xformer collections)}))
 
 
-(defn- should-filter?
+(defn- is-bad?
   "Returns true if the map is okay to include in a directory listing."
-  [filter path]
-  (or (contains? (:paths filter) path)
-    (contains? (:names filter) (file/basename path))
-    (not (duv/good-string? (:chars filter) path))))
+  [bad-indicator path]
+  (let [basename (file/basename path)]
+    (or (contains? (:paths bad-indicator) path)
+        (contains? (:names bad-indicator) basename)
+        (not (duv/good-string? (:chars bad-indicator) basename)))))
 
 
-(defn- total-filtered
-  [user zone parent info-types filter]
-  (let [cfilt (apply str (:chars filter))
-        nfilt (:names filter)
-        pfilt (:paths filter)]
-    (icat/number-of-filtered-items-in-folder user zone parent info-types cfilt nfilt pfilt)))
+(defn- total-bad
+  [user zone parent info-types bad-indicator]
+  (let [cbad (apply str (:chars bad-indicator))
+        nbad (:names bad-indicator)
+        pbad (:paths bad-indicator)]
+    (icat/number-of-bad-items-in-folder user zone parent info-types cbad nbad pbad)))
 
 
 (defn- paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
-  [irods user path filter sfield sord offset limit info-types]
+  [irods user path bad-indicator sfield sord offset limit info-types]
   (let [id           (irods/lookup-uuid irods path)
-        filter?      (should-filter? filter path)
+        bad?         (is-bad? bad-indicator path)
         perm         (perm/permission-for irods user path)
         stat         (item/stat irods path)
         date-created (:date-created stat)
@@ -294,24 +294,24 @@
         zone         (cfg/irods-zone)
         name         (fs/base-name path)
         page         (icat/paged-folder-listing user zone path sfield sord limit offset info-types)]
-    (merge (fmt-entry id date-created mod-date filter? nil path name perm 0)
-           (page->map (partial should-filter? filter) page)
-           {:total         (icat/number-of-items-in-folder user zone path info-types)
-            :totalFiltered (total-filtered user zone path info-types filter)})))
+    (merge (fmt-entry id date-created mod-date bad? nil path name perm 0)
+           (page->map (partial is-bad? bad-indicator) page)
+           {:total    (icat/number-of-items-in-folder user zone path info-types)
+            :totalBad (total-bad user zone path info-types bad-indicator)})))
 
 
 (defn- get-folder
   [irods path ctx]
   (let [user       (get-in ctx [:request :params :user])
-        filter     {:chars (::filter-chars ctx)
-                    :names (::filter-name ctx)
-                    :paths (::filter-path ctx)}
+        badies     {:chars (::bad-chars ctx)
+                    :names (::bad-name ctx)
+                    :paths (::bad-path ctx)}
         sort-field (::sort-field ctx)
         sort-order (::sort-order ctx)
         offset     (::offset ctx)
         limit      (::limit ctx)
         info-types (::info-type ctx)]
-    (paged-dir-listing irods user path filter sort-field sort-order offset limit info-types)))
+    (paged-dir-listing irods user path badies sort-field sort-order offset limit info-types)))
 
 
 (defn- as-folder-response

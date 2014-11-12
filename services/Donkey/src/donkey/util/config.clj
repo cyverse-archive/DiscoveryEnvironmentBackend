@@ -504,10 +504,10 @@
   [props config-valid configs filesystem-routes-enabled]
   "donkey.fs.community-data")
 
-(cc/defprop-vec fs-filter-files
-  "The files to filter out of return values."
+(cc/defprop-vec fs-bad-names
+  "The bad data names."
   [props config-valid configs filesystem-routes-enabled]
-  "donkey.fs.filter-files")
+  "donkey.fs.bad-names")
 
 (cc/defprop-vec fs-perms-filter
   "Hmmm..."
@@ -519,10 +519,10 @@
   [props config-valid configs filesystem-routes-enabled]
   "donkey.fs.copy-key")
 
-(cc/defprop-str fs-filter-chars
+(cc/defprop-str fs-bad-chars
   "The characters that are considered invalid in iRODS dir- and filenames."
   [props config-valid configs filesystem-routes-enabled]
-  "donkey.fs.filter-chars")
+  "donkey.fs.bad-chars")
 
 (cc/defprop-int fs-max-paths-in-request
   "The number of paths that are allowable in an API request."

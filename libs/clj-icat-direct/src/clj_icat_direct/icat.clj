@@ -77,18 +77,20 @@
       (:total)))
 
 
-(defn ^Integer number-of-filtered-items-in-folder
+(defn ^Integer number-of-bad-items-in-folder
   "Returns the total number of files and folders in the specified folder that the user has access to
-   and where the files have the given info types, but should be filtered in the client.
+   and where the files have the given info types, but should be marked as having a bad name in the
+   client.
 
    Parameters:
-     user         - the username of the authorized user
-     zone         - the user's authentication zone
-     folder-path  - The absolute path to the folder of interest
-     info-types   - the info-types of the files to count, if empty, all files are considered
-     filter-chars - If a path contains one or more of these characters, it forms part of the filter
-     filter-names - This is a sequence of names that form part of the filter
-     filter-paths - This is an array of paths that form part of the filter.
+     user        - the username of the authorized user
+     zone        - the user's authentication zone
+     folder-path - The absolute path to the folder of interest
+     info-types  - the info-types of the files to count, if empty, all files are considered
+     bad-chars   - If a name contains one or more of these characters, the item will be marked as
+                   bad
+     bad-names   - This is a sequence of names that are bad
+     bad-paths   - This is an array of paths to items that will be marked as badr.
 
    Returns:
      It returns the total."
@@ -96,18 +98,15 @@
    ^String zone
    ^String folder-path
    ^ISeq   info-types
-   ^String filter-chars
-   ^ISeq   filter-names
-   ^ISeq   filter-paths]
-  (let [filt-file-cond   (q/mk-file-filter-cond folder-path filter-chars filter-names filter-paths)
-        filt-folder-cond (q/mk-folder-filter-cond folder-path
-                                                  filter-chars
-                                                  filter-names
-                                                  filter-paths)
-        query            (format (:count-filtered-items-in-folder q/queries)
-                                 (q/mk-file-type-cond info-types)
-                                 filt-file-cond
-                                 filt-folder-cond)]
+   ^String bad-chars
+   ^ISeq   bad-names
+   ^ISeq   bad-paths]
+  (let [bad-file-cond   (q/mk-bad-file-cond folder-path bad-chars bad-names bad-paths)
+        bad-folder-cond (q/mk-bad-folder-cond folder-path bad-chars bad-names bad-paths)
+        query           (format (:count-bad-items-in-folder q/queries)
+                                (q/mk-file-type-cond info-types)
+                                 bad-file-cond
+                                 bad-folder-cond)]
     (-> (run-query-string query user zone folder-path) first :total_filtered)))
 
 

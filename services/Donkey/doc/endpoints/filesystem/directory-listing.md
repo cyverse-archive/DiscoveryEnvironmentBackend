@@ -25,7 +25,7 @@ __Response Body__:
             "date-created": 1373927956000,
             "date-modified": 1374015533000,
             "file-size": 0,
-            "filter": false,
+            "badName": false,
             "hasSubDirs": true,
             "path": "/iplant/home/wregglej/acsxfdqswfrdafds",
             "label": "acsxfdqswfrdafds",
@@ -37,7 +37,7 @@ __Response Body__:
             "date-created": 1371157127000,
             "date-modified": 1380909580000,
             "file-size": 0,
-            "filter": false,
+            "badName": false,
             "hasSubDirs": true,
             "path": "/iplant/home/wregglej/analyses",
             "label": "analyses",
@@ -49,7 +49,7 @@ __Response Body__:
             "date-created": 1380814985000,
             "date-modified": 1380814985000,
             "file-size": 0,
-            "filter": false,
+            "badName": false,
             "hasSubDirs": true,
             "path": "/iplant/home/wregglej/analyses3",
             "label": "analyses3",
@@ -64,7 +64,7 @@ __Response Body__:
     "path": "/iplant/home/wregglej",
     "label": "wregglej",
     "isFavorite" : false,
-    "filter": true,
+    "badName": true,
     "permission": "own"
     }
 
@@ -105,11 +105,13 @@ __Request Query Params__:
 __Response Body__:
 
     {
+        "badName": false,
         "date-created": 1369778522000,
         "date-modified": 1379520049000,
         "file-size": 0,
         "files": [
             {
+                "badName": false,
                 "date-created": 1379519492000,
                 "date-modified": 1379520049000,
                 "file-size": 196903039,
@@ -123,6 +125,7 @@ __Response Body__:
         ],
         "folders": [
             {
+                "badName": false,
                 "date-created": 1374080225000,
                 "date-modified": 1374080225000,
                 "file-size": 0,
@@ -135,6 +138,7 @@ __Response Body__:
                 "permission": "own"
             },
             {
+                "badName": false,
                 "date-created": 1377814242000,
                 "date-modified": 1377814242000,
                 "file-size": 0,
@@ -147,6 +151,7 @@ __Response Body__:
                 "permission": "own"
             },
             {
+                "badName": false,
                 "date-created": 1373397344000,
                 "date-modified": 1377558112000,
                 "file-size": 0,
@@ -159,6 +164,7 @@ __Response Body__:
                 "permission": "own"
             },
             {
+                "badName": false,
                 "date-created": 1374080529000,
                 "date-modified": 1374080529000,
                 "file-size": 0,
@@ -178,7 +184,8 @@ __Response Body__:
         "label": "wregglej",
         "isFavorite" : false,
         "permission": "own",
-        "total" : 218
+        "total": 218,
+        "totalBad": 0
     }
 
 __Curl Command__:

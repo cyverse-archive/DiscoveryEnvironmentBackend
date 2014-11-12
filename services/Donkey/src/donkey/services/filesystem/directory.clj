@@ -33,17 +33,18 @@
     (let [listing (icat/paged-folder-listing user (cfg/irods-zone) folder :base-name :asc limit 0)]
       (map :full_path listing))))
 
-(defn- filtered-paths
+
+(defn- bad-paths
   "Returns a seq of full paths that should not be included in paged listing."
   [user]
   [(cfg/fs-community-data)
    (ft/path-join (cfg/irods-home) user)
    (ft/path-join (cfg/irods-home) "public")])
 
-(defn- should-filter?
+(defn- is-bad?
   "Returns true if the map is okay to include in a directory listing."
   [user path-to-check]
-  (let [fpaths (set (concat (cfg/fs-filter-files) (filtered-paths user)))]
+  (let [fpaths (set (concat (cfg/fs-bad-names) (bad-paths user)))]
     (or  (contains? fpaths path-to-check)
          (not (paths/valid-path? path-to-check)))))
 
@@ -55,8 +56,8 @@
                   :path          full_path
                   :label         base_name
                   :isFavorite    (meta/is-favorite? user (UUID/fromString uuid))
-                  :filter        (or (should-filter? user full_path)
-                                     (should-filter? user base_name))
+                  :badName       (or (is-bad? user full_path)
+                                     (is-bad? user base_name))
                   :file-size     data_size
                   :date-created  (* (Integer/parseInt create_ts) 1000)
                   :date-modified (* (Integer/parseInt modify_ts) 1000)
@@ -86,8 +87,8 @@
      :path          path
      :label         (paths/id->label user path)
      :isFavorite    (meta/is-favorite? user (UUID/fromString id))
-     :filter        (or (should-filter? user path)
-                        (should-filter? user (fs/base-name path)))
+     :badName       (or (is-bad? user path)
+                        (is-bad? user (fs/base-name path)))
      :permission    (:permission entry)
      :date-created  (:dateCreated entry)
      :date-modified (:dateModified entry)
@@ -159,7 +160,7 @@
      :label         (paths/id->label user path)
      :infoType      (:infoType entry)
      :isFavorite    (meta/is-favorite? user (UUID/fromString id))
-     :filter        (:filter entry)
+     :badName       (:badName entry)
      :permission    (:permission entry)
      :date-created  (:dateCreated entry)
      :date-modified (:dateModified entry)
@@ -169,11 +170,11 @@
 (defn- format-page
   [user page]
   (assoc (format-entry user page)
-    :hasSubDirs     true
-    :files          (map #(format-entry user %) (:files page))
-    :folders        (map #(format-entry user %) (:folders page))
-    :total          (:total page)
-    :total_filtered (:totalFiltered page)))
+    :hasSubDirs true
+    :files      (map #(format-entry user %) (:files page))
+    :folders    (map #(format-entry user %) (:folders page))
+    :total      (:total page)
+    :totalBad   (:totalBad page)))
 
 
 (defn- handle-not-processable
@@ -190,14 +191,14 @@
   [user path limit offset sort-field sort-order info-type]
   (log/info "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
   (let [url-path         (data/mk-entries-path-url-path path)
-        params           {:user         user
-                          :limit        limit
-                          :offset       offset
-                          :filter-chars (cfg/fs-filter-chars)
-                          :filter-name  (cfg/fs-filter-files)
-                          :filter-path  (filtered-paths user)
-                          :sort-field   sort-field
-                          :sort-order   sort-order}
+        params           {:user       user
+                          :limit      limit
+                          :offset     offset
+                          :bad-chars  (cfg/fs-bad-chars)
+                          :bad-name   (cfg/fs-bad-names)
+                          :bad-path   (bad-paths user)
+                          :sort-field sort-field
+                          :sort-order sort-order}
         params           (if info-type
                            (assoc params :info-type info-type)
                            params)
