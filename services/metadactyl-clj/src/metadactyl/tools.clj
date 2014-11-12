@@ -23,6 +23,14 @@
         {(sqlfn lower :tools.name) [like (sqlfn lower search-term)]}
         {(sqlfn lower :tools.description) [like (sqlfn lower search-term)]}))))
 
+(defn- add-hidden-tool-types-clause
+  "Adds the clause used to filter out hidden tool types if hidden tool types are not supposed to
+   be included in the result set."
+  [base-query include-hidden]
+  (if-not include-hidden
+    (where base-query {:tool_types.hidden false})
+    base-query))
+
 (defn tool-listing-base-query
   "Obtains a listing query for tools, with optional search and paging params."
   ([]
@@ -35,14 +43,16 @@
                [:tools.version :version]
                [:tools.attribution :attribution])
        (join tool_types)))
-  ([{search-term :search :keys [sort-field sort-dir limit offset]}]
+  ([{search-term :search :keys [sort-field sort-dir limit offset include-hidden]
+                         :or {include-hidden false}}]
    (let [sort-field (when sort-field (keyword (str "tools." sort-field)))
          sort-dir (when sort-dir (keyword (upper-case sort-dir)))]
      (-> (tool-listing-base-query)
          (add-search-where-clauses search-term)
          (add-query-sorting sort-field sort-dir)
          (add-query-limit limit)
-         (add-query-offset offset)))))
+         (add-query-offset offset)
+         (add-hidden-tool-types-clause include-hidden)))))
 
 (defn search-tools
   "Obtains a listing of tools for the tool search service."

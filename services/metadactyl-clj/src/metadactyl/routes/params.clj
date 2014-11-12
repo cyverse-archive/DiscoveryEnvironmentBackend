@@ -52,6 +52,10 @@
       descending (`DESC`) order, before limits and offsets are applied. Defaults to `ASC`.
       See http://www.postgresql.org/docs/9.3/interactive/queries-order.html")})
 
+(s/defschema IncludeHiddenParams
+  {(s/optional-key :include-hidden)
+   (ss/describe String "True if hidden elements should be included in the results.")})
+
 (s/defschema SecuredPagingParams
   (merge SecuredQueryParams PagingParams))
 
@@ -63,7 +67,7 @@
          {:search (ss/describe String "The pattern to match in an App's Name or Description.")}))
 
 (s/defschema ToolSearchParams
-  (merge SecuredPagingParams
+  (merge SecuredPagingParams IncludeHiddenParams
     {:search (ss/describe String "The pattern to match in an Tool's Name or Description.")}))
 
 (s/defschema AppParameterTypeParams
