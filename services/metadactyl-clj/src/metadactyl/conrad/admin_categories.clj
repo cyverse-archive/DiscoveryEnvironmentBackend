@@ -1,5 +1,6 @@
 (ns metadactyl.conrad.admin-categories
   (:use [kameleon.app-groups :only [add-subgroup
+                                    category-ancestor-of-subcategory?
                                     category-contains-apps?
                                     category-contains-subcategory?
                                     category-hierarchy-contains-apps?
@@ -52,6 +53,14 @@
     (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
              :reason     "Parent App Category already contains Apps"
              :parent_id  parent-id})))
+
+(defn- validate-category-not-ancestor-of-parent
+  [category-id parent-id]
+  (when (category-ancestor-of-subcategory? category-id parent-id)
+    (throw+ {:error_code   ce/ERR_ILLEGAL_ARGUMENT
+             :reason       "App Category is an ancestor of the destination Category"
+             :category_id  category-id
+             :parent_id    parent-id})))
 
 (defn- validate-category-hierarchy-empty
   "Validates that the given App Category and its subcategories contain no Apps."
@@ -119,6 +128,7 @@
         (validate-subcategory-name parent_id (or name (:name category)))
         (validate-category-empty parent_id)
         (decategorize-category category-id)
+        (validate-category-not-ancestor-of-parent category-id parent_id)
         (add-subgroup parent_id category-id))
       (list-apps-in-group category-id {}))))
 

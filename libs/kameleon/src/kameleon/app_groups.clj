@@ -124,6 +124,14 @@
          (where {:acg.parent_category_id category-id
                  :name name}))))
 
+(defn category-ancestor-of-subcategory?
+  "Checks if the app category ID is a parent or ancestor of the subcategory ID in the
+   app_category_group table."
+  [category-id subcategory-id]
+  (seq (select :app_category_group
+         (where {:child_category_id [in (subselect (sqlfn :app_category_hierarchy_ids category-id))]})
+         (where {:child_category_id subcategory-id}))))
+
 (defn category-contains-apps?
   "Checks if the app category with the given ID directly contains any apps."
   [category-id]
