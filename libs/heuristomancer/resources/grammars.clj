@@ -43,4 +43,5 @@
  [:gde       "ebnf/gde.ebnf"]
  [:fasta     "ebnf/fasta.ebnf"]
  [:phylip    "ebnf/phylip.ebnf"]
+ [:path-list "ebnf/path_list.ebnf"]
  [:raw       "ebnf/raw.ebnf"]]

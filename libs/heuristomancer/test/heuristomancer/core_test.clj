@@ -91,6 +91,7 @@
    ["hg16_chroms.gff"         :gff]
    ["myco_sites.gff"          :gff]
    ["test.gff"                :gff]
+   ["de-path-list.txt"        :path-list]
    ["dna.phylip"              :phylip]
    ["dna.pir"                 :pir]
    ["protein.pir"             :pir]

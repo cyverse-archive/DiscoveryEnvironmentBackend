@@ -1,0 +1,10 @@
+# application/vnd.de.path-list+csv; version=1
+/iplant/home/sample/one.txt
+/iplant/home/sample/two.txt
+/iplant/home/sample/three.txt
+/iplant/home/sample/four.txt
+/iplant/home/sample/five.txt
+/iplant/home/sample/six.txt
+/iplant/home/sample/seven.txt
+/iplant/home/sample/eight.txt
+/iplant/home/sample/nine.txt
