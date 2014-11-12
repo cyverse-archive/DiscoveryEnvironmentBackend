@@ -95,12 +95,13 @@
           :query [params SecuredQueryParams]
           :body [body (describe AdminAppPatchRequest "The App to update.")]
           :return AppDetails
-          :summary "Update App Labels and Details"
-          :notes "This service is capable of updating high-level information of App, as well as just
-          the labels within a single-step app that has already been made available for public use.
-          <b>Note</b>: Although this endpoint accepts all App Group and Parameter fields, only their
-          'description', 'label', and 'display' (only in parameter arguments) fields will be
-          processed and updated by this endpoint."
+          :summary "Update App Details and Labels"
+          :notes "This service is capable of updating high-level information of an App, including
+          'deleted' and 'disabled' flags, as well as just the labels within a single-step app that
+          has already been made available for public use.
+          <b>Note</b>: Although this endpoint accepts all App Group and Parameter fields within the
+          'groups' array, only their 'description', 'label', and 'display' (only in parameter
+          arguments) fields will be processed and updated by this endpoint."
           (ce/trap uri #(update-app (assoc body :id app-id)))))
 
 (defroutes* admin-categories
