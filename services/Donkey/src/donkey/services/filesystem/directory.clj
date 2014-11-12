@@ -176,6 +176,15 @@
     :total_filtered (:totalFiltered page)))
 
 
+(defn- handle-not-processable
+  [method url err]
+  (let [body (json/decode (:body err) true)]
+    (if (and (= (:error_code body) error/ERR_BAD_QUERY_PARAMETER)
+             (= (:parameters body) ["info-type"]))
+      (throw+ body)
+      (data/respond-with-default-error 422 method url err))))
+
+
 (defn- paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
   [user path limit offset sort-field sort-order info-type]
@@ -197,7 +206,8 @@
       :403 handle-not-found
       :404 handle-not-found
       :410 handle-not-found
-      :414 handle-not-found)))
+      :414 handle-not-found
+      :422 handle-not-processable)))
 
 
 (defn- resolve-sort-field
