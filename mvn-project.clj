@@ -55,5 +55,3 @@
         props (get-mvn-properties pom)]
     (mapv (partial build-dependency props)
           (get-tag-content pom :dependencies))))
-
-(pprint (get-mvn-deps "libs/hibernatetoolkit/pom.xml"))
