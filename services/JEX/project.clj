@@ -18,6 +18,7 @@
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/java.classpath "0.1.0"]
                  [cheshire "5.0.1"]
+                 [com.cemerick/url "0.1.1"]
                  [compojure "1.0.1"]
                  [ring/ring-jetty-adapter "1.0.1"]
                  [org.iplantc/clojure-commons "4.0.5"]

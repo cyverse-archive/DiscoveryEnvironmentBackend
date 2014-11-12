@@ -9,6 +9,7 @@
             [clojure.java.shell :as sh]
             [clojure-commons.osm :as osm]
             [clj-http.client :as http]
+            [cemerick.url :refer (url url-encode)]
             [cheshire.core :as cheshire]))
 
 (defn failure [reason]
@@ -56,7 +57,8 @@
                       :submitter    submitter
                       :appid        app-id
                       :invocationid inv-id}
-          result     (http/post (cfg/jex-events-url) {:form-params job-record
+          post-url   (str (url (cfg/jex-events-url) "jobs"))
+          result     (http/post post-url {:form-params job-record
                                                       :content-type :json}
                                 {:throw-exceptions false})]
       (log/info result))
@@ -88,32 +90,19 @@
 
 (defn get-job-sub-id
   [uuid]
-  (let [osm-client (osm/create (cfg/osm-url) (cfg/osm-coll))
-        result     (cheshire/decode
-                    (osm/query osm-client {:state.uuid uuid})
-                    true)]
+  (let [get-url (str (url (cfg/jex-events-url) "invocations" uuid))
+        result  (cheshire/decode (:body (http/get get-url)) true)]
     (when-not result
       (throw+ (missing-condor-id uuid)))
-
-    (when-not (contains? result :objects)
+    (when-not (contains? result :CondorID)
       (throw+ (missing-condor-id uuid)))
-
-    (when-not (pos? (count (:objects result)))
-      (throw+ (missing-condor-id uuid)))
-
-    (when-not (contains? (first (:objects result)) :state)
-      (throw+ (missing-condor-id uuid)))
-
-    (when-not (contains? (:state (first (:objects result))) :sub_id)
-      (throw+ (missing-condor-id uuid)))
-
-    (get-in (first (:objects result)) [:state :sub_id])))
-
+    (:CondorID result)))
 
 (defn stop-analysis
   "Calls condor_rm on the submission id associated with the provided analysis
    id."
   [uuid]
+  (log/warn "Received request to stop job" uuid)
   (let [sub-id (get-job-sub-id uuid)]
     (log/debug (str "Grabbed Condor ID: " sub-id))
     (if sub-id
@@ -236,6 +225,6 @@
                     (xform-map-for-osm updated-map sub-id)
                     sub-result)]
     (log/warn "Submitted Job:" sub-id "OSM doc:" doc-id)
-    (log/warn "Pushing to jex-events:" sub-id (:username updated-map) (:app_id updated-map))
+    (log/warn "Pushing to jex-events:" sub-id (:username updated-map) (:app_id updated-map) (:uuid updated-map))
     (push-job-to-jex-events sub-id (:username updated-map) (:app_id updated-map) (:uuid updated-map))
     [(:exit sub-result) sub-id doc-id]))
