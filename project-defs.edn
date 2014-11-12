@@ -174,17 +174,6 @@
   :language :clojure
   :archive? true}
 
- "Conrad"
- {:type     :service
-  :path     "services/Conrad"
-  :build    :lein
-  :rpm?     true
-  :tarball? false
-  :uberjar? true
-  :install? false
-  :language :clojure
-  :archive? true}
-
  "dewey"
  {:type     :service
   :path     "services/dewey"
