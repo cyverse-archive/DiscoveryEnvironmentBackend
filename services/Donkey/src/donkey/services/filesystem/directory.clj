@@ -178,19 +178,22 @@
 
 (defn- paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
-  [user path limit offset sort-field sort-order]
-  (log/warn "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
+  [user path limit offset sort-field sort-order info-type]
+  (log/info "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
   (let [url-path         (data/mk-entries-path-url-path path)
-        req-map          {:query-params {:user         user
-                                         :limit        limit
-                                         :offset       offset
-                                         :filter-chars (cfg/fs-filter-chars)
-                                         :filter-name  (cfg/fs-filter-files)
-                                         :filter-path  (filtered-paths user)
-                                         :sort-field   sort-field
-                                         :sort-order   sort-order}}
+        params           {:user         user
+                          :limit        limit
+                          :offset       offset
+                          :filter-chars (cfg/fs-filter-chars)
+                          :filter-name  (cfg/fs-filter-files)
+                          :filter-path  (filtered-paths user)
+                          :sort-field   sort-field
+                          :sort-order   sort-order}
+        params           (if info-type
+                           (assoc params :info-type info-type)
+                           params)
         handle-not-found (fn [_ _ _] (throw+ {:error_code error/ERR_NOT_FOUND :path path}))]
-    (data/request :get url-path req-map
+    (data/request :get url-path {:query-params params}
       :403 handle-not-found
       :404 handle-not-found
       :410 handle-not-found
@@ -229,6 +232,7 @@
   "Entrypoint for the API that calls (paged-dir-listing)."
   [{user       :user
     path       :path
+    info-type  :info-type
     limit      :limit
     offset     :offset
     sort-col   :sort-col
@@ -238,7 +242,7 @@
   (let [path       (ft/rm-last-slash path)
         sort-field (resolve-sort-field sort-col)
         sort-order (resolve-sort-order sort-order)
-        resp       (paged-dir-listing user path limit offset sort-field sort-order)]
+        resp       (paged-dir-listing user path limit offset sort-field sort-order info-type)]
     (format-page user (json/decode (:body resp) true))))
 
 (with-pre-hook! #'do-paged-listing

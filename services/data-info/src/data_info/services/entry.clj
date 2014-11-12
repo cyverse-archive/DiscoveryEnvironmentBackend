@@ -161,7 +161,6 @@
       (->> filter-path-params (map fmt-path) (remove nil?) set))))
 
 
-
 (defn- resolve-info-types
   [info-type-params]
   (let [resolve-type     (fn [param] (when (some #(= param %) (info/supported-formats))
