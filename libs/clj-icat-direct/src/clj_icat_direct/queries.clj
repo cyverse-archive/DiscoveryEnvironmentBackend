@@ -14,12 +14,12 @@
 
 (defn- file-chars-cond
   [_ filter-chars]
-  (str "d.data_name ~ '" (filter-chars->sql-char-class filter-chars) "'"))
+  (str "d.data_name ~ E'" (filter-chars->sql-char-class filter-chars) "'"))
 
 
 (defn- folder-chars-cond
   [parent-path filter-chars]
-  (str "c.coll_name ~ '" parent-path "/.*" (filter-chars->sql-char-class filter-chars) "'"))
+  (str "c.coll_name ~ E'" parent-path "/.*" (filter-chars->sql-char-class filter-chars) "'"))
 
 
 (defn- file-name-cond
