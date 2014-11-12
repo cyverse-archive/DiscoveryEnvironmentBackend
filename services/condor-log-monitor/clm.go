@@ -132,17 +132,21 @@ type ConnectionErrorChan struct {
 // exchange, and create a new channel. Make sure you call the Close method when
 // you are done, most likely with a defer statement.
 func (p *AMQPPublisher) Connect(errorChan chan ConnectionErrorChan) error {
+	log.Printf("Dialing %s", p.URI)
 	connection, err := amqp.Dial(p.URI)
 	if err != nil {
 		return err
 	}
 	p.connection = connection
 
+	log.Println("Creating channel on the connection.")
 	channel, err := p.connection.Channel()
 	if err != nil {
 		return err
 	}
+	log.Printf("Done creating channel on the connection.")
 
+	log.Printf("Declaring exchange %s with a type of %s", p.ExchangeName, p.ExchangeType)
 	err = channel.ExchangeDeclare(
 		p.ExchangeName,
 		p.ExchangeType,
@@ -155,6 +159,7 @@ func (p *AMQPPublisher) Connect(errorChan chan ConnectionErrorChan) error {
 	if err != nil {
 		return err
 	}
+	log.Println("Done declaring exchange.")
 	p.channel = channel
 	errors := p.connection.NotifyClose(make(chan *amqp.Error))
 	msg := ConnectionErrorChan{
@@ -198,6 +203,7 @@ func (p *AMQPPublisher) PublishString(body string) error {
 
 // PublishBytes sends off the bytes to the AMQP broker.
 func (p *AMQPPublisher) PublishBytes(body []byte) error {
+	log.Printf("Publishing message to the %s exchange using routing key %s", p.ExchangeName, p.RoutingKey)
 	if err := p.channel.Publish(
 		p.ExchangeName,
 		p.RoutingKey,
@@ -214,6 +220,7 @@ func (p *AMQPPublisher) PublishBytes(body []byte) error {
 	); err != nil {
 		return err
 	}
+	log.Printf("Done publishing message.")
 	return nil
 }
 
@@ -353,17 +360,13 @@ func MonitorPath(path string, sleepyTime time.Duration, changeDetected chan<- in
 	}
 	lastmod := fileinfo.ModTime()
 	for {
-		log.Println("Beginning sleep")
 		time.Sleep(sleepyTime)
-		log.Println("Done sleeping")
 		latestInfo, err := os.Stat(path)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 		latestLastMod := latestInfo.ModTime()
-		log.Printf("Previous last modified time for %s: %s\n", path, lastmod.String())
-		log.Printf("Latest last modified time for %s: %s\n", path, latestLastMod.String())
 		if !latestLastMod.Equal(lastmod) {
 			log.Printf("Change detected in %s\n", path)
 			changeDetected <- 1
