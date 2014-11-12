@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
+	"path"
 	"time"
 )
 
@@ -28,28 +30,29 @@ type JobState struct {
 // different job states. Right now we map the Condor states to DE states here.
 type PostEventHandler struct {
 	PostURL string
+	JEXURL  string
 }
 
 // Route decides which handling function an event should be passed along to and
 // then invokes that function.
 func (p *PostEventHandler) Route(event *Event) error {
 	switch event.EventNumber {
-	case "000":
+	case "000": //Job Submitted
 		return p.Submitted(event)
-	case "001":
+	case "001": //Job running
 		return p.Running(event)
-	case "002":
+	case "002": // error in executable
 		return p.Failed(event)
-	case "004":
+	case "004": // job evicted
 		return p.Failed(event)
-	case "005":
+	case "005": // job terminated
 		return p.Completed(event)
-	case "009":
+	case "009": // job aborted
 		return p.Failed(event)
-	case "010":
+	case "010": // job suspended
 		return p.Failed(event)
-	case "012":
-		return p.Failed(event)
+	case "012": // job held
+		return p.Held(event)
 	default:
 		return p.Unrouted(event)
 	}
@@ -166,6 +169,32 @@ func (p *PostEventHandler) Completed(event *Event) error {
 	}
 	log.Printf("Sending Completed' event to %s: %s", p.PostURL, string(json))
 	resp, err := http.Post(p.PostURL, "application/json", bytes.NewBuffer(json))
+	if err != nil {
+		return err
+	}
+	LogResponse(resp)
+	return nil
+}
+
+// Held handles event number 012, which means that a job was put into the held
+// state. Our system can't recover from a job going into this state, so the job
+// has to be killed. This is accomplished by sending a DELETE to a URL in the
+// JEX. We don't have to send a status notification to Donkey here, since the
+// job will come through as failed.
+func (p *PostEventHandler) Held(event *Event) error {
+	log.Printf("Job %s is in the held state", event.ID)
+	stopPath := path.Join("/stop", event.InvocationID)
+	stopURL, err := url.Parse(p.JEXURL)
+	if err != nil {
+		return err
+	}
+	stopURL.Path = stopPath
+	log.Printf("Posting a request to stop job %s to %s", event.ID, stopURL.String())
+	req, err := http.NewRequest("DELETE", stopURL.String(), nil)
+	if err != nil {
+		return nil
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}

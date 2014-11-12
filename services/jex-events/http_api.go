@@ -97,7 +97,7 @@ func (h *HTTPAPI) InvocationHTTPGet(writer http.ResponseWriter, request *http.Re
 		writer.Write([]byte(err.Error()))
 		return
 	}
-	log.Println(marshalled)
+	log.Println(string(marshalled[:]))
 	writer.Write(marshalled)
 }
 
@@ -132,7 +132,7 @@ func (h *HTTPAPI) JobHTTPGet(writer http.ResponseWriter, request *http.Request) 
 		writer.Write([]byte(err.Error()))
 		return
 	}
-	log.Println(marshalled)
+	log.Println(string(marshalled[:]))
 	writer.Write(marshalled)
 }
 

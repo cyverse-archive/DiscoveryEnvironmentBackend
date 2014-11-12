@@ -23,7 +23,7 @@ func init() {
 
 // Configuration instance contain config values for jex-events.
 type Configuration struct {
-	AMQPURI, DBURI, EventURL                                              string
+	AMQPURI, DBURI, EventURL, JEXURL                                      string
 	ConsumerTag, HTTPListenPort                                           string
 	ExchangeName, ExchangeType, RoutingKey, QueueName, QueueBindingKey    string
 	ExchangeDurable, ExchangeAutodelete, ExchangeInternal, ExchangeNoWait bool
@@ -141,7 +141,7 @@ type ConnectionErrorChannel struct {
 
 // MsgHandler functions will accept msgs from a Delivery channel and report
 // error on the error channel.
-type MsgHandler func(<-chan amqp.Delivery, <-chan int, *Databaser, string)
+type MsgHandler func(<-chan amqp.Delivery, <-chan int, *Databaser, string, string)
 
 // Connect sets up a connection to an AMQP exchange
 func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan amqp.Delivery, error) {
@@ -218,7 +218,14 @@ func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan
 
 // SetupReconnection fires up a goroutine that listens for Close() errors and
 // reconnects to the AMQP server if they're encountered.
-func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, handler MsgHandler, quitHandler chan int, d *Databaser, postURL string) {
+func (c *AMQPConsumer) SetupReconnection(
+	errorChan chan ConnectionErrorChannel,
+	handler MsgHandler,
+	quitHandler chan int,
+	d *Databaser,
+	postURL string,
+	JEXURL string,
+) {
 	//errors := p.connection.NotifyClose(make(chan *amqp.Error))
 	go func() {
 		var exitChan chan *amqp.Error
@@ -238,7 +245,7 @@ func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, 
 						log.Print("Error reconnecting to server, exiting.")
 						log.Print(err)
 					}
-					handler(deliveries, quitHandler, d, postURL)
+					handler(deliveries, quitHandler, d, postURL, JEXURL)
 					reconfig = true //
 				} else {
 					log.Println(exitError)
@@ -248,7 +255,7 @@ func (c *AMQPConsumer) SetupReconnection(errorChan chan ConnectionErrorChannel, 
 						log.Print("Error reconnecting to server, exiting.")
 						log.Print(err)
 					}
-					handler(deliveries, quitHandler, d, postURL)
+					handler(deliveries, quitHandler, d, postURL, JEXURL)
 					reconfig = false
 				}
 			}
@@ -367,9 +374,10 @@ func (e *Event) Parse() {
 }
 
 // EventHandler processes incoming event messages
-func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser, postURL string) {
+func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser, postURL string, JEXURL string) {
 	eventHandler := PostEventHandler{
 		PostURL: postURL,
+		JEXURL:  JEXURL,
 	}
 	for {
 		select {
@@ -450,7 +458,7 @@ func main() {
 	connErrChan := make(chan ConnectionErrorChannel)
 	quitHandler := make(chan int)
 	consumer := NewAMQPConsumer(config)
-	consumer.SetupReconnection(connErrChan, EventHandler, quitHandler, databaser, config.EventURL)
+	consumer.SetupReconnection(connErrChan, EventHandler, quitHandler, databaser, config.EventURL, config.JEXURL)
 	log.Print("Setting up HTTP")
 	SetupHTTP(config, databaser)
 	log.Print("Done setting up HTTP")
@@ -459,5 +467,5 @@ func main() {
 		log.Print(err)
 		os.Exit(-1)
 	}
-	EventHandler(deliveries, quitHandler, databaser, config.EventURL)
+	EventHandler(deliveries, quitHandler, databaser, config.EventURL, config.JEXURL)
 }
