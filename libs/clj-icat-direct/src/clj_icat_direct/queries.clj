@@ -106,13 +106,13 @@
         fmt-ft     (prepare-text-set file-types)]
     (cond
       (empty? file-types)
-      ""
+      "TRUE"
 
       (some #(= "raw" %) file-types)
-      (str "AND (f.meta_attr_value IS NULL OR f.meta_attr_value IN ('', " fmt-ft "))")
+      (str "f.meta_attr_value IS NULL OR f.meta_attr_value IN ('', " fmt-ft ")")
 
       :else
-      (str "AND f.meta_attr_value IN (" fmt-ft ")"))))
+      (str "f.meta_attr_value IN (" fmt-ft ")"))))
 
 
 (def queries
@@ -140,7 +140,8 @@
       FROM ( SELECT DISTINCT d.data_id FROM r_objt_access a
                JOIN data_objs d ON a.object_id = d.data_id
           LEFT JOIN file_types f ON d.data_id = f.object_id
-              WHERE a.user_id IN ( SELECT group_user_id FROM user_groups ) %s
+              WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
+                AND (%s)
               UNION
              SELECT c.coll_id
                FROM r_coll_main c
@@ -202,7 +203,7 @@
                JOIN data_objs d ON a.object_id = d.data_id
           LEFT JOIN file_types f ON d.data_id = f.object_id
               WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-                %s
+                AND (%s)
                 AND (%s)
               UNION
              SELECT c.coll_id
@@ -408,7 +409,7 @@
                    ON d.data_id = f.object_id
                  WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
                    AND m.meta_attr_name = 'ipc_UUID'
-                   %s ) AS p
+                   AND (%s) ) AS p
       ORDER BY p.type ASC, %s %s
       LIMIT ?
       OFFSET ?"
