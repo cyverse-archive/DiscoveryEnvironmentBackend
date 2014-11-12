@@ -318,6 +318,63 @@ func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
 	return jr, err
 }
 
+// GetJobByInvocationID returns a JobRecord from the database.
+func (d *Databaser) GetJobByInvocationID(invocationID string) (*JobRecord, error) {
+	query := `
+	SELECT cast(id as varchar),
+	       batch_id,
+				 submitter,
+				 date_submitted,
+				 date_started,
+				 date_completed,
+				 app_id,
+				 exit_code,
+				 failure_threshold,
+				 failure_count,
+				 condor_id,
+				 invocation_id
+	  FROM jobs
+	 WHERE invocation_id = cast($1 as uuid)
+	`
+	jr := &JobRecord{}
+	rows := d.db.QueryRow(query, invocationID)
+	var batchid interface{}
+	var appid interface{}
+	var invid interface{}
+	err := rows.Scan(
+		&jr.ID,
+		&batchid,
+		&jr.Submitter,
+		&jr.DateSubmitted,
+		&jr.DateStarted,
+		&jr.DateCompleted,
+		&appid,
+		&jr.ExitCode,
+		&jr.FailureThreshold,
+		&jr.FailureCount,
+		&jr.CondorID,
+		&invid,
+	)
+	// This evil has been perpetrated to avoid an issue where time.Time instances
+	// set to their zero value and stored in PostgreSQL with timezone info can
+	// come back as Time instances from __before__ the epoch. We need to re-zero
+	// the dates on the fly when that happens.
+	epoch := time.Unix(0, 0)
+	if jr.DateSubmitted.Before(epoch) {
+		jr.DateSubmitted = epoch
+	}
+	if jr.DateStarted.Before(epoch) {
+		jr.DateStarted = epoch
+	}
+	if jr.DateCompleted.Before(epoch) {
+		jr.DateCompleted = epoch
+	}
+	FixBatchID(jr, batchid)
+	FixAppID(jr, appid)
+	FixInvID(jr, invid)
+	return jr, err
+}
+
 // UpdateJob updates a job instance in the database
 func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
 	query := `

@@ -35,10 +35,10 @@ func LogAPIMsg(request *http.Request, msg string) {
 	)
 }
 
-// Route looks at the requests method and decides which function should handle
+// RouteJobRequests looks at the requests method and decides which function should handle
 // the request.
-func (h *HTTPAPI) Route(writer http.ResponseWriter, request *http.Request) {
-	LogAPIMsg(request, "Request received; routing")
+func (h *HTTPAPI) RouteJobRequests(writer http.ResponseWriter, request *http.Request) {
+	LogAPIMsg(request, "Job request received; routing")
 	switch request.Method {
 	case "GET":
 		h.JobHTTPGet(writer, request)
@@ -49,6 +49,56 @@ func (h *HTTPAPI) Route(writer http.ResponseWriter, request *http.Request) {
 	default:
 		LogAPIMsg(request, fmt.Sprintf("Method %s is not supported on /jobs", request.Method))
 	}
+}
+
+// RouteInvocationRequests looks at the requests method and decides which function should
+// handle the request.
+func (h *HTTPAPI) RouteInvocationRequests(writer http.ResponseWriter, request *http.Request) {
+	LogAPIMsg(request, "Invocation request received; routing")
+	switch request.Method {
+	case "GET":
+		h.InvocationHTTPGet(writer, request)
+	case "":
+		h.InvocationHTTPGet(writer, request)
+	default:
+		LogAPIMsg(request, fmt.Sprintf("Method %s is not supported on /invocation", request.Method))
+	}
+}
+
+// InvocationHTTPGet is responsible for getting a Job from the database by
+// its InvocationID and returning the job record as a JSON encoded string body.
+// The Invocation UUID is extracted from the basename of the URL path and must
+// be a valid UUID.
+func (h *HTTPAPI) InvocationHTTPGet(writer http.ResponseWriter, request *http.Request) {
+	log.Printf("Handling GET request for %s", request.URL.Path)
+	baseName := path.Base(request.URL.Path)
+	if baseName == "" {
+		WriteRequestError(writer, "The path must contain an invocation UUID")
+		return
+	}
+	log.Printf("Requested job UUID: %s", baseName)
+	if uuid.Parse(baseName) == nil {
+		WriteRequestError(writer, fmt.Sprintf("The base of the path must be a UUID: %s", baseName))
+		return
+	}
+	jr, err := h.d.GetJobByInvocationID(baseName)
+	if err != nil {
+		WriteRequestError(writer, err.Error())
+		return
+	}
+	if jr == nil {
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Write([]byte(fmt.Sprintf("Job %s was not found", baseName)))
+		return
+	}
+	marshalled, err := json.Marshal(jr)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(err.Error()))
+		return
+	}
+	log.Println(marshalled)
+	writer.Write(marshalled)
 }
 
 // JobHTTPGet is responsible for retrieving a Job from the database and returning
@@ -176,8 +226,10 @@ func SetupHTTP(config *Configuration, d *Databaser) {
 		api := HTTPAPI{
 			d: d,
 		}
-		http.HandleFunc("/jobs/", api.Route)
-		http.HandleFunc("/jobs", api.Route)
+		http.HandleFunc("/jobs/", api.RouteJobRequests)
+		http.HandleFunc("/jobs", api.RouteJobRequests)
+		http.HandleFunc("/invocations/", api.RouteInvocationRequests)
+		http.HandleFunc("/invocation", api.RouteInvocationRequests)
 		log.Printf("Listening for HTTP requests on %s", config.HTTPListenPort)
 		log.Fatal(http.ListenAndServe(config.HTTPListenPort, nil))
 	}()
