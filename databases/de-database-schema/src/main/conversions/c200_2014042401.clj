@@ -406,7 +406,11 @@
 (defn- add-new-data
   []
   (println "\t* adding new reference genome parameter types...")
-  (load-sql-file "conversions/c200_2014042401/data/01_parameter_types.sql"))
+  (load-sql-file "conversions/c200_2014042401/data/01_parameter_types.sql")
+  (println "\t* adding new tool types...")
+  (load-sql-file "conversions/c200_2014042401/data/02_tool_types.sql")
+  (println "\t* adding internal apps...")
+  (load-sql-file "data/21_internal_apps.sql"))
 
 (defn- param-type-subselect
   [param-type]

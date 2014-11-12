@@ -6,7 +6,8 @@ SET search_path = public, pg_catalog;
 CREATE VIEW app_job_types AS
     SELECT
         apps.id AS app_id,
-        tt.name AS job_type
+        tt.name AS job_type,
+        tt.hidden
     FROM apps
         JOIN app_steps steps ON apps.id = steps.app_id
         JOIN tasks t ON steps.task_id = t.id

@@ -12,6 +12,7 @@ CREATE VIEW tool_listing AS
            tool.description,
            tool.location,
            tt."name" AS "type",
+           tt.hidden,
            tool.version,
            tool.attribution
     FROM apps
