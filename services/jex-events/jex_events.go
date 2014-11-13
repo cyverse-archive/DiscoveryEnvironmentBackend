@@ -378,6 +378,7 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 	eventHandler := PostEventHandler{
 		PostURL: postURL,
 		JEXURL:  JEXURL,
+		DB:      d,
 	}
 	for {
 		select {
@@ -399,6 +400,9 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 				continue
 			}
 			job.ExitCode = event.ExitCode
+			if job.ExitCode != 0 {
+				job.FailureCount = job.FailureCount + 1
+			}
 			job, err = d.UpdateJob(job) // Need to make sure the exit code gets stored.
 			if err != nil {
 				log.Printf("Error updating job")

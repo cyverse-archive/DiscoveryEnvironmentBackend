@@ -31,6 +31,7 @@ type JobState struct {
 type PostEventHandler struct {
 	PostURL string
 	JEXURL  string
+	DB      *Databaser
 }
 
 // Route decides which handling function an event should be passed along to and
