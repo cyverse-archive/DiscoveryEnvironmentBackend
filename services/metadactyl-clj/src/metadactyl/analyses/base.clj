@@ -181,15 +181,3 @@
 (defn build-submission
   [user email submission]
   (.buildSubmission (build-job-request-formatter user email submission)))
-
-;; TODO: remove when this is no longer needed.
-(defn- load-submission
-  [path]
-  (-> (slurp path)
-      (cheshire.core/decode true)
-      (update-in [:app_id] kameleon.uuids/uuidify)))
-
-;; TODO: remove when this is no longer needed.
-(defn test-submission
-  [user email path]
-  (build-submission user email (load-submission path)))
