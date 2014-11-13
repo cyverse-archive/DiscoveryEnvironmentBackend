@@ -5,7 +5,8 @@
             [clojure-commons.error-codes :as ce]
             [clojure-commons.props :as cp]
             [clojure.tools.logging :as log])
-  (:import [java.io IOException]))
+  (:import [java.io IOException]
+           [java.util UUID]))
 
 (defn load-config-from-file
   "A multi-arity function that loads the configuration properties from a file.
@@ -188,12 +189,27 @@
    can't be converted.
 
    Parameters:
-       props        - a ref containing the properties.
+       prop-name    - the name of the property.
        value        - the value of the property as a string.
        config-valid - a ref containing a validity flag."
   [prop-name value config-valid]
   (try
     (Boolean/parseBoolean value)
+    (catch Exception e
+      (record-invalid-prop prop-name e config-valid)
+      false)))
+
+(defn string-to-uuid
+  "Attempts to convert a String property to a UUID property.  Returns false if the property can't
+   be converted.
+
+   Parameters:
+       prop-name    - the name of the property.
+       value        - the value of the property as a string.
+       config-valid - a ref containing a validity flag."
+  [prop-name value config-valid]
+  (try
+    (UUID/fromString value)
     (catch Exception e
       (record-invalid-prop prop-name e config-valid)
       false)))
@@ -286,6 +302,36 @@
   ([props prop-name config-valid default]
      (if-let [string-value (get-optional-prop props prop-name config-valid nil)]
        (string-to-boolean prop-name string-value config-valid)
+       default)))
+
+(defn get-required-uuid-prop
+  "Gets a required UUID property from a set of properties. If a property is missing or not able
+   to be converted to a UUID then the configuration will be marked as invalid and false will be
+   returned.
+
+   Parameters:
+       props        - a ref containing the properties.
+       prop-name    - the name of a property.
+       config-valid - a ref containing a validity flag."
+  [props prop-name config-valid]
+  (let [value (get-required-prop props prop-name config-valid)]
+    (if (string/blank? value)
+      false
+      (string-to-uuid prop-name value config-valid))))
+
+(defn get-optional-uuid-prop
+  "Gets an optional UUID property from a set of properties.
+
+   Parameters:
+       props        - a ref containing the properties.
+       prop-name    - the name of the property.
+       config-valid - a ref containing the vailidity flag.
+       default      - the default value."
+  ([props prop-name config-valid]
+     (get-optional-uuid-prop props prop-name config-valid nil))
+  ([props prop-name config-valid default]
+     (if-let [string-value (get-optional-prop props prop-name config-valid nil)]
+       (string-to-uuid prop-name string-value config-valid)
        default)))
 
 (defn- wrap-extraction-fn
@@ -473,7 +519,7 @@
     sym desc [props config-valid configs flag-props] prop-name get-required-long-prop))
 
 (defmacro defprop-optlong
-  "Defined an optional long property.
+  "Defines an optional long property.
 
    Parameters:
        sym          - the symbol to define.
@@ -525,6 +571,42 @@
      (define-optional-property
        sym desc [props config-valid configs flag-props]
        prop-name get-optional-boolean-prop default)))
+
+(defmacro defprop-uuid
+  "Defines a required UUID property
+
+   Parameters:
+       sym          - the symbol to define.
+       desc         - a brief description of the property.
+       props        - a ref containing the properties.
+       config-valid - a ref containing a validity flag.
+       configs      - a ref containing the list of config settings.
+       flag-props   - the feature flag properties determining if the property is relevant.
+       prop-name    - the name of the property."
+  [sym desc [props config-valid configs & flag-props] prop-name]
+  (define-required-property
+    sym desc [props config-valid configs flag-props] prop-name get-required-uuid-prop))
+
+(defmacro defprop-optuuid
+  "Defines an optional UUID property.
+
+   Parameters:
+       sym          - the symbol to define.
+       desc         - a brief description of the property.
+       props        - a ref containing the properties.
+       config-valid - a ref containing the validity flag.
+       configs      - a ref containing the list of config settings.
+       flag-props   - the feature flag properties determining if the property is relevant.
+       prop-name    - the name of the property.
+       default      - the default value."
+  ([sym desc [props config-valid configs & flag-props] prop-name]
+     (define-optional-property
+       sym desc [props config-valid configs flag-props]
+       prop-name get-optional-uuid-prop false))
+  ([sym desc [props config-valid configs & flag-props] prop-name default]
+     (define-optional-property
+       sym desc [props config-valid configs flag-props]
+       prop-name get-optional-uuid-prop default)))
 
 (defn validate-config
   "Validates a configuration that has been defined and loaded using this library.
