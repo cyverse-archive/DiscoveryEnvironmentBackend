@@ -106,7 +106,7 @@
     {:status  200
      :body    (:body resp)
      :headers {"Content-Disposition" (get-disposition params)
-               "Content-Type"        (:content-type resp)}}))
+               "Content-Type"        (get-in resp [:headers "Content-Type"])}}))
 
 (with-pre-hook! #'do-special-download
   (fn [params]
