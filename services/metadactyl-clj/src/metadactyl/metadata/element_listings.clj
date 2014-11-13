@@ -66,8 +66,11 @@
 
 (defn- list-tools
   "Obtains a listing of tools for the metadata element listing service."
-  [_]
-  {:tools (map remove-nil-vals (select (tool-listing-base-query)))})
+  [params]
+  {:tools (->> (select-keys params [:include-hidden])
+               (tool-listing-base-query)
+               (select)
+               (map remove-nil-vals))})
 
 (defn- list-info-types
   "Obtains a listing of information types for the metadata element listing service."
@@ -140,8 +143,7 @@
   [params]
   (reduce merge {} (map #(% params) (vals listing-fns))))
 
-(defn list-elements
-  "Lists selected workflow elements.  This function handles requests to list
+  (defn list-elements "Lists selected workflow elements.  This function handles requests to list
    various different types of workflow elements."
   [elm-type params]
   (service/success-response

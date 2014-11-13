@@ -74,8 +74,8 @@
     (GET "/apps/ids" []
          (get-all-app-ids))
 
-    (GET "/apps/elements/:element-type" [element-type]
-         (get-workflow-elements element-type))
+    (GET "/apps/elements/:element-type" [element-type :as {:keys [params]}]
+         (get-workflow-elements element-type params))
 
     (POST "/apps/pipelines" [:as {:keys [body]}]
           (apps/create-pipeline body))

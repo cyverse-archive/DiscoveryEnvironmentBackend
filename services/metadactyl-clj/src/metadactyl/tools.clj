@@ -16,12 +16,14 @@
   "Adds where clauses to a base tool search query to restrict results to tools that contain the
    given search term in their name or description."
   [base-query search-term]
-  (let [search-term (format-query-wildcards search-term)
-        search-term (str "%" search-term "%")]
-    (where base-query
-      (or
-        {(sqlfn lower :tools.name) [like (sqlfn lower search-term)]}
-        {(sqlfn lower :tools.description) [like (sqlfn lower search-term)]}))))
+  (if search-term
+    (let [search-term (format-query-wildcards search-term)
+          search-term (str "%" search-term "%")]
+      (where base-query
+             (or
+              {(sqlfn lower :tools.name) [like (sqlfn lower search-term)]}
+              {(sqlfn lower :tools.description) [like (sqlfn lower search-term)]})))
+    base-query))
 
 (defn- add-hidden-tool-types-clause
   "Adds the clause used to filter out hidden tool types if hidden tool types are not supposed to

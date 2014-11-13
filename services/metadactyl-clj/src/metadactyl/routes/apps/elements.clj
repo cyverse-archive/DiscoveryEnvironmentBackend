@@ -10,7 +10,7 @@
 
 (defroutes* app-elements
   (GET* "/" [:as {uri :uri}]
-        :query [params SecuredQueryParams]
+        :query [params SecuredIncludeHiddenParams]
         :summary "List All Available App Elements"
         :notes "This endpoint may be used to obtain lists of all available elements that may be
         included in an App."
@@ -76,7 +76,7 @@
         (ce/trap uri #(list-elements "rule-types" params)))
 
   (GET* "/tools" [:as {uri :uri}]
-        :query [params SecuredQueryParams]
+        :query [params SecuredIncludeHiddenParams]
         :return ToolListing
         :summary "List App Tools"
         :notes "This endpoint is used by the Discovery Environment to obtain a list of registered

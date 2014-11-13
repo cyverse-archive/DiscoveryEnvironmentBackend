@@ -54,7 +54,7 @@
 
 (s/defschema IncludeHiddenParams
   {(s/optional-key :include-hidden)
-   (ss/describe String "True if hidden elements should be included in the results.")})
+   (ss/describe Boolean "True if hidden elements should be included in the results.")})
 
 (s/defschema SecuredPagingParams
   (merge SecuredQueryParams PagingParams))
@@ -65,6 +65,9 @@
 (s/defschema AppSearchParams
   (merge SecuredPagingParams
          {:search (ss/describe String "The pattern to match in an App's Name or Description.")}))
+
+(s/defschema SecuredIncludeHiddenParams
+  (merge SecuredQueryParams IncludeHiddenParams))
 
 (s/defschema ToolSearchParams
   (merge SecuredPagingParams IncludeHiddenParams

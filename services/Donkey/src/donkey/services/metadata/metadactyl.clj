@@ -50,15 +50,17 @@
 
 (defn get-workflow-elements
   "A service to get information about workflow elements."
-  [element-type]
-  (client/get (metadactyl-url {} "apps" "elements" element-type)
-              {:as :stream}))
+  [element-type params]
+  (let [params (select-keys params [:include-hidden])]
+    (client/get (metadactyl-url params "apps" "elements" element-type)
+                {:as :stream})))
 
 (defn search-tools
   "A service to search information about tools."
   [{params :params :as req}]
-  (let [url (metadactyl-url (select-keys params (conj metadactyl-sort-params :search)) "tools")
-        req (metadactyl-request req)]
+  (let [params (select-keys params (conj metadactyl-sort-params :search :include-hidden))
+        url    (metadactyl-url params "tools")
+        req    (metadactyl-request req)]
     (forward-get url req)))
 
 (defn get-all-app-ids
