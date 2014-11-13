@@ -28,7 +28,8 @@
     (service/assert-valid uuid "no job UUID provided")
     (service/assert-valid status "no status provided")
     (log/info (str "received a status update for DE job " uuid ": status = " status))
-    (apps/update-de-job-status uuid status end-date)))
+    (apps/update-de-job-status uuid status end-date)
+    (service/success-response)))
 
 (defn receive-agave-job-status-update
   "Receives notification from Agave that a job status has changed."
