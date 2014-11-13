@@ -134,9 +134,15 @@
   (let [selections (if (seq? param-value) param-value [])]
     (mapcat (partial selection-args param) selections)))
 
+(defn- parse-boolean
+  [param-value]
+  (if-not (instance? Boolean param-value)
+    (Boolean/parseBoolean (string/trim param-value))
+    param-value))
+
 (defn flag-args
   [param param-value]
-  (let [selected?      (Boolean/parseBoolean (string/trim param-value))
+  (let [selected?      (parse-boolean param-value)
         values         (string/split (:name param) #"\s*,\s*" 2)
         selected-value (if selected? (first values) (second values))]
     (if (util/not-blank? selected-value)
