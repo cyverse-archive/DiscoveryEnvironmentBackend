@@ -33,14 +33,13 @@
       (log/warn (cheshire/encode body))
 
       (if (jp/validate-submission body)
-        (let [[exit-code dag-id doc-id] (jp/submit body)]
+        (let [[exit-code dag-id] (jp/submit body)]
           (cond
             (not= exit-code 0)
             (throw+ {:error_code "ERR_FAILED_NON_ZERO"})
 
             :else
-            {:sub_id dag-id
-             :osm_id doc-id}))
+            {:sub_id dag-id}))
         (throw+ {:error_code "ERR_INVALID_JSON"})))
     (catch Exception e
       (throw+ {:error_code "ERR_UNHANDLED_EXCEPTION"}))))

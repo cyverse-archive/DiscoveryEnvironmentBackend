@@ -7,7 +7,6 @@
             [jex.config :as cfg]
             [clojure.tools.logging :as log]
             [clojure.java.shell :as sh]
-            [clojure-commons.osm :as osm]
             [clj-http.client :as http]
             [cemerick.url :refer (url url-encode)]
             [cheshire.core :as cheshire]))
@@ -40,16 +39,6 @@
   {"PATH"          (cfg/path-env)
    "CONDOR_CONFIG" (cfg/condor-config)})
 
-(defn create-osm-record
-  "Creates a new record in the OSM, associates the notification-url with it as a
-   callback, and returns the OSM document ID in a string."
-  [output-map osm-client]
-  (let [notif-url (or (:callback output-map) (cfg/notif-url))
-        doc-id    (osm/save-object osm-client {})
-        result    (osm/add-callback osm-client doc-id "on_update" notif-url)]
-    (log/warn result)
-    doc-id))
-
 (defn push-job-to-jex-events
   [condor-id submitter app-id inv-id]
   (try
@@ -69,18 +58,6 @@
   "Stops a condor job."
   [sub-id]
   (sh/with-sh-env (condor-env) (sh/sh "condor_rm" sub-id)))
-
-(defn extract-state-from-result
-  "Extracts the state from the JSON returned by the OSM."
-  [result-map]
-  (-> result-map (cheshire/decode true) :objects first :state))
-
-(defn query-for-analysis
-  "Queries the OSM for the document representing a particular analysis."
-  [uuid]
-  (osm/query
-   (osm/create (cfg/osm-url) (cfg/osm-coll))
-   {:state.uuid uuid}))
 
 (defn missing-condor-id
   [uuid]
@@ -166,36 +143,6 @@
     (log/warn (str "Grabbed dag_id: " sub-id))
     sub-id))
 
-(defn xform-map-for-osm
-  "Transforms the analysis map so it's usable by panopticon."
-  [updated-map sub-id]
-  (ox/transform (assoc updated-map :sub_id sub-id)))
-
-(defn push-failed-submit-to-osm
-  "Pushes out the analysis map to OSM after marking it as Failed."
-  [output-map]
-  (let [osm-client (osm/create (cfg/osm-url) (cfg/osm-coll))
-        doc-id     (create-osm-record output-map osm-client)]
-    (osm/update-object osm-client doc-id (assoc output-map :status "Failed"))
-    doc-id))
-
-(defn push-successful-submit-to-osm
-  "Pushes out the analysis map to the OSM. It's marked as Submitted at this
-   point."
-  [output-map]
-  (let [osm-client (osm/create (cfg/osm-url) (cfg/osm-coll))
-        doc-id     (create-osm-record output-map osm-client)]
-    (osm/update-object osm-client doc-id output-map)
-    doc-id))
-
-(defn push-submission-info-to-osm
-  "Decides whether to push the analysis map to the OSM based on the exit
-   code of the condor_submit call."
-  [output-map {:keys [exit]}]
-  (if (not= exit 0)
-    (push-failed-submit-to-osm output-map)
-    (push-successful-submit-to-osm output-map)))
-
 (defn generate-submission
   "Takes in the analysis map, transforms it for script generation, creates the
    iplant.sh and iplant.cmd. Returns the modified analysis map."
@@ -220,11 +167,11 @@
   [submit-map]
   (let [[sub-path updated-map] (generate-submission submit-map)
         sub-result (condor-submit sub-path)
-        sub-id     (submission-id sub-result)
-        doc-id     (push-submission-info-to-osm
-                    (xform-map-for-osm updated-map sub-id)
-                    sub-result)]
-    (log/warn "Submitted Job:" sub-id "OSM doc:" doc-id)
-    (log/warn "Pushing to jex-events:" sub-id (:username updated-map) (:app_id updated-map) (:uuid updated-map))
+        sub-id     (submission-id sub-result)]
+    (log/warn "Submitted Job:" sub-id)
+    (log/warn "Pushing to jex-events:\n\tCondorID:" sub-id
+              "\n\tUsername:" (:username updated-map)
+              "\n\tAppID:"  (:app_id updated-map)
+              "\n\tInvocationID:" (:uuid updated-map))
     (push-job-to-jex-events sub-id (:username updated-map) (:app_id updated-map) (:uuid updated-map))
-    [(:exit sub-result) sub-id doc-id]))
+    [(:exit sub-result) sub-id]))

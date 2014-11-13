@@ -97,21 +97,6 @@
   [props config-valid configs]
   "jex.env.path")
 
-(cc/defprop-str osm-url
-  "The URL to the OSM."
-  [props config-valid configs]
-  "jex.osm.url")
-
-(cc/defprop-str osm-coll
-  "The collection to use in the OSM."
-  [props config-valid configs]
-  "jex.osm.collection")
-
-(cc/defprop-str notif-url
-  "The URL to the notification agent."
-  [props config-valid configs]
-  "jex.osm.notification-url")
-
 (cc/defprop-str request-disk
   "The amount of disk space needed for a job, in kilobytes."
   [props config-valid configs]
