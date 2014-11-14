@@ -426,6 +426,16 @@
                (fields :u.username)
                (where {:a.id app-id}))))
 
+(defn count-external-steps
+  "Counts how many steps have an external ID in the given app."
+  [app-id]
+  ((comp :count first)
+   (select [:app_steps :s]
+     (aggregate (count :external_app_id) :count)
+     (join [:tasks :t] {:s.task_id :t.id})
+     (where {:s.app_id app-id})
+     (where (raw "t.external_app_id IS NOT NULL")))))
+
 (defn permanently-delete-app
   "Permanently removes an app from the metadata database."
   [app-id]

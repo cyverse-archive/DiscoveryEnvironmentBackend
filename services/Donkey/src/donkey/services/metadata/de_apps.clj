@@ -23,58 +23,30 @@
     jp/completed-status (db/timestamp-from-str completion_date)
     nil))
 
-(defn- store-submitted-de-job
-  [job-id job submission]
-  (jp/save-job {:id                 job-id
-                :job-name           (:name job)
-                :description        (:description job)
-                :app-id             (:app_id job)
-                :app-name           (:app_name job)
-                :app-description    (:app_details job)
-                :app-wiki-url       (:wiki_url job)
-                :result-folder-path (:resultfolderid job)
-                :start-date         (db/timestamp-from-str (str (:startdate job)))
-                :username           (:username current-user)
-                :status             (:status job)}
-               submission))
-
-(defn- store-job-step
-  [job-id job]
-  (jp/save-job-step {:job-id          job-id
-                     :step-number     1
-                     :external-id     (:id job)
-                     :start-date      (db/timestamp-from-str (str (:startdate job)))
-                     :status          (:status job)
-                     :job-type        jp/de-job-type
-                     :app-step-number 1}))
-
 (defn- de-job-callback-url
   []
   (str (curl/url (config/donkey-base-url) "callbacks" "de-job")))
 
 (defn- prepare-submission
   [submission job-id]
-  (assoc submission
+  (assoc (mu/update-submission-result-folder submission (mu/build-result-folder-path submission))
     :uuid     (str job-id)
     :callback (de-job-callback-url)))
 
 (defn submit-job
   [submission]
-  (let [job-id     (UUID/randomUUID)
-        submission (prepare-submission submission job-id)
-        job        (metadactyl/submit-job submission)
-        username   (:shortUsername current-user)
-        email      (:email current-user)]
-    (store-submitted-de-job job-id job submission)
-    (store-job-step job-id job)
-    (dn/send-job-status-update username email (assoc job :id job-id))
-    {:id         (str job-id)
-     :name       (:name job)
+  (let [submission (prepare-submission submission (UUID/randomUUID))
+        uuid       (:uuid (metadactyl/submit-job submission))
+        job-id     ((comp :job-id first) (jp/get-job-steps-by-external-id uuid))
+        job        (jp/get-job-by-id job-id)]
+    (mu/send-job-status-notification job jp/submitted-status nil)
+    {:id         (:id job)
+     :name       (:job-name job)
      :status     (:status job)
-     :start-date (time-utils/millis-from-str (str (:startdate job)))}))
+     :start-date (db/millis-from-timestamp (:start-date job))}))
 
 (defn submit-job-step
-  [job-info job-step submission]
+  [submission]
   (->> (prepare-submission submission (UUID/randomUUID))
        (metadactyl/submit-job)
        (:uuid)))
@@ -105,7 +77,7 @@
   (when-not (= (:status job-step) status)
     (jp/update-job-step (:id job) (:external-id job-step) status end-time)
     (jp/update-job (:id job) status end-time)
-    (mu/send-job-status-notification job job-step status end-time)))
+    (mu/send-job-status-notification job status end-time)))
 
 (defn sync-job-status
   [{:keys [id] :as job}]

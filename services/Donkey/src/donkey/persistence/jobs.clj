@@ -8,7 +8,8 @@
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
-            [donkey.util.db :as db])
+            [donkey.util.db :as db]
+            [kameleon.jobs :as kj])
   (:import [java.util UUID]))
 
 (def de-job-type "DE")
@@ -36,15 +37,6 @@
   "Returns nil if the argument value is zero."
   [v]
   (if (zero? v) nil v))
-
-(defn- get-job-type-id
-  "Fetches the primary key for the job type with the given name."
-  [job-type]
-  (let [id ((comp :id first) (select :job_types (where {:name job-type})))]
-    (when (nil? id)
-      (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-               :job-type   job-type}))
-    id))
 
 (defn- filter-value->where-value
   "Returns a value for use in a job query where-clause map, based on the given filter field and
@@ -77,64 +69,50 @@
     query
     (where query (apply or (map filter-map->where-clause filter)))))
 
-(defn- save-job-submission
-  "Associated a job submission with a saved job in the database."
-  [job-id submission]
-  (exec-raw ["UPDATE jobs SET submission = CAST ( ? AS json ) WHERE id = ?"
-             [(cast Object (cheshire/encode submission)) job-id]]))
-
-(defn- save-job*
-  "Saves information about a job in the database."
-  [{:keys [id job-name description app-id app-name app-description app-wiki-url result-folder-path
-           start-date end-date status deleted username]}]
-  (let [user-id (get-user-id username)]
-    (insert :jobs
-            (values (remove-nil-values
-                     {:id                 id
-                      :job_name           job-name
-                      :job_description    description
-                      :app_id             app-id
-                      :app_name           app-name
-                      :app_description    app-description
-                      :app_wiki_url       app-wiki-url
-                      :result_folder_path result-folder-path
-                      :start_date         start-date
-                      :end_date           end-date
-                      :status             status
-                      :deleted            deleted
-                      :user_id            user-id})))))
-
 (defn save-job
   "Saves information about a job in the database."
-  [job-info submission]
-  (save-job* job-info)
-  (save-job-submission (:id job-info) submission))
-
-(defn- save-job-step*
-  "Saves a single job step in the database."
-  [{:keys [job-id step-number external-id start-date end-date status job-type app-step-number]}]
-  (let [job-type-id (get-job-type-id job-type)]
-    (insert :job_steps
-            (values (remove-nil-values
-                     {:job_id job-id
-                      :step_number     step-number
-                      :external_id     external-id
-                      :start_date      start-date
-                      :end_date        end-date
-                      :status          status
-                      :job_type_id     job-type-id
-                      :app_step_number app-step-number})))))
+  [{:keys [id job-name description app-id app-name app-description app-wiki-url result-folder-path
+           start-date end-date status deleted username]}
+   submission]
+  (let [user-id (get-user-id username)
+        job-info (remove-nil-values
+                   {:id                 id
+                    :job_name           job-name
+                    :job_description    description
+                    :app_id             app-id
+                    :app_name           app-name
+                    :app_description    app-description
+                    :app_wiki_url       app-wiki-url
+                    :result_folder_path result-folder-path
+                    :start_date         start-date
+                    :end_date           end-date
+                    :status             status
+                    :deleted            deleted
+                    :user_id            user-id})]
+    (kj/save-job job-info (cheshire/encode submission))))
 
 (defn save-job-step
   "Saves a single job step in the database."
-  [job-step]
-  (save-job-step* job-step))
+  [{:keys [job-id step-number external-id start-date end-date status job-type app-step-number]}]
+  (let [job-type-id (kj/get-job-type-id job-type)]
+    (when (nil? job-type-id)
+      (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
+               :job-type   job-type}))
+    (kj/save-job-step
+      (remove-nil-values
+        {:job_id          job-id
+         :step_number     step-number
+         :external_id     external-id
+         :start_date      start-date
+         :end_date        end-date
+         :status          status
+         :job_type_id     job-type-id
+         :app_step_number app-step-number}))))
 
 (defn save-multistep-job
   [job-info job-steps submission]
-  (save-job* job-info)
-  (save-job-submission (:id job-info) submission)
-  (dorun (map save-job-step* job-steps)))
+  (save-job job-info submission)
+  (dorun (map save-job-step job-steps)))
 
 (defn- agave-job-subselect
   []

@@ -181,39 +181,71 @@
                               :status      "Submitted"
                               :start-date  (db/now)}))
 
-(defn- submit-job-step
-  [agave job-info {:keys [app-step-number] :as job-step} submission]
-  (doto (if (is-de-job-step? job-step)
-          (let [output-dir (:result-folder-path job-info)
-                submission (assoc (mu/update-submission-result-folder submission output-dir)
-                             :starting_step app-step-number)]
-            (da/submit-job-step job-info job-step submission))
-          (let [app-steps     (ap/load-app-steps (:app-id job-info))
-                curr-app-step (nth app-steps (dec app-step-number))
-                output-dir    (:result-folder-path job-info)
-                submission    (assoc (mu/update-submission-result-folder submission output-dir)
-                                :app_id (:external_app_id curr-app-step)
-                                :paramPrefix (:step_id curr-app-step))]
-            (aa/submit-job-step agave job-info job-step submission)))
-    (record-step-submission job-info job-step)))
+(defn- submit-de-job-step
+  [job-info {:keys [app-step-number] :as job-step} submission]
+  (let [output-dir (mu/build-result-folder-path submission)
+        submission (assoc (mu/update-submission-result-folder submission output-dir)
+                     :starting_step app-step-number)
+        external-id (da/submit-job-step submission)]
+    (when-not (nil? job-info)
+      (record-step-submission external-id job-info job-step))
+    external-id))
 
-(defn- submit-de-job
+(defn- submit-agave-job-step
+  [agave job-info {:keys [app-step-number] :as job-step} submission]
+  (let [app-steps     (ap/load-app-steps (:app-id job-info))
+        curr-app-step (nth app-steps (dec app-step-number))
+        output-dir    (:result-folder-path job-info)
+        submission    (assoc (mu/update-submission-result-folder submission output-dir)
+                        :app_id (:external_app_id curr-app-step)
+                        :paramPrefix (:step_id curr-app-step))
+        external-id (aa/submit-job-step agave job-info job-step submission)]
+    (record-step-submission external-id job-info job-step)
+    external-id))
+
+(defn- submit-job-step
+  [agave job-info job-step submission]
+  (if (is-de-job-step? job-step)
+    (submit-de-job-step job-info job-step submission)
+    (submit-agave-job-step agave job-info job-step submission)))
+
+(defn- submit-combined-job
   "Submits a DE job to the remote system. A DE job is a job using any app defined in the DE
    database, which may consist of Agave steps, DE steps or both."
-  [agave app-id submission]
+  [agave app-id job-id job-steps submission]
   (let [app-info  (service/assert-found (ap/load-app-info app-id) "app" app-id)
-        job-id    (uuids/uuid)
         job-info  (build-job-save-info (mu/build-result-folder-path submission)
-                                       job-id app-info submission)
-        job-steps (map (partial build-job-step-save-info job-id)
-                       (validate-job-steps app-id (load-job-steps app-id)))]
+                                       job-id app-info submission)]
     (jp/save-multistep-job job-info job-steps submission)
     (submit-job-step agave job-info (first job-steps) submission)
-    (mu/send-job-status-notification job-info (first job-steps) jp/submitted-status nil)
+    (mu/send-job-status-notification job-info jp/submitted-status nil)
     {:id         job-id
      :name       (:job-name job-info)
      :status     (:status job-info)
      :start-date (db/millis-from-timestamp (:start-date job-info))}))
+
+(defn- submit-de-only-job
+  "Submits a DE-only job to the remote system. A DE-only job is a job using any app defined in the
+   DE database and consists only of DE steps."
+  [job-step submission]
+  (let [uuid     (submit-de-job-step nil job-step submission)
+        job-id   ((comp :job-id first) (jp/get-job-steps-by-external-id uuid))
+        job-info (jp/get-job-by-id job-id)]
+    (mu/send-job-status-notification job-info jp/submitted-status nil)
+    {:id         (:id job-info)
+     :name       (:job-name job-info)
+     :status     (:status job-info)
+     :start-date (db/millis-from-timestamp (:start-date job-info))}))
+
+(defn- submit-de-job
+  "Submits a DE-only job or a DE job composed of Agave steps, DE steps or both."
+  [agave app-id submission]
+  (let [job-id    (uuids/uuid)
+        job-steps (map (partial build-job-step-save-info job-id)
+                       (validate-job-steps app-id (load-job-steps app-id)))]
+    (if (every? is-de-job-step? job-steps)
+      (submit-de-only-job (first job-steps) submission)
+      (submit-combined-job agave app-id job-id job-steps submission))))
 
 (defn submit-job
   "Submits a job for execution. The job may run exclusively in Agave, exclusively in the DE, or it
@@ -318,7 +350,7 @@
                   (and last-step? (mu/is-completed? status))
                   (= status jp/failed-status))
           (jp/update-job job-id status end-time)
-          (mu/send-job-status-notification job job-step status end-time))
+          (mu/send-job-status-notification job status end-time))
         (when (and (not last-step?) (= status jp/completed-status))
           (submit-next-step agave username job job-step))))))
 
@@ -383,7 +415,7 @@
         (jex/stop-job external-id)
         (when-not (nil? agave) (.stopJob agave external-id)))
       (jp/cancel-job-step-numbers id (mapv :step-number steps))
-      (mu/send-job-status-notification job step jp/canceled-status (db/now)))))
+      (mu/send-job-status-notification job jp/canceled-status (db/now)))))
 
 (defn stop-job
   "Stops a job. This function updates the database first in order to minimize the risk of a race
