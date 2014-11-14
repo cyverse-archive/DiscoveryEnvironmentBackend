@@ -10,7 +10,8 @@
             [donkey.persistence.search :as search]
             [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
-            [donkey.util.service :as svc])
+            [donkey.util.service :as svc]
+            [donkey.util.validators :as valid])
   (:import [java.net ConnectException]
            [java.util UUID]
            [clojure.lang IPersistentMap]))
@@ -131,17 +132,11 @@
 
    Throws:
      :invalid-argument - This is thrown if the extracted type isn't valid."
-  [params default]
-  (if-let [type-val (:type params)]
-    (case (string/lower-case type-val)
-      "any"    :any
-      "file"   :file
-      "folder" :folder
-               (throw+ {:type   :invalid-argument
-                        :reason "must be 'any', 'file' or 'folder'"
-                        :arg    :type
-                        :val    type-val}))
-    default))
+  [params]
+  (try+
+    (valid/resolve-entity-type (:type params))
+    (catch [:type :invalid-argument] exn
+      (throw+ (assoc exn :arg "type")))))
 
 
 (defn- extract-uint
@@ -230,7 +225,7 @@
     (let [start       (l/local-now)
           query       (extract-query query-str)
           tags        (extract-tags user tags-str)
-          type        (extract-type opts :any)
+          type        (extract-type opts)
           offset      (extract-uint opts :offset 0)
           limit       (extract-uint opts :limit (cfg/default-search-result-limit))
           sort        (extract-sort opts [[:score] :desc])
@@ -241,7 +236,5 @@
         (extract-result offset memberships)
         (add-timing start)
         svc/success-response))
-    (catch [:type :invalid-argument] {:keys [arg val reason]}
-      (invalid-arg-response arg val reason))
     (catch [:type :invalid-query] {:keys []}
       (invalid-arg-response "q" query-str "This is not a valid elasticsearch query."))))

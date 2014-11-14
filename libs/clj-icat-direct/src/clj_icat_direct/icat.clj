@@ -206,7 +206,7 @@
 
 (defn paged-uuid-listing
   "Returns a page of filesystem entries corresponding to a list a set of UUIDs."
-  [user zone sort-column sort-order limit offset uuids]
+  [user zone sort-column sort-order limit offset uuids & [file-types]]
   (if-not (contains? sort-columns sort-column)
     (throw (Exception. (str "Invalid sort-column " sort-column))))
 
@@ -215,8 +215,20 @@
 
   (if (empty? uuids)
     []
-    (let [sc    (get sort-columns sort-column)
-          so    (get sort-orders sort-order)
-          query (format (:paged-uuid-listing q/queries) (q/prepare-text-set uuids) sc so)
-          p     (partial add-permission user)]
+    (let [uuid-set (q/prepare-text-set uuids)
+          ft-cond  (q/mk-file-type-cond file-types)
+          sc       (get sort-columns sort-column)
+          so       (get sort-orders sort-order)
+          query    (format (:paged-uuid-listing q/queries) uuid-set ft-cond sc so)
+          p        (partial add-permission user)]
       (map p (run-query-string query user zone limit offset)))))
+
+
+(defn ^Integer number-of-uuids-in-folder
+  [^String user ^String zone ^ISeq uuids ^ISeq file-types]
+  (if (empty? uuids)
+    0
+    (let [uuid-set (q/prepare-text-set uuids)
+          ft-cond  (q/mk-file-type-cond file-types)
+          query    (format (:count-uuids-of-file-type q/queries) uuid-set ft-cond)]
+      (:total (first (run-query-string query user zone))))))

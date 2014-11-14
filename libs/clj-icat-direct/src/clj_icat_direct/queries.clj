@@ -99,8 +99,7 @@
      file-types - A list of file types used to filter on. A nil or empty list disables filtering.
 
    Returns:
-     It returns a condition to be added as the first format parameter in the count-items-in-folder,
-     count-filtered-items-in-folder, and paged-folder-listing query templates."
+     It returns a condition for filtering data objects by file type."
   [^ISeq file-types]
   (let [file-types (mapv string/lower-case file-types)
         fmt-ft     (prepare-text-set file-types)]
@@ -449,29 +448,67 @@
                        AND m.meta_attr_value IN (%s)
                        AND o.object_id IN (SELECT object_id
                                              FROM r_objt_access
-                                             WHERE user_id in (SELECT group_user_id FROM groups)))
+                                             WHERE user_id in (SELECT group_user_id FROM groups))),
+         file_types AS (SELECT *
+                          FROM r_objt_metamap AS om
+                            JOIN r_meta_main AS mm ON mm.meta_id = om.meta_id
+                          WHERE om.object_id = ANY(ARRAY(SELECT object_id FROM uuids))
+                            AND mm.meta_attr_name = 'ipc-filetype')
     SELECT *
-      FROM (SELECT c.coll_name                            AS full_path,
+      FROM (SELECT 'collection'                           AS type,
+                   u.uuid                                 AS uuid,
+                   c.coll_name                            AS full_path,
                    regexp_replace(c.coll_name, '.*/', '') AS base_name,
+                   NULL                                   AS info_type,
                    0                                      AS data_size,
                    c.create_ts                            AS create_ts,
-                   c.modify_ts                            AS modify_ts,
-                   u.uuid                                 AS uuid,
-                   'collection'                           AS type
-                   FROM uuids u JOIN r_coll_main c ON u.object_id = c.coll_id
-                   WHERE c.coll_type != 'linkPoint'
+                   c.modify_ts                            AS modify_ts
+              FROM uuids u JOIN r_coll_main c ON u.object_id = c.coll_id
+              WHERE c.coll_type != 'linkPoint'
             UNION
-            SELECT (c.coll_name || '/' || d.data_name) AS full_path,
-                   d.data_name                         AS base_name,
-                   (array_agg(d.data_size))[1]         AS data_size,
-                   (array_agg(d.create_ts))[1]         AS create_ts,
-                   (array_agg(d.modify_ts))[1]         AS modify_ts,
-                   u.uuid                              AS uuid,
-                   'dataobject'                        AS type
+            SELECT 'dataobject'                         AS type,
+                   u.uuid                               AS uuid,
+                   (c.coll_name || '/' || d1.data_name) AS full_path,
+                   d1.data_name                         AS base_name,
+                   f.meta_attr_value                    AS info_type,
+                   d1.data_size                         AS data_size,
+                   d1.create_ts                         AS create_ts,
+                   d1.modify_ts                         AS modify_ts
               FROM uuids u
-                JOIN r_data_main d ON u.object_id = d.data_id
-                JOIN r_coll_main c ON d.coll_id = c.coll_id
-              GROUP BY full_path, base_name, uuid) p
+                JOIN r_data_main AS d1 ON u.object_id = d1.data_id
+                JOIN r_coll_main c ON d1.coll_id = c.coll_id
+                LEFT JOIN file_types AS f ON d1.data_id = f.object_id
+              WHERE d1.data_repl_num = (SELECT MIN(d2.data_repl_num)
+                                          FROM r_data_main AS d2
+                                          WHERE d2.data_id = d1.data_id)
+                AND (%s)) AS p
       ORDER BY type ASC, %s %s
       LIMIT ?
-      OFFSET ?"})
+      OFFSET ?"
+
+   :count-uuids-of-file-type
+   "WITH groups AS (SELECT *
+                      FROM r_user_group
+                      WHERE user_id IN (SELECT user_id
+                                          FROM r_user_main
+                                          WHERE user_name = ? AND zone_name = ?)),
+         uuids AS (SELECT m.meta_attr_value AS uuid, o.object_id
+                     FROM r_meta_main m JOIN r_objt_metamap o ON m.meta_id = o.meta_id
+                     WHERE m.meta_attr_name = 'ipc_UUID'
+                       AND m.meta_attr_value IN (%s)
+                       AND o.object_id IN (SELECT object_id
+                                             FROM r_objt_access
+                                             WHERE user_id in (SELECT group_user_id FROM groups))),
+         file_types AS (SELECT *
+                          FROM r_objt_metamap AS om
+                            JOIN r_meta_main AS mm ON mm.meta_id = om.meta_id
+                          WHERE om.object_id = ANY(ARRAY(SELECT object_id FROM uuids))
+                            AND mm.meta_attr_name = 'ipc-filetype')
+    SELECT COUNT(*) AS total
+      FROM uuids
+      WHERE object_id IN (SELECT coll_id FROM r_coll_main WHERE coll_type != 'linkPoint'
+                          UNION
+                          SELECT d.data_id
+                            FROM r_data_main AS d
+                              LEFT JOIN file_types AS f on d.data_id = f.object_id
+                            WHERE (%s))"})

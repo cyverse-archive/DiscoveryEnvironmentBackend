@@ -2,10 +2,12 @@
   (:use [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes])
   (:require [clojure.set :as set]
+            [clojure.string :as string]
             [cheshire.core :as json]
             [cemerick.url :as url-parser]
             [donkey.util.config :as cfg])
-  (:import [java.util UUID]))
+  (:import [clojure.lang Keyword]
+           [java.util UUID]))
 
 (defn parse-body
   [body]
@@ -63,3 +65,27 @@
   (let [bad-chars      (set (seq (cfg/fs-bad-chars)))
         chars-to-check (set (seq to-check))]
     (empty? (set/intersection bad-chars chars-to-check))))
+
+
+(defn ^Keyword resolve-entity-type
+  "Resolves an entity type keyword value from a URL query parameter.
+
+   Params:
+     param-val - The value of the entity-type URL parameter
+
+   Returns:
+     The resolved Keyword value.
+
+   Throws:
+     :invalid-argument - This is thrown if the extracted type isn't valid."
+  [^String param-val]
+  (if param-val
+    (case (string/lower-case param-val)
+      "any"    :any
+      "file"   :file
+      "folder" :folder
+      (throw+ {:type   :invalid-argument
+               :reason "must be 'any', 'file' or 'folder'"
+               :arg    "entity-type"
+               :val    param-val}))
+    :any))

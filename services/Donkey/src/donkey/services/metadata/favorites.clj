@@ -1,19 +1,20 @@
 (ns donkey.services.metadata.favorites
-  (:require [clojure.tools.logging :as log]
-            [clojure.set :as set]
+  (:require [clojure.set :as set]
             [cheshire.core :as json]
             [donkey.auth.user-attributes :as user]
             [donkey.clients.data-info :as data]
             [donkey.persistence.metadata :as db]
-            [donkey.util.service :as svc])
+            [donkey.util.service :as svc]
+            [donkey.util.validators :as valid])
   (:import [java.util UUID]))
 
 
 (defn- format-favorites
   [favs]
-  (let [favs (map #(assoc % :isFavorite true) favs)]
-    {:folders (filter #(= (:type %) :dir) favs)
-     :files   (filter #(= (:type %) :file) favs)}))
+  (letfn [(mk-fav [entry] (assoc entry :isFavorite true))]
+    (assoc favs
+      :files   (map mk-fav (:files favs))
+      :folders (map mk-fav (:folders favs)))))
 
 
 (defn- user-col->api-col
@@ -70,18 +71,12 @@
     (svc/donkey-response {} 404))))
 
 
-(defn- compute-total
-  "Computes the total number of favorites. If there are no favorites in the data store, but the
-   total hasn't been reached, an error as logged and the data store accumulated total is returned."
-  [uuids limit offset fav-page]
-  (let [total      (count uuids)
-        page-size  (count fav-page)
-        page-accum (+ offset page-size)]
-    (if (and (> limit page-size) (> total page-accum))
-      (do
-        (log/error "The metadata has favorites that are not in the data store.")
-        page-accum)
-      total)))
+(defn- select-favorites
+  [user entity-type]
+  (let [entity-types (if (:any entity-type)
+                       ["file" "folder"]
+                       [(name entity-type)])]
+    (db/select-favorites-of-type user entity-types)))
 
 
 (defn list-favorite-data-with-stat
@@ -89,25 +84,31 @@
    is intended to help with paginating.
 
    Parameters:
-     sort-col - This is the value of the `sort-col` query parameter. It should be a case-insensitive
-                string containing one of the following: DATECREATED|ID|LASTMODIFIED|NAME|SIZE
-     sort-order - This is the value of the `sort-order` query parameter. It should be a
-                case-insensitive string containing one of the following: ASC|DESC
-     limit - This is the value of the `limit` query parameter. It should contain a positive number.
-     offset - This is the value of the `offset` query parameter. It should contain a non-negative
-              number."
-  [sort-col sort-order limit offset]
-  (let [user         (:shortUsername user/current-user)
-        col          (user-col->api-col sort-col)
-        ord          (user-order->api-order sort-order)
-        limit        (Long/valueOf limit)
-        offset       (Long/valueOf offset)
-        uuids        (db/select-favorites-of-type user ["file" "folder"])
-        fav-page     (data/stats-by-uuids-paged user col ord limit offset uuids)
-        attach-total (fn [favs] (assoc favs :total (compute-total uuids limit offset fav-page)))]
-    (->> fav-page
-      (format-favorites)
-      attach-total
+     sort-col    - This is the value of the `sort-col` query parameter. It should be a case-
+                   insensitive string containing one of the following:
+                   DATECREATED|ID|LASTMODIFIED|NAME|SIZE
+     sort-order  - This is the value of the `sort-order` query parameter. It should be a case-
+                   insensitive string containing one of the following: ASC|DESC
+     limit       - This is the value of the `limit` query parameter. It should contain a positive
+                   number.
+     offset      - This is the value of the `offset` query parameter. It should contain a non-
+                   negative number.
+     entity-type - This is the value of the `entity-type` query parameter. It should be a case-
+                   insensitive string containing one of the following: ANY|FILE|FOLDER. If it is
+                   nil, ANY will be used.
+     info-types  - This is the value(s) of the `info-type` query parameter(s). It may be nil,
+                   meaning return all info types, a string containing a single info type, or a
+                   sequence containing a set of info types."
+  [sort-col sort-order limit offset entity-type info-types]
+  (let [user        (:shortUsername user/current-user)
+        col         (user-col->api-col sort-col)
+        ord         (user-order->api-order sort-order)
+        limit       (Long/valueOf limit)
+        offset      (Long/valueOf offset)
+        entity-type (valid/resolve-entity-type entity-type)
+        uuids       (select-favorites user entity-type)]
+    (->> (data/stats-by-uuids-paged user col ord limit offset uuids info-types)
+      format-favorites
       (hash-map :filesystem)
       svc/success-response)))
 

@@ -6,6 +6,7 @@
             [cemerick.url :as url]
             [clj-http.client :as http]
             [me.raynes.fs :as fs]
+            [clj-icat-direct.icat :as db]
             [clojure-commons.error-codes :as error]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
@@ -169,11 +170,30 @@
      limit      - the maximum number of results to return
      offset     - the number of results to skip before returning some
      uuids      - the UUIDS of interest
+     info-types - This is info types to of the files to return. It may be nil, meaning return all
+                  info types, a string containing a single info type, or a sequence containing a set
+                  of info types.
 
    Returns:
      It returns a page of stat info maps."
-  [^String user ^String sort-field ^String sort-order ^Integer limit ^Integer offset ^ISeq uuids]
-  (uuids/paths-for-uuids-paged user sort-field sort-order limit offset uuids))
+  [^String  user
+   ^String  sort-field
+   ^String  sort-order
+   ^Integer limit
+   ^Integer offset
+   ^ISeq    uuids
+            info-types]
+  (let [info-types (if (string? info-types) [info-types] info-types)
+        page       (uuids/paths-for-uuids-paged user
+                                                sort-field
+                                                sort-order
+                                                limit
+                                                offset
+                                                uuids
+                                                info-types)]
+    {:files   (filter #(= (:type %) :file) page)
+     :folders (filter #(= (:type %) :dir) page)
+     :total   (db/number-of-uuids-in-folder user (cfg/irods-zone) uuids info-types)}))
 
 
 (defn ^Boolean uuid-accessible?

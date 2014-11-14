@@ -13,7 +13,7 @@
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.icat :as jargon])
   (:import [java.util UUID]
-           [clojure.lang IPersistentMap]))
+           [clojure.lang IPersistentMap ISeq]))
 
 
 (def uuid-attr "ipc_UUID")
@@ -69,11 +69,34 @@
       (stat/decorate-stat cm user))))
 
 (defn paths-for-uuids-paged
-  [user sort-col sort-order limit offset uuids]
-  (init/with-jargon (jargon/jargon-cfg) [cm]
-    (user-exists cm user)
-    (map (partial fmt-stat cm user)
-         (icat/paged-uuid-listing user (cfg/irods-zone) sort-col sort-order limit offset uuids))))
+  "Resolves the stat info for the entities with the given UUIDs. The results are paged.
+
+   Params:
+     user       - the user requesting the info
+     sort-field - the stat field to sort on
+     sort-order - the direction of the sort (asc|desc)
+     limit      - the maximum number of results to return
+     offset     - the number of results to skip before returning some
+     uuids      - the UUIDS of interest
+     info-types - This is info types to of the files to return. It may be nil, meaning return all
+                  info types, a string containing a single info type, or a sequence containing a set
+                  of info types.
+
+   Returns:
+     It returns a page of stat info maps."
+  [^String  user
+   ^String  sort-col
+   ^String  sort-order
+   ^Integer limit
+   ^Integer offset
+   ^ISeq    uuids
+   ^ISeq    info-types]
+  (let [zone (cfg/irods-zone)]
+    (init/with-jargon (jargon/jargon-cfg) [cm]
+      (user-exists cm user)
+      (map (partial fmt-stat cm user)
+           (icat/paged-uuid-listing user zone sort-col sort-order limit offset uuids info-types)))))
+
 
 (defn do-paths-for-uuids
   [params body]

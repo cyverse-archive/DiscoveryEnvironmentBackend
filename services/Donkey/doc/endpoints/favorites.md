@@ -157,14 +157,15 @@ files and folders accessible to the user will be listed. The result set is paged
 
 A request to this endpoint requires the parameters in the following table.
 
-| Parameter  | Description |
-| ---------- | ----------- |
-| proxyToken | the CAS authentication token |
-| sort-col   | the field used to sort the filesystem entries in the result set. This can be `NAME|ID|LASTMODIFIED|DATECREATED|SIZE`. All values are case insensitive. |
-| sort-order | the sorting direction.  It can be `ASC|DESC`. Both values are case insensitive. |
-| limit      | the maximum number of filesystem entries to return |
-| offset     | the number entries in the sorted total result set to skip before including entries in the response document. |
-
+| Parameter   | Required? | Default      | Description |
+| ----------- | --------- | ------------ | ----------- |
+| proxyToken  | yes       |              | the CAS authentication token |
+| sort-col    | yes       |              | the field used to sort the filesystem entries in the result set. This can be `NAME|ID|LASTMODIFIED|DATECREATED|SIZE`. All values are case insensitive. |
+| sort-order  | yes       |              | the sorting direction. It can be `ASC|DESC`. Both values are case insensitive. |
+| limit       | yes       |              | the maximum number of filesystem entries to return |
+| offset      | yes       |              | the number entries in the sorted total result set to skip before including entries in the response document. |
+| entity-type | no        | ANY          | the type of entities to return. It can be `ANY|FILE|FOLDER`. All values are case-insensitive. |
+| info-type   | no        | no filtering | filter the files portion of the result set so that only files with this info type are returned. To return multiple info types, and this parameter more than once. |
 
 Any additional parameters will be ignored.
 
