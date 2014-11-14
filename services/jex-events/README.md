@@ -71,6 +71,8 @@ go test
 
 # Inserting a job over HTTP/JSON
 
+To insert a job with HTTP/JSON, do a POST request to the /jobs path.
+
 The incoming JSON must have the following format:
 ```json
 {
@@ -107,3 +109,31 @@ the AMQP interface.
 Errors will return either a 400 or 500 series HTTP status and an error message.
 
 Successful calls will return with a 200 series HTTP status.
+
+# Getting the status of a job
+
+To get the status of a job, do a GET request to /last-events/<uuid>. The <uuid>
+should be replaced with the invocation_id of the job.
+
+The response will be something like this:
+
+```json
+{
+  "state" : {
+    "status" : "Running",
+    "uuid" : "ebbff967-b467-48a3-b3bf-d73f7cde8ed1"
+  }
+}
+```
+
+If the job is in the Completed or Failed state, the response will look like this:
+
+```json
+{
+  "state" : {
+    "status" : "Completed",
+    "completion_date":"1415988131640",
+    "uuid":"ebbff967-b467-48a3-b3bf-d73f7cde8ed1"
+  }
+}
+```
