@@ -8,5 +8,6 @@ CREATE TABLE condor_job_events(
   job_id              uuid not null, -- foreign key into the jobs table
   condor_event_id     uuid not null, -- foreign key into the condor_events table
   condor_raw_event_id uuid not null, -- foreign key into the condor_raw_events table
+  checksum            varchar(64),
   date_triggered      timestamp with time zone not null
 );
