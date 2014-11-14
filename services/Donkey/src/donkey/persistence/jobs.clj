@@ -121,43 +121,47 @@
              (where {:j.id   :s.job_id
                      :t.name agave-job-type})))
 
+(defn- internal-app-subselect
+  []
+  (subselect :apps
+             (join :app_steps {:apps.id :app_steps.app_id})
+             (join :tasks {:app_steps.task_id :tasks.id})
+             (join :tools {:tasks.tool_id :tools.id})
+             (join :tool_types {:tools.tool_type_id :tool_types.id})
+             (where (and (= :j.app_id (raw "CAST(apps.id AS text)"))
+                         (= :tool_types.name "internal")))))
+
+(defn- add-internal-app-clause
+  [query include-hidden]
+  (if-not include-hidden
+    (where query (not (exists (internal-app-subselect))))
+    query))
+
 (defn- count-jobs-base
   "The base query for counting the number of jobs in the database for a user."
-  [username]
+  [username include-hidden]
   (-> (select* [:jobs :j])
       (join [:users :u] {:j.user_id :u.id})
       (join [:job_steps :s] {:j.id :s.job_id})
       (join [:job_types :t] {:s.job_type_id :t.id})
       (aggregate (count :*) :count)
-      (where {:u.username username})))
-
-(defn count-all-jobs
-  "Counts the total number of jobs in the database for a user."
-  [username]
-  ((comp :count first) (select (count-jobs-base username))))
+      (where {:u.username username})
+      (add-internal-app-clause include-hidden)))
 
 (defn count-jobs
   "Counts the number of undeleted jobs in the database for a user."
-  [username filter]
+  [username filter include-hidden]
   ((comp :count first)
-   (select (add-job-query-filter-clause (count-jobs-base username) filter)
+   (select (add-job-query-filter-clause (count-jobs-base username include-hidden) filter)
            (where {:j.deleted false}))))
 
 (defn count-de-jobs
   "Counts the number of undeleted DE jobs int he database for a user."
-  [username filter]
+  [username filter include-hidden]
   ((comp :count first)
-   (select (add-job-query-filter-clause (count-jobs-base username) filter)
+   (select (add-job-query-filter-clause (count-jobs-base username include-hidden) filter)
            (where {:j.deleted false})
            (where (not (exists (agave-job-subselect)))))))
-
-(defn count-null-descriptions
-  "Counts the number of undeleted jobs with null descriptions in the database."
-  [username]
-  ((comp :count first)
-   (select (count-jobs-base username)
-           (where {:j.deleted         false
-                   :j.job_description nil}))))
 
 (defn- translate-sort-field
   "Translates the sort field sent to get-jobs to a value that can be used in the query."
@@ -223,38 +227,30 @@
            (aggregate (max :step_number) :max-step)
            (where {:job_id job-id}))))
 
-(defn- internal-app-subselect
-  []
-  (subselect :apps
-             (join :app_steps {:apps.id :app_steps.app_id})
-             (join :tasks {:app_steps.task_id :tasks.id})
-             (join :tools {:tasks.tool_id :tools.id})
-             (join :tool_types {:tools.tool_type_id :tool_types.id})
-             (where (and (= :j.app_id (raw "CAST(apps.id AS text)"))
-                         (= :tool_types.name "internal")))))
-
 (defn list-jobs
   "Gets a list of jobs satisfying a query."
-  [username row-limit row-offset sort-field sort-order filter]
-  (select (add-job-query-filter-clause (job-base-query) filter)
-          (where {:j.deleted  false
-                  :j.username username})
-          (where (not (exists (internal-app-subselect))))
-          (order (translate-sort-field sort-field) sort-order)
-          (offset (nil-if-zero row-offset))
-          (limit (nil-if-zero row-limit))))
+  [username row-limit row-offset sort-field sort-order filter include-hidden]
+  (-> (select* (add-job-query-filter-clause (job-base-query) filter))
+      (where {:j.deleted  false
+              :j.username username})
+      (add-internal-app-clause include-hidden)
+      (order (translate-sort-field sort-field) sort-order)
+      (offset (nil-if-zero row-offset))
+      (limit (nil-if-zero row-limit))
+      (select)))
 
 (defn list-de-jobs
   "Gets a list of jobs that contain only DE steps."
-  [username row-limit row-offset sort-field sort-order filter]
-  (select (add-job-query-filter-clause (job-base-query) filter)
-          (where {:j.deleted  false
-                  :j.username username})
-          (where (not (exists (agave-job-subselect))))
-          (where (not (exists (internal-app-subselect))))
-          (order (translate-sort-field sort-field) sort-order)
-          (offset (nil-if-zero row-offset))
-          (limit (nil-if-zero row-limit))))
+  [username row-limit row-offset sort-field sort-order filter include-hidden]
+  (-> (select* (add-job-query-filter-clause (job-base-query) filter))
+      (where {:j.deleted  false
+              :j.username username})
+      (where (not (exists (agave-job-subselect))))
+      (add-internal-app-clause include-hidden)
+      (order (translate-sort-field sort-field) sort-order)
+      (offset (nil-if-zero row-offset))
+      (limit (nil-if-zero row-limit))
+      (select)))
 
 (defn- add-job-type-clause
   "Adds a where clause for a set of job types if the set of job types provided is not nil
