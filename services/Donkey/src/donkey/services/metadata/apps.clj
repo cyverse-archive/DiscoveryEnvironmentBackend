@@ -634,15 +634,3 @@
   [address filename dest-path]
   (with-db db/de
     (.urlImport (get-app-lister) address filename dest-path)))
-
-;; TODO: remove when this is no longer needed.
-(def me {"uid"       "dennis"
-         "email"     "dennis@iplantcollaborative.org"
-         "firstName" "Dennis"
-         "lastName"  "Roberts"})
-
-;; TODO: remove when this is no longer needed.
-(defn test-url-import
-  []
-  (donkey.auth.user-attributes/with-user [me]
-    (url-import "http://www.gnu.org/licenses/licenses.html" "licenses.html" "/iplant/home/dennis")))

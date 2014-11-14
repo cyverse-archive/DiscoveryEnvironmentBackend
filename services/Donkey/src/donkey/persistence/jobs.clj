@@ -245,12 +245,23 @@
            (aggregate (max :step_number) :max-step)
            (where {:job_id job-id}))))
 
+(defn- internal-app-subselect
+  []
+  (subselect :apps
+             (join :app_steps {:apps.id :app_steps.app_id})
+             (join :tasks {:app_steps.task_id :tasks.id})
+             (join :tools {:tasks.tool_id :tools.id})
+             (join :tool_types {:tools.tool_type_id :tool_types.id})
+             (where (and (= :j.app_id (raw "CAST(apps.id AS text)"))
+                         (= :tool_types.name "internal")))))
+
 (defn list-jobs
   "Gets a list of jobs satisfying a query."
   [username row-limit row-offset sort-field sort-order filter]
   (select (add-job-query-filter-clause (job-base-query) filter)
           (where {:j.deleted  false
                   :j.username username})
+          (where (not (exists (internal-app-subselect))))
           (order (translate-sort-field sort-field) sort-order)
           (offset (nil-if-zero row-offset))
           (limit (nil-if-zero row-limit))))
@@ -262,6 +273,7 @@
           (where {:j.deleted  false
                   :j.username username})
           (where (not (exists (agave-job-subselect))))
+          (where (not (exists (internal-app-subselect))))
           (order (translate-sort-field sort-field) sort-order)
           (offset (nil-if-zero row-offset))
           (limit (nil-if-zero row-limit))))
