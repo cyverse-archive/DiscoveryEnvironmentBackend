@@ -112,7 +112,7 @@ Successful calls will return with a 200 series HTTP status.
 
 # Getting the status of a job
 
-To get the status of a job, do a GET request to /last-events/<uuid>. The <uuid>
+To get the status of a job, do a GET request to /last-events/\<uuid\>. The \<uuid\>
 should be replaced with the invocation_id of the job.
 
 The response will be something like this:
