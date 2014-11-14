@@ -73,17 +73,53 @@ func LogResponse(resp *http.Response) {
 	}
 }
 
-// Submitted handles the events with an EventNumber of "000". This will
-// assemble the JSON and POST it to the /de-job endpoints. This does not
-// require a completion date and the Status will be set to "Submitted."
-func (p *PostEventHandler) Submitted(event *Event) error {
+// JobStatusStatus returns the string that should be used in the Status field
+// of a JobStatus instance.
+func JobStatusStatus(event *Event) string {
+	switch event.EventNumber {
+	case "000": //Job Submitted
+		return "Submitted"
+	case "001": //Job running
+		return "Running"
+	case "002": // error in executable
+		return "Failed"
+	case "004": // job evicted
+		return "Failed"
+	case "005": // job terminated
+		return "Completed"
+	case "009": // job aborted
+		return "Failed"
+	case "010": // job suspended
+		return "Failed"
+	case "012": // job held
+		return "Failed"
+	default:
+		return "Running"
+	}
+}
+
+// NewJobState returns a new instance of JobState populated with info from
+// the passed in event and status string. Does not include a completion date.
+func NewJobState(event *Event) JobState {
 	js := JobStatus{
-		Status: "Submitted",
+		Status: JobStatusStatus(event),
 		UUID:   event.InvocationID,
+	}
+	if js.Status == "Failed" || js.Status == "Completed" {
+		now := fmt.Sprintf("%d", time.Now().UnixNano()/int64(time.Millisecond))
+		js.CompletionDate = now
 	}
 	state := JobState{
 		State: js,
 	}
+	return state
+}
+
+// Submitted handles the events with an EventNumber of "000". This will
+// assemble the JSON and POST it to the /de-job endpoints. This does not
+// require a completion date and the Status will be set to "Submitted."
+func (p *PostEventHandler) Submitted(event *Event) error {
+	state := NewJobState(event)
 	json, err := json.Marshal(state)
 	if err != nil {
 		return err
@@ -101,13 +137,7 @@ func (p *PostEventHandler) Submitted(event *Event) error {
 // and POSTs it to the /de-job endpoint. This does not require a completion date in the
 // outgoing JSON. The "status" field will be set to "Running".
 func (p *PostEventHandler) Running(event *Event) error {
-	js := JobStatus{
-		Status: "Running",
-		UUID:   event.InvocationID,
-	}
-	state := JobState{
-		State: js,
-	}
+	state := NewJobState(event)
 	json, err := json.Marshal(state)
 	if err != nil {
 		return err
@@ -124,15 +154,7 @@ func (p *PostEventHandler) Running(event *Event) error {
 // Failed handles all events that map to a job failure, which encompasses multiple
 // event numbers.
 func (p *PostEventHandler) Failed(event *Event) error {
-	now := fmt.Sprintf("%d", time.Now().UnixNano()/int64(time.Millisecond))
-	js := JobStatus{
-		Status:         "Failed",
-		CompletionDate: now,
-		UUID:           event.InvocationID,
-	}
-	state := JobState{
-		State: js,
-	}
+	state := NewJobState(event)
 	json, err := json.Marshal(state)
 	if err != nil {
 		return err
@@ -155,15 +177,7 @@ func (p *PostEventHandler) Completed(event *Event) error {
 	if event.IsFailure() {
 		return p.Failed(event)
 	}
-	now := fmt.Sprintf("%d", time.Now().UnixNano()/int64(time.Millisecond))
-	js := JobStatus{
-		Status:         "Completed",
-		CompletionDate: now,
-		UUID:           event.InvocationID,
-	}
-	state := JobState{
-		State: js,
-	}
+	state := NewJobState(event)
 	json, err := json.Marshal(state)
 	if err != nil {
 		return err

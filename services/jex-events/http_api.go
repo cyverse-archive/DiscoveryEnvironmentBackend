@@ -65,6 +65,83 @@ func (h *HTTPAPI) RouteInvocationRequests(writer http.ResponseWriter, request *h
 	}
 }
 
+// RouteLastEventRequests looks at the requests method and decides which
+// function to call to handle requests for last event lookups.
+func (h *HTTPAPI) RouteLastEventRequests(writer http.ResponseWriter, request *http.Request) {
+	LogAPIMsg(request, "Last event lookup request received; routing")
+	switch request.Method {
+	case "GET":
+		h.LastEventHTTP(writer, request)
+	case "":
+		h.LastEventHTTP(writer, request)
+	default:
+		LogAPIMsg(request, fmt.Sprintf("Method %s is not supported for last event lookups", request.Method))
+	}
+}
+
+// LastEventHTTP handles HTTP requests for looking up the last event for a job
+// by its invocation ID.
+func (h *HTTPAPI) LastEventHTTP(writer http.ResponseWriter, request *http.Request) {
+	log.Printf("Handling GET request for %s", request.URL.Path)
+	baseName := path.Base(request.URL.Path)
+	if baseName == "" {
+		WriteRequestError(writer, "The path must contain an invocation UUID")
+		return
+	}
+	log.Printf("Requested job UUID: %s", baseName)
+	if uuid.Parse(baseName) == nil {
+		WriteRequestError(writer, fmt.Sprintf("The base of the path must be a UUID: %s", baseName))
+		return
+	}
+	jr, err := h.d.GetJobByInvocationID(baseName)
+	if err != nil {
+		WriteRequestError(writer, err.Error())
+		return
+	}
+	if jr == nil {
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Write([]byte(fmt.Sprintf("Job %s was not found", baseName)))
+		return
+	}
+	lastCondorJobEvent, err := h.d.GetLastCondorJobEvent(jr.ID)
+	if err != nil {
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Write([]byte(fmt.Sprintf("Last event for job %s using invocation %s was not found", jr.ID, baseName)))
+		return
+	}
+	lastJobEvent, err := h.d.GetCondorJobEvent(lastCondorJobEvent.CondorJobEventID)
+	if err != nil {
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Write([]byte(fmt.Sprintf("JobEvent %s was not found for last event lookup", lastCondorJobEvent.CondorJobEventID)))
+		return
+	}
+	condorEvent, err := h.d.GetCondorEvent(lastJobEvent.CondorEventID)
+	if err != nil {
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Write([]byte(fmt.Sprintf("CondorEvent %s was not found for last event lookup", lastJobEvent.CondorEventID)))
+		return
+	}
+	appEvent := &Event{
+		EventNumber:  condorEvent.EventNumber,
+		CondorID:     jr.CondorID,
+		AppID:        jr.AppID,
+		InvocationID: jr.InvocationID,
+		User:         jr.Submitter,
+		EventName:    condorEvent.EventName,
+		ExitCode:     jr.ExitCode,
+	}
+	jobState := NewJobState(appEvent)
+	marshalled, err := json.Marshal(jobState)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		writer.Write([]byte(err.Error()))
+		return
+	}
+	log.Printf("Response for last event lookup by invocation %s:\n%s", baseName, string(marshalled[:]))
+	writer.Write(marshalled)
+
+}
+
 // InvocationHTTPGet is responsible for getting a Job from the database by
 // its InvocationID and returning the job record as a JSON encoded string body.
 // The Invocation UUID is extracted from the basename of the URL path and must
@@ -97,7 +174,7 @@ func (h *HTTPAPI) InvocationHTTPGet(writer http.ResponseWriter, request *http.Re
 		writer.Write([]byte(err.Error()))
 		return
 	}
-	log.Println(string(marshalled[:]))
+	log.Printf("Response for job lookup by invocation ID %s:\n%s", baseName, string(marshalled[:]))
 	writer.Write(marshalled)
 }
 
@@ -132,7 +209,7 @@ func (h *HTTPAPI) JobHTTPGet(writer http.ResponseWriter, request *http.Request) 
 		writer.Write([]byte(err.Error()))
 		return
 	}
-	log.Println(string(marshalled[:]))
+	log.Printf("Response for job lookup by UUID %s:\n%s", baseName, string(marshalled[:]))
 	writer.Write(marshalled)
 }
 
@@ -230,6 +307,8 @@ func SetupHTTP(config *Configuration, d *Databaser) {
 		http.HandleFunc("/jobs", api.RouteJobRequests)
 		http.HandleFunc("/invocations/", api.RouteInvocationRequests)
 		http.HandleFunc("/invocation", api.RouteInvocationRequests)
+		http.HandleFunc("/last-events/", api.RouteLastEventRequests)
+		http.HandleFunc("/last-events", api.RouteLastEventRequests)
 		log.Printf("Listening for HTTP requests on %s", config.HTTPListenPort)
 		log.Fatal(http.ListenAndServe(config.HTTPListenPort, nil))
 	}()
