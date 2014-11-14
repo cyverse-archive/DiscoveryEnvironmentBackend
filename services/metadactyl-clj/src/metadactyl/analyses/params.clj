@@ -15,12 +15,13 @@
   [path]
   (string/replace path (irods-home-pattern) ""))
 
-(def log-output
+(defn log-output
+  [retain?]
   {:multiplicity "collection"
    :name         "logs"
    :property     "logs"
    :type         "File"
-   :retain       true})
+   :retain       retain?})
 
 (defn- build-input
   "Builds a single input for a step in an app. The current implementation performs the analysis
@@ -77,9 +78,8 @@
 
 (defn build-outputs
   [config default-values params]
-  (conj (mapv (partial build-output config default-values)
-              (filter util/output? params))
-        log-output))
+  (mapv (partial build-output config default-values)
+        (filter util/output? params)))
 
 (defn value-for-param
   ([config io-maps output-value-map default-values param]

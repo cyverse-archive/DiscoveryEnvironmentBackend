@@ -71,7 +71,8 @@
     (params/build-inputs (:config submission) params))
 
   (buildOutputs [this params]
-    (params/build-outputs (:config submission) defaults params))
+    (conj (params/build-outputs (:config submission) defaults params)
+          (params/log-output (:archive_logs submission true))))
 
   (buildConfig [this step]
     (let [params-for-step  (params (:id step))
@@ -139,7 +140,7 @@
     [])
 
   (buildOutputs [_ _]
-    [params/log-output])
+    [(params/log-output (:archive_logs submission true))])
 
   (buildConfig [this step]
     (let [params-for-step  (params (:id step))
@@ -180,4 +181,4 @@
 
 (defn build-submission
   [user email submission]
-  (.buildSubmission (build-job-request-formatter user email submission)))
+  (log/spy :warn (.buildSubmission (build-job-request-formatter user email submission))))

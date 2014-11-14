@@ -49,7 +49,10 @@
    (describe Bool "True if metadata should not associate metadata with the parent directory.")
 
    (optional-key :file-metadata)
-   (describe [FileMetadata] "Custom file attributes to associate with result files.")})
+   (describe [FileMetadata] "Custom file attributes to associate with result files.")
+
+   (optional-key :archive_logs)
+   (describe Bool "True if the job logs should be uploaded to the data store.")})
 
 (def JexStepComponent (describe Any "this should be a schema"))
 

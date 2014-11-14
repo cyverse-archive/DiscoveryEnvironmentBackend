@@ -49,7 +49,8 @@
    :output_dir           dest-path
    :notify               true
    :skip-parent-meta     true
-   :file-metadata        [(avu "ipc-url-import" address "Import URL")]})
+   :file-metadata        [(avu "ipc-url-import" address "Import URL")]
+   :archive_logs         false})
 
 (defn- launch-url-import-job
   [app-lister address filename dest-path]

@@ -62,15 +62,16 @@ INSERT INTO parameters (id, "name", description, label, ordering, parameter_grou
            0,
            TRUE
     FROM parameter_types pt
-    WHERE pt."name" = 'Output'
+    WHERE pt."name" = 'FileOutput'
     LIMIT 1;
 
-INSERT INTO file_parameters (id, parameter_id, info_type, data_format, data_source_id)
+INSERT INTO file_parameters (id, parameter_id, info_type, data_format, data_source_id, retain)
     SELECT '75288DE6-323D-44CA-BEFA-8E14DAE109E4',
            '1DD009B1-CE1E-4933-ABA8-66314757288B',
            info_type.id,
            data_formats.id,
-           data_source.id
+           data_source.id,
+           TRUE
     FROM info_type, data_formats, data_source
     WHERE info_type."name" = 'File'
     AND data_formats."name" = 'Unspecified'
