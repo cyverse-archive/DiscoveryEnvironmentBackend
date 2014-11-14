@@ -714,6 +714,7 @@ type CondorJobEvent struct {
 	JobID            string
 	CondorEventID    string
 	CondorRawEventID string
+	Hash             string
 	DateTriggered    time.Time
 }
 
@@ -724,12 +725,14 @@ func (d *Databaser) InsertCondorJobEvent(je *CondorJobEvent) (string, error) {
 		job_id,
 		condor_event_id,
 		condor_raw_event_id,
-		date_triggered
+		date_triggered,
+		checksum
 	) VALUES (
 	  cast($1 as uuid),
 		cast($2 as uuid),
 		cast($3 as uuid),
-		$4
+		$4,
+		$5
 	) RETURNING id
 	`
 	var id string
@@ -739,6 +742,7 @@ func (d *Databaser) InsertCondorJobEvent(je *CondorJobEvent) (string, error) {
 		je.CondorEventID,
 		je.CondorRawEventID,
 		je.DateTriggered,
+		je.Hash,
 	).Scan(&id)
 	if err != nil {
 		return "", err
@@ -746,14 +750,32 @@ func (d *Databaser) InsertCondorJobEvent(je *CondorJobEvent) (string, error) {
 	return id, nil
 }
 
+// DoesCondorJobEventExist returns true if an event with a matching checksum
+// is already in the database.
+func (d *Databaser) DoesCondorJobEventExist(checksum string) (bool, error) {
+	query := `
+	SELECT COUNT(*) as job_count FROM condor_job_events where checksum = $1
+	`
+	var count int64
+	err := d.db.QueryRow(query, checksum).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	if count > 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
 // AddCondorJobEvent adds a CondorJobEvent to the database. You'll probably want
 // to use this over InsertCondorJobEvent.
-func (d *Databaser) AddCondorJobEvent(jobID string, eventID string, rawEventID string) (string, error) {
+func (d *Databaser) AddCondorJobEvent(jobID string, eventID string, rawEventID string, hash string) (string, error) {
 	je := &CondorJobEvent{
 		JobID:            jobID,
 		CondorEventID:    eventID,
 		CondorRawEventID: rawEventID,
 		DateTriggered:    time.Now(),
+		Hash:             hash,
 	}
 	jeID, err := d.InsertCondorJobEvent(je)
 	if err != nil {

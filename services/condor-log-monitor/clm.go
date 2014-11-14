@@ -32,6 +32,7 @@ package main
 import (
 	"bufio"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -242,7 +243,7 @@ func NewPublishableEvent(event string) *PublishableEvent {
 	hashBytes := sha256.Sum256([]byte(event))
 	return &PublishableEvent{
 		Event: event,
-		Hash:  string(hashBytes[:]),
+		Hash:  hex.EncodeToString(hashBytes[:]),
 	}
 }
 

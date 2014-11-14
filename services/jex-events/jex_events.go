@@ -282,12 +282,13 @@ type Event struct {
 }
 
 func (e *Event) String() string {
-	retval := fmt.Sprintf("EventNumber: %s\tID: %s\tCondorID: %s\tDate: %s\tTime: %s\tMsg: %s",
+	retval := fmt.Sprintf("EventNumber: %s\tID: %s\tCondorID: %s\tDate: %s\tTime: %s\tSHA256: %s\tMsg: %s",
 		e.EventNumber,
 		e.ID,
 		e.CondorID,
 		e.Date,
 		e.Time,
+		e.Hash,
 		e.Msg,
 	)
 	return retval
@@ -411,6 +412,15 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 			event.InvocationID = job.InvocationID
 			event.AppID = job.AppID
 			event.User = job.Submitter
+			exists, err := d.DoesCondorJobEventExist(event.Hash)
+			if err != nil {
+				log.Printf("Error checking for job event existence by checksum: %s", event.Hash)
+				continue
+			}
+			if exists {
+				log.Printf("An event with a hash of %s already exists in the database, skipping", event.Hash)
+				continue
+			}
 			err = eventHandler.Route(&event)
 			if err != nil {
 				log.Printf("Error sending event upstream: %s", err)
@@ -425,7 +435,7 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 				log.Printf("Error getting condor event: %s", err)
 				continue
 			}
-			jobEventID, err := d.AddCondorJobEvent(job.ID, ce.ID, rawEventID)
+			jobEventID, err := d.AddCondorJobEvent(job.ID, ce.ID, rawEventID, event.Hash)
 			if err != nil {
 				log.Printf("Error adding job event: %s", err)
 				continue
