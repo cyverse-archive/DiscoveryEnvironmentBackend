@@ -3,6 +3,11 @@
         [schema.core :only [defschema optional-key Any Bool]])
   (:import [java.util UUID]))
 
+(defschema FileMetadata
+  {:attr  (describe String "The attribute name.")
+   :value (describe String "The attribute value.")
+   :unit  (describe String "The attribute unit.")})
+
 (defschema AnalysisSubmission
   {:app_id
    (describe UUID "The UUID of the app used to perform the analysis.")
@@ -38,15 +43,18 @@
 
    (optional-key :uuid)
    (describe UUID (str "The UUID of the analysis. A random UUID will be assigned if one isn't "
-                       "provided."))})
+                       "provided."))
 
-;; TODO: nuke this when it's no longer needed.
+   (optional-key :skip-parent-meta)
+   (describe Bool "True if metadata should not associate metadata with the parent directory.")
+
+   (optional-key :file-metadata)
+   (describe [FileMetadata] "Custom file attributes to associate with result files.")})
+
 (def JexStepComponent (describe Any "this should be a schema"))
 
-;; TODO: nuke this when it's no longer needed.
 (def JexStepConfig (describe Any "this should be a schema"))
 
-;; TODO: nuke this when it's no longer needed.
 (defschema JexSubmissionStep
   {:component
    (describe JexStepComponent "The program used perform the analysis step.")
@@ -60,7 +68,6 @@
    :type
    (describe String "The type of the analysis step.")})
 
-;; TODO: nuke this when it's no longer needed.
 (defschema JexSubmission
   {:app_description
    (describe String "The app description from the database.")
@@ -113,7 +120,13 @@
    (describe String "The username of the user who submitted the analysis.")
 
    (optional-key :wiki_url)
-   (describe String "A link to the app's documentation page.")})
+   (describe String "A link to the app's documentation page.")
+
+   (optional-key :skip-parent-meta)
+   (describe Bool "True if metadata should not associate metadata with the parent directory.")
+
+   (optional-key :file-metadata)
+   (describe [FileMetadata] "Custom file attributes to associate with result files.")})
 
 (defschema SubmissionResponse
   {:id

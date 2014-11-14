@@ -15,7 +15,8 @@
 
 (defn is-uuid?
   [id]
-  (some #(re-find % id) uuid-regexes))
+  (or (instance? java.util.UUID id)
+      (some #(re-find % id) uuid-regexes)))
 
 (defn trap-handler
   [handler]

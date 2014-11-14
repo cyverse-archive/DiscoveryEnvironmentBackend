@@ -17,8 +17,8 @@
             [donkey.services.metadata.property-values :as property-values]
             [donkey.util :as util]
             [donkey.util.db :as db]
-            [donkey.util.service :as service])
-  (:import [java.util UUID]))
+            [donkey.util.service :as service]
+            [kameleon.uuids :as uuids]))
 
 (declare submit-next-step)
 
@@ -202,7 +202,7 @@
    database, which may consist of Agave steps, DE steps or both."
   [agave app-id submission]
   (let [app-info  (service/assert-found (ap/load-app-info app-id) "app" app-id)
-        job-id    (UUID/randomUUID)
+        job-id    (uuids/uuid)
         job-info  (build-job-save-info (mu/build-result-folder-path submission)
                                        job-id app-info submission)
         job-steps (map (partial build-job-step-save-info job-id)
@@ -221,7 +221,7 @@
   [agave submission]
   (let [app-id (:app_id submission)]
     (if (util/is-uuid? app-id)
-      (submit-de-job agave (UUID/fromString app-id) submission)
+      (submit-de-job agave (uuids/uuidify app-id) submission)
       (aa/submit-agave-job agave submission))))
 
 (defn- get-job-submission-config

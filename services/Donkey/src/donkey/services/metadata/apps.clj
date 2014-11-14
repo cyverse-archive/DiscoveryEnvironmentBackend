@@ -16,6 +16,7 @@
             [donkey.services.metadata.agave-apps :as aa]
             [donkey.services.metadata.combined-apps :as ca]
             [donkey.services.metadata.de-apps :as da]
+            [donkey.services.metadata.internal-jobs :as internal-jobs]
             [donkey.services.metadata.util :as mu]
             [donkey.util :as util]
             [donkey.util.config :as config]
@@ -119,7 +120,8 @@
   (updateJobStatus [_ username job job-step status end-time])
   (stopJob [_ job])
   (getJobParams [_ job-id])
-  (getAppRerunInfo [_ job-id]))
+  (getAppRerunInfo [_ job-id])
+  (urlImport [_ address filename dest-path]))
 ;; AppLister
 
 (deftype DeOnlyAppLister []
@@ -192,7 +194,10 @@
     (ca/get-job-params nil (jp/get-job-by-id (UUID/fromString job-id))))
 
   (getAppRerunInfo [_ job-id]
-    (ca/get-app-rerun-info nil (jp/get-job-by-id (UUID/fromString job-id)))))
+    (ca/get-app-rerun-info nil (jp/get-job-by-id (UUID/fromString job-id))))
+
+  (urlImport [this address filename dest-path]
+    (internal-jobs/submit :url-import this [address filename dest-path])))
 ;; DeOnlyAppLister
 
 (deftype DeHpcAppLister [agave-client user-has-access-token?]
@@ -302,7 +307,10 @@
   (getAppRerunInfo [_ job-id]
     (process-job agave-client job-id
                  {:process-de-job    (partial ca/get-app-rerun-info agave-client)
-                  :process-agave-job aa/get-agave-app-rerun-info})))
+                  :process-agave-job aa/get-agave-app-rerun-info}))
+
+  (urlImport [this address filename dest-path]
+    (internal-jobs/submit :url-import this [address filename dest-path])))
 ;; DeHpcAppLister
 
 (defn- has-access-token
@@ -621,3 +629,20 @@
     (-> (get-app-lister)
         (.updatePipeline app-id (service/decode-json body))
         (service/success-response))))
+
+(defn url-import
+  [address filename dest-path]
+  (with-db db/de
+    (.urlImport (get-app-lister) address filename dest-path)))
+
+;; TODO: remove when this is no longer needed.
+(def me {"uid"       "dennis"
+         "email"     "dennis@iplantcollaborative.org"
+         "firstName" "Dennis"
+         "lastName"  "Roberts"})
+
+;; TODO: remove when this is no longer needed.
+(defn test-url-import
+  []
+  (donkey.auth.user-attributes/with-user [me]
+    (url-import "http://www.gnu.org/licenses/licenses.html" "licenses.html" "/iplant/home/dennis")))

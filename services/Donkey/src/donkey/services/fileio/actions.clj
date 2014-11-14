@@ -8,7 +8,7 @@
         [clojure-commons.error-codes]
         [donkey.util.service :only [success-response]]
         [slingshot.slingshot :only [try+ throw+]])
-  (:require [cemerick.url :as url] 
+  (:require [cemerick.url :as url]
             [cheshire.core :as json]
             [clojure-commons.file-utils :as ft]
             [clojure.java.io :as io]
@@ -18,7 +18,9 @@
             [ring.util.response :as rsp-utils]
             [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
-            [donkey.services.fileio.config :as jargon]))
+            [donkey.services.fileio.config :as jargon]
+            [donkey.services.filesystem.validators :as validators]
+            [donkey.services.metadata.apps :as apps]))
 
 
 (defn set-meta
@@ -75,11 +77,11 @@
     (when-not (user-exists? cm user)
       (throw+ {:error_code ERR_NOT_A_USER
                :user       user}))
-    
+
     (when-not (exists? cm file-path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST
                :path       file-path}))
-    
+
     (when-not (is-readable? cm user file-path)
       (throw+ {:error_code ERR_NOT_READABLE
                :user       user
@@ -96,20 +98,20 @@
 (defn upload
   [user tmp-path fpath]
   (log/info "In upload for " user tmp-path fpath)
-  (let [final-path (ft/rm-last-slash fpath)] 
+  (let [final-path (ft/rm-last-slash fpath)]
     (with-jargon (jargon/jargon-cfg) [cm]
       (when-not (user-exists? cm user)
         (throw+ {:error_code ERR_NOT_A_USER
                  :user user}))
-      
+
       (when-not (exists? cm final-path)
         (throw+ {:error_code ERR_DOES_NOT_EXIST
                  :id final-path}))
-      
+
       (when-not (is-writeable? cm user final-path)
         (throw+ {:error_code ERR_NOT_WRITEABLE
                  :id final-path}))
-      
+
       (let [new-fname (new-filename tmp-path)
             new-path  (ft/path-join final-path new-fname)]
         (if (exists? cm new-path) (delete cm new-path))
@@ -139,96 +141,27 @@
   (let [full-url (url/url url-to-encode)]
     (str (assoc full-url :path (url-encode-path (:path full-url))))))
 
-(defn- jex-urlimport
-  [user address filename dest-path]
-  (let [curl-dir  (ft/dirname (cfg/fileio-curl-path))
-        curl-name (ft/basename (cfg/fileio-curl-path))
-        job-name  (str "url_import_" filename)
-        job-desc  (str "URL Import of " filename " from " address)
-        submission-json (json/generate-string
-                          {:name                  job-name
-                           :type                  "data"
-                           :description           job-desc
-                           :output_dir            dest-path
-                           :create_output_subdir  false
-                           :uuid                  (str (java.util.UUID/randomUUID))
-                           :monitor_transfer_logs false
-                           :skip-parent-meta      true
-                           :username              user
-                           :file-metadata 
-                           [{:attr  "ipc-url-import"
-                             :value address
-                             :unit  "Import URL"}]
-                           :steps 
-                           [{:component
-                             {:location curl-dir
-                              :name     curl-name}
-                             :config
-                             {:params
-                              [{:name "-o"
-                                :value filename
-                                :order 1}
-                               {:name (str "'" (url-encode-url address) "'")
-                                :value ""
-                                :order 2}]
-                              :input []
-                              :output
-                              [{:name         "logs"
-                                :property     "logs"
-                                :type         "File"
-                                :multiplicity "collection"
-                                :retain       false}]}}]})]
-    (log/warn "Curl directory: " curl-dir)
-    (log/warn "Curl name: " curl-name)
-    (log/warn "Submission JSON:\n" submission-json)
-    submission-json))
-
-(defn- jex-send
-  [body]
-  (client/post (cfg/jex-base-url) {:content-type :json :body body}))
-
-
 (defn urlimport
-  "Pushes out an import job to the JEX.
+  "Submits a URL import job for execution.
 
    Parameters:
-     user - string containing the username of the user that requested the
-        import.
+     user - string containing the username of the user that requested the import.
      address - string containing the URL of the file to be imported.
      filename - the filename of the file being imported.
      dest-path - irods path indicating the directory the file should go in."
-  [user address filename orig-dest-path]
-  (let [dest-path (ft/rm-last-slash orig-dest-path)]
+  [user address filename dest-path]
+  (let [filename  (if (url-encoded? filename) (url/url-decode filename) filename)
+        dest-path (ft/rm-last-slash dest-path)]
     (with-jargon (jargon/jargon-cfg) [cm]
-      (when-not (user-exists? cm user)
-        (throw+ {:error_code ERR_NOT_A_USER
-                 :user       user}))
-      
-      (when-not (is-writeable? cm user dest-path)
-        (throw+ {:error_code ERR_NOT_WRITEABLE
-                 :user       user
-                 :path       dest-path}))
-      
-      (when (exists? cm (ft/path-join dest-path filename))
-        (throw+ {:error_code ERR_EXISTS
-                 :path (ft/path-join dest-path filename)}))
-      
-      (let [decoded-filename (if (url-encoded? filename) 
-                               (url/url-decode filename) filename)
-            req-body         (jex-urlimport user address decoded-filename dest-path)
-            {jex-status :status jex-body :body} (jex-send req-body)]
-        (log/warn "Status from JEX: " jex-status)
-        (log/warn "Body from JEX: " jex-body)
-        
-        (when (not= jex-status 200)
-          (throw+ {:msg        jex-body
-                   :error_code ERR_REQUEST_FAILED}))
-        
-        (success-response
-          {:msg    "Upload scheduled."
-           :url    address
-           :label  decoded-filename
-           :dest   dest-path})))))
+      (validators/user-exists cm user)
+      (validators/path-writeable cm user dest-path)
+      (validators/path-not-exists cm (ft/path-join dest-path filename)))
+    (apps/url-import address filename dest-path)
+    (success-response
+     {:msg   "Upload scheduled."
+      :url   address
+      :label filename
+      :dest  dest-path})))
 
 (defn download
   "Returns a response map filled out with info that lets the client download
