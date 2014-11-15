@@ -30,7 +30,7 @@ __Response Body__:
             "date-modified": 1.398183371e+12,
             "file-size": 1.0822742e+07,
             "id": "0dfcac40-df8a-11e3-bfa5-6abdce5a08d5",
-            "info-type": "",
+            "infoType": "",
             "label": "BTSync.dmg",
             "content-type": "application/octet-stream",
             "path": "/iplant/home/wregglej/BTSync.dmg",
