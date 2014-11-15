@@ -17,6 +17,6 @@ CREATE TABLE jobs (
     status character varying(64) NOT NULL,
     deleted boolean DEFAULT FALSE NOT NULL,
     user_id uuid NOT NULL,
-    submission json
+    submission json,
+    parent_id uuid
 );
-

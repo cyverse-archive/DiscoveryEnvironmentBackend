@@ -975,6 +975,14 @@ ALTER TABLE ONLY jobs
     REFERENCES users(id);
 
 --
+-- Foreign key constraint for the parent_id field of the jobs table.
+--
+ALTER TABLE ONLY jobs
+    ADD CONSTRAINT jobs_parent_id_fkey
+    FOREIGN KEY (parent_id)
+    REFERENCES jobs(id);
+
+--
 -- The primary key for the job_steps table.
 --
 ALTER TABLE ONLY job_steps
