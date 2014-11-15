@@ -5,7 +5,7 @@
             [korma.db :as db]
             [korma.core :as k]
             [clj-icat-direct.queries :as q])
-  (:import [clojure.lang ISeq]))
+  (:import [clojure.lang ISeq Keyword]))
 
 
 (defn icat-db-spec
@@ -204,27 +204,55 @@
   (let [query (format (:select-folders-with-uuids q/queries) (q/prepare-text-set uuids))]
     (run-query-string query)))
 
-(defn paged-uuid-listing
-  "Returns a page of filesystem entries corresponding to a list a set of UUIDs."
-  [user zone sort-column sort-order limit offset uuids & [file-types]]
+(defn ^ISeq paged-uuid-listing
+  "Returns a page of filesystem entries corresponding to a list a set of UUIDs.
+
+   Parameters:
+     user        - the name of the user determining access privileges
+     zone        - the authentication zone of the user
+     sort-column - the column to sort by (type|modify-ts|create-ts|data-size|base-name|full-path)
+     sort-order  - the sorting direction (asc|desc)
+     limit       - the maximum number of results to return
+     offset      - the number of results to skip after sorting and before returning results
+     uuids       - the list of UUIDS to look up.
+     file-types  - the info types of interest
+
+   Returns:
+     The result set"
+  [^String  user
+   ^String  zone
+   ^Keyword sort-column
+   ^Keyword sort-order
+   ^Long    limit
+   ^Long    offset
+   ^ISeq    uuids
+   ^ISeq    file-types]
   (if-not (contains? sort-columns sort-column)
     (throw (Exception. (str "Invalid sort-column " sort-column))))
-
   (if-not (contains? sort-orders sort-order)
     (throw (Exception. (str "Invalid sort-order " sort-order))))
-
   (if (empty? uuids)
     []
     (let [uuid-set (q/prepare-text-set uuids)
           ft-cond  (q/mk-file-type-cond file-types)
           sc       (get sort-columns sort-column)
           so       (get sort-orders sort-order)
-          query    (format (:paged-uuid-listing q/queries) uuid-set ft-cond sc so)
-          p        (partial add-permission user)]
-      (map p (run-query-string query user zone limit offset)))))
+          query    (format (:paged-uuid-listing q/queries) uuid-set ft-cond sc so)]
+      (run-query-string query user zone limit offset))))
 
 
-(defn ^Integer number-of-uuids-in-folder
+(defn ^Long number-of-uuids-in-folder
+  "Returns the number of entities that have provided UUIDs, are visible to the given user and are a
+   folder or have one of the given file types.
+
+   Parameters:
+     user       - the name of the user determining visibility
+     zone       - the authentication zone of the user
+     uuids       - the list of UUIDS to look up.
+     file-types  - the info types of interest
+
+   Returns:
+     The result set"
   [^String user ^String zone ^ISeq uuids ^ISeq file-types]
   (if (empty? uuids)
     0

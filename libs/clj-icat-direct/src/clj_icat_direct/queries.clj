@@ -372,7 +372,15 @@
                               JOIN r_meta_main AS mm ON mm.meta_id = om.meta_id
                             WHERE om.object_id = ANY(ARRAY( SELECT data_id FROM data_objs )))
 
-    SELECT *
+    SELECT p.type,
+           p.uuid,
+           p.full_path,
+           p.base_name,
+           p.info_type,
+           p.data_size,
+           p.create_ts,
+           p.modify_ts,
+           MAX(p.access_type_id) AS access_type_id
       FROM ( SELECT 'collection'                           AS type,
                     m.meta_attr_value                      AS uuid,
                     c.coll_name                            AS full_path,
@@ -409,6 +417,8 @@
                  WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
                    AND m.meta_attr_name = 'ipc_UUID'
                    AND (%s) ) AS p
+      GROUP BY p.type, p.uuid, p.full_path, p.base_name, p.info_type, p.data_size, p.create_ts,
+               p.modify_ts
       ORDER BY p.type ASC, %s %s
       LIMIT ?
       OFFSET ?"
@@ -454,7 +464,15 @@
                             JOIN r_meta_main AS mm ON mm.meta_id = om.meta_id
                           WHERE om.object_id = ANY(ARRAY(SELECT object_id FROM uuids))
                             AND mm.meta_attr_name = 'ipc-filetype')
-    SELECT *
+    SELECT p.type,
+           p.uuid,
+           p.full_path,
+           p.base_name,
+           p.info_type,
+           p.data_size,
+           p.create_ts,
+           p.modify_ts,
+           MAX(p.access_type_id) AS access_type_id
       FROM (SELECT 'collection'                           AS type,
                    u.uuid                                 AS uuid,
                    c.coll_name                            AS full_path,
@@ -462,9 +480,12 @@
                    NULL                                   AS info_type,
                    0                                      AS data_size,
                    c.create_ts                            AS create_ts,
-                   c.modify_ts                            AS modify_ts
-              FROM uuids u JOIN r_coll_main c ON u.object_id = c.coll_id
-              WHERE c.coll_type != 'linkPoint'
+                   c.modify_ts                            AS modify_ts,
+                   a.access_type_id                       AS access_type_id
+              FROM uuids u
+                JOIN r_coll_main c ON u.object_id = c.coll_id
+                JOIN r_objt_access AS a ON c.coll_id = a.object_id
+              WHERE c.coll_type != 'linkPoint' AND a.user_id IN (SELECT group_user_id FROM groups)
             UNION
             SELECT 'dataobject'                         AS type,
                    u.uuid                               AS uuid,
@@ -473,16 +494,21 @@
                    f.meta_attr_value                    AS info_type,
                    d1.data_size                         AS data_size,
                    d1.create_ts                         AS create_ts,
-                   d1.modify_ts                         AS modify_ts
+                   d1.modify_ts                         AS modify_ts,
+                   a.access_type_id                     AS access_type_id
               FROM uuids u
                 JOIN r_data_main AS d1 ON u.object_id = d1.data_id
                 JOIN r_coll_main c ON d1.coll_id = c.coll_id
+                JOIN r_objt_access AS a ON d1.data_id = a.object_id
                 LEFT JOIN file_types AS f ON d1.data_id = f.object_id
               WHERE d1.data_repl_num = (SELECT MIN(d2.data_repl_num)
                                           FROM r_data_main AS d2
                                           WHERE d2.data_id = d1.data_id)
+                AND a.user_id IN (SELECT group_user_id FROM groups)
                 AND (%s)) AS p
-      ORDER BY type ASC, %s %s
+      GROUP BY p.type, p.uuid, p.full_path, p.base_name, p.info_type, p.data_size, p.create_ts,
+               p.modify_ts
+      ORDER BY p.type ASC, %s %s
       LIMIT ?
       OFFSET ?"
 
