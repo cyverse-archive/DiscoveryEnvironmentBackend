@@ -47,7 +47,7 @@
   (mu/assert-agave-enabled agave)
   (let [app          (.getApp agave external-app-id)
         mapped-props (get-mapped-props (:step_id step))]
-    (->> (:categories app)
+    (->> (:groups app)
          (map (partial remove-mapped-inputs mapped-props))
          (remove (comp empty? :parameters))
          (map (partial reformat-group (:name app) (:step_id step)))
@@ -83,9 +83,9 @@
 (defn- get-combined-app
   [agave app-id]
   (let [metadactyl-app (metadactyl/get-app app-id)]
-    (->> (:categories metadactyl-app)
+    (->> (:groups metadactyl-app)
          (get-combined-groups agave app-id)
-         (assoc metadactyl-app :categories))))
+         (assoc metadactyl-app :groups))))
 
 (defn get-app
   [agave app-id]
