@@ -3,14 +3,14 @@
    submitted to any excecution service."
   (:use [clojure-commons.core :only [remove-nil-values]]
         [kameleon.queries :only [get-user-id]]
+        [kameleon.uuids :only [uuidify]]
         [korma.core]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [donkey.util.db :as db]
-            [kameleon.jobs :as kj])
-  (:import [java.util UUID]))
+            [kameleon.jobs :as kj]))
 
 (def de-job-type "DE")
 (def agave-job-type "Agave")
@@ -43,9 +43,10 @@
    value pair."
   [field value]
   (case field
-    "app_name" ['like (sqlfn :lower (str "%" value "%"))]
-    "name"     ['like (sqlfn :lower (str "%" value "%"))]
-    "id"       (UUID/fromString value)
+    "app_name"  ['like (sqlfn :lower (str "%" value "%"))]
+    "name"      ['like (sqlfn :lower (str "%" value "%"))]
+    "id"        (uuidify value)
+    "parent_id" (uuidify value)
     value))
 
 (defn- filter-field->where-field
@@ -142,8 +143,6 @@
   [username include-hidden]
   (-> (select* [:jobs :j])
       (join [:users :u] {:j.user_id :u.id})
-      (join [:job_steps :s] {:j.id :s.job_id})
-      (join [:job_types :t] {:s.job_type_id :t.id})
       (aggregate (count :*) :count)
       (where {:u.username username})
       (add-internal-app-clause include-hidden)))
@@ -189,7 +188,9 @@
               [:j.status             :status]
               [:j.username           :username]
               [:j.app_wiki_url       :app-wiki-url]
-              [:j.job_type           :job-type])))
+              [:j.job_type           :job-type]
+              [:j.parent_id          :parent-id]
+              [:j.is_batch           :is-batch])))
 
 (defn- job-step-base-query
   "The base query used for retrieving job step information from the database."

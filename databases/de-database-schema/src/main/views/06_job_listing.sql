@@ -20,7 +20,12 @@ CREATE VIEW job_listings AS
            j.submission,
            CASE WHEN COUNT(DISTINCT t.name) > 1 THEN 'DE'
                 ELSE MAX(t.name)
-           END AS job_type
+           END AS job_type,
+           j.parent_id,
+           EXISTS (
+               SELECT * FROM jobs child
+               WHERE child.parent_id = j.id
+           ) AS is_batch
     FROM jobs j
          JOIN users u ON j.user_id = u.id
          JOIN job_steps s ON j.id = s.job_id

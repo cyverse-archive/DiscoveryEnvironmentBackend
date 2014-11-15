@@ -68,7 +68,9 @@
    :username        (:username job)
    :deleted         (:deleted job)
    :wiki_url        (:app-wiki-url job)
-   :app_disabled    (app-disabled? app-tables (:app-id job))})
+   :app_disabled    (app-disabled? app-tables (:app-id job))
+   :parent_id       (:parent-id job)
+   :batch           (:is-batch job)})
 
 (defn send-job-status-notification
   "Sends a job status change notification."
