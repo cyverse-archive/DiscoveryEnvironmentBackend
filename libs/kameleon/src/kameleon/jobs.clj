@@ -20,6 +20,7 @@
   [job-info]
   (insert :jobs
     (values (select-keys job-info [:id
+                                   :parent_id
                                    :job_name
                                    :job_description
                                    :app_id
