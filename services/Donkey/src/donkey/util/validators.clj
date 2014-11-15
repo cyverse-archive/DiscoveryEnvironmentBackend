@@ -79,7 +79,8 @@
    Throws:
      :invalid-argument - This is thrown if the extracted type isn't valid."
   [^String param-val]
-  (if param-val
+  (if (empty? param-val)
+    :any
     (case (string/lower-case param-val)
       "any"    :any
       "file"   :file
@@ -87,5 +88,4 @@
       (throw+ {:type   :invalid-argument
                :reason "must be 'any', 'file' or 'folder'"
                :arg    "entity-type"
-               :val    param-val}))
-    :any))
+               :val    param-val}))))
