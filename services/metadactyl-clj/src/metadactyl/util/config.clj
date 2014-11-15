@@ -108,6 +108,11 @@
   [props config-valid configs]
   "metadactyl.jex.base-url")
 
+(cc/defprop-str data-info-base-url
+  "The base URL to use when connecting to the JEX."
+  [props config-valid configs]
+  "metadactyl.data-info.base-url")
+
 (cc/defprop-str workspace-root-app-group
   "The name of the root app group in each user's workspace."
   [props config-valid configs]
