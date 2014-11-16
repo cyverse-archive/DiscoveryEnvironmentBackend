@@ -173,7 +173,7 @@
       (err-resp action (:object &throw-context)))
     (catch clj-http-error? o o)
     (catch [:type :invalid-configuration] {:keys [reason]} (invalid-cfg-response reason))
-    (catch [:type :invalid-argument] {:keys [reason arg val]} (invalid-arg-response reason arg val))
+    (catch [:type :invalid-argument] {:keys [reason arg val]} (invalid-arg-response arg val reason))
     (catch Object e
       (log/error (format-exception (:throwable &throw-context)))
       (err-resp action (unchecked &throw-context)))))
