@@ -19,6 +19,7 @@
             [clj-icat-direct.icat :as icat]
             [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
+            [donkey.util.validators :as duv]
             [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as jargon])
   (:import [java.util UUID]
@@ -188,17 +189,18 @@
 
 (defn- paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
-  [user path limit offset sort-field sort-order info-type]
+  [user path entity-type limit offset sort-field sort-order info-type]
   (log/info "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
   (let [url-path         (data/mk-entries-path-url-path path)
-        params           {:user       user
-                          :limit      limit
-                          :offset     offset
-                          :bad-chars  (cfg/fs-bad-chars)
-                          :bad-name   (cfg/fs-bad-names)
-                          :bad-path   (bad-paths user)
-                          :sort-field sort-field
-                          :sort-order sort-order}
+        params           {:user        user
+                          :entity-type (name entity-type)
+                          :limit       limit
+                          :offset      offset
+                          :bad-chars   (cfg/fs-bad-chars)
+                          :bad-name    (cfg/fs-bad-names)
+                          :bad-path    (bad-paths user)
+                          :sort-field  sort-field
+                          :sort-order  sort-order}
         params           (if info-type
                            (assoc params :info-type info-type)
                            params)
@@ -241,19 +243,15 @@
 ; TODO validate limit >= 0, offset >= 0
 (defn do-paged-listing
   "Entrypoint for the API that calls (paged-dir-listing)."
-  [{user       :user
-    path       :path
-    info-type  :info-type
-    limit      :limit
-    offset     :offset
-    sort-col   :sort-col
-    sort-order :sort-order}]
+  [{:keys [user path entity-type info-type limit offset sort-col sort-order]}]
   (Integer/parseInt limit)
   (Integer/parseInt offset)
-  (let [path       (ft/rm-last-slash path)
-        sort-field (resolve-sort-field sort-col)
-        sort-order (resolve-sort-order sort-order)
-        resp       (paged-dir-listing user path limit offset sort-field sort-order info-type)]
+  (let [path        (ft/rm-last-slash path)
+        entity-type (duv/resolve-entity-type entity-type)
+        sort-field  (resolve-sort-field sort-col)
+        sort-order  (resolve-sort-order sort-order)
+        resp        (paged-dir-listing user path entity-type limit offset sort-field sort-order
+                                       info-type)]
     (format-page user (json/decode (:body resp) true))))
 
 (with-pre-hook! #'do-paged-listing

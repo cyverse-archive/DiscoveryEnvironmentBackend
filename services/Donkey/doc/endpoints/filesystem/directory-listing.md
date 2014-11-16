@@ -98,9 +98,11 @@ __Request Query Params__:
 * path - The path to list. Must be a directory.
 * limit - The total number of results to return in a page. This is the number of folders and files combined.
 * offset - The offset into the directory listing result set to begin the listing at.
+* entity-type - (OPTIONAL) The type of entity to return, FILE, FOLDER, or ANY. The values are case-insensitive. It defaults to ANY.
 * info-type - (OPTIONAL) Filter the files portion of the result set so that only files with this info type are returned. To return multiple info types, and this parameter more than once.
 * sort-col - The column to sort the result set by. Sorting is done in iRODS's ICAT database, not at the application level. Accepted values are NAME, ID, LASTMODIFIED, DATECREATED, SIZE, PATH. The values are case-insensitive.
 * sort-order - The order to sort the result set in. Accepted values are ASC and DESC. The values are case-insensitive.
+
 
 __Response Body__:
 
