@@ -161,6 +161,17 @@
       (->> bad-path-params (map fmt-path) (remove nil?) set))))
 
 
+(defn- resolve-entity-type
+  [entity-type-param]
+  (if (empty? entity-type-param)
+    :any
+    (case (str/lower-case entity-type-param)
+      "any"    :any
+      "file"   :file
+      "folder" :folder
+               nil)))
+
+
 (defn- resolve-info-types
   [info-type-params]
   (let [resolve-type     (fn [param] (when (some #(= param %) (info/supported-formats))
@@ -210,14 +221,15 @@
 
 (defn- resolve-folder-params
   [params]
-  {::bad-chars  (set (:bad-chars params))
-   ::bad-name   (resolve-bad-names (:bad-name params))
-   ::bad-path   (resolve-bad-paths (:bad-path params))
-   ::info-type  (resolve-info-types (:info-type params))
-   ::sort-field (resolve-sort-field (:sort-field params))
-   ::sort-order (resolve-sort-order (:sort-order params))
-   ::offset     (resolve-nonnegative (:offset params) 0)
-   ::limit      (resolve-nonnegative (:limit params))})
+  {::entity-type (resolve-entity-type (:entity-type params))
+   ::bad-chars   (set (:bad-chars params))
+   ::bad-name    (resolve-bad-names (:bad-name params))
+   ::bad-path    (resolve-bad-paths (:bad-path params))
+   ::info-type   (resolve-info-types (:info-type params))
+   ::sort-field  (resolve-sort-field (:sort-field params))
+   ::sort-order  (resolve-sort-order (:sort-order params))
+   ::offset      (resolve-nonnegative (:offset params) 0)
+   ::limit       (resolve-nonnegative (:limit params))})
 
 
 (defn- folder-processable?
@@ -284,7 +296,7 @@
 
 (defn- paged-dir-listing
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
-  [irods user path bad-indicator sfield sord offset limit info-types]
+  [irods user path entity-type bad-indicator sfield sord offset limit info-types]
   (let [id           (irods/lookup-uuid irods path)
         bad?         (is-bad? bad-indicator path)
         perm         (perm/permission-for irods user path)
@@ -293,7 +305,16 @@
         mod-date     (:date-modified stat)
         zone         (cfg/irods-zone)
         name         (fs/base-name path)
-        page         (icat/paged-folder-listing user zone path sfield sord limit offset info-types)]
+        page         (icat/paged-folder-listing
+                       :user           user
+                       :zone           zone
+                       :folder-path    path
+                       :entity-type    entity-type
+                       :info-types     info-types
+                       :sort-column    sfield
+                       :sort-direction sord
+                       :limit          limit
+                       :offset         offset)]
     (merge (fmt-entry id date-created mod-date bad? nil path name perm 0)
            (page->map (partial is-bad? bad-indicator) page)
            {:total    (icat/number-of-items-in-folder user zone path info-types)
@@ -302,16 +323,18 @@
 
 (defn- get-folder
   [irods path ctx]
-  (let [user       (get-in ctx [:request :params :user])
-        badies     {:chars (::bad-chars ctx)
-                    :names (::bad-name ctx)
-                    :paths (::bad-path ctx)}
-        sort-field (::sort-field ctx)
-        sort-order (::sort-order ctx)
-        offset     (::offset ctx)
-        limit      (::limit ctx)
-        info-types (::info-type ctx)]
-    (paged-dir-listing irods user path badies sort-field sort-order offset limit info-types)))
+  (let [user        (get-in ctx [:request :params :user])
+        entity-type (::entity-type ctx)
+        badies      {:chars (::bad-chars ctx)
+                     :names (::bad-name ctx)
+                     :paths (::bad-path ctx)}
+        sort-field  (::sort-field ctx)
+        sort-order  (::sort-order ctx)
+        offset      (::offset ctx)
+        limit       (::limit ctx)
+        info-types  (::info-type ctx)]
+    (paged-dir-listing irods user path entity-type badies sort-field sort-order offset limit
+                       info-types)))
 
 
 (defn- as-folder-response

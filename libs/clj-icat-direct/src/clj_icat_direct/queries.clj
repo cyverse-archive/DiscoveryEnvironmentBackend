@@ -1,6 +1,6 @@
 (ns clj-icat-direct.queries
   (:require [clojure.string :as string])
-  (:import  [clojure.lang ISeq]))
+  (:import  [clojure.lang IPersistentMap ISeq]))
 
 
 (defn- bad-chars->sql-char-class
@@ -112,6 +112,128 @@
 
       :else
       (str "f.meta_attr_value IN (" fmt-ft ")"))))
+
+
+(def ^IPersistentMap sort-columns
+  {:type      "type"
+   :modify-ts "modify_ts"
+   :create-ts "create_ts"
+   :data-size "data_size"
+   :base-name "base_name"
+   :full-path "full_path"})
+
+
+(def ^IPersistentMap sort-directions
+  {:asc "ASC" :desc "DESC"})
+
+
+(defn- mk-data-objs-query
+  [parent-path]
+  (str "SELECT *
+          FROM r_data_main AS d1
+          WHERE coll_id = (SELECT coll_id FROM r_coll_main WHERE coll_name = '" parent-path "')
+            AND d1.data_repl_num = (SELECT MIN(d2.data_repl_num)
+                                      FROM r_data_main AS d2
+                                      WHERE d2.data_id = d1.data_id)"))
+
+
+(defn- mk-file-avus-query
+  [file-ids-query]
+  (str "SELECT *
+          FROM r_objt_metamap AS o JOIN r_meta_main AS m ON o.meta_id = m.meta_id
+          WHERE o.object_id = ANY(ARRAY(" file-ids-query "))"))
+
+
+(defn- mk-folder-files-query
+  [parent-path group-ids-query info-type-cond data-objs-cte avus-cte]
+  (str "SELECT 'dataobject'                      AS type,
+               m.meta_attr_value                 AS uuid,
+               '" parent-path "/' || d.data_name AS full_path,
+               d.data_name                       AS base_name,
+               f.meta_attr_value                 AS info_type,
+               d.data_size                       AS data_size,
+               d.create_ts                       AS create_ts,
+               d.modify_ts                       AS modify_ts,
+               MAX(a.access_type_id)             AS access_type_id
+          FROM " data-objs-cte " AS d
+            JOIN " avus-cte " AS m ON d.data_id = m.object_id
+            JOIN r_objt_access AS a ON d.data_id = a.object_id
+            LEFT JOIN (SELECT * FROM " avus-cte " WHERE meta_attr_name = 'ipc-filetype') AS f
+              ON d.data_id = f.object_id
+          WHERE a.user_id IN (" group-ids-query ")
+            AND m.meta_attr_name = 'ipc_UUID'
+            AND (" info-type-cond ")
+          GROUP BY type, uuid, full_path, base_name, info_type, data_size, d.create_ts,
+                   d.modify_ts"))
+
+
+(defn- mk-folder-folders-query
+  [parent-path group-ids-query]
+  (str "SELECT 'collection'                           AS type,
+               m.meta_attr_value                      AS uuid,
+               c.coll_name                            AS full_path,
+               REGEXP_REPLACE(c.coll_name, '.*/', '') AS base_name,
+               NULL                                   AS info_type,
+               0                                      AS data_size,
+               c.create_ts                            AS create_ts,
+               c.modify_ts                            AS modify_ts,
+               MAX(a.access_type_id)                  AS access_type_id
+          FROM r_coll_main AS c
+            JOIN r_objt_metamap AS om ON om.object_id = c.coll_id
+            JOIN r_meta_main AS m ON m.meta_id = om.meta_id
+            JOIN r_objt_access AS a ON c.coll_id = a.object_id
+          WHERE c.parent_coll_name = '" parent-path "'
+            AND c.coll_type != 'linkPoint'
+            AND m.meta_attr_name = 'ipc_UUID'
+            AND a.user_id IN (" group-ids-query ")
+          GROUP BY type, uuid, full_path, base_name, info_type, data_size, c.create_ts,
+                   c.modify_ts"))
+
+
+(defn- mk-groups-query
+  [user zone]
+  (str "SELECT *
+          FROM r_user_group
+          WHERE user_id IN (SELECT user_id
+                              FROM r_user_main
+                              WHERE user_name = '" user "' AND zone_name = '" zone "')"))
+
+
+(defn ^String mk-paged-folder-files-query
+  [& {:keys [user zone parent-path info-type-cond sort-column sort-direction]}]
+  (let [group-query "SELECT group_user_id FROM groups"]
+    (str "WITH groups    AS (" (mk-groups-query user zone) "),
+               data_objs AS (" (mk-data-objs-query parent-path) "),
+               file_avus AS (" (mk-file-avus-query "SELECT data_id FROM data_objs") ")
+         " (mk-folder-files-query parent-path group-query info-type-cond "data_objs" "file_avus") "
+           ORDER BY type ASC, " sort-column " " sort-direction "
+           LIMIT ?
+           OFFSET ?")))
+
+
+(defn ^String mk-paged-folder-folders-query
+  [& {:keys [user zone parent-path sort-column sort-direction]}]
+  (str "WITH groups AS (" (mk-groups-query user zone) ")
+       " (mk-folder-folders-query parent-path "SELECT group_user_id FROM groups") "
+        ORDER BY type ASC, " sort-column " " sort-direction "
+        LIMIT ?
+        OFFSET ?"))
+
+
+(defn ^String mk-paged-folder-query
+  [& {:keys [user zone parent-path info-type-cond sort-column sort-direction]}]
+  (let [group-query   "SELECT group_user_id FROM groups"
+        folders-query (mk-folder-folders-query parent-path group-query)
+        files-query   (mk-folder-files-query parent-path group-query info-type-cond "data_objs"
+                                             "file_avus")]
+    (str "WITH groups    AS (" (mk-groups-query user zone) "),
+               data_objs AS (" (mk-data-objs-query parent-path) "),
+               file_avus AS (" (mk-file-avus-query "SELECT data_id FROM data_objs") ")
+          SELECT *
+            FROM (" folders-query " UNION " files-query ") AS p
+            ORDER BY type ASC, " sort-column " " sort-direction "
+            LIMIT ?
+            OFFSET ?")))
 
 
 (def queries
@@ -352,76 +474,6 @@
       WHERE parent_coll_name IN (SELECT coll_name FROM parent)
         AND coll_id IN (SELECT object_id FROM user_access)
         AND coll_type != 'linkPoint'"
-
-   :paged-folder-listing
-   "WITH user_groups AS ( SELECT g.*
-                            FROM r_user_main AS u JOIN r_user_group AS g ON g.user_id = u.user_id
-                            WHERE u.user_name = ? AND u.zone_name = ? ),
-
-         parent      AS ( SELECT * FROM r_coll_main WHERE coll_name = ? ),
-
-         data_objs   AS ( SELECT *
-                            FROM r_data_main AS d1
-                            WHERE coll_id = ANY(ARRAY( SELECT coll_id FROM parent ))
-                              AND d1.data_repl_num = ( SELECT MIN(d2.data_repl_num)
-                                                         FROM r_data_main AS d2
-                                                         WHERE d2.data_id = d1.data_id )),
-
-         file_avus   AS ( SELECT *
-                            FROM r_objt_metamap AS om
-                              JOIN r_meta_main AS mm ON mm.meta_id = om.meta_id
-                            WHERE om.object_id = ANY(ARRAY( SELECT data_id FROM data_objs )))
-
-    SELECT p.type,
-           p.uuid,
-           p.full_path,
-           p.base_name,
-           p.info_type,
-           p.data_size,
-           p.create_ts,
-           p.modify_ts,
-           MAX(p.access_type_id) AS access_type_id
-      FROM ( SELECT 'collection'                           AS type,
-                    m.meta_attr_value                      AS uuid,
-                    c.coll_name                            AS full_path,
-                    regexp_replace(c.coll_name, '.*/', '') AS base_name,
-                    NULL                                   AS info_type,
-                    0                                      AS data_size,
-                    c.create_ts                            AS create_ts,
-                    c.modify_ts                            AS modify_ts,
-                    a.access_type_id                       AS access_type_id
-               FROM r_coll_main AS c
-                 JOIN r_objt_access AS a ON c.coll_id = a.object_id
-                 JOIN parent AS p ON c.parent_coll_name = p.coll_name
-                 JOIN r_objt_metamap AS om ON om.object_id = c.coll_id
-                 JOIN r_meta_main AS m ON m.meta_id = om.meta_id
-               WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-                 AND c.coll_type != 'linkPoint'
-                 AND m.meta_attr_name = 'ipc_UUID'
-             UNION
-             SELECT 'dataobject'                      AS type,
-                    m.meta_attr_value                 AS uuid,
-                    c.coll_name || '/' || d.data_name AS full_path,
-                    d.data_name                       AS base_name,
-                    f.meta_attr_value                 AS info_type,
-                    d.data_size                       AS data_size,
-                    d.create_ts                       AS create_ts,
-                    d.modify_ts                       AS modify_ts,
-                    a.access_type_id                  AS access_type_id
-               FROM r_objt_access AS a
-                 JOIN data_objs AS d ON a.object_id = d.data_id
-                 JOIN r_coll_main AS c ON c.coll_id = d.coll_id
-                 JOIN file_avus AS m ON m.object_id = d.data_id
-                 LEFT JOIN ( SELECT * FROM file_avus WHERE meta_attr_name = 'ipc-filetype' ) AS f
-                   ON d.data_id = f.object_id
-                 WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-                   AND m.meta_attr_name = 'ipc_UUID'
-                   AND (%s) ) AS p
-      GROUP BY p.type, p.uuid, p.full_path, p.base_name, p.info_type, p.data_size, p.create_ts,
-               p.modify_ts
-      ORDER BY p.type ASC, %s %s
-      LIMIT ?
-      OFFSET ?"
 
    :select-files-with-uuids
    "SELECT DISTINCT m.meta_attr_value                   uuid,

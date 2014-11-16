@@ -1,7 +1,6 @@
 (ns clj-icat-direct.icat
   (:use [clojure.java.io :only [file]])
   (:require [clojure.string :as string]
-            [clojure.tools.logging :as log]
             [korma.db :as db]
             [korma.core :as k]
             [clj-icat-direct.queries :as q])
@@ -137,18 +136,6 @@
   (map (partial add-permission user)
        (run-simple-query :list-folders-in-folder user zone folder-path)))
 
-(def sort-columns
-  {:type      "p.type"
-   :modify-ts "p.modify_ts"
-   :create-ts "p.create_ts"
-   :data-size "p.data_size"
-   :base-name "p.base_name"
-   :full-path "p.full_path"})
-
-(def sort-orders
-  {:asc  "ASC"
-   :desc "DESC"})
-
 
 (defn ^ISeq folder-path-listing
   "Returns a complete folder listing for everything visible to a given user.
@@ -172,20 +159,55 @@
     record))
 
 
-(defn paged-folder-listing
-  "Returns a page from a folder listing."
-  [user zone folder-path sort-column sort-order limit offset & [file-types]]
-  (if-not (contains? sort-columns sort-column)
-    (throw (Exception. (str "Invalid sort-column " sort-column))))
+(defn- resolve-sort-column
+  [col-key]
+  (if-let [col (get q/sort-columns col-key)]
+    col
+    (throw (Exception. (str "invalid sort column " col-key)))))
 
-  (if-not (contains? sort-orders sort-order)
-    (throw (Exception. (str "Invalid sort-order " sort-order))))
 
-  (let [ft-cond (q/mk-file-type-cond file-types)
-        sc      (get sort-columns sort-column)
-        so      (get sort-orders sort-order)
-        query   (format (:paged-folder-listing q/queries) ft-cond sc so)]
-    (map fmt-info-type (run-query-string query user zone folder-path limit offset))))
+(defn- resolve-sort-direction
+  [direction-key]
+  (if-let [direction (get q/sort-directions direction-key)]
+    direction
+    (throw (Exception. (str "invalid sort direction" direction-key)))))
+
+
+(defn ^ISeq paged-folder-listing
+  "Returns a page from a folder listing.
+
+   Parameters:
+     user           - the name of the user determining access privileges
+     zone           - the authentication zone of the user
+     folder-path    - the folder to list the contents of
+     entity-type    - the type of entities to return (:any|:file|:folder), :any means both files and
+                      folders
+     sort-column    - the column to sort by
+                      (:type|:modify-ts|:create-ts|:data-size|:base-name|:full-path)
+     sort-direction - the sorting direction (:asc|:desc)
+     limit          - the maximum number of results to return
+     offset         - the number of results to skip after sorting and before returning results
+     file-types     - the info types of interest
+
+   Returns:
+     It returns a page of results.
+
+   Throws:
+     It throws an exception if a validation fails."
+  [& {:keys [user zone folder-path entity-type sort-column sort-direction limit offset info-types]}]
+  (let [query-ctor (case entity-type
+                     :any    q/mk-paged-folder-query
+                     :file   q/mk-paged-folder-files-query
+                     :folder q/mk-paged-folder-folders-query
+                             (throw (Exception. (str "invalid entity type " entity-type))))
+        query (query-ctor
+                :user           user
+                :zone           zone
+                :parent-path    folder-path
+                :info-type-cond (q/mk-file-type-cond info-types)
+                :sort-column    (resolve-sort-column sort-column)
+                :sort-direction (resolve-sort-direction sort-direction))]
+    (map fmt-info-type (run-query-string query limit offset))))
 
 
 (defn select-files-with-uuids
@@ -227,18 +249,14 @@
    ^Long    offset
    ^ISeq    uuids
    ^ISeq    file-types]
-  (if-not (contains? sort-columns sort-column)
-    (throw (Exception. (str "Invalid sort-column " sort-column))))
-  (if-not (contains? sort-orders sort-order)
-    (throw (Exception. (str "Invalid sort-order " sort-order))))
   (if (empty? uuids)
     []
     (let [uuid-set (q/prepare-text-set uuids)
           ft-cond  (q/mk-file-type-cond file-types)
-          sc       (get sort-columns sort-column)
-          so       (get sort-orders sort-order)
+          sc       (resolve-sort-column sort-column)
+          so       (resolve-sort-direction sort-order)
           query    (format (:paged-uuid-listing q/queries) uuid-set ft-cond sc so)]
-      (run-query-string query user zone limit offset))))
+      (map fmt-info-type (run-query-string query user zone limit offset)))))
 
 
 (defn ^Long number-of-uuids-in-folder
