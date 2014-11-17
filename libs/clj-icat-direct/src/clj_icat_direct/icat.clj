@@ -63,8 +63,9 @@
      It returns the total number of folders combined with the total number of files with the given
      info types."
   [^String user ^String zone ^String folder-path ^ISeq info-types]
-  (let [query (format (:count-items-in-folder q/queries) (q/mk-file-type-cond info-types))]
-    (-> (run-query-string query user zone folder-path) first :total)))
+  (let [type-cond (q/mk-file-type-cond info-types)
+        query     (q/mk-count-items-in-folder-query user zone folder-path type-cond)]
+    (-> (run-query-string query) first :total)))
 
 
 (defn number-of-all-items-under-folder

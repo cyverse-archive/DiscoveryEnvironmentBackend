@@ -199,6 +199,34 @@
                               WHERE user_name = '" user "' AND zone_name = '" zone "')"))
 
 
+(defn ^String mk-count-items-in-folder-query
+  [^String user ^String zone ^String parent-path ^String info-type-cond]
+  (let [group-query "SELECT group_user_id FROM groups"]
+    (str "WITH groups     AS (" (mk-groups-query user zone) "),
+               data_objs  AS (SELECT *
+                                FROM r_data_main
+                                WHERE coll_id = ANY(ARRAY(SELECT coll_id
+                                                            FROM r_coll_main
+                                                            WHERE coll_name = '" parent-path "'))),
+               file_types AS (SELECT *
+                                FROM r_objt_metamap AS o
+                                  JOIN r_meta_main AS m ON m.meta_id = o.meta_id
+                                 WHERE o.object_id = ANY(ARRAY(SELECT data_id FROM data_objs))
+                                   AND m.meta_attr_name = 'ipc-filetype')
+          SELECT count(*) AS total
+            FROM (SELECT c.coll_id
+                    FROM r_coll_main c JOIN r_objt_access AS a ON c.coll_id = a.object_id
+                    WHERE c.parent_coll_name = '" parent-path "'
+                      AND c.coll_type != 'linkPoint'
+                      AND a.user_id IN (" group-query ")
+                  UNION
+                  SELECT DISTINCT d.data_id
+                    FROM data_objs AS d
+                      JOIN r_objt_access AS a ON a.object_id = d.data_id
+                      LEFT JOIN file_types AS f ON f.object_id = d.data_id
+                    WHERE a.user_id IN (" group-query ") AND (" info-type-cond ")) AS t")))
+
+
 (defn ^String mk-paged-folder-files-query
   [& {:keys [user zone parent-path info-type-cond sort-column sort-direction]}]
   (let [group-query "SELECT group_user_id FROM groups"]
@@ -230,48 +258,14 @@
                data_objs AS (" (mk-data-objs-query parent-path) "),
                file_avus AS (" (mk-file-avus-query "SELECT data_id FROM data_objs") ")
           SELECT *
-            FROM (" folders-query " UNION " files-query ") AS p
+            FROM (" folders-query " UNION " files-query ") AS t
             ORDER BY type ASC, " sort-column " " sort-direction "
             LIMIT ?
             OFFSET ?")))
 
 
 (def queries
-  {:count-items-in-folder
-   "WITH user_groups AS ( SELECT g.*
-                            FROM r_user_main u
-                            JOIN r_user_group g ON g.user_id = u.user_id
-                           WHERE u.user_name = ?
-                             AND u.zone_name = ? ),
-
-         parent      AS ( SELECT * from r_coll_main
-                           WHERE coll_name = ? ),
-
-         data_objs   AS ( SELECT *
-                            FROM r_data_main
-                           WHERE coll_id = ANY(ARRAY( SELECT coll_id FROM parent ))),
-
-         file_types  AS ( SELECT *
-                            FROM r_objt_metamap om
-                            JOIN r_meta_main mm ON mm.meta_id = om.meta_id
-                           WHERE om.object_id = ANY(ARRAY( SELECT data_id FROM data_objs ))
-                             AND mm.meta_attr_name = 'ipc-filetype' )
-
-    SELECT count(*) AS total
-      FROM ( SELECT DISTINCT d.data_id FROM r_objt_access a
-               JOIN data_objs d ON a.object_id = d.data_id
-          LEFT JOIN file_types f ON d.data_id = f.object_id
-              WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-                AND (%s)
-              UNION
-             SELECT c.coll_id
-               FROM r_coll_main c
-               JOIN r_objt_access a ON c.coll_id = a.object_id
-               JOIN parent p ON c.parent_coll_name = p.coll_name
-              WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-                AND c.coll_type != 'linkPoint' ) AS contents"
-
-   :count-all-items-under-folder
+  {:count-all-items-under-folder
    "WITH user_groups AS ( SELECT g.*
                             FROM r_user_main u
                             JOIN r_user_group g ON g.user_id = u.user_id
