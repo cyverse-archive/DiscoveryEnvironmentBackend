@@ -112,7 +112,7 @@
   [job]
   (let [inputs (log/spy (mapcat (comp :input :config) (:steps job)))
         file-stats (log/spy (get-file-stats (set (map :value inputs))))
-        info-type-filter #(= (:infoType (second %)) "path-list")]
+        info-type-filter #(= (:infoType (second %)) "ht-analysis-path-list")]
     (into {} (filter info-type-filter (:paths file-stats)))))
 
 (defn- get-path-list-contents-map
