@@ -7,6 +7,7 @@
         [korma.core]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [donkey.util.db :as db]
@@ -45,8 +46,8 @@
   (case field
     "app_name"  ['like (sqlfn :lower (str "%" value "%"))]
     "name"      ['like (sqlfn :lower (str "%" value "%"))]
-    "id"        (uuidify value)
-    "parent_id" (uuidify value)
+    "id"        (when-not (string/blank? value) (uuidify value))
+    "parent_id" (when-not (string/blank? value) (uuidify value))
     value))
 
 (defn- filter-field->where-field
