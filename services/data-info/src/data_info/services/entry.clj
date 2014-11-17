@@ -317,7 +317,7 @@
                        :offset         offset)]
     (merge (fmt-entry id date-created mod-date bad? nil path name perm 0)
            (page->map (partial is-bad? bad-indicator) page)
-           {:total    (icat/number-of-items-in-folder user zone path info-types)
+           {:total    (icat/number-of-items-in-folder user zone path entity-type info-types)
             :totalBad (total-bad user zone path info-types bad-indicator)})))
 
 

@@ -57,14 +57,20 @@
      user        - the username of the user
      zone        - the user's authentication zone
      folder-path - the absolute path to the folder being inspected
+     entity-type - the type of entities to return (:any|:file|:folder), :any means both files and
+                   folders
      info-types  - the info-types of the files to count, if empty, all files are counted
 
    Returns:
      It returns the total number of folders combined with the total number of files with the given
      info types."
-  [^String user ^String zone ^String folder-path ^ISeq info-types]
+  [^String user ^String zone ^String folder-path ^Keyword entity-type & [info-types]]
   (let [type-cond (q/mk-file-type-cond info-types)
-        query     (q/mk-count-items-in-folder-query user zone folder-path type-cond)]
+        query     (case entity-type
+                    :any    (q/mk-count-items-in-folder-query user zone folder-path type-cond)
+                    :file   (q/mk-count-files-in-folder-query user zone folder-path type-cond)
+                    :folder (q/mk-count-folders-in-folder-query user zone folder-path)
+                            (throw (Exception. (str "invalid entity type " entity-type))))]
     (-> (run-query-string query) first :total)))
 
 

@@ -127,7 +127,7 @@
   {:asc "ASC" :desc "DESC"})
 
 
-(defn- mk-data-objs-query
+(defn- mk-unique-objs-in-coll-query
   [parent-path]
   (str "SELECT *
           FROM r_data_main AS d1
@@ -137,11 +137,16 @@
                                       WHERE d2.data_id = d1.data_id)"))
 
 
-(defn- mk-file-avus-query
+(defn- mk-obj-avus-query
   [file-ids-query]
   (str "SELECT *
           FROM r_objt_metamap AS o JOIN r_meta_main AS m ON o.meta_id = m.meta_id
           WHERE o.object_id = ANY(ARRAY(" file-ids-query "))"))
+
+
+(defn- mk-file-types-query
+  [avus-cte]
+  (str "SELECT * FROM " avus-cte " WHERE meta_attr_name = 'ipc-filetype'"))
 
 
 (defn- mk-folder-files-query
@@ -158,7 +163,7 @@
           FROM " data-objs-cte " AS d
             JOIN " avus-cte " AS m ON d.data_id = m.object_id
             JOIN r_objt_access AS a ON d.data_id = a.object_id
-            LEFT JOIN (SELECT * FROM " avus-cte " WHERE meta_attr_name = 'ipc-filetype') AS f
+            LEFT JOIN (" (mk-file-types-query avus-cte) ") AS f
               ON d.data_id = f.object_id
           WHERE a.user_id IN (" group-ids-query ")
             AND m.meta_attr_name = 'ipc_UUID'
@@ -199,40 +204,57 @@
                               WHERE user_name = '" user "' AND zone_name = '" zone "')"))
 
 
-(defn ^String mk-count-items-in-folder-query
+(defn- mk-count-colls-in-coll
+  [parent-path group-ids-query]
+  (str "SELECT COUNT(*) AS total
+          FROM r_coll_main c JOIN r_objt_access AS a ON c.coll_id = a.object_id
+          WHERE c.parent_coll_name = '" parent-path "'
+            AND c.coll_type != 'linkPoint'
+            AND a.user_id IN (" group-ids-query ")"))
+
+
+(defn- mk-count-objs-of-type
+  [avus-cte group-query info-type-cond]
+  (str "SELECT COUNT(*) AS total
+          FROM data_objs AS d
+            JOIN r_objt_access AS a ON a.object_id = d.data_id
+            LEFT JOIN (" (mk-file-types-query avus-cte) ") AS f ON f.object_id = d.data_id
+          WHERE a.user_id IN (" group-query ") AND (" info-type-cond ")"))
+
+
+(defn ^String mk-count-files-in-folder-query
   [^String user ^String zone ^String parent-path ^String info-type-cond]
   (let [group-query "SELECT group_user_id FROM groups"]
-    (str "WITH groups     AS (" (mk-groups-query user zone) "),
-               data_objs  AS (SELECT *
-                                FROM r_data_main
-                                WHERE coll_id = ANY(ARRAY(SELECT coll_id
-                                                            FROM r_coll_main
-                                                            WHERE coll_name = '" parent-path "'))),
-               file_types AS (SELECT *
-                                FROM r_objt_metamap AS o
-                                  JOIN r_meta_main AS m ON m.meta_id = o.meta_id
-                                 WHERE o.object_id = ANY(ARRAY(SELECT data_id FROM data_objs))
-                                   AND m.meta_attr_name = 'ipc-filetype')
-          SELECT count(*) AS total
-            FROM (SELECT c.coll_id
-                    FROM r_coll_main c JOIN r_objt_access AS a ON c.coll_id = a.object_id
-                    WHERE c.parent_coll_name = '" parent-path "'
-                      AND c.coll_type != 'linkPoint'
-                      AND a.user_id IN (" group-query ")
-                  UNION
-                  SELECT DISTINCT d.data_id
-                    FROM data_objs AS d
-                      JOIN r_objt_access AS a ON a.object_id = d.data_id
-                      LEFT JOIN file_types AS f ON f.object_id = d.data_id
-                    WHERE a.user_id IN (" group-query ") AND (" info-type-cond ")) AS t")))
+    (str "WITH groups    AS (" (mk-groups-query user zone) "),
+               data_objs AS (" (mk-unique-objs-in-coll-query parent-path ) "),
+               file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
+         " (mk-count-objs-of-type "file_avus" group-query info-type-cond))))
+
+
+(defn ^String mk-count-folders-in-folder-query
+  [^String user ^String zone ^String parent-path]
+  (let [group-query "SELECT group_user_id FROM groups"]
+    (str "WITH groups AS (" (mk-groups-query user zone) ")
+         " (mk-count-colls-in-coll parent-path group-query))))
+
+
+(defn ^String mk-count-items-in-folder-query
+  [^String user ^String zone ^String parent-path ^String info-type-cond]
+  (let [group-query   "SELECT group_user_id FROM groups"
+        folders-query (mk-count-colls-in-coll parent-path group-query)
+        files-query   (mk-count-objs-of-type "file_avus" group-query info-type-cond)]
+    (str "WITH groups    AS (" (mk-groups-query user zone) "),
+               data_objs AS (" (mk-unique-objs-in-coll-query parent-path ) "),
+               file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
+          SELECT (" folders-query ") + (" files-query ") AS total")))
 
 
 (defn ^String mk-paged-folder-files-query
   [& {:keys [user zone parent-path info-type-cond sort-column sort-direction]}]
   (let [group-query "SELECT group_user_id FROM groups"]
     (str "WITH groups    AS (" (mk-groups-query user zone) "),
-               data_objs AS (" (mk-data-objs-query parent-path) "),
-               file_avus AS (" (mk-file-avus-query "SELECT data_id FROM data_objs") ")
+               data_objs AS (" (mk-unique-objs-in-coll-query parent-path) "),
+               file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
          " (mk-folder-files-query parent-path group-query info-type-cond "data_objs" "file_avus") "
            ORDER BY type ASC, " sort-column " " sort-direction "
            LIMIT ?
@@ -255,8 +277,8 @@
         files-query   (mk-folder-files-query parent-path group-query info-type-cond "data_objs"
                                              "file_avus")]
     (str "WITH groups    AS (" (mk-groups-query user zone) "),
-               data_objs AS (" (mk-data-objs-query parent-path) "),
-               file_avus AS (" (mk-file-avus-query "SELECT data_id FROM data_objs") ")
+               data_objs AS (" (mk-unique-objs-in-coll-query parent-path) "),
+               file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
           SELECT *
             FROM (" folders-query " UNION " files-query ") AS t
             ORDER BY type ASC, " sort-column " " sort-direction "
