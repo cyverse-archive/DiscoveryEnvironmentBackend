@@ -205,44 +205,36 @@
 
 
 (defn- mk-count-colls-in-coll
-  [parent-path group-ids-query]
+  [parent-path group-ids-query & {:keys [cond] :or {:cond "TRUE"}}]
   (str "SELECT COUNT(*) AS total
           FROM r_coll_main c JOIN r_objt_access AS a ON c.coll_id = a.object_id
           WHERE c.parent_coll_name = '" parent-path "'
             AND c.coll_type != 'linkPoint'
-            AND a.user_id IN (" group-ids-query ")"))
+            AND a.user_id IN (" group-ids-query ")
+            AND (" cond ")"))
 
 
 (defn- mk-count-objs-of-type
-  [avus-cte group-query info-type-cond]
+  [objs-cte avus-cte group-query info-type-cond & {:keys [cond] :or {:cond "TRUE"}}]
   (str "SELECT COUNT(*) AS total
-          FROM data_objs AS d
+          FROM " objs-cte " AS d
             JOIN r_objt_access AS a ON a.object_id = d.data_id
             LEFT JOIN (" (mk-file-types-query avus-cte) ") AS f ON f.object_id = d.data_id
-          WHERE a.user_id IN (" group-query ") AND (" info-type-cond ")"))
+          WHERE a.user_id IN (" group-query ")
+            AND (" info-type-cond ")
+            AND (" cond ")"))
 
 
 (defn ^String mk-count-bad-items-in-folder
   [& {:keys [user zone parent-path info-type-cond bad-file-cond bad-folder-cond]}]
-  (str "WITH groups    AS (" (mk-groups-query user zone) "),
-             data_objs AS (" (mk-unique-objs-in-coll-query parent-path) "),
-             file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
-        SELECT ((SELECT COUNT(*)
-                   FROM r_coll_main c JOIN r_objt_access AS a ON c.coll_id = a.object_id
-                   WHERE c.parent_coll_name = '" parent-path "'
-                     AND c.coll_type != 'linkPoint'
-                     AND a.user_id IN (SELECT group_user_id FROM groups)
-                     AND (" bad-folder-cond "))
-                +
-                (SELECT COUNT(*)
-                   FROM data_objs AS d
-                     JOIN r_objt_access AS a ON a.object_id = d.data_id
-                     LEFT JOIN (SELECT * FROM file_avus WHERE meta_attr_name = 'ipc-filetype') AS f
-                       ON f.object_id = d.data_id
-                   WHERE a.user_id IN (SELECT group_user_id FROM groups)
-                     AND (" info-type-cond ")
-                     AND (" bad-file-cond ")))
-               AS total"))
+  (let [group-query  "SELECT group_user_id FROM groups"
+        folder-query (mk-count-colls-in-coll parent-path group-query :cond bad-folder-cond)
+        file-query   (mk-count-objs-of-type "data_objs" "file_avus" group-query info-type-cond
+                       :cond bad-file-cond)]
+    (str "WITH groups    AS (" (mk-groups-query user zone) "),
+               data_objs AS (" (mk-unique-objs-in-coll-query parent-path) "),
+               file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
+          SELECT ((" folder-query ") + (" file-query ")) AS total")))
 
 
 (defn ^String mk-count-files-in-folder-query
@@ -251,7 +243,7 @@
     (str "WITH groups    AS (" (mk-groups-query user zone) "),
                data_objs AS (" (mk-unique-objs-in-coll-query parent-path ) "),
                file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
-         " (mk-count-objs-of-type "file_avus" group-query info-type-cond))))
+         " (mk-count-objs-of-type "data_objs" "file_avus" group-query info-type-cond))))
 
 
 (defn ^String mk-count-folders-in-folder-query
@@ -265,7 +257,7 @@
   [^String user ^String zone ^String parent-path ^String info-type-cond]
   (let [group-query   "SELECT group_user_id FROM groups"
         folders-query (mk-count-colls-in-coll parent-path group-query)
-        files-query   (mk-count-objs-of-type "file_avus" group-query info-type-cond)]
+        files-query   (mk-count-objs-of-type "data_objs" "file_avus" group-query info-type-cond)]
     (str "WITH groups    AS (" (mk-groups-query user zone) "),
                data_objs AS (" (mk-unique-objs-in-coll-query parent-path ) "),
                file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
