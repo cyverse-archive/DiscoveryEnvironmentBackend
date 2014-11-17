@@ -1,6 +1,6 @@
 (ns jex.dagify
   (:use [clojure-commons.file-utils :as ut]
-        [clojure.string :only (join)]
+        [clojure.string :only (join split trim)]
         [clojure.tools.logging :as log])
   (:require [jex.config :as cfg])
   (:import [java.io File]))
@@ -46,6 +46,20 @@
   [{:keys [steps] :as amap}]
   (str "+IpcExePath = \"" (ut/dirname (:executable (first steps))) "\"\n"))
 
+;;; We only want a single instance of this across all threads just in
+;;; case the number of accounting groups gets really large.
+(def accounting-groups-storage (atom nil))
+
+(defn accounting-group
+  "Returns a random group, as a string, from the list of accounting groups stored in
+   @accounting-groups-storage."
+  []
+  (if-not @accounting-groups-storage
+    (reset! accounting-groups-storage
+            (filter (fn [s] (not (empty? s)))
+                    (map trim (split (cfg/accounting-groups) #",")))))
+  (nth @accounting-groups-storage (rand-int (count @accounting-groups-storage))))
+
 (defn script-submission
   "Generates the Condor submission file that will execute the generated
    shell script."
@@ -63,7 +77,7 @@
    "+IpcUuid = \"" uuid "\"\n"
    "+IpcJobId = \"generated_script\"\n"
    "+IpcUsername = \"" username "\"\n"
-   "+AccountingGroup = \"" (cfg/accounting-group) "." username "\"\n"
+   "+AccountingGroup = \"" (accounting-group) "." username "\"\n"
    (ipc-exe analysis-map)
    (ipc-exe-path analysis-map)
    "should_transfer_files = YES\n"

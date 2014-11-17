@@ -102,10 +102,10 @@
   [props config-valid configs]
   "jex.app.request-disk")
 
-(cc/defprop-str accounting-group
+(cc/defprop-str accounting-groups
   "The accounting group to place everyone in by default."
   [props config-valid configs]
-  "jex.app.accounting-group")
+  "jex.app.accounting-groups")
 
 (cc/defprop-str jex-events-url
   "The URL to the jobs endpoint of the jex-events service"
