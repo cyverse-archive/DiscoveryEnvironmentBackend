@@ -3,9 +3,9 @@
         [donkey.auth.user-attributes :only [current-user]])
   (:require [cemerick.url :as curl]
             [clojure.tools.logging :as log]
+            [donkey.clients.jex-events :as jex-events]
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.notifications :as dn]
-            [donkey.clients.osm :as osm]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
             [donkey.services.metadata.property-values :as property-values]
@@ -51,14 +51,6 @@
        (metadactyl/submit-job)
        (:uuid)))
 
-(defn load-de-job-states
-  [de-jobs]
-  (if-not (empty? de-jobs)
-    (->> (osm/get-jobs (map :id de-jobs))
-         (map (juxt :uuid identity))
-         (into {}))
-    {}))
-
 (defn load-app-details
   [ids]
   (into {} (map (juxt (comp str :id) identity)
@@ -66,7 +58,7 @@
 
 (defn get-job-step-status
   [id]
-  (when-let [step (osm/get-job id)]
+  (when-let [step (jex-events/get-job-state id)]
     {:status  (:status step)
      :enddate (:completion_date step)}))
 

@@ -407,19 +407,12 @@
   "donkey.metadata.password")
 ;;;End Metadata database connection information
 
-;;;OSM connection information
-(cc/defprop-str osm-base-url
-  "The base URL to use when connecting to the OSM."
+;;; JEX Events connection information
+(cc/defprop-str jex-events-base-url
+  "The base URL to use when connecting to the JEX Events service."
   [props config-valid configs]
-  "donkey.osm.base-url")
-
-(cc/defprop-str osm-jobs-bucket
-  "The OSM bucket containing information about jobs that the user has
-   submitted."
-  [props config-valid configs]
-  "donkey.osm.jobs-bucket")
-;;;End OSM connection information
-
+  "donkey.jex-events.base-url")
+;;; End JEX Events connection information
 
 ;;; ICAT connection information
 (cc/defprop-str icat-host
@@ -470,16 +463,6 @@
   "The directory, in iRODS, to use as temp storage for uploads."
   [props config-valid configs fileio-routes-enabled]
   "donkey.fileio.temp-dir")
-
-(cc/defprop-str fileio-curl-path
-  "The path on the cluster to the curl tool."
-  [props config-valid configs fileio-routes-enabled]
-  "donkey.fileio.curl-path")
-
-(cc/defprop-str fileio-service-name
-  "The old service name for fileio"
-  [props config-valid configs fileio-routes-enabled]
-  "donkey.fileio.service-name")
 
 (cc/defprop-uuid fileio-url-import-app
   "The identifier of the internal app used for URL imports."

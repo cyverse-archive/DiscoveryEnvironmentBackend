@@ -10,7 +10,6 @@
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [donkey.clients.metadactyl :as metadactyl]
-            [donkey.clients.osm :as osm]
             [donkey.persistence.jobs :as jp]
             [donkey.persistence.oauth :as op]
             [donkey.services.metadata.agave-apps :as aa]
