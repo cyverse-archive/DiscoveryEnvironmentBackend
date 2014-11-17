@@ -142,6 +142,10 @@
   (let [path-list-base-names (set (map fs/base-name (keys path-lists)))]
     ((juxt filter remove) #(contains? path-list-base-names (:value %)) params)))
 
+(defn- get-partitioned-submission-config-entries
+  [path-lists config]
+  ((juxt filter remove) (fn [[k v]] (contains? path-lists v)) config))
+
 (defn- build-batch-partitioned-job-step
   [path-lists step]
   (let [config (:config step)
@@ -162,6 +166,11 @@
       (if (nil? (:parent_id job))
         (throw+ o)
         (save-job-submission job submission "Failed")))))
+
+(defn- update-batch-config
+  [batch-path-map [list-params params]]
+  (let [list-params (map (fn [[k v]] (vector k (get batch-path-map v))) list-params)]
+    (into {} (concat list-params params))))
 
 (defn- update-batch-input
   [batch-path-map input]
@@ -194,16 +203,25 @@
   [submission job batch-job-id & batch-paths]
   (let [batch-path-map (log/spy (into {} batch-paths))
         job (assoc job :parent_id batch-job-id
-                       :steps (map (partial update-batch-step batch-path-map) (:steps job)))]
+                       :steps (map (partial update-batch-step batch-path-map) (:steps job)))
+        submission (assoc submission
+                     :config (update-batch-config batch-path-map (:config submission)))]
     (submit-one-de-job submission job)))
+
+(defn- path-list-map-entry->path-contents-pairs
+  [[path-list-path path-list-contents]]
+  (map (juxt (constantly path-list-path) identity) path-list-contents))
 
 (defn- submit-batch-de-job
   [submission job path-lists]
   (dorun (map (comp validate-path-list-stats second) path-lists))
   (let [path-lists (get-path-list-contents-map (map (comp :path second) path-lists))
-        transposed-list-path (map (fn [[k v]] (map (juxt (constantly k) identity) v)) path-lists)
-        batch-job-id (save-job-submission (log/spy job) submission)
-        job (assoc job :steps (map (partial build-batch-partitioned-job-step path-lists) (:steps job)))]
+        transposed-list-path (map path-list-map-entry->path-contents-pairs path-lists)
+        batch-job-id (save-job-submission job submission)
+        job (assoc job :steps (map (partial build-batch-partitioned-job-step path-lists) (:steps job)))
+        submission (assoc submission
+                     :config (get-partitioned-submission-config-entries path-lists
+                                                                        (:config submission)))]
     (dorun (apply (partial map (partial submit-job-in-batch submission job batch-job-id))
                   transposed-list-path))))
 
