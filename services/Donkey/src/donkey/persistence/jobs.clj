@@ -254,6 +254,12 @@
       (limit (nil-if-zero row-limit))
       (select)))
 
+(defn list-child-jobs
+  "Lists the child jobs within a batch job."
+  [batch-id]
+  (select (job-base-query)
+          (where {:parent_id batch-id})))
+
 (defn- add-job-type-clause
   "Adds a where clause for a set of job types if the set of job types provided is not nil
    or empty."
