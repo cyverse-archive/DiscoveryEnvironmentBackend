@@ -205,7 +205,7 @@
 
 
 (defn- mk-count-colls-in-coll
-  [parent-path group-ids-query & {:keys [cond] :or {:cond "TRUE"}}]
+  [parent-path group-ids-query & {:keys [cond] :or {cond "TRUE"}}]
   (str "SELECT COUNT(*) AS total
           FROM r_coll_main c JOIN r_objt_access AS a ON c.coll_id = a.object_id
           WHERE c.parent_coll_name = '" parent-path "'
@@ -215,7 +215,7 @@
 
 
 (defn- mk-count-objs-of-type
-  [objs-cte avus-cte group-query info-type-cond & {:keys [cond] :or {:cond "TRUE"}}]
+  [objs-cte avus-cte group-query info-type-cond & {:keys [cond] :or {cond "TRUE"}}]
   (str "SELECT COUNT(*) AS total
           FROM " objs-cte " AS d
             JOIN r_objt_access AS a ON a.object_id = d.data_id
@@ -223,6 +223,24 @@
           WHERE a.user_id IN (" group-query ")
             AND (" info-type-cond ")
             AND (" cond ")"))
+
+
+(defn ^String mk-count-bad-files-in-folder
+  [& {:keys [user zone parent-path info-type-cond bad-file-cond]}]
+  (let [group-query "SELECT group_user_id FROM groups"
+        count-query (mk-count-objs-of-type "data_objs" "file_avus" group-query info-type-cond
+                      :cond bad-file-cond)]
+    (str "WITH groups    AS (" (mk-groups-query user zone) "),
+               data_objs AS (" (mk-unique-objs-in-coll-query parent-path ) "),
+               file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
+         " count-query)))
+
+
+(defn ^String mk-count-bad-folders-in-folder
+  [& {:keys [user zone parent-path bad-folder-cond]}]
+  (let [group-query "SELECT group_user_id FROM groups"]
+    (str "WITH groups AS (" (mk-groups-query user zone) ")
+         " (mk-count-colls-in-coll parent-path group-query :cond bad-folder-cond))))
 
 
 (defn ^String mk-count-bad-items-in-folder

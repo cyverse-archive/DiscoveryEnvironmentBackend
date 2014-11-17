@@ -92,6 +92,8 @@
      user        - the username of the authorized user
      zone        - the user's authentication zone
      folder-path - The absolute path to the folder of interest
+     entity-type - the type of entities to return (:any|:file|:folder), :any means both files and
+                   folders
      info-types  - the info-types of the files to count, if empty, all files are considered
      bad-chars   - If a name contains one or more of these characters, the item will be marked as
                    bad
@@ -100,17 +102,23 @@
 
    Returns:
      It returns the total."
-  [^String user
-   ^String zone
-   ^String folder-path
-   ^ISeq   info-types
-   ^String bad-chars
-   ^ISeq   bad-names
-   ^ISeq   bad-paths]
+  [^String  user
+   ^String  zone
+   ^String  folder-path
+   ^Keyword entity-type
+   ^ISeq    info-types
+   ^String  bad-chars
+   ^ISeq    bad-names
+   ^ISeq    bad-paths]
   (let [info-type-cond  (q/mk-file-type-cond info-types)
         bad-file-cond   (q/mk-bad-file-cond folder-path bad-chars bad-names bad-paths)
         bad-folder-cond (q/mk-bad-folder-cond folder-path bad-chars bad-names bad-paths)
-        query           (q/mk-count-bad-items-in-folder
+        query-ctor      (case entity-type
+                          :any    q/mk-count-bad-items-in-folder
+                          :file   q/mk-count-bad-files-in-folder
+                          :folder q/mk-count-bad-folders-in-folder
+                                  (throw (Exception. (str "invalid entity type " entity-type))))
+        query           (query-ctor
                           :user            user
                           :zone            zone
                           :parent-path     folder-path

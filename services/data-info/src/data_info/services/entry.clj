@@ -287,11 +287,11 @@
 
 
 (defn- total-bad
-  [user zone parent info-types bad-indicator]
+  [user zone parent entity-type info-types bad-indicator]
   (let [cbad (apply str (:chars bad-indicator))
         nbad (:names bad-indicator)
         pbad (:paths bad-indicator)]
-    (icat/number-of-bad-items-in-folder user zone parent info-types cbad nbad pbad)))
+    (icat/number-of-bad-items-in-folder user zone parent entity-type info-types cbad nbad pbad)))
 
 
 (defn- paged-dir-listing
@@ -318,7 +318,7 @@
     (merge (fmt-entry id date-created mod-date bad? nil path name perm 0)
            (page->map (partial is-bad? bad-indicator) page)
            {:total    (icat/number-of-items-in-folder user zone path entity-type info-types)
-            :totalBad (total-bad user zone path info-types bad-indicator)})))
+            :totalBad (total-bad user zone path entity-type info-types bad-indicator)})))
 
 
 (defn- get-folder
