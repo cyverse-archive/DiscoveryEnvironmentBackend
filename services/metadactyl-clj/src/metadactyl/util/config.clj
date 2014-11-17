@@ -156,6 +156,21 @@
   [props config-valid configs]
   "metadactyl.irods.home")
 
+(cc/defprop-str path-list-info-type
+  "The info type for HT Analysis Path Lists."
+  [props config-valid configs]
+  "metadactyl.batch.path-list.info-type")
+
+(cc/defprop-int path-list-max-paths
+  "The maximum number of paths to process per HT Analysis Path Lists."
+  [props config-valid configs]
+  "metadactyl.batch.path-list.max-paths")
+
+(cc/defprop-int path-list-max-size
+  "The maximum size of each HT Analysis Path List that can be fetched from the data-info service."
+  [props config-valid configs]
+  "metadactyl.batch.path-list.max-size")
+
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []

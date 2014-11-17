@@ -17,8 +17,6 @@
             [metadactyl.util.config :as config]
             [metadactyl.util.service :as service]))
 
-(def path-list-max-size (* 1024 1024))
-
 (defn- secured-params
   []
   {:user (:shortUsername current-user)})
@@ -104,24 +102,35 @@
 
 (defn- validate-path-list-stats
   [file-stats]
-  (when (> (:file-size file-stats) path-list-max-size)
+  (when (> (:file-size file-stats) (config/path-list-max-size))
     (throw+ {:error_code ce/ERR_REQUEST_FAILED
-             :message (str "HT Analysis Path List file is too large: " (:path file-stats))})))
+             :message    (str "HT Analysis Path List file exceeds maximum size of "
+                              (config/path-list-max-size)
+                              " bytes.")
+             :path       (:path file-stats)
+             :file-size  (:file-size file-stats)})))
 
 (defn- find-path-lists
   [job]
   (let [inputs (log/spy (mapcat (comp :input :config) (:steps job)))
         file-stats (log/spy (get-file-stats (set (map :value inputs))))
-        info-type-filter #(= (:infoType (second %)) "ht-analysis-path-list")]
+        info-type-filter #(= (:infoType (second %)) (config/path-list-info-type))]
     (into {} (filter info-type-filter (:paths file-stats)))))
 
 (defn- get-path-list-contents-map
   [paths]
   (let [path-lists (log/spy (into {} (map #(vector % (get-path-list-contents %)) paths)))
         first-list-count (count (second (first path-lists)))]
+    (when (> first-list-count (config/path-list-max-paths))
+      (throw+ {:error_code ce/ERR_REQUEST_FAILED
+               :message    (str "The HT Analysis Path List exceeds the maximum of "
+                                (config/path-list-max-paths)
+                                " allowed paths.")
+               :path       (ffirst path-lists)
+               :path-count first-list-count}))
     (when-not (every? #(= first-list-count %) (map (comp count second) path-lists))
       (throw+ {:error_code ce/ERR_REQUEST_FAILED
-               :message "All HT Analysis Path Lists must have the same number of paths"}))
+               :message "All HT Analysis Path Lists must have the same number of paths."}))
     path-lists))
 
 (defn- split-inputs-by-path-list
