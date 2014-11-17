@@ -29,6 +29,7 @@
  [:vcf       "ebnf/vcf.ebnf"]
  [:gff       "ebnf/gff.ebnf"]
  [:hmmer     "ebnf/hmmer.ebnf"]
+ [:ht-analysis-path-list "ebnf/de_path_list.ebnf"]
  [:mase      "ebnf/mase.ebnf"]
  [:mega      "ebnf/mega.ebnf"]
  [:msf       "ebnf/msf.ebnf"]
@@ -43,5 +44,4 @@
  [:gde       "ebnf/gde.ebnf"]
  [:fasta     "ebnf/fasta.ebnf"]
  [:phylip    "ebnf/phylip.ebnf"]
- [:path-list "ebnf/path_list.ebnf"]
  [:raw       "ebnf/raw.ebnf"]]
