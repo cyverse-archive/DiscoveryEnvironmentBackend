@@ -57,14 +57,21 @@
      user        - the username of the user
      zone        - the user's authentication zone
      folder-path - the absolute path to the folder being inspected
+     entity-type - the type of entities to return (:any|:file|:folder), :any means both files and
+                   folders
      info-types  - the info-types of the files to count, if empty, all files are counted
 
    Returns:
      It returns the total number of folders combined with the total number of files with the given
      info types."
-  [^String user ^String zone ^String folder-path ^ISeq info-types]
-  (let [query (format (:count-items-in-folder q/queries) (q/mk-file-type-cond info-types))]
-    (-> (run-query-string query user zone folder-path) first :total)))
+  [^String user ^String zone ^String folder-path ^Keyword entity-type & [info-types]]
+  (let [type-cond (q/mk-file-type-cond info-types)
+        query     (case entity-type
+                    :any    (q/mk-count-items-in-folder-query user zone folder-path type-cond)
+                    :file   (q/mk-count-files-in-folder-query user zone folder-path type-cond)
+                    :folder (q/mk-count-folders-in-folder-query user zone folder-path)
+                            (throw (Exception. (str "invalid entity type " entity-type))))]
+    (-> (run-query-string query) first :total)))
 
 
 (defn number-of-all-items-under-folder
@@ -85,6 +92,8 @@
      user        - the username of the authorized user
      zone        - the user's authentication zone
      folder-path - The absolute path to the folder of interest
+     entity-type - the type of entities to return (:any|:file|:folder), :any means both files and
+                   folders
      info-types  - the info-types of the files to count, if empty, all files are considered
      bad-chars   - If a name contains one or more of these characters, the item will be marked as
                    bad
@@ -93,20 +102,30 @@
 
    Returns:
      It returns the total."
-  [^String user
-   ^String zone
-   ^String folder-path
-   ^ISeq   info-types
-   ^String bad-chars
-   ^ISeq   bad-names
-   ^ISeq   bad-paths]
-  (let [bad-file-cond   (q/mk-bad-file-cond folder-path bad-chars bad-names bad-paths)
+  [^String  user
+   ^String  zone
+   ^String  folder-path
+   ^Keyword entity-type
+   ^ISeq    info-types
+   ^String  bad-chars
+   ^ISeq    bad-names
+   ^ISeq    bad-paths]
+  (let [info-type-cond  (q/mk-file-type-cond info-types)
+        bad-file-cond   (q/mk-bad-file-cond folder-path bad-chars bad-names bad-paths)
         bad-folder-cond (q/mk-bad-folder-cond folder-path bad-chars bad-names bad-paths)
-        query           (format (:count-bad-items-in-folder q/queries)
-                                (q/mk-file-type-cond info-types)
-                                 bad-file-cond
-                                 bad-folder-cond)]
-    (-> (run-query-string query user zone folder-path) first :total_filtered)))
+        query-ctor      (case entity-type
+                          :any    q/mk-count-bad-items-in-folder
+                          :file   q/mk-count-bad-files-in-folder
+                          :folder q/mk-count-bad-folders-in-folder
+                                  (throw (Exception. (str "invalid entity type " entity-type))))
+        query           (query-ctor
+                          :user            user
+                          :zone            zone
+                          :parent-path     folder-path
+                          :info-type-cond  info-type-cond
+                          :bad-file-cond   bad-file-cond
+                          :bad-folder-cond bad-folder-cond)]
+    (-> (run-query-string query) first :total)))
 
 
 (defn folder-permissions-for-user
