@@ -222,6 +222,29 @@
           WHERE a.user_id IN (" group-query ") AND (" info-type-cond ")"))
 
 
+(defn ^String mk-count-bad-items-in-folder
+  [& {:keys [user zone parent-path info-type-cond bad-file-cond bad-folder-cond]}]
+  (str "WITH groups    AS (" (mk-groups-query user zone) "),
+             data_objs AS (" (mk-unique-objs-in-coll-query parent-path) "),
+             file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
+        SELECT ((SELECT COUNT(*)
+                   FROM r_coll_main c JOIN r_objt_access AS a ON c.coll_id = a.object_id
+                   WHERE c.parent_coll_name = '" parent-path "'
+                     AND c.coll_type != 'linkPoint'
+                     AND a.user_id IN (SELECT group_user_id FROM groups)
+                     AND (" bad-folder-cond "))
+                +
+                (SELECT COUNT(*)
+                   FROM data_objs AS d
+                     JOIN r_objt_access AS a ON a.object_id = d.data_id
+                     LEFT JOIN (SELECT * FROM file_avus WHERE meta_attr_name = 'ipc-filetype') AS f
+                       ON f.object_id = d.data_id
+                   WHERE a.user_id IN (SELECT group_user_id FROM groups)
+                     AND (" info-type-cond ")
+                     AND (" bad-file-cond ")))
+               AS total"))
+
+
 (defn ^String mk-count-files-in-folder-query
   [^String user ^String zone ^String parent-path ^String info-type-cond]
   (let [group-query "SELECT group_user_id FROM groups"]
@@ -246,7 +269,7 @@
     (str "WITH groups    AS (" (mk-groups-query user zone) "),
                data_objs AS (" (mk-unique-objs-in-coll-query parent-path ) "),
                file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
-          SELECT (" folders-query ") + (" files-query ") AS total")))
+          SELECT ((" folders-query ") + (" files-query ")) AS total")))
 
 
 (defn ^String mk-paged-folder-files-query
@@ -315,41 +338,6 @@
                JOIN parent p ON c.parent_coll_name = p.coll_name
               WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
                 AND c.coll_type != 'linkPoint' ) AS contents"
-
-   :count-bad-items-in-folder
-   "WITH user_groups AS ( SELECT g.* FROM r_user_main u
-                            JOIN r_user_group g ON g.user_id = u.user_id
-                           WHERE u.user_name = ?
-                             AND u.zone_name = ? ),
-
-         parent      AS ( SELECT * from r_coll_main
-                           WHERE coll_name = ? ),
-
-         data_objs   AS ( SELECT *
-                            FROM r_data_main
-                           WHERE coll_id = ANY(ARRAY( SELECT coll_id FROM parent ))),
-
-         file_types  AS ( SELECT *
-                            FROM r_objt_metamap om
-                            JOIN r_meta_main mm ON mm.meta_id = om.meta_id
-                           WHERE om.object_id = ANY(ARRAY( SELECT data_id FROM data_objs ))
-                             AND mm.meta_attr_name = 'ipc-filetype' )
-
-    SELECT count(*) AS total_filtered
-      FROM ( SELECT DISTINCT d.data_id FROM r_objt_access a
-               JOIN data_objs d ON a.object_id = d.data_id
-          LEFT JOIN file_types f ON d.data_id = f.object_id
-              WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-                AND (%s)
-                AND (%s)
-              UNION
-             SELECT c.coll_id
-               FROM r_coll_main c
-               JOIN r_objt_access a ON c.coll_id = a.object_id
-               JOIN parent p ON c.parent_coll_name = p.coll_name
-              WHERE a.user_id IN ( SELECT group_user_id FROM user_groups )
-                AND c.coll_type != 'linkPoint'
-                AND (%s)) AS filtered"
 
    :list-folders-in-folder
    "WITH user_groups AS ( SELECT g.* FROM r_user_main u

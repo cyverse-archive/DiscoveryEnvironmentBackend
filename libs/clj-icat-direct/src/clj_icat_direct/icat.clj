@@ -107,13 +107,17 @@
    ^String bad-chars
    ^ISeq   bad-names
    ^ISeq   bad-paths]
-  (let [bad-file-cond   (q/mk-bad-file-cond folder-path bad-chars bad-names bad-paths)
+  (let [info-type-cond  (q/mk-file-type-cond info-types)
+        bad-file-cond   (q/mk-bad-file-cond folder-path bad-chars bad-names bad-paths)
         bad-folder-cond (q/mk-bad-folder-cond folder-path bad-chars bad-names bad-paths)
-        query           (format (:count-bad-items-in-folder q/queries)
-                                (q/mk-file-type-cond info-types)
-                                 bad-file-cond
-                                 bad-folder-cond)]
-    (-> (run-query-string query user zone folder-path) first :total_filtered)))
+        query           (q/mk-count-bad-items-in-folder
+                          :user            user
+                          :zone            zone
+                          :parent-path     folder-path
+                          :info-type-cond  info-type-cond
+                          :bad-file-cond   bad-file-cond
+                          :bad-folder-cond bad-folder-cond)]
+    (-> (run-query-string query) first :total)))
 
 
 (defn folder-permissions-for-user
