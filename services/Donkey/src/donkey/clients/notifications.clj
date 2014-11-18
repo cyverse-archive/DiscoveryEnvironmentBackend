@@ -86,6 +86,22 @@
       (catch Exception e
         (log/warn e "unable to send tool request update notification for" tool-req)))))
 
+(defn send-url-import-status-notification
+  "Sends notification of a URL import job status update to the user."
+  [username {:keys [description] :as job-info}]
+  (try
+    (send-notification
+     {:type    "data"
+      :user    username
+      :subject (str description " status changed.")
+      :message (str description " " (string/lower-case (:status job-info)))
+      :email   false
+      :payload (assoc job-info
+                 :action "job_status_change"
+                 :user   username)})
+    (catch Exception e
+      (log/warn e "unable to send URL import status update notification for" (:id job-info)))))
+
 (defn send-job-status-update
   "Sends notification of an Agave or DE job status update to the user."
   [username email-address {job-name :name :as job-info}]

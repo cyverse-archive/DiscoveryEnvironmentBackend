@@ -6,6 +6,7 @@
             [clojure-commons.file-utils :as ft]
             [donkey.clients.notifications :as dn]
             [donkey.persistence.jobs :as jp]
+            [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.util.service :as service]))
 
@@ -81,7 +82,17 @@
     :batch           (:is-batch job)
     :batch_status    (when (:is-batch job) (format-batch-status (:id job)))}))
 
-(defn send-job-status-notification
+(defn- send-url-import-status-notification
+  [{:keys [username start-date] :as job} status end-time]
+  (let [username     (string/replace username #"@.*" "")
+        end-millis   (db/timestamp-str end-time)
+        start-millis (db/timestamp-str start-date)]
+    (dn/send-url-import-status-notification username (assoc (format-job [] job)
+                                                       :status    status
+                                                       :enddate   end-millis
+                                                       :startdate start-millis))))
+
+(defn- send-analysis-status-notification
   "Sends a job status change notification."
   [{:keys [username start-date parent-id] :as job} status end-time]
   (when-not parent-id
@@ -93,3 +104,10 @@
                                                   :status    status
                                                   :enddate   end-millis
                                                   :startdate start-millis)))))
+
+;; TODO: come up with a better way to associate internal apps with notification types.
+(defn send-job-status-notification
+  [{:keys [app-id] :as job} status end-time]
+  (if (= app-id (str (config/fileio-url-import-app)))
+    (send-url-import-status-notification job status end-time)
+    (send-analysis-status-notification job status end-time)))
