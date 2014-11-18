@@ -31,7 +31,16 @@
     (get-paths-in-folder user folder (cfg/fs-max-paths-in-request)))
 
   ([user folder limit]
-    (let [listing (icat/paged-folder-listing user (cfg/irods-zone) folder :base-name :asc limit 0)]
+    (let [listing (icat/paged-folder-listing
+                    :user           user
+                    :zone           (cfg/irods-zone)
+                    :folder-path    folder
+                    :entity-type    :any
+                    :sort-column    :base-name
+                    :sort-direction :asc
+                    :limit          limit
+                    :offset         0
+                    :info-types     nil)]
       (map :full_path listing))))
 
 
