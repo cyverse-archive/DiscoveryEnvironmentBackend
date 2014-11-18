@@ -71,7 +71,7 @@
   [path]
   (when-not (empty? path)
     (try+
-      (->> (http/get (log/spy (service/build-url (config/data-info-base-url) "entries" "path" path))
+      (->> (http/get (service/build-url (config/data-info-base-url) "entries" "path" path)
              {:query-params (secured-params)
               :as :stream})
            (:body)
@@ -112,14 +112,14 @@
 
 (defn- find-path-lists
   [job]
-  (let [inputs (log/spy (mapcat (comp :input :config) (:steps job)))
-        file-stats (log/spy (get-file-stats (set (map :value inputs))))
+  (let [inputs (mapcat (comp :input :config) (:steps job))
+        file-stats (get-file-stats (set (map :value inputs)))
         info-type-filter #(= (:infoType (second %)) (config/path-list-info-type))]
     (into {} (filter info-type-filter (:paths file-stats)))))
 
 (defn- get-path-list-contents-map
   [paths]
-  (let [path-lists (log/spy (into {} (map #(vector % (get-path-list-contents %)) paths)))
+  (let [path-lists (into {} (map #(vector % (get-path-list-contents %)) paths))
         first-list-count (count (second (first path-lists)))]
     (when (> first-list-count (config/path-list-max-paths))
       (throw+ {:error_code ce/ERR_REQUEST_FAILED
@@ -149,10 +149,10 @@
 (defn- build-batch-partitioned-job-step
   [path-lists step]
   (let [config (:config step)
-        inputs (log/spy (:input config))
-        params (log/spy (:params config))
-        [list-inputs inputs] (log/spy (split-inputs-by-path-list inputs path-lists))
-        [list-params params] (log/spy (split-params-by-path-list params path-lists))]
+        inputs (:input config)
+        params (:params config)
+        [list-inputs inputs] (split-inputs-by-path-list inputs path-lists)
+        [list-params params] (split-params-by-path-list params path-lists)]
     (assoc step :config (assoc config
                           :input  [list-inputs inputs]
                           :params [list-params params]))))
@@ -161,7 +161,7 @@
   [submission job]
   (try+
     (do-jex-submission job)
-    (save-job-submission (log/spy job) submission)
+    (save-job-submission job submission)
     (catch Object o
       (if (nil? (:parent_id job))
         (throw+ o)
@@ -174,7 +174,7 @@
 
 (defn- update-batch-input
   [batch-path-map input]
-  (let [path (log/spy (get batch-path-map (:value input)))
+  (let [path (get batch-path-map (:value input))
         filename (when-not (nil? path) (fs/base-name path))]
     (assoc input
       :name     filename
@@ -183,7 +183,7 @@
 
 (defn- update-batch-param
   [batch-filename-map param]
-  (let [path (log/spy (get batch-filename-map (:value param)))
+  (let [path (get batch-filename-map (:value param))
         filename (when-not (nil? path) (fs/base-name path))]
     (assoc param :value filename)))
 
@@ -192,7 +192,7 @@
   (let [config (:config partitioned-step)
         [list-inputs inputs] (:input config)
         [list-params params] (:params config)
-        batch-filename-map (log/spy (into {} (map (fn [[k v]] (vector (fs/base-name k) v)) batch-path-map)))
+        batch-filename-map (into {} (map (fn [[k v]] (vector (fs/base-name k) v)) batch-path-map))
         list-inputs (map (partial update-batch-input batch-path-map) list-inputs)
         list-params (map (partial update-batch-param batch-filename-map) list-params)]
     (assoc partitioned-step :config (assoc config
@@ -201,7 +201,7 @@
 
 (defn- submit-job-in-batch
   [submission job batch-job-id & batch-paths]
-  (let [batch-path-map (log/spy (into {} batch-paths))
+  (let [batch-path-map (into {} batch-paths)
         job (assoc job :parent_id batch-job-id
                        :steps (map (partial update-batch-step batch-path-map) (:steps job)))
         submission (assoc submission
@@ -234,7 +234,7 @@
 (defn- submit-job
   [submission job]
   (let [de-only-job? (zero? (ap/count-external-steps (:app_id job)))
-        path-lists (log/spy (find-path-lists job))]
+        path-lists (find-path-lists job)]
     (if de-only-job?
       (submit-de-only-job submission job path-lists)
       (if (empty? path-lists)
