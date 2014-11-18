@@ -1,5 +1,6 @@
 (ns metadactyl.analyses
   (:use [clojure.string :only [split-lines]]
+        [clojure-commons.file-utils :only [build-result-folder-path path-join]]
         [kameleon.jobs :only [get-job-type-id save-job save-job-step]]
         [kameleon.queries :only [get-user-id]]
         [metadactyl.user :only [current-user]]
@@ -200,9 +201,10 @@
                                       :params (concat list-params params)))))
 
 (defn- submit-job-in-batch
-  [submission job batch-job-id & batch-paths]
+  [submission job batch-job-id job-number & batch-paths]
   (let [batch-path-map (into {} batch-paths)
         job (assoc job :parent_id batch-job-id
+                       :output_dir (path-join (:output_dir job) (str "job-" (inc job-number)))
                        :steps (map (partial update-batch-step batch-path-map) (:steps job)))
         submission (assoc submission
                      :config (update-batch-config batch-path-map (:config submission)))]
@@ -217,12 +219,14 @@
   (dorun (map (comp validate-path-list-stats second) path-lists))
   (let [path-lists (get-path-list-contents-map (map (comp :path second) path-lists))
         transposed-list-path (map path-list-map-entry->path-contents-pairs path-lists)
+        job (assoc job :output_dir (build-result-folder-path submission)
+                       :create_output_subdir false)
         batch-job-id (save-job-submission job submission)
         job (assoc job :steps (map (partial build-batch-partitioned-job-step path-lists) (:steps job)))
         submission (assoc submission
                      :config (get-partitioned-submission-config-entries path-lists
                                                                         (:config submission)))]
-    (dorun (apply (partial map (partial submit-job-in-batch submission job batch-job-id))
+    (dorun (apply (partial map (partial submit-job-in-batch submission job batch-job-id) (range))
                   transposed-list-path))))
 
 (defn- submit-de-only-job

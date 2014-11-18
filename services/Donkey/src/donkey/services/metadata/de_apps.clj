@@ -3,6 +3,7 @@
         [donkey.auth.user-attributes :only [current-user]])
   (:require [cemerick.url :as curl]
             [clojure.tools.logging :as log]
+            [clojure-commons.file-utils :as ft]
             [donkey.clients.jex-events :as jex-events]
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.notifications :as dn]
@@ -29,7 +30,7 @@
 
 (defn- prepare-submission
   [submission job-id]
-  (assoc (mu/update-submission-result-folder submission (mu/build-result-folder-path submission))
+  (assoc (mu/update-submission-result-folder submission (ft/build-result-folder-path submission))
     :uuid     (str job-id)
     :callback (de-job-callback-url)))
 

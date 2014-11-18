@@ -6,6 +6,7 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
+            [clojure-commons.file-utils :as ft]
             [donkey.clients.notifications :as dn]
             [donkey.persistence.jobs :as jp]
             [donkey.services.metadata.util :as mu]
@@ -64,7 +65,7 @@
   [agave-client submission]
   (let [id         (UUID/randomUUID)
         cb-url     (build-callback-url id)
-        output-dir (mu/build-result-folder-path submission)
+        output-dir (ft/build-result-folder-path submission)
         job        (.submitJob agave-client
                                (assoc (mu/update-submission-result-folder submission output-dir)
                                  :callbackUrl cb-url))

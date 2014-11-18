@@ -183,7 +183,7 @@
 
 (defn- submit-de-job-step
   [job-info {:keys [app-step-number] :as job-step} submission]
-  (let [output-dir (mu/build-result-folder-path submission)
+  (let [output-dir (ft/build-result-folder-path submission)
         submission (assoc (mu/update-submission-result-folder submission output-dir)
                      :starting_step app-step-number)
         external-id (da/submit-job-step submission)]
@@ -214,7 +214,7 @@
    database, which may consist of Agave steps, DE steps or both."
   [agave app-id job-id job-steps submission]
   (let [app-info  (service/assert-found (ap/load-app-info app-id) "app" app-id)
-        job-info  (build-job-save-info (mu/build-result-folder-path submission)
+        job-info  (build-job-save-info (ft/build-result-folder-path submission)
                                        job-id app-info submission)]
     (jp/save-multistep-job job-info job-steps submission)
     (submit-job-step agave job-info (first job-steps) submission)

@@ -1,19 +1,13 @@
 (ns donkey.services.metadata.util
   (:use [clojure-commons.core :only [remove-nil-values]]
         [donkey.auth.user-attributes :only [current-user]])
-  (:require [clj-time.core :as t]
-            [clj-time.format :as tf]
-            [clojure.string :as string]
+  (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [donkey.clients.notifications :as dn]
             [donkey.persistence.jobs :as jp]
             [donkey.util.db :as db]
             [donkey.util.service :as service]))
-
-(defn- current-timestamp
-  []
-  (tf/unparse (tf/formatter "yyyy-MM-dd-HH-mm-ss.S") (t/now)))
 
 (defn is-completed?
   [job-status]
@@ -25,19 +19,6 @@
   [agave]
   (when-not agave
     (service/bad-request "HPC_JOBS_DISABLED")))
-
-(defn- job-name-to-path
-  "Converts a job name to a string suitable for inclusion in a path."
-  [path]
-  (string/replace path #"[\s@]" "_"))
-
-(defn build-result-folder-path
-  [submission]
-  (let [build-path (comp ft/rm-last-slash ft/path-join)]
-    (if (:create_output_subdir submission true)
-      (build-path (:output_dir submission)
-                  (str (job-name-to-path (:name submission)) "-" (current-timestamp)))
-      (build-path (:output_dir submission)))))
 
 (defn update-submission-result-folder
   [submission result-folder-path]

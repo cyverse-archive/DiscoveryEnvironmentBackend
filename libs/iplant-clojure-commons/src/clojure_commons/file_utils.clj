@@ -1,7 +1,10 @@
 (ns clojure-commons.file-utils
   (:use [clojure.java.io :only [file]]
         [clojure.string :only [join split]])
-  (:require [me.raynes.fs :as fs])
+  (:require [clj-time.core :as time]
+            [clj-time.format :as time-format]
+            [clojure.string :as string]
+            [me.raynes.fs :as fs])
   (:import [java.io File]))
 
 (def ^:dynamic *max-temp-dir-attempts*
@@ -174,3 +177,20 @@
        (fs/with-cwd ~sym
          ~@body)
        (finally (rec-delete ~sym)))))
+
+(defn- job-name-to-path
+  "Converts a job name to a string suitable for inclusion in a path."
+  [path]
+  (string/replace path #"[\s@]" "_"))
+
+(defn- current-timestamp
+  []
+  (time-format/unparse (time-format/formatter "yyyy-MM-dd-HH-mm-ss.S") (time/now)))
+
+(defn build-result-folder-path
+  [submission]
+  (let [build-path (comp rm-last-slash path-join)]
+    (if (:create_output_subdir submission true)
+      (build-path (:output_dir submission)
+        (str (job-name-to-path (:name submission)) "-" (current-timestamp)))
+      (build-path (:output_dir submission)))))
