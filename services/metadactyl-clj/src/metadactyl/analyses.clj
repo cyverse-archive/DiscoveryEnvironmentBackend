@@ -222,8 +222,10 @@
 (defn- submit-job-in-batch
   [submission job batch-job-id job-number & batch-paths]
   (let [batch-path-map (into {} batch-paths)
+        job-suffix (str "analysis-" (inc job-number))
         job (assoc job :parent_id batch-job-id
-                       :output_dir (path-join (:output_dir job) (str "job-" (inc job-number)))
+                       :name (str (:name job) " - " job-suffix)
+                       :output_dir (path-join (:output_dir job) job-suffix)
                        :steps (map (partial update-batch-step batch-path-map) (:steps job))
                        :uuid (uuids/uuid))
         submission (assoc submission
