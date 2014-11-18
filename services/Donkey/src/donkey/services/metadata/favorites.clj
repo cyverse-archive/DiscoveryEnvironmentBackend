@@ -73,7 +73,7 @@
 
 (defn- select-favorites
   [user entity-type]
-  (let [entity-types (if (:any entity-type)
+  (let [entity-types (if (= :any entity-type)
                        ["file" "folder"]
                        [(name entity-type)])]
     (db/select-favorites-of-type user entity-types)))
