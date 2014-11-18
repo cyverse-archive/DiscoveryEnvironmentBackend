@@ -288,10 +288,15 @@
 
 (defn- total-bad
   [user zone parent entity-type info-types bad-indicator]
-  (let [cbad (apply str (:chars bad-indicator))
-        nbad (:names bad-indicator)
-        pbad (:paths bad-indicator)]
-    (icat/number-of-bad-items-in-folder user zone parent entity-type info-types cbad nbad pbad)))
+  (icat/number-of-bad-items-in-folder
+    :user user
+    :zone zone
+    :parent-path parent
+    :entity-type entity-type
+    :info-types  info-types
+    :bad-chars   (apply str (:chars bad-indicator))
+    :bad-names   (:names bad-indicator)
+    :bad-paths   (:paths bad-indicator)))
 
 
 (defn- paged-dir-listing

@@ -67,9 +67,9 @@
   [^String user ^String zone ^String folder-path ^Keyword entity-type & [info-types]]
   (let [type-cond (q/mk-file-type-cond info-types)
         query     (case entity-type
-                    :any    (q/mk-count-items-in-folder-query user zone folder-path type-cond)
-                    :file   (q/mk-count-files-in-folder-query user zone folder-path type-cond)
-                    :folder (q/mk-count-folders-in-folder-query user zone folder-path)
+                    :any    (q/mk-count-items-in-folder user zone folder-path type-cond)
+                    :file   (q/mk-count-files-in-folder user zone folder-path type-cond)
+                    :folder (q/mk-count-folders-in-folder user zone folder-path)
                             (throw (Exception. (str "invalid entity type " entity-type))))]
     (-> (run-query-string query) first :total)))
 
@@ -102,14 +102,7 @@
 
    Returns:
      It returns the total."
-  [^String  user
-   ^String  zone
-   ^String  folder-path
-   ^Keyword entity-type
-   ^ISeq    info-types
-   ^String  bad-chars
-   ^ISeq    bad-names
-   ^ISeq    bad-paths]
+  [& {:keys [user zone folder-path entity-type info-types bad-chars bad-names bad-paths]}]
   (let [info-type-cond  (q/mk-file-type-cond info-types)
         bad-file-cond   (q/mk-bad-file-cond folder-path bad-chars bad-names bad-paths)
         bad-folder-cond (q/mk-bad-folder-cond folder-path bad-chars bad-names bad-paths)
@@ -215,9 +208,9 @@
      It throws an exception if a validation fails."
   [& {:keys [user zone folder-path entity-type sort-column sort-direction limit offset info-types]}]
   (let [query-ctor (case entity-type
-                     :any    q/mk-paged-folder-query
-                     :file   q/mk-paged-folder-files-query
-                     :folder q/mk-paged-folder-folders-query
+                     :any    q/mk-paged-folder
+                     :file   q/mk-paged-files-in-folder
+                     :folder q/mk-paged-folders-in-folder
                              (throw (Exception. (str "invalid entity type " entity-type))))
         query (query-ctor
                 :user           user

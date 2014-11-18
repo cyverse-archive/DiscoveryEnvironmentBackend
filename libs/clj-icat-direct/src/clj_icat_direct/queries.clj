@@ -115,6 +115,7 @@
 
 
 (def ^IPersistentMap sort-columns
+  "This is a mapping of API column keywords to fields in the response document."
   {:type      "type"
    :modify-ts "modify_ts"
    :create-ts "create_ts"
@@ -124,33 +125,34 @@
 
 
 (def ^IPersistentMap sort-directions
+  "This ia a mapping of API sort direction keywords to database sort direction strings."
   {:asc "ASC" :desc "DESC"})
 
 
-(defn- mk-unique-objs-in-coll-query
-  [parent-path]
+(defn- mk-unique-objs-in-coll
+  [coll-path]
   (str "SELECT *
           FROM r_data_main AS d1
-          WHERE coll_id = (SELECT coll_id FROM r_coll_main WHERE coll_name = '" parent-path "')
+          WHERE coll_id = (SELECT coll_id FROM r_coll_main WHERE coll_name = '" coll-path "')
             AND d1.data_repl_num = (SELECT MIN(d2.data_repl_num)
                                       FROM r_data_main AS d2
                                       WHERE d2.data_id = d1.data_id)"))
 
 
-(defn- mk-obj-avus-query
-  [file-ids-query]
+(defn- mk-obj-avus
+  [obj-ids-query]
   (str "SELECT *
           FROM r_objt_metamap AS o JOIN r_meta_main AS m ON o.meta_id = m.meta_id
-          WHERE o.object_id = ANY(ARRAY(" file-ids-query "))"))
+          WHERE o.object_id = ANY(ARRAY(" obj-ids-query "))"))
 
 
-(defn- mk-file-types-query
+(defn- mk-file-types
   [avus-cte]
   (str "SELECT * FROM " avus-cte " WHERE meta_attr_name = 'ipc-filetype'"))
 
 
-(defn- mk-folder-files-query
-  [parent-path group-ids-query info-type-cond data-objs-cte avus-cte]
+(defn- mk-files-in-folder
+  [parent-path group-ids-query info-type-cond objs-cte avus-cte]
   (str "SELECT 'dataobject'                      AS type,
                m.meta_attr_value                 AS uuid,
                '" parent-path "/' || d.data_name AS full_path,
@@ -160,10 +162,10 @@
                d.create_ts                       AS create_ts,
                d.modify_ts                       AS modify_ts,
                MAX(a.access_type_id)             AS access_type_id
-          FROM " data-objs-cte " AS d
+          FROM " objs-cte " AS d
             JOIN " avus-cte " AS m ON d.data_id = m.object_id
             JOIN r_objt_access AS a ON d.data_id = a.object_id
-            LEFT JOIN (" (mk-file-types-query avus-cte) ") AS f
+            LEFT JOIN (" (mk-file-types avus-cte) ") AS f
               ON d.data_id = f.object_id
           WHERE a.user_id IN (" group-ids-query ")
             AND m.meta_attr_name = 'ipc_UUID'
@@ -172,7 +174,7 @@
                    d.modify_ts"))
 
 
-(defn- mk-folder-folders-query
+(defn- mk-folders-in-folder
   [parent-path group-ids-query]
   (str "SELECT 'collection'                           AS type,
                m.meta_attr_value                      AS uuid,
@@ -195,7 +197,7 @@
                    c.modify_ts"))
 
 
-(defn- mk-groups-query
+(defn- mk-groups
   [user zone]
   (str "SELECT *
           FROM r_user_group
@@ -219,99 +221,251 @@
   (str "SELECT COUNT(*) AS total
           FROM " objs-cte " AS d
             JOIN r_objt_access AS a ON a.object_id = d.data_id
-            LEFT JOIN (" (mk-file-types-query avus-cte) ") AS f ON f.object_id = d.data_id
+            LEFT JOIN (" (mk-file-types avus-cte) ") AS f ON f.object_id = d.data_id
           WHERE a.user_id IN (" group-query ")
             AND (" info-type-cond ")
             AND (" cond ")"))
 
 
 (defn ^String mk-count-bad-files-in-folder
+  "This function constructs a query for counting all of the files that are direct members of a given
+   folder, accessible to a given user, satisfy a given info type condition, and satisfy a given
+   condition indicating the file has an invalid name.
+
+   Parameters:
+     user           - username of the user that can access the files
+     zone           - iRODS authentication zone of the user
+     parent-path    - the folder being inspected
+     info-type-cond - a WHERE condition indicating the info types of the files to be counted
+     bad-file-cond  - a WHERE condition indicating that a file has an invalid name
+
+  Returns:
+    It returns the properly formatted SELECT query."
   [& {:keys [user zone parent-path info-type-cond bad-file-cond]}]
   (let [group-query "SELECT group_user_id FROM groups"
-        count-query (mk-count-objs-of-type "data_objs" "file_avus" group-query info-type-cond
+        count-query (mk-count-objs-of-type "objs" "file_avus" group-query info-type-cond
                       :cond bad-file-cond)]
-    (str "WITH groups    AS (" (mk-groups-query user zone) "),
-               data_objs AS (" (mk-unique-objs-in-coll-query parent-path ) "),
-               file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
+    (str "WITH groups    AS (" (mk-groups user zone) "),
+               objs      AS (" (mk-unique-objs-in-coll parent-path) "),
+               file_avus AS (" (mk-obj-avus "SELECT data_id FROM objs") ")
          " count-query)))
 
 
 (defn ^String mk-count-bad-folders-in-folder
+  "This function constructs a query for counting all of the folders that are direct members of a
+   given folder, accessible to a given user, and satisfy a given condition indicating the folder has
+   an invalid name.
+
+   Parameters:
+     user            - username of the user that can access the folders
+     zone            - iRODS authentication zone of the user
+     parent-path     - the folder being inspected
+     bad-folder-cond - a WHERE condition indicating that a folder has an invalid name
+
+  Returns:
+    It returns the properly formatted SELECT query."
   [& {:keys [user zone parent-path bad-folder-cond]}]
   (let [group-query "SELECT group_user_id FROM groups"]
-    (str "WITH groups AS (" (mk-groups-query user zone) ")
+    (str "WITH groups AS (" (mk-groups user zone) ")
          " (mk-count-colls-in-coll parent-path group-query :cond bad-folder-cond))))
 
 
 (defn ^String mk-count-bad-items-in-folder
+  "This function constructs a query for counting all of the files and folders that are direct
+   members of a given folder, accessible to a given user, satisfy a given info type condition, and
+   satisfy a given condition indicating the file or folder has an invalid name.
+
+   Parameters:
+     user            - username of the user that can access the files and folders
+     zone            - iRODS authentication zone of the user
+     parent-path     - the folder being inspected
+     info-type-cond  - a WHERE condition indicating the info types of the files to be counted
+     bad-file-cond   - a WHERE condition indicating that a file has an invalid name
+     bad-folder-cond - A WHERE condition indicating that a folder has an invalid name
+
+  Returns:
+    It returns the properly formatted SELECT query."
   [& {:keys [user zone parent-path info-type-cond bad-file-cond bad-folder-cond]}]
   (let [group-query  "SELECT group_user_id FROM groups"
         folder-query (mk-count-colls-in-coll parent-path group-query :cond bad-folder-cond)
-        file-query   (mk-count-objs-of-type "data_objs" "file_avus" group-query info-type-cond
+        file-query   (mk-count-objs-of-type "objs" "file_avus" group-query info-type-cond
                        :cond bad-file-cond)]
-    (str "WITH groups    AS (" (mk-groups-query user zone) "),
-               data_objs AS (" (mk-unique-objs-in-coll-query parent-path) "),
-               file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
+    (str "WITH groups    AS (" (mk-groups user zone) "),
+               data      AS (" (mk-unique-objs-in-coll parent-path) "),
+               file_avus AS (" (mk-obj-avus "SELECT data_id FROM objs") ")
           SELECT ((" folder-query ") + (" file-query ")) AS total")))
 
 
-(defn ^String mk-count-files-in-folder-query
+(defn ^String mk-count-files-in-folder
+  "This function constructs a query for counting all of the files that are direct members of a given
+   folder, accessible to a given user, and satisfy a given info type condition.
+
+   Parameters:
+     user           - username of the user that can access the files
+     zone           - iRODS authentication zone of the user
+     parent-path    - the folder being inspected
+     info-type-cond - a WHERE condition indicating the info types of the files to be counted
+
+  Returns:
+    It returns the properly formatted SELECT query."
   [^String user ^String zone ^String parent-path ^String info-type-cond]
   (let [group-query "SELECT group_user_id FROM groups"]
-    (str "WITH groups    AS (" (mk-groups-query user zone) "),
-               data_objs AS (" (mk-unique-objs-in-coll-query parent-path ) "),
-               file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
-         " (mk-count-objs-of-type "data_objs" "file_avus" group-query info-type-cond))))
+    (str "WITH groups    AS (" (mk-groups user zone) "),
+               objs      AS (" (mk-unique-objs-in-coll parent-path ) "),
+               file_avus AS (" (mk-obj-avus "SELECT data_id FROM objs") ")
+         " (mk-count-objs-of-type "objs" "file_avus" group-query info-type-cond))))
 
 
-(defn ^String mk-count-folders-in-folder-query
+(defn ^String mk-count-folders-in-folder
+  "This function constructs a query for counting all of the folders that are direct members of a
+   given folder and accessible to a given user.
+
+   Parameters:
+     user        - username of the user that can access the files
+     zone        - iRODS authentication zone of the user
+     parent-path - the folder being inspected
+
+  Returns:
+    It returns the properly formatted SELECT query."
   [^String user ^String zone ^String parent-path]
   (let [group-query "SELECT group_user_id FROM groups"]
-    (str "WITH groups AS (" (mk-groups-query user zone) ")
+    (str "WITH groups AS (" (mk-groups user zone) ")
          " (mk-count-colls-in-coll parent-path group-query))))
 
 
-(defn ^String mk-count-items-in-folder-query
+(defn ^String mk-count-items-in-folder
+  "This function constructs a query for counting all of the files and folders that are direct
+   members of a given folder, accessible to a given user, and satisfy a given info type condition.
+
+   Parameters:
+     user           - username of the user that can access the files and folders
+     zone           - iRODS authentication zone of the user
+     parent-path    - the folder being inspected
+     info-type-cond - a WHERE condition indicating the info types of the files to be counted
+
+  Returns:
+    It returns the properly formatted SELECT query."
   [^String user ^String zone ^String parent-path ^String info-type-cond]
   (let [group-query   "SELECT group_user_id FROM groups"
         folders-query (mk-count-colls-in-coll parent-path group-query)
-        files-query   (mk-count-objs-of-type "data_objs" "file_avus" group-query info-type-cond)]
-    (str "WITH groups    AS (" (mk-groups-query user zone) "),
-               data_objs AS (" (mk-unique-objs-in-coll-query parent-path ) "),
-               file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
+        files-query   (mk-count-objs-of-type "objs" "file_avus" group-query info-type-cond)]
+    (str "WITH groups    AS (" (mk-groups user zone) "),
+               objs      AS (" (mk-unique-objs-in-coll parent-path ) "),
+               file_avus AS (" (mk-obj-avus "SELECT data_id FROM objs") ")
           SELECT ((" folders-query ") + (" files-query ")) AS total")))
 
 
-(defn ^String mk-paged-folder-files-query
+(defn ^String mk-paged-files-in-folder
+  "This function constructs a parameterized query for returning a sorted page of files that are
+   direct members of a given folder, accessible to a given user, and satisfy a given info type
+   condition.
+
+   Parameters:
+     user           - username of the user that can access the files
+     zone           - iRODS authentication zone of the user
+     parent-path    - the folder being inspected
+     info-type-cond - a WHERE condition indicating the info types of the files to be counted
+     sort-column    - the result field to sort on:
+                      (type|modify_ts|create_ts|data_size|base_name|full_path)
+     sort-direction - the direction of the sort
+
+  Returns:
+    It returns the properly formatted parameterized SELECT query. The query is parameterized over
+    the page size and offset, respectively. The query will return a result set sorted by the
+    provided sort column. Each row in the result set will have the following columns.
+
+      type           - 'dataobject'
+      uuid           - the file's UUID
+      full_path      - the absolute path to the file in iRODS
+      base_name      - the name of the file
+      info_type      - the info type of the file
+      data_size      - the size in bytes of the file
+      create_ts      - the iRODS timestamp string for when the file was created
+      modify_ts      - the iRODS timestamp string for when the file was last modified
+      access_type_id - the ICAT DB Id indicating the user's level of access to the file"
   [& {:keys [user zone parent-path info-type-cond sort-column sort-direction]}]
   (let [group-query "SELECT group_user_id FROM groups"]
-    (str "WITH groups    AS (" (mk-groups-query user zone) "),
-               data_objs AS (" (mk-unique-objs-in-coll-query parent-path) "),
-               file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
-         " (mk-folder-files-query parent-path group-query info-type-cond "data_objs" "file_avus") "
-           ORDER BY type ASC, " sort-column " " sort-direction "
+    (str "WITH groups    AS (" (mk-groups user zone) "),
+               objs      AS (" (mk-unique-objs-in-coll parent-path) "),
+               file_avus AS (" (mk-obj-avus "SELECT data_id FROM objs") ")
+         " (mk-files-in-folder parent-path group-query info-type-cond "objs" "file_avus") "
+           ORDER BY " sort-column " " sort-direction "
            LIMIT ?
            OFFSET ?")))
 
 
-(defn ^String mk-paged-folder-folders-query
+(defn ^String mk-paged-folders-in-folder
+  "This function constructs a parameterized query for returning a sorted page of folders that are
+   direct members of a given folder and accessible to a given user.
+
+   Parameters:
+     user           - username of the user that can access the folders
+     zone           - iRODS authentication zone of the user
+     parent-path    - the folder being inspected
+     sort-column    - the result field to sort on:
+                      (type|modify_ts|create_ts|data_size|base_name|full_path)
+     sort-direction - the direction of the sort
+
+  Returns:
+    It returns the properly formatted parameterized SELECT query. The query is parameterized over
+    the page size and offset, respectively. The query will return a result set sorted by the
+    provided sort column. Each row in the result set will have the following columns.
+
+      type           - 'collection'
+      uuid           - the folder's UUID
+      full_path      - the absolute path to the folder in iRODS
+      base_name      - the name of the folder
+      info_type      - 'NULL'
+      data_size      - '0'
+      create_ts      - the iRODS timestamp string for when the folder was created
+      modify_ts      - the iRODS timestamp string for when the folder was last modified
+      access_type_id - the ICAT DB Id indicating the user's level of access to the folder"
   [& {:keys [user zone parent-path sort-column sort-direction]}]
-  (str "WITH groups AS (" (mk-groups-query user zone) ")
-       " (mk-folder-folders-query parent-path "SELECT group_user_id FROM groups") "
-        ORDER BY type ASC, " sort-column " " sort-direction "
+  (str "WITH groups AS (" (mk-groups user zone) ")
+       " (mk-folders-in-folder parent-path "SELECT group_user_id FROM groups") "
+        ORDER BY " sort-column " " sort-direction "
         LIMIT ?
         OFFSET ?"))
 
 
-(defn ^String mk-paged-folder-query
+(defn ^String mk-paged-folder
+  "This function constructs a parameterized query for returning a sorted page of files and folders
+   that are direct members of a given folder, accessible to a given user, and satisfy a given info
+   type condition.
+
+   Parameters:
+     user           - username of the user that can access the files and folders
+     zone           - iRODS authentication zone of the user
+     parent-path    - the folder being inspected
+     info-type-cond - a WHERE condition indicating the info types of the files to be counted
+     sort-column    - the result field to sort on:
+                      (type|modify_ts|create_ts|data_size|base_name|full_path)
+     sort-direction - the direction of the sort
+
+  Returns:
+    It returns the properly formatted parameterized SELECT query. The query is parameterized over
+    the page size and offset, respectively. The query will return a result set sorted primary by
+    entity type, and secondarily by the provided sort column. Each row in the result set will have
+    the following columns.
+
+      type           - (collection|dataobject) collection indicates folder and dataobject indicates
+                       file
+      uuid           - the file's or folder's UUID
+      full_path      - the absolute path to the file or folder in iRODS
+      base_name      - the name of the file or folder
+      info_type      - the info type of the file or NULL for a folder
+      data_size      - the size in bytes of the file or 0 for a folder
+      create_ts      - the iRODS timestamp string for when the file or folder was created
+      modify_ts      - the iRODS timestamp string for when the file or folder was last modified
+      access_type_id - the ICAT DB Id indicating the user's level of access to the file or folder"
   [& {:keys [user zone parent-path info-type-cond sort-column sort-direction]}]
   (let [group-query   "SELECT group_user_id FROM groups"
-        folders-query (mk-folder-folders-query parent-path group-query)
-        files-query   (mk-folder-files-query parent-path group-query info-type-cond "data_objs"
-                                             "file_avus")]
-    (str "WITH groups    AS (" (mk-groups-query user zone) "),
-               data_objs AS (" (mk-unique-objs-in-coll-query parent-path) "),
-               file_avus AS (" (mk-obj-avus-query "SELECT data_id FROM data_objs") ")
+        folders-query (mk-folders-in-folder parent-path group-query)
+        files-query   (mk-files-in-folder parent-path group-query info-type-cond "objs"
+                                          "file_avus")]
+    (str "WITH groups    AS (" (mk-groups user zone) "),
+               objs      AS (" (mk-unique-objs-in-coll parent-path) "),
+               file_avus AS (" (mk-obj-avus "SELECT data_id FROM objs") ")
           SELECT *
             FROM (" folders-query " UNION " files-query ") AS t
             ORDER BY type ASC, " sort-column " " sort-direction "
