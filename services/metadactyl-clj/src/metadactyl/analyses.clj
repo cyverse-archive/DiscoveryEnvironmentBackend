@@ -67,6 +67,24 @@
        (store-job-step job-id job status)
        job-id))))
 
+(defn- get-batch-output-dir
+  "Builds the parent output folder path for batch jobs, and creating it if it doesn't exist."
+  [submission]
+  (let [output-dir (build-result-folder-path submission)]
+    (try+
+      (http/post (service/build-url (config/data-info-base-url) "stat-gatherer")
+        {:query-params (secured-params)
+         :body (cheshire/encode {:paths [output-dir]})
+         :content-type :json
+         :as :stream})
+      (catch Object does-not-exist
+        (http/post (service/build-url (config/data-info-base-url) "data" "directory" "create")
+          {:query-params (secured-params)
+           :body (cheshire/encode {:path output-dir})
+           :content-type :json
+           :as :stream})))
+    output-dir))
+
 (defn- get-path-list-contents
   "Gets the contents of the given path list as a vector of each of its paths (assuming one per line)"
   [path]
@@ -219,7 +237,7 @@
   (dorun (map (comp validate-path-list-stats second) path-lists))
   (let [path-lists (get-path-list-contents-map (map (comp :path second) path-lists))
         transposed-list-path (map path-list-map-entry->path-contents-pairs path-lists)
-        job (assoc job :output_dir (build-result-folder-path submission)
+        job (assoc job :output_dir (get-batch-output-dir submission)
                        :create_output_subdir false)
         batch-job-id (save-job-submission job submission)
         job (assoc job :steps (map (partial build-batch-partitioned-job-step path-lists) (:steps job)))
