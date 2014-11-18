@@ -158,7 +158,10 @@
         (apps/get-parameter-values analysis-id))
 
    (GET "/analyses/:analysis-id/relaunch-info" [analysis-id]
-        (apps/get-app-rerun-info analysis-id))))
+        (apps/get-app-rerun-info analysis-id))
+
+   (POST "/analyses/:uuid/stop" [uuid]
+         (apps/stop-job uuid))))
 
 (defn admin-reference-genomes-routes
   []
@@ -240,9 +243,6 @@
 
    (PATCH "/analysis/:analysis-id" [analysis-id :as {body :body}]
           (apps/update-job analysis-id body))
-
-   (DELETE "/stop-analysis/:uuid" [uuid]
-           (apps/stop-job uuid))
 
    (GET "/default-output-dir" []
         (get-default-output-dir))
