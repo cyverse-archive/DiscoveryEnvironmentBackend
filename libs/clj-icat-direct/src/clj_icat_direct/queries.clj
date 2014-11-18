@@ -291,7 +291,7 @@
         file-query   (mk-count-objs-of-type "objs" "file_avus" group-query info-type-cond
                        :cond bad-file-cond)]
     (str "WITH groups    AS (" (mk-groups user zone) "),
-               data      AS (" (mk-unique-objs-in-coll parent-path) "),
+               objs      AS (" (mk-unique-objs-in-coll parent-path) "),
                file_avus AS (" (mk-obj-avus "SELECT data_id FROM objs") ")
           SELECT ((" folder-query ") + (" file-query ")) AS total")))
 
