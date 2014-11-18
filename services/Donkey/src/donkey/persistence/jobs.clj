@@ -291,7 +291,8 @@
               [:j.start_date         :start-date]
               [:j.status             :status]
               [:j.app_wiki_url       :app-wiki-url]
-              [:j.submission         :submission])
+              [:j.submission         :submission]
+              [:j.parent_id          :parent-id])
       (where {:j.id id})
       (#(str (as-sql %) " for update"))
       (#(exec-raw [% [id]] :results))
@@ -434,6 +435,15 @@
                                             :end_date end-date}))
             (where {:job_id      job-id
                     :external_id external-id}))))
+
+(defn update-job-steps
+  "Updates all steps for a job in the database."
+  [job-id status end-date]
+  (when (or status end-date)
+    (update :job_steps
+            (set-fields (remove-nil-values {:status   status
+                                            :end_date end-date}))
+            (where {:job_id job-id}))))
 
 (defn list-incomplete-jobs
   []

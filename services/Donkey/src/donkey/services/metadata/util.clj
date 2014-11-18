@@ -13,6 +13,10 @@
   [job-status]
   (jp/completed-status-codes job-status))
 
+(defn is-running?
+  [job-status]
+  (= jp/running-status job-status))
+
 (def not-completed? (complement is-completed?))
 
 (defn assert-agave-enabled
@@ -37,9 +41,9 @@
 
 (defn- batch-child-status
   [{:keys [status]}]
-  (cond (jp/completed-status-codes status) :completed
-        (= jp/running-status status)       :running
-        :else                              :submitted))
+  (cond (is-completed? status) :completed
+        (is-running? status)   :running
+        :else                  :submitted))
 
 (def ^:private empty-batch-child-status
   {:total     0
@@ -79,12 +83,13 @@
 
 (defn send-job-status-notification
   "Sends a job status change notification."
-  [{:keys [username start-date] :as job} status end-time]
-  (let [username     (string/replace username #"@.*" "")
-        end-millis   (db/timestamp-str end-time)
-        start-millis (db/timestamp-str start-date)
-        email        (:email current-user)]
-    (dn/send-job-status-update username email (assoc (format-job [] job)
-                                                :status    status
-                                                :enddate   end-millis
-                                                :startdate start-millis))))
+  [{:keys [username start-date parent-id] :as job} status end-time]
+  (when-not parent-id
+    (let [username     (string/replace username #"@.*" "")
+          end-millis   (db/timestamp-str end-time)
+          start-millis (db/timestamp-str start-date)
+          email        (:email current-user)]
+      (dn/send-job-status-update username email (assoc (format-job [] job)
+                                                  :status    status
+                                                  :enddate   end-millis
+                                                  :startdate start-millis)))))

@@ -73,6 +73,21 @@
        (process-de-job job)
        (process-agave-job agave-client (get-first-job-step job)))))
 
+(defn- determine-batch-status
+  [{:keys [id]}]
+  (let [children (jp/list-child-jobs id)]
+    (cond (every? (comp mu/is-completed? :status) children) jp/completed-status
+          (some (comp mu/is-running? :status) children)     jp/running-status
+          :else                                             jp/submitted-status)))
+
+(defn- update-batch-status
+  [batch completion-date]
+  (let [new-status (determine-batch-status batch)]
+    (when-not (= (:status batch) new-status)
+      (jp/update-job (:id batch) {:status new-status :end-date completion-date})
+      (jp/update-job-steps (:id batch) new-status completion-date)
+      (mu/send-job-status-notification batch new-status completion-date))))
+
 (defn- agave-authorization-uri
   [state-info]
   (let [username (:username current-user)
@@ -117,6 +132,7 @@
   (listJobs [_ limit offset sort-field sort-order filter include-hidden])
   (syncJobStatus [_ job])
   (updateJobStatus [_ username job job-step status end-time])
+  (updateBatchStatus [_ batch completion-date])
   (stopJob [_ job])
   (getJobParams [_ job-id])
   (getAppRerunInfo [_ job-id])
@@ -185,6 +201,9 @@
 
   (updateJobStatus [_ username job job-step status end-time]
     (da/update-job-status username job job-step status end-time))
+
+  (updateBatchStatus [_ batch completion-date]
+    (update-batch-status batch completion-date))
 
   (stopJob [_ job]
     (ca/stop-job job))
@@ -294,6 +313,9 @@
 
   (updateJobStatus [_ username job job-step status end-time]
     (ca/update-job-status agave-client username job job-step status end-time))
+
+  (updateBatchStatus [_ batch completion-date]
+    (update-batch-status batch completion-date))
 
   (stopJob [_ job]
     (ca/stop-job agave-client job))
@@ -466,11 +488,14 @@
        (let [job-step                   (get-unique-job-step external-id)
              job-step                   (jp/lock-job-step (:job-id job-step) external-id)
              {:keys [username] :as job} (jp/lock-job (:job-id job-step))
-             end-date                   (db/timestamp-from-str end-date)]
+             batch                      (when (:parent-id job) (jp/lock-job (:parent-id job)))
+             end-date                   (db/timestamp-from-str end-date)
+             app-lister                 (get-app-lister "" username)]
          (service/assert-found job "job" (:job-id job-step))
          (with-directory-user [username]
            (try+
-            (.updateJobStatus (get-app-lister "" username) username job job-step status end-date)
+            (.updateJobStatus app-lister username job job-step status end-date)
+            (when batch (.updateBatchStatus app-lister batch end-date))
             (catch Object o
               (let [msg (str "DE job status update failed for " external-id)]
                 (log/warn o msg)
@@ -483,12 +508,15 @@
      (let [uuid                       (UUID/fromString uuid)
            job-step                   (jp/lock-job-step uuid external-id)
            {:keys [username] :as job} (jp/lock-job uuid)
-           end-time                   (db/timestamp-from-str end-time)]
+           batch                      (when (:parent-id job) (jp/lock-job (:parent-id job)))
+           end-time                   (db/timestamp-from-str end-time)
+           app-lister                 (get-app-lister "" username)]
        (service/assert-found job "job" uuid)
        (service/assert-found job-step "job step" (str uuid "/" external-id))
        (with-directory-user [username]
          (try+
-          (.updateJobStatus (get-app-lister "" username) username job job-step status end-time)
+          (.updateJobStatus app-lister username job job-step status end-time)
+          (.updateBatchStatus app-lister batch end-time)
           (catch Object o
             (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
               (log/warn o msg)

@@ -12,6 +12,7 @@
             [clj-http.client :as http]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
+            [kameleon.uuids :as uuids]
             [me.raynes.fs :as fs]
             [metadactyl.analyses.base :as ab]
             [metadactyl.persistence.app-metadata :as ap]
@@ -223,7 +224,8 @@
   (let [batch-path-map (into {} batch-paths)
         job (assoc job :parent_id batch-job-id
                        :output_dir (path-join (:output_dir job) (str "job-" (inc job-number)))
-                       :steps (map (partial update-batch-step batch-path-map) (:steps job)))
+                       :steps (map (partial update-batch-step batch-path-map) (:steps job))
+                       :uuid (uuids/uuid))
         submission (assoc submission
                      :config (update-batch-config batch-path-map (:config submission)))]
     (submit-one-de-job submission job)))
