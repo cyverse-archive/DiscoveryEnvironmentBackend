@@ -41,18 +41,15 @@
 
 (defn push-job-to-jex-events
   [condor-id submitter app-id inv-id]
-  (try
-    (let [job-record {:condorid     condor-id
-                      :submitter    submitter
-                      :appid        app-id
-                      :invocationid inv-id}
-          post-url   (str (url (cfg/jex-events-url) "jobs"))
-          result     (http/post post-url {:form-params job-record
-                                                      :content-type :json}
-                                {:throw-exceptions false})]
-      (log/info result))
-    (catch Exception e
-      (log/error e))))
+  (let [job-record {:condorid     condor-id
+                    :submitter    submitter
+                    :appid        app-id
+                    :invocationid inv-id}
+        post-url   (str (url (cfg/jex-events-url) "jobs"))
+        result     (http/post post-url {:form-params job-record
+                                        :content-type :json}
+                              {:throw-exceptions false})]
+    (log/info result)))
 
 (defn condor-rm
   "Stops a condor job."
@@ -173,5 +170,10 @@
               "\n\tUsername:" (:username updated-map)
               "\n\tAppID:"  (:app_id updated-map)
               "\n\tInvocationID:" (:uuid updated-map))
-    (push-job-to-jex-events sub-id (:username updated-map) (:app_id updated-map) (:uuid updated-map))
+    (try
+      (push-job-to-jex-events sub-id (:username updated-map) (:app_id updated-map) (:uuid updated-map))
+      (catch Exception e
+        (log/warn "Exception caught when sending event to jex-events, cancelling job:" e)
+        (condor-rm sub-id)
+        (throw e)))
     [(:exit sub-result) sub-id]))
