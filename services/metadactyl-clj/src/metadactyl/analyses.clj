@@ -130,12 +130,30 @@
              :path       (:path file-stats)
              :file-size  (:file-size file-stats)})))
 
-(defn- find-path-lists
+(defn- validate-path-list-input-multiplicity
+  "Throws an error if any of the given inputs have a multiplicity of 'many' and one of the path-list
+  paths as its value."
+  [path-list-paths inputs]
+  (when (some #(contains? path-list-paths (:value %))
+              (filter #(= "many" (:multiplicity %)) inputs))
+    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
+             :message (str "HT Analysis Path List files are not supported in multi-file inputs.")})))
+
+(defn- path-list-stats->validated-paths
+  "Validates the given list of path-list stats, then extracts and validates their paths against the
+   given list of job inputs, returning the validated paths."
+  [path-list-stats inputs]
+  (dorun (map validate-path-list-stats path-list-stats))
+  (let [paths (set (map :path path-list-stats))]
+    (validate-path-list-input-multiplicity paths inputs)
+    paths))
+
+(defn- get-path-list-stats
   [job]
   (let [inputs (mapcat (comp :input :config) (:steps job))
-        file-stats (get-file-stats (set (map :value inputs)))
-        info-type-filter #(= (:infoType (second %)) (config/path-list-info-type))]
-    (into {} (filter info-type-filter (:paths file-stats)))))
+        file-stats-map (get-file-stats (set (map :value inputs)))
+        file-stats (map second (:paths file-stats-map))]
+    (filter #(= (:infoType %) (config/path-list-info-type)) file-stats)))
 
 (defn- get-path-list-contents-map
   [paths]
@@ -237,34 +255,34 @@
   (map (juxt (constantly path-list-path) identity) path-list-contents))
 
 (defn- submit-batch-de-job
-  [submission job path-lists]
-  (dorun (map (comp validate-path-list-stats second) path-lists))
-  (let [path-lists (get-path-list-contents-map (map (comp :path second) path-lists))
+  [{config :config :as submission} {steps :steps :as job} path-list-stats]
+  (let [path-list-paths (path-list-stats->validated-paths path-list-stats
+                                                          (mapcat (comp :input :config) steps))
+        path-lists (get-path-list-contents-map path-list-paths)
         transposed-list-path (map path-list-map-entry->path-contents-pairs path-lists)
         job (assoc job :output_dir (get-batch-output-dir submission)
                        :create_output_subdir false
                        :group "batch")
         batch-job-id (save-job-submission job submission)
-        job (assoc job :steps (map (partial build-batch-partitioned-job-step path-lists) (:steps job)))
+        job (assoc job :steps (map (partial build-batch-partitioned-job-step path-lists) steps))
         submission (assoc submission
-                     :config (get-partitioned-submission-config-entries path-lists
-                                                                        (:config submission)))]
+                     :config (get-partitioned-submission-config-entries path-lists config))]
     (dorun (apply (partial map (partial submit-job-in-batch submission job batch-job-id) (range))
                   transposed-list-path))))
 
 (defn- submit-de-only-job
-  [submission job path-lists]
-  (if (empty? path-lists)
+  [submission job path-list-stats]
+  (if (empty? path-list-stats)
     (submit-one-de-job submission job)
-    (submit-batch-de-job submission job path-lists)))
+    (submit-batch-de-job submission job path-list-stats)))
 
 (defn- submit-job
   [submission job]
   (let [de-only-job? (zero? (ap/count-external-steps (:app_id job)))
-        path-lists (find-path-lists job)]
+        path-list-stats (get-path-list-stats job)]
     (if de-only-job?
-      (submit-de-only-job submission job path-lists)
-      (if (empty? path-lists)
+      (submit-de-only-job submission job path-list-stats)
+      (if (empty? path-list-stats)
         (do-jex-submission job)
         (throw+ {:error_code ce/ERR_REQUEST_FAILED
                  :message "HT Analysis Path Lists are not supported in Apps with Agave steps."}))))
