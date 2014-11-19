@@ -43,7 +43,8 @@
                 :result-folder-path (:resultfolderid job)
                 :start-date         (determine-start-time job)
                 :username           (:username current-user)
-                :status             (:status job)}
+                :status             (:status job)
+                :notify             (:notify job)}
                submission))
 
 (defn- store-job-step
@@ -69,6 +70,7 @@
         job        (.submitJob agave-client
                                (assoc (mu/update-submission-result-folder submission output-dir)
                                  :callbackUrl cb-url))
+        job        (assoc job :notify (:notify submission false))
         username   (:shortUsername current-user)
         email      (:email current-user)]
     (store-agave-job id job submission)

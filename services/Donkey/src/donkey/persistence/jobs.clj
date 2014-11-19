@@ -74,7 +74,7 @@
 (defn save-job
   "Saves information about a job in the database."
   [{:keys [id job-name description app-id app-name app-description app-wiki-url result-folder-path
-           start-date end-date status deleted username]}
+           start-date end-date status deleted username notify]}
    submission]
   (let [user-id (get-user-id username)
         job-info (remove-nil-values
@@ -90,7 +90,8 @@
                     :end_date           end-date
                     :status             status
                     :deleted            deleted
-                    :user_id            user-id})]
+                    :user_id            user-id
+                    :notify             notify})]
     (kj/save-job job-info (cheshire/encode submission))))
 
 (defn save-job-step
@@ -191,7 +192,8 @@
               [:j.app_wiki_url       :app-wiki-url]
               [:j.job_type           :job-type]
               [:j.parent_id          :parent-id]
-              [:j.is_batch           :is-batch])))
+              [:j.is_batch           :is-batch]
+              [:j.notify             :notify])))
 
 (defn- job-step-base-query
   "The base query used for retrieving job step information from the database."
@@ -290,6 +292,7 @@
               [:j.result_folder_path :result-folder-path]
               [:j.start_date         :start-date]
               [:j.status             :status]
+              [:j.notify             :notify]
               [:j.app_wiki_url       :app-wiki-url]
               [:j.submission         :submission]
               [:j.parent_id          :parent-id])

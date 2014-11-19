@@ -37,7 +37,7 @@
   "Saves information about a job in the database."
   [job submission status]
   (let [job-info (-> job
-                     (select-keys [:parent_id :app_id :app_name :app_description])
+                     (select-keys [:parent_id :app_id :app_name :app_description :notify])
                      (assoc :job_name           (:name job)
                             :job_description    (:description job)
                             :app_wiki_url       (:wiki_url job)

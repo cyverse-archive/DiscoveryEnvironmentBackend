@@ -11,6 +11,7 @@ CREATE VIEW job_listings AS
            j.end_date,
            j.status,
            j.deleted,
+           j.notify,
            u.username,
            j.job_description,
            j.app_id,
@@ -22,7 +23,7 @@ CREATE VIEW job_listings AS
                 ELSE MAX(t.name)
            END AS job_type,
            j.parent_id,
-           EXISTS (
+                      EXISTS (
                SELECT * FROM jobs child
                WHERE child.parent_id = j.id
            ) AS is_batch

@@ -32,6 +32,7 @@
                                    :end_date
                                    :status
                                    :deleted
+                                   :notify
                                    :user_id]))))
 
 (defn save-job

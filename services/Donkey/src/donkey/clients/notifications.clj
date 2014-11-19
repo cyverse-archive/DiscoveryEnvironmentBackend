@@ -102,6 +102,11 @@
     (catch Exception e
       (log/warn e "unable to send URL import status update notification for" (:id job-info)))))
 
+(defn- send-email?
+  [job-info]
+  (and (:notify job-info false)
+       (#{"Completed" "Failed"} (:status job-info))))
+
 (defn send-job-status-update
   "Sends notification of an Agave or DE job status update to the user."
   [username email-address {job-name :name :as job-info}]
@@ -111,7 +116,7 @@
       :user           username
       :subject        (str job-name " status changed.")
       :message        (str job-name " " (string/lower-case (:status job-info)))
-      :email          (if (#{"Completed" "Failed"} (:status job-info)) true false)
+      :email          (send-email? job-info)
       :email_template "analysis_status_change"
       :payload        (assoc job-info
                         :analysisname          (:name job-info)

@@ -159,7 +159,8 @@
    :result-folder-path result-folder-path
    :start-date         (db/now)
    :status             "Submitted"
-   :username           (:username current-user)})
+   :username           (:username current-user)
+   :notify             (:notify submission false)})
 
 (defn- build-job-step-save-info
   [job-id job-step]
