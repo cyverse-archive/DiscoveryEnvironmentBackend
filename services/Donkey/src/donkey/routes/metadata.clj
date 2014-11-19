@@ -148,6 +148,9 @@
    (POST "/analyses" [:as {:keys [body]}]
          (apps/submit-job body))
 
+   (PATCH "/analyses/:analysis-id" [analysis-id :as {body :body}]
+          (apps/update-job analysis-id body))
+
    (DELETE "/analyses/:analysis-id" [analysis-id]
            (apps/delete-job analysis-id))
 
@@ -240,9 +243,6 @@
 
    (GET "/logout" [:as {params :params}]
         (logout params))
-
-   (PATCH "/analysis/:analysis-id" [analysis-id :as {body :body}]
-          (apps/update-job analysis-id body))
 
    (GET "/default-output-dir" []
         (get-default-output-dir))

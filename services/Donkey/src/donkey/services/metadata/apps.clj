@@ -603,7 +603,9 @@
            body (service/decode-json body)]
        (validate-job-existence id)
        (validate-job-update body)
-       (jp/update-job id body)))))
+       (-> (jp/update-job id body)
+           (dissoc :submission)
+           (service/success-response))))))
 
 (defn stop-job
   [id]
