@@ -29,3 +29,8 @@ DROP INDEX template_property_group_property_group_id_idx;
 WITH dups AS (SELECT id, COUNT(hid_v187) FROM parameter_groups GROUP BY id)
   UPDATE parameter_groups SET id = (uuid_generate_v1())
     WHERE id IN (SELECT id FROM dups WHERE count > 1);
+
+-- CORE-6155 The group "label" has been used instead of its "name" by the client for a long time.
+UPDATE parameter_groups SET label = name WHERE label IS NULL;
+ALTER TABLE ONLY parameter_groups ALTER COLUMN label SET NOT NULL;
+ALTER TABLE ONLY parameter_groups ALTER COLUMN name DROP NOT NULL;

@@ -176,7 +176,7 @@
    (optional-key :description)
    (describe String "The Parameter Group's description")
 
-   (optional-key :label)
+   :label
    (describe String "The label used to identify the Parameter Group in the UI")
 
    (optional-key :isVisible)
