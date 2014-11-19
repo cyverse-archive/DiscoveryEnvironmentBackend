@@ -101,31 +101,23 @@
 
 (defn invalid-cfg-response
   [reason]
-  {:status       500
-   :body         (cheshire/encode {:error_code ERR_CONFIG_INVALID
-                                   :reason     reason})
-   :content-type :json})
+  (err-resp {:error_code ERR_CONFIG_INVALID
+             :reason     reason}))
 
 (defn invalid-arg-response [arg val reason]
-  {:status       400
-   :body         (cheshire/encode {:error_code ERR_ILLEGAL_ARGUMENT
-                                   :reason     reason
-                                   :arg        (name arg)
-                                   :val        val})
-   :content-type :json})
+  (err-resp {:error_code ERR_ILLEGAL_ARGUMENT
+             :reason     reason
+             :arg        (name arg)
+             :val        val}))
 
 (defn missing-arg-response [arg]
   (log/error "missing required argument:" (name arg))
-  {:status       400
-   :body         (cheshire/encode {:error_code ERR_MISSING_QUERY_PARAMETER
-                                   :arg        (name arg)})
-   :content-type :json})
+  (err-resp {:error_code ERR_MISSING_QUERY_PARAMETER
+             :arg        (name arg)}))
 
 (defn validation-error-response [error]
-  {:status       400
-   :body         (cheshire/encode {:error_code ERR_BAD_REQUEST
-                                   :validation error})
-   :content-type :json})
+  (err-resp {:error_code ERR_BAD_REQUEST
+             :validation error}))
 
 (defn- response-map?
   "Returns true if 'm' can be used as a response map. We're defining a
