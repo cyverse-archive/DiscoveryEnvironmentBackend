@@ -121,6 +121,12 @@
                                    :arg        (name arg)})
    :content-type :json})
 
+(defn validation-error-response [error]
+  {:status       400
+   :body         (cheshire/encode {:error_code ERR_BAD_REQUEST
+                                   :validation error})
+   :content-type :json})
+
 (defn- response-map?
   "Returns true if 'm' can be used as a response map. We're defining a
    response map as a map that contains a :status and :body field."
@@ -174,6 +180,7 @@
     (catch clj-http-error? o o)
     (catch [:type :invalid-configuration] {:keys [reason]} (invalid-cfg-response reason))
     (catch [:type :invalid-argument] {:keys [reason arg val]} (invalid-arg-response arg val reason))
+    (catch [:type :ring.swagger.schema/validation] {:keys [error]} (validation-error-response error))
     (catch Object e
       (log/error (format-exception (:throwable &throw-context)))
       (err-resp action (unchecked &throw-context)))))
