@@ -3,6 +3,7 @@
         [clojure-commons.file-utils :only [build-result-folder-path path-join]]
         [kameleon.jobs :only [get-job-type-id save-job save-job-step]]
         [kameleon.queries :only [get-user-id]]
+        [medley.core :only [dissoc-in]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
         [korma.core]
@@ -23,11 +24,23 @@
   []
   {:user (:shortUsername current-user)})
 
+(defn- pre-process-jex-step
+  "Removes the input array of a fAPI step's config."
+  [{{step-type :type} :component :as step}]
+  (if (= step-type "fAPI")
+    (dissoc-in step [:config :input])
+    step))
+
+(defn- pre-process-jex-submission
+  "Finalizes the job for submission to the JEX."
+  [job]
+  (update-in job [:steps] (partial map pre-process-jex-step)))
+
 (defn- do-jex-submission
   [job]
   (try+
     (http/post (config/jex-base-url)
-               {:body         (cheshire/encode job)
+               {:body         (cheshire/encode (pre-process-jex-submission job))
                 :content-type :json})
     (catch Object o
       (log/error (:throwable &throw-context) "job submission failed")
