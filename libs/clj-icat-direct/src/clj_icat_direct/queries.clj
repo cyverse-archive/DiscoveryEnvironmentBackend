@@ -473,6 +473,33 @@
             OFFSET ?")))
 
 
+(defn ^String mk-count-uuids-of-file-type
+  [^String user ^String zone ^String uuids ^String info-type-cond]
+  (str "WITH groups     AS (" (mk-groups user zone) "),
+             uuids      AS (SELECT m.meta_attr_value AS uuid, o.object_id
+                              FROM r_meta_main AS m
+                                JOIN r_objt_metamap AS o ON m.meta_id = o.meta_id
+                              WHERE m.meta_attr_name = 'ipc_UUID'
+                                AND m.meta_attr_value IN (" uuids ")
+                                AND o.object_id IN (SELECT object_id
+                                                      FROM r_objt_access
+                                                      WHERE user_id in (SELECT group_user_id
+                                                                          FROM groups))),
+             file_types AS (SELECT *
+                              FROM r_objt_metamap AS o
+                                JOIN r_meta_main AS m ON m.meta_id = o.meta_id
+                              WHERE o.object_id = ANY(ARRAY(SELECT object_id FROM uuids))
+                                AND m.meta_attr_name = 'ipc-filetype')
+        SELECT COUNT(*) AS total
+          FROM uuids
+          WHERE object_id IN (SELECT coll_id FROM r_coll_main WHERE coll_type != 'linkPoint'
+                              UNION
+                              SELECT d.data_id
+                                FROM r_data_main AS d
+                                  LEFT JOIN file_types AS f on d.data_id = f.object_id
+                                WHERE (" info-type-cond "))"))
+
+
 (def queries
   {:count-all-items-under-folder
    "WITH user_groups AS ( SELECT g.*
@@ -730,31 +757,4 @@
                p.modify_ts
       ORDER BY p.type ASC, %s %s
       LIMIT ?
-      OFFSET ?"
-
-   :count-uuids-of-file-type
-   "WITH groups AS (SELECT *
-                      FROM r_user_group
-                      WHERE user_id IN (SELECT user_id
-                                          FROM r_user_main
-                                          WHERE user_name = ? AND zone_name = ?)),
-         uuids AS (SELECT m.meta_attr_value AS uuid, o.object_id
-                     FROM r_meta_main m JOIN r_objt_metamap o ON m.meta_id = o.meta_id
-                     WHERE m.meta_attr_name = 'ipc_UUID'
-                       AND m.meta_attr_value IN (%s)
-                       AND o.object_id IN (SELECT object_id
-                                             FROM r_objt_access
-                                             WHERE user_id in (SELECT group_user_id FROM groups))),
-         file_types AS (SELECT *
-                          FROM r_objt_metamap AS om
-                            JOIN r_meta_main AS mm ON mm.meta_id = om.meta_id
-                          WHERE om.object_id = ANY(ARRAY(SELECT object_id FROM uuids))
-                            AND mm.meta_attr_name = 'ipc-filetype')
-    SELECT COUNT(*) AS total
-      FROM uuids
-      WHERE object_id IN (SELECT coll_id FROM r_coll_main WHERE coll_type != 'linkPoint'
-                          UNION
-                          SELECT d.data_id
-                            FROM r_data_main AS d
-                              LEFT JOIN file_types AS f on d.data_id = f.object_id
-                            WHERE (%s))"})
+      OFFSET ?"})
