@@ -288,5 +288,5 @@
     0
     (let [uuid-set (q/prepare-text-set uuids)
           ft-cond  (q/mk-file-type-cond file-types)
-          query    (format (q/mk-count-uuids-of-file-type) uuid-set ft-cond)]
-      (:total (first (run-query-string query user zone))))))
+          query    (q/mk-count-uuids-of-file-type user zone uuid-set ft-cond)]
+      (:total (first (run-query-string query))))))

@@ -474,6 +474,17 @@
 
 
 (defn ^String mk-count-uuids-of-file-type
+  "This function constructs a query for returning the number of given uuids that are either folders
+   or are files satisfying the given info type WHERE condition.
+
+   Parameter:
+     user           - username of the user that can access the files and folders
+     zone           - iRODS authentication zone of the user
+     uuids          - a comma-separated list of uuids to count
+     info-type-cond - a WHERE condition indicating the info types of the files to be counted
+
+  Returns:
+    It returns the a single row containing a single 'total' column containing the total."
   [^String user ^String zone ^String uuids ^String info-type-cond]
   (str "WITH groups     AS (" (mk-groups user zone) "),
              uuids      AS (SELECT m.meta_attr_value AS uuid, o.object_id
@@ -490,14 +501,18 @@
                                 JOIN r_meta_main AS m ON m.meta_id = o.meta_id
                               WHERE o.object_id = ANY(ARRAY(SELECT object_id FROM uuids))
                                 AND m.meta_attr_name = 'ipc-filetype')
-        SELECT COUNT(*) AS total
-          FROM uuids
-          WHERE object_id IN (SELECT coll_id FROM r_coll_main WHERE coll_type != 'linkPoint'
-                              UNION
-                              SELECT d.data_id
-                                FROM r_data_main AS d
-                                  LEFT JOIN file_types AS f on d.data_id = f.object_id
-                                WHERE (" info-type-cond "))"))
+        SELECT ((SELECT COUNT(*)
+                   FROM uuids
+                   WHERE object_id IN (SELECT coll_id
+                                         FROM r_coll_main
+                                         WHERE coll_type != 'linkPoint'))
+                +
+                (SELECT COUNT(*)
+                   FROM uuids
+                   WHERE object_id IN (SELECT d.data_id
+                                         FROM r_data_main As d
+                                           LEFT JOIN file_types AS f on d.data_id = f.object_id
+                                         WHERE (" info-type-cond ")))) AS total"))
 
 
 (def queries
