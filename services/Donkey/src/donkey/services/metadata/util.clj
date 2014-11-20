@@ -76,6 +76,7 @@
     :status          (:status job)
     :username        (:username job)
     :deleted         (:deleted job)
+    :notify          (:notify job false)
     :wiki_url        (:app-wiki-url job)
     :app_disabled    (app-disabled? app-tables (:app-id job))
     :parent_id       (:parent-id job)
