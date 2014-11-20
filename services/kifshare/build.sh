@@ -27,12 +27,14 @@ fi
 echo "Create the build directory"
 mkdir -p $BUILDDIR/$BINDIR
 
+echo "Create the resource directory"
+mkdir -p $BUILDDIR/$BINDIR/resources
+
 echo "Copying in the build directory, which contains the resources"
-cp -r build/* ${BUILDDIR}/${BINDIR}
+cp -r build/* ${BUILDDIR}/${BINDIR}/resources
 
 echo "Creating the log directory."
 mkdir -p $BUILDDIR/$LOGDIR
-
 mkdir -p $BUILDDIR/$CONFDIR
 lein clean
 lein deps
