@@ -69,7 +69,7 @@
                 };
             },
 
-            zero_clip_path = "flash/ZeroClipboard.swf";
+            zero_clip_path = "resources/flash/ZeroClipboard.swf";
 
         $('#lastmod').text(last_mod_date.toString());
         $('#de-import-url').val(import_url);
