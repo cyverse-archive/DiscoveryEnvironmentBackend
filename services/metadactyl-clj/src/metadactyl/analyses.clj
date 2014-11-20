@@ -123,7 +123,7 @@
 (defn- validate-path-list-stats
   [file-stats]
   (when (> (:file-size file-stats) (config/path-list-max-size))
-    (throw+ {:error_code ce/ERR_REQUEST_FAILED
+    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
              :message    (str "HT Analysis Path List file exceeds maximum size of "
                               (config/path-list-max-size)
                               " bytes.")
@@ -160,14 +160,14 @@
   (let [path-lists (into {} (map #(vector % (get-path-list-contents %)) paths))
         first-list-count (count (second (first path-lists)))]
     (when (> first-list-count (config/path-list-max-paths))
-      (throw+ {:error_code ce/ERR_REQUEST_FAILED
+      (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
                :message    (str "The HT Analysis Path List exceeds the maximum of "
                                 (config/path-list-max-paths)
                                 " allowed paths.")
                :path       (ffirst path-lists)
                :path-count first-list-count}))
     (when-not (every? #(= first-list-count %) (map (comp count second) path-lists))
-      (throw+ {:error_code ce/ERR_REQUEST_FAILED
+      (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
                :message "All HT Analysis Path Lists must have the same number of paths."}))
     path-lists))
 
@@ -284,7 +284,7 @@
       (submit-de-only-job submission job path-list-stats)
       (if (empty? path-list-stats)
         (do-jex-submission job)
-        (throw+ {:error_code ce/ERR_REQUEST_FAILED
+        (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
                  :message "HT Analysis Path Lists are not supported in Apps with Agave steps."}))))
   job)
 
