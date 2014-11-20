@@ -112,12 +112,12 @@
   (insert :parameters (values (assoc param :display_order index))))
 
 (defn- add-file-param-wrappers
-  [task-id group-name params]
+  [task-id group-label params]
   (let [group-order ((comp inc :group_order first)
                      (select :template_property_group_v187
                              (aggregate (max :hid) :group_order)
                              (where {:template_id task-id})))
-        group-id (:hid_v187 (insert :parameter_groups (values {:name group-name
+        group-id (:hid_v187 (insert :parameter_groups (values {:label group-label
                                                                :display_order group-order})))
         params (map-indexed add-param-wrapper params)]
     (insert :template_property_group_v187 (values {:template_id task-id
