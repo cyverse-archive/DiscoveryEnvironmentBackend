@@ -146,7 +146,7 @@
         values         (string/split (:name param) #"\s*,\s*" 2)
         selected-value (if selected? (first values) (second values))]
     (if (util/not-blank? selected-value)
-      [(build-arg param selected-value)]
+      [(build-arg param selected-value "")]
       [])))
 
 (defn input-args

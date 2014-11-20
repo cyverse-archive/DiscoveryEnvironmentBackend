@@ -184,4 +184,4 @@
 
 (defn build-submission
   [user email submission]
-  (log/spy :warn (.buildSubmission (build-job-request-formatter user email submission))))
+  (.buildSubmission (build-job-request-formatter user email submission)))
