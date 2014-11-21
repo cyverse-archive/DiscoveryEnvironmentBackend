@@ -42,6 +42,7 @@
             {:sub_id dag-id}))
         (throw+ {:error_code "ERR_INVALID_JSON"})))
     (catch Exception e
+      (log/error e "job submission failed")
       (throw+ {:error_code "ERR_UNHANDLED_EXCEPTION"}))))
 
 (defroutes jex-routes
