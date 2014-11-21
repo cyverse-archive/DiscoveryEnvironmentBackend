@@ -4,6 +4,7 @@
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clj-time.format :as tf]
+            [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]))
 
 (defn- assert-defined*
@@ -41,7 +42,7 @@
   "Finds the value associated with a key in a map. The first non-nil value associated with one
    of the given keys is returned. With the current implementation, the keys provided must be
    keywords."
-  [m [ks]]
+  [m ks]
   (find-first (complement nil?) ((apply juxt ks) m)))
 
 (defn get-enum-values

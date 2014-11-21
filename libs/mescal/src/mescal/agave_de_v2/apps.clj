@@ -190,4 +190,4 @@
 
 (defn format-app-rerun-info
   [agave app job]
-  (format-app app (partial format-groups-for-rerun agave job)))
+  (format-app agave app (partial format-groups-for-rerun agave job)))
