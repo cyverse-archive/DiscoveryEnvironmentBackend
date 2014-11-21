@@ -54,7 +54,7 @@
 (defn- missing-output-filename
   [{step-id :step_id id :id}]
   (throw+ {:error_code ce/ERR_BAD_REQUEST
-           :reason     ("no filename found for output " id " in step " step-id)}))
+           :reason     (str "no filename found for output " id " in step " step-id)}))
 
 (defn- get-output-filename
   "Obtains the name of an output filename from either the app config or the default values

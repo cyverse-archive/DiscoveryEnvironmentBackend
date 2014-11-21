@@ -3,7 +3,8 @@
         [kameleon.entities]
         [kameleon.uuids :only [uuid]]
         [korma.core]
-        [metadactyl.util.assertions :only [assert-not-nil]])
+        [metadactyl.util.assertions :only [assert-not-nil]]
+        [metadactyl.util.conversions :only [remove-nil-vals]])
   (:require [clojure.string :as string]
             [metadactyl.analyses.params :as params]
             [metadactyl.analyses.util :as util]))
@@ -24,7 +25,8 @@
 
 (defn build-default-values-map
   [params]
-  (into {} (map (juxt util/param->qual-id :default_value) params)))
+  (remove-nil-vals
+    (into {} (map (juxt util/param->qual-id :default_value) params))))
 
 (defn build-config
   [inputs outputs params]
