@@ -68,7 +68,7 @@
          :name          (:name submission)
          :appId         (:app_id submission)
          :archive       true
-         :archivePath   (.agaveFilePath agave (:outputDirectory submission))
+         :archivePath   (.agaveFilePath agave (:output_dir submission))
          :archiveSystem (.storageSystem agave)
          :notifications (job-notifications (:callbackUrl submission)))
        (remove-vals nil?)))
