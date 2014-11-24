@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/notificationagent "4.0.6"
+(defproject org.iplantc/notificationagent "4.0.7"
   :description "A web service for storing and forwarding notifications."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -18,9 +18,9 @@
                  [org.clojure/tools.logging "0.2.3"]
                  [cheshire "5.0.1"]
                  [compojure "1.0.2"]
-                 [org.iplantc/clojure-commons "4.0.6"]
-                 [org.iplantc/kameleon "4.0.6"]
-                 [org.iplantc/common-cli "4.0.6"]
+                 [org.iplantc/clojure-commons "4.0.7"]
+                 [org.iplantc/kameleon "4.0.7"]
+                 [org.iplantc/common-cli "4.0.7"]
                  [me.raynes/fs "1.4.4"]
                  [clj-http "0.5.5"]
                  [clj-time "0.5.0"]
@@ -31,7 +31,7 @@
   :plugins [[lein-ring "0.6.4"]
             [swank-clojure "1.4.2"]
             [lein-marginalia "0.7.0"]
-            [org.iplantc/lein-iplant-rpm "4.0.6"]]
+            [org.iplantc/lein-iplant-rpm "4.0.7"]]
   :ring {:handler notification-agent.core/app
          :init notification-agent.core/load-config-from-file
          :port 31320}
