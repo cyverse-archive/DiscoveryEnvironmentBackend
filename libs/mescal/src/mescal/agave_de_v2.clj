@@ -25,7 +25,7 @@
 (defn- find-matching-apps
   [agave jobs-enabled? search-term]
   (filter (partial app-matches? search-term)
-          (:templates (list-apps agave jobs-enabled?))))
+          (:apps (list-apps agave jobs-enabled?))))
 
 (defn search-apps
   [agave jobs-enabled? search-term]
