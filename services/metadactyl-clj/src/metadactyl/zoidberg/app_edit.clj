@@ -245,7 +245,7 @@
       (when-not (contains? persistence/param-file-types param-type)
         (persistence/remove-parameter-mappings param-id)))
 
-    (when-not (or (contains? persistence/param-list-types param-type) (empty? default-value))
+    (when-not (or (contains? persistence/param-list-types param-type) (nil? default-value))
       (persistence/add-parameter-default-value param-id default-value))
 
     (dorun (map (partial add-validation-rule param-id) validators))
