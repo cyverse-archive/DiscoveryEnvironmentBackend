@@ -8,7 +8,7 @@
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config :only [workspace-dev-app-group-index]]
         [metadactyl.util.conversions :only [remove-nil-vals convert-rule-argument]]
-        [metadactyl.validation :only [verify-app-editable verify-app-ownership]]
+        [metadactyl.validation :only [validate-parameter verify-app-editable verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as cc-errs]
@@ -231,6 +231,7 @@
                            validators :validators
                            arguments :arguments
                            :as parameter}]
+  (validate-parameter parameter)
   (let [update-values (assoc parameter :parameter_group_id group-id :display_order display-order)
         param-exists (and param-id (persistence/get-app-parameter param-id group-id))
         param-id (if param-exists

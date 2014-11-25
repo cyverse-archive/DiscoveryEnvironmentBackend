@@ -2,7 +2,8 @@
   (:use [metadactyl.user :only [current-user]]
         [clojure.string :only [blank?]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as cc-errs]))
+  (:require [clojure-commons.error-codes :as cc-errs]
+            [metadactyl.persistence.app-metadata :as persistence]))
 
 (defn missing-json-field-exception
   "Thrown when a required field is missing from a JSON request body."
@@ -208,3 +209,13 @@
     (throw+ {:error_code cc-errs/ERR_BAD_OR_MISSING_FIELD
              :message (str "pipeline step " step-number " contians neither a task ID nor an "
                            "external app ID")})))
+
+(defn validate-parameter
+  "Ensures that hidden output parameters have a filename defined."
+  [{default-value :defaultValue param-type :type visible :isVisible :or {visible true} :as parameter}]
+  (when (and (contains? persistence/param-output-types param-type)
+             (nil? default-value)
+             (not visible))
+    (throw+ {:error_code cc-errs/ERR_BAD_OR_MISSING_FIELD
+             :message    "Hidden output parameters must define a default value."
+             :parameter  parameter})))
