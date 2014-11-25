@@ -306,7 +306,6 @@
    with fields required by the client."
   [query task-param-entity]
   (with query task-param-entity
-              (join data_formats {:data_format :data_formats.id})
               (join :parameter_values {:parameter_values.parameter_id :id})
               (fields :id
                       :name
@@ -314,7 +313,7 @@
                       :description
                       :required
                       :parameter_values.value
-                      [:data_formats.name :format])))
+                      [:data_format :format])))
 
 (defn- get-tasks
   "Fetches a list of tasks for the given IDs with their inputs and outputs."
