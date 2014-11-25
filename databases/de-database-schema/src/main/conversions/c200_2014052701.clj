@@ -94,14 +94,30 @@
             (SELECT p.id AS parameter_id, defalut_value_v187 AS value, TRUE AS is_default
              FROM parameters p
              LEFT JOIN parameter_types pt ON pt.id = p.parameter_type
-             WHERE CHAR_LENGTH(defalut_value_v187) > 0 AND pt.name NOT LIKE '%Selection')")
+             WHERE CHAR_LENGTH(defalut_value_v187) > 0
+               AND pt.name NOT LIKE '%Selection')")
   (exec-raw "INSERT INTO parameter_values (parameter_id, value, is_default)
             (SELECT p.id AS parameter_id, f.name_v187 AS value, TRUE AS is_default
-             FROM task_param_listing tp
-             LEFT JOIN parameter_values pv ON tp.id = pv.parameter_id
-             LEFT JOIN parameters p ON p.id = tp.id
+             FROM task_param_listing p
+             LEFT JOIN parameter_values pv ON p.id = pv.parameter_id
              LEFT JOIN file_parameters f ON f.parameter_id = p.id
-             WHERE value_type = 'Output' AND CHAR_LENGTH(f.name_v187) > 0 AND pv.value IS NULL)"))
+             WHERE value_type = 'Output'
+               AND CHAR_LENGTH(f.name_v187) > 0
+               AND pv.value IS NULL)"))
+
+(defn- fix-hidden-output-defalut-values
+  "CORE-6190 Fix hidden outputs without filenames."
+  []
+  (println "\t* copying labels of hidden outputs without filenames to parameter_values...")
+  (exec-raw "INSERT INTO parameter_values (parameter_id, value, is_default)
+            (SELECT p.id AS parameter_id, p.label AS value, TRUE AS is_default
+             FROM task_param_listing p
+             LEFT JOIN parameter_values pv ON p.id = pv.parameter_id
+             LEFT JOIN file_parameters f ON f.parameter_id = p.id
+             WHERE value_type = 'Output'
+               AND is_visible = false
+               AND CHAR_LENGTH(f.name_v187) < 1
+               AND pv.value IS NULL)"))
 
 (defn convert
   "Performs the database conversion."
@@ -109,4 +125,6 @@
   (println "Performing the conversion for" version)
   (convert-defalut-values)
   (convert-selection-values)
-  (convert-tree-selection-values))
+  (convert-tree-selection-values)
+  (fix-hidden-output-defalut-values))
+
