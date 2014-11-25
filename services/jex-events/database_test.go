@@ -149,6 +149,24 @@ func TestFixAppID(t *testing.T) {
 	}
 }
 
+// TestFixBatchID tests the FixBatchID function.
+func TestFixBatchID(t *testing.T) {
+	jr := &JobRecord{}
+
+	var batchIDNil interface{}
+	batchIDNil = nil
+	FixBatchID(jr, batchIDNil)
+	if jr.BatchID != "" {
+		t.Errorf("BatchID was not an empty string after call to FixBatchID: %s", jr.BatchID)
+	}
+
+	batchID := []uint8("000000")
+	FixBatchID(jr, batchID)
+	if jr.BatchID != "000000" {
+		t.Errorf("BatchID was not set to '000000' after call to FixBatchID: %s", jr.BatchID)
+	}
+}
+
 func TestCRUDCondorEvents(t *testing.T) {
 	connString := ConnString()
 	d, err := NewDatabaser(connString)
