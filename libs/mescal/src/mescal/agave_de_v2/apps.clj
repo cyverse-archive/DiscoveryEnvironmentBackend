@@ -1,5 +1,6 @@
 (ns mescal.agave-de-v2.apps
-  (:use [mescal.agave-de-v2.app-listings :only [get-app-name]])
+  (:use [medley.core :only [remove-vals]]
+        [mescal.agave-de-v2.app-listings :only [get-app-name]])
   (:require [clojure.string :as string]
             [mescal.agave-de-v2.constants :as c]
             [mescal.agave-de-v2.params :as mp]
@@ -26,17 +27,18 @@
 
 (defn- format-param
   [get-type get-value get-args param]
-  {:description  (get-in param [:details :description])
-   :arguments    (get-args param)
-   :defaultValue (get-value param)
-   :id           (:id param)
-   :isVisible    (get-boolean (get-in param [:value :visible]) false)
-   :label        (get-in param [:details :label])
-   :name         (:id param)
-   :order        0
-   :required     (get-boolean (get-in param [:value :required]) false)
-   :type         (get-type param)
-   :validators   []})
+  (remove-vals nil?
+               {:description  (get-in param [:details :description])
+                :arguments    (get-args param)
+                :defaultValue (get-value param)
+                :id           (:id param)
+                :isVisible    (get-boolean (get-in param [:value :visible]) false)
+                :label        (get-in param [:details :label])
+                :name         (:id param)
+                :order        0
+                :required     (get-boolean (get-in param [:value :required]) false)
+                :type         (get-type param)
+                :validators   []}))
 
 (defn- param-formatter
   [get-type get-value get-args]
@@ -46,7 +48,7 @@
 (defn- get-default-enum-value
   [{value-obj :value :as param}]
   (let [enum-values (util/get-enum-values value-obj)
-        default     (first (:default value-obj))]
+        default     (:default value-obj)]
     (when-let [default-elem (mp/find-enum-element default enum-values)]
       (mp/format-enum-element default default-elem))))
 
@@ -59,7 +61,7 @@
 (defn- get-param-args
   [{value-obj :value :as param}]
   (let [enum-values (util/get-enum-values value-obj)
-        default     (first (:default value-obj))]
+        default     (:default value-obj)]
     (if (mp/enum-param? param)
       (map (partial mp/format-enum-element default) enum-values)
       [])))
