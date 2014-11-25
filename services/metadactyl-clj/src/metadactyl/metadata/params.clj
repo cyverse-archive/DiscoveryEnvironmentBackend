@@ -58,8 +58,7 @@
 
 (defn params-base-query
   []
-  (-> (select* [:parameters :p])
-      (join :inner [:parameter_types :t] {:p.parameter_type :t.id})
+  (-> (select* [:task_param_listing :p])
       (fields [:p.description   :description]
               [:p.id            :id]
               [:p.name          :name]
@@ -68,7 +67,12 @@
               [:p.required      :required]
               [:p.omit_if_blank :omit_if_blank]
               [:p.ordering      :order]
-              [:t.name          :type])))
+              [:parameter_type  :type]
+              :retain
+              :is_implicit
+              :info_type
+              :data_format
+              :data_source)))
 
 (defn get-default-value
   [type param-values]
@@ -102,18 +106,7 @@
 (defn load-app-params
   [app-id]
   (->> (select (params-base-query)
-               (join :inner [:parameter_groups :pg] {:p.parameter_group_id :pg.id})
-               (join :inner [:tasks :task] {:pg.task_id :task.id})
-               (join :inner [:app_steps :s] {:task.id :s.task_id})
-               (join :left [:file_parameters :fp] {:p.id :fp.parameter_id})
-               (join :left [:info_type :it] {:fp.info_type :it.id})
-               (join :left [:data_formats :df] {:fp.data_format :df.id})
-               (join :left [:data_source :ds] {:fp.data_source_id :ds.id})
-               (fields [:s.id           :step_id]
-                       [:fp.retain      :retain]
-                       [:fp.is_implicit :is_implicit]
-                       [:it.name        :info_type]
-                       [:df.name        :data_format]
-                       [:ds.name        :data_source])
+               (join :inner [:app_steps :s] {:p.task_id :s.task_id})
+               (fields [:s.id :step_id])
                (where {:s.app_id app-id}))
        (mapv add-default-value)))
