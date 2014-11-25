@@ -41,6 +41,7 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 	started := time.Now()
 	completed := time.Now()
 	condorID := "999"
+	invID := uuid.New()
 	jr := &JobRecord{
 		BatchID:       "",
 		Submitter:     "unit_tests",
@@ -49,6 +50,7 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
+		InvocationID:  invID,
 	}
 	newUUID, err := d.InsertJob(jr)
 	if err != nil {
@@ -122,6 +124,13 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 	}
 	if condor.ID != newUUID {
 		t.Errorf("The IDs didn't match after GetJobByCondorID: %s %s", condor.ID, newUUID)
+	}
+	invocation, err := d.GetJobByInvocationID(invID)
+	if err != nil {
+		t.Errorf("Error in GetJobByInvocationID: %s", err)
+	}
+	if invocation.ID != newUUID {
+		t.Errorf("The IDs didn't match after GetJobByInvocationID: %s %s", invocation.ID, newUUID)
 	}
 	err = d.DeleteJob(newUUID)
 	if err != nil {
