@@ -167,6 +167,24 @@ func TestFixBatchID(t *testing.T) {
 	}
 }
 
+// TestFixInvID tests the FixInvID function.
+func TestFixInvID(t *testing.T) {
+	jr := &JobRecord{}
+
+	var invIDNil interface{}
+	invIDNil = nil
+	FixInvID(jr, invIDNil)
+	if jr.InvocationID != "" {
+		t.Errorf("InvocationID was not an empty string after call to FixInvID: %s", jr.InvocationID)
+	}
+
+	invID := []uint8("000000")
+	FixInvID(jr, invID)
+	if jr.InvocationID != "000000" {
+		t.Errorf("InvocationID was not set to '000000' after call to FixInvID: %s", jr.InvocationID)
+	}
+}
+
 func TestCRUDCondorEvents(t *testing.T) {
 	connString := ConnString()
 	d, err := NewDatabaser(connString)
