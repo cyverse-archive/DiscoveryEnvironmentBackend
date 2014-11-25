@@ -156,6 +156,11 @@
   [props config-valid configs]
   "metadactyl.irods.home")
 
+(cc/defprop-str jex-batch-group-name
+  "The group name to submit to the JEX for batch jobs."
+  [props config-valid configs]
+  "metadactyl.batch.group")
+
 (cc/defprop-str path-list-info-type
   "The info type for HT Analysis Path Lists."
   [props config-valid configs]

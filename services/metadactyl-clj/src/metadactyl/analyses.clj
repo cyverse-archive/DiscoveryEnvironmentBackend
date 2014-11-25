@@ -275,7 +275,7 @@
         transposed-list-path (map path-list-map-entry->path-contents-pairs path-lists)
         job (assoc job :output_dir (get-batch-output-dir submission)
                        :create_output_subdir false
-                       :group "batch")
+                       :group (config/jex-batch-group-name))
         batch-job-id (save-job-submission job submission)
         job (assoc job :steps (map (partial build-batch-partitioned-job-step path-lists) steps))
         submission (assoc submission
