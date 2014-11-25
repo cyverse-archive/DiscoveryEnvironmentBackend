@@ -1,6 +1,6 @@
 (ns jex.dagify
   (:use [clojure-commons.file-utils :as ut]
-        [clojure.string :only (join split trim)]
+        [clojure.string :only (join split trim blank?)]
         [clojure.tools.logging :as log])
   (:require [jex.config :as cfg])
   (:import [java.io File]))
@@ -64,8 +64,8 @@
    "+IpcJobId = \"generated_script\"\n"
    "+IpcUsername = \"" username "\"\n"
    (if (and (contains? analysis-map :group)
-            (= (:group analysis-map) "batch"))
-     (str "+AccountingGroup = \"" (cfg/batch-group) "." username "\"\n"))
+            (not (blank? (:group analysis-map))))
+     (str "+AccountingGroup = \"" (:group analysis-map) "." username "\"\n"))
    (ipc-exe analysis-map)
    (ipc-exe-path analysis-map)
    "should_transfer_files = YES\n"
