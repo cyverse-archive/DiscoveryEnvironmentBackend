@@ -130,6 +130,25 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 	}
 }
 
+// TestFixAppID tests the FixAppID function.
+func TestFixAppID(t *testing.T) {
+	jr := &JobRecord{}
+
+	var appIDNil interface{}
+	appIDNil = nil
+	FixAppID(jr, appIDNil)
+	if jr.AppID != "" {
+		t.Errorf("AppID was not an empty string after call to FixAppID: %s", jr.AppID)
+	}
+
+	var appID interface{}
+	appID = []uint8("000000")
+	FixAppID(jr, appID)
+	if jr.AppID != "000000" {
+		t.Errorf("AppID was not set to '000000' after call to FixAppID: %s", jr.AppID)
+	}
+}
+
 func TestCRUDCondorEvents(t *testing.T) {
 	connString := ConnString()
 	d, err := NewDatabaser(connString)
