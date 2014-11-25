@@ -230,9 +230,13 @@
                            file-parameter :file_parameters
                            validators :validators
                            arguments :arguments
+                           visible :isVisible
+                           :or {visible true}
                            :as parameter}]
   (validate-parameter parameter)
-  (let [update-values (assoc parameter :parameter_group_id group-id :display_order display-order)
+  (let [update-values (assoc parameter :parameter_group_id group-id
+                                       :display_order display-order
+                                       :isVisible visible)
         param-exists (and param-id (persistence/get-app-parameter param-id group-id))
         param-id (if param-exists
                    param-id
