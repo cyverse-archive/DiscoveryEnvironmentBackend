@@ -66,7 +66,7 @@
 
 (defn- input-param-formatter
   [& {:keys [get-default] :or {get-default (constantly "")}}]
-  (param-formatter (constantly "FileInput") get-default (constantly [])))
+  (param-formatter (constantly "FileFolderInput") get-default (constantly [])))
 
 (defn- opt-param-formatter
   [& {:keys [get-default] :or {get-default get-default-param-value}}]

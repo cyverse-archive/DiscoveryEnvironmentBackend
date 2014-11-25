@@ -39,7 +39,7 @@
   [agave param-values param]
   (format-param-value #(.irodsFilePath agave (get-param-value param-values param))
                       #(.irodsFilePath agave (get-default-param-value param))
-                      (constantly "FileInput")
+                      (constantly "FileFolderInput")
                       (constantly "Unspecified")
                       (constantly "File")
                       param))
