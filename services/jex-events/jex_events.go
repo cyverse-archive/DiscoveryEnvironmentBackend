@@ -9,6 +9,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/streadway/amqp"
 )
@@ -343,7 +344,11 @@ func (e *Event) setCondorID() {
 	if matchesLength < 2 {
 		e.CondorID = ""
 	}
-	e.CondorID = matches[1]
+	if strings.HasPrefix(matches[1], "0") {
+		e.CondorID = strings.TrimLeft(matches[1], "0")
+	} else {
+		e.CondorID = matches[1]
+	}
 }
 
 // Parse extracts info from an event string.
