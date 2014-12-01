@@ -62,10 +62,14 @@
     :event      "*"
     :persistent true}])
 
+(defn- build-job-name
+  [submission]
+  (format "%s_%04d" (:job_id submission) (:step_number submission 1)))
+
 (defn prepare-submission
   [agave app submission]
   (->> (assoc (prepare-params agave app (:paramPrefix submission) (:config submission))
-         :name          (:name submission)
+         :name          (build-job-name submission)
          :appId         (:app_id submission)
          :archive       true
          :archivePath   (.agaveFilePath agave (:output_dir submission))

@@ -69,8 +69,12 @@
         output-dir (ft/build-result-folder-path submission)
         job        (.submitJob agave-client
                                (assoc (mu/update-submission-result-folder submission output-dir)
-                                 :callbackUrl cb-url))
-        job        (assoc job :notify (:notify submission false))
+                                 :callbackUrl cb-url
+                                 :job_id      id
+                                 :step_number 1))
+        job        (assoc job
+                     :notify (:notify submission false)
+                     :name   (:name submission))
         username   (:shortUsername current-user)
         email      (:email current-user)]
     (store-agave-job id job submission)
@@ -84,7 +88,10 @@
 (defn submit-job-step
   [agave-client job-info job-step submission]
   (let [cb-url (build-callback-url (:id job-info))]
-    (:id (.submitJob agave-client (assoc submission :callbackUrl cb-url)))))
+    (:id (.submitJob agave-client (assoc submission
+                                    :callbackUrl cb-url
+                                    :job_id      (:id job-info)
+                                    :step_number (:step-number job-step))))))
 
 (defn get-agave-app-rerun-info
   [agave {:keys [external-id]}]
