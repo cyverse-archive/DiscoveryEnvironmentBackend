@@ -171,7 +171,9 @@
   "Generates and writes out the iplant.sh and iplant.cmd files."
   [analysis-map]
   (spit (scriptpath analysis-map) (script analysis-map))
+  (log/warn "Wrote bash script to" (scriptpath analysis-map))
   (spit (irods-config-path analysis-map) (irods-config))
+  (log/warn "Wrote iRODS config to" (irods-config-path analysis-map))
   (spit
    (script-command-file analysis-map)
    (script-submission
@@ -179,6 +181,7 @@
      analysis-map
      {:script-path (scriptpath analysis-map)
       :local-log-dir (local-log-dir analysis-map)})))
+  (log/warn "Write HTCondor submission file to" (script-command-file analysis-map))
   analysis-map)
 
 (defn cleanup-analysis-map
