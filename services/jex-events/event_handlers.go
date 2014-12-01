@@ -86,6 +86,9 @@ func JobStatusStatus(event *Event) string {
 	case "004": // job evicted
 		return "Failed"
 	case "005": // job terminated
+		if event.IsFailure() {
+			return "Failed"
+		}
 		return "Completed"
 	case "009": // job aborted
 		return "Failed"
