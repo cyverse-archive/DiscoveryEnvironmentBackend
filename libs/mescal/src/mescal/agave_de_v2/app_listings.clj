@@ -10,8 +10,8 @@
    :app_count    -1})
 
 (defn get-app-name
-  [{:keys [name id]}]
-  (str name " [" id "]"))
+  [app]
+  (:name app))
 
 (defn- format-app-listing
   [statuses jobs-enabled? listing]
