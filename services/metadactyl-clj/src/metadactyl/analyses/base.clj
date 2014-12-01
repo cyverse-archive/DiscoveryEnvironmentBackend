@@ -24,10 +24,10 @@
   (buildInputs [_ params])
   (buildOutputs [_ params])
   (buildParams [_ params outputs])
-  (buildConfig [_ step])
+  (buildConfig [_ steps step])
   (buildEnvironment [_ step])
   (buildComponent [_ step])
-  (buildStep [_ step])
+  (buildStep [_ steps step])
   (buildSteps [_])
   (buildSubmission [_]))
 
@@ -47,7 +47,7 @@
     (params/flag-args param param-value))
 
   (buildInputArgs [_ param param-value]
-    (params/input-args param param-value fs/base-name))
+    (params/input-args param param-value #(if (string/blank? %) nil (fs/base-name %))))
 
   (buildOutputArgs [_ param param-value]
     (params/output-args param param-value))
@@ -74,11 +74,12 @@
     (conj (params/build-outputs (:config submission) defaults params)
           (params/log-output (:archive_logs submission true))))
 
-  (buildConfig [this step]
+  (buildConfig [this steps step]
     (let [params-for-step  (params (:id step))
+          outputs          (mapcat (comp :output :config) steps)
           outputs-for-step (.buildOutputs this params-for-step)
           inputs-for-step  (.buildInputs this params-for-step)
-          params-for-step  (.buildParams this params-for-step outputs-for-step)]
+          params-for-step  (.buildParams this params-for-step (concat outputs outputs-for-step))]
       (ca/build-config inputs-for-step outputs-for-step params-for-step)))
 
   (buildEnvironment [this step]
@@ -87,8 +88,8 @@
   (buildComponent [this step]
     (ca/build-component step))
 
-  (buildStep [this step]
-    (ca/build-step this step))
+  (buildStep [this steps step]
+    (ca/build-step this steps step))
 
   (buildSteps [this]
     (ca/build-steps this app submission))
@@ -145,11 +146,12 @@
   (buildOutputs [_ _]
     [(params/log-output (:archive_logs submission true))])
 
-  (buildConfig [this step]
+  (buildConfig [this steps step]
     (let [params-for-step  (params (:id step))
+          outputs          (mapcat (comp :output :config) steps)
           outputs-for-step (.buildOutputs this params-for-step)
           inputs-for-step  (.buildInputs this params-for-step)
-          params-for-step  (.buildParams this params-for-step outputs-for-step)]
+          params-for-step  (.buildParams this params-for-step (concat outputs outputs-for-step))]
       (ca/build-config inputs-for-step outputs-for-step params-for-step)))
 
   (buildEnvironment [this step]
@@ -158,8 +160,8 @@
   (buildComponent [this step]
     (ca/build-component step))
 
-  (buildStep [this step]
-    (ca/build-step this step))
+  (buildStep [this steps step]
+    (ca/build-step this steps step))
 
   (buildSteps [this]
     (ca/build-steps this app submission))
