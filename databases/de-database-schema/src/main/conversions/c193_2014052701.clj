@@ -1,4 +1,4 @@
-(ns facepalm.c200-2014052701
+(ns facepalm.c193-2014052701
   (:use [korma.core])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string])
@@ -8,7 +8,7 @@
 
 (def ^:private version
   "The destination database version."
-  "2.0.0:20140527.01")
+  "1.9.3:20140527.01")
 
 (defn- insert-param-selection-value
   [{:keys [argument_value parameter_id]}]
