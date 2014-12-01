@@ -62,11 +62,12 @@
   (assert-not-nil [:tool-for-task task-id] (load-step-component task-id)))
 
 (defn build-step
-  [request-builder step]
-  {:component   (.buildComponent request-builder step)
-   :config      (.buildConfig request-builder step)
-   :environment (.buildEnvironment request-builder step)
-   :type        "condor"})
+  [request-builder steps step]
+  (conj steps
+    {:component   (.buildComponent request-builder step)
+     :config      (.buildConfig request-builder steps step)
+     :environment (.buildEnvironment request-builder step)
+     :type        "condor"}))
 
 (defn load-steps
   [app-id]
@@ -84,7 +85,7 @@
   (->> (load-steps (:id app))
        (drop (dec (:starting_step submission 1)))
        (take-while (comp nil? :external_app_id))
-       (mapv #(.buildStep request-builder %))))
+       (reduce #(.buildStep request-builder %1 %2) [])))
 
 (defn build-submission
   [request-builder user email submission app]

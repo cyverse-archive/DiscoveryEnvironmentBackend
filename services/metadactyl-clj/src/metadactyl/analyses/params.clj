@@ -13,7 +13,8 @@
 
 (defn remove-irods-home
   [path]
-  (string/replace path (irods-home-pattern) ""))
+  (when-not (string/blank? path)
+    (string/replace path (irods-home-pattern) "")))
 
 (defn log-output
   [retain?]
@@ -85,7 +86,7 @@
   ([config io-maps output-value-map default-values param]
      (let [qual-id  (util/param->qual-id param)
            qual-key (keyword qual-id)]
-       (cond (contains? io-maps qual-id)        (output-value-map qual-id)
+       (cond (contains? io-maps qual-id)        (output-value-map (io-maps qual-id))
              (contains? config qual-key)        (config qual-key)
              (contains? default-values qual-id) (default-values qual-id)
              :else                              nil)))
