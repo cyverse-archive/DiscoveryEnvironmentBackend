@@ -9,4 +9,4 @@ SET search_path = public, pg_catalog;
 UPDATE jobs j
 SET app_id = CAST(a.id AS character varying)
 FROM apps a
-WHERE j.app_id = a.id_v187;
+WHERE j.app_id = a.id_v192;

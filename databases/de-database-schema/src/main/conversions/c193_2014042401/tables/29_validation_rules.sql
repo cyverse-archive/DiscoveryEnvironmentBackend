@@ -5,12 +5,12 @@ SET search_path = public, pg_catalog;
 --
 ALTER TABLE rule RENAME TO validation_rules;
 
-ALTER TABLE ONLY validation_rules RENAME COLUMN hid TO hid_v187;
-ALTER TABLE ONLY validation_rules RENAME COLUMN name TO name_v187;
-ALTER TABLE ONLY validation_rules ALTER COLUMN name_v187 DROP NOT NULL;
-ALTER TABLE ONLY validation_rules RENAME COLUMN description TO description_v187;
-ALTER TABLE ONLY validation_rules RENAME COLUMN label TO label_v187;
-ALTER TABLE ONLY validation_rules RENAME COLUMN rule_type TO rule_type_v187;
+ALTER TABLE ONLY validation_rules RENAME COLUMN hid TO hid_v192;
+ALTER TABLE ONLY validation_rules RENAME COLUMN name TO name_v192;
+ALTER TABLE ONLY validation_rules ALTER COLUMN name_v192 DROP NOT NULL;
+ALTER TABLE ONLY validation_rules RENAME COLUMN description TO description_v192;
+ALTER TABLE ONLY validation_rules RENAME COLUMN label TO label_v192;
+ALTER TABLE ONLY validation_rules RENAME COLUMN rule_type TO rule_type_v192;
 ALTER TABLE ONLY validation_rules
   ALTER COLUMN id TYPE UUID USING
     CASE WHEN CHAR_LENGTH(id) < 36

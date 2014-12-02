@@ -67,18 +67,18 @@
   (println "\t* adding agave task for" external_app_id)
   (let [task-id (uuids/uuid)]
     (insert :tasks (values {:id task-id
-                            :id_v187 (str task-id)
+                            :id_v192 (str task-id)
                             :name external_app_id
                             :external_app_id external_app_id}))
-    (update :transformations_v187
+    (update :transformations_v192
             (set-fields {:template_id (subselect :tasks
-                                                 (fields :id_v187)
+                                                 (fields :id_v192)
                                                  (where {:id task-id}))})
             (where {:id id}))))
 
 (defn- add-agave-step-tasks
   []
-  (let [agave-steps (select :transformations_v187
+  (let [agave-steps (select :transformations_v192
                             (fields :id :external_app_id)
                             (where (raw "template_id IS NULL")))]
     (dorun (map add-agave-task agave-steps))))
@@ -87,24 +87,24 @@
   [join-table join-col]
   (select [join-table :t]
           (join [:file_parameters :f]
-                {:f.hid_v187 join-col})
+                {:f.hid_v192 join-col})
           (join [:parameters :p]
-                {:p.dataobject_id_v187 :f.hid_v187})
+                {:p.dataobject_id_v192 :f.hid_v192})
           (fields [:t.template_id :task_id]
                   (raw "f.*"))
-          (where (raw "p.dataobject_id_v187 IS NULL"))
+          (where (raw "p.dataobject_id_v192 IS NULL"))
           (order :t.template_id)
-          (order :f.hid_v187)))
+          (order :f.hid_v192)))
 
 (defn- get-param-type-hid
   [param-type]
-  ((comp :hid_v187 first)
-   (select :parameter_types (fields :hid_v187) (where {:name param-type}))))
+  ((comp :hid_v192 first)
+   (select :parameter_types (fields :hid_v192) (where {:name param-type}))))
 
 (defn- add-param-wrapper->group
-  [group-id {:keys [hid_v187 display_order]}]
-  (insert :property_group_property_v187 (values {:property_group_id group-id
-                                                 :property_id hid_v187
+  [group-id {:keys [hid_v192 display_order]}]
+  (insert :property_group_property_v192 (values {:property_group_id group-id
+                                                 :property_id hid_v192
                                                  :hid display_order})))
 
 (defn- add-param-wrapper
@@ -114,52 +114,52 @@
 (defn- add-file-param-wrappers
   [task-id group-label params]
   (let [group-order ((comp inc :group_order first)
-                     (select :template_property_group_v187
+                     (select :template_property_group_v192
                              (aggregate (max :hid) :group_order)
                              (where {:template_id task-id})))
-        group-id (:hid_v187 (insert :parameter_groups (values {:label group-label
+        group-id (:hid_v192 (insert :parameter_groups (values {:label group-label
                                                                :display_order group-order})))
         params (map-indexed add-param-wrapper params)]
-    (insert :template_property_group_v187 (values {:template_id task-id
+    (insert :template_property_group_v192 (values {:template_id task-id
                                                    :property_group_id group-id
                                                    :hid group-order}))
     (dorun (map (partial add-param-wrapper->group group-id) params))))
 
 (defn- input->param
-  [param-type-id {:keys [hid_v187
-                         name_v187
-                         label_v187
-                         description_v187
-                         orderd_v187
-                         switch_v187
-                         required_v187]}]
-  {:dataobject_id_v187 hid_v187
-   :property_type_v187 param-type-id
-   :name switch_v187
-   :description description_v187
-   :label name_v187
-   :ordering orderd_v187
-   :required required_v187
+  [param-type-id {:keys [hid_v192
+                         name_v192
+                         label_v192
+                         description_v192
+                         orderd_v192
+                         switch_v192
+                         required_v192]}]
+  {:dataobject_id_v192 hid_v192
+   :property_type_v192 param-type-id
+   :name switch_v192
+   :description description_v192
+   :label name_v192
+   :ordering orderd_v192
+   :required required_v192
    :is_visible true})
 
 (defn- output->param
   [param-type-id {:keys [is_implicit
-                         hid_v187
-                         name_v187
-                         label_v187
-                         description_v187
-                         orderd_v187
-                         switch_v187
-                         required_v187]}]
+                         hid_v192
+                         name_v192
+                         label_v192
+                         description_v192
+                         orderd_v192
+                         switch_v192
+                         required_v192]}]
   (let [visible (not is_implicit)]
     (when visible
-      {:dataobject_id_v187 hid_v187
-       :property_type_v187 param-type-id
-       :name switch_v187
-       :description description_v187
-       :defalut_value_v187 name_v187
-       :ordering orderd_v187
-       :required required_v187
+      {:dataobject_id_v192 hid_v192
+       :property_type_v192 param-type-id
+       :name switch_v192
+       :description description_v192
+       :defalut_value_v192 name_v192
+       :ordering orderd_v192
+       :required required_v192
        :is_visible visible
        :omit_if_blank visible})))
 
@@ -181,8 +181,8 @@
 
 (defn- convert-unreferenced-file-params
   []
-  (let [inputs (group-by :task_id (get-unreferenced-dataobjects :template_input_v187 :t.input_id))
-        outputs (group-by :task_id (get-unreferenced-dataobjects :template_output_v187 :t.output_id))
+  (let [inputs (group-by :task_id (get-unreferenced-dataobjects :template_input_v192 :t.input_id))
+        outputs (group-by :task_id (get-unreferenced-dataobjects :template_output_v192 :t.output_id))
         input-param-type-id (get-param-type-hid "Input")
         output-param-type-id (get-param-type-hid "Output")]
     (when-not (empty? inputs)
@@ -429,7 +429,7 @@
   []
   (subselect [:file_parameters :fp]
              (fields :m.name)
-             (join [:multiplicity_v187 :m] {:fp.multiplicity_v187 :m.hid})
+             (join [:multiplicity_v192 :m] {:fp.multiplicity_v192 :m.hid})
              (where {:parameters.id :fp.parameter_id})))
 
 (defn- convert-reference-genome-parameters
@@ -453,7 +453,7 @@
   (exec-raw
    "SELECT j.id AS \"job-id\",
            j.app_id AS \"new-id\",
-           a.id_v187 AS \"old-id\",
+           a.id_v192 AS \"old-id\",
            j.submission AS \"submission\"
     FROM jobs j
     LEFT JOIN apps a ON j.app_id = CAST(a.id AS character varying)"
@@ -467,8 +467,8 @@
   []
   (->> (select [:app_steps :s]
                (join :inner
-                     [:transformation_steps_v187 :ts]
-                     {:s.transformation_step_id_v187 :ts.id})
+                     [:transformation_steps_v192 :ts]
+                     {:s.transformation_step_id_v192 :ts.id})
                (fields [:s.app_id :app-id] [:ts.name :step-name] [:s.id :step-id]))
        (group-by :app-id)
        (map (fn [[app-id steps]] [(str app-id) (build-step-name-id-map steps)]))
@@ -484,7 +484,7 @@
                (join :inner [:tasks :t] {:s.task_id :t.id})
                (join :inner [:parameter_groups :pg] {:t.id :pg.task_id})
                (join :inner [:parameters :p] {:pg.id :p.parameter_group_id})
-               (fields [:s.app_id :app-id] [:p.id_v187 :old-id] [:p.id :new-id]))
+               (fields [:s.app_id :app-id] [:p.id_v192 :old-id] [:p.id :new-id]))
        (group-by :app-id)
        (map (fn [[app-id params]] [(str app-id) (build-param-id-map params)]))
        (into {})))

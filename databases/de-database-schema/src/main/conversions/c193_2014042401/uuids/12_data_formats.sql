@@ -5,7 +5,7 @@ SET search_path = public, pg_catalog;
 --
 UPDATE file_parameters SET data_format =
     (SELECT d.id FROM data_formats d
-     WHERE data_format_v187 = d.id_v187);
+     WHERE data_format_v192 = d.id_v192);
 
 -- Add NOT NULL constraints on foreign key columns.
 ALTER TABLE ONLY file_parameters ALTER COLUMN data_format SET NOT NULL;

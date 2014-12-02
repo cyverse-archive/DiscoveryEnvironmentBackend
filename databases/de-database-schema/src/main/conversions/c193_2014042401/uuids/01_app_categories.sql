@@ -4,15 +4,15 @@ SET search_path = public, pg_catalog;
 -- Updates app_categories uuid foreign keys.
 --
 UPDATE workspace SET root_category_id =
-    (SELECT ac.id FROM app_categories ac WHERE root_analysis_group_id_v187 = ac.hid_v187);
+    (SELECT ac.id FROM app_categories ac WHERE root_analysis_group_id_v192 = ac.hid_v192);
 UPDATE app_category_app SET app_category_id =
-    (SELECT ac.id FROM app_categories ac WHERE template_group_id_v187 = ac.hid_v187);
+    (SELECT ac.id FROM app_categories ac WHERE template_group_id_v192 = ac.hid_v192);
 UPDATE suggested_groups SET app_category_id =
-    (SELECT ac.id FROM app_categories ac WHERE template_group_id_v187 = ac.hid_v187);
+    (SELECT ac.id FROM app_categories ac WHERE template_group_id_v192 = ac.hid_v192);
 UPDATE app_category_group SET parent_category_id =
-    (SELECT ac.id FROM app_categories ac WHERE parent_group_id_v187 = ac.hid_v187);
+    (SELECT ac.id FROM app_categories ac WHERE parent_group_id_v192 = ac.hid_v192);
 UPDATE app_category_group SET child_category_id =
-    (SELECT ac.id FROM app_categories ac WHERE subgroup_id_v187 = ac.hid_v187);
+    (SELECT ac.id FROM app_categories ac WHERE subgroup_id_v192 = ac.hid_v192);
 
 -- Cleanup rows with NULL foreign keys.
 DELETE FROM workspace WHERE root_category_id IS NULL;

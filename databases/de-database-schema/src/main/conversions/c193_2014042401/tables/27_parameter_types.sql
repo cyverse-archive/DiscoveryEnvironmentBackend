@@ -5,8 +5,8 @@ SET search_path = public, pg_catalog;
 --
 ALTER TABLE property_type RENAME TO parameter_types;
 
-ALTER TABLE ONLY parameter_types RENAME COLUMN hid TO hid_v187;
-ALTER TABLE ONLY parameter_types RENAME COLUMN value_type_id TO value_type_id_v187;
+ALTER TABLE ONLY parameter_types RENAME COLUMN hid TO hid_v192;
+ALTER TABLE ONLY parameter_types RENAME COLUMN value_type_id TO value_type_id_v192;
 ALTER TABLE ONLY parameter_types ALTER COLUMN id TYPE UUID USING
  CAST(regexp_replace(id, '^pt', '') AS UUID);
 ALTER TABLE ONLY parameter_types ALTER COLUMN id SET DEFAULT uuid_generate_v1();

@@ -5,10 +5,10 @@ SET search_path = public, pg_catalog;
 --
 UPDATE tools SET integration_data_id =
     (SELECT i.id FROM integration_data i
-     WHERE integration_data_id_v187 = i.id_v187);
+     WHERE integration_data_id_v192 = i.id_v192);
 UPDATE apps SET integration_data_id =
     (SELECT i.id FROM integration_data i
-     WHERE integration_data_id_v187 = i.id_v187);
+     WHERE integration_data_id_v192 = i.id_v192);
 
 -- Add NOT NULL constraints on foreign key columns.
 ALTER TABLE ONLY tools ALTER COLUMN integration_data_id SET NOT NULL;
