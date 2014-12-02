@@ -214,7 +214,7 @@
   "Ensures that hidden output parameters have a filename defined."
   [{default-value :defaultValue param-type :type visible :isVisible :or {visible true} :as parameter}]
   (when (and (contains? persistence/param-output-types param-type)
-             (nil? default-value)
+             (blank? default-value)
              (not visible))
     (throw+ {:error_code cc-errs/ERR_BAD_OR_MISSING_FIELD
              :message    "Hidden output parameters must define a default value."

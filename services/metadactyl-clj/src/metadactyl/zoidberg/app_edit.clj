@@ -1,5 +1,6 @@
 (ns metadactyl.zoidberg.app-edit
-  (:use [korma.core]
+  (:use [clojure.string :only [blank?]]
+        [korma.core]
         [korma.db :only [transaction]]
         [kameleon.app-groups :only [add-app-to-category get-app-subcategory-id]]
         [kameleon.core]
@@ -250,7 +251,7 @@
       (when-not (contains? persistence/param-file-types param-type)
         (persistence/remove-parameter-mappings param-id)))
 
-    (when-not (or (contains? persistence/param-list-types param-type) (nil? default-value))
+    (when-not (or (contains? persistence/param-list-types param-type) (blank? (str default-value)))
       (persistence/add-parameter-default-value param-id default-value))
 
     (dorun (map (partial add-validation-rule param-id) validators))
