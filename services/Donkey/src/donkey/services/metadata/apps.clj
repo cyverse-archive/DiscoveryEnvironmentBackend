@@ -229,7 +229,7 @@
 
   (listApps [_ category-id params]
     (if (= category-id (:id (.hpcAppGroup agave-client)))
-      (.listApps agave-client)
+      (aa/list-apps agave-client category-id params)
       (metadactyl/apps-in-category category-id params)))
 
   (searchApps [_ search-term]
