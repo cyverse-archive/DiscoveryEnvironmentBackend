@@ -121,8 +121,8 @@
 (defn- is-selection-arg?
   [param-value]
   (and (map? param-value)
-       (or (seq (:name param-value))
-           (seq (:value param-value)))))
+       (or (util/not-blank? (:name param-value))
+           (util/not-blank? (:value param-value)))))
 
 (defn selection-args
   [param param-value]
@@ -132,7 +132,7 @@
 
 (defn tree-selection-args
   [param param-value]
-  (let [selections (if (seq? param-value) param-value [])]
+  (let [selections (if (seq param-value) param-value [])]
     (mapcat (partial selection-args param) selections)))
 
 (defn- parse-boolean
