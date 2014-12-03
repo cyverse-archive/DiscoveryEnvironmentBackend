@@ -20,8 +20,6 @@
 * [POST /secured/filesystem/delete-tickets](endpoints/filesystem/tickets.md#deleting-tickets-)
 * [GET /secured/filesystem/directory](endpoints/filesystem/directory-listing.md#directory-list-non-recursive-)
 * [POST /secured/filesystem/directory/create](endpoints/filesystem/directory-create.md#directory-creation-)
-* [GET /secured/filesystem/entry/{entry-id}/tags](endpoints/tags.#listing-attached-tags)
-* [PATCH /secured/filesystem/entry/{entry-id}/tags](endpoints/tags.md/attaching-or-detaching-multiple-tags-to-a-file-or-folder)
 * [POST /secured/filesystem/exists](endpoints/filesystem/existence.md#filedirectory-existence-)
 * [GET /secured/filesystem/file/manifest](endpoints/filesystem/manifest.md#file-manifest-)
 * [GET /secured/filesystem/file/preview](endpoints/filesystem/preview.md#file-preview-)
