@@ -20,7 +20,7 @@
   [sort-field sort-dir]
   (partial sort-by
            (keyword sort-field)
-           (if (and sort-dir (= string/upper-case sort-dir) "DESC")
+           (if (and sort-dir (= (string/upper-case sort-dir) "DESC"))
              #(compare %2 %1)
              #(compare %1 %2))))
 
