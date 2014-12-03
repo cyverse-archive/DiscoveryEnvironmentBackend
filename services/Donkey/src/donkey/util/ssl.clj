@@ -62,12 +62,19 @@
     (.connect ftp (.getHost url) (.getPort url))
     (.connect ftp (.getHost url))))
 
+
+(defn- urlize
+  [url]
+  (if (string? url)
+    (java.net.URI. url)
+    url))
+
 (defn- ftp-login
   ([ftp username password]
      (.login ftp username password))
   ([ftp url]
-     (if-let [user-info (.getUserInfo url)]
-       (apply ftp-login (clojure.string/split #":" user-info))
+     (if-let [user-info (.getUserInfo (urlize url))]
+       (apply (partial ftp-login ftp) (clojure.string/split user-info #":"))
        (ftp-login ftp "anonymous" ""))))
 
 (defn- get-ftp-input-stream
