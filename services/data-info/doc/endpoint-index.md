@@ -24,7 +24,6 @@
 * [GET /secured/filesystem/file/manifest](endpoints/filesystem/manifest.md#file-manifest-)
 * [GET /secured/filesystem/file/preview](endpoints/filesystem/preview.md#file-preview-)
 * [GET /secured/filesystem/groups](endpoints/filesystem/groups.md#listing-a-users-group-memberships-)
-* [GET /secured/filesystem/index-status](endpoints/filesystem/search.md#endpoint)
 * [POST /secured/filesystem/list-tickets](endpoints/filesystem/tickets.md#listing-tickets-)
 * [DELETE /secured/filesystem/metadata](endpoints/filesystem/metadata.md#deleting-file-and-directory-metadata-)
 * [GET /secured/filesystem/metadata](endpoints/filesystem/metadata.md#getting-metadata-)
