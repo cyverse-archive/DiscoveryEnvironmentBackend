@@ -44,7 +44,6 @@
 * [POST /secured/filesystem/restore-all](endpoints/filesystem/restore.md#restoring-all-items-in-a-users-trash-)
 * [GET /secured/filesystem/root](endpoints/filesystem/root-listing.md#top-level-root-listing-)
 * [POST /secured/filesystem/share](endpoints/filesystem/sharing.md#sharing-)
-* [POST /secured/filesystem/stat](endpoints/filesystem/stat.md#file-and-directory-status-information-)
 * [POST /secured/filesystem/tickets](endpoints/filesystem/tickets.md#creating-tickets-)
 * [DELETE /secured/filesystem/trash](endpoints/filesystem/empty-trash.md#emptying-a-users-trash-directory-)
 * [POST /secured/filesystem/unshare](endpoints/filesystem/sharing.md#unsharing-)
