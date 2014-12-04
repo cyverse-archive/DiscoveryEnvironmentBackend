@@ -12,7 +12,9 @@ import (
 	"code.google.com/p/go-uuid/uuid"
 )
 
-// HTTPAPI stores the state that all of the API functionality will need.
+// HTTPAPI encapsulates the HTTP+JSON API for jex-events. It provides access to
+// to the database so that each endpoint does not have to set up its own
+// connection.
 type HTTPAPI struct {
 	d *Databaser
 }
@@ -35,8 +37,11 @@ func LogAPIMsg(request *http.Request, msg string) {
 	)
 }
 
-// RouteJobRequests looks at the requests method and decides which function should handle
-// the request.
+// RouteJobRequests routes requests to one of the Job-related handlers. It
+// decides which function to call by examining the request method. If the
+// request method somehow ends up being blank (which shouldn't happen), then
+// the request is assumed to be a GET request. Right now only GETs and POSTs
+// are supported.
 func (h *HTTPAPI) RouteJobRequests(writer http.ResponseWriter, request *http.Request) {
 	LogAPIMsg(request, "Job request received; routing")
 	switch request.Method {
@@ -51,8 +56,9 @@ func (h *HTTPAPI) RouteJobRequests(writer http.ResponseWriter, request *http.Req
 	}
 }
 
-// RouteInvocationRequests looks at the requests method and decides which function should
-// handle the request.
+// RouteInvocationRequests routes requests to one of the Invocation-related
+// handlers. Right now only GET requests are supported. If the request method
+// somehow ends up being blank, the request is assumed to be a GET request.
 func (h *HTTPAPI) RouteInvocationRequests(writer http.ResponseWriter, request *http.Request) {
 	LogAPIMsg(request, "Invocation request received; routing")
 	switch request.Method {
@@ -65,8 +71,9 @@ func (h *HTTPAPI) RouteInvocationRequests(writer http.ResponseWriter, request *h
 	}
 }
 
-// RouteLastEventRequests looks at the requests method and decides which
-// function to call to handle requests for last event lookups.
+// RouteLastEventRequests routes requests to one of the LastEvent-related handlers
+// Only GET requests are supported. If the request method somehow ends up being
+// blank, the request is assumed to be a GET request.
 func (h *HTTPAPI) RouteLastEventRequests(writer http.ResponseWriter, request *http.Request) {
 	LogAPIMsg(request, "Last event lookup request received; routing")
 	switch request.Method {
@@ -79,8 +86,25 @@ func (h *HTTPAPI) RouteLastEventRequests(writer http.ResponseWriter, request *ht
 	}
 }
 
-// LastEventHTTP handles HTTP requests for looking up the last event for a job
-// by its invocation ID.
+// LastEventHTTP handles HTTP requests for looking up a job's last event. The
+// job is looked up by its invocation ID. JSON is written to the response body
+// in the following format:
+//
+// 		{
+// 			"state" : {
+// 				"uuid" : "",
+// 				"status" : "",
+// 				"completion_date" : ""
+// 			}
+//		}
+//
+// 'uuid' will be in the normal UUID format of 32 hex digits in 5 groups
+//  delimited by '-'. For example: 'bf6ff4a0-7bcf-11e4-b116-123b93f75cba'.
+//
+// 'status' will be a one of 'Submitted', 'Running', 'Completed', or 'Failed'.
+//
+// 'completion_date' will be a timestamp that looks like
+// '2006-01-02T15:04:05Z07:00'.
 func (h *HTTPAPI) LastEventHTTP(writer http.ResponseWriter, request *http.Request) {
 	log.Printf("Handling GET request for %s", request.URL.Path)
 	baseName := path.Base(request.URL.Path)
