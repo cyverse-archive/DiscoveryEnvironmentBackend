@@ -13,6 +13,7 @@
         [metadactyl.routes.params]
         [metadactyl.user :only [store-current-user]]
         [ring.middleware keyword-params nested-params]
+        [ring.swagger.json-schema :only [json-type]]
         [ring.swagger.schema :only [describe]]
         [ring.util.response :only [redirect]])
   (:require [metadactyl.routes.admin :as admin-routes]
@@ -23,6 +24,8 @@
             [metadactyl.routes.apps.pipelines :as pipeline-routes]
             [metadactyl.routes.reference-genomes :as reference-genome-routes]
             [metadactyl.routes.tools :as tool-routes]))
+
+(defmethod json-type schema.core.AnythingSchema [_] {:type "any"})
 
 (defapi app
   (swagger-ui "/api")

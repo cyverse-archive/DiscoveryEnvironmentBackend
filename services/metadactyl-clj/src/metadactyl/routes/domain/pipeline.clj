@@ -34,12 +34,8 @@
     {:steps
      (describe [PipelineStep] "The Pipeline's steps")
 
-     ;; KLUDGE
      :mappings
-     (describe [PipelineMapping]
-       "The Pipeline's input/output mappings. <b>Note</b>: These objects have a required `map` key
-        with an `{'input-uuid': 'output-uuid', ...}` value, but the current version of the
-        documentation library does not support documenting this kind of map.")}))
+     (describe [PipelineMapping] "The Pipeline's input/output mappings")}))
 
 (defschema PipelineUpdateRequest
   (->optional-param Pipeline :tasks))

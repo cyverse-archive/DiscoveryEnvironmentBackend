@@ -19,11 +19,7 @@
 
 (def ToolListDocs "The tools used to execute the App")
 (def GroupListDocs "The list of Parameter Groups associated with the App")
-(def ParameterListDocs
-  ;; KLUDGE
-  "The list of Parameters in this Group. <b>Note</b>: These objects have an optional
-   `defaultValue` field that can contain any type of value, but the current version of the
-   documentation library does not support documenting these kinds of fields.")
+(def ParameterListDocs "The list of Parameters in this Group")
 (def ListItemOrTreeDocs
   "The List Parameter's arguments. Only used in cases where the user is given a fixed number of
    values to choose from. This can occur for Parameters such as `TextSelection` or
