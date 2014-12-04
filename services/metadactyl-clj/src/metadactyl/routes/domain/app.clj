@@ -3,7 +3,7 @@
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.tool :only [Tool]]
         [ring.swagger.schema :only [describe]]
-        [schema.core :only [defschema optional-key enum Any]])
+        [schema.core :only [Any defschema optional-key recursive]])
   (:import [java.util UUID Date]))
 
 (def AppIdParam (describe UUID "A UUID that is used to identify the App"))
@@ -31,6 +31,7 @@
 (def TreeSelectorParameterListDocs "The TreeSelector root's arguments")
 (def TreeSelectorGroupListDocs "The TreeSelector root's groups")
 (def TreeSelectorGroupParameterListDocs "The TreeSelector Group's arguments")
+(def TreeSelectorGroupGroupListDocs "The TreeSelector Group's groups")
 
 (defschema AppParameterListItem
   {:id                         (describe UUID "A UUID that is used to identify the List Item")
@@ -45,11 +46,8 @@
          {OptionalParameterArgumentsKey
           (describe [AppParameterListItem] TreeSelectorGroupParameterListDocs)
 
-          ;; KLUDGE
           OptionalGroupsKey
-          (describe [Any]
-            "The TreeSelector Group's groups. This will be a list of more groups like this one, but
-             the documentation library does not currently support recursive model schema definitions")}))
+          (describe [(recursive #'AppParameterListGroup)] TreeSelectorGroupGroupListDocs)}))
 
 (defschema AppParameterListItemOrTree
   (merge AppParameterListItem
@@ -337,7 +335,9 @@
   (-> AppParameterListGroup
     (->optional-param :id)
     (assoc OptionalParameterArgumentsKey
-           (describe [AppParameterListItemRequest] TreeSelectorGroupParameterListDocs))))
+           (describe [AppParameterListItemRequest] TreeSelectorGroupParameterListDocs)
+           OptionalGroupsKey
+           (describe [(recursive #'AppParameterListGroupRequest)] TreeSelectorGroupGroupListDocs))))
 
 (defschema AppParameterListItemOrTreeRequest
   (-> AppParameterListItemOrTree

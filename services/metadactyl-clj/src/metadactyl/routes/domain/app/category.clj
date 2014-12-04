@@ -2,7 +2,7 @@
   (:use [metadactyl.routes.domain.app]
         [metadactyl.routes.params]
         [ring.swagger.schema :only [describe]]
-        [schema.core :only [defschema optional-key Any]])
+        [schema.core :only [defschema optional-key recursive]])
   (:import [java.util UUID]))
 
 (def AppCategoryNameParam (describe String "The App Category's name"))
@@ -31,12 +31,9 @@
      "Whether this App Category is viewable to all users or private to only the user that owns its
       Workspace")
 
-   ;; KLUDGE
    (optional-key :categories)
-   (describe [Any]
-     "A listing of child App Categories under this App Category.
-      <b>Note</b>: This will be a list of more categories like this one, but the documentation
-      library does not currently support recursive model schema definitions")})
+   (describe [(recursive #'AppCategory)]
+     "A listing of child App Categories under this App Category")})
 
 (defschema AppCategoryListing
   {:categories (describe [AppCategory] "A listing of App Categories visisble to the requesting user")})

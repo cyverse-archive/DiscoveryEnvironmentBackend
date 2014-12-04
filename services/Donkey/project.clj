@@ -39,7 +39,7 @@
                  [clj-time "0.8.0"]
                  [com.cemerick/url "0.1.1"]
                  [ring "1.3.1"]
-                 [compojure "1.1.9"]
+                 [compojure "1.2.1"]
                  [clojurewerkz/elastisch "2.0.0"]
                  [com.novemberain/validateur "2.3.1"]
                  [com.novemberain/welle "3.0.0"]

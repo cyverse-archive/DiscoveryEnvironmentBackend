@@ -8,8 +8,7 @@
         [metadactyl.util.conversions :only [long->timestamp
                                             remove-nil-vals]]
         [metadactyl.util.assertions]
-        [slingshot.slingshot :only [throw+]]
-        [ring.swagger.schema :only [coerce!]])
+        [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
             [clojure-commons.error-codes :as ce]))
@@ -82,12 +81,9 @@
   (when (seq arguments)
     (dorun (map (partial update-parameter-value-labels parameter-id) arguments)))
 
-  ;; KLUDGE need to coerce sub-groups until compojure-api supports recursive schema definitions.
   (when (seq groups)
     (dorun
-      (map (comp (partial update-parameter-value-labels parameter-id)
-                 (partial coerce! AppParameterListGroup))
-           groups))))
+      (map (partial update-parameter-value-labels parameter-id) groups))))
 
 (defn- update-parameter-values
   "Updates the labels in parameter values."

@@ -1,6 +1,6 @@
 (ns metadactyl.routes.domain.app.element
   (:use [ring.swagger.schema :only [describe]]
-        [schema.core :only [defschema optional-key enum Any]])
+        [schema.core :only [defschema optional-key]])
   (:import [java.util UUID]))
 
 (defschema DataSource
