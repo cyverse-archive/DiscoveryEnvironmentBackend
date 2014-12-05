@@ -180,11 +180,11 @@
           (dissoc :app_references
                   :tasks)))))
 
-(defn edit-app
+(defn get-app-ui
   "This service prepares a JSON response for editing an App in the client."
   [app-id]
   (let [app (persistence/get-app app-id)]
-    (verify-app-editable app)
+    (verify-app-ownership app)
     (service/success-response (format-app-for-editing app))))
 
 (defn- update-parameter-argument
@@ -356,7 +356,7 @@
       (when-not (nil? tool-id)
         (persistence/set-task-tool task-id tool-id))
       (dorun (map-indexed (partial update-app-group task-id) groups))
-      (edit-app app-id))))
+      (get-app-ui app-id))))
 
 (defn- name-too-long?
   "Determines if a name is too long to be extended for a copy name."

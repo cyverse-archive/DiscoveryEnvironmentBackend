@@ -10,7 +10,7 @@
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.tool :only [ToolListing]]
         [metadactyl.routes.params]
-        [metadactyl.zoidberg.app-edit :only [add-app copy-app edit-app update-app]]
+        [metadactyl.zoidberg.app-edit :only [add-app copy-app get-app-ui update-app]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -224,5 +224,5 @@
         :summary "Make an App Available for Editing"
         :notes "The app integration utility in the DE uses this service to obtain the App
         description JSON so that it can be edited. The App must have been integrated by the
-        requesting user, and it must not already be public."
-        (ce/trap uri #(edit-app app-id))))
+        requesting user."
+        (ce/trap uri #(get-app-ui app-id))))
