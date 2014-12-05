@@ -54,9 +54,82 @@
    (optional-key :archive_logs)
    (describe Bool "True if the job logs should be uploaded to the data store.")})
 
-(def JexStepComponent (describe Any "this should be a schema"))
+(defschema JexStepComponent
+  {(optional-key :description)
+   (describe String "A brief description of the component.")
 
-(def JexStepConfig (describe Any "this should be a schema"))
+   :location
+   (describe String "The path to the directory containing the component.")
+
+   :name
+   (describe String "The name of the executable file associated with the component.")
+
+   (optional-key :type)
+   (describe String "The type of the component.")})
+
+(defschema JexStepInput
+  {(optional-key :id)
+   (describe UUID "The input ID.")
+
+   (optional-key :multiplicity)
+   (describe String "Indicates the number and organization of input files.")
+
+   (optional-key :name)
+   (describe String "The name of the input.")
+
+   (optional-key :property)
+   (describe String "The property value associated with the input.")
+
+   (optional-key :retain)
+   (describe Bool "True if the file should be retained in the analysis output folder.")
+
+   (optional-key :type)
+   (describe String "The type of data contained in the input.")
+
+   (optional-key :value)
+   (describe String "The path to the input in the data store.")})
+
+(defschema JexStepOutput
+  {(optional-key :multiplicity)
+   (describe String "Indicates the number and organization of output files.")
+
+   (optional-key :name)
+   (describe String "The name of the output.")
+
+   (optional-key :property)
+   (describe String "The property value associated with the ouptut.")
+
+   (optional-key :qual-id)
+   (describe String "The fully qualified output ID.")
+
+   (optional-key :retain)
+   (describe Bool "True if the file should be retained in the analysis output folder.")
+
+   (optional-key :type)
+   (describe String "The type of data contained in the output.")})
+
+(defschema JexStepParam
+  {(optional-key :id)
+   (describe UUID "The parameter ID.")
+
+   (optional-key :name)
+   (describe String "The command-line option associated with the parameter.")
+
+   (optional-key :order)
+   (describe Long "The relative ordering of the parameter on the command line.")
+
+   (optional-key :value)
+   (describe Any "The value to associate with the parameter.")})
+
+(defschema JexStepConfig
+  {:input
+   (describe [JexStepInput] "The list of inputs for the job step.")
+
+   :output
+   (describe [JexStepOutput] "The list of outputs for the job step.")
+
+   :params
+   (describe [JexStepParam] "The list of parameters for the job step.")})
 
 (defschema JexSubmissionStep
   {:component
