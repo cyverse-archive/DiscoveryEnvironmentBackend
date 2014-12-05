@@ -214,3 +214,10 @@
                       :as           :stream})
       (:body)
       (service/decode-json)))
+
+(defn import-tools
+  [body]
+  (client/post (metadactyl-url "admin" "tools")
+               {:query-params (secured-params)
+                :body         (cheshire/encode body)
+                :content-type :json}))

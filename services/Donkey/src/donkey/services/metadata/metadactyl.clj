@@ -4,7 +4,6 @@
         [donkey.util.transformers]
         [donkey.auth.user-attributes]
         [donkey.clients.user-info :only [get-user-details]]
-        [donkey.clients.metadactyl :only [metadactyl-sort-params]]
         [donkey.persistence.workspaces :only [get-or-create-workspace]]
         [donkey.services.fileio.actions :only [upload]]
         [donkey.services.user-prefs :only [user-prefs]]
@@ -58,7 +57,7 @@
 (defn search-tools
   "A service to search information about tools."
   [{params :params :as req}]
-  (let [params (select-keys params (conj metadactyl-sort-params :search :include-hidden))
+  (let [params (select-keys params (conj dm/metadactyl-sort-params :search :include-hidden))
         url    (metadactyl-url params "tools")
         req    (metadactyl-request req)]
     (forward-get url req)))
@@ -71,7 +70,7 @@
 
 (defn get-admin-app-categories
   [params]
-  (client/get (metadactyl-url (select-keys params metadactyl-sort-params)
+  (client/get (metadactyl-url (select-keys params dm/metadactyl-sort-params)
                               "admin" "apps" "categories")
               {:as :stream}))
 
@@ -119,13 +118,10 @@
   "This service will import deployed components into the DE and send
    notifications if notification information is included and the deployed
    components are successfully imported."
-  [req]
-  (let [json-string (slurp (:body req))
-        json-obj    (cheshire/decode json-string true)
-        url (metadactyl-url {} "admin" "tools")
-        req (metadactyl-request req)]
-    (forward-post url req json-string)
-    (dorun (map #(dn/send-tool-notification %) (:tools json-obj))))
+  [body]
+  (let [json (decode-json body)]
+    (dm/import-tools json)
+    (dorun (map dn/send-tool-notification (:tools json))))
   (success-response))
 
 (defn update-app-labels

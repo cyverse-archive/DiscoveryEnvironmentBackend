@@ -4,7 +4,8 @@
         [donkey.services.metadata.metadactyl]
         [donkey.util.service]
         [donkey.util])
-  (:require [donkey.util.config :as config]
+  (:require [clojure.tools.logging :as log]
+            [donkey.util.config :as config]
             [donkey.services.metadata.apps :as apps]))
 
 (defn app-category-routes
@@ -201,8 +202,8 @@
     [#(and (config/admin-routes-enabled)
         (config/app-routes-enabled))]
 
-    (POST "/tools" [:as req]
-          (import-tools req))
+    (POST "/tools" [:as {:keys [body]}]
+          (import-tools body))
 
     (GET "/tool-requests" [:as {params :params}]
          (admin-list-tool-requests params))
