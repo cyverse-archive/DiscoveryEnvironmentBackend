@@ -325,8 +325,8 @@
   "Fetches an App parameter."
   ([parameter-id]
    (first (select parameters (where {:id parameter-id}))))
-  ([parameter-id group-id]
-   (first (select parameters (where {:id parameter-id, :parameter_group_id group-id})))))
+  ([parameter-id task-id]
+   (first (select :task_param_listing (where {:id parameter-id, :task_id task-id})))))
 
 (defn add-app-parameter
   "Adds an App parameter to the parameters table."

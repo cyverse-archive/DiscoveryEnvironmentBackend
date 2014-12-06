@@ -225,20 +225,20 @@
 
 (defn- update-app-parameter
   "Adds or updates an App parameter and any associated file parameters, validators, and arguments."
-  [group-id display-order {param-id :id
-                           default-value :defaultValue
-                           param-type :type
-                           file-parameter :file_parameters
-                           validators :validators
-                           arguments :arguments
-                           visible :isVisible
-                           :or {visible true}
-                           :as parameter}]
+  [task-id group-id display-order {param-id :id
+                                   default-value :defaultValue
+                                   param-type :type
+                                   file-parameter :file_parameters
+                                   validators :validators
+                                   arguments :arguments
+                                   visible :isVisible
+                                   :or {visible true}
+                                   :as parameter}]
   (validate-parameter parameter)
   (let [update-values (assoc parameter :parameter_group_id group-id
                                        :display_order display-order
                                        :isVisible visible)
-        param-exists (and param-id (persistence/get-app-parameter param-id group-id))
+        param-exists (and param-id (persistence/get-app-parameter param-id task-id))
         param-id (if param-exists
                    param-id
                    (:id (persistence/add-app-parameter update-values)))
@@ -275,7 +275,7 @@
       (persistence/update-app-group update-values))
     (assoc group
       :id group-id
-      :parameters (doall (map-indexed (partial update-app-parameter group-id) parameters)))))
+      :parameters (doall (map-indexed (partial update-app-parameter task-id group-id) parameters)))))
 
 (defn- delete-app-parameter-orphans
   "Deletes parameters no longer associated with an App group."
