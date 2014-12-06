@@ -399,16 +399,9 @@
   (insert parameter_values (values (filter-valid-parameter-value-values parameter-value))))
 
 (defn remove-parameter-values
-  "Removes all parameter values associated with the given parameter ID."
-  [parameter-id]
-  (delete parameter_values (where {:parameter_id parameter-id})))
-
-(defn remove-parameter-value-orphans
-  "Removes parameter values associated with the given parameter ID, but not in the given
-   parameter-value-ids list."
-  [parameter-id parameter-value-ids]
-  (delete parameter_values (where {:parameter_id parameter-id
-                                   :id [not-in parameter-value-ids]})))
+  "Removes all parameter values associated with the given parameter IDs."
+  [parameter-ids]
+  (delete parameter_values (where {:parameter_id [in parameter-ids]})))
 
 (defn app-accessible-by
   "Obtains the list of users who can access an app."
