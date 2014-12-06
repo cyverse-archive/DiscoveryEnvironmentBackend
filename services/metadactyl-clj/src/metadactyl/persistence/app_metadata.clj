@@ -349,6 +349,11 @@
   (delete parameters (where {:parameter_group_id group-id
                              :id [not-in parameter-ids]})))
 
+(defn clear-group-parameters
+  "Removes parameters associated with the given group ID."
+  [group-id]
+  (delete parameters (where {:parameter_group_id group-id})))
+
 (defn add-file-parameter
   "Adds file parameter fields to the database."
   [{info-type :file_info_type data-format :format data-source :data_source :as file-parameter}]

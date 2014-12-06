@@ -281,7 +281,8 @@
   "Deletes parameters no longer associated with an App group."
   [{group-id :id params :parameters}]
   (let [parameter-ids (remove nil? (map :id params))]
-    (when-not (empty? parameter-ids)
+    (if (empty? parameter-ids)
+      (persistence/clear-group-parameters group-id)
       (persistence/remove-parameter-orphans group-id parameter-ids))))
 
 (defn- delete-app-orphans
