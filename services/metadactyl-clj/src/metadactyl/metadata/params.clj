@@ -1,8 +1,15 @@
 (ns metadactyl.metadata.params
   (:use [korma.core]
         [kameleon.core]
-        [kameleon.entities])
-  (:require [metadactyl.util.conversions :as conv]))
+        [kameleon.entities]
+        [kameleon.uuids :only [uuidify]]
+        [metadactyl.metadata.reference-genomes :only [get-reference-genomes-by-id]])
+  (:require [metadactyl.persistence.app-metadata :as persistence]
+            [metadactyl.util.conversions :as conv]))
+
+(defn- reference-param?
+  [param-type]
+  (contains? persistence/param-reference-genome-types param-type))
 
 (defn- selection-param?
   [param-type]
@@ -48,6 +55,14 @@
         (selection-param? type)      (mapv format-param-value param-values)
         :else                        []))
 
+(defn format-reference-genome-value
+  [uuid]
+  (when uuid (-> uuid
+                 uuidify
+                 get-reference-genomes-by-id
+                 first
+                 conv/remove-nil-vals)))
+
 (defn get-param-values
   [id]
   (-> (select* :parameter_values)
@@ -80,6 +95,7 @@
     (cond
      (tree-selection-param? type) nil
      (selection-param? type)      (format-param-value default)
+     (reference-param? type)      (format-reference-genome-value (:value default))
      :else                        (:value default))))
 
 (defn- format-validator

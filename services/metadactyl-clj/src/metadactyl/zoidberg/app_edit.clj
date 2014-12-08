@@ -6,7 +6,7 @@
         [kameleon.core]
         [kameleon.entities]
         [kameleon.uuids :only [uuidify]]
-        [metadactyl.metadata.reference-genomes :only [get-reference-genomes-by-id]]
+        [metadactyl.metadata.params :only [format-reference-genome-value]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config :only [workspace-dev-app-group-index]]
         [metadactyl.util.conversions :only [remove-nil-vals convert-rule-argument]]
@@ -140,7 +140,7 @@
   [{param-type :type :as param} default-value]
   (let [default-value (if (and default-value
                                (contains? persistence/param-reference-genome-types param-type))
-                        (first (get-reference-genomes-by-id (uuidify default-value)))
+                        (format-reference-genome-value default-value)
                         default-value)]
     (assoc param :defaultValue default-value)))
 
