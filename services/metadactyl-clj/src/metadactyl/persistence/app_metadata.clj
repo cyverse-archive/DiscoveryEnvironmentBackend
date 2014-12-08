@@ -20,6 +20,8 @@
 (def param-tree-type "TreeSelection")
 (def param-list-types (conj param-selection-types param-tree-type))
 
+(def param-reference-genome-types #{"ReferenceGenome" "ReferenceSequence" "ReferenceAnnotation"})
+
 (defn- filter-valid-app-values
   "Filters valid keys from the given App for inserting or updating in the database, setting the
    current date as the edited date."

@@ -6,6 +6,7 @@
         [kameleon.core]
         [kameleon.entities]
         [kameleon.uuids :only [uuidify]]
+        [metadactyl.metadata.reference-genomes :only [get-reference-genomes-by-id]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config :only [workspace-dev-app-group-index]]
         [metadactyl.util.conversions :only [remove-nil-vals convert-rule-argument]]
@@ -135,6 +136,14 @@
                                                       :retain]))
     param))
 
+(defn- format-default-value
+  [{param-type :type :as param} default-value]
+  (let [default-value (if (and default-value
+                               (contains? persistence/param-reference-genome-types param-type))
+                        (first (get-reference-genomes-by-id (uuidify default-value)))
+                        default-value)]
+    (assoc param :defaultValue default-value)))
+
 (defn- format-param
   [{param-type :type
     value-type :value_type
@@ -158,7 +167,7 @@
                   remove-nil-vals)]
     (if (contains? persistence/param-list-types param-type)
       (format-list-param param param-values)
-      (assoc param :defaultValue (-> param-values first :value)))))
+      (format-default-value param (-> param-values first :value)))))
 
 (defn- format-group
   [group]
@@ -242,7 +251,10 @@
         param-id (if param-exists
                    param-id
                    (:id (persistence/add-app-parameter update-values)))
-        parameter (assoc parameter :id param-id)]
+        parameter (assoc parameter :id param-id)
+        default-value (if (contains? persistence/param-reference-genome-types param-type)
+                        (:id default-value)
+                        default-value)]
     (when param-exists
       (persistence/update-app-parameter update-values)
       (persistence/remove-file-parameter param-id)
