@@ -7,8 +7,9 @@
             [dewey.entity :as entity]
             [dewey.indexing :as indexing]
             [dewey.util :as util])
-  (:import [java.util UUID]
-           [org.irods.jargon.core.exception FileNotFoundException]))
+  (:import [java.io IOException]
+           [java.util UUID]
+           [org.irods.jargon.core.exception FileNotFoundException JargonException]))
 
 
 (defn- extract-entity-id
@@ -315,5 +316,10 @@
         (consume irods es msg))
       (catch FileNotFoundException _
         (log/info "Attempted to index a non-existent iRODS entity. Most likely it was deleted after"
-                  "this index message was created.")))
+                  "this index message was created."))
+      (catch JargonException e
+        (if (instance? IOException (.getCause e))
+          (log/warn "Failed to connect to iRODs. Could not process route" routing-key "with message"
+            msg)
+          (throw e))))
     (log/warn (str "unknown routing key" routing-key "received with message" msg))))
