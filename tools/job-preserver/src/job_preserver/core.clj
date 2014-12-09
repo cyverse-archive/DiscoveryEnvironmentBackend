@@ -231,5 +231,4 @@
         mg-conn (get-mongo-conn opts)
         mg-db   (get-mongo-db opts mg-conn)]
     (define-database opts)
-    (run-conversion opts mg-db)
-    (mg/disconnect mg-conn)))
+    (run-conversion opts mg-db)))
