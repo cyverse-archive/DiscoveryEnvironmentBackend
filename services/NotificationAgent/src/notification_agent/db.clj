@@ -213,67 +213,6 @@
         (add-offset-clause params)
         (select))))
 
-(defn- parse-old-job-uuid
-  "Parses a UUID in the most recent old job UUID format, which is the standard
-   UUID format prefixed by a lower-case j."
-  [uuid]
-  (when (and uuid (re-matches #"j[-0-9a-fA-F]{36}" uuid))
-    (parse-uuid (apply str (drop 1 uuid)))))
-
-(defn- chunk-string
-  "Splits a string into chunks of specified lengths"
-  [s ls]
-  (loop [acc      []
-         s        s
-         [l & ls] ls]
-    (let [acc (conj acc (apply str (take l s)))]
-      (if ls
-        (recur acc (drop l s) ls)
-        acc))))
-
-(defn- parse-older-job-uuid
-  "Parses a UUID in the original job UUID format, which is in the format of a
-   hexadecimal string with no dashes preceded by a lower-case j."
-  [uuid]
-  (when (and uuid (re-matches #"j[0-9a-fA-F]{32}" uuid))
-    (parse-uuid (string/join "-" (chunk-string (rest uuid) [8 4 4 4 12])))))
-
-(defn- parse-job-uuid
-  "Parses a UUID associated with a job, which may be in one of several formats."
-  [job-uuid]
-  (or (parse-old-job-uuid job-uuid)
-      (parse-older-job-uuid job-uuid)
-      (parse-uuid job-uuid)
-      (throw+ {:error_code  ce/ERR_BAD_OR_MISSING_FIELD
-               :description "missing UUID"})))
-
-(defn get-notification-status
-  "Gets the status of the most recent notification associated with a job."
-  [job-uuid]
-  (with-db notifications-db
-    ((comp :status first)
-     (select analysis_execution_statuses
-             (fields :status)
-             (where {:uuid (parse-job-uuid job-uuid)})))))
-
-(defn- now-timestamp
-  "Returns an SQL timestamp representing the current date and time."
-  []
-  (Timestamp. (System/currentTimeMillis)))
-
-(defn update-notification-status
-  "Updates the status of the most recent notification associated with a job."
-  [job-uuid status]
-  (with-db notifications-db
-    (let [uuid (parse-job-uuid job-uuid)]
-      (or (update analysis_execution_statuses
-                  (set-fields {:status        status
-                               :date_modified (now-timestamp)})
-                  (where {:uuid uuid}))
-          (insert analysis_execution_statuses
-                  (values {:status status
-                           :uuid   uuid}))))))
-
 (defn insert-notification
   "Inserts a notification into the database."
   [type username subject created-date message]
@@ -531,9 +470,9 @@
 
 ;; NOT API
 (defn count-sys-note-ack-state-below
-  [ack-state user]
   "Given a user and an acknowledgment state, this function determines how many active system
    messages having a user acknowledgment state below the given acknowledgment state."
+  [ack-state user]
   (count-results (active-sys-note-ack-below-query (millis-since-epoch) ack-state user)))
 
 ;; NOT API

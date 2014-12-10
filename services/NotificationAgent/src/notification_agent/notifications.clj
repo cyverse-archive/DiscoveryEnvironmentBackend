@@ -52,8 +52,8 @@
   (dorun (map (partial validate-field msg) req-fields)))
 
 (defn- request-to-msg
-  "Converts a notification request to a full-fledged message that will be
-   stored in the OSM."
+  "Converts a notification request to a full-fledged message that will be stored
+  in the notification database."
   [request]
   {:type           (:type request)
    :user           (:user request)

@@ -6,24 +6,17 @@
         [compojure.core]
         [ring.middleware keyword-params nested-params]
         [notification-agent.delete]
-        [notification-agent.job-status]
         [notification-agent.notifications]
         [notification-agent.query]
         [notification-agent.seen]
         [slingshot.slingshot :only [try+]])
   (:require [compojure.route :as route]
             [clojure.tools.logging :as log]
-            [notification-agent.app-db :as app-db]
             [notification-agent.config :as config]
             [notification-agent.db :as db]
             [ring.adapter.jetty :as jetty]
             [common-cli.core :as ccli]
             [me.raynes.fs :as fs]))
-
-(defn- job-status
-  "Handles a job status update request."
-  [body]
-  (trap :job-status #(handle-job-status body)))
 
 (defn- notification
   "Handles a generic notification request."
@@ -138,7 +131,6 @@
 
 (defroutes notificationagent-routes
   (GET  "/" [] "Welcome to the notification agent!\n")
-  (POST "/job-status" [:as {body :body}] (job-status body))
   (POST "/notification" [:as {body :body}] (notification body))
   (POST "/delete" [:as {:keys [params body]}] (delete params body))
   (DELETE "/delete-all" [:as {params :params}] (delete-all params))
@@ -210,7 +202,6 @@
 
 (defn- init-service
   []
-  (app-db/define-database)
   (db/define-database))
 
 (defn load-config-from-file
@@ -239,6 +230,5 @@
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
     (load-config-from-file (:config options))
-    (future (initialize-job-status-service))
     (log/warn "Listening on" (config/listen-port))
     (jetty/run-jetty (site-handler notificationagent-routes) {:port (config/listen-port)})))

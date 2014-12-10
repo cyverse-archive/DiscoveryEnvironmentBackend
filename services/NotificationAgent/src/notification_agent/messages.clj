@@ -1,11 +1,9 @@
 (ns notification-agent.messages
   (:use [notification-agent.config]
-        [notification-agent.messages]
         [notification-agent.time]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
-            [clojure-commons.osm :as osm]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [notification-agent.db :as db])
@@ -28,8 +26,8 @@
     (if (nil? value) m (apply update-in m ks f args))))
 
 (defn reformat-message
-  "Converts a message from the format stored in the OSM to the format that the
-   DE expects."
+  "Converts a message from the format stored in the notification database to the
+   format that the DE expects."
   [uuid state & {:keys [seen deleted] :or {seen false deleted false}}]
   (-> state
       (assoc-in [:message :id] uuid)
@@ -51,9 +49,9 @@
     (db/record-email-request notification-uuid template to json-request)))
 
 (defn- persist-msg
-  "Persists a message in the OSM."
+  "Persists a message in the notification database."
   [{type :type username :user {subject :text created-date :timestamp} :message :as msg}]
-  (log/debug "saving a message in the OSM:" msg)
+  (log/debug "saving a message in the notification database:" msg)
   (db/insert-notification
    (or type "analysis") username subject created-date (cheshire/encode msg)))
 
@@ -77,8 +75,8 @@
      (send-msg nil msg)))
 
 (defn persist-and-send-msg
-  "Persists a message in the OSM and sends it to any receivers and returns
-   the state object."
+  "Persists a message in the notification database and sends it to any receivers
+   and returns the state object."
   [msg]
   (let [uuid          (persist-msg msg)
         email-request (:email_request msg)]
