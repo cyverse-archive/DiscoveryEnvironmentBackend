@@ -176,12 +176,12 @@
               [(cast Object (cheshire/encode submission)) job-id]])))
 
 (defn- get-job-submission
-  [mongo-db job-requests-collection orig-id]
+  [job-requests-collection orig-id]
   ((comp :experiment :state first)
-   (mc/find-maps mongo-db job-requests-collection {:state.jobUuid orig-id})))
+   (mc/find-maps job-requests-collection {:state.jobUuid orig-id})))
 
 (defn- insert-job
-  [mongo-db job-requests-collection state]
+  [job-requests-collection state]
   (let [orig-id (:uuid state)
         job-id  (uuidify (string/replace orig-id #"^j" ""))]
     (insert :jobs
@@ -197,7 +197,7 @@
                      :status             (:status state)
                      :deleted            (:deleted state false)
                      :user_id            (user-id-subselect (:user state))}))
-    (insert-submission job-id (get-job-submission mongo-db job-requests-collection orig-id))))
+    (insert-submission job-id (get-job-submission job-requests-collection orig-id))))
 
 (defn- insert-job-step
   [state]
@@ -212,8 +212,8 @@
                    :app_step_number 1})))
 
 (defn- save-job
-  [mongo-db job-requests-collection state]
-  (insert-job mongo-db job-requests-collection state)
+  [job-requests-collection state]
+  (insert-job job-requests-collection state)
   (insert-job-step state))
 
 (defn- run-conversion
@@ -222,7 +222,7 @@
        (map :state)
        (remove (comp nil? :uuid))
        (remove exists-in-postgres?)
-       (map (partial save-job mongo-db job-requests-collection))
+       (map (partial save-job job-requests-collection))
        (map (comp println (juxt :uuid :status)))
        (dorun)))
 
