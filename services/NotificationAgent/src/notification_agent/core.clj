@@ -1,6 +1,7 @@
 (ns notification-agent.core
   (:gen-class)
-  (:use [clojure-commons.error-codes :only [trap]]
+  (:use [clojure.java.io :only [file]]
+        [clojure-commons.error-codes :only [trap]]
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
@@ -204,10 +205,43 @@
   []
   (db/define-database))
 
+(defn- iplant-conf-dir-file
+  [filename]
+  (when-let [conf-dir (System/getenv "IPLANT_CONF_DIR")]
+    (let [f (file conf-dir filename)]
+      (when (.isFile f) (.getPath f)))))
+
+(defn- cwd-file
+  [filename]
+  (let [f (file filename)]
+    (when (.isFile f) (.getPath f))))
+
+(defn- classpath-file
+  [filename]
+  (-> (Thread/currentThread)
+      (.getContextClassLoader)
+      (.findResource filename)
+      (.toURI)
+      (file)))
+
+(defn- no-configuration-found
+  [filename]
+  (throw (RuntimeException. (str "configuration file " filename " not found"))))
+
+(defn- find-configuration-file
+  []
+  (let [conf-file "notificationagent.properties"]
+    (or (iplant-conf-dir-file conf-file)
+        (cwd-file conf-file)
+        (classpath-file conf-file)
+        (no-configuration-found conf-file))))
+
 (defn load-config-from-file
-  [cfg-path]
-  (config/load-config-from-file cfg-path)
-  (init-service))
+  ([]
+     (load-config-from-file (find-configuration-file)))
+  ([cfg-path]
+     (config/load-config-from-file cfg-path)
+     (init-service)))
 
 (def svc-info
   {:desc "A web service for storing and forwarding notifications."

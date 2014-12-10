@@ -7,6 +7,7 @@
         [slingshot.slingshot :only [throw+ try+]])
   (:require [clojure-commons.error-codes :as ce]
             [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [korma.sql.engine :as eng]
             [notification-agent.time :as time])
   (:import [java.sql Timestamp]
@@ -90,7 +91,7 @@
                                      :deleted false}))
    params))
 
-(defn- validate-notification-sort-field
+(defn- normalize-notification-sort-field
   "Validates the sort field for a notification query."
   [sort-field]
   (let [sort-field (if (string? sort-field)
@@ -99,10 +100,6 @@
         sort-field (if (= :timestamp sort-field)
                      :date_created
                      sort-field)]
-    (when-not ((set (:fields notifications)) (eng/prefix notifications sort-field))
-      (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-               :arg_name   :sort-field
-               :arg_value  sort-field}))
     sort-field))
 
 (defn- validate-sort-order
@@ -124,7 +121,7 @@
   (if sort-field
     (order
      query
-     (validate-notification-sort-field sort-field)
+     (normalize-notification-sort-field sort-field)
      (validate-sort-order sort-dir))
     query))
 
@@ -159,80 +156,72 @@
   "Marks notifications with selected UUIDs as deleted if they belong to the
    specified user."
   [user uuids]
-  (with-db notifications-db
-    (update notifications
-            (set-fields {:deleted true})
-            (where {:user_id (user-id-subselect user)
-                    :uuid    [in (map parse-uuid uuids)]}))))
+  (update notifications
+          (set-fields {:deleted true})
+          (where {:user_id (user-id-subselect user)
+                  :uuid    [in (map parse-uuid uuids)]})))
 
 (defn delete-matching-notifications
   "Deletes notifications matching a set of incoming parameters."
   [user params]
-  (with-db notifications-db
-    (update notifications
-            (set-fields {:deleted true})
-            (where (build-where-clause user params)))))
+  (update notifications
+          (set-fields {:deleted true})
+          (where (build-where-clause user params))))
 
 (defn mark-notifications-seen
   "Marks notifications with selected UUIDs as seen if they belong to the
    specified user."
   [user uuids]
-  (with-db notifications-db
-    (update notifications
-            (set-fields {:seen true})
-            (where {:user_id (user-id-subselect user)
-                    :uuid    [in (map parse-uuid uuids)]}))))
+  (update notifications
+          (set-fields {:seen true})
+          (where {:user_id (user-id-subselect user)
+                  :uuid    [in (map parse-uuid uuids)]})))
 
 (defn mark-matching-notifications-seen
   "Marks notifications matching a set of incoming parameters as seen."
   [user params]
-  (with-db notifications-db
-    (update notifications
-            (set-fields {:seen true})
-            (where (build-where-clause user params)))))
+  (update notifications
+          (set-fields {:seen true})
+          (where (build-where-clause user params))))
 
 (defn count-matching-messages
   "Counts the number of messages matching a set of query-string parameters."
   [user params]
-  (with-db notifications-db
-    (unwrap-count (select :notifications
-                          (aggregate (count :*) :count)
-                          (where (build-where-clause user params))))))
+  (unwrap-count (select :notifications
+                        (aggregate (count :*) :count)
+                        (where (build-where-clause user params)))))
 
 (defn find-matching-messages
   "Finds messages matching a set of query-string parameters."
   [user params]
-  (with-db notifications-db
-    (-> (select* notifications)
-        (fields :uuid :type [:users.username :username] :subject :seen :deleted :date_created
-                :message)
-        (with users)
-        (where (build-where-clause user params))
-        (add-order-by-clause params)
-        (add-limit-clause params)
-        (add-offset-clause params)
-        (select))))
+  (-> (select* notifications)
+      (fields :uuid :type [:users.username :username] :subject :seen :deleted :date_created
+              :message)
+      (with users)
+      (where (build-where-clause user params))
+      (add-order-by-clause params)
+      (add-limit-clause params)
+      (add-offset-clause params)
+      (select)))
 
 (defn insert-notification
   "Inserts a notification into the database."
   [type username subject created-date message]
-  (with-db notifications-db
-    (let [uuid (UUID/randomUUID)]
-      (insert notifications
-              (values {:uuid         uuid
-                       :type         type
-                       :user_id      (get-user-id username)
-                       :subject      subject
-                       :message      message
-                       :date_created (parse-date created-date)}))
-      (string/upper-case (str uuid)))))
+  (let [uuid (UUID/randomUUID)]
+    (insert notifications
+            (values {:uuid         uuid
+                     :type         type
+                     :user_id      (get-user-id username)
+                     :subject      subject
+                     :message      message
+                     :date_created (parse-date created-date)}))
+    (string/upper-case (str uuid))))
 
 (defn get-notification-id
   [uuid]
-  (with-db notifications-db
-    (select notifications
-            (fields :id)
-            (where {:uuid (parse-uuid uuid)}))))
+  (select notifications
+          (fields :id)
+          (where {:uuid (parse-uuid uuid)})))
 
 (defn- notification-id-subselect
   "Creates a subselect statement to obtain the primary key for the notification
@@ -245,31 +234,27 @@
 (defn record-email-request
   "Inserts a record of an e-mail request into the database."
   [uuid template addr payload]
-  (with-db notifications-db
-    (insert email_notification_messages
-            (values {:notification_id (notification-id-subselect uuid)
-                     :template        template
-                     :address         addr
-                     :payload         payload}))))
+  (insert email_notification_messages
+          (values {:notification_id (notification-id-subselect uuid)
+                   :template        template
+                   :address         addr
+                   :payload         payload})))
 
 (defn get-system-notification-type-id
   "Returns a system notification type id by looking it up by name."
   [sys-notif-type]
-  (with-db notifications-db
-    (:id (first (select system_notification_types (where {:name sys-notif-type}))))))
+  (:id (first (select system_notification_types (where {:name sys-notif-type})))))
 
 (defn get-system-notification-type
   "Returns a string containing the name of the system notification type
    associated with the ID 'type-id'."
   [type-id]
-  (with-db notifications-db
-    (:name (first (select system_notification_types (where {:id type-id}))))))
+  (:name (first (select system_notification_types (where {:id type-id})))))
 
 (defn get-system-notification-types
   "Returns a list of all of the names of the system notification types."
   []
-  (with-db notifications-db
-    (map :name (select system_notification_types))))
+  (map :name (select system_notification_types)))
 
 (defn- xform-timestamp
   "Converts a PostgreSQL timestamp to a more useable timestamp format."
@@ -280,14 +265,13 @@
   "Cleans up a map representing a system notification. Removed database specific
    information."
   [db-map]
-  (with-db notifications-db
-    (let [notification-type (get-system-notification-type (:system_notification_type_id db-map))]
-      (-> db-map
-          (assoc :type              notification-type
-                 :activation_date   (xform-timestamp (:activation_date db-map))
-                 :deactivation_date (xform-timestamp (:deactivation_date db-map))
-                 :date_created      (xform-timestamp (:date_created db-map)))
-          (dissoc :id :system_notification_type_id)))))
+  (let [notification-type (get-system-notification-type (:system_notification_type_id db-map))]
+    (-> db-map
+        (assoc :type              notification-type
+               :activation_date   (xform-timestamp (:activation_date db-map))
+               :deactivation_date (xform-timestamp (:deactivation_date db-map))
+               :date_created      (xform-timestamp (:date_created db-map)))
+        (dissoc :id :system_notification_type_id))))
 
 (defn- ack-aware-system-map
   "This function converts a system notification record received from the database into the expected
@@ -322,8 +306,7 @@
 (defn insert-system-notification-type
   "Adds a new system notification type."
   [sys-notif-type]
-  (with-db notifications-db
-    (insert system_notification_types (values {:name sys-notif-type}))))
+  (insert system_notification_types (values {:name sys-notif-type})))
 
 (defn insert-system-notification
   "Inserts a system notification into the database.
@@ -346,22 +329,20 @@
       :or   {activation_date  (millis-since-epoch)
              dismissible     false
              logins_disabled false}}]
-  (with-db notifications-db
-    (system-map
-     (insert system_notifications
-             (values {:uuid                         (UUID/randomUUID)
-                      :system_notification_type_id  (get-system-notification-type-id type)
-                      :activation_date              (parse-date activation_date)
-                      :deactivation_date            (parse-date deactivation_date)
-                      :message                      message
-                      :dismissible                  dismissible
-                      :logins_disabled              logins_disabled})))))
+  (system-map
+   (insert system_notifications
+           (values {:uuid                         (UUID/randomUUID)
+                    :system_notification_type_id  (get-system-notification-type-id type)
+                    :activation_date              (parse-date activation_date)
+                    :deactivation_date            (parse-date deactivation_date)
+                    :message                      message
+                    :dismissible                  dismissible
+                    :logins_disabled              logins_disabled}))))
 
 (defn get-system-notification-by-uuid
   "Selects system notifications that have a uuid of 'uuid'."
   [uuid]
-  (with-db notifications-db
-    (-> (select system_notifications (where {:uuid (parse-uuid uuid)})) first system-map)))
+  (-> (select system_notifications (where {:uuid (parse-uuid uuid)})) first system-map))
 
 (defn- for-ack-state-above
   [query inf-state]
@@ -487,19 +468,17 @@
 (defn list-system-notifications
   "Lists system notifications."
   [active-only type res-limit res-offset]
-  (with-db notifications-db
-    (mapv system-listing-map
-          (select (system-notification-listing-query active-only type res-limit res-offset)
-                  (sys-listing-fields)
-                  (order :date_created)))))
+  (mapv system-listing-map
+        (select (system-notification-listing-query active-only type res-limit res-offset)
+                (sys-listing-fields)
+                (order :date_created))))
 
 (defn count-system-notifications
   "Counts system notifications."
   [active-only type]
-  (with-db notifications-db
-    ((comp :count first)
-     (select (system-notification-listing-query active-only type)
-             (aggregate (count :*) :count)))))
+  ((comp :count first)
+   (select (system-notification-listing-query active-only type)
+           (aggregate (count :*) :count))))
 
 (defn get-active-system-notifications
   "This function retrieves the set of active system notifications for a given user that have not
@@ -511,8 +490,7 @@
    Returns:
      The system notification records prepared for transmission."
   [user]
-  (with-db notifications-db
-    (get-sys-note-ack-state-below "dismissed" user)))
+  (get-sys-note-ack-state-below "dismissed" user))
 
 (defn get-new-system-notifications
   "Returns the active system notifications for a particular user that the user has not received
@@ -524,8 +502,7 @@
    Returns:
      The system notification records prepared for transmission."
   [user]
-  (with-db notifications-db
-    (get-sys-note-ack-state-below "received" user)))
+  (get-sys-note-ack-state-below "received" user))
 
 (defn get-unseen-system-notifications
   "Returns the active system notifications for a particular user that have not been seen yet.
@@ -536,8 +513,7 @@
    Returns:
      The system notification records prepared for transmission."
   [user]
-  (with-db notifications-db
-    (get-sys-note-ack-state-below "acknowledged" user)))
+  (get-sys-note-ack-state-below "acknowledged" user))
 
 (defn count-new-system-notifications
   "Returns the number of system notifications that have not be received by a given user.
@@ -548,20 +524,17 @@
    Returns:
      The number of system notifications that are active by have not been received by a given user."
   [user]
-  (with-db notifications-db
-    (count-sys-note-ack-state-below "received" user)))
+  (count-sys-note-ack-state-below "received" user))
 
 (defn count-unseen-system-notifications
   "Returns the count of the unseen system notifications for a user."
   [user]
-  (with-db notifications-db
-    (count-sys-note-ack-state-below "acknowledged" user)))
+  (count-sys-note-ack-state-below "acknowledged" user))
 
 (defn count-active-system-notifications
   "Returns the number of active system notifications for a particular user."
   [user]
-  (with-db notifications-db
-    (count-sys-note-ack-state-below "dismissed" user)))
+  (count-sys-note-ack-state-below "dismissed" user))
 
 (defn- fix-date [a-date] (Timestamp. (-> a-date time/timestamp->millis)))
 
@@ -593,11 +566,10 @@
       :logins_disabled - Boolean
       :message - The message that's displayed in the notification."
   [uuid update-values]
-  (with-db notifications-db
-    (system-map
-     (update system_notifications
-             (set-fields (system-notification-update-map update-values))
-             (where {:uuid (parse-uuid uuid)})))))
+  (system-map
+   (update system_notifications
+           (set-fields (system-notification-update-map update-values))
+           (where {:uuid (parse-uuid uuid)}))))
 
 (defn- system-notif-id
   [uuid]
@@ -609,11 +581,8 @@
    Required Parameters:
      uuid - The system notification uuid."
   [uuid]
-  (with-db notifications-db
-    (delete system_notification_acknowledgments
-            (where {:system_notification_id (system-notif-id uuid)}))
-    (system-map
-     (delete system_notifications (where {:uuid (parse-uuid uuid)})))))
+  (delete system_notification_acknowledgments
+          (where {:system_notification_id (system-notif-id uuid)})))
 
 ;; NOT API
 (defn ack-exists?
@@ -749,8 +718,7 @@
      user - the name of the user of interest
      sys-note-uuids - the UUIDS of the system notifications to mark"
   [user sys-note-uuids]
-  (with-db notifications-db
-    (mark-sys-notes received received? user sys-note-uuids)))
+  (mark-sys-notes received received? user sys-note-uuids))
 
 (defn mark-all-system-notifications-received
   "Mark all of the system notification as received by the given user.
@@ -758,30 +726,25 @@
    Parameters:
      user - the name of the user of interest"
   [user]
-  (with-db notifications-db
-    (mark-selected-sys-notes received get-new-system-notifications user)))
+  (mark-selected-sys-notes received get-new-system-notifications user))
 
 (defn mark-system-notifications-seen
   [user sys-note-uuids]
-  (with-db notifications-db
-    (mark-sys-notes seen seen? user sys-note-uuids)))
+  (mark-sys-notes seen seen? user sys-note-uuids))
 
 (defn mark-all-system-notifications-seen
   [user]
-  (with-db notifications-db
-    (mark-selected-sys-notes seen get-unseen-system-notifications user)))
+  (mark-selected-sys-notes seen get-unseen-system-notifications user))
 
 (defn soft-delete-system-notifications
   [user sys-note-uuids]
-  (with-db notifications-db
-    (mark-sys-notes delete-msg
-                    #(or (not (dismissible? %2)) (deleted? %1 %2))
-                    user
-                    sys-note-uuids)))
+  (mark-sys-notes delete-msg
+                  #(or (not (dismissible? %2)) (deleted? %1 %2))
+                  user
+                  sys-note-uuids))
 
 (defn soft-delete-all-system-notifications
   [user]
-  (with-db notifications-db
-    (mark-selected-sys-notes delete-msg
-                             #(filter :dismissible (get-active-system-notifications %))
-                             user)))
+  (mark-selected-sys-notes delete-msg
+                           #(filter :dismissible (get-active-system-notifications %))
+                           user))
