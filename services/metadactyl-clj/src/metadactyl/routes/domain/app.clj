@@ -12,6 +12,8 @@
 (def AppReferencesParam (describe [String] "The App's references"))
 (def AppDeletedParam (describe Boolean "Whether the App is marked as deleted"))
 (def AppDisabledParam (describe Boolean "Whether the App is marked as disabled"))
+(def AppPublicParam (describe Boolean
+                      "Whether the App has been published and is viewable by all users"))
 
 (def OptionalGroupsKey (optional-key :groups))
 (def OptionalParametersKey (optional-key :parameters))
@@ -298,7 +300,7 @@
      (describe Boolean "Whether the current user has marked the App as a favorite")
 
      :is_public
-     (describe Boolean "Whether the App has been published and is viewable by all users")
+     AppPublicParam
 
      :pipeline_eligibility
      (describe PipelineEligibility "Whether the App can be used in a Pipeline")
@@ -364,7 +366,8 @@
     (->optional-param :id)
     (->optional-param :name)
     (->optional-param :description)
-    (assoc OptionalGroupsKey (describe [AppGroupRequest] GroupListDocs))))
+    (assoc OptionalGroupsKey (describe [AppGroupRequest] GroupListDocs)
+           (optional-key :is_public) AppPublicParam)))
 
 (defschema AppCategoryIdListing
   {:categories (describe [UUID] "A listing of App Category IDs")})
