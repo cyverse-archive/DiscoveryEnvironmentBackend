@@ -1,7 +1,6 @@
 (ns metadactyl.core
   (:gen-class)
   (:use [clojure.java.io :only [file]]
-        [metadactyl.beans]
         [metadactyl.kormadb])
   (:require [clojure.tools.logging :as log]
             [common-cli.core :as ccli]
@@ -12,7 +11,6 @@
 (defn- init-service
   "Initializes the service."
   []
-  (init-registered-beans)
   (define-database))
 
 (defn- iplant-conf-dir-file
