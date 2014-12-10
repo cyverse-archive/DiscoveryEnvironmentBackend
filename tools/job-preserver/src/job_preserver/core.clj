@@ -138,15 +138,15 @@
 (defn- build-mongo-options
   []
   (mg/mongo-options
-   {:connections-per-host 10
-    :max-wait-time        1200
-    :connect-timeout      1000
-    :socket-timeout       0
-    :auto-connect-retry   true}))
+   :connections-per-host 10
+   :max-wait-time        1200
+   :connect-timeout      1000
+   :socket-timeout       0
+   :auto-connect-retry   true))
 
 (defn- get-mongo-conn
   [{:keys [mongo-host mongo-port]}]
-  (mg/connect (mg/server-address mongo-host mongo-port) (build-mongo-options)))
+  (mg/connect! (mg/server-address mongo-host mongo-port) (build-mongo-options)))
 
 (defn- get-mongo-db
   [{:keys [mongo-db]} mongo-conn]
@@ -217,18 +217,19 @@
   (insert-job-step state))
 
 (defn- run-conversion
-  [{:keys [jobs-collection job-requests-collection]} mongo-db]
-  (->> (mc/find-maps mongo-db jobs-collection)
+  [{:keys [jobs-collection job-requests-collection]}]
+  (->> (mc/find-maps jobs-collection)
        (map :state)
        (remove (comp nil? :uuid))
        (remove exists-in-postgres?)
        (map (partial save-job mongo-db job-requests-collection))
+       (map (comp println (juxt :uuid :status)))
        (dorun)))
 
 (defn -main
   [& args]
   (let [opts    (parse-args args)
-        mg-conn (get-mongo-conn opts)
-        mg-db   (get-mongo-db opts mg-conn)]
+        mg-conn (get-mongo-conn opts)]
+    (mg/set-db! (get-mongo-db opts mg-conn))
     (define-database opts)
-    (run-conversion opts mg-db)))
+    (run-conversion opts)))
