@@ -223,7 +223,6 @@
        (remove (comp nil? :uuid))
        (remove exists-in-postgres?)
        (map (partial save-job job-requests-collection))
-       (map (comp println (juxt :uuid :status)))
        (dorun)))
 
 (defn -main
