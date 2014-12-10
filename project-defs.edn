@@ -362,17 +362,6 @@
   :language :clojure
   :archive? true}
 
- "job-migrator"
- {:type     :tool
-  :path     "tools/job-migrator"
-  :build    :lein
-  :rpm?     false
-  :tarball? false
-  :uberjar? true
-  :install? false
-  :language :clojure
-  :archive? true}
-
  "facepalm"
  {:type     :tool
   :path     "tools/facepalm"
