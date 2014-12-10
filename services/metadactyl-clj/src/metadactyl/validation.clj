@@ -1,6 +1,8 @@
 (ns metadactyl.validation
-  (:use [metadactyl.user :only [current-user]]
+  (:use [kameleon.entities]
+        [metadactyl.user :only [current-user]]
         [clojure.string :only [blank?]]
+        [korma.core]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as cc-errs]
             [metadactyl.persistence.app-metadata :as persistence]))
@@ -179,6 +181,14 @@
      (validate-json-field m k ""))
   ([m k path]
      (validate-json-field* m k (add-field path k))))
+
+(defn verify-tool-name-location
+  [tool]
+  (let [existing-tool (first (select tools (where (select-keys tool [:name :location]))))]
+    (when existing-tool
+      (throw+ {:error_code cc-errs/ERR_EXISTS
+               :message    "A Tool with that name and location already exists."
+               :tool       tool}))))
 
 (defn- verify-app-not-public
   "Verifies that an app has not been made public."

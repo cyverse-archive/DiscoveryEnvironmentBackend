@@ -6,6 +6,7 @@
         [metadactyl.persistence.app-metadata :only [add-tool]]
         [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
+        [metadactyl.validation :only [verify-tool-name-location]]
         [clojure.string :only [upper-case]]
         [korma.core]
         [korma.db :only [transaction]])
@@ -78,9 +79,14 @@
   (map remove-nil-vals
     (select (tool-listing-base-query) (where {:tools.id [in tool-ids]}))))
 
+(defn- add-new-tool
+  [tool]
+  (verify-tool-name-location tool)
+  (add-tool tool))
+
 (defn add-tools
   "Adds a list of tools to the database, returning a list of IDs of the tools added."
   [{:keys [tools]}]
   (transaction
-    (let [tool-ids (map add-tool tools)]
+    (let [tool-ids (doall (map add-new-tool tools))]
       (service/success-response {:tool_ids tool-ids}))))
