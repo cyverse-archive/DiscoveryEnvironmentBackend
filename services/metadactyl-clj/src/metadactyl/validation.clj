@@ -222,10 +222,15 @@
 
 (defn validate-parameter
   "Ensures that hidden output parameters have a filename defined."
-  [{default-value :defaultValue param-type :type visible :isVisible :or {visible true} :as parameter}]
+  [{default-value :defaultValue
+    param-type :type
+    {implicit :is_implicit} :file_parameters
+    visible :isVisible
+    :or {visible true}
+    :as parameter}]
   (when (and (contains? persistence/param-output-types param-type)
              (blank? default-value)
-             (not visible))
+             (or (not visible) implicit))
     (throw+ {:error_code cc-errs/ERR_BAD_OR_MISSING_FIELD
              :message    "Hidden output parameters must define a default value."
              :parameter  parameter})))
