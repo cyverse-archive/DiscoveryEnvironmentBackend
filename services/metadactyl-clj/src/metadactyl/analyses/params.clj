@@ -150,9 +150,9 @@
   [param param-value]
   (let [selected?      (parse-boolean param-value)
         values         (string/split (:name param) #"\s*,\s*" 2)
-        selected-value (string/trim (if selected? (first values) (second values)))]
+        selected-value (if selected? (first values) (second values))]
     (if (util/not-blank? selected-value)
-      [(build-flag-arg param selected-value)]
+      [(build-flag-arg param (string/trim selected-value))]
       [])))
 
 (defn input-args
