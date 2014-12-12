@@ -4,7 +4,8 @@
         [kameleon.uuids :only [uuid]]
         [korma.core]
         [medley.core :only [remove-vals]]
-        [metadactyl.util.assertions :only [assert-not-nil]])
+        [metadactyl.util.assertions :only [assert-not-nil]]
+        [metadactyl.util.conversions :only [remove-nil-vals]])
   (:require [clojure.string :as string]
             [metadactyl.analyses.params :as params]
             [metadactyl.analyses.util :as util]))
@@ -55,7 +56,8 @@
       (fields :tools.description :tools.location :tools.name [:tool_types.name :type])
       (where {:tasks.id task-id})
       (select)
-      (first)))
+      (first)
+      (remove-nil-vals)))
 
 (defn build-component
   [{task-id :task_id}]
