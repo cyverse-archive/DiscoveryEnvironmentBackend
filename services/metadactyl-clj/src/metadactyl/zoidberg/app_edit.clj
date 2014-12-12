@@ -225,6 +225,14 @@
     [(update-parameter-tree-root param-id (first arguments))]
     (doall (map-indexed (partial update-parameter-argument param-id nil) arguments))))
 
+(defn- save-file-parameter
+  "Save an App parameter's file settings."
+  [param-type {:keys [retain] :as file-parameter}]
+  (let [retain? (if (contains? persistence/param-output-types param-type)
+                  true
+                  retain)]
+    (persistence/add-file-parameter (remove-nil-vals (assoc file-parameter :retain retain?)))))
+
 (defn- add-validation-rule
   "Adds an App parameter's validator and its rule arguments."
   [parameter-id {validator-type :type rule-args :params}]
@@ -268,7 +276,7 @@
     (dorun (map (partial add-validation-rule param-id) validators))
 
     (when (contains? persistence/param-file-types param-type)
-      (persistence/add-file-parameter (assoc file-parameter :parameter_id param-id)))
+      (save-file-parameter param-type (assoc file-parameter :parameter_id param-id)))
 
     (remove-nil-vals
         (assoc parameter
