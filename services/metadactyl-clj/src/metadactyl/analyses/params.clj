@@ -28,29 +28,29 @@
   "Builds a single input for a step in an app. The current implementation performs the analysis
   configuration lookup twice (once in build-input and once in build-inputs), but the code seems
   clearest that way."
-  [param path]
+  [retain? param path]
   (let [filename (when-not (nil? path) (fs/base-name path))]
     {:id           (:id param)
      :multiplicity (util/input-multiplicities (:type param))
      :name         filename
      :property     filename
-     :retain       (:retain param)
+     :retain       (or retain? (:retain param))
      :type         (:type param)
      :value        path}))
 
 (defn- build-inputs-for-param
-  [config param]
+  [config retain? param]
   (let [param-value (config (util/param->qual-key param))
         paths       (if (sequential? param-value) param-value [param-value])]
-    (map (partial build-input param) paths)))
+    (map (partial build-input retain? param) paths)))
 
 (defn build-inputs
   "Builds the list of inputs for a step in an app. The current implementation performs the
   analysis configuration lookup twice, but the code seems clearest that way."
-  [config params]
+  [{config :config retain? :debug} params]
   (->> (filter util/input? params)
        (filter (comp config util/param->qual-key))
-       (mapcat (partial build-inputs-for-param config))))
+       (mapcat (partial build-inputs-for-param config retain?))))
 
 (defn- missing-output-filename
   [{step-id :step_id id :id}]

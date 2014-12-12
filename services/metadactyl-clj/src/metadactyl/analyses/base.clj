@@ -68,7 +68,7 @@
     (params/build-params this (:config submission) io-maps outputs defaults params))
 
   (buildInputs [this params]
-    (params/build-inputs (:config submission) params))
+    (params/build-inputs submission params))
 
   (buildOutputs [this params]
     (conj (params/build-outputs (:config submission) defaults params)
@@ -141,7 +141,7 @@
     ;; The inputs array needs to be empty when it's submitted to the JEX, but the batch
     ;; submission code needs it to determine which paramters are inputs. The batch submission
     ;; code will clear out the inputs array before submitting Foundation API jobs to the JEX.
-    (params/build-inputs (:config submission) params))
+    (params/build-inputs submission params))
 
   (buildOutputs [_ _]
     [(params/log-output (:archive_logs submission true))])
