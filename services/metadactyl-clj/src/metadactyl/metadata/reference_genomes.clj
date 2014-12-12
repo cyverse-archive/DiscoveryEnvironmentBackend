@@ -50,10 +50,11 @@
 
 (defn list-reference-genomes
   "Lists the reference genomes in the database."
-  [params]
-  (let [reference-genomes (get-reference-genomes params)]
-    (log/debug "reference-genomes count" (count reference-genomes))
-    (success-response {:genomes reference-genomes})))
+  ([]
+   (list-reference-genomes nil))
+  ([params]
+   (let [reference-genomes (get-reference-genomes params)]
+     (success-response {:genomes reference-genomes}))))
 
 (defn- get-valid-reference-genome
   [reference-genome-id]
