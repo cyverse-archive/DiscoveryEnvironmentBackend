@@ -65,11 +65,17 @@
 
 (defn build-step
   [request-builder steps step]
-  (conj steps
-    {:component   (.buildComponent request-builder step)
-     :config      (.buildConfig request-builder steps step)
-     :environment (.buildEnvironment request-builder step)
-     :type        "condor"}))
+  (let [config  (.buildConfig request-builder steps step)
+        stdout  (:stdout config)
+        stderr  (:stderr config)]
+    (conj steps
+      (remove-nil-vals
+        {:component   (.buildComponent request-builder step)
+         :environment (.buildEnvironment request-builder step)
+         :config      (dissoc config :stdout :stderr)
+         :stdout      stdout
+         :stderr      stderr
+         :type        "condor"}))))
 
 (defn load-steps
   [app-id]

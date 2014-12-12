@@ -75,12 +75,19 @@
      :property     filename
      :qual-id      (util/param->qual-id param)
      :retain       (:retain param)
+     :data_source  (:data_source param)
      :type         (:info_type param)}))
 
 (defn build-outputs
   [config default-values params]
   (mapv (partial build-output config default-values)
         (filter util/output? params)))
+
+(defn find-redirect-output-filename
+  "Finds the filename for the given data-source in the given list of outputs."
+  [outputs data-source]
+  ((comp :name first)
+   (filter #(= data-source (:data_source %)) outputs)))
 
 (defn value-for-param
   ([config io-maps output-value-map default-values param]

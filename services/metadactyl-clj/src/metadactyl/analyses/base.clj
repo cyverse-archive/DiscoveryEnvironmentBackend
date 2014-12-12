@@ -78,9 +78,14 @@
     (let [params-for-step  (params (:id step))
           outputs          (mapcat (comp :output :config) steps)
           outputs-for-step (.buildOutputs this params-for-step)
+          stdout           (params/find-redirect-output-filename outputs-for-step "stdout")
+          stderr           (params/find-redirect-output-filename outputs-for-step "stderr")
+          outputs-for-step (map #(dissoc % :data_source) outputs-for-step)
           inputs-for-step  (.buildInputs this params-for-step)
           params-for-step  (.buildParams this params-for-step (concat outputs outputs-for-step))]
-      (ca/build-config inputs-for-step outputs-for-step params-for-step)))
+      (assoc (ca/build-config inputs-for-step outputs-for-step params-for-step)
+        :stdout stdout
+        :stderr stderr)))
 
   (buildEnvironment [this step]
     (ca/build-environment (:config submission) defaults (params (:id step))))

@@ -141,6 +141,14 @@
    :environment
    (describe Any "A map of environment variable names to values.")
 
+   (optional-key :stdout)
+   (describe String
+     "A path relative to the current working directory where stdout should be redirected.")
+
+   (optional-key :stderr)
+   (describe String
+     "A path relative to the current working directory where stderr should be redirected.")
+
    :type
    (describe String "The type of the analysis step.")})
 
