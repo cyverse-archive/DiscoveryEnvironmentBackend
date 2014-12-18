@@ -1,4 +1,4 @@
-(defproject org.iplantc/authy "4.0.9"
+(defproject org.iplantc/authy "4.1.0"
   :description "An OAuth 2.0 client clibrary written in Clojure."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD Standard License"
