@@ -1004,3 +1004,9 @@ ALTER TABLE ONLY job_steps
     ADD CONSTRAINT job_steps_job_type_id_fkey
     FOREIGN KEY (job_type_id)
     REFERENCES job_types(id);
+
+--
+-- Indices on the jobs table to speed up job listing queries.
+--
+CREATE INDEX jobs_parent_id_index ON jobs(parent_id);
+CREATE INDEX jobs_user_id_index ON jobs(user_id);
