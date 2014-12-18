@@ -82,11 +82,12 @@
 
 (defn- update-batch-status
   [batch completion-date]
-  (let [new-status (determine-batch-status batch)]
-    (when-not (= (:status batch) new-status)
-      (jp/update-job (:id batch) {:status new-status :end-date completion-date})
-      (jp/update-job-steps (:id batch) new-status completion-date)
-      (mu/send-job-status-notification batch new-status completion-date))))
+  (when batch
+    (let [new-status (determine-batch-status batch)]
+      (when-not (= (:status batch) new-status)
+        (jp/update-job (:id batch) {:status new-status :end-date completion-date})
+        (jp/update-job-steps (:id batch) new-status completion-date)
+        (mu/send-job-status-notification batch new-status completion-date)))))
 
 (defn- agave-authorization-uri
   [state-info]
@@ -516,7 +517,7 @@
        (with-directory-user [username]
          (try+
           (.updateJobStatus app-lister username job job-step status end-time)
-          (.updateBatchStatus app-lister batch end-time)
+          (when batch (.updateBatchStatus app-lister batch end-time))
           (catch Object o
             (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
               (log/warn o msg)
