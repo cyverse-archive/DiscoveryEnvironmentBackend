@@ -285,7 +285,7 @@
   [doc]
   (if (:id doc)
     true
-    (log/warn "Filesystem entry" (:path doc) "doesn't have a UUID. Skipping indexing.")))
+    (log/warn "missing UUID for filesystem entry" doc)))
 
 
 (defn index-entries
