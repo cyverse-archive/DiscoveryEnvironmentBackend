@@ -733,10 +733,18 @@ func main() {
 	// First, we need to read the tombstone file if it exists.
 	var tombstone *Tombstone
 	if TombstoneExists() {
-		log.Printf("Removing old tombstone from %s\n", TombstonePath)
-		err = os.Remove(TombstonePath)
+		log.Printf("Attempting to read tombstone from %s\n", TombstonePath)
+		tombstone, err = ReadTombstone()
+		if err != nil {
+			log.Println("Couldn't read Tombstone file.")
+			log.Println(err)
+			tombstone = nil
+		}
+		log.Printf("Done reading tombstone file from %s\n", TombstonePath)
+	} else {
+		tombstone = nil
 	}
-	tombstone = nil
+
 	logDir := filepath.Dir(cfg.EventLog)
 	log.Printf("Log directory: %s\n", logDir)
 	logFilename := filepath.Base(cfg.EventLog)
@@ -753,6 +761,15 @@ func main() {
 	// We need to sort the rotated log files in order from oldest to newest.
 	sort.Sort(logList)
 
+	// If there aren't any rotated log files or a tombstone file, then there
+	// isn't a reason to truncate the list of rotated log files. Hopefully, we'd
+	// trim the list of log files to prevent reprocessing, which could save us
+	// a significant amount of time at start up.
+	if len(logList) > 0 && tombstone != nil {
+		log.Printf("Slicing log list by inode number %d\n", tombstone.Inode)
+		logList = logList.SliceByInode(tombstone.Inode)
+	}
+
 	// Iterate through the list of log files, parse them, and ultimately send the
 	// events out to the AMQP broker. Skip the latest log file, we'll be handling
 	// that further down.
@@ -762,7 +779,22 @@ func main() {
 		}
 		logfilePath := path.Join(logFile.BaseDir, logFile.Info.Name())
 		log.Printf("Parsing %s\n", logfilePath)
-		_, err = ParseEventFile(logfilePath, 0, pub, false)
+
+		if tombstone != nil {
+			logfileInode := InodeFromFileInfo(&logFile.Info)
+
+			// Inodes need to match and the current position needs to be less than the file size.
+			if logfileInode == tombstone.Inode && tombstone.CurrentPos < logFile.Info.Size() {
+				log.Printf("Tombstoned inode matches %s, starting parse at %d\n", logfilePath, tombstone.CurrentPos)
+				_, err = ParseEventFile(logfilePath, tombstone.CurrentPos, pub, false)
+			} else {
+				log.Printf("Tombstoned inode does not match %s, starting parse at position 0\n", logfilePath)
+				_, err = ParseEventFile(logfilePath, 0, pub, false)
+			}
+		} else {
+			log.Printf("No tombstone found, starting parse at position 0 for %s\n", logfilePath)
+			_, err = ParseEventFile(logfilePath, 0, pub, false)
+		}
 		if err != nil {
 			fmt.Println(err)
 		}
