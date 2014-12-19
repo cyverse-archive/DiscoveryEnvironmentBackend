@@ -1,8 +1,7 @@
 (ns notification-agent.config
   (:use [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.config :as cc]
-            [clojure-commons.error-codes :as ce]
-            [clojure-commons.osm :as osm]))
+            [clojure-commons.error-codes :as ce]))
 
 (def ^:private props
   "A ref for storing the configuration properties."
@@ -51,51 +50,6 @@
   [props config-valid configs]
   "notificationagent.db.password")
 
-(cc/defprop-str app-db-driver-class
-  "The name of the JDBC driver to use for the app database."
-  [props config-valid configs]
-  "notificationagent.app-db.driver" )
-
-(cc/defprop-str app-db-subprotocol
-  "The subprotocol to use when connecting to the app database (e.g. postgresql)."
-  [props config-valid configs]
-  "notificationagent.app-db.subprotocol")
-
-(cc/defprop-str app-db-host
-  "The host name or IP address to use when connecting to the app database."
-  [props config-valid configs]
-  "notificationagent.app-db.host")
-
-(cc/defprop-str app-db-port
-  "The port number to use when connecting to the app database."
-  [props config-valid configs]
-  "notificationagent.app-db.port")
-
-(cc/defprop-str app-db-name
-  "The name of the app database to connect to."
-  [props config-valid configs]
-  "notificationagent.app-db.name")
-
-(cc/defprop-str app-db-user
-  "The username to use when authenticating to the app database."
-  [props config-valid configs]
-  "notificationagent.app-db.user")
-
-(cc/defprop-str app-db-password
-  "The password to use when authenticating to the app database."
-  [props config-valid configs]
-  "notificationagent.app-db.password")
-
-(cc/defprop-str osm-base
-  "The base URL used to connect to the OSM."
-  [props config-valid configs]
-  "notificationagent.osm-base")
-
-(cc/defprop-str osm-jobs-bucket
-  "The OSM bucket containing job status information."
-  [props config-valid configs]
-  "notificationagent.osm-jobs-bucket")
-
 (cc/defprop-boolean email-enabled
   "True if e-mail notifications are enabled."
   [props config-valid configs]
@@ -106,21 +60,6 @@
   [props config-valid configs]
   "notificationagent.email-url")
 
-(cc/defprop-str email-template
-  "The template to use when sending e-mail notifications."
-  [props config-valid configs]
-  "notificationagent.email-template")
-
-(cc/defprop-str email-from-address
-  "The source address to use when sending e-mail notifications."
-  [props config-valid configs]
-  "notificationagent.from-address")
-
-(cc/defprop-str email-from-name
-  "The source name to use when sending e-mail notifications."
-  [props config-valid configs]
-  "notificationagent.from-name")
-
 (cc/defprop-optvec notification-recipients
   "The list of URLs to send notifications to."
   [props config-valid configs]
@@ -130,11 +69,6 @@
   "The port to listen to for incoming connections."
   [props config-valid configs]
   "notificationagent.listen-port")
-
-(defn jobs-osm
-  "The OSM client instance used to retrieve job status information."
-  []
-  (osm/create (osm-base) (osm-jobs-bucket)))
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
