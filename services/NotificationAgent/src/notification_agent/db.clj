@@ -217,12 +217,6 @@
                      :date_created (parse-date created-date)}))
     (string/upper-case (str uuid))))
 
-(defn get-notification-id
-  [uuid]
-  (select notifications
-          (fields :id)
-          (where {:uuid (parse-uuid uuid)})))
-
 (defn- notification-id-subselect
   "Creates a subselect statement to obtain the primary key for the notification
    with the given UUID."
@@ -302,11 +296,6 @@
     :activation_date   (xform-timestamp (:activation_date db-map))
     :deactivation_date (xform-timestamp (:deactivation_date db-map))
     :date_created      (xform-timestamp (:date_created db-map))))
-
-(defn insert-system-notification-type
-  "Adds a new system notification type."
-  [sys-notif-type]
-  (insert system_notification_types (values {:name sys-notif-type})))
 
 (defn insert-system-notification
   "Inserts a system notification into the database.
