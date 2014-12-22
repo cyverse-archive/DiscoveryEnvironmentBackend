@@ -91,70 +91,64 @@
   "info-typer.irods.use-trash")
 
 
-(cc/defprop-str rabbitmq-host
-  "The hostname for RabbitMQ"
+(cc/defprop-str amqp-host
+  "The hostname for the AMQP broker"
   [props config-valid configs]
-  "info-typer.rabbitmq.host")
+  "info-typer.amqp.host")
 
 
-(cc/defprop-int rabbitmq-port
-  "The port for RabbitMQ"
+(cc/defprop-int amqp-port
+  "The port for the AMQP broker"
   [props config-valid configs]
-  "info-typer.rabbitmq.port")
+  "info-typer.amqp.port")
 
 
-(cc/defprop-str rabbitmq-user
-  "The username for RabbitMQ"
+(cc/defprop-str amqp-user
+  "The username for AMQP broker"
   [props config-valid configs]
-  "info-typer.rabbitmq.user")
+  "info-typer.amqp.user")
 
 
-(cc/defprop-str rabbitmq-pass
-  "The password for RabbitMQ"
+(cc/defprop-str amqp-pass
+  "The password for AMQP broker"
   [props config-valid configs]
-  "info-typer.rabbitmq.pass")
+  "info-typer.amqp.pass")
 
 
-(cc/defprop-long rabbitmq-health-check-interval
-  "The number of milliseconds to wait between connection health checks."
-  [props config-valid configs]
-  "info-typer.rabbitmq.connection.health-check-interval")
-
-
-(cc/defprop-str rabbitmq-exchange
+(cc/defprop-str amqp-exchange
   "The exchange to listen to for iRODS updates."
   [props config-valid configs]
-  "info-typer.rabbitmq.exchange")
+  "info-typer.amqp.exchange")
 
 
-(cc/defprop-str rabbitmq-exchange-type
+(cc/defprop-str amqp-exchange-type
   "The exchange type for the iRODS updates"
   [props config-valid configs]
-  "info-typer.rabbitmq.exchange.type")
+  "info-typer.amqp.exchange.type")
 
 
-(cc/defprop-boolean rabbitmq-exchange-durable?
+(cc/defprop-boolean amqp-exchange-durable?
   "Toggles whether or not the rabbitmq exchange is durable."
   [props config-valid configs]
-  "info-typer.rabbitmq.exchange.durable")
+  "info-typer.amqp.exchange.durable")
 
 
-(cc/defprop-boolean rabbitmq-exchange-auto-delete?
+(cc/defprop-boolean amqp-exchange-auto-delete?
   "Toggles whether to auto-delete the exchange or not."
   [props config-valid configs]
-  "info-typer.rabbitmq.exchange.auto-delete")
+  "info-typer.amqp.exchange.auto-delete")
 
 
-(cc/defprop-boolean rabbitmq-msg-auto-ack?
+(cc/defprop-boolean amqp-msg-auto-ack?
   "Toggles whether or not to auto-ack messages that are received."
   [props config-valid configs]
-  "info-typer.rabbitmq.msg.auto-ack")
+  "info-typer.amqp.msg-auto-ack")
 
 
-(cc/defprop-str rabbitmq-routing-key
+(cc/defprop-str amqp-routing-key
   "The routing key for messages."
   [props config-valid configs]
-  "info-typer.rabbitmq.queue.routing-key")
+  "info-typer.amqp.routing-key")
 
 
 (defn- exception-filters

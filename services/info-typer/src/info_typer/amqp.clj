@@ -5,7 +5,6 @@
             [langohr.exchange            :as le]
             [langohr.queue               :as lq]
             [langohr.consumers           :as lc]
-            [clojure-commons.error-codes :as ce]
             [info-typer.config           :as cfg]))
 
 
@@ -29,10 +28,10 @@
 (defn- connection-map
   "Returns a configuration map for the RabbitMQ connection."
   []
-  {:host     (cfg/rabbitmq-host)
-   :port     (cfg/rabbitmq-port)
-   :username (cfg/rabbitmq-user)
-   :password (cfg/rabbitmq-pass)})
+  {:host     (cfg/amqp-host)
+   :port     (cfg/amqp-port)
+   :username (cfg/amqp-user)
+   :password (cfg/amqp-pass)})
 
 
 (defn- get-connection
@@ -118,27 +117,10 @@
 
         (declare-exchange
           @amqp-channel
-          (cfg/rabbitmq-exchange)
-          (cfg/rabbitmq-exchange-type)
-          :durable     (cfg/rabbitmq-exchange-durable?)
-          :auto-delete (cfg/rabbitmq-exchange-auto-delete?))
+          (cfg/amqp-exchange)
+          (cfg/amqp-exchange-type)
+          :durable     (cfg/amqp-exchange-durable?)
+          :auto-delete (cfg/amqp-exchange-auto-delete?))
 
-        (bind @amqp-channel q (cfg/rabbitmq-exchange) (cfg/rabbitmq-routing-key))
-        (subscribe @amqp-channel q msg-fn :auto-ack (cfg/rabbitmq-msg-auto-ack?))))))
-
-
-(defn conn-monitor
-  "Starts an infinite loop in a new thread that checks the health of the connection and reconnects
-   if necessary."
-  [msg-fn]
-  (.start
-    (Thread.
-      (fn []
-        (loop []
-          (log/info "[amqp/conn-monitor] checking messaging connection.")
-          (try
-            (configure msg-fn)
-            (catch Exception e
-              (log/error "[amqp/conn-monitor]" (ce/format-exception e))))
-          (Thread/sleep (cfg/rabbitmq-health-check-interval))
-          (recur))))))
+        (bind @amqp-channel q (cfg/amqp-exchange) (cfg/amqp-routing-key))
+        (subscribe @amqp-channel q msg-fn :auto-ack (cfg/amqp-msg-auto-ack?))))))

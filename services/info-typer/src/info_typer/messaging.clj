@@ -36,18 +36,7 @@
       (log/error "[amqp/messaging-initialization]" (ce/format-exception e)))))
 
 
-(defn- monitor
-  "Fires off the monitoring thread that makes sure that the AMQP connection is still up
-   and working."
-  []
-  (try
-    (amqp/conn-monitor message-handler)
-    (catch Exception e
-      (log/error "[amqp/messaging-initialization]" (ce/format-exception e)))))
-
-
 (defn messaging-initialization
   "Initializes the AMQP messaging handling, registering (message-handler) as the callback."
   []
-  (.start (Thread. receive))
-  (monitor))
+  (.start (Thread. receive)))
