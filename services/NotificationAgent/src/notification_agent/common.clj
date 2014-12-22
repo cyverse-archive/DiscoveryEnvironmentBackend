@@ -4,7 +4,6 @@
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
-            [clojure-commons.json :as cc-json]
             [clj-time.core :as time])
   (:import [java.io InputStream Reader]
            [java.util UUID]))
@@ -35,7 +34,7 @@
      (success-resp {}))
   ([m]
      {:status       200
-      :body         (if (map? m) (cheshire/encode (assoc m :success true)) (str m)) 
+      :body         (if (map? m) (cheshire/encode (assoc m :success true)) (str m))
       :content-type :json}))
 
 (defn json-resp

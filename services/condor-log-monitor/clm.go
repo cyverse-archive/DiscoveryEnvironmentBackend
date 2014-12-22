@@ -263,6 +263,16 @@ func ParseEventFile(
 	if err != nil {
 		return -1, err
 	}
+
+	fileStat, err := openFile.Stat()
+	if err != nil {
+		return -1, err
+	}
+
+	if seekTo > fileStat.Size() {
+		seekTo = 0
+	}
+
 	_, err = openFile.Seek(seekTo, os.SEEK_SET)
 	if err != nil {
 		return -1, err
@@ -355,19 +365,43 @@ func ParseEventFile(
 func MonitorPath(path string, sleepyTime time.Duration, changeDetected chan<- int) error {
 	log.Printf("Monitoring path %s every %s\n", path, sleepyTime.String())
 
-	fileinfo, err := os.Stat(path)
+	openFile, err := os.Open(path)
 	if err != nil {
 		return err
 	}
+
+	fileinfo, err := openFile.Stat()
+	if err != nil {
+		return err
+	}
+
 	lastmod := fileinfo.ModTime()
+	err = openFile.Close()
+	if err != nil {
+		return err
+	}
+
 	for {
 		time.Sleep(sleepyTime)
-		latestInfo, err := os.Stat(path)
+		openFile, err = os.Open(path)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
+
+		latestInfo, err := openFile.Stat()
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
 		latestLastMod := latestInfo.ModTime()
+		err = openFile.Close()
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
 		if !latestLastMod.Equal(lastmod) {
 			log.Printf("Change detected in %s\n", path)
 			changeDetected <- 1
@@ -648,6 +682,27 @@ func (l LogfileList) SliceByInode(inode uint64) LogfileList {
 	return l[foundIdx:]
 }
 
+// PathFromInode returns the path to a file from the LogfileList that has the
+// same inode as the one that is passed in. If none of the paths match then the
+// returned string will be empty.
+func (l LogfileList) PathFromInode(inode uint64) string {
+	foundIndex := 0
+	didFind := false
+	for idx, logfile := range l {
+		fileInode := InodeFromFileInfo(&logfile.Info)
+		if fileInode == inode {
+			didFind = true
+			foundIndex = idx
+			break
+		}
+	}
+	if !didFind {
+		return ""
+	}
+	fileInstance := l[foundIndex]
+	return path.Join(fileInstance.BaseDir, fileInstance.Info.Name())
+}
+
 /*
 On start up, look for tombstone and read it if it's present.
 List the log files.
@@ -689,6 +744,7 @@ func main() {
 	} else {
 		tombstone = nil
 	}
+
 	logDir := filepath.Dir(cfg.EventLog)
 	log.Printf("Log directory: %s\n", logDir)
 	logFilename := filepath.Base(cfg.EventLog)
@@ -723,9 +779,12 @@ func main() {
 		}
 		logfilePath := path.Join(logFile.BaseDir, logFile.Info.Name())
 		log.Printf("Parsing %s\n", logfilePath)
+
 		if tombstone != nil {
 			logfileInode := InodeFromFileInfo(&logFile.Info)
-			if logfileInode == tombstone.Inode {
+
+			// Inodes need to match and the current position needs to be less than the file size.
+			if logfileInode == tombstone.Inode && tombstone.CurrentPos < logFile.Info.Size() {
 				log.Printf("Tombstoned inode matches %s, starting parse at %d\n", logfilePath, tombstone.CurrentPos)
 				_, err = ParseEventFile(logfilePath, tombstone.CurrentPos, pub, false)
 			} else {
@@ -743,23 +802,8 @@ func main() {
 
 	changeDetected := make(chan int)
 	var startPos int64
-	if tombstone != nil {
-		logInode, err := InodeFromPath(cfg.EventLog)
-		if err != nil {
-			log.Println(err)
-			startPos = 0
-		} else {
-			if logInode == tombstone.Inode {
-				startPos = tombstone.CurrentPos
-			} else {
-				startPos = 0
-			}
-		}
-	} else {
-		startPos = 0
-	}
-	log.Printf("The start position in the log file is %d", startPos)
-	d, err := time.ParseDuration("2s")
+
+	d, err := time.ParseDuration("0.5s")
 	if err != nil {
 		log.Println(err)
 	}
@@ -776,6 +820,46 @@ func main() {
 	for {
 		select {
 		case <-changeDetected:
+			//Get the tombstone if it exists.
+			if TombstoneExists() {
+				tombstone, err = ReadTombstone()
+				if err != nil {
+					fmt.Println(err)
+				}
+				startPos = tombstone.CurrentPos
+
+				// Get the path to the file that the Tombstone was indicating
+				oldLogs, err := NewLogfileList(logDir, logFilename)
+				if err != nil {
+					fmt.Println(err)
+				}
+
+				// If the path to the file is different from the configured file the the
+				// log likely rolled over.
+				pathFromTombstone := oldLogs.PathFromInode(tombstone.Inode)
+				if pathFromTombstone != "" && pathFromTombstone != cfg.EventLog {
+					oldInfo, err := os.Stat(pathFromTombstone)
+					if err != nil {
+						fmt.Println(err)
+					}
+					// Compare the start position to the size of the
+					// file. If it's less than the size of the file, more of the old file
+					// needs to be parsed.
+					if startPos < oldInfo.Size() {
+						_, err = ParseEventFile(pathFromTombstone, startPos, pub, true)
+						if err != nil {
+							fmt.Println(err)
+						}
+						// Afterwards set the startPos to 0 if it isn't
+						// already, but ONLY if an old file was parsed first.
+						startPos = 0
+					}
+				}
+			} else {
+				// The Tombstone didn't exist, so start from the beginning of the file.
+				startPos = 0
+			}
+
 			log.Printf("Parsing %s starting at position %d\n", cfg.EventLog, startPos)
 			startPos, err = ParseEventFile(cfg.EventLog, startPos, pub, true)
 			if err != nil {
