@@ -48,7 +48,6 @@
                  [commons-net "3.3"]
                  [org.clojure/tools.nrepl "0.2.6"]
                  [net.sf.opencsv/opencsv "2.3"]
-                 [com.novemberain/langohr "2.11.0"]
                  [de.ubercode.clostache/clostache "1.4.0"]
                  [me.raynes/fs "1.4.6"]
                  [medley "0.5.1"]

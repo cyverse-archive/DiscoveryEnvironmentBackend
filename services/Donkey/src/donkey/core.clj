@@ -35,7 +35,6 @@
             [donkey.util.db :as db]
             [donkey.services.fileio.controllers :as fileio]
             [donkey.tasks :as tasks]
-            [donkey.util.messaging :as messages]
             [clojure.tools.nrepl.server :as nrepl]
             [me.raynes.fs :as fs]
             [common-cli.core :as ccli]
@@ -180,7 +179,6 @@
 (defn lein-ring-init
   []
   (load-configuration-from-file)
-  (messages/messaging-initialization)
   (icat/configure-icat)
   (start-nrepl)
   (tasks/schedule-tasks))
@@ -225,7 +223,6 @@
       (ccli/exit 1 "The config file is not readable."))
     (config/load-config-from-file (:config options))
     (db/define-database)
-    (messages/messaging-initialization)
     (icat/configure-icat)
     (tasks/schedule-tasks)
     (jetty/run-jetty app {:port (config/listen-port)})))

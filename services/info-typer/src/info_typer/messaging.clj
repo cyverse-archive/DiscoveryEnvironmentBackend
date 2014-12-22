@@ -1,16 +1,18 @@
-(ns donkey.util.messaging
-  (:require [donkey.services.filesystem.garnish.messages :as ftype]
-            [donkey.clients.amqp :as amqp]
-            [donkey.util.config :as cfg]
-            [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as ce]))
+(ns info-typer.messaging
+  (:require [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as ce]
+            [info-typer.amqp :as amqp]
+            [info-typer.config :as cfg]
+            [info-typer.messages :as ftype]))
 
-(defn dataobject-added
+
+(defn- dataobject-added
   "Event handler for 'data-object.added' events."
   [^bytes payload]
   (ftype/filetype-message-handler (String. payload "UTF-8")))
 
-(defn message-handler
+
+(defn- message-handler
   "A langohr compatible message callback. This will push out message handling to other functions
    based on the value of the routing-key. This will allow us to pull in the full iRODS event
    firehose later and delegate execution to handlers without having to deal with AMQPs object
@@ -24,6 +26,7 @@
     "data-object.add" (dataobject-added payload)
     nil))
 
+
 (defn- receive
   "Configures the AMQP connection. This is wrapped in a function because we want to start
    the connection in a new thread."
@@ -32,6 +35,7 @@
     (amqp/configure message-handler)
     (catch Exception e
       (log/error "[amqp/messaging-initialization]" (ce/format-exception e)))))
+
 
 (defn- monitor
   "Fires off the monitoring thread that makes sure that the AMQP connection is still up
@@ -42,12 +46,13 @@
     (catch Exception e
       (log/error "[amqp/messaging-initialization]" (ce/format-exception e)))))
 
+
 (defn messaging-initialization
   "Initializes the AMQP messaging handling, registering (message-handler) as the callback."
   []
   (if-not (cfg/rabbitmq-enabled)
     (log/info "[amqp/messaging-initialization] iRODS messaging disabled"))
-  
+
   (when (cfg/rabbitmq-enabled)
     (log/info "[amqp/messaging-initialization] iRODS messaging enabled")
     (.start (Thread. receive))

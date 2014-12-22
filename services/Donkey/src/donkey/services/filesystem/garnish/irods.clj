@@ -18,7 +18,8 @@
             [donkey.services.filesystem.icat :as icat])
   (:import [org.apache.tika Tika]))
 
-(defn get-file-type
+
+(defn- get-file-type
   [cm path]
   "Uses heuristomancer to determine a the file type of a file."
   (let [result (hm/identify (input-stream cm path) (cfg/filetype-read-amount))]
@@ -26,7 +27,8 @@
       (name result)
       result)))
 
-(defn content-type
+
+(defn- content-type
   "Determines the filetype of path. Reads in a chunk, writes it to a temp file, runs it
    against the configured script. If the script can't identify it, it's passed to Tika."
   [cm path]

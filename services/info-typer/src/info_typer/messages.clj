@@ -1,4 +1,4 @@
-(ns donkey.services.filesystem.garnish.messages
+(ns info-typer.messages
   (:use [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
         [clj-jargon.metadata :only [attribute? add-metadata]]
@@ -7,9 +7,10 @@
             [clojure.string :as string]
             [clojure-commons.error-codes :as ce]
             [cheshire.core :as json]
-            [donkey.util.config :as cfg]
-            [donkey.services.filesystem.garnish.irods :as irods]
-            [donkey.services.filesystem.icat :as icat]))
+            [info-typer.config :as cfg]
+            [info-typer.icat :as icat]
+            [info-typer.irods :as irods]))
+
 
 (defn filetype-message-handler
   [payload]
@@ -20,14 +21,14 @@
         (if (nil? path)
           (throw+ {:error_code "ERR_INVALID_JSON"
                    :payload payload}))
-        
+
         (if-not (exists? cm path)
           (log/warn "[filetype-message-handler]" path "does not exist, it probably got moved before the handler fired."))
-        
+
         (if (attribute? cm path (cfg/garnish-type-attribute))
           (log/warn "[filetype-message-handler]" path "already has an attribute called"
-                    (cfg/garnish-type-attribute)))
-        
+            (cfg/garnish-type-attribute)))
+
         (when (and (exists? cm path) (not (attribute? cm path (cfg/garnish-type-attribute))))
           (let [ctype (irods/content-type cm path)]
             (when-not (or (nil? ctype) (string/blank? ctype))
