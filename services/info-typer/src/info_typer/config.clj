@@ -91,12 +91,6 @@
   "info-typer.irods.use-trash")
 
 
-(cc/defprop-optboolean rabbitmq-enabled
-  "Enables or disables RabbitMQ connection."
-  [props config-valid configs]
-  "info-typer.rabbitmq.enabled" false)
-
-
 (cc/defprop-str rabbitmq-host
   "The hostname for RabbitMQ"
   [props config-valid configs]
