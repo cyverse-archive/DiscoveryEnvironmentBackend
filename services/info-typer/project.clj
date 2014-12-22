@@ -1,8 +1,18 @@
-(defproject info-typer "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+    (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+    ""))
+
+
+(defproject info-typer "4.1.0"
+  :description "An AMQP based info type detection service for iRODS"
+  :manifest {"Git-Ref" ~(git-ref)}
+  :uberjar-name "info-typer-standalone.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/tools.logging "0.3.1"]
@@ -12,6 +22,14 @@
                  [org.iplantc/clojure-commons "4.1.0"]
                  [org.iplantc/common-cli "4.1.0"]
                  [org.iplantc/heuristomancer "4.1.0"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "4.1.0"]]
   :main ^:skip-aot info-typer.core
-  :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:dev {:resource-paths ["conf/test"]}
+             :uberjar {:aot :all}}
+  :iplant-rpm {:summary "iPlant iRODS info type detection service"
+               :provides "info-typer"
+               :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
+               :exe-files []
+               :config-files ["log4j.properties"]
+               :config-path "conf/main"}
+  :uberjar-exclusions [#"LICENSE" #"NOTICE"])
