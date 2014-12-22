@@ -2,7 +2,6 @@
   (:require [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [info-typer.amqp :as amqp]
-            [info-typer.config :as cfg]
             [info-typer.messages :as ftype]))
 
 
@@ -50,10 +49,5 @@
 (defn messaging-initialization
   "Initializes the AMQP messaging handling, registering (message-handler) as the callback."
   []
-  (if-not (cfg/rabbitmq-enabled)
-    (log/info "[amqp/messaging-initialization] iRODS messaging disabled"))
-
-  (when (cfg/rabbitmq-enabled)
-    (log/info "[amqp/messaging-initialization] iRODS messaging enabled")
-    (.start (Thread. receive))
-    (monitor)))
+  (.start (Thread. receive))
+  (monitor))
