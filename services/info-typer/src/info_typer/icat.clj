@@ -1,7 +1,6 @@
 (ns info-typer.icat
   (:require [clojure.core.memoize :as memo]
             [clj-jargon.init :as init]
-            [clj-jargon.metadata :as meta]
             [info-typer.config :as cfg]))
 
 
