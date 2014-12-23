@@ -8,14 +8,13 @@
             [clojure-commons.error-codes :as ce]
             [cheshire.core :as json]
             [info-typer.config :as cfg]
-            [info-typer.icat :as icat]
             [info-typer.irods :as irods]))
 
 
 (defn filetype-message-handler
-  [payload]
+  [irods-cfg payload]
   (try+
-    (with-jargon (icat/jargon-cfg) [cm]
+    (with-jargon irods-cfg [cm]
       (let [parsed-map (json/parse-string payload true)
             path       (:path parsed-map)]
         (if (nil? path)

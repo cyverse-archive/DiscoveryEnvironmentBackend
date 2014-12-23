@@ -1,8 +1,10 @@
 (ns info-typer.core
   (:gen-class)
   (:require [me.raynes.fs :as fs]
+            [clj-jargon.init :as init]
             [common-cli.core :as ccli]
-            [info-typer.config :as config]
+            [info-typer.config :as cfg]
+            [info-typer.icat :as icat]
             [info-typer.messaging :as messages]))
 
 
@@ -21,6 +23,20 @@
    ["-h" "--help"]])
 
 
+(defn- mk-jargon-cfg
+  []
+  (init/init (cfg/irods-host)
+    (cfg/irods-port)
+    (cfg/irods-user)
+    (cfg/irods-pass)
+    (cfg/irods-home)
+    (cfg/irods-zone)
+    (cfg/irods-resc)
+    :max-retries (cfg/irods-max-retries)
+    :retry-sleep (cfg/irods-retry-sleep)
+    :use-trash   (cfg/irods-use-trash)))
+
+
 (defn -main
   [& args]
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
@@ -28,5 +44,5 @@
       (ccli/exit 1 "The config file does not exist."))
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
-    (config/load-config-from-file (:config options))
-    (messages/receive)))
+    (cfg/load-config-from-file (:config options))
+    (messages/receive (mk-jargon-cfg))))
