@@ -29,4 +29,4 @@
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
     (config/load-config-from-file (:config options))
-    (messages/messaging-initialization)))
+    (messages/receive)))

@@ -26,7 +26,7 @@
     nil))
 
 
-(defn- receive
+(defn receive
   "Configures the AMQP connection. This is wrapped in a function because we want to start
    the connection in a new thread."
   []
@@ -34,9 +34,3 @@
     (amqp/configure message-handler)
     (catch Exception e
       (log/error "[amqp/messaging-initialization]" (ce/format-exception e)))))
-
-
-(defn messaging-initialization
-  "Initializes the AMQP messaging handling, registering (message-handler) as the callback."
-  []
-  (.start (Thread. receive)))
