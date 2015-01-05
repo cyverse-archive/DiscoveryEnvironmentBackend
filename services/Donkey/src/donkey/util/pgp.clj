@@ -1,28 +1,35 @@
 (ns donkey.util.pgp
-  (:require [clojure.java.io :as io]
-            [donkey.util.config :as config]
-            [mvxcvi.crypto.pgp :as pgp]))
+  (:use [slingshot.slingshot :only [throw+]])
+  (:require [clj-pgp.core :as pgp]
+            [clj-pgp.keyring :as keyring]
+            [clj-pgp.message :as pgp-msg]
+            [clojure.java.io :as io]
+            [clojure-commons.error-codes :as ce]
+            [donkey.util.config :as config]))
 
 (def ^:private keyring
-  (memoize (fn [] (-> (config/keyring-path) io/file pgp/load-secret-keyring))))
+  (memoize (fn [] (-> (config/keyring-path) io/file keyring/load-secret-keyring))))
 
 (def ^:private get-public-key
-  (memoize (fn [] (first (pgp/list-public-keys (keyring))))))
+  (memoize (fn [] (first (keyring/list-public-keys (keyring))))))
 
 (def ^:private get-private-key
   (memoize
    (fn [id]
      (some-> (keyring)
-             (pgp/get-secret-key id)
+             (keyring/get-secret-key id)
              (pgp/unlock-key (config/key-password))))))
 
 (defn encrypt
   [s]
-  (pgp/encrypt (.getBytes s) (get-public-key)
-               :algorithm :aes-256
-               :compress  :zip
-               :armor     true))
+  (pgp-msg/encrypt (.getBytes s) (get-public-key)
+                   :algorithm :aes-256
+                   :compress  :zip
+                   :armor     true))
 
 (defn decrypt
   [bs]
-  (String. (pgp/decrypt bs get-private-key)))
+  (if-let [private-key (get-private-key)]
+    (String. (pgp-msg/decrypt bs private-key))
+    (throw+ {:error_code ce/ERR_CONFIG_INVALID
+             :message    "unable to unlock the private encryption key"})))
