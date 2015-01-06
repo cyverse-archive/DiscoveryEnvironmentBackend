@@ -23,7 +23,11 @@
   "EnvironmentVariable")
 
 (def ignored-param-types
-  #{environment-variable-type})
+  #{environment-variable-type "Info"})
+
+(defn ignored-param?
+  [{:keys [type order]}]
+  (or (contains? ignored-param-types type) (< order 0)))
 
 (defn qual-id
   [step-id param-id]
