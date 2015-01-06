@@ -232,7 +232,7 @@
   [formatter config io-maps outputs default-values params]
   (let [output-value-map (into {} (map (juxt :qual-id :name) outputs))]
     (mapcat (partial args-for-param formatter config io-maps output-value-map default-values)
-            (remove (comp util/ignored-param-types :type) params))))
+            (remove util/ignored-param? params))))
 
 (def ^:private generated-param-ids
   {:archive      (uuidify "06F127BB-0599-4343-89CB-DD15BD0163DE")
