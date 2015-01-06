@@ -15,17 +15,16 @@
 
 (def ^:private get-private-key
   (memoize
-   (fn [id]
+   (fn []
      (some-> (keyring)
-             (keyring/get-secret-key id)
+             (keyring/get-secret-key (pgp/hex-id (get-public-key)))
              (pgp/unlock-key (config/key-password))))))
 
 (defn encrypt
   [s]
   (pgp-msg/encrypt (.getBytes s) (get-public-key)
                    :algorithm :aes-256
-                   :compress  :zip
-                   :armor     true))
+                   :compress  :zip))
 
 (defn decrypt
   [bs]
