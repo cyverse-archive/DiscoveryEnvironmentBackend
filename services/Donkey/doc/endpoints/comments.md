@@ -136,8 +136,8 @@ same user who retracted the comment.
 
 ### Request
 
-In addition to the the `proxyToken` authentication parameter, this endpoint requires a boolean
-`retracted` parameter.  A value of `true` indicates that the comment is being retracted, while a
+In addition to the `proxyToken` authentication parameter, this endpoint requires a boolean
+`retracted` parameter. A value of `true` indicates that the comment is being retracted, while a
 value of `false` indicates the comment is being readmitted.
 
 Any body attached to the request will be ignored.
@@ -146,14 +146,15 @@ Any body attached to the request will be ignored.
 
 | Status Code | Cause |
 | ----------- | ----- |
-| 200         | The comment corresponding to the `comment-id` UUID has been marked as a retracted. |
+| 200         | The comment corresponding to the `comment-id` UUID has been marked as retracted. |
 | 400         | The `retracted` parameter was missing or had a value other than `true` or `false`. |
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 | 403         | See [403](#403). |
 | 404         | `entry-id` doesn't exist or isn't accessible by the user, or `comment-id` doesn't exist.
 | 409         | One of the query parameters was passed more than once with different values. |
 
-Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
+Error responses may include a `reason` field, providing a short, human readable explanation of the
+failure.
 
 #### 403
 
@@ -165,4 +166,36 @@ if the comment wasn't originally retracted by the user.
 
 ```
 curl -X PATCH "localhost/secured/filesystem/f86700ac-df88-11e3-bf3b-6abdce5a08d5/comments/79a6a1f0-0745-21e3-c125-73dece2a6989?proxyToken=fake-token&retracted=true"
+```
+
+## Administratively deleting a comment
+
+__NOT IMPLEMENTED__
+
+`DELETE /admin/filesystem/entry/{entry-id}/comments/{comment-id}`
+
+This endpoint allows an administrative user to delete a given comment on a given file or folder.
+`entry-id` is the UUID of the file or folder, and `comment-id` is the UUID of the comment.
+
+### Request
+
+Only the `proxyToken` authentication parameter is required. All other parameters are ignored.
+
+Any body attached to the request will be ignored.
+
+### Response
+
+| Status Code | Cause |
+| ----------- | ----- |
+| 204         | The comment corresponding to the `comment-id` UUID has been deleted. |
+| 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
+| 404         | Either the file or folder corresponding to `entry-id` doesn't exist or the comment corresponding to `comment-id` doesn't. |
+
+Error responses may include a `reason` field, providing a short, human readable explanation of the
+failure.
+
+### Example
+
+```
+curl -X DELETE localhost/admin/filesystem/f86700ac-df88-11e3-bf3b-6abdce5a08d5/comments/79a6a1f0-0745-21e3-c125-73dece2a6989?proxyToken=fake-token
 ```
