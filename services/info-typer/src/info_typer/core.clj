@@ -4,7 +4,6 @@
             [clj-jargon.init :as init]
             [common-cli.core :as ccli]
             [info-typer.config :as cfg]
-            [info-typer.icat :as icat]
             [info-typer.messaging :as messages]))
 
 
