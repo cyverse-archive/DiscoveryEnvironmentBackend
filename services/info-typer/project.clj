@@ -9,7 +9,7 @@
     ""))
 
 
-(defproject info-typer "4.1.0"
+(defproject info-typer "4.1.1"
   :description "An AMQP based info type detection service for iRODS"
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "info-typer-standalone.jar"
@@ -17,11 +17,11 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [com.novemberain/langohr "2.11.0"]
                  [me.raynes/fs "1.4.6"]
-                 [org.iplantc/clj-jargon "4.1.0"]
-                 [org.iplantc/clojure-commons "4.1.0"]
-                 [org.iplantc/common-cli "4.1.0"]
-                 [org.iplantc/heuristomancer "4.1.0"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "4.1.0"]]
+                 [org.iplantc/clj-jargon "4.1.1"]
+                 [org.iplantc/clojure-commons "4.1.1"]
+                 [org.iplantc/common-cli "4.1.1"]
+                 [org.iplantc/heuristomancer "4.1.1"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "4.1.1"]]
   :main ^:skip-aot info-typer.core
   :profiles {:dev {:resource-paths ["conf/test"]}
              :uberjar {:aot :all}}
