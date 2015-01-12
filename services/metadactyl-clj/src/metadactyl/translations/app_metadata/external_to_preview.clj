@@ -1,10 +1,20 @@
 (ns metadactyl.translations.app-metadata.external-to-preview
   (:use [metadactyl.translations.app-metadata.util])
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [me.raynes.fs :as fs]))
+
+(defn- base-name
+  [path]
+  (when-not (string/blank? path)
+    (fs/base-name path)))
+
+(defn- default-prop-value-fn
+  [prop]
+  (:value prop ""))
 
 (defn- default-prop-translation
   ([prop]
-     (default-prop-translation prop #(:value % "")))
+     (default-prop-translation prop default-prop-value-fn))
   ([prop f]
      [{:name  (:name prop "--unnamed-parameter")
        :value (f prop)
@@ -37,9 +47,17 @@
     (:defaultValue prop "")
     (:order prop 0))])
 
+(defn- input-prop-translation
+  ([prop]
+     (input-prop-translation prop default-prop-value-fn))
+  ([prop f]
+     (let [path (base-name (:path (f prop)))]
+       (when-not (or (:is_implicit prop) (string/blank? path))
+         (default-prop-translation prop (constantly path))))))
+
 (defn- multi-file-input-prop-translation
   [prop]
-  (mapcat #(default-prop-translation prop (constantly %))
+  (mapcat #(input-prop-translation prop (constantly %))
           (:value prop)))
 
 (defn- output-prop-translation
@@ -51,6 +69,7 @@
   [[#(= "Flag" %)                flag-prop-translation]
    [#(= "TreeSelection" %)       tree-selection-prop-translation]
    [#(re-find #"Selection$" %)   selection-prop-translation]
+   [#(re-find #"Input$" %)       input-prop-translation]
    [#(= "MultiFileSelector" %)   multi-file-input-prop-translation]
    [#(re-find #"Output$" %)      output-prop-translation]
    [#(= "EnvironmentVariable" %) (constantly nil)]

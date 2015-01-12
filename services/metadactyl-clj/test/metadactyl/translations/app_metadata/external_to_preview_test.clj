@@ -2,33 +2,33 @@
   (:use [clojure.test]
         [metadactyl.translations.app-metadata.external-to-preview]))
 
-(deftest no-property-groups
+(deftest no-parameter-groups
   (is (= {:params []}
          (translate-template {:groups []}))))
 
-(deftest no-properties
+(deftest no-parameters
   (is (= {:params []}
          (translate-template
           {:groups
            {:groups
-            [{:properties []}
-             {:properties []}]}}))))
+            [{:parameters []}
+             {:parameters []}]}}))))
 
-(deftest one-property
+(deftest one-parameter
   (is (= {:params
           [{:name  "-f"
             :value "foo"
             :order 1}]}
          (translate-template
           {:groups
-           [{:properties
+           [{:parameters
              [{:id    "some-uuid"
                :name  "-f"
                :label "foo"
                :value "foo"
                :order 1}]}]}))))
 
-(deftest properties-in-one-group
+(deftest parameters-in-one-group
   (is (= {:params
           [{:name  "-f"
             :value "foo"
@@ -38,20 +38,19 @@
             :order 1}]}
          (translate-template
           {:groups
-           {:groups
-            [{:properties
-              [{:id    "some-uuid"
-                :name  "-f"
-                :label "foo"
-                :value "foo"
-                :order 2}
-               {:id    "some-other-uuid"
-                :name  "-b"
-                :label "bar"
-                :value "bar"
-                :order 1}]}]}}))))
+           [{:parameters
+             [{:id    "some-uuid"
+               :name  "-f"
+               :label "foo"
+               :value "foo"
+               :order 2}
+              {:id    "some-other-uuid"
+               :name  "-b"
+               :label "bar"
+               :value "bar"
+               :order 1}]}]}))))
 
-(deftest properties-in-multiple-groups
+(deftest parameters-in-multiple-groups
   (is (= {:params
           [{:name  "-f"
             :value "foo"
@@ -64,7 +63,7 @@
             :order 3}]}
          (translate-template
           {:groups
-           [{:properties
+           [{:parameters
              [{:id    "some-uuid"
                :name  "-f"
                :label "foo"
@@ -75,9 +74,62 @@
                :label "baz"
                :value "baz"
                :order 4}]}
-            {:properties
+            {:parameters
              [{:id    "yet-another-uuid"
                :name  "-r"
                :label "bar"
                :value "bar"
                :order 3}]}]}))))
+
+(defn- implicit-test-prop
+  [[base-name type implicit?] order]
+  (let [param-value {:path base-name}]
+    {:id         (str base-name "-id")
+     :name       (str "--" base-name)
+     :label       base-name
+     :value       (if (= type "MultiFileSelector") [param-value] param-value)
+     :order       order
+     :type        type
+     :is_implicit implicit?}))
+
+(deftest implicit-input-parameters
+  (is (= {:params
+          [{:name  "--foo"
+            :value "foo"
+            :order 1}
+           {:name  "--bar"
+            :value "bar"
+            :order 3}
+           {:name  "--baz"
+            :value "baz"
+            :order 5}]}
+         (translate-template
+          {:groups
+           [{:parameters
+             (map implicit-test-prop
+                  [["foo" "FileInput"         false]
+                   ["oof" "FileInput"         true]
+                   ["bar" "FolderInput"       false]
+                   ["rab" "FolderInput"       true]
+                   ["baz" "MultiFileSelector" false]
+                   ["zab" "MultiFileSelector" true]]
+                  (iterate inc 1))}]}))))
+
+(defn- build-empty-input-parameter
+  [type order]
+  (let [param-value {:path ""}]
+    {:id    (str "empty-" type)
+     :name  (str "--" type)
+     :label type
+     :value (if (= type "MultiFileSelector") [param-value] param-value)
+     :order order
+     :type  type}))
+
+(deftest empty-input-parameters
+  (is (= {:params []}
+         (translate-template
+          {:groups
+           [:parameters
+            (map build-empty-input-parameter
+                 ["FileInput" "FolderInput" "MultiFileSelector"]
+                 (iterate inc 1))]}))))
