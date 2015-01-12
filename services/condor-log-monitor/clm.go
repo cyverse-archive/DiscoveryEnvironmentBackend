@@ -38,6 +38,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
@@ -722,12 +723,24 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
 	errChan := make(chan ConnectionErrorChan)
 	pub := NewAMQPPublisher(cfg)
 	pub.SetupReconnection(errChan)
-	if err = pub.Connect(errChan); err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
+
+	// Handle badness with AMQP at startup.
+	for {
+		log.Println("Attempting AMQP connection...")
+		err = pub.Connect(errChan)
+		if err != nil {
+			log.Println(err)
+			waitFor := randomizer.Intn(10)
+			fmt.Printf("Re-attempting connection in %d seconds", waitFor)
+			time.Sleep(time.Duration(waitFor) * time.Second)
+		} else {
+			log.Println("Successfully connected to the AMQP broker.")
+			break
+		}
 	}
 
 	// First, we need to read the tombstone file if it exists.
