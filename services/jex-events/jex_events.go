@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/streadway/amqp"
 )
@@ -474,17 +476,30 @@ func main() {
 		log.Print(err)
 		os.Exit(-1)
 	}
+	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
 	connErrChan := make(chan ConnectionErrorChannel)
 	quitHandler := make(chan int)
 	consumer := NewAMQPConsumer(config)
 	consumer.SetupReconnection(connErrChan, EventHandler, quitHandler, databaser, config.EventURL, config.JEXURL)
+
 	log.Print("Setting up HTTP")
 	SetupHTTP(config, databaser)
 	log.Print("Done setting up HTTP")
-	deliveries, err := consumer.Connect(connErrChan)
-	if err != nil {
-		log.Print(err)
-		os.Exit(-1)
+
+	var deliveries <-chan amqp.Delivery
+	for {
+		log.Println("Attempting AMQP connection...")
+		deliveries, err = consumer.Connect(connErrChan)
+		if err != nil {
+			log.Print(err)
+			waitFor := randomizer.Intn(10)
+			log.Printf("Re-attempting connection in %d seconds", waitFor)
+			time.Sleep(time.Duration(waitFor) * time.Second)
+		} else {
+			log.Println("Successfully connected to the AMQP broker")
+			break
+		}
 	}
+
 	EventHandler(deliveries, quitHandler, databaser, config.EventURL, config.JEXURL)
 }
