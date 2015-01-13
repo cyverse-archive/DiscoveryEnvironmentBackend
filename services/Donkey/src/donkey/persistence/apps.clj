@@ -33,6 +33,7 @@
                     :p.ordering
                     :p.omit_if_blank
                     [:pt.name :type]
+                    [:vt.name :value_type]
                     :fp.is_implicit
                     [:info_type.name :info_type]
                     [:df.name :data_format]
@@ -48,6 +49,8 @@
                   {:p.parameter_group_id :pg.id})
             (join [:parameter_types :pt]
                   {:p.parameter_type :pt.id})
+            (join [:value_type :vt]
+                  {:pt.value_type_id :vt.id})
             (join [:file_parameters :fp]
                   {:fp.parameter_id :p.id})
             (join [:data_formats :df]

@@ -42,7 +42,7 @@
 
 (defn- implicit-output?
   [param]
-  (and (= "Output" (:type param)) (:is_implicit param)))
+  (and (= "Output" (:value_type param)) (:is_implicit param)))
 
 (defn- omit-param?
   [param]
@@ -131,7 +131,6 @@
   [agave-client app-id job-id config]
   (let [agave-params   (load-agave-pipeline-params agave-client app-id)
         de-params      (filter (comp nil? :external_app_id) (ap/get-app-parameters app-id))
-        params         (concat agave-params de-params)
         mapped-params  (load-mapped-params app-id)]
     (->> (concat agave-params de-params)
          (remove (comp mapped-params get-full-param-id))
