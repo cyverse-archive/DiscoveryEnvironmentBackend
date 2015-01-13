@@ -5,24 +5,8 @@
             [langohr.exchange            :as le]
             [langohr.queue               :as lq]
             [langohr.consumers           :as lc]
-            [info-typer.config           :as cfg]))
-
-
-(def ^:private amqp-conn (ref nil))
-(def ^:private amqp-channel (ref nil))
-
-
-(defn- connection-okay?
-  "Returns a boolean telling whether the connection that's passed in is still active."
-  [conn]
-  (and (not (nil? conn))
-    (rmq/open? conn)))
-
-
-(defn- connection
-  "Creates and returns a new connection to the AMQP server."
-  [conn-map]
-  (rmq/connect conn-map))
+            [info-typer.config           :as cfg])
+  (:import [java.net SocketException]))
 
 
 (defn- connection-map
@@ -34,33 +18,24 @@
    :password (cfg/amqp-pass)})
 
 
+(defn- attempt-connect
+  [conn-map]
+  (try
+    (let [conn (rmq/connect conn-map)]
+      (log/info "Connected to the AMQP broker.")
+      conn)
+    (catch SocketException e
+      (log/warn "Failed to connect to the AMQP broker."))))
+
+
 (defn- get-connection
   "Sets the amqp-conn ref if necessary and returns it."
-  []
-  (if (connection-okay? @amqp-conn)
-    @amqp-conn
-    (dosync (ref-set amqp-conn (connection (connection-map))))))
-
-
-(defn- channel-okay?
-  "Returns a boolean telling whether the channel that's passed in is still active."
-  [chan]
-  (and (not (nil? chan))
-    (rmq/open? chan)))
-
-
-(defn- channel
-  "Creates a channel on connection and returnes it."
-  [connection]
-  (lch/open connection))
-
-
-(defn- get-channel
-  "Sets the amqp-channel ref if necessary and returns it."
-  []
-  (if (channel-okay? @amqp-channel)
-    @amqp-channel
-    (dosync (ref-set amqp-channel (channel (get-connection))))))
+  [conn-map]
+  (if-let [conn (attempt-connect conn-map)]
+    conn
+    (do
+      (Thread/sleep (cfg/amqp-retry-sleep))
+      (recur conn-map))))
 
 
 (defn- exchange?
@@ -107,20 +82,10 @@
   "Sets up a channel, exchange, and queue, with the queue bound to the exchange and 'msg-fn'
    registered as the callback."
   [msg-fn]
-  (dosync
-    (when (or (not (connection-okay? @amqp-conn))
-            (not (channel-okay? @amqp-channel)))
-      (log/warn "[amqp/configure] configuring message connection")
-      (let [conn (get-connection)
-            chan (get-channel)
-            q    (declare-queue @amqp-channel)]
-
-        (declare-exchange
-          @amqp-channel
-          (cfg/amqp-exchange)
-          (cfg/amqp-exchange-type)
-          :durable     (cfg/amqp-exchange-durable?)
-          :auto-delete (cfg/amqp-exchange-auto-delete?))
-
-        (bind @amqp-channel q (cfg/amqp-exchange) (cfg/amqp-routing-key))
-        (subscribe @amqp-channel q msg-fn :auto-ack (cfg/amqp-msg-auto-ack?))))))
+  (log/info "configuring AMQP connection")
+  (let [chan (lch/open (get-connection (connection-map)))
+        q    (declare-queue chan)]
+    (declare-exchange chan (cfg/amqp-exchange) (cfg/amqp-exchange-type)
+      :durable (cfg/amqp-exchange-durable?) :auto-delete (cfg/amqp-exchange-auto-delete?))
+    (bind chan q (cfg/amqp-exchange) (cfg/amqp-routing-key))
+    (subscribe chan q msg-fn :auto-ack (cfg/amqp-msg-auto-ack?))))

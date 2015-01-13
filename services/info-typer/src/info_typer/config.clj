@@ -115,6 +115,12 @@
   "info-typer.amqp.pass")
 
 
+(cc/defprop-int amqp-retry-sleep
+  "The number of milliseconds to sleep between connection retries."
+  [props config-valid configs]
+  "info-typer.amqp.retry-sleep")
+
+
 (cc/defprop-str amqp-exchange
   "The exchange to listen to for iRODS updates."
   [props config-valid configs]
@@ -167,6 +173,6 @@
   "Loads the configuration settings from a file."
   [cfg-path]
   (cc/load-config-from-file cfg-path props)
-  (cc/log-config props :filters [#"irods\.user" #"icat\.user"])
+  (cc/log-config props :filters [#"irods\.user"])
   (validate-config)
   (ce/register-filters (exception-filters)))
