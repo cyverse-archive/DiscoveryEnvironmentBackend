@@ -1,36 +1,11 @@
 # info-typer
 
-FIXME: description
+An AMQP message based info type detector
 
-## Installation
+info-typer listens to the `irods` AMQP topic exchange for iRODS change messages related to data
+objects. The iRODS change messages are described in the document
+https://docs.google.com/document/d/126uSOX8VWfFyRub1Ibqiknf4QbQuDZLOCktoBLpgqsE/edit. For each
+`data-object` change message, info-typer attempts to detect the info type of the corresponding file.
+If it succeeds, it updates the `ipc-filetype` AVU in iRODS with the detected info type.
 
-Download from http://example.com/FIXME.
-
-## Usage
-
-FIXME: explanation
-
-    $ java -jar info-typer-0.1.0-standalone.jar [args]
-
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
-
-## License
-
-Copyright © 2014 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+This is not a public facing service. It has no API.
