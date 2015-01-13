@@ -164,9 +164,11 @@
 
 (defn input-args
   [param param-value preprocessor]
-  (let [values (if (sequential? param-value) param-value [param-value])]
-    (mapv (comp (partial build-arg param) (fnil preprocessor ""))
-          (if (:omit_if_blank param) (remove string/blank? values) values))))
+  (if-not (:is_implicit param)
+    (let [values (if (sequential? param-value) param-value [param-value])]
+      (mapv (comp (partial build-arg param) (fnil preprocessor ""))
+            (if (:omit_if_blank param) (remove string/blank? values) values)))
+    []))
 
 (defn output-args
   [param param-value]
