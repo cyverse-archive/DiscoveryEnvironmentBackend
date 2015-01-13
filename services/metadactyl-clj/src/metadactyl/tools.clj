@@ -3,7 +3,6 @@
         [kameleon.entities]
         [kameleon.queries]
         [kameleon.util.search]
-        [metadactyl.persistence.app-metadata :only [add-tool]]
         [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
         [metadactyl.validation :only [verify-tool-name-location]]
@@ -11,6 +10,7 @@
         [korma.core]
         [korma.db :only [transaction]])
   (:require [clojure-commons.error-codes :as cc-errs]
+            [metadactyl.persistence.app-metadata :as persistence]
             [metadactyl.util.service :as service]))
 
 (defn- add-search-where-clauses
@@ -82,7 +82,7 @@
 (defn- add-new-tool
   [tool]
   (verify-tool-name-location tool)
-  (add-tool tool))
+  (persistence/add-tool tool))
 
 (defn add-tools
   "Adds a list of tools to the database, returning a list of IDs of the tools added."
@@ -90,3 +90,8 @@
   (transaction
     (let [tool-ids (doall (map add-new-tool tools))]
       (service/success-response {:tool_ids tool-ids}))))
+
+(defn update-tool
+  [{:keys [id] :as tool}]
+  (persistence/update-tool tool)
+  (get-tool id))

@@ -18,7 +18,7 @@
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
         [metadactyl.service.app-metadata :only [permanently-delete-apps]]
-        [metadactyl.tools :only [add-tools]]
+        [metadactyl.tools :only [add-tools update-tool]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
@@ -35,6 +35,15 @@
          :summary "Add new Tools."
          :notes "This service adds new Tools to the DE."
          (ce/trap uri #(add-tools body)))
+
+  (PATCH* "/tools/:tool-id" [:as {uri :uri}]
+          :path-params [tool-id :- ToolIdParam]
+          :query [params SecuredQueryParams]
+          :body [body (describe ToolUpdateRequest "The Tool to update.")]
+          :return Tool
+          :summary "Update a Tool"
+          :notes "This service updates a Tool definition in the DE."
+          (ce/trap uri #(update-tool (assoc body :id tool-id))))
 
   (GET* "/tool-requests" [:as {uri :uri}]
         :query [params ToolRequestListingParams]

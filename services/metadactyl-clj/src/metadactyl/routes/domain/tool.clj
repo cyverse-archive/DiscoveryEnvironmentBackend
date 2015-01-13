@@ -41,6 +41,13 @@
 (defschema ToolsImportRequest
   {:tools (describe [ToolImportRequest] "zero or more Tool definitions")})
 
+(defschema ToolUpdateRequest
+  (-> ToolImportRequest
+      (->optional-param :name)
+      (->optional-param :location)
+      (->optional-param :type)
+      (->optional-param :implementation)))
+
 (defschema ToolListing
   {:tools (describe [Tool] "Listing of App Tools")})
 

@@ -30,6 +30,18 @@
       (select-keys [:name :description])
       (assoc :edited_date (sqlfn now))))
 
+(defn- filter-valid-tool-values
+  "Filters valid keys from the given Tool for inserting or updating in the database."
+  [tool]
+  (select-keys tool [:id
+                     :name
+                     :description
+                     :attribution
+                     :location
+                     :version
+                     :integration_data_id
+                     :tool_type_id]))
+
 (defn- filter-valid-task-values
   "Filters valid keys from the given Task for inserting or updating in the database."
   [task]
@@ -135,13 +147,36 @@
   (transaction
     (let [integration-data-id (:id (get-integration-data implementor_email implementor))
           tool (-> tool
-                   (select-keys [:id :name :description :attribution :location :version])
                    (assoc :integration_data_id integration-data-id
-                          :tool_type_id (get-tool-type-id type)))
+                          :tool_type_id (get-tool-type-id type))
+                   (filter-valid-tool-values))
           tool-id (:id (insert tools (values tool)))]
       (dorun (map (partial add-tool-data-file tool-id true) (:input_files test)))
       (dorun (map (partial add-tool-data-file tool-id false) (:output_files test)))
       tool-id)))
+
+(defn update-tool
+  "Updates a tool and its test data files in the database"
+  [{tool-id :id
+    type :type
+    {:keys [implementor_email implementor test] :as implementation} :implementation
+    :as tool}]
+  (transaction
+    (let [integration-data-id (when implementation
+                                (:id (get-integration-data implementor_email implementor)))
+          type-id (when type (get-tool-type-id type))
+          tool (-> tool
+                   (assoc :integration_data_id integration-data-id
+                          :tool_type_id        type-id)
+                   (dissoc :id)
+                   filter-valid-tool-values
+                   remove-nil-vals)]
+      (when-not (empty? tool)
+        (update tools (set-fields tool) (where {:id tool-id})))
+      (when-not (empty? test)
+        (delete tool_test_data_files (where {:tool_id tool-id}))
+        (dorun (map (partial add-tool-data-file tool-id true) (:input_files test)))
+        (dorun (map (partial add-tool-data-file tool-id false) (:output_files test)))))))
 
 (defn add-app
   "Adds top-level app info to the database and returns the new app info, including its new ID."
