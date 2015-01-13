@@ -84,13 +84,13 @@
 (defn- implicit-test-prop
   [[base-name type implicit?] order]
   (let [param-value {:path base-name}]
-    {:id         (str base-name "-id")
-     :name       (str "--" base-name)
-     :label       base-name
-     :value       (if (= type "MultiFileSelector") [param-value] param-value)
-     :order       order
-     :type        type
-     :is_implicit implicit?}))
+    {:id              (str base-name "-id")
+     :name            (str "--" base-name)
+     :label           base-name
+     :value           (if (= type "MultiFileSelector") [param-value] param-value)
+     :order           order
+     :type            type
+     :file_parameters {:is_implicit implicit?}}))
 
 (deftest implicit-input-parameters
   (is (= {:params

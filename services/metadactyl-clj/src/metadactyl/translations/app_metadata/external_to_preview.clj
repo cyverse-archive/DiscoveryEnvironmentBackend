@@ -12,6 +12,10 @@
   [prop]
   (:value prop ""))
 
+(defn- implicit?
+  [prop]
+  (get-in prop [:file_parameters :is_implicit] false))
+
 (defn- default-prop-translation
   ([prop]
      (default-prop-translation prop default-prop-value-fn))
@@ -52,7 +56,7 @@
      (input-prop-translation prop default-prop-value-fn))
   ([prop f]
      (let [path (base-name (:path (f prop)))]
-       (when-not (or (:is_implicit prop) (string/blank? path))
+       (when-not (or (implicit? prop) (string/blank? path))
          (default-prop-translation prop (constantly path))))))
 
 (defn- multi-file-input-prop-translation
@@ -62,7 +66,7 @@
 
 (defn- output-prop-translation
   [prop]
-  (when (and (not (:is_implicit prop)) (= (:data_source prop) "file"))
+  (when (and (not (implicit? prop)) (= (:data_source prop) "file"))
     (default-prop-translation prop)))
 
 (def ^:private prop-translation-fns
