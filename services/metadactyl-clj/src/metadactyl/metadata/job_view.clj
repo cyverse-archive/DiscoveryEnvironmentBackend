@@ -20,7 +20,8 @@
           (where {:p.parameter_group_id group-id
                   :p.is_visible         true})
           (where (and (not (exists (mapped-input-subselect step-id)))
-                      (or {:is_implicit nil}
+                      (or (in :parameter_type amp/param-input-types)
+                          {:is_implicit nil}
                           {:is_implicit false})))))
 
 (defn- format-parameter
