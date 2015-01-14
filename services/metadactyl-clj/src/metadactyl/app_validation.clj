@@ -89,17 +89,29 @@
                   :a.step_count 1
                   :a.is_public  false})))
 
+(defn- list-unrunnable-tasks
+  "Determines which of a collection of task IDs are not runnable."
+  [task-ids]
+  (map :id
+       (select [:tasks :t]
+               (fields :t.id)
+               (where {:t.id              [in task-ids]
+                       :t.tool_id         nil
+                       :t.external_app_id nil}))))
+
 (defn app-publishable?
   "Determines whether or not an app can be published. An app is publishable if none of the
    templates in the app are associated with any single-step apps that are not public. Returns
    a flag indicating whether or not the app is publishable along with the reason the app isn't
    publishable if it's not."
   [app-id]
-  (let [app (get-app app-id)
-        task-ids (task-ids-for-app app-id)
-        private-apps (private-apps-for task-ids)]
-    (cond (:is_public app)            [false "app is already public"]
-          (zero? (count task-ids))    [false "no app ID provided"]
-          (= 1 (count task-ids))      [true]
-          (pos? (count private-apps)) [false "contains private apps" private-apps]
-          :else                       [true])))
+  (let [app              (get-app app-id)
+        task-ids         (task-ids-for-app app-id)
+        unrunnable-tasks (list-unrunnable-tasks task-ids)
+        private-apps     (private-apps-for task-ids)]
+    (cond (:is_public app)       [false "app is already public"]
+          (empty? task-ids)      [false "no app ID provided"]
+          (seq unrunnable-tasks) [false "contains unrunnable tasks" unrunnable-tasks]
+          (= 1 (count task-ids)) [true]
+          (seq private-apps)     [false "contains private apps" private-apps]
+          :else                  [true])))
