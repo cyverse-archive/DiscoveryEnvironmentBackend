@@ -1,5 +1,5 @@
 (ns donkey.services.file-listing
-  (:use [clojure-commons.error-codes] 
+  (:use [clojure-commons.error-codes]
         [donkey.util.config]
         [donkey.util.service :only [decode-stream required-param success-response]]
         [slingshot.slingshot :only [throw+]]
@@ -38,5 +38,5 @@
   "Resets the default output directory for a user."
   [body]
   (let [path       (required-param (decode-stream body) :path)
-        build-path (di/build-path (di/user-home-folder (:shortUsername current-user) path))]
+        build-path (di/build-path (di/user-home-folder (:shortUsername current-user)) path)]
     {:path (generate-output-dir build-path)}))

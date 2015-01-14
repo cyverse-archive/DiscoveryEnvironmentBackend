@@ -135,8 +135,7 @@
 (defn save-default-output-dir
   "Saves the path to the user's default output folder in the user's preferences."
   [user path]
-  (let [prefs (cheshire/decode (user-prefs user))]
-    (user-prefs user (add-default-output-dir prefs path))))
+  (user-prefs user (add-default-output-dir (user-prefs user) path)))
 
 
 (defn get-default-output-dir
