@@ -13,11 +13,16 @@
 (def AppIdPathParam (ss/describe UUID "The App's UUID"))
 (def AppCategoryIdPathParam (ss/describe UUID "The App Category's UUID"))
 
+(def NonBlankString
+  (ss/describe
+   (s/both String (s/pred (complement clojure.string/blank?) 'non-blank?))
+   "A non-blank string."))
+
 (s/defschema SecuredQueryParamsRequired
-  {:user       (ss/describe String "The short version of the username")
-   :email      (ss/describe String "The user's email address")
-   :first-name (ss/describe String "The user's first name")
-   :last-name  (ss/describe String "The user's last name")})
+  {:user       (ss/describe NonBlankString "The short version of the username")
+   :email      (ss/describe NonBlankString "The user's email address")
+   :first-name (ss/describe NonBlankString "The user's first name")
+   :last-name  (ss/describe NonBlankString "The user's last name")})
 
 (s/defschema SecuredQueryParamsEmailRequired
   (-> SecuredQueryParamsRequired
