@@ -47,8 +47,15 @@
                               (secured-params query)
                               components))
 
+(defn get-all-workflow-elements
+  "A service to get information about all workflow elements."
+  [params]
+  (let [params (select-keys params [:include-hidden])]
+    (client/get (metadactyl-url params "apps" "elements")
+                {:as :stream})))
+
 (defn get-workflow-elements
-  "A service to get information about workflow elements."
+  "A service to get information about selected workflow elements."
   [element-type params]
   (let [params (select-keys params [:include-hidden])]
     (client/get (metadactyl-url params "apps" "elements" element-type)

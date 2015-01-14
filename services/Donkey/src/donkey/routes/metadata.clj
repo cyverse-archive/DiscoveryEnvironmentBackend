@@ -75,6 +75,9 @@
     (GET "/apps/ids" []
          (get-all-app-ids))
 
+    (GET "/apps/elements" [:as {:keys [params]}]
+         (get-all-workflow-elements params))
+
     (GET "/apps/elements/:element-type" [element-type :as {:keys [params]}]
          (get-workflow-elements element-type params))
 

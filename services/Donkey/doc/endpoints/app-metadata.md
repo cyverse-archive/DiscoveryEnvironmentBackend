@@ -51,6 +51,10 @@ information.
 
 ## Listing App Elements
 
+Secured Endpoint: GET /apps/elements
+
+Delegates to metadactyl: GET /apps/elements
+
 Secured Endpoint: GET /apps/elements/{element-type}
 
 Delegates to metadactyl: GET /apps/elements/{element-type}

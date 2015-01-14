@@ -37,6 +37,7 @@
 * [POST /apps/arg-preview](endpoints/app-metadata.md#previewing-command-line-arguments)
 * [GET /apps/categories](endpoints/app-metadata.md#listing-app-categories)
 * [GET /apps/categories/{group-id}](endpoints/app-metadata.md#listing-apps-in-an-app-group)
+* [GET /apps/elements](endpoints/app-metadata.md#listing-app-elements)
 * [GET /apps/elements/{element-type}](endpoints/app-metadata.md#listing-app-elements)
 * [GET /apps/ids](endpoints/app-metadata.md#listing-app-identifiers)
 * [POST /apps/pipelines](endpoints/app-metadata.md#creating-a-pipeline)
