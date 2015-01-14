@@ -249,14 +249,18 @@
   "Retrieves the details for a single app."
   [app-id]
   (assert-not-nil [:app-id app-id]
-    (first (select apps (with app_references) (where {:id app-id})))))
+    (first (select apps
+                   (with app_references)
+                   (with integration_data)
+                   (where {:id app-id})))))
 
 (defn- format-app-details
   "Formats information for the get-app-details service."
   [details tools]
   (let [app-id (:id details)]
     (-> details
-      (select-keys [:id :integration_date :edited_date :deleted :disabled :wiki_url])
+      (select-keys [:id :integration_date :edited_date :deleted :disabled :wiki_url
+                    :integrator_name :integrator_email])
       (assoc :name                 (:name details "")
              :description          (:description details "")
              :references           (map :reference_text (:app_references details))

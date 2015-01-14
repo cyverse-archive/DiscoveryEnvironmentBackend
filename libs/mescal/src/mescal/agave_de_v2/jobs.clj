@@ -97,11 +97,11 @@
         :app_description (:shortDescription app-info "")
         :app_name        (app-listings/get-app-name app-info)
         :description     ""
-        :enddate         (or (str (util/parse-timestamp (:endTime job))) "")
+        :enddate         (or (util/to-utc (:endTime job)) "")
         :name            (:name job)
         :raw_status      (:status job)
         :resultfolderid  (get-result-folder-id agave job)
-        :startdate       (or (str (util/parse-timestamp (:startTime job))) "")
+        :startdate       (or (util/to-utc (:startTime job)) "")
         :status          (job-status-translations (:status job) "")
         :wiki_url        ""}))
   ([agave jobs-enabled? statuses app-info-map job]

@@ -248,6 +248,12 @@
           :disabled
           AppDisabledParam
 
+          :integrator_email
+          (describe String "The App integrator's email address.")
+
+          :integrator_name
+          (describe String "The App integrator's full name.")
+
           (optional-key :wiki_url)
           AppDocUrlParam
 

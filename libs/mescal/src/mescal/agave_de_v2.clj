@@ -39,7 +39,7 @@
 
 (defn get-app-details
   [agave app-id]
-  (apps/format-app-details (.getApp agave app-id)))
+  (apps/format-app-details agave (.getApp agave app-id)))
 
 (defn list-app-tasks
   [agave app-id]

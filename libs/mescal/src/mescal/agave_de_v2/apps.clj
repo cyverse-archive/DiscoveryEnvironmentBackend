@@ -97,7 +97,7 @@
   ([agave app group-format-fn]
      (let [system-name (:executionSystem app)
            app-label   (get-app-name app)
-           mod-time    (util/parse-timestamp (:lastModified app))]
+           mod-time    (util/to-utc (:lastModified app))]
        {:groups           (group-format-fn app)
         :disabled         (system-available? agave system-name)
         :label            app-label
@@ -127,19 +127,22 @@
    :version     (:version app)})
 
 (defn format-app-details
-  [app]
-  (let [app-label (get-app-name app)
-        mod-time  (str (util/parse-timestamp (:lastModified app)))]
-    {:published_date   mod-time
-     :edited_date      mod-time
-     :id               (:id app)
-     :references       []
-     :description      (:shortDescription app)
-     :label            app-label
-     :tito             (:id app)
-     :components       [(format-deployed-component-for-app app)]
-     :groups           [c/hpc-group-overview]
-     :suggested_groups [c/hpc-group-overview]}))
+  [agave app]
+  (let [mod-time (util/to-utc (:lastModified app))]
+    {:integrator_name      c/unknown-value
+     :integrator_email     c/unknown-value
+     :integration_date     mod-time
+     :edited_date          mod-time
+     :id                   (:id app)
+     :name                 (get-app-name app)
+     :references           []
+     :description          (:shortDescription app)
+     :deleted              false
+     :disabled             (system-available? agave (:executionSystem app))
+     :tito                 (:id app)
+     :tools                [(format-deployed-component-for-app app)]
+     :categories           [c/hpc-group-overview]
+     :suggested_categories []}))
 
 (defn- add-file-info
   [prop]

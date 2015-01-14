@@ -26,11 +26,12 @@
     (cheshire/decode source true)
     (cheshire/decode-stream (reader source) true)))
 
-(defn parse-timestamp
-  "Converts a formatted timestamp to the number of milliseconds since the epoch."
+(defn to-utc
+  "Converts a formatted timestamp to UTC."
   [timestamp]
   (when-not (nil? timestamp)
-    (.getMillis (tf/parse (:date-time tf/formatters) timestamp))))
+    (->> (tf/parse (:date-time tf/formatters) timestamp)
+         (tf/unparse (:date-time tf/formatters)))))
 
 (defn get-boolean
   [value default]

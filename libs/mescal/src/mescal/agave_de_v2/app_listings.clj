@@ -15,7 +15,7 @@
 
 (defn- format-app-listing
   [statuses jobs-enabled? listing]
-  (let [mod-time (util/parse-timestamp (:lastModified listing))
+  (let [mod-time (util/to-utc (:lastModified listing))
         system   (:executionSystem listing)]
     (-> listing
         (dissoc :lastModified :name :shortDescription :revision :executionSystem :isPublic :version
