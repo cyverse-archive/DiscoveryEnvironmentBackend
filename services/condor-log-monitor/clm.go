@@ -735,7 +735,7 @@ func main() {
 		if err != nil {
 			log.Println(err)
 			waitFor := randomizer.Intn(10)
-			fmt.Printf("Re-attempting connection in %d seconds", waitFor)
+			log.Printf("Re-attempting connection in %d seconds", waitFor)
 			time.Sleep(time.Duration(waitFor) * time.Second)
 		} else {
 			log.Println("Successfully connected to the AMQP broker.")
