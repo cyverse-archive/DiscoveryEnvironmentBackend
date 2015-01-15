@@ -3,6 +3,7 @@
         [donkey.auth.user-attributes :only [current-user]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cemerick.url :as curl]
+            [cheshire.core :as cheshire]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
@@ -13,7 +14,8 @@
             [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.util.time :as time-utils]
-            [donkey.util.service :as service])
+            [donkey.util.service :as service]
+            [schema.core :as s])
   (:import [java.util UUID]))
 
 (defn- app-sorter
@@ -97,16 +99,52 @@
   (str (assoc (curl/url (config/agave-callback-base) (str id))
          :query "status=${JOB_STATUS}&external-id=${JOB_ID}&end-time=${JOB_END_TIME}")))
 
+(def NonBlankString
+  (s/both s/Str (s/pred (complement string/blank?) 'non-blank?)))
+
+(def JobInfo
+  "A schema used to validate job information."
+  {:id              NonBlankString
+   :app_id          NonBlankString
+   :app_description s/Str
+   :app_name        NonBlankString
+   :app-disabled    s/Bool
+   :description     s/Str
+   :enddate         s/Str
+   :name            NonBlankString
+   :raw_status      s/Str
+   :resultfolderid  NonBlankString
+   :startdate       s/Str
+   :status          NonBlankString
+   :wiki_url        s/Str})
+
+(defn- validate-job-info
+  [job-info]
+  (try+
+   (s/validate JobInfo job-info)
+   (catch Object _
+     (log/error (:throwable &throw-context)
+                (str "received an invalid job submission response from Agave:\n"
+                     (cheshire/encode job-info {:pretty true})))
+     (service/request-failure (str "Unexpected job submission response: "
+                                   (.getMessage (:throwable &throw-context)))))))
+
+(defn- submit-job
+  [agave-client submission job-id step-number]
+  (->> (assoc submission
+         :callbackUrl (build-callback-url job-id)
+         :job_id      job-id
+         :step_number step-number)
+       (.submitJob agave-client)
+       (validate-job-info)))
+
 (defn submit-agave-job
   [agave-client submission]
   (let [id         (UUID/randomUUID)
-        cb-url     (build-callback-url id)
         output-dir (ft/build-result-folder-path submission)
-        job        (.submitJob agave-client
-                               (assoc (mu/update-submission-result-folder submission output-dir)
-                                 :callbackUrl cb-url
-                                 :job_id      id
-                                 :step_number 1))
+        job        (submit-job agave-client
+                               (mu/update-submission-result-folder submission output-dir)
+                               id 1)
         job        (assoc job
                      :notify (:notify submission false)
                      :name   (:name submission))
@@ -122,11 +160,7 @@
 
 (defn submit-job-step
   [agave-client job-info job-step submission]
-  (let [cb-url (build-callback-url (:id job-info))]
-    (:id (.submitJob agave-client (assoc submission
-                                    :callbackUrl cb-url
-                                    :job_id      (:id job-info)
-                                    :step_number (:step-number job-step))))))
+  (:id (submit-agave-job agave-client submission (:id job-info) (:step-number job-step))))
 
 (defn get-agave-app-rerun-info
   [agave {:keys [external-id]}]
