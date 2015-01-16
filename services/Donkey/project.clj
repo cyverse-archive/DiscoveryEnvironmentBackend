@@ -53,6 +53,7 @@
                  [medley "0.5.3"]
                  [dire "0.5.3"]
                  [mvxcvi/clj-pgp "0.8.0"]
+                 [prismatic/schema "0.3.3"]
                  [slingshot "0.12.1"]]
   :plugins [[org.iplantc/lein-iplant-rpm "4.1.3"]
             [lein-ring "0.8.8"]
