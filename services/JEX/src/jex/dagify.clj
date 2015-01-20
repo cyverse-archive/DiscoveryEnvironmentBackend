@@ -66,6 +66,7 @@
    (if (and (contains? analysis-map :group)
             (not (blank? (:group analysis-map))))
      (str "+AccountingGroup = \"" (:group analysis-map) "." username "\"\n"))
+   "concurrency_limits = " username "\n"
    (ipc-exe analysis-map)
    (ipc-exe-path analysis-map)
    "should_transfer_files = YES\n"
