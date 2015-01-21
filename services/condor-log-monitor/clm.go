@@ -297,7 +297,13 @@ func ParseEventFile(
 			} else {
 				prefixBuffer = line
 			}
-			continue
+
+			//It's possible to get a partial containing only a "..." which causes the
+			//clm to halt until more data is detected in the log file. This can cause
+			//a significant delay in sending out a notification.
+			if !strings.HasPrefix(string(prefixBuffer), "...") {
+				continue
+			}
 		}
 		// if we get here, prefix was false and either the rest of a line was read or
 		// the entire line was read at once. if there is data in the prefixBuffer,
