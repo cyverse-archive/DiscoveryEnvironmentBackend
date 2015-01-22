@@ -139,7 +139,7 @@ func NewAMQPConsumer(cfg *Configuration) *AMQPConsumer {
 
 // ConnectionErrorChannel is used to send error channels to goroutines.
 type ConnectionErrorChannel struct {
-	channel chan *amqp.Error
+	Channel chan *amqp.Error
 }
 
 // MsgHandler functions will accept msgs from a Delivery channel and report
@@ -213,7 +213,7 @@ func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan
 	}
 	errors := c.connection.NotifyClose(make(chan *amqp.Error))
 	msg := ConnectionErrorChannel{
-		channel: errors,
+		Channel: errors,
 	}
 	errorChannel <- msg // 'prime' anything receiving error messages
 	return deliveries, err
@@ -223,44 +223,21 @@ func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan
 // reconnects to the AMQP server if they're encountered.
 func (c *AMQPConsumer) SetupReconnection(
 	errorChan chan ConnectionErrorChannel,
-	handler MsgHandler,
-	quitHandler chan int,
-	d *Databaser,
-	postURL string,
-	JEXURL string,
 ) {
 	//errors := p.connection.NotifyClose(make(chan *amqp.Error))
 	go func() {
-		var exitChan chan *amqp.Error
-		reconfig := true
+		msg := <-errorChan
+		exitChan := msg.Channel
+
 		for {
-			if reconfig {
-				msg := <-errorChan     // the Connect() function sends out a msg to 'prime' this goroutine
-				exitChan = msg.channel // the exitChan to listen on comes from the initial priming msg
-			}
 			select {
 			case exitError, ok := <-exitChan:
-				if !ok { // this occurs when an error causes the connection to close.
+				if !ok {
 					log.Println("Exit channel closed.")
-					quitHandler <- 1
-					deliveries, err := c.Connect(errorChan)
-					if err != nil {
-						log.Print("Error reconnecting to server, exiting.")
-						log.Print(err)
-					}
-					handler(deliveries, quitHandler, d, postURL, JEXURL)
-					reconfig = true //
-				} else {
-					log.Println(exitError)
-					quitHandler <- 1
-					deliveries, err := c.Connect(errorChan)
-					if err != nil {
-						log.Print("Error reconnecting to server, exiting.")
-						log.Print(err)
-					}
-					handler(deliveries, quitHandler, d, postURL, JEXURL)
-					reconfig = false
 				}
+				log.Println(exitError)
+				log.Println("An error was detected with the AMQP connection. Exiting with a -1000 exit code.")
+				os.Exit(-1000)
 			}
 		}
 	}()
@@ -480,7 +457,7 @@ func main() {
 	connErrChan := make(chan ConnectionErrorChannel)
 	quitHandler := make(chan int)
 	consumer := NewAMQPConsumer(config)
-	consumer.SetupReconnection(connErrChan, EventHandler, quitHandler, databaser, config.EventURL, config.JEXURL)
+	consumer.SetupReconnection(connErrChan)
 
 	log.Print("Setting up HTTP")
 	SetupHTTP(config, databaser)
