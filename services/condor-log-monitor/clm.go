@@ -57,6 +57,9 @@ var (
 	logPath = flag.String("event-log", "", "Path to the log file.")
 )
 
+// TombstonePath is the path to the tombstone file.
+const TombstonePath = "/tmp/condor-log-monitor.tombstone"
+
 func init() {
 	flag.Parse()
 }
@@ -127,7 +130,7 @@ func NewAMQPPublisher(cfg *Configuration) *AMQPPublisher {
 
 // ConnectionErrorChan is used to send error channels to goroutines.
 type ConnectionErrorChan struct {
-	channel chan *amqp.Error
+	Channel chan *amqp.Error
 }
 
 // Connect will attempt to connect to the AMQP broker, create/use the configured
@@ -165,7 +168,7 @@ func (p *AMQPPublisher) Connect(errorChan chan ConnectionErrorChan) error {
 	p.channel = channel
 	errors := p.connection.NotifyClose(make(chan *amqp.Error))
 	msg := ConnectionErrorChan{
-		channel: errors,
+		Channel: errors,
 	}
 	errorChan <- msg
 	return nil
@@ -176,23 +179,32 @@ func (p *AMQPPublisher) Connect(errorChan chan ConnectionErrorChan) error {
 func (p *AMQPPublisher) SetupReconnection(errorChan chan ConnectionErrorChan) {
 	//errors := p.connection.NotifyClose(make(chan *amqp.Error))
 	go func() {
-		var exitChan chan *amqp.Error
-		reconfig := true
+		msg := <-errorChan      //msg is sent from the Connect() function
+		exitChan := msg.Channel //This is the channel that error notifications will come over.
 		for {
-			if reconfig {
-				msg := <-errorChan
-				exitChan = msg.channel
-			}
 			select {
 			case exitError, ok := <-exitChan:
 				if !ok {
 					log.Println("Exit channel closed.")
-					reconfig = true
-				} else {
-					log.Println(exitError)
-					p.Connect(errorChan)
-					reconfig = false
 				}
+				log.Println(exitError)
+				log.Println("An error was detected with the AMQP connection.")
+				log.Println("condor-log-monitor could be in an inconsistent state.")
+				log.Println("Removing /tmp/condor-log-monitor.tombstone...")
+				_, err := os.Stat(TombstonePath)
+				if err != nil {
+					log.Printf("Failed to stat %s, could not remove it.", TombstonePath)
+				} else {
+					err = os.Remove(TombstonePath)
+					if err != nil {
+						log.Printf("Error removing %s: \n %s", TombstonePath, err)
+					} else {
+						log.Printf("Done removing %s", TombstonePath)
+						log.Println("condor-log-monitor will process the entire log when it restarts")
+					}
+				}
+				log.Println("Exiting with a -1000 exit code")
+				os.Exit(-1000)
 			}
 		}
 	}()
@@ -454,9 +466,6 @@ type Tombstone struct {
 	LogLastMod time.Time
 	Inode      uint64
 }
-
-// TombstonePath is the path to the tombstone file.
-const TombstonePath = "/tmp/condor-log-monitor.tombstone"
 
 // TombstoneExists returns true if the tombstone file is present.
 func TombstoneExists() bool {
