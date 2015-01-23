@@ -1,5 +1,5 @@
-FROM ubuntu:14.04
+FROM busybox
 
 ADD condor-log-monitor /bin/
 
-CMD ["condor-log-monitor"]
+CMD ["condor-log-monitor", "--help"]
