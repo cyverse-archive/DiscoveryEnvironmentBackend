@@ -1,4 +1,4 @@
-(defproject org.iplantc/common-cli "4.1.3"
+(defproject org.iplantc/common-cli "4.1.4"
   :description "Common CLI functions for the DE backend services and tools"
   :url "http://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend/"
   :license {:name "BSD"}
