@@ -1,5 +1,5 @@
-FROM ubuntu:14.04
+FROM busybox
 
 ADD jex-events /bin/
 
-CMD ["/bin/jex-events"]
+CMD ["jex-events", "--help"]
