@@ -481,11 +481,6 @@
   [props config-valid configs filesystem-routes-enabled]
   "donkey.data-info.base-url")
 
-(cc/defprop-str scruffian-base-url
-  "The base URL for the Scruffian file export and import services."
-  [props config-valid configs tree-viewer-routes-enabled]
-  "donkey.scruffian.base-url")
-
 (cc/defprop-str tree-parser-url
   "The URL for the tree parser service."
   [props config-valid configs tree-viewer-routes-enabled]

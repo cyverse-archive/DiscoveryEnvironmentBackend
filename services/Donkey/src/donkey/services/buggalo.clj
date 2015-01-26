@@ -1,7 +1,7 @@
 (ns donkey.services.buggalo
   (:use [clojure.java.io :only [copy file]]
         [clojure-commons.file-utils :only [with-temp-dir-in]]
-        [donkey.util.config :only [data-info-base-url scruffian-base-url tree-parser-url]]
+        [donkey.util.config :only [data-info-base-url tree-parser-url]]
         [donkey.services.buggalo.nexml :only [is-nexml? extract-trees-from-nexml]]
         [donkey.util.service :only [success-response temp-dir-failure-response]]
         [donkey.auth.user-attributes :only [current-user]]
@@ -15,7 +15,7 @@
             [clojure-commons.error-codes :as ce]
             [clojure-commons.file-utils :as ft]
             [donkey.clients.data-info :as di]
-            [donkey.util.scruffian :as scruffian]
+            [donkey.services.fileio.actions :as fileio]
             [donkey.util.tree-url :as tu])
   (:import [java.security MessageDigest DigestInputStream]
            [org.forester.io.parsers.util ParserUtils PhylogenyParserException]
@@ -163,7 +163,7 @@
   "Formats the response for one of the tree viewer URL services."
   [resp]
   (if (seq? resp)
-    (success-response {:urls resp})    
+    (success-response {:urls resp})
     (success-response {:urls (:tree-urls resp)})))
 
 (defn tree-viewer-urls-for
@@ -191,7 +191,7 @@
         (build-response-map existing-urls)
         (with-temp-dir-in dir (file "/tmp") "tv" temp-dir-creation-failure
           (let [infile (file dir "data.txt")
-                body   (scruffian/download user path)
+                body   (:body (fileio/download user path))
                 sha1   (save-file body infile)]
             (or (and (not refresh) (get-existing-tree-urls sha1 user path))
                 (get-and-save-tree-viewer-urls path user dir infile sha1))))))))
