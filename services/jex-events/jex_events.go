@@ -436,23 +436,30 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 }
 
 func main() {
+	log.Println("Starting jex-events")
 	if *cfgPath == "" {
 		fmt.Println("--config must be set.")
 		os.Exit(-1)
 	}
+	log.Println("Reading config...")
 	config, err := ReadConfig(*cfgPath)
 	if err != nil {
 		log.Print(err)
 		os.Exit(-1)
 	}
+	log.Println("Done reading config.")
 	if !config.Valid() {
+		log.Println("Something is wrong with the jex-events config file.")
 		os.Exit(-1)
 	}
+	log.Println("Configuring database connection...")
 	databaser, err := NewDatabaser(config.DBURI)
 	if err != nil {
 		log.Print(err)
 		os.Exit(-1)
 	}
+	log.Println("Done configuring database connection.")
+
 	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
 	connErrChan := make(chan ConnectionErrorChannel)
 	quitHandler := make(chan int)
