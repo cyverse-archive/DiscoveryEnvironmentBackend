@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"strings"
 	"time"
 
 	"code.google.com/p/go-uuid/uuid"
@@ -319,6 +320,13 @@ func (h *HTTPAPI) JobHTTPPost(writer http.ResponseWriter, request *http.Request)
 	writer.Write([]byte(job.ID))
 }
 
+func formatPort(port string) string {
+	if strings.HasPrefix(port, ":") {
+		return port
+	}
+	return fmt.Sprintf(":%s", port)
+}
+
 // SetupHTTP configures a new HTTPAPI instance, registers handlers, and fires
 // off a goroutinge that listens for requests. Should probably only be called
 // once.
@@ -334,6 +342,6 @@ func SetupHTTP(config *Configuration, d *Databaser) {
 		http.HandleFunc("/last-events/", api.RouteLastEventRequests)
 		http.HandleFunc("/last-events", api.RouteLastEventRequests)
 		log.Printf("Listening for HTTP requests on %s", config.HTTPListenPort)
-		log.Fatal(http.ListenAndServe(config.HTTPListenPort, nil))
+		log.Fatal(http.ListenAndServe(formatPort(config.HTTPListenPort), nil))
 	}()
 }
