@@ -18,8 +18,7 @@
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
+  :uberjar-name "facepalm-standalone.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/tools.logging "0.3.0"]
