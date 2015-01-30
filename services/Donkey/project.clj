@@ -79,4 +79,4 @@
                  ["nexml"
                   {:url "http://nexml-dev.nescent.org/.m2/repository"
                    :checksum :ignore
-                   :update :daily}]])
+                   :update :never}]])
