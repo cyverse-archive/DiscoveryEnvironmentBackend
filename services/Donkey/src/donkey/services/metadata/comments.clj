@@ -45,7 +45,7 @@
   [app-id]
   (let [app-uuid (valid/extract-uri-uuid app-id)]
     (with-db db-util/de
-      (svc/assert-found (app-listing/get-app app-uuid) "App" app-uuid))
+      (svc/assert-found (app-listing/get-app-listing app-uuid) "App" app-uuid))
     app-uuid))
 
 (defn- extract-retracted
@@ -195,7 +195,7 @@
      retracted - the `retracted` query parameter. This should be either `true` or `false`."
   (let [app-uuid  (valid/extract-uri-uuid app-id)
         app       (with-db db-util/de
-                    (svc/assert-found (app-listing/get-app app-uuid) "App" app-uuid))
+                    (svc/assert-found (app-listing/get-app-listing app-uuid) "App" app-uuid))
         owns-app? (validators/user-owns-app? user/current-user app)]
     (update-retract-status app-uuid comment-id retracted owns-app?)))
 

@@ -7,7 +7,7 @@
   (:require [clojure.tools.logging :as log]
             [clojure.string :as str]))
 
-(defn get-app
+(defn get-app-listing
   "Retrieves all app listing fields from the database for the given App ID."
   [app-id]
   (first (select app_listing (where {:id app-id}))))

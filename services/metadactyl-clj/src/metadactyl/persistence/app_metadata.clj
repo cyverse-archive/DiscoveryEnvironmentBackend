@@ -104,7 +104,7 @@
 (defn get-app
   "Retrieves all app listing fields from the database."
   [app-id]
-  (assert-not-nil [:app-id app-id] (app-listing/get-app app-id)))
+  (assert-not-nil [:app-id app-id] (app-listing/get-app-listing app-id)))
 
 (defn get-integration-data
   "Retrieves integrator info from the database, adding it first if not already there."
