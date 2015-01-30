@@ -51,6 +51,7 @@
   (flagged-routes
     (app-category-routes)
     (apps-routes)
+    (app-comment-routes)
     (analysis-routes)
     (reference-genomes-routes)
     (tool-routes)))
@@ -74,15 +75,17 @@
    (secured-oauth-routes)
    (secured-favorites-routes)
    (secured-tag-routes)
-   (secured-comment-routes)
+   (data-comment-routes)
    (route/not-found (unrecognized-path-response))))
 
 (defn admin-routes
   []
   (flagged-routes
     (secured-admin-routes)
+    (admin-data-comment-routes)
     (admin-category-routes)
     (admin-apps-routes)
+    (admin-app-comment-routes)
     (admin-notification-routes)
     (admin-reference-genomes-routes)
     (admin-tool-routes)

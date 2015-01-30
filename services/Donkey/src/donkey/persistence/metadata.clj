@@ -116,6 +116,17 @@
       (where {:id comment-id})))
   nil)
 
+(defn mark-comment-deleted
+  "Deletes a comment from the metadata database. If the comment doesn't exist, it silently fails.
+
+   Parameters:
+     comment-id - The UUID of the comment being deleted."
+  [comment-id deleted?]
+  (korma/with-db db/metadata
+    (update :comments
+      (set-fields {:deleted deleted?})
+      (where {:id comment-id}))))
+
 
 ;; FAVORITES
 

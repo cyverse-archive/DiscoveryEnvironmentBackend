@@ -7,6 +7,11 @@
   (:require [clojure.tools.logging :as log]
             [clojure.string :as str]))
 
+(defn get-app
+  "Retrieves all app listing fields from the database for the given App ID."
+  [app-id]
+  (first (select app_listing (where {:id app-id}))))
+
 (defn- get-all-group-ids-subselect
   "Gets a subselect that fetches the app_categories and its subgroup IDs with
    the stored procedure app_category_hierarchy_ids."

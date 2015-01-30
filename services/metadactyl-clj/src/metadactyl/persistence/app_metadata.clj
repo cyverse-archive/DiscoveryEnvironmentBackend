@@ -7,7 +7,8 @@
         [metadactyl.user :only [current-user]]
         [metadactyl.util.assertions]
         [metadactyl.util.conversions :only [remove-nil-vals]])
-  (:require [metadactyl.persistence.app-metadata.delete :as delete]
+  (:require [kameleon.app-listing :as app-listing]
+            [metadactyl.persistence.app-metadata.delete :as delete]
             [metadactyl.persistence.app-metadata.relabel :as relabel]
             [clojure.set :as set]
             [clojure.tools.logging :as log]))
@@ -103,7 +104,7 @@
 (defn get-app
   "Retrieves all app listing fields from the database."
   [app-id]
-  (assert-not-nil [:app-id app-id] (first (select app_listing (where {:id app-id})))))
+  (assert-not-nil [:app-id app-id] (app-listing/get-app app-id)))
 
 (defn get-integration-data
   "Retrieves integrator info from the database, adding it first if not already there."

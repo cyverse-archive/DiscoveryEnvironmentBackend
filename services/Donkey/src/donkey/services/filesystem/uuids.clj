@@ -44,6 +44,21 @@
    (init/with-jargon (jargon/jargon-cfg) [cm]
      (path-for-uuid cm user uuid))))
 
+(defn ^IPersistentMap uuid-exists?
+  "Checks if an entry exists with a given UUID.
+
+   Params:
+     uuid - the UUID
+
+   Returns:
+     True if any entries were found with the given UUID, false otherwise."
+  ([^IPersistentMap cm ^UUID uuid]
+    (let [results (list-everything-with-attr-value cm uuid-attr uuid)]
+      (pos? (count results))))
+  ([^UUID uuid]
+    (init/with-jargon (jargon/jargon-cfg) [cm]
+      (uuid-exists? cm uuid))))
+
 
 (defn paths-for-uuids
   [user uuids]

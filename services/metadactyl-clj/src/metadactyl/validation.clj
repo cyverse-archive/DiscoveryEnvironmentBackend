@@ -5,6 +5,7 @@
         [korma.core]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as cc-errs]
+            [clojure-commons.validators :as validators]
             [metadactyl.persistence.app-metadata :as persistence]))
 
 (defn missing-json-field-exception
@@ -200,11 +201,10 @@
 (defn verify-app-ownership
   "Verifies that the current user owns the app that is being edited."
   [app]
-  (let [owner (:integrator_email app)]
-    (if (not= owner (:email current-user))
-      (throw+ {:error_code cc-errs/ERR_NOT_OWNER,
-               :username (:username current-user),
-               :message (str (:shortUsername current-user) " does not own app " (:id app))}))))
+  (when-not (validators/user-owns-app? current-user app)
+    (throw+ {:error_code cc-errs/ERR_NOT_OWNER,
+             :username   (:username current-user),
+             :message    (str (:shortUsername current-user) " does not own app " (:id app))})))
 
 (defn verify-app-editable
   "Verifies that the app is allowed to be edited by the current user."
