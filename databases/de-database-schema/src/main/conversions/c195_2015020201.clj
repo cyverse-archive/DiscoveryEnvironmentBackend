@@ -6,14 +6,14 @@
   "The destination database version."
   "1.9.5:20150202.01")
 
-(defn- add-documentation-table
+(defn- add-app-documentation-table
   []
-  (println "\t* adding documentation table")
-  (load-sql-file "tables/documentation.sql")
-  (load-sql-file "constraints/01_documentation.sql"))
+  (println "\t* adding app_documentation table")
+  (load-sql-file "tables/10_app_documentation.sql")
+  (load-sql-file "constraints/10_app_documentation.sql"))
 
 (defn convert
   "Performs the conversion for database version 1.9.5:20150202.01"
   []
   (println "Performing the conversion for" version)
-  (add-documentation-table))
+  (add-app-documentation-table))
