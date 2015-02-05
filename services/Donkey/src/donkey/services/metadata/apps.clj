@@ -123,6 +123,11 @@
   (getApp [_ app-id])
   (getAppDeployedComponents [_ app-id])
   (getAppDetails [_ app-id])
+  (getAppDocs [_ app-id])
+  (addAppDocs [_ app-id docs])
+  (editAppDocs [_ app-id docs])
+  (adminAddAppDocs [_ app-id docs])
+  (adminEditAppDocs [_ app-id docs])
   (listAppTasks [_ app-id])
   (editWorkflow [_ app-id])
   (copyWorkflow [_ app-id])
@@ -172,6 +177,21 @@
 
   (getAppDetails [_ app-id]
     (metadactyl/get-app-details app-id))
+
+  (getAppDocs [_ app-id]
+    (metadactyl/get-app-docs app-id))
+
+  (addAppDocs [_ app-id docs]
+    (metadactyl/add-app-docs app-id docs))
+
+  (editAppDocs [_ app-id docs]
+    (metadactyl/edit-app-docs app-id docs))
+
+  (adminAddAppDocs [_ app-id docs]
+    (metadactyl/admin-add-app-docs app-id docs))
+
+  (adminEditAppDocs [_ app-id docs]
+    (metadactyl/admin-edit-app-docs app-id docs))
 
   (listAppTasks [_ app-id]
     (metadactyl/list-app-tasks app-id))
@@ -278,6 +298,36 @@
     (if (is-uuid? app-id)
       (metadactyl/get-app-details app-id)
       (.getAppDetails agave-client app-id)))
+
+  (getAppDocs [_ app-id]
+    (if (is-uuid? app-id)
+      (metadactyl/get-app-docs app-id)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "Cannot read documentation for HPC apps with this service"})))
+
+  (addAppDocs [_ app-id docs]
+    (if (is-uuid? app-id)
+      (metadactyl/add-app-docs app-id docs)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "Cannot edit documentation for HPC apps with this service"})))
+
+  (editAppDocs [_ app-id docs]
+    (if (is-uuid? app-id)
+      (metadactyl/edit-app-docs app-id docs)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "Cannot edit documentation for HPC apps with this service"})))
+
+  (adminAddAppDocs [_ app-id docs]
+    (if (is-uuid? app-id)
+      (metadactyl/admin-add-app-docs app-id docs)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "Cannot edit documentation for HPC apps with this service"})))
+
+  (adminEditAppDocs [_ app-id docs]
+    (if (is-uuid? app-id)
+      (metadactyl/admin-edit-app-docs app-id docs)
+      (throw+ {:error_code ce/ERR_BAD_REQUEST
+               :reason     "Cannot edit documentation for HPC apps with this service"})))
 
   (listAppTasks [_ app-id]
     (if (is-uuid? app-id)
@@ -438,6 +488,31 @@
   (with-db db/de
     (transaction
      (service/success-response (.getAppDetails (get-app-lister) app-id)))))
+
+(defn get-app-docs
+  [app-id]
+  (service/success-response
+    (.getAppDocs (get-app-lister) app-id)))
+
+(defn add-app-docs
+  [app-id body]
+  (service/success-response
+    (.addAppDocs (get-app-lister) app-id (service/decode-json body))))
+
+(defn edit-app-docs
+  [app-id body]
+  (service/success-response
+    (.editAppDocs (get-app-lister) app-id (service/decode-json body))))
+
+(defn admin-add-app-docs
+  [app-id body]
+  (service/success-response
+    (.adminAddAppDocs (get-app-lister) app-id (service/decode-json body))))
+
+(defn admin-edit-app-docs
+  [app-id body]
+  (service/success-response
+    (.adminEditAppDocs (get-app-lister) app-id (service/decode-json body))))
 
 (defn submit-job
   [body]

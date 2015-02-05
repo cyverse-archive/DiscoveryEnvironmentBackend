@@ -13,6 +13,7 @@
     * [Creating an App for the Current User](#creating-an-app-for-the-current-user)
     * [Getting Analyses in the JSON Format Required by the DE](#getting-analyses-in-the-json-format-required-by-the-de)
     * [Getting App Details](#getting-app-details)
+    * [App Documentation](#app-documentation)
     * [Listing App Categories](#listing-app-categories)
     * [Exporting an Analysis](#exporting-an-analysis)
     * [Get a Tool by ID](#get-a-tool-by-id)
@@ -266,6 +267,31 @@ Here's an example of an Agave app listing:
     "tito": "wc-1.00u1"
 }
 ```
+
+## App Documentation
+
+Secured Endpoint: GET /apps/{app-id}/documentation
+
+Delegates to metadactyl: GET /apps/{app-id}/documentation
+
+Secured Endpoint: PATCH /apps/{app-id}/documentation
+
+Delegates to metadactyl: PATCH /apps/{app-id}/documentation
+
+Secured Endpoint: POST /apps/{app-id}/documentation
+
+Delegates to metadactyl: POST /apps/{app-id}/documentation
+
+Secured Endpoint: PATCH /admin/apps/{app-id}/documentation
+
+Delegates to metadactyl: PATCH /admin/apps/{app-id}/documentation
+
+Secured Endpoint: POST /admin/apps/{app-id}/documentation
+
+Delegates to metadactyl: POST /admin/apps/{app-id}/documentation
+
+These endpoints are passthroughs to the metadactyl endpoints using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Listing App Categories
 
