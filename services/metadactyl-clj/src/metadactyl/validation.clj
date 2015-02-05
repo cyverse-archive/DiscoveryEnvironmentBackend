@@ -1,5 +1,6 @@
 (ns metadactyl.validation
   (:use [kameleon.entities]
+        [kameleon.queries :only [get-existing-user-id]]
         [metadactyl.user :only [current-user]]
         [clojure.string :only [blank?]]
         [korma.core]
@@ -234,3 +235,12 @@
     (throw+ {:error_code cc-errs/ERR_BAD_OR_MISSING_FIELD
              :message    "Hidden output parameters must define a default value."
              :parameter  parameter})))
+
+(defn get-valid-user-id
+  "Gets the user ID for the given username, or throws an error if that username is not found."
+  [username]
+  (let [user-id (get-existing-user-id username)]
+    (when (nil? user-id)
+      (throw+ {:error_code cc-errs/ERR_BAD_REQUEST
+               :reason     (str "No user found for username " username)}))
+    user-id))

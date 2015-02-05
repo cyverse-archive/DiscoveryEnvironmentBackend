@@ -6,14 +6,13 @@
                                     decategorize-app
                                     get-app-subcategory-id
                                     remove-app-from-category]]
-        [kameleon.queries :only [get-existing-user-id]]
         [kameleon.uuids :only [uuidify]]
         [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.config :only [workspace-beta-app-category-id
                                        workspace-favorites-app-group-index]]
         [metadactyl.util.service :only [build-url success-response]]
-        [metadactyl.validation :only [verify-app-ownership]]
+        [metadactyl.validation :only [get-valid-user-id verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
@@ -23,15 +22,6 @@
             [metadactyl.persistence.app-metadata :as amp]
             [metadactyl.translations.app-metadata :as atx]
             [metadactyl.util.config :as config]))
-
-(defn- get-valid-user-id
-  "Gets the user ID for the given username, or throws an error if that username is not found."
-  [username]
-  (let [user-id (get-existing-user-id username)]
-    (when (nil? user-id)
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     (str "No user found for username " username)}))
-    user-id))
 
 (defn- validate-app-existence
   "Verifies that apps exist."
