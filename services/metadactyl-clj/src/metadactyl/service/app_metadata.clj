@@ -20,6 +20,7 @@
             [clj-http.client :as client]
             [clojure-commons.error-codes :as ce]
             [metadactyl.persistence.app-metadata :as amp]
+            [metadactyl.service.app-documentation :as app-docs]
             [metadactyl.translations.app-metadata :as atx]
             [metadactyl.util.config :as config]))
 
@@ -144,6 +145,7 @@
   [{app-id :id :keys [references categories] :as app}]
   (transaction
     (amp/update-app app true)
+    (app-docs/add-app-docs app-id app)
     (amp/set-app-references app-id references)
     (amp/set-app-suggested-categories app-id categories)
     (decategorize-app app-id)
