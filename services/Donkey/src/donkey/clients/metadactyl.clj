@@ -121,6 +121,54 @@
       (:body)
       (service/decode-json)))
 
+(defn get-app-docs
+  [app-id]
+  (-> (client/get (metadactyl-url "apps" app-id "documentation")
+                  {:query-params (secured-params)
+                   :as           :stream})
+    (:body)
+    (service/decode-json)))
+
+(defn add-app-docs
+  [app-id docs]
+  (-> (client/post (metadactyl-url "apps" app-id "documentation")
+                   {:query-params (secured-params)
+                    :content-type :json
+                    :body         (cheshire/encode docs)
+                    :as           :stream})
+    (:body)
+    (service/decode-json)))
+
+(defn edit-app-docs
+  [app-id docs]
+  (-> (client/patch (metadactyl-url "apps" app-id "documentation")
+                    {:query-params (secured-params)
+                     :content-type :json
+                     :body         (cheshire/encode docs)
+                     :as           :stream})
+    (:body)
+    (service/decode-json)))
+
+(defn admin-add-app-docs
+  [app-id docs]
+  (-> (client/post (metadactyl-url "admin" "apps" app-id "documentation")
+                   {:query-params (secured-params)
+                    :content-type :json
+                    :body         (cheshire/encode docs)
+                    :as           :stream})
+    (:body)
+    (service/decode-json)))
+
+(defn admin-edit-app-docs
+  [app-id docs]
+  (-> (client/patch (metadactyl-url "admin" "apps" app-id "documentation")
+                    {:query-params (secured-params)
+                     :content-type :json
+                     :body         (cheshire/encode docs)
+                     :as           :stream})
+    (:body)
+    (service/decode-json)))
+
 (defn list-app-tasks
   [app-id]
   (-> (client/get (metadactyl-url "apps" app-id "tasks")

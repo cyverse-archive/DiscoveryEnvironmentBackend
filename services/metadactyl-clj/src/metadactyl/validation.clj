@@ -1,10 +1,12 @@
 (ns metadactyl.validation
   (:use [kameleon.entities]
+        [kameleon.queries :only [get-existing-user-id]]
         [metadactyl.user :only [current-user]]
         [clojure.string :only [blank?]]
         [korma.core]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as cc-errs]
+            [clojure-commons.validators :as validators]
             [metadactyl.persistence.app-metadata :as persistence]))
 
 (defn missing-json-field-exception
@@ -200,11 +202,10 @@
 (defn verify-app-ownership
   "Verifies that the current user owns the app that is being edited."
   [app]
-  (let [owner (:integrator_email app)]
-    (if (not= owner (:email current-user))
-      (throw+ {:error_code cc-errs/ERR_NOT_OWNER,
-               :username (:username current-user),
-               :message (str (:shortUsername current-user) " does not own app " (:id app))}))))
+  (when-not (validators/user-owns-app? current-user app)
+    (throw+ {:error_code cc-errs/ERR_NOT_OWNER,
+             :username   (:username current-user),
+             :message    (str (:shortUsername current-user) " does not own app " (:id app))})))
 
 (defn verify-app-editable
   "Verifies that the app is allowed to be edited by the current user."
@@ -234,3 +235,12 @@
     (throw+ {:error_code cc-errs/ERR_BAD_OR_MISSING_FIELD
              :message    "Hidden output parameters must define a default value."
              :parameter  parameter})))
+
+(defn get-valid-user-id
+  "Gets the user ID for the given username, or throws an error if that username is not found."
+  [username]
+  (let [user-id (get-existing-user-id username)]
+    (when (nil? user-id)
+      (throw+ {:error_code cc-errs/ERR_BAD_REQUEST
+               :reason     (str "No user found for username " username)}))
+    user-id))

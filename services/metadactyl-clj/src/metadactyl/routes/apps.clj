@@ -10,6 +10,9 @@
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.tool :only [ToolListing]]
         [metadactyl.routes.params]
+        [metadactyl.service.app-documentation :only [get-app-docs
+                                                     owner-add-app-docs
+                                                     owner-edit-app-docs]]
         [metadactyl.zoidberg.app-edit :only [add-app copy-app get-app-ui update-app]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
@@ -138,6 +141,32 @@
         :summary "Get App Details"
         :notes "This service is used by the DE to obtain high-level details about a single App"
         (ce/trap uri #(get-app-details app-id)))
+
+  (GET* "/:app-id/documentation" [:as {uri :uri}]
+        :path-params [app-id :- AppIdPathParam]
+        :query [params SecuredQueryParams]
+        :return AppDocumentation
+        :summary "Get App Documentation"
+        :notes "This service is used by the DE to obtain documentation for a single App"
+        (ce/trap uri #(get-app-docs app-id)))
+
+  (PATCH* "/:app-id/documentation" [:as {uri :uri body :body}]
+          :path-params [app-id :- AppIdPathParam]
+          :query [params SecuredQueryParamsEmailRequired]
+          :body [body (describe AppDocumentation "The App Documentation Request.")]
+          :return AppDocumentation
+          :summary "Update App Documentation"
+          :notes "This service is used by the DE to update documentation for a single App"
+          (ce/trap uri #(owner-edit-app-docs app-id body)))
+
+  (POST* "/:app-id/documentation" [:as {uri :uri body :body}]
+         :path-params [app-id :- AppIdPathParam]
+         :query [params SecuredQueryParamsEmailRequired]
+         :body [body (describe AppDocumentation "The App Documentation Request.")]
+         :return AppDocumentation
+         :summary "Add App Documentation"
+         :notes "This service is used by the DE to add documentation for a single App"
+         (ce/trap uri #(owner-add-app-docs app-id body)))
 
   (DELETE* "/:app-id/favorite" [:as {uri :uri}]
            :path-params [app-id :- AppIdPathParam]

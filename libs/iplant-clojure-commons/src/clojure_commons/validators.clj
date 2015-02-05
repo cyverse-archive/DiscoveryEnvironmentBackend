@@ -119,3 +119,9 @@
   [^IPersistentMap params ^IPersistentMap validators]
   (check-missing throw-missing-params params (keys validators))
   (check-valid throw-bad-params params validators))
+
+(defn user-owns-app?
+  "Checks if the given user owns the given app, determined by comparing the user's email with the
+   app's integrator_email."
+  [{:keys [email]} {:keys [integrator_email]}]
+  (= email integrator_email))

@@ -17,6 +17,7 @@
         [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
+        [metadactyl.service.app-documentation :only [add-app-docs edit-app-docs get-app-docs]]
         [metadactyl.service.app-metadata :only [permanently-delete-apps]]
         [metadactyl.tools :only [add-tools update-tool]]
         [metadactyl.user :only [current-user]]
@@ -111,7 +112,25 @@
           <b>Note</b>: Although this endpoint accepts all App Group and Parameter fields within the
           'groups' array, only their 'description', 'label', and 'display' (only in parameter
           arguments) fields will be processed and updated by this endpoint."
-          (ce/trap uri #(update-app (assoc body :id app-id)))))
+          (ce/trap uri #(update-app (assoc body :id app-id))))
+
+  (PATCH* "/:app-id/documentation" [:as {uri :uri body :body}]
+          :path-params [app-id :- AppIdPathParam]
+          :query [params SecuredQueryParams]
+          :body [body (describe AppDocumentation "The App Documentation Request.")]
+          :return AppDocumentation
+          :summary "Update App Documentation"
+          :notes "This service is used by DE administrators to update documentation for a single App"
+          (ce/trap uri #(edit-app-docs app-id body)))
+
+  (POST* "/:app-id/documentation" [:as {uri :uri body :body}]
+         :path-params [app-id :- AppIdPathParam]
+         :query [params SecuredQueryParams]
+         :body [body (describe AppDocumentation "The App Documentation Request.")]
+         :return AppDocumentation
+         :summary "Add App Documentation"
+         :notes "This service is used by DE administrators to add documentation for a single App"
+         (ce/trap uri #(add-app-docs app-id body))))
 
 (defroutes* admin-categories
   (GET* "/" [:as {uri :uri}]

@@ -96,6 +96,10 @@
   ([retval]
     (donkey-response retval 201)))
 
+(defn successful-delete-response
+  []
+  (donkey-response nil 204))
+
 (defn failure-response [e]
   (log/error e "bad request")
   (donkey-response e 400))

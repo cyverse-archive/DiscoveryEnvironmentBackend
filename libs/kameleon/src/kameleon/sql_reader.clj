@@ -1,6 +1,10 @@
 (ns kameleon.sql-reader
   (:use [clojure.java.io :only [file reader]]
-        [slingshot.slingshot :only [throw+]]))
+        [korma.core]
+        [slingshot.slingshot :only [throw+]])
+  (:require [clojure.string :as string]
+            [clojure.tools.logging :as log]
+            [me.raynes.fs :as fs]))
 
 (def test-file
   "/Users/dennis/src/iplant/ua/de-database-schema/src/main/data/01_data_formats.sql")
@@ -140,3 +144,19 @@
       res
       (recur (conj res (apply str stmt))
              (trampoline #(statement [] cs))))))
+
+(defn exec-sql-statement
+  "A wrapper around korma.core/exec-raw that logs the statement that is being
+   executed if debugging is enabled."
+  [& statements]
+  (let [statement (string/join " " statements)]
+    (log/debug "executing SQL statement:" statement)
+    (exec-raw statement)))
+
+(defn load-sql-file
+  "Loads a single SQL file into the database."
+  [sql-file]
+  (let [sql-file (fs/file sql-file)]
+    (log/info (str "Loading " (.getName sql-file) "..."))
+    (with-open [rdr (reader sql-file)]
+      (dorun (map exec-sql-statement (sql-statements rdr))))))

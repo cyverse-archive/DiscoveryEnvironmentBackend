@@ -7,7 +7,7 @@
         [kameleon.core]
         [kameleon.entities]
         [kameleon.queries]
-        [kameleon.sql-reader :only [sql-statements]]
+        [kameleon.sql-reader :only [load-sql-file]]
         [korma.core]
         [korma.db]
         [slingshot.slingshot :only [throw+ try+]])
@@ -271,20 +271,6 @@
         exit-status (sh "tar" "xvf" file-path "-C" (.getPath dir))]
     (when-not (zero? exit-status)
       (build-artifact-expansion-failed))))
-
-(defn exec-sql-statement
-  "A wrapper around korma.core/exec-raw that logs the statement that is being
-   executed if debugging is enabled."
-  [statement]
-  (log/debug "executing SQL statement:" statement)
-  (exec-raw statement))
-
-(defn- load-sql-file
-  "Loads a single SQL file into the database."
-  [sql-file]
-  (println (str "Loading " (.getName sql-file) "..."))
-  (with-open [rdr (reader sql-file)]
-    (dorun (map exec-sql-statement (sql-statements rdr)))))
 
 (defn- load-sql-files
   "Loads SQL files from a subdirectory of the artifact directory."

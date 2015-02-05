@@ -56,7 +56,13 @@
             (admin-delete-app app-id))
 
     (PATCH "/apps/:app-id" [app-id :as req]
-           (admin-update-app req app-id))))
+           (admin-update-app req app-id))
+
+    (POST "/apps/:app-id/documentation" [app-id :as {:keys [body]}]
+          (apps/admin-add-app-docs app-id body))
+
+    (PATCH "/apps/:app-id/documentation" [app-id :as {:keys [body]}]
+           (apps/admin-edit-app-docs app-id body))))
 
 (defn apps-routes
   []
@@ -113,6 +119,15 @@
 
     (GET "/apps/:app-id/details" [app-id]
          (apps/get-app-details app-id))
+
+    (GET "/apps/:app-id/documentation" [app-id]
+         (apps/get-app-docs app-id))
+
+    (POST "/apps/:app-id/documentation" [app-id :as {:keys [body]}]
+          (apps/add-app-docs app-id body))
+
+    (PATCH "/apps/:app-id/documentation" [app-id :as {:keys [body]}]
+           (apps/edit-app-docs app-id body))
 
     (DELETE "/apps/:app-id/favorite" [app-id]
             (apps/remove-favorite-app app-id))

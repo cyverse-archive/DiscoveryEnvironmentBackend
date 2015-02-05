@@ -268,6 +268,14 @@
           (describe [AppDetailCategory]
             "The list of Categories the integrator wishes to associate with the App")}))
 
+(defschema AppDocumentation
+  {(optional-key :app_id)      AppIdParam
+   :documentation              (describe String "The App's documentation")
+   (optional-key :created_on)  (describe Date "The Date the App's documentation was created")
+   (optional-key :modified_on) (describe Date "The Date the App's documentation was last modified")
+   (optional-key :created_by)  (describe String "The user that created the App's documentation")
+   (optional-key :modified_by) (describe String "The user that last modified the App's documentation")})
+
 (defschema PipelineEligibility
   {:is_valid (describe Boolean "Whether the App can be used in a Pipeline")
    :reason (describe String "The reason an App cannot be used in a Pipeline")})
