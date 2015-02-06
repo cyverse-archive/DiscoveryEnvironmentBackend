@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/streadway/amqp"
+	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
@@ -27,10 +28,11 @@ func init() {
 // Configuration instance contain config values for jex-events.
 type Configuration struct {
 	AMQPURI, DBURI, EventURL, JEXURL                                      string
-	ConsumerTag, HTTPListenPort                                           string
+	ConsumerTag, HTTPListenPort, LogPath                                  string
 	ExchangeName, ExchangeType, RoutingKey, QueueName, QueueBindingKey    string
 	ExchangeDurable, ExchangeAutodelete, ExchangeInternal, ExchangeNoWait bool
 	QueueDurable, QueueAutodelete, QueueExclusive, QueueNoWait            bool
+	LogMaxSize, LogMaxBackups, LogMaxAge                                  int
 }
 
 // ReadConfig reads JSON from 'path' and returns a pointer to a Configuration
@@ -441,11 +443,19 @@ func main() {
 		fmt.Println("--config must be set.")
 		os.Exit(-1)
 	}
-	log.Println("Reading config...")
 	config, err := ReadConfig(*cfgPath)
 	if err != nil {
 		log.Print(err)
 		os.Exit(-1)
+	}
+	//Set up log rotation
+	if config.LogPath != "" {
+		log.SetOutput(&lumberjack.Logger{
+			Filename:   config.LogPath,
+			MaxSize:    config.LogMaxSize,
+			MaxBackups: config.LogMaxBackups,
+			MaxAge:     config.LogMaxAge,
+		})
 	}
 	log.Println("Done reading config.")
 	if !config.Valid() {
