@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM scratch
 
 ADD condor-log-monitor /bin/
 
