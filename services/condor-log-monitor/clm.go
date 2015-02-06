@@ -50,6 +50,7 @@ import (
 	"time"
 
 	"github.com/streadway/amqp"
+	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
@@ -67,9 +68,10 @@ func init() {
 // Configuration contains the setting read from a config file.
 type Configuration struct {
 	EventLog                               string
-	AMQPURI                                string
+	AMQPURI, LogPath                       string
 	ExchangeName, ExchangeType, RoutingKey string
 	Durable, Autodelete, Internal, NoWait  bool
+	LogMaxSize, LogMaxBackups, LogMaxAge   int
 }
 
 // ReadConfig reads JSON from 'path' and returns a pointer to a Configuration
@@ -737,6 +739,15 @@ func main() {
 	cfg, err := ReadConfig(*cfgPath)
 	if err != nil {
 		fmt.Println(err)
+	}
+	//Set up log rotation
+	if cfg.LogPath != "" {
+		log.SetOutput(&lumberjack.Logger{
+			Filename:   cfg.LogPath,
+			MaxSize:    cfg.LogMaxSize,
+			MaxBackups: cfg.LogMaxBackups,
+			MaxAge:     cfg.LogMaxAge,
+		})
 	}
 	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
 	errChan := make(chan ConnectionErrorChan)
