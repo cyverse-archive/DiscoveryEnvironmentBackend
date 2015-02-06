@@ -347,14 +347,14 @@ func ParseEventFile(
 			}
 			eventlines = eventlines + text + "\n"
 			if matchedEnd {
-				fmt.Println(eventlines)
+				log.Println(eventlines)
 				pubEvent := NewPublishableEvent(eventlines)
 				pubJSON, err := json.Marshal(pubEvent)
 				if err != nil {
 					return -1, err
 				}
 				if err = pub.PublishBytes(pubJSON); err != nil {
-					fmt.Println(err)
+					log.Println(err)
 				}
 				eventlines = ""
 				foundStart = false
@@ -793,7 +793,7 @@ func main() {
 	// potentially missed updates.
 	logList, err := NewLogfileList(logDir, logFilename)
 	if err != nil {
-		fmt.Println("Couldn't get list of log files.")
+		log.Println("Couldn't get list of log files.")
 		logList = LogfileList{}
 	}
 
@@ -835,7 +835,7 @@ func main() {
 			_, err = ParseEventFile(logfilePath, 0, pub, false)
 		}
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 	}
 
@@ -863,14 +863,14 @@ func main() {
 			if TombstoneExists() {
 				tombstone, err = ReadTombstone()
 				if err != nil {
-					fmt.Println(err)
+					log.Println(err)
 				}
 				startPos = tombstone.CurrentPos
 
 				// Get the path to the file that the Tombstone was indicating
 				oldLogs, err := NewLogfileList(logDir, logFilename)
 				if err != nil {
-					fmt.Println(err)
+					log.Println(err)
 				}
 
 				// If the path to the file is different from the configured file the the
@@ -879,7 +879,7 @@ func main() {
 				if pathFromTombstone != "" && pathFromTombstone != cfg.EventLog {
 					oldInfo, err := os.Stat(pathFromTombstone)
 					if err != nil {
-						fmt.Println(err)
+						log.Println(err)
 					}
 					// Compare the start position to the size of the
 					// file. If it's less than the size of the file, more of the old file
@@ -887,7 +887,7 @@ func main() {
 					if startPos < oldInfo.Size() {
 						_, err = ParseEventFile(pathFromTombstone, startPos, pub, true)
 						if err != nil {
-							fmt.Println(err)
+							log.Println(err)
 						}
 						// Afterwards set the startPos to 0 if it isn't
 						// already, but ONLY if an old file was parsed first.
@@ -902,7 +902,7 @@ func main() {
 			log.Printf("Parsing %s starting at position %d\n", cfg.EventLog, startPos)
 			startPos, err = ParseEventFile(cfg.EventLog, startPos, pub, true)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 			}
 		}
 	}
