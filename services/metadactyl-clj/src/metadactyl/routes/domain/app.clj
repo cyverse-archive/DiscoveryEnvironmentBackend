@@ -8,6 +8,7 @@
 
 (def AppIdParam (describe UUID "A UUID that is used to identify the App"))
 (def OptionalIdParam (describe UUID "An optional UUID identifier"))
+(def AppDocParam (describe String "The App's documentation"))
 (def AppDocUrlParam (describe String "The App's documentation URL"))
 (def AppReferencesParam (describe [String] "The App's references"))
 (def AppDeletedParam (describe Boolean "Whether the App is marked as deleted"))
@@ -270,7 +271,7 @@
 
 (defschema AppDocumentation
   {(optional-key :app_id)      AppIdParam
-   :documentation              (describe String "The App's documentation")
+   :documentation              AppDocParam
    (optional-key :created_on)  (describe Date "The Date the App's documentation was created")
    (optional-key :modified_on) (describe Date "The Date the App's documentation was last modified")
    (optional-key :created_by)  (describe String "The user that created the App's documentation")
@@ -391,7 +392,7 @@
     (->optional-param :id)
     (->optional-param :name)
     (->optional-param :description)
-    (assoc :wiki_url AppDocUrlParam
+    (assoc :documentation AppDocParam
            :references AppReferencesParam)
     (merge AppCategoryIdListing)))
 

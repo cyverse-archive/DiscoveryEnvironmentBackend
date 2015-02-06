@@ -101,18 +101,18 @@ Please see the metadactyl documentation for more information.
 
 ## Deleting a Category by ID
 
-Secured Endpoint: DELETE /admin/apps/categories/:uuid
+Secured Endpoint: DELETE /admin/apps/categories/{category-id}
 
-Delegates to metadactyl: DELETE /admin/apps/categories/:uuid
+Delegates to metadactyl: DELETE /admin/apps/categories/{category-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.
 
 ## Updating an App Category
 
-Secured Endpoint: PATCH /admin/apps/categories/:uuid
+Secured Endpoint: PATCH /admin/apps/categories/{category-id}
 
-Delegates to metadactyl: PATCH /admin/apps/categories/:uuid
+Delegates to metadactyl: PATCH /admin/apps/categories/{category-id}
 
 This endpoint is a passthrough to the metadactyl endpoint using the same path.
 Please see the metadactyl documentation for more information.

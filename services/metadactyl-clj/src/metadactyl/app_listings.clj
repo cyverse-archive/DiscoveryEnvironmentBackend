@@ -6,6 +6,7 @@
         [kameleon.app-groups]
         [kameleon.app-listing]
         [kameleon.uuids :only [uuidify]]
+        [metadactyl.persistence.app-documentation :only [get-documentation]]
         [metadactyl.persistence.app-metadata :only [get-app get-app-tools]]
         [metadactyl.tools :only [get-tools-by-id]]
         [metadactyl.user :only [current-user]]
@@ -254,6 +255,11 @@
                    (with integration_data)
                    (where {:id app-id})))))
 
+(defn- format-wiki-url
+  "CORE-6510: Remove the wiki_url from app details responses if the App has documentation saved."
+  [{:keys [id wiki_url] :as app}]
+  (assoc app :wiki_url (if (get-documentation id) nil wiki_url)))
+
 (defn- format-app-details
   "Formats information for the get-app-details service."
   [details tools]
@@ -266,7 +272,8 @@
              :references           (map :reference_text (:app_references details))
              :tools                (map remove-nil-vals tools)
              :categories           (get-groups-for-app app-id)
-             :suggested_categories (get-suggested-groups-for-app app-id)))))
+             :suggested_categories (get-suggested-groups-for-app app-id))
+      format-wiki-url)))
 
 (defn get-app-details
   "This service obtains the high-level details of an app."
