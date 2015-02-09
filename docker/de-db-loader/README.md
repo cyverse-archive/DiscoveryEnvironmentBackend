@@ -46,6 +46,14 @@ To use your own uberjarred build of facepalm, create the uberjar and bind mount 
 
 The /path/to/facepalm-standalone.jar is the local path to your facepalm build, while the /facepalm-standalone.tar.gz is the path to the uberjar in the container.
 
+# Updating the database
+
+A custom script is provided in the de-db-loader image to assist with getting the database updated from a tarball. To run facepalm in update mode run the following command:
+
+    docker run --rm --link de-db:postgres discoenv/de-db-loader /update-dev-database.sh
+
+You will probably want to bind mount new versions of facepalm-standalone.jar and/or database.tar.gz into the container when doing this, otherwise it's a no-op as far as the database is concerned. See the above sections for more info.
+
 # More info
 
 de-db is a very small modification on top of the official Postgres image for docker. See https://registry.hub.docker.com/_/postgres/ for more info, including how to connect to the database with psql.
