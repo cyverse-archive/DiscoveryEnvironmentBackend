@@ -22,11 +22,11 @@ When de-db-loader finishes, you should have an intialized instance of the DE dat
 
 To reset the database, first kill the existing instance:
 
-   docker kill de-db
+    docker kill de-db
 
 Then remove the cached container:
 
-   docker rm de-db
+    docker rm de-db
 
 The you can rerun the de-db and de-db-loader containers as described in the Quickstart.
 
@@ -34,7 +34,7 @@ The you can rerun the de-db and de-db-loader containers as described in the Quic
 
 To load in your own database build, create a database tarball and bind mount it into the de-db-loader container when you run it. That is, replace the second docker command from the Quickstart with this:
 
-   docker run --rm --link de-db:postgres -v /path/to/database.tar.gz:/database.tar.gz discoenv/de-db-loader
+    docker run --rm --link de-db:postgres -v /path/to/database.tar.gz:/database.tar.gz discoenv/de-db-loader
 
 The /path/to/database.tar.gz is the local path to your custom database, while the /database.tar.gz is the path to the tarball in the container.
 
@@ -42,7 +42,7 @@ The /path/to/database.tar.gz is the local path to your custom database, while th
 
 To use your own uberjarred build of facepalm, create the uberjar and bind mount it into the de-db-loader container when you run it. That is, replace the second docker command from the Quickstart with this:
 
-   docker run --rm --link de-db:postgres -v /path/to/facepalm-standalone.jar:/facepalm-standalone.jar discoenv/de-db-loader
+    docker run --rm --link de-db:postgres -v /path/to/facepalm-standalone.jar:/facepalm-standalone.jar discoenv/de-db-loader
 
 The /path/to/facepalm-standalone.jar is the local path to your facepalm build, while the /facepalm-standalone.tar.gz is the path to the uberjar in the container.
 
