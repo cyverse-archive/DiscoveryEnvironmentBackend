@@ -28,7 +28,7 @@ Then remove the cached container:
 
     docker rm de-db
 
-The you can rerun the de-db and de-db-loader containers as described in the Quickstart.
+Then you can rerun the de-db and de-db-loader containers as described in the Quickstart.
 
 # Loading in a custom database tarball
 
