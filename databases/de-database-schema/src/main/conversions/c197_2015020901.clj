@@ -33,7 +33,7 @@
 (defn- add-container-volumes-from-table
   []
   (println "\t* adding container_volumes_from table")
-  (load-sql-file "table/74_container_volumes_from.sql")
+  (load-sql-file "tables/74_container_volumes_from.sql")
   (load-sql-file "constraints/74_container_volumes_from.sql"))
 
 (defn convert
