@@ -1,5 +1,11 @@
 (ns metadactyl.persistence.app-documentation
-  (:use [korma.core]))
+  (:use [kameleon.entities]
+        [korma.core]))
+
+(defn get-app-references
+  "Retrieves references for the given app ID."
+  [app-id]
+  (select app_references (where {:app_id app-id})))
 
 (defn get-documentation
   "Retrieves documentation details for the given app ID."

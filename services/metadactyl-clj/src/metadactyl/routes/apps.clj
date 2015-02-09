@@ -153,7 +153,7 @@
   (PATCH* "/:app-id/documentation" [:as {uri :uri body :body}]
           :path-params [app-id :- AppIdPathParam]
           :query [params SecuredQueryParamsEmailRequired]
-          :body [body (describe AppDocumentation "The App Documentation Request.")]
+          :body [body (describe AppDocumentationRequest "The App Documentation Request.")]
           :return AppDocumentation
           :summary "Update App Documentation"
           :notes "This service is used by the DE to update documentation for a single App"
@@ -162,7 +162,7 @@
   (POST* "/:app-id/documentation" [:as {uri :uri body :body}]
          :path-params [app-id :- AppIdPathParam]
          :query [params SecuredQueryParamsEmailRequired]
-         :body [body (describe AppDocumentation "The App Documentation Request.")]
+         :body [body (describe AppDocumentationRequest "The App Documentation Request.")]
          :return AppDocumentation
          :summary "Add App Documentation"
          :notes "This service is used by the DE to add documentation for a single App"
