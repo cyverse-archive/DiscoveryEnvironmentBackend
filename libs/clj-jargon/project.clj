@@ -3,8 +3,6 @@
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.iplantc/clojure-commons "4.1.5"]
                  [org.slf4j/slf4j-api "1.7.5"]
