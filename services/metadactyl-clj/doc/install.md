@@ -30,32 +30,6 @@ metadactyl.db.name        = some-db
 metadactyl.db.user        = some-user
 metadactyl.db.password    = some-password
 
-# Hibernate resource definition files.
-metadactyl.hibernate.resources = template-mapping.hbm.xml, \
-                                 notifications.hbm.xml, \
-                                 workflow.hbm.xml
-
-# Java packages containing classes with JPA Annotations.
-metadactyl.hibernate.packages = org.iplantc.persistence.dto.step, \
-                                org.iplantc.persistence.dto.transformation, \
-                                org.iplantc.persistence.dto.data, \
-                                org.iplantc.persistence.dto.workspace, \
-                                org.iplantc.persistence.dto.user, \
-                                org.iplantc.persistence.dto.components, \
-                                org.iplantc.persistence.dto.listing, \
-                                org.iplantc.persistence.dto.refgenomes, \
-                                org.iplantc.workflow.core
-
-# The Hibernate dialect to use.
-metadactyl.hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect
-
-# OSM connection settings.
-metadactyl.osm.base-url           = http://localhost:65009
-metadactyl.osm.connection-timeout = 5000
-metadactyl.osm.encoding           = UTF-8
-metadactyl.osm.jobs-bucket        = jobs
-metadactyl.osm.job-request-bucket = job_requests
-
 # JEX connection settings.
 metadactyl.jex.base-url = http://localhost:65006
 
