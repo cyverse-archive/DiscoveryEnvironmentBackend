@@ -211,5 +211,5 @@ failure.
 ### Example
 
 ```
-curl -X DELETE "localhost/admin/filesystem/f86700ac-df88-11e3-bf3b-6abdce5a08d5/comments/79a6a1f0-0745-21e3-c125-73dece2a6989?proxyToken=fake-token"
+curl -X DELETE "localhost/admin/filesystem/entry/f86700ac-df88-11e3-bf3b-6abdce5a08d5/comments/79a6a1f0-0745-21e3-c125-73dece2a6989?proxyToken=fake-token"
 ```
