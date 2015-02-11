@@ -72,11 +72,9 @@
   "Get the list of task IDs associated with an app."
   [app-id]
   (map :task_id
-       (select [:apps :a]
+       (select [:app_steps :step]
                (fields :step.task_id)
-               (join [:app_steps :step]
-                     {:a.id :step.app_id})
-               (where {:a.id app-id}))))
+               (where {:step.app_id app-id}))))
 
 (defn- private-apps-for
   "Finds private single-step apps for a list of task IDs."
