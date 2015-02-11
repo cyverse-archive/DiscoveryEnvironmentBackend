@@ -8,7 +8,7 @@
          rule_type rule_subtype app_category_listing app_listing tool_listing ratings collaborators
          genome_reference created_by last_modified_by data_source tool_types
          tool_request_status_codes tool_architectures tool_requests
-         tool_request_statuses)
+         tool_request_statuses container-images container-settings container-devices container-volumes container-volumes-from)
 
 ;; Users who have logged into the DE.  Multiple entities are associated with
 ;; the same table in order to allow us to have multiple relationships between
@@ -55,12 +55,35 @@
   (has-many apps)
   (has-many tools))
 
+
+;; Information about containers containing tools.
+(defentity container-images
+  (table :container_images))
+
+(defentity container-settings
+  (table :container_settings))
+
+(defentity container-devices
+  (table :container_devices)
+  (belongs-to container-settings {:fk :container_settings_id}))
+
+(defentity container-volumes
+  (table :container_volumes)
+  (belongs-to container-settings {:fk :container_settings_id}))
+
+(defentity container-volumes-from
+  (table :container_volumes_from)
+  (belongs-to container-settings {:fk :container_settings_id}))
+
+
 ;; Information about a deployed tool.
 (defentity tools
   (belongs-to integration_data)
   (belongs-to tool_types {:fk :tool_type_id})
   (has-many tool_test_data_files {:fk :tool_id})
-  (has-many tool_requests {:fk :tool_id}))
+  (has-many tool_requests {:fk :tool_id})
+  (has-one container-images)
+  (has-one container-settings))
 
 ;; Test data files for use with deployed components.
 (defentity tool_test_data_files
@@ -267,3 +290,4 @@
 (defentity user-saved-searches
   (table :user_saved_searches)
   (belongs-to users {:fk :user_id}))
+
