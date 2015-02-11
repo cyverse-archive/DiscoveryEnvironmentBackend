@@ -35,6 +35,7 @@
           (where {:id (->uuid image-id)})))
 
 (defn image?
+  "Returns true if the given name and tag exist in the container_images table."
   [{name :name tag :tag :or {tag "latest"}}]
   (pos?
    (count
@@ -43,6 +44,7 @@
                         (= :tag tag)))))))
 
 (defn image-id
+  "Returns the UUID used as the primary key in the container_images table."
   [{name :name tag :tag :or {tag "latest"} :as params}]
   (if-not (image? params)
     (throw (Exception. (str "image does not exist: " params)))
