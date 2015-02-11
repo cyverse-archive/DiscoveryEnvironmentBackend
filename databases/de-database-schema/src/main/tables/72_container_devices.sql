@@ -7,7 +7,7 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE container_devices(
   -- primary key
-  id uuid NOT NULL,
+  id uuid UNIQUE NOT NULL,
 
   -- The foreign key into the container_settings table.
   container_settings_id uuid NOT NULL,
