@@ -24,8 +24,7 @@
                  [com.cemerick/url "0.0.7"]
                  [korma "0.3.0-RC5"]
                  [log4j "1.2.17"]
-                 [org.iplantc/clj-jargon "4.1.5"
-                  :exclusions [[org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
+                 [org.iplantc/clj-jargon "4.1.5"]
                  [org.iplantc/clojure-commons "4.1.5"]
                  [org.iplantc/common-cli "4.1.5"]
                  [org.iplantc/kameleon "4.1.5"]
@@ -34,9 +33,9 @@
                  [org.slf4j/slf4j-log4j12 "1.6.6"]
                  [slingshot "0.10.3"]]
   :plugins [[org.iplantc/lein-iplant-rpm "4.1.5"]]
-  :profiles {:dev {:resource-paths ["resources/test"]}}
-  :aot [clockwork.core]
-  :main clockwork.core
+  :profiles {:dev     {:resource-paths ["resources/test"]}
+             :uberjar {:aot :all}}
+  :main ^:skip-aot clockwork.core
   :iplant-rpm {:summary "Scheduled jobs for the iPlant Discovery Environment"
                :provides "clockwork"
                :dependencies ["iplant-service-config >= 0.1.0-5"

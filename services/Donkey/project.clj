@@ -14,7 +14,6 @@
             :url "http://www.iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "donkey-standalone.jar"
-  :offline? true
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/tools.logging "0.3.1"]
@@ -23,9 +22,7 @@
                  [org.apache.tika/tika-core "1.6"]
                  [org.iplantc/authy "4.1.5"]
                  [org.iplantc/clj-cas "4.1.5"]
-                 [org.iplantc/clj-jargon "4.1.5"
-                  :exclusions [[xerces/xmlParserAPIs]
-                               [org.irods.jargon.transfer/jargon-transfer-dao-spring]]]
+                 [org.iplantc/clj-jargon "4.1.5" :exclusions [[xerces/xmlParserAPIs]]]
                  [org.iplantc/clojure-commons "4.1.5"]
                  [org.iplantc/mescal "4.1.5"]
                  [org.iplantc/kameleon "4.1.5"]
@@ -59,9 +56,9 @@
   :plugins [[org.iplantc/lein-iplant-rpm "4.1.5"]
             [lein-ring "0.8.8"]
             [swank-clojure "1.4.2"]]
-  :profiles {:dev {:resource-paths ["conf/test"]}}
-  :aot [donkey.core]
-  :main donkey.core
+  :profiles {:dev     {:resource-paths ["conf/test"]}
+             :uberjar {:aot :all}}
+  :main ^:skip-aot donkey.core
   :ring {:handler donkey.core/app
          :init donkey.core/lein-ring-init
          :port 31325

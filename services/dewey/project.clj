@@ -15,8 +15,7 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "dewey-standalone.jar"
-  :aot [dewey.core]
-  :main dewey.core
+  :main ^:skip-aot dewey.core
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/tools.logging "0.3.0"]
@@ -33,8 +32,9 @@
                  [org.iplantc/common-cli "4.1.5"]
                  [me.raynes/fs "1.4.6"]]
   :resource-paths []
-  :profiles {:dev {:dependencies   [[midje "1.6.3"]]
-                   :resource-paths ["dev-resource"]}}
+  :profiles {:dev     {:dependencies   [[midje "1.6.3"]]
+                       :resource-paths ["dev-resource"]}
+             :uberjar {:aot :all}}
   :plugins [[org.iplantc/lein-iplant-rpm "4.1.5"]]
   :iplant-rpm {:summary      "dewey"
                :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]

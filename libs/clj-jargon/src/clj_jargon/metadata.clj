@@ -115,9 +115,7 @@
         :<               QueryConditionOperators/LESS_THAN
         :<=              QueryConditionOperators/LESS_THAN_OR_EQUAL_TO
         :like            QueryConditionOperators/LIKE
-        :not-between     QueryConditionOperators/NOT_BETWEEN
         :not=            QueryConditionOperators/NOT_EQUAL
-        :not-in          QueryConditionOperators/NOT_IN
         :not-like        QueryConditionOperators/NOT_LIKE
         :num=            QueryConditionOperators/NUMERIC_EQUAL
         :num>            QueryConditionOperators/NUMERIC_GREATER_THAN

@@ -37,9 +37,10 @@
   :ring {:init kifshare.config/init
          :handler kifshare.core/app}
 
-  :profiles {:dev {:resource-paths ["build"]
-                   :dependencies [[midje "1.4.0"]]
-                   :plugins [[lein-midje "2.0.1"]]}}
+  :profiles {:dev     {:resource-paths ["build"]
+                       :dependencies [[midje "1.4.0"]]
+                       :plugins [[lein-midje "2.0.1"]]}
+             :uberjar {:aot :all}}
 
   :iplant-rpm {:summary "kifshare",
                :dependencies ["iplant-service-config >= 0.1.0-5"
@@ -59,5 +60,4 @@
   :deploy-repositories [["sonatype-nexus-staging"
                          {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]]
 
-  :aot [kifshare.core]
-  :main kifshare.core)
+  :main ^:skip-aot kifshare.core)
