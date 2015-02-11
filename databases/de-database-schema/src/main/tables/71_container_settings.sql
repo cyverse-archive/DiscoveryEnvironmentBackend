@@ -7,7 +7,7 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE container_settings (
   -- Primary key
-  id uuid UNIQUE NOT NULL,
+  id uuid UNIQUE NOT NULL DEFAULT uuid_generate_v1(),
 
   -- The 'shares' of the CPU that the container owns.
   cpu_shares integer,

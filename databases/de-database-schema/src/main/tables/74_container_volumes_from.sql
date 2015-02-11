@@ -7,7 +7,7 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE container_volumes_from (
   -- primary key
-  id uuid UNIQUE NOT NULL,
+  id uuid UNIQUE NOT NULL DEFAULT uuid_generate_v1(),
 
   -- foreign key into the container_settings_table.
   container_settings_id uuid NOT NULL,
