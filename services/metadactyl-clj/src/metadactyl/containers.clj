@@ -6,15 +6,9 @@
                                   container-devices
                                   container-volumes
                                   container-volumes-from]]
+        [kameleon.uuids :only [uuidify]]
         [korma.core]
         [korma.db :only [transaction]]))
-
-(defn ->uuid
-  "Converts a string to a UUID (or tries to, at least). Otherwise it assumes it's already a UUID instance."
-  [uuid]
-  (if (string? uuid)
-    (java.util.UUID/fromString uuid)
-    uuid))
 
 (defn containerized?
   "Returns true if the tool is available in a container."
@@ -25,14 +19,14 @@
             (fields :container_images_id)
             (where
              (and
-              (= :id (->uuid tool-id))
+              (= :id (uuidify tool-id))
               (not= :container_images_id nil)))))))
 
 (defn image-info
   "Returns a map containing information about a container image. Info is looked up by the image UUID."
   [image-id]
   (select container-images
-          (where {:id (->uuid image-id)})))
+          (where {:id (uuidify image-id)})))
 
 (defn image?
   "Returns true if the given name and tag exist in the container_images table."
