@@ -170,10 +170,11 @@
   "Adds steps to a pipeline. The app type isn't stored in the database, but needs to be kept in
    the list of steps so that external steps can be distinguished from DE steps. The two types of
    steps normally can't be distinguished without examining the associated task."
-  (map-indexed (fn [step-number step]
-                 (assoc (add-pipeline-step app-id step-number step)
-                   :app_type (:app_type step)))
-               steps))
+  (doall
+    (map-indexed (fn [step-number step]
+                   (assoc (add-pipeline-step app-id step-number step)
+                     :app_type (:app_type step)))
+                 steps)))
 
 (defn- add-app-steps-mappings
   [{app-id :id steps :steps mappings :mappings}]
