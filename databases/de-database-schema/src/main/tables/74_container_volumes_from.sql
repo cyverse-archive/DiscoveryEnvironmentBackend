@@ -13,5 +13,7 @@ CREATE TABLE container_volumes_from (
   container_settings_id uuid NOT NULL,
 
   -- The name of the container to mount volumes from
-  name text NOT NULL
+  name text NOT NULL,
+
+  unique(container_settings_id, name)
 )

@@ -16,5 +16,7 @@ CREATE TABLE container_volumes (
   host_path text NOT NULL,
 
   -- The path in the container that the host_path will be mounted to.
-  container_path text NOT NULL
+  container_path text NOT NULL,
+
+  unique(container_settings_id, host_path, container_path)
 );
