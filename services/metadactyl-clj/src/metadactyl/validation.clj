@@ -236,6 +236,18 @@
              :message    "Hidden output parameters must define a default value."
              :parameter  parameter})))
 
+(defn validate-pipeline
+  "Verifies that a pipeline contains at least 2 steps and at least 1 input->ouput mapping."
+  [{:keys [steps mappings]}]
+  (when (< (count steps) 2)
+    (throw+ {:error_code cc-errs/ERR_BAD_OR_MISSING_FIELD
+             :message    "Cannot save a workflow with less than 2 steps defined."
+             :steps      steps}))
+  (when (< (count mappings) 1)
+    (throw+ {:error_code cc-errs/ERR_BAD_OR_MISSING_FIELD
+             :message    "Cannot save a workflow without input->output mappings defined."
+             :mappings   mappings})))
+
 (defn get-valid-user-id
   "Gets the user ID for the given username, or throws an error if that username is not found."
   [username]

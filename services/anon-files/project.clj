@@ -13,8 +13,8 @@
   :license {:name "BSD"}
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "anon-files-standalone.jar"
-  :aot [anon-files.core]
-  :main anon-files.core
+  :main ^:skip-aot anon-files.core
+  :profiles {:uberjar {:aot :all}}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.iplantc/clj-jargon "4.1.5"]
                  [org.iplantc/common-cli "4.1.5"]

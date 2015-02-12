@@ -13,8 +13,8 @@
   :license {:name "BSD"
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
-  :main porklock.core
-  :aot [porklock.core]
+  :main ^:skip-aot porklock.core
+  :profiles {:uberjar {:aot :all}}
   :uberjar-name "porklock-standalone.jar"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.logging "0.2.6"]

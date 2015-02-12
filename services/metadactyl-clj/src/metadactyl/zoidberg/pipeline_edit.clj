@@ -15,6 +15,7 @@
                                                     update-app]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
         [metadactyl.validation :only [validate-external-app-step
+                                      validate-pipeline
                                       verify-app-editable
                                       verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
@@ -183,6 +184,7 @@
 
 (defn- add-pipeline-app
   [app]
+  (validate-pipeline app)
   (transaction
     (let [app-id (:id (add-app app))]
       (add-app-to-user-dev-category app-id)
@@ -191,6 +193,7 @@
 
 (defn- update-pipeline-app
   [app]
+  (validate-pipeline app)
   (transaction
     (let [app-id (:id app)]
       (verify-app-editable (get-app app-id))
