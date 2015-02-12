@@ -93,7 +93,7 @@
 (defn- filter-params
   [params]
   (into {} (filter
-            (fn [k v]
+            (fn [[k v]]
               (contains?
                #{:cpu_shares
                  :memory_limit
@@ -134,4 +134,177 @@
   [uuid]
   (when (settings? uuid)
     (delete container-settings
+            (where {:id (uuidify uuid)}))))
+
+(defn devices
+  "Returns the devices associated with the given container_setting uuid."
+  [settings-uuid]
+  (select container-devices
+          (where {:container_settings_id (uuidify settings-uuid)})))
+
+(defn device
+  "Returns the device indicated by the UUID."
+  [uuid]
+  (select container-devices
+          (where {:id (uuidify uuid)})))
+
+(defn device?
+  "Returns true if the given UUID is associated with a device."
+  [uuid]
+  (pos? (count (select container-devices (where {:id (uuidify uuid)})))))
+
+(defn device-mapping?
+  "Returns true if the combination of container_settings UUID, host-path, and
+   container-path already exists in the container_devices table."
+  [settings-uuid host-path container-path]
+  (pos? (count (select container-devices (where (and (= :container_settings_id (uuidify settings-uuid))
+                                                     (= :host_path host-path)
+                                                     (= :container_path container-path)))))))
+
+(defn settings-has-device?
+  "Returns true if the container_settings record specified by the given UUID has
+   at least one device associated with it."
+  [settings-uuid]
+  (pos? (count (select container-devices (where {:container_settings_id (uuidify settings-uuid)})))))
+
+(defn add-device
+  "Associates a device with the given container_settings UUID."
+  [settings-uuid host-path container-path]
+  (if (device-mapping? settings-uuid host-path container-path)
+    (throw (Exception. (str "device mapping already exists: " settings-uuid " " host-path " " container-path))))
+  (insert container-devices
+          (values {:container_settings_id (uuidify settings-uuid)
+                   :host_path host-path
+                   :container_path container-path})))
+
+(defn modify-device
+  [uuid settings-uuid host-path container-path]
+  (if-not (device? uuid)
+    (throw (Exception. (str "device does not exist: " uuid))))
+  (update container-devices
+          (set-fields {:container_settings_id (uuidify settings-uuid)
+                       :host_path host-path
+                       :container_path container-path})
+          (where {:id (uuidify uuid)})))
+
+(defn delete-device
+  [uuid]
+  (if (device? uuid)
+    (delete container-devices
+            (where {:id (uuidify uuid)}))))
+
+(defn volumes
+  "Returns the devices associated with the given container_settings UUID."
+  [settings-uuid]
+  (select container-volumes (where {:container_settings_id (uuidify settings-uuid)})))
+
+(defn volume
+  "Returns the volume indicated by the UUID."
+  [uuid]
+  (select container-volumes (where {:id (uuidify uuid)})))
+
+(defn volume?
+  "Returns true if volume indicated by the UUID exists."
+  [uuid]
+  (pos? (count (select container-volumes (where {:id (uuidify uuid)})))))
+
+(defn volume-mapping?
+  "Returns true if the combination of container_settings UUID, host-path, and
+   container-path already exists in the database."
+  [settings-uuid host-path container-path]
+  (pos? (count (select container-volumes (where (and (= :container_settings_id (uuidify settings-uuid))
+                                                     (= :host_path host-path)
+                                                     (= :container_path container-path)))))))
+(defn settings-has-volume?
+  "Returns true if the container_settings UUID has at least one volume
+   associated with it."
+  [settings-uuid]
+  (pos? (count (select container-volumes (where {:container_settings_id (uuidify settings-uuid)})))))
+
+(defn add-volume
+  "Adds a volume record to the database for the specified container_settings UUID."
+  [settings-uuid host-path container-path]
+  (if (volume-mapping? settings-uuid host-path container-path)
+    (throw (Exception. (str "volume mapping already exists: " settings-uuid " " host-path " " container-path))))
+  (insert container-volumes
+          (values {:container_settings_id (uuidify settings-uuid)
+                   :host_path host-path
+                   :container_path container-path})))
+
+(defn modify-volume
+  "Modifies the container_volumes record indicated by the uuid."
+  [uuid settings-uuid host-path container-path]
+  (if-not (volume? uuid)
+    (throw (Exception. (str "volume does not exist: " uuid))))
+  (update container-volumes
+          (set-fields {:container_settings_id (uuidify settings-uuid)
+                       :host_path host-path
+                       :container_path container-path})
+          (where {:id (uuidify uuid)})))
+
+(defn delete-volume
+  "Deletes the volume associated with uuid in the container_volumes table."
+  [uuid]
+  (when (volume? uuid)
+    (delete container-volumes (where {:id (uuidify uuid)}))))
+
+(defn volumes-from
+  "Returns all of the records from the container_volumes_from table that are associated
+   with the given container_settings UUID."
+  [settings-uuid]
+  (select container-volumes-from (where {:container_settings_id (uuidify settings-uuid)})))
+
+(defn volume-from
+  "Returns all records from container_volumes_from associated with the UUID passed in. There
+   should only be a single result, but we're returning a seq just in case."
+  [uuid]
+  (select container-volumes-from
+          (where {:id (uuidify uuid)})))
+
+(defn volume-from?
+  "Returns true if the volume_from record indicated by the UUID exists."
+  [uuid]
+  (pos? (count (select container-volumes-from
+                       (where {:id (uuidify uuid)})))))
+
+(defn volume-from-mapping?
+  "Returns true if the combination of the container_settings UUID and container
+   already exists in the container_volumes_from table."
+  [settings-uuid name]
+  (pos? (count (select container-volumes-from
+                       (where {:container_settings_id (uuidify settings-uuid)
+                               :name name})))))
+
+(defn settings-has-volume-from?
+  "Returns true if the indicated container_settings record has at least one
+   container_volumes_from record associated with it."
+  [settings-uuid]
+  (pos? (count (select container-volumes-from
+                       (where {:container_settings_id (uuidify settings-uuid)})))))
+
+(defn add-volume-from
+  "Adds a record to container_volumes_from associated with the given
+   container_settings UUID."
+  [settings-uuid container-name]
+  (if (settings-has-volume-from? settings-uuid)
+    (throw (Exception. (str "volume from mapping already exists: " settings-uuid " " container-name))))
+  (insert container-volumes-from
+          (values {:container_settings_id (uuidify settings-uuid)
+                   :name container-name})))
+
+(defn modify-volume-from
+  "Modifies a record in container_volumes_from."
+  [uuid settings-uuid container-name]
+  (if-not (volume-from? uuid)
+    (throw (Exception. (str "volume from setting does not exist: " uuid))))
+  (update container-volumes-from
+          (set-fields {:container_settings_id (uuidify settings-uuid)
+                      :name container-name})
+          (where {:id (uuidify uuid)})))
+
+(defn delete-volume-from
+  "Deletes a record from container_volumes_from."
+  [uuid]
+  (when (volume-from? uuid)
+    (delete container-volumes-from
             (where {:id (uuidify uuid)}))))
