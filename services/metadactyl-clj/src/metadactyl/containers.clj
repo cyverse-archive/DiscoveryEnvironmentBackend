@@ -78,3 +78,60 @@
      (delete container-images
              (where (and (= :name name)
                          (= :tag tag)))))))
+
+(defn settings
+  "Returns the settings associated with the given UUID."
+  [uuid]
+  (first (select container-settings
+                 (where {:id (uuidify uuid)}))))
+
+(defn settings?
+  "Returns true if the given UUID is associated with a set of container settings."
+  [uuid]
+  (pos? (count (select container-settings (where {:id (uuidify uuid)})))))
+
+(defn- filter-params
+  [params]
+  (into {} (filter
+            (fn [k v]
+              (contains?
+               #{:cpu_shares
+                 :memory_limit
+                 :network_mode
+                 :working_directory
+                 :name}
+               k))
+            params)))
+
+(defn add-settings
+  "Adds a new settings record to the database based on the parameter map.
+   None of the fields are required. Recognized fields are:
+     :cpu-shares - integer granting shares of the CPU to the container.
+     :memory-limit - bigint number of bytes of RAM to give to the container.
+     :network-mode - either bridge or none
+     :working-directory - default working directory for the container
+     :name - name to give the container
+   Does not check to see if the record already exists, since multiple containers
+   have the same settings. Trying to dedupe would just make editing settings
+   more complicated."
+  [params]
+  (insert container-settings
+          (values (filter-params params))))
+
+(defn modify-settings
+  "Modifies an existing set of container settings. Requires the container-settings-uuid
+   and a new set of values."
+  [uuid params]
+  (if-not (settings? uuid)
+    (throw (Exception. (str "Container settings do not exist for UUID: " uuid))))
+  (let [values (filter-params params)]
+    (update container-settings
+            (set-fields values)
+            (where {:id (uuidify uuid)}))))
+
+(defn delete-settings
+  "Deletes an existing set of container settings. Requires the container-settings uuid."
+  [uuid]
+  (when (settings? uuid)
+    (delete container-settings
+            (where {:id (uuidify uuid)}))))
