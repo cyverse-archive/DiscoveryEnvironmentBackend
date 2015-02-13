@@ -19,6 +19,7 @@ CREATE VIEW task_param_listing AS
            vt.name AS value_type,
            f.retain,
            f.is_implicit,
+           f.repeat_option_flag,
            it.name AS info_type,
            df.name AS data_format,
            ds.name AS data_source
