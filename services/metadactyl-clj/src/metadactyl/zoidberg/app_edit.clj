@@ -76,8 +76,9 @@
                          [:value_type.name :value_type]
                          [:info_type.name :file_info_type]
                          :file_parameters.is_implicit
-                         [:data_source.name :data_source]
+                         :file_parameters.repeat_option_flag
                          :file_parameters.retain
+                         [:data_source.name :data_source]
                          [:data_formats.name :format]))))
            (where {:id app-id}))))
 
@@ -127,14 +128,21 @@
     (assoc param :arguments param-args)))
 
 (defn- format-file-params
+  "Returns param with a file_parameters key/value map added if the param type matches one in the
+   persistence/param-file-types set. Only includes the repeat_option_flag key in the file_parameters
+   map if the param type is also the persistence/param-multi-input-type string."
   [{param-type :type :as param}]
-  (if (contains? persistence/param-file-types param-type)
-    (assoc param :file_parameters (select-keys param [:format
-                                                      :file_info_type
-                                                      :is_implicit
-                                                      :data_source
-                                                      :retain]))
-    param))
+  (let [file-param-keys [:format
+                         :file_info_type
+                         :is_implicit
+                         :data_source
+                         :retain]
+        file-param-keys (if (= persistence/param-multi-input-type param-type)
+                          (conj file-param-keys :repeat_option_flag)
+                          file-param-keys)]
+    (if (contains? persistence/param-file-types param-type)
+      (assoc param :file_parameters (select-keys param file-param-keys))
+      param)))
 
 (defn- format-default-value
   [{param-type :type :as param} default-value]
@@ -162,6 +170,7 @@
                           :format
                           :file_info_type
                           :is_implicit
+                          :repeat_option_flag
                           :data_source
                           :retain)
                   remove-nil-vals)]
@@ -178,7 +187,7 @@
   [app]
   (let [app (get-app-details (:id app))
         task (first (:tasks app))]
-    (when (empty? tasks)
+    (when (empty? task)
       (throw+ {:error_code cc-errs/ERR_NOT_WRITEABLE
                :message "App contains no steps and cannot be copied or modified."}))
     (remove-nil-vals

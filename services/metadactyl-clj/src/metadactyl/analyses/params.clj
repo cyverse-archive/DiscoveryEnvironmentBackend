@@ -162,12 +162,19 @@
       [(build-flag-arg param (string/trim selected-value))]
       [])))
 
+(defn- build-input-arg
+  [{:keys [repeat_option_flag name] :as param} preprocessor index value]
+  (let [name (if (and (pos? index) (not repeat_option_flag)) "" name)]
+    (build-arg
+      (assoc param :name name)
+      ((fnil preprocessor "") value))))
+
 (defn input-args
-  [param param-value preprocessor]
-  (if-not (:is_implicit param)
+  [{:keys [is_implicit omit_if_blank] :as param} param-value preprocessor]
+  (if-not is_implicit
     (let [values (if (sequential? param-value) param-value [param-value])]
-      (mapv (comp (partial build-arg param) (fnil preprocessor ""))
-            (if (:omit_if_blank param) (remove string/blank? values) values)))
+      (vec (map-indexed (partial build-input-arg param preprocessor)
+                        (if omit_if_blank (remove string/blank? values) values))))
     []))
 
 (defn output-args
