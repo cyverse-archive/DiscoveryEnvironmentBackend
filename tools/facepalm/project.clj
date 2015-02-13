@@ -39,8 +39,8 @@
             [lein-marginalia "0.7.1"]]
   :iplant-rpm {:summary "Facepalm"
                :type :command}
-  :main ^:skip-aot facepalm.core
-  :profiles {:uberjar {:aot :all}}
+  :aot :all
+  :main facepalm.core
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
   :deploy-repositories [["sonatype-nexus-staging"
