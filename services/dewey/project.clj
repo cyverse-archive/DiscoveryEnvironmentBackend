@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/dewey "4.1.6"
+(defproject org.iplantc/dewey "4.1.7"
   :description "This is a RabbitMQ client responsible for keeping an elasticsearch index
                 synchronized with an iRODS repository using messages produced by iRODS."
   :url "http://www.iplantcollaborative.org"
@@ -27,15 +27,15 @@
                  [ring/ring-core "1.3.0"]
                  [ring/ring-jetty-adapter "1.3.0"]
                  [slingshot "0.10.3"]
-                 [org.iplantc/clj-jargon "4.1.6"]
-                 [org.iplantc/clojure-commons "4.1.6"]
-                 [org.iplantc/common-cli "4.1.6"]
+                 [org.iplantc/clj-jargon "4.1.7"]
+                 [org.iplantc/clojure-commons "4.1.7"]
+                 [org.iplantc/common-cli "4.1.7"]
                  [me.raynes/fs "1.4.6"]]
   :resource-paths []
   :profiles {:dev     {:dependencies   [[midje "1.6.3"]]
                        :resource-paths ["dev-resource"]}
              :uberjar {:aot :all}}
-  :plugins [[org.iplantc/lein-iplant-rpm "4.1.6"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "4.1.7"]]
   :iplant-rpm {:summary      "dewey"
                :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
                :config-files ["log4j.properties"]
