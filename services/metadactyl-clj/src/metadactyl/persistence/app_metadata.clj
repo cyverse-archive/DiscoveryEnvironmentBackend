@@ -13,7 +13,8 @@
             [clojure.set :as set]
             [clojure.tools.logging :as log]))
 
-(def param-input-types #{"FileInput" "FolderInput" "MultiFileSelector"})
+(def param-multi-input-type "MultiFileSelector")
+(def param-input-types #{"FileInput" "FolderInput" param-multi-input-type})
 (def param-output-types #{"FileOutput" "FolderOutput" "MultiFileOutput"})
 (def param-file-types (set/union param-input-types param-output-types))
 
@@ -82,7 +83,8 @@
                                :is_implicit
                                :info_type
                                :data_format
-                               :data_source_id]))
+                               :data_source_id
+                               :repeat_option_flag]))
 
 (defn- filter-valid-parameter-value-values
   "Filters and renames valid keys from the given parameter-value for inserting or updating in the

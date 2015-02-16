@@ -85,6 +85,7 @@
               [:parameter_type  :type]
               :retain
               :is_implicit
+              :repeat_option_flag
               :info_type
               :data_format
               :data_source)))

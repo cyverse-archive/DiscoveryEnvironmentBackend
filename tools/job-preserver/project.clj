@@ -1,4 +1,4 @@
-(defproject job-preserver "4.1.5"
+(defproject job-preserver "4.1.7"
   :description "Migration to move job data that was skipped in previous migrations."
   :url "https://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend"
   :license {:name "BSD Standard License"
@@ -10,7 +10,7 @@
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [org.iplantc/kameleon "4.1.5"]]
+                 [org.iplantc/kameleon "4.1.7"]]
   :uberjar-name "job-preserver.jar"
   :aot [job-preserver.core]
   :main job-preserver.core)

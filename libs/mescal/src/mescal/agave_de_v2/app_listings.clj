@@ -11,7 +11,7 @@
 
 (defn get-app-name
   [app]
-  (:name app))
+  (str (or (:label app) (:name app)) " " (:version app)))
 
 (defn- format-app-listing
   [statuses jobs-enabled? listing]

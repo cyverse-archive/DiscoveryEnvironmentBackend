@@ -90,6 +90,11 @@
       then the output file name either must always be the same or it must follow a naming convention
       that can easily be matched with a glob pattern")
 
+   (optional-key :repeat_option_flag)
+   (describe Boolean
+     "Whether or not the command-line option flag should preceed each file of a MultiFileSelector
+     on the command line when the App is run")
+
    (optional-key :data_source)
    (describe String "The Output Parameter's source")
 
