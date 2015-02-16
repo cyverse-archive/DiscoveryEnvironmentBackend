@@ -14,8 +14,8 @@
 (defdb testdb (postgres {:db "de"
                          :user "de"
                          :password "notprod"
-                         :host "127.0.0.1"
-                         :port "5432"
+                         :host (System/getenv "POSTGRES_PORT_5432_TCP_ADDR")
+                         :port (System/getenv "POSTGRES_PORT_5432_TCP_PORT")
                          :delimiters ""}))
 
 (def image-info-map (add-image-info {:name "discoenv/de-db" :tag "latest" :url "https://www.google.com"}))
