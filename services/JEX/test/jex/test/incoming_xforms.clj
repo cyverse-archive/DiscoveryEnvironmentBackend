@@ -47,7 +47,7 @@
                  cfg/nfs-base        (fn [] "/tmp/nfs-base")
                  cfg/irods-base      (fn [] "/tmp/irods-base")
                  cfg/condor-log-path (fn [] "/tmp/condor-log-path")
-                 cfg/filetool-path   (fn [] "/usr/local/bin/filetool")
+                 cfg/jar-path        (fn [] "/usr/local/lib/porklock/porklock-standalone.jar")
                  cfg/icommands-path  (fn [] "/usr/local/bin")
                  cfg/filter-files    (fn [] ",foo,bar,baz,blippy,cow,bees,")]
      (do ~@body)))

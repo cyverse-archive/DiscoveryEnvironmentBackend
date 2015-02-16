@@ -333,7 +333,8 @@
   "Formats the arguments to porklock for an input job."
   [condor-map source input-map]
   (let [file-metadata (or (:file-metadata condor-map) [])]
-    (str "get --user " (:username condor-map)
+    (str "-jar " (cfg/jar-path)
+         " get --user " (:username condor-map)
          " --source " (quote-value
                         (handle-source-path source (:multiplicity input-map)))
          " --config " (irods-config condor-map)
@@ -364,7 +365,7 @@
      :retain          (:retain input)
      :multi           (:multiplicity input)
      :source          (:value input)
-     :executable      (cfg/filetool-path)
+     :executable      "java"
      :environment     (filetool-env)
      :arguments       (input-arguments
                        condor-map
@@ -394,7 +395,8 @@
 (defn output-arguments
   "Formats the porklock arguments for output jobs."
   [user source dest]
-  (str "put --user " user
+  (str "-jar " (cfg/jar-path)
+       " put --user " user
        " --source " (quote-value source)
        " --destination " (quote-value dest)
        " --config logs/irods-config"))
@@ -431,7 +433,7 @@
      :retain          (:retain output)
      :multi           (:multiplicity output)
      :environment     (filetool-env)
-     :executable      (cfg/filetool-path)
+     :executable      "java"
      :arguments       (output-arguments
                        (:username condor-map)
                        (:name output)
@@ -524,11 +526,12 @@
   {:id "imkdir"
    :status "Submitted"
    :environment (filetool-env)
-   :executable (cfg/filetool-path)
+   :executable "java"
    :stderr "logs/imkdir-stderr"
    :stdout "logs/imkdir-stdout"
    :log-file (ut/path-join condor-log "logs" "imkdir-log")
-   :arguments (str "mkdir --user " username
+   :arguments (str "-jar " (cfg/jar-path)
+                   " mkdir --user " username
                    " --destination " (quote-value output-dir))})
 
 (defn meta-analysis-id
@@ -569,12 +572,13 @@
   (log/info "shotgun-job-map")
   {:id          "output-last"
    :status      "Submitted"
-   :executable  (cfg/filetool-path)
+   :executable  "java"
    :environment (filetool-env)
    :stderr      "logs/output-last-stderr"
    :stdout      "logs/output-last-stdout"
    :log-file    (ut/path-join condor-log "logs" "output-last-log")
-   :arguments   (str "put --user " username
+   :arguments   (str "-jar " (cfg/jar-path)
+                     " put --user " username
                      " --config " (irods-config condor-map)
                      " --destination " (quote-value output-dir)
                      (if (:skip-parent-meta condor-map) " --skip-parent-meta" "")

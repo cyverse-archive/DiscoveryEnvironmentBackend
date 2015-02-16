@@ -17,10 +17,10 @@
   "A ref for storing the symbols used to get configuration settings."
   (ref []))
 
-(cc/defprop-str filetool-path
+(cc/defprop-str jar-path
   "Returns the path to porklock on the filesystem out on the Condor cluster."
   [props config-valid configs]
-  "jex.app.filetool-path")
+  "jex.app.jar-path")
 
 (cc/defprop-str nfs-base
   "Returns the path to the NFS directory on the submission host."
