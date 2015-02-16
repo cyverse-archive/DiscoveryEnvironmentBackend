@@ -25,8 +25,8 @@
 (defn image-info
   "Returns a map containing information about a container image. Info is looked up by the image UUID."
   [image-id]
-  (select container-images
-          (where {:id (uuidify image-id)})))
+  (first (select container-images
+                 (where {:id (uuidify image-id)}))))
 
 (defn image?
   "Returns true if the given name and tag exist in the container_images table."
@@ -106,10 +106,10 @@
 (defn add-settings
   "Adds a new settings record to the database based on the parameter map.
    None of the fields are required. Recognized fields are:
-     :cpu-shares - integer granting shares of the CPU to the container.
-     :memory-limit - bigint number of bytes of RAM to give to the container.
-     :network-mode - either bridge or none
-     :working-directory - default working directory for the container
+     :cpu_shares - integer granting shares of the CPU to the container.
+     :memory_limit - bigint number of bytes of RAM to give to the container.
+     :network_mode - either bridge or none
+     :working_directory - default working directory for the container
      :name - name to give the container
    Does not check to see if the record already exists, since multiple containers
    have the same settings. Trying to dedupe would just make editing settings
@@ -145,8 +145,8 @@
 (defn device
   "Returns the device indicated by the UUID."
   [uuid]
-  (select container-devices
-          (where {:id (uuidify uuid)})))
+  (first (select container-devices
+                 (where {:id (uuidify uuid)}))))
 
 (defn device?
   "Returns true if the given UUID is associated with a device."
@@ -201,7 +201,7 @@
 (defn volume
   "Returns the volume indicated by the UUID."
   [uuid]
-  (select container-volumes (where {:id (uuidify uuid)})))
+  (first (select container-volumes (where {:id (uuidify uuid)}))))
 
 (defn volume?
   "Returns true if volume indicated by the UUID exists."
@@ -258,8 +258,8 @@
   "Returns all records from container_volumes_from associated with the UUID passed in. There
    should only be a single result, but we're returning a seq just in case."
   [uuid]
-  (select container-volumes-from
-          (where {:id (uuidify uuid)})))
+  (first (select container-volumes-from
+                 (where {:id (uuidify uuid)}))))
 
 (defn volume-from?
   "Returns true if the volume_from record indicated by the UUID exists."
