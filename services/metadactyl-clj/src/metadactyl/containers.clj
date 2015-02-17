@@ -79,63 +79,6 @@
              (where (and (= :name name)
                          (= :tag tag)))))))
 
-(defn settings
-  "Returns the settings associated with the given UUID."
-  [uuid]
-  (first (select container-settings
-                 (where {:id (uuidify uuid)}))))
-
-(defn settings?
-  "Returns true if the given UUID is associated with a set of container settings."
-  [uuid]
-  (pos? (count (select container-settings (where {:id (uuidify uuid)})))))
-
-(defn- filter-params
-  [params]
-  (into {} (filter
-            (fn [[k v]]
-              (contains?
-               #{:cpu_shares
-                 :memory_limit
-                 :network_mode
-                 :working_directory
-                 :name}
-               k))
-            params)))
-
-(defn add-settings
-  "Adds a new settings record to the database based on the parameter map.
-   None of the fields are required. Recognized fields are:
-     :cpu_shares - integer granting shares of the CPU to the container.
-     :memory_limit - bigint number of bytes of RAM to give to the container.
-     :network_mode - either bridge or none
-     :working_directory - default working directory for the container
-     :name - name to give the container
-   Does not check to see if the record already exists, since multiple containers
-   have the same settings. Trying to dedupe would just make editing settings
-   more complicated."
-  [params]
-  (insert container-settings
-          (values (filter-params params))))
-
-(defn modify-settings
-  "Modifies an existing set of container settings. Requires the container-settings-uuid
-   and a new set of values."
-  [uuid params]
-  (if-not (settings? uuid)
-    (throw (Exception. (str "Container settings do not exist for UUID: " uuid))))
-  (let [values (filter-params params)]
-    (update container-settings
-            (set-fields values)
-            (where {:id (uuidify uuid)}))))
-
-(defn delete-settings
-  "Deletes an existing set of container settings. Requires the container-settings uuid."
-  [uuid]
-  (when (settings? uuid)
-    (delete container-settings
-            (where {:id (uuidify uuid)}))))
-
 (defn devices
   "Returns the devices associated with the given container_setting uuid."
   [settings-uuid]
@@ -308,3 +251,79 @@
   (when (volume-from? uuid)
     (delete container-volumes-from
             (where {:id (uuidify uuid)}))))
+
+(defn settings
+  "Returns the settings associated with the given UUID."
+  [uuid]
+  (first (select container-settings
+                 (where {:id (uuidify uuid)}))))
+
+(defn settings?
+  "Returns true if the given UUID is associated with a set of container settings."
+  [uuid]
+  (pos? (count (select container-settings (where {:id (uuidify uuid)})))))
+
+(defn- filter-params
+  [params]
+  (into {} (filter
+            (fn [[k v]]
+              (contains?
+               #{:cpu_shares
+                 :memory_limit
+                 :network_mode
+                 :working_directory
+                 :name}
+               k))
+            params)))
+
+(defn add-settings
+  "Adds a new settings record to the database based on the parameter map.
+   None of the fields are required. Recognized fields are:
+     :cpu_shares - integer granting shares of the CPU to the container.
+     :memory_limit - bigint number of bytes of RAM to give to the container.
+     :network_mode - either bridge or none
+     :working_directory - default working directory for the container
+     :name - name to give the container
+   Does not check to see if the record already exists, since multiple containers
+   have the same settings. Trying to dedupe would just make editing settings
+   more complicated."
+  [params]
+  (insert container-settings
+          (values (filter-params params))))
+
+(defn modify-settings
+  "Modifies an existing set of container settings. Requires the container-settings-uuid
+   and a new set of values."
+  [uuid params]
+  (if-not (settings? uuid)
+    (throw (Exception. (str "Container settings do not exist for UUID: " uuid))))
+  (let [values (filter-params params)]
+    (update container-settings
+            (set-fields values)
+            (where {:id (uuidify uuid)}))))
+
+(defn delete-settings
+  "Deletes an existing set of container settings. Requires the container-settings uuid."
+  [uuid]
+  (when (settings? uuid)
+    (let [id (uuidify uuid)]
+      (transaction
+       (delete container-devices
+               (where {:container_settings_id id}))
+       (delete container-volumes
+               (where {:container_settings_id id}))
+       (delete container-volumes-from
+               (where {:container_settings_id id}))
+       (delete container-settings
+               (where {:id id}))))))
+
+(defn all-settings
+  "Returns a map with all of the settings for a container, including all of the
+   devices, volumes, and volumes-froms."
+  [settings-uuid]
+  (let [id    (uuidify settings-uuid)
+        rm-id (fn [m] (dissoc m :container_settings_id))]
+    (-> (settings id)
+        (assoc :devices (mapv rm-id (devices id)))
+        (assoc :volumes (mapv rm-id (volumes id)))
+        (assoc :volumes-from (mapv rm-id (volumes-from id))))))
