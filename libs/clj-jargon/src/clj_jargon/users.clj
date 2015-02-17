@@ -1,7 +1,9 @@
 (ns clj-jargon.users
   (:use [clj-jargon.validations]
         [clj-jargon.gen-query])
-  (:import [org.irods.jargon.core.query RodsGenQueryEnum]))
+  (:import [org.irods.jargon.core.exception DataNotFoundException]
+           [org.irods.jargon.core.query RodsGenQueryEnum]))
+
 
 (defn username->id
   [cm user]
@@ -27,5 +29,4 @@
     (do
       (.findByName (:userAO cm) user)
       true)
-    (catch java.lang.Exception d false)))
-
+    (catch DataNotFoundException d false)))
