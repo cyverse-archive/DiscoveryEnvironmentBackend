@@ -22,4 +22,6 @@
                  [slingshot "0.12.2"]
                  [org.clojure/tools.logging "0.3.1"]]
   :repositories [["dice.repository"
-                  {:url "https://raw.github.com/DICE-UNC/DICE-Maven/master/releases"}]])
+                  {:url "https://raw.github.com/DICE-UNC/DICE-Maven/master/releases"}]
+                 ["iplant.repository"
+                  {:url "http://katic.iplantcollaborative.org/archiva/repository/internal/"}]])
