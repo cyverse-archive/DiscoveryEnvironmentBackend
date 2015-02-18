@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/saved-searches "4.1.7"
+(defproject org.iplantc/saved-searches "4.1.8"
   :description "DE API for managing saved searches."
   :url "https://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend"
   :license {:name "BSD"}
@@ -16,9 +16,9 @@
   :main saved-searches.core
   :uberjar-name "saved-searches-standalone.jar"
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.iplantc/common-cli "4.1.7"]
-                 [org.iplantc/common-cfg "4.1.7"]
-                 [org.iplantc/kameleon "4.1.7"]
+                 [org.iplantc/common-cli "4.1.8"]
+                 [org.iplantc/common-cfg "4.1.8"]
+                 [org.iplantc/kameleon "4.1.8"]
                  [me.raynes/fs "1.4.4"]
                  [cheshire "5.3.1"]
                  [compojure "1.1.6"]
@@ -30,4 +30,4 @@
                :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]}
   :plugins [[lein-ring "0.8.10"]
             [lein-midje "3.1.1"]
-            [org.iplantc/lein-iplant-rpm "4.1.7"]])
+            [org.iplantc/lein-iplant-rpm "4.1.8"]])
