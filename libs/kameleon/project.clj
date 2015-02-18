@@ -1,4 +1,4 @@
-(defproject org.iplantc/kameleon "4.1.7"
+(defproject org.iplantc/kameleon "4.1.8"
   :description "Library for interacting with backend relational databases."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
