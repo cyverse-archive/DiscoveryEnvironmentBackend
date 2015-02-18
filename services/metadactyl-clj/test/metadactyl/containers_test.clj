@@ -2,7 +2,8 @@
   (:use [clojure.test]
         [metadactyl.containers]
         [korma.core]
-        [korma.db])
+        [korma.db]
+        [kameleon.entities])
   (:require [clojure.string :as string]))
 
 ;;; These tests assume that you have a clean instance of the de
@@ -30,11 +31,15 @@
   (is (= {:name "discoenv/de-db" :tag "latest" :url "https://www.google.com"}
          (dissoc (image-info (image-id {:name "discoenv/de-db" :tag "latest"})) :id))))
 
+
+(def tool-map (first (select tools)))
+
 (def settings-map  (add-settings {:name "test"
                                   :cpu_shares 1024
                                   :memory_limit 2048
                                   :network_mode "bridge"
-                                  :working_directory "/work"}))
+                                  :working_directory "/work"
+                                  :tools_id (:id tool-map)}))
 
 (deftest settings-tests []
   (is (not (nil? (:id settings-map))))
@@ -43,10 +48,13 @@
           :cpu_shares 1024
           :memory_limit 2048
           :network_mode "bridge"
-          :working_directory "/work"}
+          :working_directory "/work"
+          :tools_id (:id tool-map)}
          (dissoc (settings (:id settings-map)) :id)))
 
-  (is (settings? (:id settings-map))))
+  (is (settings? (:id settings-map)))
+
+  (is (tool-has-settings? (:id tool-map))))
 
 (def devices-map (add-device (:id settings-map) "/dev/null" "/dev/yay"))
 
@@ -92,6 +100,11 @@
 
 
 (def all-settings-map (all-settings (:id settings-map)))
+
+(defn setup
+  []
+  (update tools (set-fields {:container_images_id (:id image-info-map)
+                             :container_settings_id (:id settings-map)})))
 
 (defn all-settings-test []
   (is (not (nil? (:id all-settings-map))))

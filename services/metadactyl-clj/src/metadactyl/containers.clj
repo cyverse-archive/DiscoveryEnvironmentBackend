@@ -1,5 +1,6 @@
 (ns metadactyl.containers
   (:use [metadactyl.schema.containers]
+        [metadactyl.routes.domain.tool :only [ToolIdParam]]
         [kameleon.core]
         [kameleon.entities :only [tools
                                   container-images
@@ -27,7 +28,17 @@
   "Returns a map containing information about a container image. Info is looked up by the image UUID."
   [ImageID]
   (first (select container-images
+                 (fields :name :tag :url)
                  (where {:id (uuidify ImageID)}))))
+
+(defn tool-image-info
+  "Returns a map containing information about a container image. Info is looked up by the tool UUID"
+  [ToolIdParam]
+  (let [image-id (:container_images_id
+                  (first (select tools
+                                 (fields :container_images_id)
+                                 (where {:id (uuidify ToolIdParam)}))))]
+    (image-info image-id)))
 
 (defn- get-tag
   [ImageSpecifier]
@@ -290,24 +301,21 @@
                  :memory_limit
                  :network_mode
                  :working_directory
-                 :name}
+                 :name
+                 :tools_id}
                k))
             Settings)))
 
 (defn add-settings
-  "Adds a new settings record to the database based on the parameter map.
-   None of the fields are required. Recognized fields are:
-     :cpu_shares - integer granting shares of the CPU to the container.
-     :memory_limit - bigint number of bytes of RAM to give to the container.
-     :network_mode - either bridge or none
-     :working_directory - default working directory for the container
-     :name - name to give the container
-   Does not check to see if the record already exists, since multiple containers
-   have the same settings. Trying to dedupe would just make editing settings
-   more complicated."
+  "Adds a new settings record to the database based on the parameter map."
   [Settings]
   (insert container-settings
           (values (filter-params Settings))))
+
+(defn tool-has-settings?
+  "Returns true if the given tool UUID has some container settings associated with it."
+  [ToolIdParam]
+  (pos? (count (select container-settings (where {:tools_id (uuidify ToolIdParam)})))))
 
 (defn modify-settings
   "Modifies an existing set of container settings. Requires the container-settings-uuid
@@ -334,6 +342,23 @@
                (where {:container_settings_id id}))
        (delete container-settings
                (where {:id id}))))))
+
+(defn tool-container-info
+  "Returns container info associated with a tool or nil"
+  [ToolIdParam]
+  (let [id (uuidify ToolIdParam)]
+    (if (tool-has-settings? id)
+      (->  (select container-settings
+                   (fields :id :cpu_shares :memory_limit :network_mode :name :working_directory)
+                   (with container-devices
+                         (fields :host_path :container_path))
+                   (with container-volumes
+                         (fields :host_path :container_path))
+                   (with container-volumes-from
+                         (fields :name))
+                   (where {:tools_id id}))
+           first
+           (merge {:image (tool-image-info ToolIdParam)})))))
 
 (defn all-settings
   "Returns a map with all of the settings for a container, including all of the

@@ -3,6 +3,8 @@
 set -e
 set -x
 
+$(boot2docker shellinit)
+
 if [ $(docker ps | grep de-db | wc -l) -gt 0 ]; then 
     docker kill de-db
 fi

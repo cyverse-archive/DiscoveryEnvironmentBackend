@@ -61,19 +61,23 @@
   (table :container_images))
 
 (defentity container-settings
-  (table :container_settings))
+  (table :container_settings)
+  (belongs-to tools)
+  (has-many container-devices)
+  (has-many container-volumes)
+  (has-many container-volumes-from))
 
 (defentity container-devices
   (table :container_devices)
-  (belongs-to container-settings {:fk :container_settings_id}))
+  (belongs-to container-settings))
 
 (defentity container-volumes
   (table :container_volumes)
-  (belongs-to container-settings {:fk :container_settings_id}))
+  (belongs-to container-settings))
 
 (defentity container-volumes-from
   (table :container_volumes_from)
-  (belongs-to container-settings {:fk :container_settings_id}))
+  (belongs-to container-settings))
 
 
 ;; Information about a deployed tool.
@@ -82,7 +86,6 @@
   (belongs-to tool_types {:fk :tool_type_id})
   (has-many tool_test_data_files {:fk :tool_id})
   (has-many tool_requests {:fk :tool_id})
-  (has-one container-images)
   (has-one container-settings))
 
 ;; Test data files for use with deployed components.
