@@ -12,6 +12,5 @@ CREATE TABLE tools (
     version character varying(255),
     attribution text,
     integration_data_id uuid NOT NULL,
-    container_images_id uuid,
-    container_settings_id uuid
+    container_images_id uuid
 );

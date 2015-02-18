@@ -9,6 +9,9 @@ CREATE TABLE container_settings (
   -- Primary key
   id uuid UNIQUE NOT NULL DEFAULT uuid_generate_v1(),
 
+  -- Foreign key into the tools table
+  tools_id uuid UNIQUE NOT NULL,
+
   -- The 'shares' of the CPU that the container owns.
   cpu_shares integer,
 
