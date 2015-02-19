@@ -30,7 +30,7 @@
   "Returns a map containing information about a container image. Info is looked up by the image UUID."
   [ImageID]
   (first (select container-images
-                 (fields :name :tag :url)
+                 (fields :name :tag :url :id)
                  (where {:id (uuidify ImageID)}))))
 
 (defn tool-image-info
@@ -350,18 +350,17 @@
   [ToolIdParam]
   (let [id (uuidify ToolIdParam)]
     (when (tool-has-settings? id)
-      (let [retval (->  (select container-settings
-                            (fields :id :cpu_shares :memory_limit :network_mode :name :working_directory)
-                            (with container-devices
-                                  (fields :host_path :container_path))
-                            (with container-volumes
-                                  (fields :host_path :container_path))
-                            (with container-volumes-from
-                                  (fields :name))
-                            (where {:tools_id id}))
-                    first
-                    (merge {:image (tool-image-info ToolIdParam)}))]
-        retval))))
+      (->  (select container-settings
+                   (fields :id :cpu_shares :memory_limit :network_mode :name :working_directory)
+                   (with container-devices
+                         (fields :host_path :container_path :id))
+                   (with container-volumes
+                         (fields :host_path :container_path :id))
+                   (with container-volumes-from
+                         (fields :name :id))
+                   (where {:tools_id id}))
+           first
+           (merge {:image (tool-image-info ToolIdParam)})))))
 
 (defn all-settings
   "Returns a map with all of the settings for a container, including all of the

@@ -30,7 +30,7 @@
         :notes "This endpoint returns the details for one tool."
         (ce/trap uri #(get-tool tool-id)))
 
-  (GET* "/tools/:tool-id/containers" [:as {uri :uri}]
+  (GET* "/tools/:tool-id/container" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
         :query [params SecuredQueryParams]
         :return ToolContainer

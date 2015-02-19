@@ -8,6 +8,7 @@
 (def ImageSpecifier
   (describe
    {:name                 s/Str
+    :id                   s/Uuid
     (s/optional-key :tag) s/Str
     (s/optional-key :url) s/Str}
    "A map describing a container image."))
@@ -19,12 +20,12 @@
 
 (s/defschema Settings
   (describe
-   {:cpu_shares   Integer
-    :memory_limit Long
-    :network_mode s/Str
-    :working_dir  s/Str
-    :name         s/Str
-    :id           SettingsID}
+   {:cpu_shares         Integer
+    :memory_limit       Long
+    :network_mode       s/Str
+    :working_directory  s/Str
+    :name               s/Str
+    :id                 SettingsID}
    "The group of settings for a container."))
 
 (s/defschema DeviceID
@@ -45,7 +46,8 @@
 (s/defschema Device
   (describe
    {:host_path DeviceHostPath
-    :container_path DeviceContainerPath}
+    :container_path DeviceContainerPath
+    :id DeviceID}
    "A map representing a Device."))
 
 (s/defschema VolumeID
@@ -66,7 +68,8 @@
 (s/defschema Volume
   (describe
    {:host_path VolumeHostPath
-    :container_path VolumeContainerPath}
+    :container_path VolumeContainerPath
+    :id VolumeID}
    "A map representing a bind mounted container volume."))
 
 (s/defschema VolumesFromID
@@ -81,7 +84,8 @@
 
 (s/defschema VolumesFrom
   (describe
-   {:name VolumesFromName}
+   {:name VolumesFromName
+    :id VolumesFromID}
    "The name of a container from which to bind mount volumes."))
 
 (s/defschema ToolContainerSettings
@@ -94,17 +98,8 @@
    "Bare minimum map containing all of the container settings."))
 
 (s/defschema ToolContainer
-  {:cpu_shares Integer
-   :memory_limit Long
-   :network_mode String
-   :working_directory String
-   :name String
-   :id java.util.UUID
-   :container_devices
-   [{:host_path String :container_path String}]
-   :container_volumes
-   [{:host_path String :container_path String}]
-   :container_volumes_from
-   [{:name String}]
-   :image
-   {:name String (s/optional-key :tag) String (s/optional-key :url) String}})
+  (describe
+   (merge
+    ToolContainerSettings
+    {:image ImageSpecifier})
+   "The map that contains all information tracked about a container associated with a tool."))
