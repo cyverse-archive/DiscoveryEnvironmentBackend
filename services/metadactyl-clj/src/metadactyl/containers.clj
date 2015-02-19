@@ -10,7 +10,9 @@
                                   container-volumes-from]]
         [kameleon.uuids :only [uuidify]]
         [korma.core]
-        [korma.db :only [transaction]]))
+        [korma.db :only [transaction]])
+  (:require [clojure.tools.logging :as log]
+            [schema.core :as s]))
 
 (defn containerized?
   "Returns true if the tool is available in a container."
@@ -343,22 +345,23 @@
        (delete container-settings
                (where {:id id}))))))
 
-(defn tool-container-info
+(s/defn tool-container-info :- ToolContainer
   "Returns container info associated with a tool or nil"
   [ToolIdParam]
   (let [id (uuidify ToolIdParam)]
-    (if (tool-has-settings? id)
-      (->  (select container-settings
-                   (fields :id :cpu_shares :memory_limit :network_mode :name :working_directory)
-                   (with container-devices
-                         (fields :host_path :container_path))
-                   (with container-volumes
-                         (fields :host_path :container_path))
-                   (with container-volumes-from
-                         (fields :name))
-                   (where {:tools_id id}))
-           first
-           (merge {:image (tool-image-info ToolIdParam)})))))
+    (when (tool-has-settings? id)
+      (let [retval (->  (select container-settings
+                            (fields :id :cpu_shares :memory_limit :network_mode :name :working_directory)
+                            (with container-devices
+                                  (fields :host_path :container_path))
+                            (with container-volumes
+                                  (fields :host_path :container_path))
+                            (with container-volumes-from
+                                  (fields :name))
+                            (where {:tools_id id}))
+                    first
+                    (merge {:image (tool-image-info ToolIdParam)}))]
+        retval))))
 
 (defn all-settings
   "Returns a map with all of the settings for a container, including all of the

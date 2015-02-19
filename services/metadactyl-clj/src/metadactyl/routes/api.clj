@@ -11,6 +11,7 @@
         [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
+        [metadactyl.schema.containers]
         [metadactyl.user :only [store-current-user]]
         [ring.middleware keyword-params nested-params]
         [ring.swagger.json-schema :only [json-type]]

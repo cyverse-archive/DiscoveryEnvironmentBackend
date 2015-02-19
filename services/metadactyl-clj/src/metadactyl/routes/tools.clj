@@ -1,11 +1,14 @@
 (ns metadactyl.routes.tools
   (:use [metadactyl.metadata.tool-requests]
+        [metadactyl.containers]
+        [metadactyl.schema.containers]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
         [metadactyl.tools :only [get-tool search-tools]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
-        [ring.swagger.schema :only [describe]])
+        [ring.swagger.schema :only [describe]]
+        [metadactyl.util.service])
   (:require [clojure-commons.error-codes :as ce]
             [metadactyl.util.service :as service]
             [compojure.route :as route]))
@@ -26,6 +29,15 @@
         :summary "Get a Tool"
         :notes "This endpoint returns the details for one tool."
         (ce/trap uri #(get-tool tool-id)))
+
+  (GET* "/tools/:tool-id/containers" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam]
+        :query [params SecuredQueryParams]
+        :return ToolContainer
+        :summary "Tool Container Information"
+        :notes "This endpoint returns container information associated with a tool. This endpoint
+        returns a 404 if the tool is not run inside a container."
+        (ce/trap uri #(success-response (tool-container-info tool-id))))
 
   (GET* "/tool-requests" [:as {uri :uri}]
         :query [params ToolRequestListingParams]
