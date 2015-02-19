@@ -3,21 +3,14 @@
         [metadactyl.routes.domain.tool :only [ToolIdParam]])
   (:require [schema.core :as s]))
 
-(s/defschema ImageID (describe s/Uuid "The UUID for a container image. Primary key of the container_images table."))
-
-(def ImageSpecifier
+(s/defschema Image
   (describe
    {:name                 s/Str
     :id                   s/Uuid
     (s/optional-key :tag) s/Str
     (s/optional-key :url) s/Str}
    "A map describing a container image."))
-
-(s/defschema SettingsID
-  (describe
-   s/Uuid
-   "The UUID for a group of container settings. Primary key of the container_settings table."))
-
+ 
 (s/defschema Settings
   (describe
    {:cpu_shares         Integer
@@ -25,75 +18,40 @@
     :network_mode       s/Str
     :working_directory  s/Str
     :name               s/Str
-    :id                 SettingsID}
+    :id                 s/Uuid}
    "The group of settings for a container."))
-
-(s/defschema DeviceID
-  (describe
-   s/Uuid
-   "The UUID for device associated with a group of container settings. Primary key of the container_devices table."))
-
-(s/defschema DeviceHostPath
-  (describe
-   s/Str
-   "The path to a device on the container host."))
-
-(s/defschema DeviceContainerPath
-  (describe
-   s/Str
-   "The path to a device within a container."))
 
 (s/defschema Device
   (describe
-   {:host_path DeviceHostPath
-    :container_path DeviceContainerPath
-    :id DeviceID}
-   "A map representing a Device."))
+   {:host_path      s/Str
+    :container_path s/Str
+    :id             s/Uuid}
+   "Information about a device associated with a tool's container."))
 
-(s/defschema VolumeID
+(s/defschema Devices
   (describe
-   s/Uuid
-   "The UUID for a volume associated with a group of container settings. Primary key of the container_volumes table."))
-
-(s/defschema VolumeHostPath
-  (describe
-   s/Str
-   "The path to a volume on the host that is shared with a container."))
-
-(s/defschema VolumeContainerPath
-  (describe
-   s/Str
-   "The path to a volume in a container that was bind mounted from the host."))
+   {:container_devices [Device]}
+   "A list of devices associated with a tool's container."))
 
 (s/defschema Volume
   (describe
-   {:host_path VolumeHostPath
-    :container_path VolumeContainerPath
-    :id VolumeID}
+   {:host_path      s/Str
+    :container_path s/Str
+    :id             s/Uuid}
    "A map representing a bind mounted container volume."))
-
-(s/defschema VolumesFromID
-  (describe
-   s/Uuid
-   "The UUID for a 'volume from' setting associated with a group of container settings. Primary key of the container_volumes_from table."))
-
-(s/defschema VolumesFromName
-  (describe
-   s/Str
-   "The name of the container from which to mount volumes."))
 
 (s/defschema VolumesFrom
   (describe
-   {:name VolumesFromName
-    :id VolumesFromID}
+   {:name s/Str
+    :id   s/Uuid}
    "The name of a container from which to bind mount volumes."))
 
 (s/defschema ToolContainerSettings
   (describe
    (merge
     Settings
-    {:container_devices [Device]
-     :container_volumes [Volume]
+    {:container_devices      [Device]
+     :container_volumes      [Volume]
      :container_volumes_from [VolumesFrom]})
    "Bare minimum map containing all of the container settings."))
 
@@ -101,5 +59,5 @@
   (describe
    (merge
     ToolContainerSettings
-    {:image ImageSpecifier})
-   "The map that contains all information tracked about a container associated with a tool."))
+    {:image Image})
+   "All container and container image information associated with a tool."))

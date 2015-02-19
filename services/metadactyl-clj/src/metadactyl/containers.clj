@@ -1,7 +1,5 @@
 (ns metadactyl.containers
-  (:use [metadactyl.schema.containers]
-        [metadactyl.routes.domain.tool :only [ToolIdParam]]
-        [kameleon.core]
+  (:use [kameleon.core]
         [kameleon.entities :only [tools
                                   container-images
                                   container-settings
@@ -11,8 +9,7 @@
         [kameleon.uuids :only [uuidify]]
         [korma.core]
         [korma.db :only [transaction]])
-  (:require [clojure.tools.logging :as log]
-            [schema.core :as s]))
+  (:require [clojure.tools.logging :as log]))
 
 (defn containerized?
   "Returns true if the tool is available in a container."
@@ -28,31 +25,31 @@
 
 (defn image-info
   "Returns a map containing information about a container image. Info is looked up by the image UUID."
-  [ImageID]
+  [image-uuid]
   (first (select container-images
                  (fields :name :tag :url :id)
-                 (where {:id (uuidify ImageID)}))))
+                 (where {:id (uuidify image-uuid)}))))
 
 (defn tool-image-info
   "Returns a map containing information about a container image. Info is looked up by the tool UUID"
-  [ToolIdParam]
+  [tool-uuid]
   (let [image-id (:container_images_id
                   (first (select tools
                                  (fields :container_images_id)
-                                 (where {:id (uuidify ToolIdParam)}))))]
+                                 (where {:id (uuidify tool-uuid)}))))]
     (image-info image-id)))
 
 (defn- get-tag
-  [ImageSpecifier]
-  (if-not (contains? ImageSpecifier :tag)
+  [image-map]
+  (if-not (contains? image-map :tag)
     "latest"
-    (:tag ImageSpecifier)))
+    (:tag image-map)))
 
 (defn image?
   "Returns true if the given name and tag exist in the container_images table."
-  [ImageSpecifier]
-  (let [tag  (get-tag ImageSpecifier)
-        name (:name ImageSpecifier)]
+  [image-map]
+  (let [tag  (get-tag image-map)
+        name (:name image-map)]
     (pos?
      (count
       (select container-images
@@ -61,21 +58,21 @@
 
 (defn image-id
   "Returns the UUID used as the primary key in the container_images table."
-  [ImageSpecifier]
-  (let [tag  (get-tag ImageSpecifier)
-        name (:name ImageSpecifier)]
-    (if-not (image? ImageSpecifier)
-      (throw (Exception. (str "image does not exist: " ImageSpecifier)))
+  [image-map]
+  (let [tag  (get-tag image-map)
+        name (:name image-map)]
+    (if-not (image? image-map)
+      (throw (Exception. (str "image does not exist: " image-map)))
       (:id (first (select container-images
                           (where (and (= :name name)
                                       (= :tag tag)))))))))
 
 (defn add-image-info
-  [ImageSpecifier]
-  (let [tag  (get-tag ImageSpecifier)
-        name (:name ImageSpecifier)
-        url  (:url ImageSpecifier)]
-    (when-not (image? ImageSpecifier)
+  [image-map]
+  (let [tag  (get-tag image-map)
+        name (:name image-map)
+        url  (:url image-map)]
+    (when-not (image? image-map)
       (insert container-images
               (values {:name name
                        :tag tag
@@ -84,12 +81,12 @@
 (defn modify-image-info
   "Updates the record for a container image. Basically, just allows you to set a new URL
    at this point."
-  [ImageSpecifier]
-  (let [tag  (get-tag ImageSpecifier)
-        name (:name ImageSpecifier)
-        url  (:url ImageSpecifier)]
-    (if-not (image? ImageSpecifier)
-      (throw (Exception. (str "image doesn't exist: " ImageSpecifier)))
+  [image-map]
+  (let [tag  (get-tag image-map)
+        name (:name image-map)
+        url  (:url image-map)]
+    (if-not (image? image-map)
+      (throw (Exception. (str "image doesn't exist: " image-map)))
       (update container-images
               (set-fields {:url url})
               (where (and (= :name name)
@@ -97,205 +94,205 @@
 
 (defn delete-image-info
   "Deletes a record for an image"
-  [ImageSpecifier]
-  (when (image? ImageSpecifier)
-    (let [tag  (get-tag ImageSpecifier)
-          name (:name ImageSpecifier)]
+  [image-map]
+  (when (image? image-map)
+    (let [tag  (get-tag image-map)
+          name (:name image-map)]
       (transaction
        (update tools
                (set-fields {:container_images_id nil})
-               (where {:container_images_id (image-id ImageSpecifier)}))
+               (where {:container_images_id (image-id image-map)}))
        (delete container-images
                (where (and (= :name name)
                            (= :tag tag))))))))
 
 (defn devices
   "Returns the devices associated with the given container_setting uuid."
-  [DeviceID]
+  [device-uuid]
   (select container-devices
-          (where {:container_settings_id (uuidify DeviceID)})))
+          (where {:container_settings_id (uuidify device-uuid)})))
 
 (defn device
   "Returns the device indicated by the UUID."
-  [DeviceID]
+  [device-uuid]
   (first (select container-devices
-                 (where {:id (uuidify DeviceID)}))))
+                 (where {:id (uuidify device-uuid)}))))
 
 (defn device?
   "Returns true if the given UUID is associated with a device."
-  [DeviceID]
-  (pos? (count (select container-devices (where {:id (uuidify DeviceID)})))))
+  [device-uuid]
+  (pos? (count (select container-devices (where {:id (uuidify device-uuid)})))))
 
 (defn device-mapping?
   "Returns true if the combination of container_settings UUID, host-path, and
    container-path already exists in the container_devices table."
-  [SettingsID DeviceHostPath DeviceContainerPath]
-  (pos? (count (select container-devices (where (and (= :container_settings_id (uuidify SettingsID))
-                                                     (= :host_path DeviceHostPath)
-                                                     (= :container_path DeviceContainerPath)))))))
+  [settings-uuid host-path container-path]
+  (pos? (count (select container-devices (where (and (= :container_settings_id (uuidify settings-uuid))
+                                                     (= :host_path host-path)
+                                                     (= :container_path container-path)))))))
 
 (defn settings-has-device?
   "Returns true if the container_settings record specified by the given UUID has
    at least one device associated with it."
-  [SettingsID]
-  (pos? (count (select container-devices (where {:container_settings_id (uuidify SettingsID)})))))
+  [settings-uuid]
+  (pos? (count (select container-devices (where {:container_settings_id (uuidify settings-uuid)})))))
 
 (defn add-device
   "Associates a device with the given container_settings UUID."
-  [SettingsID DeviceHostPath DeviceContainerPath]
-  (if (device-mapping? SettingsID DeviceHostPath DeviceContainerPath)
-    (throw (Exception. (str "device mapping already exists: " SettingsID " " DeviceHostPath " " DeviceContainerPath))))
+  [settings-uuid host-path container-path]
+  (if (device-mapping? settings-uuid host-path container-path)
+    (throw (Exception. (str "device mapping already exists: " settings-uuid " " host-path " " container-path))))
   (insert container-devices
-          (values {:container_settings_id (uuidify SettingsID)
-                   :host_path DeviceHostPath
-                   :container_path DeviceContainerPath})))
+          (values {:container_settings_id (uuidify settings-uuid)
+                   :host_path host-path
+                   :container_path container-path})))
 
 (defn modify-device
-  [DeviceID SettingsID DeviceHostPath DeviceContainerPath]
-  (if-not (device? DeviceID)
-    (throw (Exception. (str "device does not exist: " DeviceID))))
+  [device-uuid settings-uuid host-path container-path]
+  (if-not (device? device-uuid)
+    (throw (Exception. (str "device does not exist: " device-uuid))))
   (update container-devices
-          (set-fields {:container_settings_id (uuidify SettingsID)
-                       :host_path DeviceHostPath
-                       :container_path DeviceContainerPath})
-          (where {:id (uuidify DeviceID)})))
+          (set-fields {:container_settings_id (uuidify settings-uuid)
+                       :host_path host-path
+                       :container_path container-path})
+          (where {:id (uuidify device-uuid)})))
 
 (defn delete-device
-  [DeviceID]
-  (if (device? DeviceID)
+  [device-uuid]
+  (if (device? device-uuid)
     (delete container-devices
-            (where {:id (uuidify DeviceID)}))))
+            (where {:id (uuidify device-uuid)}))))
 
 (defn volumes
   "Returns the devices associated with the given container_settings UUID."
-  [SettingsID]
-  (select container-volumes (where {:container_settings_id (uuidify SettingsID)})))
+  [settings-uuid]
+  (select container-volumes (where {:container_settings_id (uuidify settings-uuid)})))
 
 (defn volume
   "Returns the volume indicated by the UUID."
-  [VolumeID]
-  (first (select container-volumes (where {:id (uuidify VolumeID)}))))
+  [volume-uuid]
+  (first (select container-volumes (where {:id (uuidify volume-uuid)}))))
 
 (defn volume?
   "Returns true if volume indicated by the UUID exists."
-  [VolumeID]
-  (pos? (count (select container-volumes (where {:id (uuidify VolumeID)})))))
+  [volume-uuid]
+  (pos? (count (select container-volumes (where {:id (uuidify volume-uuid)})))))
 
 (defn volume-mapping?
   "Returns true if the combination of container_settings UUID, host-path, and
    container-path already exists in the database."
-  [SettingsID VolumeHostPath VolumeContainerPath]
+  [settings-uuid host-path container-path]
   (pos? (count (select container-volumes
-                       (where (and (= :container_settings_id (uuidify SettingsID))
-                                   (= :host_path VolumeHostPath)
-                                   (= :container_path VolumeContainerPath)))))))
+                       (where (and (= :container_settings_id (uuidify settings-uuid))
+                                   (= :host_path host-path)
+                                   (= :container_path container-path)))))))
 (defn settings-has-volume?
   "Returns true if the container_settings UUID has at least one volume
    associated with it."
-  [SettingsID]
-  (pos? (count (select container-volumes (where {:container_settings_id (uuidify SettingsID)})))))
+  [settings-uuid]
+  (pos? (count (select container-volumes (where {:container_settings_id (uuidify settings-uuid)})))))
 
 (defn add-volume
   "Adds a volume record to the database for the specified container_settings UUID."
-  [SettingsID VolumeHostPath VolumeContainerPath]
-  (if (volume-mapping? SettingsID VolumeHostPath VolumeContainerPath)
-    (throw (Exception. (str "volume mapping already exists: " SettingsID " " VolumeHostPath " " VolumeContainerPath))))
+  [settings-uuid host-path container-path]
+  (if (volume-mapping? settings-uuid host-path container-path)
+    (throw (Exception. (str "volume mapping already exists: " settings-uuid " " host-path " " container-path))))
   (insert container-volumes
-          (values {:container_settings_id (uuidify SettingsID)
-                   :host_path VolumeHostPath
-                   :container_path VolumeContainerPath})))
+          (values {:container_settings_id (uuidify settings-uuid)
+                   :host_path host-path
+                   :container_path container-path})))
 
 (defn modify-volume
   "Modifies the container_volumes record indicated by the uuid."
-  [VolumeID SettingsID VolumeHostPath VolumeContainerPath]
-  (if-not (volume? VolumeID)
-    (throw (Exception. (str "volume does not exist: " VolumeID))))
+  [volume-uuid settings-uuid host-path container-path]
+  (if-not (volume? volume-uuid)
+    (throw (Exception. (str "volume does not exist: " volume-uuid))))
   (update container-volumes
-          (set-fields {:container_settings_id (uuidify SettingsID)
-                       :host_path VolumeHostPath
-                       :container_path VolumeContainerPath})
-          (where {:id (uuidify VolumeID)})))
+          (set-fields {:container_settings_id (uuidify settings-uuid)
+                       :host_path host-path
+                       :container_path container-path})
+          (where {:id (uuidify volume-uuid)})))
 
 (defn delete-volume
   "Deletes the volume associated with uuid in the container_volumes table."
-  [VolumeID]
-  (when (volume? VolumeID)
-    (delete container-volumes (where {:id (uuidify VolumeID)}))))
+  [volume-uuid]
+  (when (volume? volume-uuid)
+    (delete container-volumes (where {:id (uuidify volume-uuid)}))))
 
 (defn volumes-from
   "Returns all of the records from the container_volumes_from table that are associated
    with the given container_settings UUID."
-  [SettingsID]
-  (select container-volumes-from (where {:container_settings_id (uuidify SettingsID)})))
+  [settings-uuid]
+  (select container-volumes-from (where {:container_settings_id (uuidify settings-uuid)})))
 
 (defn volume-from
   "Returns all records from container_volumes_from associated with the UUID passed in. There
    should only be a single result, but we're returning a seq just in case."
-  [VolumesFromID]
+  [volumes-from-uuid]
   (first (select container-volumes-from
-                 (where {:id (uuidify VolumesFromID)}))))
+                 (where {:id (uuidify volumes-from-uuid)}))))
 
 (defn volume-from?
   "Returns true if the volume_from record indicated by the UUID exists."
-  [VolumesFromID]
+  [volumes-from-uuid]
   (pos? (count (select container-volumes-from
-                       (where {:id (uuidify VolumesFromID)})))))
+                       (where {:id (uuidify volumes-from-uuid)})))))
 
 (defn volume-from-mapping?
   "Returns true if the combination of the container_settings UUID and container
    already exists in the container_volumes_from table."
-  [SettingsID VolumesFromName]
+  [settings-uuid volumes-from-name]
   (pos? (count (select container-volumes-from
-                       (where {:container_settings_id (uuidify SettingsID)
-                               :name VolumesFromName})))))
+                       (where {:container_settings_id (uuidify settings-uuid)
+                               :name volumes-from-name})))))
 
 (defn settings-has-volume-from?
   "Returns true if the indicated container_settings record has at least one
    container_volumes_from record associated with it."
-  [SettingsID]
+  [settings-uuid]
   (pos? (count (select container-volumes-from
-                       (where {:container_settings_id (uuidify SettingsID)})))))
+                       (where {:container_settings_id (uuidify settings-uuid)})))))
 
 (defn add-volume-from
   "Adds a record to container_volumes_from associated with the given
    container_settings UUID."
-  [SettingsID VolumesFromName]
-  (if (settings-has-volume-from? SettingsID)
-    (throw (Exception. (str "volume from mapping already exists: " SettingsID " " VolumesFromName))))
+  [settings-uuid volumes-from-name]
+  (if (settings-has-volume-from? settings-uuid)
+    (throw (Exception. (str "volume from mapping already exists: " settings-uuid " " volumes-from-name))))
   (insert container-volumes-from
-          (values {:container_settings_id (uuidify SettingsID)
-                   :name VolumesFromName})))
+          (values {:container_settings_id (uuidify settings-uuid)
+                   :name volumes-from-name})))
 
 (defn modify-volume-from
   "Modifies a record in container_volumes_from."
-  [VolumesFromID SettingsID VolumesFromName]
-  (if-not (volume-from? VolumesFromID)
-    (throw (Exception. (str "volume from setting does not exist: " VolumesFromID))))
+  [volumes-from-uuid settings-uuid volumes-from-name]
+  (if-not (volume-from? volumes-from-uuid)
+    (throw (Exception. (str "volume from setting does not exist: " volumes-from-uuid))))
   (update container-volumes-from
-          (set-fields {:container_settings_id (uuidify SettingsID)
-                      :name VolumesFromName})
-          (where {:id (uuidify VolumesFromID)})))
+          (set-fields {:container_settings_id (uuidify settings-uuid)
+                      :name volumes-from-name})
+          (where {:id (uuidify volumes-from-uuid)})))
 
 (defn delete-volume-from
   "Deletes a record from container_volumes_from."
-  [VolumesFromID]
-  (when (volume-from? VolumesFromID)
+  [volumes-from-uuid]
+  (when (volume-from? volumes-from-uuid)
     (delete container-volumes-from
-            (where {:id (uuidify VolumesFromID)}))))
+            (where {:id (uuidify volumes-from-uuid)}))))
 
 (defn settings
   "Returns the settings associated with the given UUID."
-  [SettingsID]
+  [settings-uuid]
   (first (select container-settings
-                 (where {:id (uuidify SettingsID)}))))
+                 (where {:id (uuidify settings-uuid)}))))
 
 (defn settings?
   "Returns true if the given UUID is associated with a set of container settings."
-  [SettingsID]
-  (pos? (count (select container-settings (where {:id (uuidify SettingsID)})))))
+  [settings-uuid]
+  (pos? (count (select container-settings (where {:id (uuidify settings-uuid)})))))
 
 (defn- filter-params
-  [Settings]
+  [settings-map]
   (into {} (filter
             (fn [[k v]]
               (contains?
@@ -306,35 +303,35 @@
                  :name
                  :tools_id}
                k))
-            Settings)))
+            settings-map)))
 
 (defn add-settings
   "Adds a new settings record to the database based on the parameter map."
-  [Settings]
+  [settings-map]
   (insert container-settings
-          (values (filter-params Settings))))
+          (values (filter-params settings-map))))
 
 (defn tool-has-settings?
   "Returns true if the given tool UUID has some container settings associated with it."
-  [ToolIdParam]
-  (pos? (count (select container-settings (where {:tools_id (uuidify ToolIdParam)})))))
+  [tool-uuid]
+  (pos? (count (select container-settings (where {:tools_id (uuidify tool-uuid)})))))
 
 (defn modify-settings
   "Modifies an existing set of container settings. Requires the container-settings-uuid
    and a new set of values."
-  [SettingsID Settings]
-  (if-not (settings? SettingsID)
-    (throw (Exception. (str "Container settings do not exist for UUID: " SettingsID))))
-  (let [values (filter-params Settings)]
+  [settings-uuid settings-map]
+  (if-not (settings? settings-uuid)
+    (throw (Exception. (str "Container settings do not exist for UUID: " settings-uuid))))
+  (let [values (filter-params settings-map)]
     (update container-settings
             (set-fields values)
-            (where {:id (uuidify SettingsID)}))))
+            (where {:id (uuidify settings-uuid)}))))
 
 (defn delete-settings
   "Deletes an existing set of container settings. Requires the container-settings uuid."
-  [SettingsID]
-  (when (settings? SettingsID)
-    (let [id (uuidify SettingsID)]
+  [settings-uuid]
+  (when (settings? settings-uuid)
+    (let [id (uuidify settings-uuid)]
       (transaction
        (delete container-devices
                (where {:container_settings_id id}))
@@ -347,8 +344,8 @@
 
 (defn tool-container-info
   "Returns container info associated with a tool or nil"
-  [ToolIdParam]
-  (let [id (uuidify ToolIdParam)]
+  [tool-uuid]
+  (let [id (uuidify tool-uuid)]
     (when (tool-has-settings? id)
       (->  (select container-settings
                    (fields :id :cpu_shares :memory_limit :network_mode :name :working_directory)
@@ -360,13 +357,20 @@
                          (fields :name :id))
                    (where {:tools_id id}))
            first
-           (merge {:image (tool-image-info ToolIdParam)})))))
+           (merge {:image (tool-image-info tool-uuid)})))))
+
+(defn tool-device-info
+  "Returns a container's device information based on the tool UUID."
+  [tool-uuid]
+  (let [container-info (tool-container-info tool-uuid)]
+    (if-not (nil? container-info)
+      {:container_devices (:container_devices container-info)})))
 
 (defn all-settings
   "Returns a map with all of the settings for a container, including all of the
    devices, volumes, and volumes-froms."
-  [SettingsID]
-  (let [id    (uuidify SettingsID)
+  [settings-uuid]
+  (let [id    (uuidify settings-uuid)
         rm-id (fn [m] (dissoc m :container_settings_id))]
     (-> (settings id)
         (assoc :devices (mapv rm-id (devices id)))
