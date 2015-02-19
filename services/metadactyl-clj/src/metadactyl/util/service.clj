@@ -20,6 +20,13 @@
   ([]
      (success-response nil)))
 
+(defn not-found-response
+  [msg]
+  (charset
+   {:status 404
+    :body   msg}
+   "UTF-8"))
+
 (defn unrecognized-path-response []
   "Builds the response to send for an unrecognized service path."
   (let [msg "unrecognized service path"]
