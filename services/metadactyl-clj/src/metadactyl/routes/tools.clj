@@ -37,7 +37,11 @@
         :summary "Tool Container Information"
         :notes "This endpoint returns container information associated with a tool. This endpoint
         returns a 404 if the tool is not run inside a container."
-        (ce/trap uri #(success-response (tool-container-info tool-id))))
+        (ce/trap uri #(let [retval (tool-container-info tool-id)]
+                        (if (nil? retval)
+                          {:status 404
+                           :body   (str "A container for " tool-id " was not found.")}
+                          (success-response retval)))))
 
   (GET* "/tool-requests" [:as {uri :uri}]
         :query [params ToolRequestListingParams]

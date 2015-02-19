@@ -345,7 +345,7 @@
        (delete container-settings
                (where {:id id}))))))
 
-(s/defn tool-container-info :- ToolContainer
+(defn tool-container-info
   "Returns container info associated with a tool or nil"
   [ToolIdParam]
   (let [id (uuidify ToolIdParam)]
