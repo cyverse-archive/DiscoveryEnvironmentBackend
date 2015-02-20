@@ -1,8 +1,6 @@
 (ns donkey.routes.oauth
-  (:use [compojure.core]
-        [donkey.util])
-  (:require [donkey.services.oauth :as oauth]
-            [donkey.util.config :as config]))
+  (:use [compojure.core])
+  (:require [donkey.clients.metadactyl :as metadactyl]))
 
 (defn secured-oauth-routes
   "These routes are callback routes for OAuth authorization codes. They need to be secured because
@@ -11,5 +9,5 @@
    through a servlet in the Discovery Environment backend."
   []
   (routes
-   (GET "/oauth/access-code/agave" [:as {params :params}]
-        (oauth/get-access-token (config/agave-oauth-settings) params))))
+   (GET "/oauth/access-code/:api-name" [api-name :as {params :params}]
+        (metadactyl/get-oauth-access-token api-name params))))

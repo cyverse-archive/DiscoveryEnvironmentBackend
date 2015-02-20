@@ -1,6 +1,7 @@
 (ns metadactyl.util.config
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [cheshire.core :as cheshire]
+  (:require [cemerick.url :as curl]
+            [cheshire.core :as cheshire]
             [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]
             [clojure.string :as str]))
@@ -175,6 +176,76 @@
   "The maximum size of each HT Analysis Path List that can be fetched from the data-info service."
   [props config-valid configs]
   "metadactyl.batch.path-list.max-size")
+
+(cc/defprop-str agave-base-url
+  "The base URL to use when connecting to Agave."
+  [props config-valid configs]
+  "metadactyl.agave.base-url")
+
+(cc/defprop-str agave-key
+  "The API key to use when authenticating to Agave."
+  [props config-valid configs]
+  "metadactyl.agave.key")
+
+(cc/defprop-str agave-secret
+  "The API secret to use when authenticating to Agave."
+  [props config-valid configs]
+  "metadactyl.agave.secret")
+
+(cc/defprop-str agave-oauth-base
+  "The base URL for the Agave OAuth 2.0 endpoints."
+  [props config-valid configs]
+  "metadactyl.agave.oauth-base")
+
+(cc/defprop-int agave-oauth-refresh-window
+  "The number of minutes before a token expires to refresh it."
+  [props config-valid configs]
+  "metadactyl.agave.oauth-refresh-window")
+
+(cc/defprop-str agave-redirect-uri
+  "The redirect URI used after Agave authorization."
+  [props config-valid configs]
+  "metadactyl.agave.redirect-uri")
+
+(cc/defprop-str agave-callback-base
+  "The base URL for receiving job status update callbacks from Agave."
+  [props config-valid configs]
+  "metadactyl.agave.callback-base")
+
+(cc/defprop-optstr agave-storage-system
+  "The storage system that Agave should use when interacting with the DE."
+  [props config-valid configs]
+  "metadactyl.agave.storage-system"
+  "data.iplantcollaborative.org")
+
+(cc/defprop-str pgp-keyring-path
+  "The path to the PGP keyring file."
+  [props config-valid configs]
+  "metadactyl.pgp.keyring-path")
+
+(cc/defprop-str pgp-key-password
+  "The password used to unlock the PGP key."
+  [props config-valid configs]
+  "metadactyl.pgp.key-password")
+
+(defn- oauth-settings
+  [api-name api-key api-secret token-uri redirect-uri refresh-window]
+  {:api-name       api-name
+   :client-key     api-key
+   :client-secret  api-secret
+   :token-uri      token-uri
+   :redirect-uri   redirect-uri
+   :refresh-window (* refresh-window 60 1000)})
+
+(def agave-oauth-settings
+  (memoize
+   #(oauth-settings
+     "agave"
+     (agave-key)
+     (agave-secret)
+     (str (curl/url (agave-oauth-base) "token"))
+     (agave-redirect-uri)
+     (agave-oauth-refresh-window))))
 
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."

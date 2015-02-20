@@ -3,4 +3,4 @@
             [schema.core :as s]))
 
 (s/defschema OAuthCallbackResponse
-  {:state (ss/describe String "Arbitrary state information required by the UI.")})
+  {:state_info (ss/describe String "Arbitrary state information required by the UI.")})

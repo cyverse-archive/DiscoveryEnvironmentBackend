@@ -269,3 +269,10 @@
                {:query-params (secured-params)
                 :body         (cheshire/encode body)
                 :content-type :json}))
+
+(defn get-oauth-access-token
+  [api-name {:keys [code state]}]
+  (client/get (metadactyl-url "oauth" "access-code" api-name)
+              {:query-params (assoc (secured-params)
+                               :code  code
+                               :state state)}))
