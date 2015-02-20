@@ -82,7 +82,7 @@
 
   (is (volume-mapping? (:id settings-map) "/tmp" "/foo"))
 
-  (is (settings-has-volume? (:id settings-map))))
+  (is (settings-has-volume? (:id settings-map) (:id volume-map))))
 
 (def volume-from-map (add-volume-from (:id settings-map) "test-name"))
 

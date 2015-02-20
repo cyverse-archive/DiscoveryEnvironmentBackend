@@ -31,7 +31,7 @@
 (def DeviceIdParam
   (describe
    java.util.UUID
-   "A devices UUID."))
+   "A device's UUID."))
 
 (s/defschema Devices
   (describe
@@ -44,6 +44,11 @@
     :container_path s/Str
     :id             s/Uuid}
    "A map representing a bind mounted container volume."))
+
+(def VolumeIdParam
+  (describe
+   java.util.UUID
+   "A volume's UUID."))
 
 (s/defschema Volumes
   (describe

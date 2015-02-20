@@ -191,8 +191,10 @@
 (defn settings-has-volume?
   "Returns true if the container_settings UUID has at least one volume
    associated with it."
-  [settings-uuid]
-  (pos? (count (select container-volumes (where {:container_settings_id (uuidify settings-uuid)})))))
+  [settings-uuid volume-uuid]
+  (pos? (count (select container-volumes
+                       (where {:container_settings_id (uuidify settings-uuid)
+                               :id                    (uuidify volume-uuid)})))))
 
 (defn add-volume
   "Adds a volume record to the database for the specified container_settings UUID."
@@ -380,6 +382,14 @@
     (let [settings-uuid (tool-settings-uuid tool-uuid)]
       (when (settings-has-device? settings-uuid device-uuid)
         (dissoc (device device-uuid) :container_settings_id)))))
+
+(defn tool-volume
+  "Returns a map with info about a particular volume associated with the tool's container."
+  [tool-uuid volume-uuid]
+  (when (tool-has-settings? tool-uuid)
+    (let [settings-uuid (tool-settings-uuid tool-uuid)]
+      (when (settings-has-volume? settings-uuid volume-uuid)
+        (dissoc (volume volume-uuid) :container_settings_id)))))
 
 (defn tool-volume-info
   "Returns a container's volumes info based on the tool UUID."
