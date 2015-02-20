@@ -250,19 +250,18 @@
                        (where {:container_settings_id (uuidify settings-uuid)
                                :name volumes-from-name})))))
 
-(defn settings-has-volume-from?
+(defn settings-has-volumes-from?
   "Returns true if the indicated container_settings record has at least one
    container_volumes_from record associated with it."
-  [settings-uuid]
+  [settings-uuid volumes-from-uuid]
   (pos? (count (select container-volumes-from
-                       (where {:container_settings_id (uuidify settings-uuid)})))))
+                       (where {:container_settings_id (uuidify settings-uuid)
+                               :id                    (uuidify volumes-from-uuid)})))))
 
 (defn add-volume-from
   "Adds a record to container_volumes_from associated with the given
    container_settings UUID."
   [settings-uuid volumes-from-name]
-  (if (settings-has-volume-from? settings-uuid)
-    (throw (Exception. (str "volume from mapping already exists: " settings-uuid " " volumes-from-name))))
   (insert container-volumes-from
           (values {:container_settings_id (uuidify settings-uuid)
                    :name volumes-from-name})))
@@ -390,6 +389,14 @@
     (let [settings-uuid (tool-settings-uuid tool-uuid)]
       (when (settings-has-volume? settings-uuid volume-uuid)
         (dissoc (volume volume-uuid) :container_settings_id)))))
+
+(defn tool-volumes-from
+  "Returns a map with info about a particular container from which the tool's container will mount volumes."
+  [tool-uuid volumes-from-uuid]
+  (when (tool-has-settings? tool-uuid)
+    (let [settings-uuid (tool-settings-uuid tool-uuid)]
+      (when (settings-has-volumes-from? settings-uuid volumes-from-uuid)
+        (dissoc (volume-from volumes-from-uuid) :container_settings_id)))))
 
 (defn tool-volume-info
   "Returns a container's volumes info based on the tool UUID."

@@ -97,6 +97,17 @@
                           (not-found-response (str "A container for " tool-id " was not found."))
                           (success-response retval)))))
 
+  (GET* "/tools/:tool-id/container/volumes-from/:volumes-from-id" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
+        :query [params SecuredQueryParams]
+        :return VolumesFrom
+        :summary "Tool Container Volumes From Information"
+        :notes "Returns a list of container names that the container associated with the tool should import volumes from."
+        (ce/trap uri #(let [retval (tool-volumes-from tool-id volumes-from-id)]
+                        (if (nil? retval)
+                          (not-found-response (str "A container for " tool-id " was not found."))
+                          (success-response retval)))))
+
   (GET* "/tool-requests" [:as {uri :uri}]
         :query [params ToolRequestListingParams]
         :return ToolRequestListing
