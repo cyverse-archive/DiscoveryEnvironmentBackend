@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [[ "$(uname)" != 'Darwin' ]]; then
+   echo "You shouldn't need to run this on anything but a Mac."
+   exit 0
+fi
+
+PORT=$1
+
+VBoxManage modifyvm "boot2docker-vm" --natpf1 "tcp-port$PORT,tcp,,$PORT,,$PORT";
+VBoxManage modifyvm "boot2docker-vm" --natpf1 "udp-port$PORT,udp,,$PORT,,$PORT";
+
