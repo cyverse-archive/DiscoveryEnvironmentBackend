@@ -9,7 +9,9 @@ if [ -z $CMD ]; then
     CMD=test
 fi
 
-if [[ "$(uname)" == 'Darwin' ]]; then
+OS=$(uname)
+
+if [ "$OS" == 'Darwin' ]; then
     $(boot2docker shellinit)
 fi
 
@@ -22,6 +24,6 @@ if [ $(docker ps -a | grep de-db | wc -l) -gt 0 ]; then
 fi
 
 docker run --name de-db -e POSTGRES_PASSWORD=notprod -d -p 5432:5432 discoenv/de-db
-sleep 2
+sleep 5
 docker run --rm --link de-db:postgres discoenv/de-db-loader
 docker run -i -t --rm -v $(pwd):/build -v ~/.m2:/root/.m2 -w /build --link de-db:postgres clojure lein $CMD
