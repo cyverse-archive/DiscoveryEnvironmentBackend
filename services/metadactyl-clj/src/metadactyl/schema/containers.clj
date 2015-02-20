@@ -61,6 +61,11 @@
     :id   s/Uuid}
    "The name of a container from which to bind mount volumes."))
 
+(def VolumesFromIdParam
+  (describe
+   java.util.UUID
+   "A volume from's UUID."))
+
 (s/defschema VolumesFromList
   (describe
    {:container_volumes_from [VolumesFrom]}
