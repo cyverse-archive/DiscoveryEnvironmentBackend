@@ -40,11 +40,21 @@
     :id             s/Uuid}
    "A map representing a bind mounted container volume."))
 
+(s/defschema Volumes
+  (describe
+   {:container_volumes [Volume]}
+   "A list of Volumes associated with a tool's container."))
+
 (s/defschema VolumesFrom
   (describe
    {:name s/Str
     :id   s/Uuid}
    "The name of a container from which to bind mount volumes."))
+
+(s/defschema VolumesFromList
+  (describe
+   {:container_volumes_from [VolumesFrom]}
+   "The list of VolumeFroms associated with a tool's container."))
 
 (s/defschema ToolContainerSettings
   (describe

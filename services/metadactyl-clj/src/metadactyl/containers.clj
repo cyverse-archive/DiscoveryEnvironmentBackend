@@ -366,6 +366,20 @@
     (if-not (nil? container-info)
       {:container_devices (:container_devices container-info)})))
 
+(defn tool-volume-info
+  "Returns a container's volumes info based on the tool UUID."
+  [tool-uuid]
+  (let [container-info (tool-container-info tool-uuid)]
+    (if-not (nil? container-info)
+      {:container_volumes (:container_volumes container-info)})))
+
+(defn tool-volumes-from-info
+  "Returns a container's volumes-from info based on the tool UUID."
+  [tool-uuid]
+  (let [container-info (tool-container-info tool-uuid)]
+    (if-not (nil? container-info)
+      {:container_volumes_from (:container_volumes_from container-info)})))
+
 (defn all-settings
   "Returns a map with all of the settings for a container, including all of the
    devices, volumes, and volumes-froms."
