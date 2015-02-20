@@ -28,6 +28,11 @@
     :id             s/Uuid}
    "Information about a device associated with a tool's container."))
 
+(def DeviceIdParam
+  (describe
+   java.util.UUID
+   "A devices UUID."))
+
 (s/defschema Devices
   (describe
    {:container_devices [Device]}

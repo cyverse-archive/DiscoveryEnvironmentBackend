@@ -52,6 +52,17 @@
                         (if (nil? retval)
                           (not-found-response (str "A container for " tool-id " was not found."))
                           (success-response retval)))))
+  
+  (GET* "/tools/:tool-id/container/devices/:device-id" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
+        :query [params SecuredQueryParams]
+        :return Device
+        :summary "Tool Container Device Information"
+        :notes "Returns device information for the container associated with a tool."
+        (ce/trap uri #(let [retval (tool-device tool-id device-id)]
+                        (if (nil? retval)
+                          (not-found-response (str "A container for " tool-id " was not found."))
+                          (success-response retval)))))
 
   (GET* "/tools/:tool-id/container/volumes" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]

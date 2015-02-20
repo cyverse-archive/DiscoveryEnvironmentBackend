@@ -108,9 +108,9 @@
 
 (defn devices
   "Returns the devices associated with the given container_setting uuid."
-  [device-uuid]
+  [settings-uuid]
   (select container-devices
-          (where {:container_settings_id (uuidify device-uuid)})))
+          (where {:container_settings_id (uuidify settings-uuid)})))
 
 (defn device
   "Returns the device indicated by the UUID."
@@ -134,8 +134,10 @@
 (defn settings-has-device?
   "Returns true if the container_settings record specified by the given UUID has
    at least one device associated with it."
-  [settings-uuid]
-  (pos? (count (select container-devices (where {:container_settings_id (uuidify settings-uuid)})))))
+  [settings-uuid device-uuid]
+  (pos? (count (select container-devices
+                       (where {:container_settings_id (uuidify settings-uuid)
+                               :id                    (uuidify device-uuid)})))))
 
 (defn add-device
   "Associates a device with the given container_settings UUID."
@@ -316,6 +318,11 @@
   [tool-uuid]
   (pos? (count (select container-settings (where {:tools_id (uuidify tool-uuid)})))))
 
+(defn tool-settings-uuid
+  "Returns the container_settings UUID for the given tool UUID."
+  [tool-uuid]
+  (:id (first (select container-settings (where {:tools_id (uuidify tool-uuid)})))))
+
 (defn modify-settings
   "Modifies an existing set of container settings. Requires the container-settings-uuid
    and a new set of values."
@@ -365,6 +372,14 @@
   (let [container-info (tool-container-info tool-uuid)]
     (if-not (nil? container-info)
       {:container_devices (:container_devices container-info)})))
+
+(defn tool-device
+  "Returns a map with information about a particular device associated with the tools container."
+  [tool-uuid device-uuid]
+  (when (tool-has-settings? tool-uuid)
+    (let [settings-uuid (tool-settings-uuid tool-uuid)]
+      (when (settings-has-device? settings-uuid device-uuid)
+        (dissoc (device device-uuid) :container_settings_id)))))
 
 (defn tool-volume-info
   "Returns a container's volumes info based on the tool UUID."

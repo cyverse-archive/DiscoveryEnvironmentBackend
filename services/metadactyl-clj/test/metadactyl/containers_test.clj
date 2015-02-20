@@ -68,7 +68,7 @@
 
   (is (device-mapping? (:id settings-map) "/dev/null" "/dev/yay"))
 
-  (is (settings-has-device? (:id settings-map))))
+  (is (settings-has-device? (:id settings-map) (:id devices-map))))
 
 (def volume-map (add-volume (:id settings-map) "/tmp" "/foo"))
 
