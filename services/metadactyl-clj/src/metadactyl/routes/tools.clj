@@ -52,6 +52,61 @@
                         (if (nil? retval)
                           (not-found-response (str "A container for " tool-id " was not found."))
                           (success-response retval)))))
+
+  (GET* "/tools/:tool-id/container/cpu-shares" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam]
+        :query [params SecuredQueryParams]
+        :return CPUShares
+        :summary "Tool Container CPU Shares"
+        :notes "Returns the number of shares of the CPU that the tool container will receive."
+        (ce/trap uri #(let [retval (tool-cpu-shares tool-id)]
+                        (if (nil? retval)
+                          (not-found-response (str "A container for " tool-id " was not found."))
+                          (success-response retval)))))
+
+  (GET* "/tools/:tool-id/container/memory-limit" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam]
+        :query [params SecuredQueryParams]
+        :return MemoryLimit
+        :summary "Tool Container Memory Limit"
+        :notes "Returns the maximum amount of RAM that can be allocated to the tool container (in bytes)."
+        (ce/trap uri #(let [retval (tool-memory-limit tool-id)]
+                        (if (nil? retval)
+                          (not-found-response (str "A container for " tool-id " was not found."))
+                          (success-response retval)))))
+
+  (GET* "/tools/:tool-id/container/network-mode" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam]
+        :query [params SecuredQueryParams]
+        :return NetworkMode
+        :summary "Tool Container Network Mode"
+        :notes "Returns the network mode the tool container will operate in. Usually 'bridge' or 'none'."
+        (ce/trap uri #(let [retval (tool-network-mode tool-id)]
+                        (if (nil? retval)
+                          (not-found-response (str "A container for " tool-id " was not found."))
+                          (success-response retval)))))
+
+  (GET* "/tools/:tool-id/container/working-directory" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam]
+        :query [params SecuredQueryParams]
+        :return WorkingDirectory
+        :summary "Tool Container Working Directory"
+        :notes "Sets the initial working directory for the tool container."
+        (ce/trap uri #(let [retval (tool-working-directory tool-id)]
+                        (if (nil? retval)
+                          (not-found-response (str "A container for " tool-id " was not found."))
+                          (success-response retval)))))
+
+  (GET* "/tools/:tool-id/container/name" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam]
+        :query [params SecuredQueryParams]
+        :return ContainerName
+        :summary "Tool Container Name"
+        :notes "The user supplied name that the container will be assigned when it runs."
+        (ce/trap uri #(let [retval (tool-container-name tool-id)]
+                        (if (nil? retval)
+                          (not-found-response (str "A container for " tool-id " was not found."))
+                          (success-response retval)))))
   
   (GET* "/tools/:tool-id/container/devices/:device-id" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]

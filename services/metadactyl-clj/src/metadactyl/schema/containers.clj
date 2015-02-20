@@ -21,6 +21,31 @@
     :id                 s/Uuid}
    "The group of settings for a container."))
 
+(s/defschema CPUShares
+  (describe
+   {:cpu_shares Integer}
+   "The shares of the CPU that the tool container will receive."))
+
+(s/defschema MemoryLimit
+  (describe
+   {:memory_limit Long}
+   "The amount of memory (in bytes) that the tool container is restricted to."))
+
+(s/defschema NetworkMode
+  (describe
+   {:network_mode s/Str}
+   "The network mode for the tool container."))
+
+(s/defschema WorkingDirectory
+  (describe
+   {:working_directory s/Str}
+   "The working directory in the tool container."))
+
+(s/defschema ContainerName
+  (describe
+   {:name s/Str}
+   "The name given to the tool container."))
+
 (s/defschema Device
   (describe
    {:host_path      s/Str

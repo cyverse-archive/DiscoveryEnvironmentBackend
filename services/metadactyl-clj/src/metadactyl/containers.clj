@@ -350,6 +350,11 @@
        (delete container-settings
                (where {:id id}))))))
 
+(defn tool-settings
+  "Returns the top-level settings for the tool container."
+  [tool-uuid]
+  (first (select container-settings (where {:tools_id (uuidify tool-uuid)}))))
+
 (defn tool-container-info
   "Returns container info associated with a tool or nil"
   [tool-uuid]
@@ -366,6 +371,41 @@
                    (where {:tools_id id}))
            first
            (merge {:image (tool-image-info tool-uuid)})))))
+
+(defn tool-cpu-shares
+  "Returns the cpu shares allocated to the tool container."
+  [tool-uuid]
+  (when (tool-has-settings? tool-uuid)
+    (let [settings (tool-settings tool-uuid)]
+      {:cpu_shares (:cpu_shares settings)})))
+
+(defn tool-memory-limit
+  "Returns the maximum amount of RAM (in bytes) that will be allocated to the tool container."
+  [tool-uuid]
+  (when (tool-has-settings? tool-uuid)
+    (let [settings (tool-settings tool-uuid)]
+      {:memory_limit (:memory_limit settings)})))
+
+(defn tool-network-mode
+  "Returns the network mode that the tool container will use."
+  [tool-uuid]
+  (when (tool-has-settings? tool-uuid)
+    (let [settings (tool-settings tool-uuid)]
+      {:network_mode (:network_mode settings)})))
+
+(defn tool-working-directory
+  "Returns the working directory for the tool container."
+  [tool-uuid]
+  (when (tool-has-settings? tool-uuid)
+    (let [settings (tool-settings tool-uuid)]
+      {:working_directory (:working_directory settings)})))
+
+(defn tool-container-name
+  "Returns the name of the tool container."
+  [tool-uuid]
+  (when (tool-has-settings? tool-uuid)
+    (let [settings (tool-settings tool-uuid)]
+      {:name (:name settings)})))
 
 (defn tool-device-info
   "Returns a container's device information based on the tool UUID."
