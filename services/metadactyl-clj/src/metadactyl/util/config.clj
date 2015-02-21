@@ -23,6 +23,16 @@
   [props config-valid configs]
   "metadactyl.app.listen-port")
 
+(cc/defprop-optboolean agave-enabled
+  "Enables or disables all features that require connections to Agave."
+  [props config-valid configs]
+  "metadactyl.features.agave" true)
+
+(cc/defprop-optboolean agave-jobs-enabled
+  "Enables or disables Agave job submission."
+  [props config-valid configs]
+  "metadactyl.features.agave.jobs" false)
+
 (cc/defprop-str db-driver-class
   "The name of the JDBC driver to use."
   [props config-valid configs]
@@ -229,10 +239,11 @@
   "metadactyl.pgp.key-password")
 
 (defn- oauth-settings
-  [api-name api-key api-secret token-uri redirect-uri refresh-window]
+  [api-name api-key api-secret auth-uri token-uri redirect-uri refresh-window]
   {:api-name       api-name
    :client-key     api-key
    :client-secret  api-secret
+   :auth-uri       auth-uri
    :token-uri      token-uri
    :redirect-uri   redirect-uri
    :refresh-window (* refresh-window 60 1000)})
@@ -243,6 +254,7 @@
      "agave"
      (agave-key)
      (agave-secret)
+     (str (curl/url (agave-oauth-base) "authorize"))
      (str (curl/url (agave-oauth-base) "token"))
      (agave-redirect-uri)
      (agave-oauth-refresh-window))))

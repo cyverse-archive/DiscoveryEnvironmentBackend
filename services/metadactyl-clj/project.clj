@@ -28,6 +28,7 @@
                  [org.iplantc/authy "4.1.8"]
                  [org.iplantc/clojure-commons "4.1.8"]
                  [org.iplantc/kameleon "4.1.8"]
+                 [org.iplantc/mescal "4.1.8"]
                  [org.iplantc/common-cli "4.1.8"]
                  [me.raynes/fs "1.4.6"]
                  [mvxcvi/clj-pgp "0.8.0"]
@@ -39,7 +40,11 @@
             [lein-ring "0.8.13"]
             [lein-swank "1.4.4"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
-  :aot [metadactyl.core]
+  :aot [metadactyl.core
+        metadactyl.protocols
+        metadactyl.service.apps.de
+        metadactyl.service.apps.agave
+        metadactyl.service.apps.combined]
   :main metadactyl.core
   :ring {:handler metadactyl.routes.api/app
          :init metadactyl.core/load-config-from-file
