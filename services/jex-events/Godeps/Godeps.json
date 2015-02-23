@@ -1,6 +1,6 @@
 {
 	"ImportPath": "backend/services/jex-events",
-	"GoVersion": "go1.3.1",
+	"GoVersion": "go1.4.1",
 	"Deps": [
 		{
 			"ImportPath": "code.google.com/p/go-uuid/uuid",
@@ -14,6 +14,11 @@
 		{
 			"ImportPath": "github.com/streadway/amqp",
 			"Rev": "7d6d1802c7710be39564a287f860360c6328f956"
+		},
+		{
+			"ImportPath": "gopkg.in/natefinch/lumberjack.v2",
+			"Comment": "v1.0-12-gd28785c",
+			"Rev": "d28785c2f27cd682d872df46ccd8232843629f54"
 		}
 	]
 }
