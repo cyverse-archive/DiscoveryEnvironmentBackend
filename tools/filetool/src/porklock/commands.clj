@@ -169,16 +169,17 @@
               ;;; Apply the App and Execution metadata to the newly uploaded
               ;;; file/directory.
               (porkprint "Applying metadata to " dest)
-              (apply-metadata cm dest metadata)
+              (apply-metadata cm dest metadata)))))
 
-              (when-not skip-parent?
-                (porkprint "Applying metadata to " dest-dir)
-                (apply-metadata cm dest-dir metadata)
-                (doseq [fileobj (file-seq (jg-info/file cm dest-dir))]
-                  (let [filepath (.getAbsolutePath fileobj)
-                        dir?     (.isDirectory fileobj)]
-                    (jg-perms/set-owner cm filepath (:user options))
-                    (apply-metadata cm filepath metadata))))))))
+      (when-not skip-parent?
+        (porkprint "Applying metadata to " dest-dir)
+        (apply-metadata cm dest-dir metadata)
+        (doseq [fileobj (file-seq (jg-info/file cm dest-dir))]
+          (let [filepath (.getAbsolutePath fileobj)
+                dir?     (.isDirectory fileobj)]
+            (if-not (jg-perms/owns? cm (:user options) filepath)
+              (jg-perms/set-owner cm filepath (:user options)))
+            (apply-metadata cm filepath metadata))))
       
       ;;; Transfer files from the NFS mount point into the logs
       ;;; directory of the destination
