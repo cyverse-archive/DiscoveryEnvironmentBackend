@@ -1,0 +1,7 @@
+FROM golang
+
+RUN go get github.com/tools/godep
+
+ADD intra-container-build.sh /bin/
+
+CMD ["intra-container-build.sh"]
