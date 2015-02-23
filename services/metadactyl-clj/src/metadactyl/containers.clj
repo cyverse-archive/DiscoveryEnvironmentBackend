@@ -379,6 +379,13 @@
     (let [settings (tool-settings tool-uuid)]
       {:cpu_shares (:cpu_shares settings)})))
 
+(defn updater
+  [tool-uuid field-kw new-value]
+  (let [id (uuidify tool-uuid)]
+    (when (tool-has-settings? id)
+      (let [settings-id (tool-settings-uuid id)]
+        (select-keys (modify-settings settings-id {field-kw new-value}) [field-kw])))))
+
 (defn tool-memory-limit
   "Returns the maximum amount of RAM (in bytes) that will be allocated to the tool container."
   [tool-uuid]
