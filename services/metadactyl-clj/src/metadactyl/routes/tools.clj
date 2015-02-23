@@ -47,10 +47,7 @@
         :summary "Tool Container Information"
         :notes "This endpoint returns container information associated with a tool. This endpoint
         returns a 404 if the tool is not run inside a container."
-        (ce/trap uri #(let [retval (tool-container-info tool-id)]
-                        (if (nil? retval)
-                          (not-found-response (str "A container for " tool-id " was not found."))
-                          (success-response retval)))))
+        (ce/trap uri (requester tool-id (tool-container-info tool-id))))
 
   (GET* "/tools/:tool-id/container/devices" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -58,10 +55,7 @@
         :return Devices
         :summary "Tool Container Device Information"
         :notes "Returns device information for the container associated with a tool."
-        (ce/trap uri #(let [retval (tool-device-info tool-id)]
-                        (if (nil? retval)
-                          (not-found-response (str "A container for " tool-id " was not found."))
-                          (success-response retval)))))
+        (ce/trap uri (requester tool-id (tool-device-info tool-id))))
 
   (GET* "/tools/:tool-id/container/cpu-shares" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -69,10 +63,7 @@
         :return CPUShares
         :summary "Tool Container CPU Shares"
         :notes "Returns the number of shares of the CPU that the tool container will receive."
-        (ce/trap uri #(let [retval (tool-cpu-shares tool-id)]
-                        (if (nil? retval)
-                          (not-found-response (str "A container for " tool-id " was not found."))
-                          (success-response retval)))))
+        (ce/trap uri (requester tool-id (tool-cpu-shares tool-id))))
 
   (POST* "/tools/:tool-id/container/cpu-shares" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
@@ -81,7 +72,7 @@
          :return CPUShares
          :summary "Update Tool Container CPU Shares"
          :notes "This endpoint updates a the CPU shares for the tool's container."
-         (ce/trap uri (requester tool-id (update-container-field tool-id :cpu_shares (:cpu_shares body)))))
+         (ce/trap uri (requester tool-id (update-settings-field tool-id :cpu_shares (:cpu_shares body)))))
 
   (GET* "/tools/:tool-id/container/memory-limit" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -89,10 +80,7 @@
         :return MemoryLimit
         :summary "Tool Container Memory Limit"
         :notes "Returns the maximum amount of RAM that can be allocated to the tool container (in bytes)."
-        (ce/trap uri #(let [retval (tool-memory-limit tool-id)]
-                        (if (nil? retval)
-                          (not-found-response (str "A container for " tool-id " was not found."))
-                          (success-response retval)))))
+        (ce/trap uri (requester tool-id (tool-memory-limit tool-id))))
 
   (POST* "/tools/:tool-id/container/memory-limit" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
@@ -101,7 +89,7 @@
          :return MemoryLimit
          :summary "Update Tool Container Memory Limit"
          :notes "This endpoint updates a the memory limit for the tool's container."
-         (ce/trap uri (requester tool-id (update-container-field tool-id :memory_limit (:memory_limit body)))))
+         (ce/trap uri (requester tool-id (update-settings-field tool-id :memory_limit (:memory_limit body)))))
   
   (GET* "/tools/:tool-id/container/network-mode" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -109,10 +97,7 @@
         :return NetworkMode
         :summary "Tool Container Network Mode"
         :notes "Returns the network mode the tool container will operate in. Usually 'bridge' or 'none'."
-        (ce/trap uri #(let [retval (tool-network-mode tool-id)]
-                        (if (nil? retval)
-                          (not-found-response (str "A container for " tool-id " was not found."))
-                          (success-response retval)))))
+        (ce/trap uri (requester tool-id (tool-network-mode tool-id))))
 
   (POST* "/tools/:tool-id/container/network-mode" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
@@ -121,7 +106,7 @@
          :return NetworkMode
          :summary "Update Tool Container Network Mode"
          :notes "This endpoint updates a the network mode for the tool's container."
-         (ce/trap uri (requester tool-id (update-container-field tool-id :network_mode (:network_mode body)))))
+         (ce/trap uri (requester tool-id (update-settings-field tool-id :network_mode (:network_mode body)))))
   
   (GET* "/tools/:tool-id/container/working-directory" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -129,10 +114,7 @@
         :return WorkingDirectory
         :summary "Tool Container Working Directory"
         :notes "Sets the initial working directory for the tool container."
-        (ce/trap uri #(let [retval (tool-working-directory tool-id)]
-                        (if (nil? retval)
-                          (not-found-response (str "A container for " tool-id " was not found."))
-                          (success-response retval)))))
+        (ce/trap uri (requester tool-id (tool-working-directory tool-id))))
 
   (POST* "/tools/:tool-id/container/working-directory" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
@@ -141,7 +123,7 @@
          :return WorkingDirectory
          :summary "Update Tool Container Working Directory"
          :notes "This endpoint updates the working directory for the tool's container."
-         (ce/trap uri (requester tool-id (update-container-field tool-id :working_directory (:working_directory body)))))
+         (ce/trap uri (requester tool-id (update-settings-field tool-id :working_directory (:working_directory body)))))
   
   (GET* "/tools/:tool-id/container/name" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -149,10 +131,7 @@
         :return ContainerName
         :summary "Tool Container Name"
         :notes "The user supplied name that the container will be assigned when it runs."
-        (ce/trap uri #(let [retval (tool-container-name tool-id)]
-                        (if (nil? retval)
-                          (not-found-response (str "A container for " tool-id " was not found."))
-                          (success-response retval)))))
+        (ce/trap uri (requester tool-id (tool-container-name tool-id))))
   
   (POST* "/tools/:tool-id/container/name" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
@@ -161,7 +140,7 @@
          :return ContainerName
          :summary "Update Tool Container Name"
          :notes "This endpoint updates the container name for the tool's container."
-         (ce/trap uri (requester tool-id (update-container-field tool-id :name (:name body)))))5
+         (ce/trap uri (requester tool-id (update-settings-field tool-id :name (:name body)))))5
   
   (GET* "/tools/:tool-id/container/devices/:device-id" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
@@ -169,10 +148,16 @@
         :return Device
         :summary "Tool Container Device Information"
         :notes "Returns device information for the container associated with a tool."
-        (ce/trap uri #(let [retval (tool-device tool-id device-id)]
-                        (if (nil? retval)
-                          (not-found-response (str "A container for " tool-id " was not found."))
-                          (success-response retval)))))
+        (ce/trap uri (requester tool-id (tool-device tool-id device-id))))
+
+  (POST* "/tools/:tool-id/container/devices/:device-id" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
+         :query [params SecuredQueryParams]
+         :body [body Device]
+         :return Device
+         :summary "Update Tool Container Name"
+         :notes "This endpoint updates the container name for the tool's container."
+         (ce/trap uri (requester tool-id (update-settings-field tool-id :name (:name body)))))
 
   (GET* "/tools/:tool-id/container/volumes" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -180,10 +165,7 @@
         :return Volumes
         :summary "Tool Container Volume Information"
         :notes "Returns volume information for the container associated with a tool."
-        (ce/trap uri #(let [retval (tool-volume-info tool-id)]
-                        (if (nil? retval)
-                          (not-found-response (str "A container for " tool-id " was not found."))
-                          (success-response retval)))))
+        (ce/trap uri (requester tool-id (tool-volume-info tool-id))))
 
   (GET* "/tools/:tool-id/container/volumes/:volume-id" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
@@ -191,10 +173,7 @@
         :return Volume
         :summary "Tool Container Volume Information"
         :notes "Returns volume information for the container associated with a tool."
-        (ce/trap uri #(let [retval (tool-volume tool-id volume-id)]
-                        (if (nil? retval)
-                          (not-found-response (str "A container for " tool-id " was not found."))
-                          (success-response retval)))))
+        (ce/trap uri (requester tool-id (tool-volume tool-id volume-id))))
 
   (GET* "/tools/:tool-id/container/volumes-from" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -202,10 +181,7 @@
         :return VolumesFromList
         :summary "Tool Container Volumes From Information"
         :notes "Returns a list of container names that the container associated with the tool should import volumes from."
-        (ce/trap uri #(let [retval (tool-volumes-from-info tool-id)]
-                        (if (nil? retval)
-                          (not-found-response (str "A container for " tool-id " was not found."))
-                          (success-response retval)))))
+        (ce/trap uri (requester tool-id (tool-volumes-from-info tool-id))))
 
   (GET* "/tools/:tool-id/container/volumes-from/:volumes-from-id" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
@@ -213,10 +189,7 @@
         :return VolumesFrom
         :summary "Tool Container Volumes From Information"
         :notes "Returns a list of container names that the container associated with the tool should import volumes from."
-        (ce/trap uri #(let [retval (tool-volumes-from tool-id volumes-from-id)]
-                        (if (nil? retval)
-                          (not-found-response (str "A container for " tool-id " was not found."))
-                          (success-response retval)))))
+        (ce/trap uri (requester tool-id (tool-volumes-from tool-id volumes-from-id))))
 
   (GET* "/tool-requests" [:as {uri :uri}]
         :query [params ToolRequestListingParams]
