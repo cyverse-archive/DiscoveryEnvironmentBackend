@@ -81,7 +81,7 @@
          :return CPUShares
          :summary "Update Tool Container CPU Shares"
          :notes "This endpoint updates a the CPU shares for the tool's container."
-         (ce/trap uri (requester tool-id (updater tool-id :cpu_shares (:cpu_shares body)))))
+         (ce/trap uri (requester tool-id (update-container-field tool-id :cpu_shares (:cpu_shares body)))))
 
   (GET* "/tools/:tool-id/container/memory-limit" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -101,7 +101,7 @@
          :return MemoryLimit
          :summary "Update Tool Container Memory Limit"
          :notes "This endpoint updates a the memory limit for the tool's container."
-         (ce/trap uri (requester tool-id (updater tool-id :memory_limit (:memory_limit body)))))
+         (ce/trap uri (requester tool-id (update-container-field tool-id :memory_limit (:memory_limit body)))))
   
   (GET* "/tools/:tool-id/container/network-mode" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -121,7 +121,7 @@
          :return NetworkMode
          :summary "Update Tool Container Network Mode"
          :notes "This endpoint updates a the network mode for the tool's container."
-         (ce/trap uri (requester tool-id (updater tool-id :network_mode (:network_mode body)))))
+         (ce/trap uri (requester tool-id (update-container-field tool-id :network_mode (:network_mode body)))))
   
   (GET* "/tools/:tool-id/container/working-directory" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -141,7 +141,7 @@
          :return WorkingDirectory
          :summary "Update Tool Container Working Directory"
          :notes "This endpoint updates the working directory for the tool's container."
-         (ce/trap uri (requester tool-id (updater tool-id :working_directory (:working_directory body)))))
+         (ce/trap uri (requester tool-id (update-container-field tool-id :working_directory (:working_directory body)))))
   
   (GET* "/tools/:tool-id/container/name" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -161,7 +161,7 @@
          :return ContainerName
          :summary "Update Tool Container Name"
          :notes "This endpoint updates the container name for the tool's container."
-         (ce/trap uri (requester tool-id (updater tool-id :name (:name body)))))
+         (ce/trap uri (requester tool-id (update-container-field tool-id :name (:name body)))))5
   
   (GET* "/tools/:tool-id/container/devices/:device-id" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]

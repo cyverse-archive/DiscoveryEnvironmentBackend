@@ -379,7 +379,7 @@
     (let [settings (tool-settings tool-uuid)]
       {:cpu_shares (:cpu_shares settings)})))
 
-(defn updater
+(defn update-container-field
   [tool-uuid field-kw new-value]
   (let [id (uuidify tool-uuid)]
     (when (tool-has-settings? id)

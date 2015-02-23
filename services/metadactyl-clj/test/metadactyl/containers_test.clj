@@ -96,7 +96,7 @@
 
   (is (volume-from-mapping? (:id settings-map) "test-name"))
 
-  (is (settings-has-volume-from? (:id settings-map))))
+  (is (settings-has-volumes-from? (:id settings-map) (:id volume-from-map))))
 
 
 (def all-settings-map (all-settings (:id settings-map)))
