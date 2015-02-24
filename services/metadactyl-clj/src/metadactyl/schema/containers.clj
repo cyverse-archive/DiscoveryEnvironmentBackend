@@ -53,6 +53,16 @@
     :id             s/Uuid}
    "Information about a device associated with a tool's container."))
 
+(s/defschema DeviceHostPath
+  (describe
+   {:host_path s/Str}
+   "A device's path on the container host."))
+
+(s/defschema DeviceContainerPath
+  (describe
+   {:container_path s/Str}
+   "A device's path inside the tool container."))
+
 (def DeviceIdParam
   (describe
    java.util.UUID

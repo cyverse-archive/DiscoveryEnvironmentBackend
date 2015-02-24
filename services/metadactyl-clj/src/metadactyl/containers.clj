@@ -150,13 +150,11 @@
                    :container_path container-path})))
 
 (defn modify-device
-  [device-uuid settings-uuid host-path container-path]
+  [device-uuid settings-uuid update-map]
   (if-not (device? device-uuid)
     (throw (Exception. (str "device does not exist: " device-uuid))))
   (update container-devices
-          (set-fields {:container_settings_id (uuidify settings-uuid)
-                       :host_path host-path
-                       :container_path container-path})
+          (set-fields (select-keys update-map [:host_path :container_path :container_settings_id]))
           (where {:id (uuidify device-uuid)})))
 
 (defn delete-device
@@ -372,13 +370,6 @@
            first
            (merge {:image (tool-image-info tool-uuid)})))))
 
-(defn tool-cpu-shares
-  "Returns the cpu shares allocated to the tool container."
-  [tool-uuid]
-  (when (tool-has-settings? tool-uuid)
-    (let [settings (tool-settings tool-uuid)]
-      {:cpu_shares (:cpu_shares settings)})))
-
 (defn update-settings-field
   [tool-uuid field-kw new-value]
   (let [id (uuidify tool-uuid)]
@@ -386,33 +377,20 @@
       (let [settings-id (tool-settings-uuid id)]
         (select-keys (modify-settings settings-id {field-kw new-value}) [field-kw])))))
 
-(defn tool-memory-limit
-  "Returns the maximum amount of RAM (in bytes) that will be allocated to the tool container."
-  [tool-uuid]
-  (when (tool-has-settings? tool-uuid)
-    (let [settings (tool-settings tool-uuid)]
-      {:memory_limit (:memory_limit settings)})))
+(defn update-device-field
+  [tool-uuid device-uuid field-kw new-value]
+  (let [id (uuidify tool-uuid)]
+    (when (tool-has-settings? id)
+      (let [settings-id (tool-settings-uuid id)]
+        (when (and (device? device-uuid)
+                   (settings-has-device? settings-id device-uuid))
+          (select-keys (modify-device settings-id device-uuid {field-kw new-value}) [field-kw]))))))
 
-(defn tool-network-mode
-  "Returns the network mode that the tool container will use."
-  [tool-uuid]
+(defn get-settings-field
+  [tool-uuid field-kw]
   (when (tool-has-settings? tool-uuid)
     (let [settings (tool-settings tool-uuid)]
-      {:network_mode (:network_mode settings)})))
-
-(defn tool-working-directory
-  "Returns the working directory for the tool container."
-  [tool-uuid]
-  (when (tool-has-settings? tool-uuid)
-    (let [settings (tool-settings tool-uuid)]
-      {:working_directory (:working_directory settings)})))
-
-(defn tool-container-name
-  "Returns the name of the tool container."
-  [tool-uuid]
-  (when (tool-has-settings? tool-uuid)
-    (let [settings (tool-settings tool-uuid)]
-      {:name (:name settings)})))
+      {field-kw (field-kw settings)})))
 
 (defn tool-device-info
   "Returns a container's device information based on the tool UUID."
@@ -428,6 +406,11 @@
     (let [settings-uuid (tool-settings-uuid tool-uuid)]
       (when (settings-has-device? settings-uuid device-uuid)
         (dissoc (device device-uuid) :container_settings_id)))))
+
+(defn device-field
+  [tool-uuid device-uuid field-kw]
+  (let [fields (tool-device tool-uuid device-uuid)]
+    (or (select-keys fields [field-kw]) nil)))
 
 (defn tool-volume
   "Returns a map with info about a particular volume associated with the tool's container."
@@ -458,14 +441,3 @@
   (let [container-info (tool-container-info tool-uuid)]
     (if-not (nil? container-info)
       {:container_volumes_from (:container_volumes_from container-info)})))
-
-(defn all-settings
-  "Returns a map with all of the settings for a container, including all of the
-   devices, volumes, and volumes-froms."
-  [settings-uuid]
-  (let [id    (uuidify settings-uuid)
-        rm-id (fn [m] (dissoc m :container_settings_id))]
-    (-> (settings id)
-        (assoc :devices (mapv rm-id (devices id)))
-        (assoc :volumes (mapv rm-id (volumes id)))
-        (assoc :volumes-from (mapv rm-id (volumes-from id))))))

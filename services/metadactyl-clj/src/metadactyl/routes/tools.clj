@@ -63,7 +63,7 @@
         :return CPUShares
         :summary "Tool Container CPU Shares"
         :notes "Returns the number of shares of the CPU that the tool container will receive."
-        (ce/trap uri (requester tool-id (tool-cpu-shares tool-id))))
+        (ce/trap uri (requester tool-id (get-settings-field tool-id :cpu_shares))))
 
   (POST* "/tools/:tool-id/container/cpu-shares" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
@@ -80,7 +80,7 @@
         :return MemoryLimit
         :summary "Tool Container Memory Limit"
         :notes "Returns the maximum amount of RAM that can be allocated to the tool container (in bytes)."
-        (ce/trap uri (requester tool-id (tool-memory-limit tool-id))))
+        (ce/trap uri (requester tool-id (get-settings-field tool-id :memory_limit))))
 
   (POST* "/tools/:tool-id/container/memory-limit" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
@@ -97,7 +97,7 @@
         :return NetworkMode
         :summary "Tool Container Network Mode"
         :notes "Returns the network mode the tool container will operate in. Usually 'bridge' or 'none'."
-        (ce/trap uri (requester tool-id (tool-network-mode tool-id))))
+        (ce/trap uri (requester tool-id (get-settings-field tool-id :network_mode))))
 
   (POST* "/tools/:tool-id/container/network-mode" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
@@ -114,7 +114,7 @@
         :return WorkingDirectory
         :summary "Tool Container Working Directory"
         :notes "Sets the initial working directory for the tool container."
-        (ce/trap uri (requester tool-id (tool-working-directory tool-id))))
+        (ce/trap uri (requester tool-id (get-settings-field tool-id :working_directory))))
 
   (POST* "/tools/:tool-id/container/working-directory" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
@@ -131,7 +131,7 @@
         :return ContainerName
         :summary "Tool Container Name"
         :notes "The user supplied name that the container will be assigned when it runs."
-        (ce/trap uri (requester tool-id (tool-container-name tool-id))))
+        (ce/trap uri (requester tool-id (get-settings-field tool-id :name))))
   
   (POST* "/tools/:tool-id/container/name" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
@@ -140,24 +140,33 @@
          :return ContainerName
          :summary "Update Tool Container Name"
          :notes "This endpoint updates the container name for the tool's container."
-         (ce/trap uri (requester tool-id (update-settings-field tool-id :name (:name body)))))5
+         (ce/trap uri (requester tool-id (update-settings-field tool-id :name (:name body)))))
   
   (GET* "/tools/:tool-id/container/devices/:device-id" [:as {uri :uri}]
-        :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
+        :path-params [tool-id :- ToolIdParam,
+                      device-id :- DeviceIdParam]
         :query [params SecuredQueryParams]
         :return Device
         :summary "Tool Container Device Information"
         :notes "Returns device information for the container associated with a tool."
         (ce/trap uri (requester tool-id (tool-device tool-id device-id))))
+  
+  (GET* "/tools/:tool-id/container/devices/:device-id/host-path" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
+        :query [params SecuredQueryParams]
+        :return DeviceHostPath
+        :summary "Tool Container Device Host Path"
+        :notes "Returns a device's host path."
+        (ce/trap uri (requester tool-id (device-field tool-id device-id :host_path))))
 
-  (POST* "/tools/:tool-id/container/devices/:device-id" [:as {uri :uri}]
+  (POST* "/tools/:tool-id/container/devices/:device-id/host-path" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
          :query [params SecuredQueryParams]
-         :body [body Device]
-         :return Device
-         :summary "Update Tool Container Name"
-         :notes "This endpoint updates the container name for the tool's container."
-         (ce/trap uri (requester tool-id (update-settings-field tool-id :name (:name body)))))
+         :body [body DeviceHostPath]
+         :return DeviceHostPath
+         :summary "Update Tool Container Device Host Path"
+         :notes "This endpoint updates a device's host path for the tool's container."
+         (ce/trap uri (requester tool-id (update-device-field tool-id device-id :host_path (:host_path body)))))
 
   (GET* "/tools/:tool-id/container/volumes" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]

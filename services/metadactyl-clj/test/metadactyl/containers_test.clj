@@ -99,35 +99,7 @@
   (is (settings-has-volumes-from? (:id settings-map) (:id volume-from-map))))
 
 
-(def all-settings-map (all-settings (:id settings-map)))
-
 (def updated-tool (update tools (set-fields {:container_images_id (:id image-info-map)})))
-
-(defn all-settings-test []
-  (is (not (nil? (:id all-settings-map))))
-
-  (is (contains? all-settings-map :devices))
-
-  (is (contains? all-settings-map :volumes))
-
-  (is (contains? all-settings-map :volumes-from))
-
-  (is (= [{:host_path "/dev/null" :container_path "/dev/yay"}]
-         (:devices all-settings-map)))
-
-  (is (= [{:host_path "/tmp" :container_path "/foo"}]
-         (:volumes all-settings-map)))
-
-  (is (= [{:name "test-name"}]
-         (:volumes-from all-settings-map)))
-
-  (is (= "test" (:name all-settings-map)))
-
-  (is (= 1024 (:cpu_shares all-settings-map)))
-
-  (is (= 2048 (:memory_limit all-settings-map)))
-
-  (is (= "bridge" (:network_mode all-settings-map))))
 
 (defn updated-tool-tests []
   (is (not (nil? (:id updated-tool))))
