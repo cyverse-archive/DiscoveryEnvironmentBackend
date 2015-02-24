@@ -150,7 +150,7 @@
                    :container_path container-path})))
 
 (defn modify-device
-  [device-uuid settings-uuid update-map]
+  [settings-uuid device-uuid update-map]
   (if-not (device? device-uuid)
     (throw (Exception. (str "device does not exist: " device-uuid))))
   (update container-devices

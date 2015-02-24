@@ -168,6 +168,23 @@
          :notes "This endpoint updates a device's host path for the tool's container."
          (ce/trap uri (requester tool-id (update-device-field tool-id device-id :host_path (:host_path body)))))
 
+  (GET* "/tools/:tool-id/container/devices/:device-id/container-path" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
+        :query [params SecuredQueryParams]
+        :return DeviceContainerPath
+        :summary "Tool Device Container Path"
+        :notes "Returns a device's host path."
+        (ce/trap uri (requester tool-id (device-field tool-id device-id :container_path))))
+  
+  (POST* "/tools/:tool-id/container/devices/:device-id/container-path" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
+         :query [params SecuredQueryParams]
+         :body [body DeviceContainerPath]
+         :return DeviceContainerPath
+         :summary "Update Tool Device Container Path"
+         :notes "This endpoint updates a device's host path for the tool's container."
+         (ce/trap uri (requester tool-id (update-device-field tool-id device-id :container_path (:container_path body)))))
+
   (GET* "/tools/:tool-id/container/volumes" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
         :query [params SecuredQueryParams]
