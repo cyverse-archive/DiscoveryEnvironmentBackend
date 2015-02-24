@@ -95,6 +95,16 @@
    {:container_volumes [Volume]}
    "A list of Volumes associated with a tool's container."))
 
+(s/defschema VolumeHostPath
+  (describe
+   {:host_path s/Str}
+   "The path to a bind mounted volume on the host machine."))
+
+(s/defschema VolumeContainerPath
+  (describe
+   {:container_path s/Str}
+   "The path to a bind mounted volume in the tool container."))
+
 (s/defschema VolumesFrom
   (describe
    {:name s/Str

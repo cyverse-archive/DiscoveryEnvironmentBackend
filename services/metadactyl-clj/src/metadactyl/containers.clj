@@ -192,6 +192,14 @@
                        (where (and (= :container_settings_id (uuidify settings-uuid))
                                    (= :host_path host-path)
                                    (= :container_path container-path)))))))
+
+(defn volume-mapping
+  [settings-uuid host-path container-path]
+  (first (select container-volumes
+                 (where (and (= :container_settings_id (uuidify settings-uuid))
+                             (= :host_path host-path)
+                             (= :container_path container-path))))))
+
 (defn settings-has-volume?
   "Returns true if the container_settings UUID has at least one volume
    associated with it."
@@ -202,13 +210,13 @@
 
 (defn add-volume
   "Adds a volume record to the database for the specified container_settings UUID."
-  [settings-uuid host-path container-path]
-  (if (volume-mapping? settings-uuid host-path container-path)
-    (throw (Exception. (str "volume mapping already exists: " settings-uuid " " host-path " " container-path))))
+  [settings-uuid volume-map]
+  (if (volume-mapping? settings-uuid (:host_path volume-map) (:container_path volume-map))
+    (throw (Exception. (str "volume mapping already exists: " settings-uuid " " (:host_path volume-map) " " (:container_path volume-map)))))
   (insert container-volumes
-          (values {:container_settings_id (uuidify settings-uuid)
-                   :host_path host-path
-                   :container_path container-path})))
+          (values (merge
+                   (select-keys volume-map [:host_path :container_path])
+                   {:container_settings_id (uuidify settings-uuid)}))))
 
 (defn modify-volume
   "Modifies the container_volumes record indicated by the uuid."
@@ -436,6 +444,22 @@
     (let [settings-uuid (tool-settings-uuid tool-uuid)]
       (when (settings-has-volume? settings-uuid volume-uuid)
         (dissoc (volume volume-uuid) :container_settings_id)))))
+
+(defn add-tool-volume
+  [tool-uuid volume-map]
+  (when-not (tool-has-settings? tool-uuid)
+    (throw (Exception. (str "Tool " tool-uuid " does not have a container."))))
+  (let [settings-uuid (tool-settings-uuid tool-uuid)]
+    (dissoc
+     (if-not (volume-mapping? settings-uuid (:host_path volume-map) (:container_path volume-map))
+       (add-volume settings-uuid volume-map)
+       (volume-mapping settings-uuid (:host_path volume-map) (:container_path volume-map)))
+     :container_settings_id)))
+
+(defn volume-field
+  [tool-uuid volume-uuid field-kw]
+  (let [fields (tool-volume tool-uuid volume-uuid)]
+    (or (select-keys fields [field-kw]) nil)))
 
 (defn tool-volumes-from
   "Returns a map with info about a particular container from which the tool's container will mount volumes."

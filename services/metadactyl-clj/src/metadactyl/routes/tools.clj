@@ -210,6 +210,22 @@
         :notes "Returns volume information for the container associated with a tool."
         (ce/trap uri (requester tool-id (tool-volume tool-id volume-id))))
 
+  (GET* "/tools/:tool-id/container/volumes/:volume-id/host-path" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
+        :query [params SecuredQueryParams]
+        :return VolumeHostPath
+        :summary "Tool Container Volume Host Path"
+        :notes "Returns volume host path for the container associated with a tool."
+        (ce/trap uri (requester tool-id (volume-field tool-id volume-id :host_path))))
+
+  (GET* "/tools/:tool-id/container/volumes/:volume-id/container-path" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
+        :query [params SecuredQueryParams]
+        :return VolumeContainerPath
+        :summary "Tool Container Volume Container Path"
+        :notes "Returns volume container path for the container associated with a tool."
+        (ce/trap uri (requester tool-id (volume-field tool-id volume-id :container_path))))
+
   (GET* "/tools/:tool-id/container/volumes-from" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
         :query [params SecuredQueryParams]
