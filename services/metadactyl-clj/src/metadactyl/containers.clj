@@ -131,6 +131,12 @@
                                                      (= :host_path host-path)
                                                      (= :container_path container-path)))))))
 
+(defn device-mapping
+  [settings-uuid host-path container-path]
+  (first (select container-devices (where (and (= :host_path host-path)
+                                               (= :container_path container-path)
+                                               (= :container_settings_id (uuidify settings-uuid)))))))
+
 (defn settings-has-device?
   "Returns true if the container_settings record specified by the given UUID has
    at least one device associated with it."
@@ -409,10 +415,14 @@
 
 (defn add-tool-device
   [tool-uuid device-map]
-  (when (tool-has-settings? tool-uuid)
-    (let [settings-uuid (tool-settings-uuid tool-uuid)]
-      (when-not (device-mapping? settings-uuid (:host_path device-map) (:container_path device-map))
-        (dissoc (add-device settings-uuid device-map) :container_settings_id)))))
+  (when-not (tool-has-settings? tool-uuid)
+    (throw (Exception. (str "Tool " tool-uuid " does not have a container."))))
+  (let [settings-uuid (tool-settings-uuid tool-uuid)]
+    (dissoc
+     (if-not (device-mapping? settings-uuid (:host_path device-map) (:container_path device-map))
+       (add-device settings-uuid device-map)
+       (device-mapping settings-uuid (:host_path device-map) (:container_path device-map)))
+     :container_settings_id)))
 
 (defn device-field
   [tool-uuid device-uuid field-kw]
