@@ -22,14 +22,6 @@
 (def my-public-apps-id (uuidify "00000000-0000-0000-0000-000000000000"))
 (def trash-category-id (uuidify "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"))
 
-(defn- add-subgroups
-  [group groups]
-  (let [subgroups (filter #(= (:id group) (:parent_id %)) groups)
-        subgroups (map #(add-subgroups % groups) subgroups)
-        result    (if (empty? subgroups) group (assoc group :categories subgroups))
-        result    (dissoc result :parent_id :workspace_id :description)]
-    result))
-
 (defn format-trash-category
   "Formats the virtual group for the admin's deleted and orphaned apps category."
   [workspace-id params]
@@ -65,63 +57,6 @@
                                       :format-listing list-my-public-apps}
    (keyword (str trash-category-id)) {:format-group   format-trash-category
                                       :format-listing list-trashed-apps}})
-
-(defn- format-private-virtual-groups
-  "Formats any virtual groups that should appear in a user's workspace."
-  [workspace-id params]
-  (remove :is_public
-    (map (fn [[_ {f :format-group}]] (f workspace-id params)) virtual-group-fns)))
-
-(defn- add-private-virtual-groups
-  [group workspace-id params]
-  (if current-user
-    (let [virtual-groups (format-private-virtual-groups workspace-id params)
-          actual-count   (count-apps-in-group-for-user
-                           (:id group)
-                           (:email current-user)
-                           params)]
-      (-> group
-          (update-in [:categories] concat virtual-groups)
-          (assoc :app_count actual-count)))))
-
-(defn- format-app-group-hierarchy
-  "Formats the app group hierarchy rooted at the app group with the given
-   identifier."
-  [user-workspace-id params {root-id :root_category_id workspace-id :id}]
-  (let [groups (get-app-group-hierarchy root-id params)
-        root   (first (filter #(= root-id (:id %)) groups))
-        result (add-subgroups root groups)]
-    (if (= user-workspace-id workspace-id)
-      (add-private-virtual-groups result workspace-id params)
-      result)))
-
-(defn get-workspace-app-groups
-  "Retrieves the list of the current user's workspace app groups."
-  [params]
-  (let [workspace (get-workspace)
-        workspace-id (:id workspace)]
-    {:categories [(format-app-group-hierarchy workspace-id params workspace)]}))
-
-(defn get-visible-app-groups
-  "Retrieves the list of app groups that are visible to a user."
-  ([params]
-     (-> (get-workspace)
-         (:id)
-         (get-visible-app-groups params)))
-  ([workspace-id params]
-     (let [workspaces (get-visible-workspaces workspace-id)]
-       {:categories (map (partial format-app-group-hierarchy workspace-id params) workspaces)})))
-
-(defn get-app-groups
-  "Retrieves the list of app groups that are visible to all users, the current user's app groups, or
-   both, depending on the :public param."
-  [{:keys [public] :as params}]
-  (service/success-response
-    (if (contains? params :public)
-      (if-not public
-        (get-workspace-app-groups params)
-        (get-visible-app-groups nil params))
-      (get-visible-app-groups params))))
 
 (defn- validate-app-pipeline-eligibility
   "Validates an App for pipeline eligibility, throwing a slingshot stone ."

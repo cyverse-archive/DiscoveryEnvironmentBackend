@@ -1,6 +1,5 @@
 (ns metadactyl.service.apps
   (:use [korma.db :only [transaction]]
-        [metadactyl.user :only [current-user]]
         [slingshot.slingshot :only [throw+]])
   (:require [cemerick.url :as curl]
             [clojure.tools.logging :as log]
@@ -53,16 +52,21 @@
    (get-agave-client state-info username)
    (partial has-access-token (config/agave-oauth-settings) username)))
 
+(defn- get-apps-client-list
+  [user state-info]
+  (vector (metadactyl.service.apps.de.DeApps. user)
+          (when (and user (config/agave-enabled))
+            (get-agave-apps-client state-info (:username user)))))
+
 (defn- get-apps-client
-  ([]
-     (get-apps-client ""))
-  ([state-info]
+  ([user]
+     (get-apps-client user ""))
+  ([user state-info]
      (metadactyl.service.apps.combined.CombinedApps.
-      [(metadactyl.service.apps.de.DeApps. current-user)
-       (when (config/agave-enabled)
-         (get-agave-apps-client state-info (:username current-user)))])))
+      (remove nil? (get-apps-client-list user state-info)))))
 
 (defn get-app-categories
-  [params]
-  (service/success-response
-   (transaction (.listAppCategories (get-apps-client "type=apps") params))))
+  [user params]
+  (let [client     (get-apps-client user "type=apps")
+        categories (transaction (.listAppCategories client params))]
+    (service/success-response {:categories categories})))

@@ -8,10 +8,15 @@
 (defn get-workspace
   "Gets a workspace database entry for the given username or the current user."
   ([]
-   (get-workspace (:username current-user)))
+     (get-workspace (:username current-user)))
   ([username]
-   (if-let [workspace (fetch-workspace-by-user-id (get-existing-user-id username))]
-     workspace
-     (throw+ {:error_code cc-errs/ERR_NOT_FOUND,
-              :username username,
-              :message  "Workspace for user not found."}))))
+     (if-let [workspace (fetch-workspace-by-user-id (get-existing-user-id username))]
+       workspace
+       (throw+ {:error_code cc-errs/ERR_NOT_FOUND,
+                :username username,
+                :message  "Workspace for user not found."}))))
+
+(defn get-optional-workspace
+  "Gets a workspace database entry for the given username if a username is provided."
+  [username]
+  (when username (get-workspace username)))

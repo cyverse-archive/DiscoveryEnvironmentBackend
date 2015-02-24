@@ -98,18 +98,18 @@
   [user params]
   (let [workspace (get-workspace (:username user))
         workspace-id (:id workspace)]
-    {:categories [(format-app-group-hierarchy user workspace-id params workspace)]}))
+    [(format-app-group-hierarchy user workspace-id params workspace)]))
 
 (defn get-visible-app-groups-for-workspace
   "Retrieves the list of app groups that."
   [workspace-id user params]
   (let [workspaces (get-visible-workspaces workspace-id)]
-    {:categories (map (partial format-app-group-hierarchy user workspace-id params) workspaces)}))
+    (map (partial format-app-group-hierarchy user workspace-id params) workspaces)))
 
 (defn get-visible-app-groups
   "Retrieves the list of app groups that are visible to a user."
   [user params]
-  (-> (get-workspace (:username user))
+  (-> (get-optional-workspace (:username user))
       (:id)
       (get-visible-app-groups-for-workspace user params)))
 
@@ -117,12 +117,11 @@
   "Retrieves the list of app groups that are visible to all users, the current user's app groups, or
    both, depending on the :public param."
   [user {:keys [public] :as params}]
-  (service/success-response
-    (if (contains? params :public)
-      (if-not public
-        (get-workspace-app-groups user params)
-        (get-visible-app-groups-for-workspace nil params))
-      (get-visible-app-groups user params))))
+  (if (contains? params :public)
+    (if-not public
+      (get-workspace-app-groups user params)
+      (get-visible-app-groups-for-workspace nil params))
+    (get-visible-app-groups user params)))
 
 (defn- validate-app-pipeline-eligibility
   "Validates an App for pipeline eligibility, throwing a slingshot stone ."

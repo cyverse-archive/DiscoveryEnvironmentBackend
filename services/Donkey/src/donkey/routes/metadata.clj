@@ -2,11 +2,12 @@
   (:use [compojure.core]
         [donkey.services.file-listing]
         [donkey.services.metadata.metadactyl]
-        [donkey.util.service]
         [donkey.util])
   (:require [clojure.tools.logging :as log]
+            [donkey.clients.metadactyl :as metadactyl]
+            [donkey.services.metadata.apps :as apps]
             [donkey.util.config :as config]
-            [donkey.services.metadata.apps :as apps]))
+            [donkey.util.service :as service]))
 
 (defn app-category-routes
   []
@@ -14,7 +15,7 @@
     [config/app-routes-enabled]
 
     (GET "/apps/categories" [:as {params :params}]
-         (apps/get-app-categories params))
+         (service/success-response (metadactyl/get-app-categories params)))
 
     (GET "/apps/categories/:app-group-id" [app-group-id :as {params :params}]
          (apps/apps-in-category app-group-id params))))

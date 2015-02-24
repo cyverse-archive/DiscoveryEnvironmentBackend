@@ -126,8 +126,8 @@
   (-> (client/get (metadactyl-url "apps" app-id "documentation")
                   {:query-params (secured-params)
                    :as           :stream})
-    (:body)
-    (service/decode-json)))
+      (:body)
+      (service/decode-json)))
 
 (defn add-app-docs
   [app-id docs]
@@ -136,8 +136,8 @@
                     :content-type :json
                     :body         (cheshire/encode docs)
                     :as           :stream})
-    (:body)
-    (service/decode-json)))
+      (:body)
+      (service/decode-json)))
 
 (defn edit-app-docs
   [app-id docs]
@@ -146,8 +146,8 @@
                      :content-type :json
                      :body         (cheshire/encode docs)
                      :as           :stream})
-    (:body)
-    (service/decode-json)))
+      (:body)
+      (service/decode-json)))
 
 (defn admin-add-app-docs
   [app-id docs]
@@ -156,8 +156,8 @@
                     :content-type :json
                     :body         (cheshire/encode docs)
                     :as           :stream})
-    (:body)
-    (service/decode-json)))
+      (:body)
+      (service/decode-json)))
 
 (defn admin-edit-app-docs
   [app-id docs]
@@ -166,8 +166,8 @@
                      :content-type :json
                      :body         (cheshire/encode docs)
                      :as           :stream})
-    (:body)
-    (service/decode-json)))
+      (:body)
+      (service/decode-json)))
 
 (defn list-app-tasks
   [app-id]
@@ -272,7 +272,9 @@
 
 (defn get-oauth-access-token
   [api-name {:keys [code state]}]
-  (client/get (metadactyl-url "oauth" "access-code" api-name)
-              {:query-params (assoc (secured-params)
-                               :code  code
-                               :state state)}))
+  (-> (client/get (metadactyl-url "oauth" "access-code" api-name)
+                  {:query-params (assoc (secured-params)
+                                   :code  code
+                                   :state state)})
+      (:body)
+      (service/decode-json)))

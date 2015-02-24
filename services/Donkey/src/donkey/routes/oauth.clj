@@ -1,6 +1,7 @@
 (ns donkey.routes.oauth
   (:use [compojure.core])
-  (:require [donkey.clients.metadactyl :as metadactyl]))
+  (:require [donkey.clients.metadactyl :as metadactyl]
+            [donkey.util.service :as service]))
 
 (defn secured-oauth-routes
   "These routes are callback routes for OAuth authorization codes. They need to be secured because
@@ -10,4 +11,4 @@
   []
   (routes
    (GET "/oauth/access-code/:api-name" [api-name :as {params :params}]
-        (metadactyl/get-oauth-access-token api-name params))))
+        (service/success-response (metadactyl/get-oauth-access-token api-name params)))))

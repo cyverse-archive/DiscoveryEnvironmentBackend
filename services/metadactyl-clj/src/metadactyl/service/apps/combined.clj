@@ -4,4 +4,4 @@
   metadactyl.protocols.Apps
 
   (listAppCategories [_ params]
-    (map #(.listAppCategories % params) clients)))
+    (apply concat (map #(.listAppCategories % params) clients))))
