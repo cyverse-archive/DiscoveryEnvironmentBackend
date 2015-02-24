@@ -220,13 +220,12 @@
 
 (defn modify-volume
   "Modifies the container_volumes record indicated by the uuid."
-  [volume-uuid settings-uuid host-path container-path]
+  [settings-uuid volume-uuid volume-map]
   (if-not (volume? volume-uuid)
     (throw (Exception. (str "volume does not exist: " volume-uuid))))
   (update container-volumes
-          (set-fields {:container_settings_id (uuidify settings-uuid)
-                       :host_path host-path
-                       :container_path container-path})
+          (set-fields (merge {:container_settings_id (uuidify settings-uuid)}
+                             (select-keys volume-map [:host_path :container_path])))
           (where {:id (uuidify volume-uuid)})))
 
 (defn delete-volume
@@ -436,6 +435,15 @@
   [tool-uuid device-uuid field-kw]
   (let [fields (tool-device tool-uuid device-uuid)]
     (or (select-keys fields [field-kw]) nil)))
+
+(defn update-volume-field
+  [tool-uuid volume-uuid field-kw new-value]
+  (let [id (uuidify tool-uuid)]
+    (when (tool-has-settings? id)
+      (let [settings-id (tool-settings-uuid id)]
+        (when (and (volume? volume-uuid)
+                   (settings-has-volume? settings-id volume-uuid))
+          (select-keys (modify-volume settings-id volume-uuid {field-kw new-value}) [field-kw]))))))
 
 (defn tool-volume
   "Returns a map with info about a particular volume associated with the tool's container."

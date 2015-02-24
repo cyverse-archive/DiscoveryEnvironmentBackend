@@ -218,6 +218,15 @@
         :notes "Returns volume host path for the container associated with a tool."
         (ce/trap uri (requester tool-id (volume-field tool-id volume-id :host_path))))
 
+  (POST* "/tools/:tool-id/container/volumes/:volume-id/host-path" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
+         :query [params SecuredQueryParams]
+         :body [body VolumeHostPath]
+         :return VolumeHostPath
+         :summary "Update Tool Container Volume Host Path"
+         :notes "This endpoint updates a volume host path for the tool's container."
+         (ce/trap uri (requester tool-id (update-volume-field tool-id volume-id :host_path (:host_path body)))))
+
   (GET* "/tools/:tool-id/container/volumes/:volume-id/container-path" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
         :query [params SecuredQueryParams]
@@ -225,6 +234,15 @@
         :summary "Tool Container Volume Container Path"
         :notes "Returns volume container path for the container associated with a tool."
         (ce/trap uri (requester tool-id (volume-field tool-id volume-id :container_path))))
+
+  (POST* "/tools/:tool-id/container/volumes/:volume-id/container-path" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
+         :query [params SecuredQueryParams]
+         :body [body VolumeContainerPath]
+         :return VolumeContainerPath
+         :summary "Update Tool Container Volume Container Path"
+         :notes "This endpoint updates a volume container path for the tool's container."
+         (ce/trap uri (requester tool-id (update-volume-field tool-id volume-id :container_path (:container_path body)))))
 
   (GET* "/tools/:tool-id/container/volumes-from" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
