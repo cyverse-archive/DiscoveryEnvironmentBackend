@@ -53,6 +53,11 @@
     :id             s/Uuid}
    "Information about a device associated with a tool's container."))
 
+(s/defschema NewDevice
+  (describe
+   (dissoc Device :id)
+   "The map needed to add a device to a container."))
+
 (s/defschema DeviceHostPath
   (describe
    {:host_path s/Str}

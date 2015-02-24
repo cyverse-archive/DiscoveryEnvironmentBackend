@@ -56,7 +56,7 @@
 
   (is (tool-has-settings? (:id tool-map))))
 
-(def devices-map (add-device (:id settings-map) "/dev/null" "/dev/yay"))
+(def devices-map (add-device (:id settings-map) {:host_path "/dev/null" :container_path "/dev/yay"}))
 
 (deftest devices-tests []
   (is (not (nil? (:id devices-map))))

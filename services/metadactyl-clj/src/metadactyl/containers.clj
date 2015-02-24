@@ -141,13 +141,13 @@
 
 (defn add-device
   "Associates a device with the given container_settings UUID."
-  [settings-uuid host-path container-path]
-  (if (device-mapping? settings-uuid host-path container-path)
-    (throw (Exception. (str "device mapping already exists: " settings-uuid " " host-path " " container-path))))
+  [settings-uuid device-map]
+  (if (device-mapping? settings-uuid (:host_path device-map) (:container_path device-map))
+    (throw (Exception. (str "device mapping already exists: " settings-uuid " " (:host_path device-map)  " " (:container_path device-map)))))
   (insert container-devices
-          (values {:container_settings_id (uuidify settings-uuid)
-                   :host_path host-path
-                   :container_path container-path})))
+          (values (merge
+                   (select-keys device-map [:host_path :container_path])
+                   {:container_settings_id (uuidify settings-uuid)}))))
 
 (defn modify-device
   [settings-uuid device-uuid update-map]
@@ -406,6 +406,13 @@
     (let [settings-uuid (tool-settings-uuid tool-uuid)]
       (when (settings-has-device? settings-uuid device-uuid)
         (dissoc (device device-uuid) :container_settings_id)))))
+
+(defn add-tool-device
+  [tool-uuid device-map]
+  (when (tool-has-settings? tool-uuid)
+    (let [settings-uuid (tool-settings-uuid tool-uuid)]
+      (when-not (device-mapping? settings-uuid (:host_path device-map) (:container_path device-map))
+        (dissoc (add-device settings-uuid device-map) :container_settings_id)))))
 
 (defn device-field
   [tool-uuid device-uuid field-kw]
