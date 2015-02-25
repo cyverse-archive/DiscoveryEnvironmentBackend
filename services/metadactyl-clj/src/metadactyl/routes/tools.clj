@@ -202,6 +202,15 @@
         :notes "Returns volume information for the container associated with a tool."
         (ce/trap uri (requester tool-id (tool-volume-info tool-id))))
 
+  (POST* "/tools/:tool-id/container/volumes" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam]
+        :query [params SecuredQueryParams]
+        :body [body NewVolume]
+        :return Volume
+        :summary "Tool Container Volume Information"
+        :notes "Returns volume information for the container associated with a tool."
+        (ce/trap uri (requester tool-id (add-tool-volume tool-id body))))
+
   (GET* "/tools/:tool-id/container/volumes/:volume-id" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
         :query [params SecuredQueryParams]

@@ -85,6 +85,11 @@
     :id             s/Uuid}
    "A map representing a bind mounted container volume."))
 
+(s/defschema NewVolume
+  (describe
+   (dissoc Volume :id)
+   "A map for adding a new volume to a container."))
+
 (def VolumeIdParam
   (describe
    java.util.UUID
