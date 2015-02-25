@@ -24,7 +24,7 @@
                  [compojure "1.2.1"]
                  [medley "0.5.1"]
                  [metosin/compojure-api "0.17.0"]
-                 [metosin/ring-swagger-ui "2.1.1-M1"]
+                 [metosin/ring-swagger-ui "2.0.17"]
                  [org.iplantc/authy "4.1.8"]
                  [org.iplantc/clojure-commons "4.1.8"]
                  [org.iplantc/kameleon "4.1.8"]
