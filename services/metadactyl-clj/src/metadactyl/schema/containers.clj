@@ -111,6 +111,16 @@
     :id   s/Uuid}
    "The name of a container from which to bind mount volumes."))
 
+(s/defschema NewVolumesFrom
+  (describe
+   (dissoc VolumesFrom :id)
+   "A map for adding a new container from which to bind mount volumes."))
+
+(s/defschema VolumesFromName
+  (describe
+   {:name s/Str}
+   "The name of a container from which volumes will be bind mounted."))
+
 (def VolumesFromIdParam
   (describe
    java.util.UUID

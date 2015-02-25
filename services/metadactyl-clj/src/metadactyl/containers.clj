@@ -240,26 +240,32 @@
   [settings-uuid]
   (select container-volumes-from (where {:container_settings_id (uuidify settings-uuid)})))
 
-(defn volume-from
+(defn volumes-from
   "Returns all records from container_volumes_from associated with the UUID passed in. There
    should only be a single result, but we're returning a seq just in case."
   [volumes-from-uuid]
   (first (select container-volumes-from
                  (where {:id (uuidify volumes-from-uuid)}))))
 
-(defn volume-from?
+(defn volumes-from?
   "Returns true if the volume_from record indicated by the UUID exists."
   [volumes-from-uuid]
   (pos? (count (select container-volumes-from
                        (where {:id (uuidify volumes-from-uuid)})))))
 
-(defn volume-from-mapping?
+(defn volumes-from-mapping?
   "Returns true if the combination of the container_settings UUID and container
    already exists in the container_volumes_from table."
   [settings-uuid volumes-from-name]
   (pos? (count (select container-volumes-from
                        (where {:container_settings_id (uuidify settings-uuid)
                                :name volumes-from-name})))))
+
+(defn volumes-from-mapping
+  [settings-uuid volumes-from-name]
+  (first (select container-volumes-from
+                 (where {:container_settings_id (uuidify settings-uuid)
+                         :name                  volumes-from-name}))))
 
 (defn settings-has-volumes-from?
   "Returns true if the indicated container_settings record has at least one
@@ -269,7 +275,7 @@
                        (where {:container_settings_id (uuidify settings-uuid)
                                :id                    (uuidify volumes-from-uuid)})))))
 
-(defn add-volume-from
+(defn add-volumes-from
   "Adds a record to container_volumes_from associated with the given
    container_settings UUID."
   [settings-uuid volumes-from-name]
@@ -277,20 +283,19 @@
           (values {:container_settings_id (uuidify settings-uuid)
                    :name volumes-from-name})))
 
-(defn modify-volume-from
+(defn modify-volumes-from
   "Modifies a record in container_volumes_from."
-  [volumes-from-uuid settings-uuid volumes-from-name]
-  (if-not (volume-from? volumes-from-uuid)
+  [settings-uuid volumes-from-uuid vf-map]
+  (if-not (volumes-from? volumes-from-uuid)
     (throw (Exception. (str "volume from setting does not exist: " volumes-from-uuid))))
   (update container-volumes-from
-          (set-fields {:container_settings_id (uuidify settings-uuid)
-                      :name volumes-from-name})
+          (set-fields (select-keys vf-map [:name]))
           (where {:id (uuidify volumes-from-uuid)})))
 
-(defn delete-volume-from
+(defn delete-volumes-from
   "Deletes a record from container_volumes_from."
   [volumes-from-uuid]
-  (when (volume-from? volumes-from-uuid)
+  (when (volumes-from? volumes-from-uuid)
     (delete container-volumes-from
             (where {:id (uuidify volumes-from-uuid)}))))
 
@@ -475,7 +480,32 @@
   (when (tool-has-settings? tool-uuid)
     (let [settings-uuid (tool-settings-uuid tool-uuid)]
       (when (settings-has-volumes-from? settings-uuid volumes-from-uuid)
-        (dissoc (volume-from volumes-from-uuid) :container_settings_id)))))
+        (dissoc (volumes-from volumes-from-uuid) :container_settings_id)))))
+
+(defn update-volumes-from-field
+  [tool-uuid vf-uuid field-kw new-value]
+  (let [id (uuidify tool-uuid)]
+    (when (tool-has-settings? id)
+      (let [settings-id (tool-settings-uuid id)]
+        (when (and (volumes-from? vf-uuid)
+                   (settings-has-volumes-from? settings-id vf-uuid))
+          (select-keys (modify-volumes-from settings-id vf-uuid {field-kw new-value}) [field-kw]))))))
+
+(defn add-tool-volumes-from
+  [tool-uuid vf-map]
+  (when-not (tool-has-settings? tool-uuid)
+    (throw (Exception. (str "Tool " tool-uuid " does not have a container."))))
+  (let [settings-uuid (tool-settings-uuid tool-uuid)]
+    (dissoc
+     (if-not (volumes-from-mapping? settings-uuid (:name vf-map))
+       (add-volumes-from settings-uuid (:name vf-map))
+       (volumes-from-mapping settings-uuid (:name vf-map)))
+     :container_settings_id)))
+
+(defn volumes-from-field
+  [tool-uuid vf-uuid field-kw]
+  (let [fields (tool-volumes-from tool-uuid vf-uuid)]
+    (or (select-keys fields [field-kw]) nil)))
 
 (defn tool-volume-info
   "Returns a container's volumes info based on the tool UUID."

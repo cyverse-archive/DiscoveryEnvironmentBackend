@@ -252,6 +252,15 @@
         :notes "Returns a list of container names that the container associated with the tool should import volumes from."
         (ce/trap uri (requester tool-id (tool-volumes-from-info tool-id))))
 
+  (POST* "/tools/:tool-id/container/volumes-from" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam]
+        :query [params SecuredQueryParams]
+        :body [body NewVolumesFrom]
+        :return VolumesFrom
+        :summary "Adds A Volume Host Container"
+        :notes "Adds a new container from which the tool container will bind mount volumes."
+        (ce/trap uri (requester tool-id (add-tool-volumes-from tool-id body))))
+
   (GET* "/tools/:tool-id/container/volumes-from/:volumes-from-id" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
         :query [params SecuredQueryParams]
@@ -259,6 +268,23 @@
         :summary "Tool Container Volumes From Information"
         :notes "Returns a list of container names that the container associated with the tool should import volumes from."
         (ce/trap uri (requester tool-id (tool-volumes-from tool-id volumes-from-id))))
+
+  (GET* "/tools/:tool-id/container/volumes-from/:volumes-from-id/name" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
+        :query [params SecuredQueryParams]
+        :return VolumesFromName
+        :summary "Name Of Volume Host Container"
+        :notes "Returns the name of the container from which the tool container will bind mount volumes."
+        (ce/trap uri (requester tool-id (volumes-from-field tool-id volumes-from-id :name))))
+
+  (POST* "/tools/:tool-id/container/volumes-from/:volumes-from-id/name" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
+         :query [params SecuredQueryParams]
+         :body [body VolumesFromName]
+         :return VolumesFromName
+         :summary "Update Name Of Volume Host Container"
+         :notes "Updates the name of a container from which the tool container will bind mount volumes."
+         (ce/trap uri (requester tool-id (update-volumes-from-field tool-id volumes-from-id :name (:name body)))))
 
   (GET* "/tool-requests" [:as {uri :uri}]
         :query [params ToolRequestListingParams]

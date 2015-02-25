@@ -84,19 +84,19 @@
 
   (is (settings-has-volume? (:id settings-map) (:id volume-map))))
 
-(def volume-from-map (add-volume-from (:id settings-map) "test-name"))
+(def volumes-from-map (add-volumes-from (:id settings-map) "test-name"))
 
 (defn volumes-from-test []
-  (is (not (nil? (:id volume-from-map))))
+  (is (not (nil? (:id volumes-from-map))))
 
   (is (= {:name "test-name" :container_settings_id (:id settings-map)}
-         (dissoc (volume-from (:id volume-from-map)) :id)))
+         (dissoc (volumes-from (:id volumes-from-map)) :id)))
 
-  (is (volume-from? (:id volume-from-map)))
+  (is (volumes-from? (:id volumes-from-map)))
 
-  (is (volume-from-mapping? (:id settings-map) "test-name"))
+  (is (volumes-from-mapping? (:id settings-map) "test-name"))
 
-  (is (settings-has-volumes-from? (:id settings-map) (:id volume-from-map))))
+  (is (settings-has-volumes-from? (:id settings-map) (:id volumes-from-map))))
 
 
 (def updated-tool (update tools (set-fields {:container_images_id (:id image-info-map)})))
