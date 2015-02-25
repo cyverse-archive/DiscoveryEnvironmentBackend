@@ -49,6 +49,27 @@
         returns a 404 if the tool is not run inside a container."
         (ce/trap uri (requester tool-id (tool-container-info tool-id))))
 
+  (POST* "/tools/:tool-id/container" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam]
+         :query [params SecuredQueryParams]
+         :body [body NewToolContainer]
+         :return ToolContainer
+         :summary "Adds Container To Tool"
+         :notes "Adds a container to a tool. This endpoint does NOT perform modifications. If you
+         attempt to POST twice you'll get an error. This is technically not correct RESTful behavior,
+         but this was done to prevent users from getting fooled into thinking that this endpoint can
+         be used for modifications."
+         (ce/trap uri (requester tool-id (add-tool-container tool-id body))))
+
+  (DELETE* "/tools/:tool-id/container" [:as {uri :uri}]
+           :path-params [tool-id :- ToolIdParam]
+           :query [params SecuredQueryParams]
+           :return nil
+           :summary "Deletes a container from a tool."
+           :notes "Delete a container from a tool. The tool will be assumed to be running in 'compatibility'
+           mode."
+           (ce/trap uri (requester tool-id (delete-tool-container tool-id))))
+
   (GET* "/tools/:tool-id/container/devices" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
         :query [params SecuredQueryParams]

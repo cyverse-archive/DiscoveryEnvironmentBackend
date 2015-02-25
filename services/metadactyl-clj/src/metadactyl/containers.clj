@@ -520,3 +520,29 @@
   (let [container-info (tool-container-info tool-uuid)]
     (if-not (nil? container-info)
       {:container_volumes_from (:container_volumes_from container-info)})))
+
+(defn add-tool-container
+  [tool-uuid info-map]
+  (when (tool-has-settings? tool-uuid)
+    (throw (Exception. (str "Tool " tool-uuid " already has container settings."))))
+  (let [devices  (:container_devices info-map)
+        volumes  (:container_volumes info-map)
+        vfs      (map :name (:container_volumes_from info-map))
+        settings (dissoc info-map :container_devices :container_volumes :container_volumes_from)
+        info-map (assoc info-map :tools_id (uuidify tool-uuid))]
+    (transaction
+     (let [settings-map  (add-settings info-map)
+           settings-uuid (:id settings-map)]
+       (doseq [d devices]
+         (add-device settings-uuid d))
+       (doseq [v volumes]
+         (add-volume settings-uuid v))
+       (doseq [vf vfs]
+         (add-volumes-from settings-uuid vf))
+       (tool-container-info tool-uuid)))))
+
+(defn delete-tool-container
+  [tool-uuid]
+  (when (tool-has-settings? tool-uuid)
+    (let [settings-id (tool-settings-uuid tool-uuid)]
+      (delete-settings settings-id))))

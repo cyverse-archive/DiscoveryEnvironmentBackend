@@ -10,16 +10,26 @@
     (s/optional-key :tag) s/Str
     (s/optional-key :url) s/Str}
    "A map describing a container image."))
+
+(s/defschema NewImage
+  (describe
+   (dissoc Image :id)
+   "The values needed to add a new image to a tool."))
  
 (s/defschema Settings
   (describe
-   {:cpu_shares         Integer
-    :memory_limit       Long
-    :network_mode       s/Str
-    :working_directory  s/Str
-    :name               s/Str
+   {(s/optional-key :cpu_shares)         Integer
+    (s/optional-key :memory_limit)       Long
+    (s/optional-key :network_mode)       s/Str
+    (s/optional-key :working_directory)  s/Str
+    (s/optional-key :name)               s/Str
     :id                 s/Uuid}
    "The group of settings for a container."))
+
+(s/defschema NewSettings
+  (describe
+   (dissoc Settings :id)
+   "The values needed to add a new container to a tool."))
 
 (s/defschema CPUShares
   (describe
@@ -151,3 +161,13 @@
     ToolContainerSettings
     {:image Image})
    "All container and container image information associated with a tool."))
+
+(s/defschema NewToolContainer
+  (describe
+   (merge
+    NewSettings
+    {(s/optional-key :container_devices)      [NewDevice]
+     (s/optional-key :container_volumes)      [NewVolume]
+     (s/optional-key :container_volumes_from) [NewVolumesFrom]
+     :image                                   NewImage})
+   "The settings for adding a new full container definition to a tool."))
