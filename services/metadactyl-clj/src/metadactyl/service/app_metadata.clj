@@ -29,14 +29,6 @@
   [app-id]
   (amp/get-app app-id))
 
-(defn relabel-app
-  "This service allows labels to be updated in any app, whether or not the app has been submitted
-   for public use."
-  [body]
-  (verify-app-ownership (validate-app-existence (:id body)))
-  (transaction (amp/update-app-labels body))
-  (success-response))
-
 (defn- validate-app-ownership
   "Verifies that a user owns an app."
   [username app-id]
