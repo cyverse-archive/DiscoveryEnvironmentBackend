@@ -17,8 +17,8 @@
     (GET "/apps/categories" [:as {params :params}]
          (service/success-response (metadactyl/get-app-categories params)))
 
-    (GET "/apps/categories/:app-group-id" [app-group-id :as {params :params}]
-         (apps/apps-in-category app-group-id params))))
+    (GET "/apps/categories/:category-id" [category-id :as {params :params}]
+         (service/success-response (metadactyl/apps-in-category category-id params)))))
 
 (defn admin-category-routes
   []

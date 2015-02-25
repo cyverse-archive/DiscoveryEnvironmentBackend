@@ -1,6 +1,5 @@
 (ns metadactyl.routes.apps.categories
-  (:use [metadactyl.app-listings :only [list-apps-in-group]]
-        [metadactyl.routes.domain.app.category]
+  (:use [metadactyl.routes.domain.app.category]
         [metadactyl.routes.params]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet])
@@ -28,6 +27,6 @@
          clicks on a category in the _Apps_ window.
          This endpoint accepts optional URL query parameters to limit and sort Apps,
          which will allow pagination of results."
-        (ce/trap uri #(list-apps-in-group category-id params)))
+        (ce/trap uri #(apps/list-apps-in-category current-user category-id params)))
 
   (route/not-found (service/unrecognized-path-response)))

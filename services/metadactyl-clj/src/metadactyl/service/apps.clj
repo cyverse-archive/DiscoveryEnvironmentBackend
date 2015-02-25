@@ -70,3 +70,9 @@
   (let [client     (get-apps-client user "type=apps")
         categories (transaction (.listAppCategories client params))]
     (service/success-response {:categories categories})))
+
+(defn list-apps-in-category
+  [user category-id params]
+  (let [state-info (str "type=apps&app-category=" category-id)
+        client     (get-apps-client user state-info)]
+    (service/success-response (.listAppsInCategory client category-id params))))

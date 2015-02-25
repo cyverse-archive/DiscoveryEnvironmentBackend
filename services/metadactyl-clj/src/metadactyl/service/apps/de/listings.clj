@@ -191,7 +191,8 @@
   (let [group-key (keyword (str group-id))]
     (when-let [format-fns (virtual-group-fns group-key)]
       (-> ((:format-group format-fns) user (:id workspace) params)
-          (assoc :apps (map format-app-listing ((:format-listing format-fns) workspace params)))))))
+          (assoc :apps (->> ((:format-listing format-fns) user workspace params)
+                            (map format-app-listing)))))))
 
 (defn- count-apps-in-group
   "Counts the number of apps in an app group, including virtual app groups that may be included."
@@ -205,7 +206,7 @@
   [user {root-group-id :root_category_id :as workspace} {:keys [id]} params]
   (let [faves-index (workspace-favorites-app-group-index)]
     (if (= root-group-id id)
-      (get-apps-in-group-for-user id workspace faves-index params user)
+      (get-apps-in-group-for-user id workspace faves-index params (:email user))
       (get-apps-in-group-for-user id workspace faves-index params))))
 
 (defn- list-apps-in-real-group
@@ -225,10 +226,15 @@
   "This service lists all of the apps in an app group and all of its
    descendents."
   [user app-group-id params]
-  (let [workspace (get-workspace (:username user))]
-    (service/success-response
-     (or (list-apps-in-virtual-group user workspace app-group-id params)
-         (list-apps-in-real-group user workspace app-group-id params)))))
+  (let [workspace (get-optional-workspace (:username user))]
+    (or (list-apps-in-virtual-group user workspace app-group-id params)
+        (list-apps-in-real-group user workspace app-group-id params))))
+
+(defn has-category
+  "Determines whether or not a category with the given ID exists."
+  [category-id]
+  (or (#{my-public-apps-id trash-category-id} category-id)
+      (seq (select :app_categories (where {:id category-id})))))
 
 (defn search-apps
   "This service searches for apps in the user's workspace and all public app
@@ -243,8 +249,8 @@
                         (workspace-favorites-app-group-index)
                         params)
         search_results (map format-app-listing search_results)]
-    (service/success-response {:app_count total
-                               :apps search_results})))
+    {:app_count total
+     :apps search_results}))
 
 (defn- load-app-details
   "Retrieves the details for a single app."
@@ -283,8 +289,7 @@
     (when (empty? tools)
       (throw  (IllegalArgumentException. (str "no tools associated with app, " app-id))))
     (->> (format-app-details details tools)
-         (remove-nil-vals)
-         (service/success-response))))
+         (remove-nil-vals))))
 
 (defn load-app-ids
   "Loads the identifiers for all apps that refer to valid tools from the database."
@@ -305,7 +310,7 @@
 (defn get-all-app-ids
   "This service obtains the identifiers of all apps that refer to valid tools."
   []
-  (service/success-response {:app_ids (load-app-ids)}))
+  {:app_ids (load-app-ids)})
 
 (defn get-app-description
   "This service obtains the description of an app."
@@ -370,7 +375,7 @@
   "A service used to list the file parameters in an app."
   [app-id]
   (let [app (get-app app-id)]
-    (service/success-response (format-app-task-listing app))))
+    (format-app-task-listing app)))
 
 (defn get-app-tool-listing
   "A service to list the tools used by an app."
@@ -380,4 +385,4 @@
                                (with tasks (fields :tool_id))
                                (where {:apps.id app-id}))))
         tool-ids (map :tool_id tasks)]
-    (service/success-response {:tools (get-tools-by-id tool-ids)})))
+    {:tools (get-tools-by-id tool-ids)}))
