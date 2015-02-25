@@ -68,7 +68,7 @@
            :summary "Deletes a container from a tool."
            :notes "Delete a container from a tool. The tool will be assumed to be running in 'compatibility'
            mode."
-           (ce/trap uri (requester tool-id (delete-tool-container tool-id))))
+           (ce/trap uri #(delete-tool-container tool-id)))
 
   (GET* "/tools/:tool-id/container/devices" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -95,6 +95,14 @@
         :summary "Tool Container Device Information"
         :notes "Returns device information for the container associated with a tool."
         (ce/trap uri (requester tool-id (tool-device tool-id device-id))))
+
+  (DELETE* "/tools/:tool-id/container/devices/:device-id" [:as {uri :uri}]
+           :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
+           :query [params SecuredQueryParams]
+           :return nil
+           :summary "Delete a container device"
+           :notes "Deletes a device from the tool's container"
+           (ce/trap uri #(delete-tool-device tool-id device-id)))
   
   (GET* "/tools/:tool-id/container/devices/:device-id/host-path" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
@@ -240,6 +248,14 @@
         :notes "Returns volume information for the container associated with a tool."
         (ce/trap uri (requester tool-id (tool-volume tool-id volume-id))))
 
+  (DELETE* "/tools/:tool-id/container/volumes/:volume-id" [:as {uri :uri}]
+           :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
+           :query [params SecuredQueryParams]
+           :return nil
+           :summary "Delete Tool Container Volume"
+           :notes "Deletes a volume from a tool container."
+           (ce/trap uri #(delete-tool-volume tool-id volume-id)))
+
   (GET* "/tools/:tool-id/container/volumes/:volume-id/host-path" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
         :query [params SecuredQueryParams]
@@ -298,6 +314,14 @@
         :summary "Tool Container Volumes From Information"
         :notes "Returns a list of container names that the container associated with the tool should import volumes from."
         (ce/trap uri (requester tool-id (tool-volumes-from tool-id volumes-from-id))))
+
+  (DELETE* "/tools/:tool-id/container/volumes-from/:volumes-from-id" [:as {uri :uri}]
+           :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
+           :query [params SecuredQueryParams]
+           :return nil
+           :summary "Delete Tool Container Volumes From Information"
+           :notes "Deletes a container name that the tool container should import volumes from."
+           (ce/trap uri #(delete-tool-volumes-from tool-id volumes-from-id)))
 
   (GET* "/tools/:tool-id/container/volumes-from/:volumes-from-id/name" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]

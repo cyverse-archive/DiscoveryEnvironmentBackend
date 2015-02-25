@@ -150,9 +150,9 @@
   (describe
    (merge
     Settings
-    {:container_devices      [Device]
-     :container_volumes      [Volume]
-     :container_volumes_from [VolumesFrom]})
+    {(s/optional-key :container_devices)      [Device]
+     (s/optional-key :container_volumes)      [Volume]
+     (s/optional-key :container_volumes_from) [VolumesFrom]})
    "Bare minimum map containing all of the container settings."))
 
 (s/defschema ToolContainer

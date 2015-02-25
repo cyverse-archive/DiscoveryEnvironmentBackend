@@ -371,6 +371,16 @@
   [tool-uuid]
   (first (select container-settings (where {:tools_id (uuidify tool-uuid)}))))
 
+(defn filter-nils
+  [retval]
+  (select-keys
+   retval
+   (for [[k v] retval
+         :when (and (not (nil? v))
+                    (not (and (or (seq? v) (vector? v))
+                              (empty? v))))]
+     k)))
+
 (defn tool-container-info
   "Returns container info associated with a tool or nil"
   [tool-uuid]
@@ -386,7 +396,8 @@
                          (fields :name :id))
                    (where {:tools_id id}))
            first
-           (merge {:image (tool-image-info tool-uuid)})))))
+           (merge {:image (tool-image-info tool-uuid)})
+           filter-nils))))
 
 (defn update-settings-field
   [tool-uuid field-kw new-value]
@@ -530,6 +541,7 @@
         vfs      (map :name (:container_volumes_from info-map))
         settings (dissoc info-map :container_devices :container_volumes :container_volumes_from)
         info-map (assoc info-map :tools_id (uuidify tool-uuid))]
+    (log/warn "adding container information for tool" tool-uuid ":" info-map)
     (transaction
      (let [settings-map  (add-settings info-map)
            settings-uuid (:id settings-map)]
@@ -545,4 +557,33 @@
   [tool-uuid]
   (when (tool-has-settings? tool-uuid)
     (let [settings-id (tool-settings-uuid tool-uuid)]
-      (delete-settings settings-id))))
+      (log/warn "deleting container settings for tool" tool-uuid)
+      (delete-settings settings-id)
+      nil)))
+
+(defn delete-tool-device
+  [tool-uuid device-uuid]
+  (when (tool-has-settings? tool-uuid)
+    (let [settings-uuid (tool-settings-uuid tool-uuid)]
+      (when (settings-has-device? settings-uuid device-uuid)
+        (log/warn "deleting device" device-uuid "from tool" tool-uuid)
+        (delete-device device-uuid)
+        nil))))
+
+(defn delete-tool-volume
+  [tool-uuid volume-uuid]
+  (when (tool-has-settings? tool-uuid)
+    (let [settings-uuid (tool-settings-uuid tool-uuid)]
+      (when (settings-has-volume? settings-uuid volume-uuid)
+        (log/warn "deleting volume" volume-uuid "for tool" tool-uuid)
+        (delete-volume volume-uuid)
+        nil))))
+
+(defn delete-tool-volumes-from
+  [tool-uuid vf-uuid]
+  (when (tool-has-settings? tool-uuid)
+    (let [settings-uuid (tool-settings-uuid tool-uuid)]
+      (when (settings-has-volumes-from? settings-uuid vf-uuid)
+        (log/warn "deleting volumes-from" vf-uuid "for tool" tool-uuid)
+        (delete-volumes-from vf-uuid)
+        nil))))
