@@ -12,6 +12,7 @@
 
 (def AppIdPathParam (ss/describe UUID "The App's UUID"))
 (def AppCategoryIdPathParam (ss/describe UUID "The App Category's UUID"))
+(def ApiName (ss/describe String "The name of the external API."))
 
 (def NonBlankString
   (ss/describe
@@ -32,6 +33,11 @@
 (s/defschema SecuredQueryParams
   (-> SecuredQueryParamsEmailRequired
     (->optional-param :email)))
+
+(s/defschema OAuthCallbackQueryParams
+  (assoc SecuredQueryParams
+    :code  (ss/describe NonBlankString "The authorization code used to obtain the access token.")
+    :state (ss/describe NonBlankString "The authorization state information.")))
 
 (s/defschema PagingParams
   {(s/optional-key :limit)

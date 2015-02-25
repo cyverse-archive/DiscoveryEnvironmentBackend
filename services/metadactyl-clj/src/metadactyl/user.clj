@@ -36,4 +36,3 @@
   [handler & [opts]]
   (fn [{uri :uri :as request}]
     (common-errors/trap uri #(with-user [(:params request)] (handler request)))))
-

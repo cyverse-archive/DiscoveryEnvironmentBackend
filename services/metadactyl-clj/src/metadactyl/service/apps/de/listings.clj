@@ -1,4 +1,4 @@
-(ns metadactyl.app-listings
+(ns metadactyl.service.apps.de.listings
   (:use [slingshot.slingshot :only [try+ throw+]]
         [korma.core]
         [kameleon.core]
@@ -9,7 +9,6 @@
         [metadactyl.persistence.app-documentation :only [get-documentation]]
         [metadactyl.persistence.app-metadata :only [get-app get-app-tools]]
         [metadactyl.tools :only [get-tools-by-id]]
-        [metadactyl.user :only [current-user]]
         [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.config]
         [metadactyl.util.conversions :only [to-long remove-nil-vals]]
@@ -22,13 +21,107 @@
 (def my-public-apps-id (uuidify "00000000-0000-0000-0000-000000000000"))
 (def trash-category-id (uuidify "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"))
 
+(defn- add-subgroups
+  [group groups]
+  (let [subgroups (filter #(= (:id group) (:parent_id %)) groups)
+        subgroups (map #(add-subgroups % groups) subgroups)
+        result    (if (empty? subgroups) group (assoc group :categories subgroups))
+        result    (dissoc result :parent_id :workspace_id :description)]
+    result))
+
 (defn format-trash-category
   "Formats the virtual group for the admin's deleted and orphaned apps category."
-  [workspace-id params]
+  [user workspace-id params]
   {:id         trash-category-id
    :name       "Trash"
    :is_public  true
    :app_count  (count-deleted-and-orphaned-apps)})
+
+(defn list-trashed-apps
+  "Lists the public, deleted apps and orphaned apps."
+  [user workspace params]
+  (list-deleted-and-orphaned-apps params))
+
+(defn- format-my-public-apps-group
+  "Formats the virtual group for the user's public apps."
+  [user workspace-id params]
+  {:id        my-public-apps-id
+   :name      "My public apps"
+   :is_public false
+   :app_count (count-public-apps-by-user (:email user) params)})
+
+(defn list-my-public-apps
+  "Lists the public apps belonging to the user with the given workspace."
+  [user workspace params]
+  (list-public-apps-by-user
+   workspace
+   (workspace-favorites-app-group-index)
+   (:email user)
+   params))
+
+(def ^:private virtual-group-fns
+  {(keyword (str my-public-apps-id)) {:format-group   format-my-public-apps-group
+                                      :format-listing list-my-public-apps}
+   (keyword (str trash-category-id)) {:format-group   format-trash-category
+                                      :format-listing list-trashed-apps}})
+
+(defn- format-private-virtual-groups
+  "Formats any virtual groups that should appear in a user's workspace."
+  [user workspace-id params]
+  (remove :is_public
+    (map (fn [[_ {f :format-group}]] (f user workspace-id params)) virtual-group-fns)))
+
+(defn- add-private-virtual-groups
+  [user group workspace-id params]
+  (let [virtual-groups (format-private-virtual-groups user workspace-id params)
+        actual-count   (count-apps-in-group-for-user
+                        (:id group)
+                        (:email user)
+                        params)]
+    (-> group
+        (update-in [:categories] concat virtual-groups)
+        (assoc :app_count actual-count))))
+
+(defn- format-app-group-hierarchy
+  "Formats the app group hierarchy rooted at the app group with the given
+   identifier."
+  [user user-workspace-id params {root-id :root_category_id workspace-id :id}]
+  (let [groups (get-app-group-hierarchy root-id params)
+        root   (first (filter #(= root-id (:id %)) groups))
+        result (add-subgroups root groups)]
+    (if (= user-workspace-id workspace-id)
+      (add-private-virtual-groups user result workspace-id params)
+      result)))
+
+(defn get-workspace-app-groups
+  "Retrieves the list of the current user's workspace app groups."
+  [user params]
+  (let [workspace (get-workspace (:username user))
+        workspace-id (:id workspace)]
+    [(format-app-group-hierarchy user workspace-id params workspace)]))
+
+(defn get-visible-app-groups-for-workspace
+  "Retrieves the list of app groups that."
+  [workspace-id user params]
+  (let [workspaces (get-visible-workspaces workspace-id)]
+    (map (partial format-app-group-hierarchy user workspace-id params) workspaces)))
+
+(defn get-visible-app-groups
+  "Retrieves the list of app groups that are visible to a user."
+  [user params]
+  (-> (get-optional-workspace (:username user))
+      (:id)
+      (get-visible-app-groups-for-workspace user params)))
+
+(defn get-app-groups
+  "Retrieves the list of app groups that are visible to all users, the current user's app groups, or
+   both, depending on the :public param."
+  [user {:keys [public] :as params}]
+  (if (contains? params :public)
+    (if-not public
+      (get-workspace-app-groups user params)
+      (get-visible-app-groups-for-workspace nil params))
+    (get-visible-app-groups user params)))
 
 (defn- validate-app-pipeline-eligibility
   "Validates an App for pipeline eligibility, throwing a slingshot stone ."
@@ -92,12 +185,63 @@
       (assoc :can_favor true :can_rate true :app_type "DE")
       (remove-nil-vals)))
 
+(defn- list-apps-in-virtual-group
+  "Formats a listing for a virtual group."
+  [user workspace group-id params]
+  (let [group-key (keyword (str group-id))]
+    (when-let [format-fns (virtual-group-fns group-key)]
+      (-> ((:format-group format-fns) user (:id workspace) params)
+          (assoc :apps (->> ((:format-listing format-fns) user workspace params)
+                            (map format-app-listing)))))))
+
+(defn- count-apps-in-group
+  "Counts the number of apps in an app group, including virtual app groups that may be included."
+  [user {root-group-id :root_category_id} {:keys [id] :as app-group} params]
+  (if (= root-group-id id)
+    (count-apps-in-group-for-user id (:email user) params)
+    (count-apps-in-group-for-user id params)))
+
+(defn- get-apps-in-group
+  "Gets the apps in an app group, including virtual app groups that may be included."
+  [user {root-group-id :root_category_id :as workspace} {:keys [id]} params]
+  (let [faves-index (workspace-favorites-app-group-index)]
+    (if (= root-group-id id)
+      (get-apps-in-group-for-user id workspace faves-index params (:email user))
+      (get-apps-in-group-for-user id workspace faves-index params))))
+
+(defn- list-apps-in-real-group
+  "This service lists all of the apps in a real app group and all of its descendents."
+  [user workspace category-id params]
+  (let [app_group      (->> (get-app-category category-id)
+                            (assert-not-nil [:category_id category-id])
+                            remove-nil-vals)
+        total          (count-apps-in-group user workspace app_group params)
+        apps_in_group  (get-apps-in-group user workspace app_group params)
+        apps_in_group  (map format-app-listing apps_in_group)]
+    (assoc app_group
+      :app_count total
+      :apps apps_in_group)))
+
+(defn list-apps-in-group
+  "This service lists all of the apps in an app group and all of its
+   descendents."
+  [user app-group-id params]
+  (let [workspace (get-optional-workspace (:username user))]
+    (or (list-apps-in-virtual-group user workspace app-group-id params)
+        (list-apps-in-real-group user workspace app-group-id params))))
+
+(defn has-category
+  "Determines whether or not a category with the given ID exists."
+  [category-id]
+  (or (#{my-public-apps-id trash-category-id} category-id)
+      (seq (select :app_categories (where {:id category-id})))))
+
 (defn search-apps
   "This service searches for apps in the user's workspace and all public app
    groups, based on a search term."
-  [params]
+  [user params]
   (let [search_term (curl/url-decode (:search params))
-        workspace (get-workspace)
+        workspace (get-workspace (:username user))
         total (count-search-apps-for-user search_term (:id workspace) params)
         search_results (search-apps-for-user
                         search_term
@@ -105,8 +249,8 @@
                         (workspace-favorites-app-group-index)
                         params)
         search_results (map format-app-listing search_results)]
-    (service/success-response {:app_count total
-                               :apps search_results})))
+    {:app_count total
+     :apps search_results}))
 
 (defn- load-app-details
   "Retrieves the details for a single app."
@@ -145,8 +289,7 @@
     (when (empty? tools)
       (throw  (IllegalArgumentException. (str "no tools associated with app, " app-id))))
     (->> (format-app-details details tools)
-         (remove-nil-vals)
-         (service/success-response))))
+         (remove-nil-vals))))
 
 (defn load-app-ids
   "Loads the identifiers for all apps that refer to valid tools from the database."
@@ -167,7 +310,7 @@
 (defn get-all-app-ids
   "This service obtains the identifiers of all apps that refer to valid tools."
   []
-  (service/success-response {:app_ids (load-app-ids)}))
+  {:app_ids (load-app-ids)})
 
 (defn get-app-description
   "This service obtains the description of an app."
@@ -232,7 +375,7 @@
   "A service used to list the file parameters in an app."
   [app-id]
   (let [app (get-app app-id)]
-    (service/success-response (format-app-task-listing app))))
+    (format-app-task-listing app)))
 
 (defn get-app-tool-listing
   "A service to list the tools used by an app."
@@ -242,4 +385,4 @@
                                (with tasks (fields :tool_id))
                                (where {:apps.id app-id}))))
         tool-ids (map :tool_id tasks)]
-    (service/success-response {:tools (get-tools-by-id tool-ids)})))
+    {:tools (get-tools-by-id tool-ids)}))

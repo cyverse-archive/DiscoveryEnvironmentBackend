@@ -10,9 +10,7 @@
                                     get-app-category
                                     update-app-category]]
         [kameleon.uuids :only [uuidify]]
-        [metadactyl.app-listings :only [get-visible-app-groups
-                                        format-trash-category
-                                        list-apps-in-group]]
+        [metadactyl.app-listings :only [format-trash-category]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.config :only [workspace-public-id]]
@@ -20,7 +18,8 @@
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as ce]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [metadactyl.service.apps :as apps]))
 
 (def ^:private max-app-category-name-len 255)
 
@@ -102,7 +101,7 @@
   (transaction
     (let [category-id (:id (create-app-group (uuidify (workspace-public-id)) category))]
       (add-subgroup parent_id category-id)
-      (list-apps-in-group category-id {}))))
+      (apps/list-apps-in-category nil category-id {}))))
 
 (defn delete-category
   "Deletes an App Category and all of its children, as long as they do not contain any Apps."
@@ -130,11 +129,11 @@
         (decategorize-category category-id)
         (validate-category-not-ancestor-of-parent category-id parent_id)
         (add-subgroup parent_id category-id))
-      (list-apps-in-group category-id {}))))
+      (apps/list-apps-in-category nil category-id {}))))
 
 (defn get-admin-app-categories
   "Lists public App Categories with the Trash Category"
   [params]
-  (-> (get-visible-app-groups nil params)
+  (-> (apps/get-app-categories nil params)
       (update-in [:categories] concat [(format-trash-category nil params)])
       success-response))

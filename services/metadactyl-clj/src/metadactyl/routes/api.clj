@@ -7,6 +7,7 @@
         [metadactyl.routes.domain.app.category]
         [metadactyl.routes.domain.app.element]
         [metadactyl.routes.domain.app.rating]
+        [metadactyl.routes.domain.oauth]
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.domain.tool]
@@ -23,6 +24,7 @@
             [metadactyl.routes.apps.categories :as app-category-routes]
             [metadactyl.routes.apps.elements :as app-element-routes]
             [metadactyl.routes.apps.pipelines :as pipeline-routes]
+            [metadactyl.routes.oauth :as oauth-routes]
             [metadactyl.routes.reference-genomes :as reference-genome-routes]
             [metadactyl.routes.tools :as tool-routes]))
 
@@ -61,6 +63,9 @@
     (swaggered "reference-genomes"
       :description "Reference Genome endpoints."
       (context "/reference-genomes" [] reference-genome-routes/reference-genomes))
+    (swaggered "oauth-routes"
+      :description "OAuth callback routes."
+      (context "/oauth" [] oauth-routes/oauth))
     (swaggered "admin-apps"
       :description "Admin App endpoints."
       (context "/admin/apps" [] admin-routes/admin-apps))

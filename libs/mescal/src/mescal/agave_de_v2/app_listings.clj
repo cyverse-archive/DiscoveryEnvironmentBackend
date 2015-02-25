@@ -30,14 +30,12 @@
             :description          (:shortDescription listing)
             :disabled             (not (and jobs-enabled? (= "UP" (statuses system))))
             :edited_date          mod-time
-            :group_id             c/hpc-group-id
-            :group_name           c/hpc-group-name
             :integration_date     mod-time
             :integrator_email     c/unknown-value
             :integrator_name      c/unknown-value
             :is_favorite          false
             :is_public            (:isPublic listing)
-            :pipeline_eligibility {:is_valid true}
+            :pipeline_eligibility {:is_valid true :reason ""}
             :rating               {:average 0.0 :total 0}
             :step_count           1
             :wiki_url             ""))))

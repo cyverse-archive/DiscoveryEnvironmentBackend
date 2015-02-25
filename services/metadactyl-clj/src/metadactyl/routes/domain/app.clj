@@ -292,7 +292,10 @@
 
 (defschema AppListingDetail
   (merge AppBase
-    {:app_type
+    {:id
+     (describe UUID "The app ID.")
+
+     :app_type
      (describe String "The type ID of the App")
 
      :can_favor
