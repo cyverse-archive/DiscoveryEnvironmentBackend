@@ -34,6 +34,9 @@
 
 (def remove-nil-vals (partial remove-vals nil?))
 
+(def remove-empty-vals
+  (partial remove-vals #(and (sequential? %1) (empty? %1))))
+
 (defn convert-rule-argument
   [arg]
   (let [arg (string/trim arg)]

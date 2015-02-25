@@ -8,7 +8,8 @@
                                   container-volumes-from]]
         [kameleon.uuids :only [uuidify]]
         [korma.core]
-        [korma.db :only [transaction]])
+        [korma.db :only [transaction]]
+        [metadactyl.util.conversions :only [remove-nil-vals remove-empty-vals]])
   (:require [clojure.tools.logging :as log]))
 
 (defn containerized?
@@ -371,15 +372,9 @@
   [tool-uuid]
   (first (select container-settings (where {:tools_id (uuidify tool-uuid)}))))
 
-(defn filter-nils
+(defn filter-returns
   [retval]
-  (select-keys
-   retval
-   (for [[k v] retval
-         :when (and (not (nil? v))
-                    (not (and (or (seq? v) (vector? v))
-                              (empty? v))))]
-     k)))
+  (-> retval remove-nil-vals remove-empty-vals))
 
 (defn tool-container-info
   "Returns container info associated with a tool or nil"
@@ -397,7 +392,7 @@
                    (where {:tools_id id}))
            first
            (merge {:image (tool-image-info tool-uuid)})
-           filter-nils))))
+           filter-returns))))
 
 (defn update-settings-field
   [tool-uuid field-kw new-value]
