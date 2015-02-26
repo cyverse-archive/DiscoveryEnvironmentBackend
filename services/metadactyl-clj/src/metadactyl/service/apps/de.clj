@@ -11,4 +11,7 @@
     (listings/has-category category-id))
 
   (listAppsInCategory [_ category-id params]
-    (listings/list-apps-in-group user category-id params)))
+    (listings/list-apps-in-group user category-id params))
+
+  (searchApps [_ _ params]
+    (listings/search-apps user params)))

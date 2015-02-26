@@ -75,3 +75,7 @@
   (let [state-info (str "type=apps&app-category=" category-id)
         client     (get-apps-client user state-info)]
     (.listAppsInCategory client category-id params)))
+
+(defn search-apps
+  [user {:keys [search] :as params}]
+  (.searchApps (get-apps-client user "") search params))

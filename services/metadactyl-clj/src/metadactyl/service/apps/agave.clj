@@ -14,4 +14,8 @@
 
   (listAppsInCategory [_ category-id params]
     (when (= category-id (uuidify (:id (.hpcAppGroup agave))))
-      (listings/list-apps agave category-id params))))
+      (listings/list-apps agave category-id params)))
+
+  (searchApps [_ search-term params]
+    (when (user-has-access-token?)
+      (listings/search-apps agave search-term params))))
