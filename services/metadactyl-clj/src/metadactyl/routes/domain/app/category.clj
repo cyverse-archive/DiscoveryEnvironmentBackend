@@ -41,9 +41,13 @@
 (defschema AppCategoryIdList
   {:category_ids (describe [UUID] "A List of UUIDs used to identify App Categories")})
 
+(defschema AppCategoryListingDetail
+  (assoc AppListingDetail
+    :id (describe String "The app ID.")))
+
 (defschema AppCategoryAppListing
   (merge (dissoc AppCategory :categories)
-         {:apps (describe [AppListingDetail] "A listing of Apps under this Category")}))
+         {:apps (describe [AppCategoryListingDetail] "A listing of Apps under this Category")}))
 
 (defschema AppCategorization
   (merge AppCategoryIdList
