@@ -148,12 +148,6 @@
 (deftype DeOnlyAppLister []
   AppLister
 
-  (listAppGroups [_ params]
-    (metadactyl/get-app-categories params))
-
-  (listApps [_ category-id params]
-    (metadactyl/apps-in-category category-id params))
-
   (searchApps [_ search-term]
     (metadactyl/search-apps search-term))
 
@@ -241,17 +235,6 @@
 
 (deftype DeHpcAppLister [agave-client user-has-access-token?]
   AppLister
-
-  (listAppGroups [_ {hpc :hpc :as params}]
-    (let [categories (metadactyl/get-app-categories params)]
-      (if (and hpc (.equalsIgnoreCase hpc "false"))
-        categories
-        (update-in categories [:categories] conj (.hpcAppGroup agave-client)))))
-
-  (listApps [_ category-id params]
-    (if (= category-id (:id (.hpcAppGroup agave-client)))
-      (aa/list-apps agave-client category-id params)
-      (metadactyl/apps-in-category category-id params)))
 
   (searchApps [_ search-term]
     (let [def-result {:app_count 0 :apps {}}
@@ -419,20 +402,6 @@
      (if (config/agave-enabled)
        (get-de-hpc-app-lister state-info username)
        (DeOnlyAppLister.))))
-
-(defn get-app-categories
-  [params]
-  (with-db db/de
-    (transaction
-     (service/success-response (.listAppGroups (get-app-lister "type=apps") params)))))
-
-(defn apps-in-category
-  [category-id params]
-  (with-db db/de
-    (transaction
-     (-> (get-app-lister (str "type=apps&app-category=" category-id))
-         (.listApps category-id params)
-         (service/success-response)))))
 
 (defn search-apps
   [{search-term :search}]
