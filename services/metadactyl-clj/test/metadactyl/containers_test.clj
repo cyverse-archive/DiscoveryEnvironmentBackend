@@ -70,7 +70,7 @@
 
   (is (settings-has-device? (:id settings-map) (:id devices-map))))
 
-(def volume-map (add-volume (:id settings-map) "/tmp" "/foo"))
+(def volume-map (add-volume (:id settings-map) {:host_path "/tmp" :container_path "/foo"}))
 
 (deftest volumes-tests []
   (is (not (nil? (:id volume-map))))
