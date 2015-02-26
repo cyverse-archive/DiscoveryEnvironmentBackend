@@ -29,41 +29,17 @@
 
 (defn get-app-categories
   [params]
-  (-> (client/get (metadactyl-url "apps" "categories")
-                  {:query-params (secured-params (select-keys params [:public]))
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn- apps-in-real-category
-  [category-id params]
-  (-> (client/get (metadactyl-url "apps" "categories" category-id)
-                  {:query-params (secured-params (select-keys params metadactyl-sort-params))
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn- virtual-category-params
-  [category-id]
-  (condp = category-id
-    "my-public-apps" {:integrator_email (:email current-user)
-                      :is_public        true}
-    (service/bad-request (str "unrecognized virtual app category: " category-id))))
-
-(defn- add-virtual-category-params
-  [params category-id]
-  (merge (secured-params params) (virtual-category-params category-id)))
-
-(defn- apps-in-virtual-category
-  [category-id params]
-  (-> (client/get (metadactyl-url "apps")
-                  {:query-params (add-virtual-category-params params category-id)})))
+  (client/get (metadactyl-url "apps" "categories")
+              {:query-params     (secured-params (select-keys params [:public]))
+               :as               :stream
+               :follow-redirects false}))
 
 (defn apps-in-category
-  [category-id & [params]]
-  (if (util/is-uuid? category-id)
-    (apps-in-real-category category-id params)
-    (apps-in-virtual-category category-id params)))
+  [category-id params]
+  (client/get (metadactyl-url "apps" "categories" category-id)
+              {:query-params     (secured-params (select-keys params metadactyl-sort-params))
+               :as               :stream
+               :follow-redirects false}))
 
 (defn search-apps
   [search-term]

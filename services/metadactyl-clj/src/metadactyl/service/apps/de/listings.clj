@@ -120,7 +120,7 @@
   (if (contains? params :public)
     (if-not public
       (get-workspace-app-groups user params)
-      (get-visible-app-groups-for-workspace nil params))
+      (get-visible-app-groups-for-workspace nil user params))
     (get-visible-app-groups user params)))
 
 (defn- validate-app-pipeline-eligibility
