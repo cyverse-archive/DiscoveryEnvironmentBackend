@@ -236,12 +236,6 @@
     (delete container-volumes (where {:id (uuidify volume-uuid)}))))
 
 (defn volumes-from
-  "Returns all of the records from the container_volumes_from table that are associated
-   with the given container_settings UUID."
-  [settings-uuid]
-  (select container-volumes-from (where {:container_settings_id (uuidify settings-uuid)})))
-
-(defn volumes-from
   "Returns all records from container_volumes_from associated with the UUID passed in. There
    should only be a single result, but we're returning a seq just in case."
   [volumes-from-uuid]
