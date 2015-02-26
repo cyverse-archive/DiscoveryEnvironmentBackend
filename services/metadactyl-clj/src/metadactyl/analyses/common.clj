@@ -8,7 +8,8 @@
         [metadactyl.util.conversions :only [remove-nil-vals]])
   (:require [clojure.string :as string]
             [metadactyl.analyses.params :as params]
-            [metadactyl.analyses.util :as util]))
+            [metadactyl.analyses.util :as util]
+            [metadactyl.containers :as c]))
 
 (defn- format-io-map
   [mapping]
@@ -48,15 +49,24 @@
        (mapcat (partial build-environment-entries config default-values))
        (into {})))
 
+(defn- add-container-info
+  [{tool-id :id :as component}]
+  (dissoc
+   (if (c/tool-has-settings? tool-id)
+     (assoc component :container (c/tool-container-info tool-id))
+     component)
+   :id))
+
 (defn- load-step-component
   [task-id]
   (-> (select* :tasks)
       (join :tools {:tasks.tool_id :tools.id})
       (join :tool_types {:tools.tool_type_id :tool_types.id})
-      (fields :tools.description :tools.location :tools.name [:tool_types.name :type])
+      (fields :tools.description :tools.location :tools.name [:tool_types.name :type] :tools.id)
       (where {:tasks.id task-id})
       (select)
       (first)
+      (add-container-info)
       (remove-nil-vals)))
 
 (defn build-component
@@ -69,13 +79,13 @@
         stdout  (:stdout config)
         stderr  (:stderr config)]
     (conj steps
-      (remove-nil-vals
-        {:component   (.buildComponent request-builder step)
-         :environment (.buildEnvironment request-builder step)
-         :config      (dissoc config :stdout :stderr)
-         :stdout      stdout
-         :stderr      stderr
-         :type        "condor"}))))
+          (remove-nil-vals
+           {:component   (.buildComponent request-builder step)
+            :environment (.buildEnvironment request-builder step)
+            :config      (dissoc config :stdout :stderr)
+            :stdout      stdout
+            :stderr      stderr
+            :type        "condor"}))))
 
 (defn load-steps
   [app-id]

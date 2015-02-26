@@ -1,6 +1,7 @@
 (ns metadactyl.routes.domain.analysis
   (:use [ring.swagger.schema :only [describe]]
-        [schema.core :only [defschema optional-key Any Bool]])
+        [schema.core :only [defschema optional-key Any Bool]]
+        [metadactyl.schema.containers :only [ToolContainer]])
   (:import [java.util UUID]))
 
 (defschema FileMetadata
@@ -58,6 +59,9 @@
   {(optional-key :description)
    (describe String "A brief description of the component.")
 
+   (optional-key :container)
+   ToolContainer
+   
    :location
    (describe String "The path to the directory containing the component.")
 
