@@ -90,14 +90,14 @@
   "Loads a properties file into a map, turning the keys into keywords."
   [cfg-path]
   (let [p (Properties.)]
-    (with-open [r (reader (fs/normalized-path (fs/expand-home cfg-path)))]
+    (with-open [r (reader (fs/normalized (fs/expand-home cfg-path)))]
       (.load p r)
       (into {} (map #(vector (keyword (first %1)) (second %1)) 
                     (into {} (seq p)))))))
 
 (defn load-edn
   [cfg-path]
-  (edn/read-string (slurp (fs/normalized-path (fs/expand-home cfg-path)))))
+  (edn/read-string (slurp (fs/normalized (fs/expand-home cfg-path)))))
 
 (defn load-cfg-file
   [cfg-path]

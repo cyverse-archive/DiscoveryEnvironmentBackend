@@ -3,8 +3,8 @@
   :url "http://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend/"
   :license {:name "BSD"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [com.taoensso/timbre "3.1.6"]
+                 [com.taoensso/timbre "3.4.0"]
                  [filevents "0.1.0"]
-                 [bouncer "0.3.1-beta1"]
-                 [medley "0.1.5"]
-                 [me.raynes/fs "1.4.4"]])
+                 [bouncer "0.3.2"]
+                 [medley "0.5.5"]
+                 [me.raynes/fs "1.4.6"]])
