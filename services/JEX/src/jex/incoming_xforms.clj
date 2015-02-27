@@ -1,8 +1,10 @@
 (ns jex.incoming-xforms
   (:require [clojure.string :as string]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [clojure-commons.file-utils :as ut]
             [jex.config :as cfg]))
+
+(log/refer-timbre)
 
 (def replacer
   "Params: [regex replace-str str-to-modify]."
@@ -199,20 +201,143 @@
       #(str (name (first %1)) "=" (str "\"" (last %1) "\""))
       (seq env-map))))
 
+(defn containerized?
+  "Returns true if the step should run in a container."
+  [step-map]
+  (contains? (:component step-map) :container))
+
+(defn container-info
+  "Returns a map of the container information extracted from the step map."
+  [step-map]
+  (get-in step-map [:component :container]))
+
+(defn container-volumes?
+  "Returns true if the container has volumes defined."
+  [container-map]
+  (contains? container-map :container_volumes))
+
+(defn container-devices?
+  "Returns true if the container has devices defined."
+  [container-map]
+  (contains? container-map :container_devices))
+
+(defn container-volumes-from?
+  "Returns true if the container imports volumes from another container."
+  [container-map]
+  (contains? container-map :container_volumes_from))
+
+(defn container-working-directory
+  [container-map]
+  (if (contains? container-map :working_directory)
+    (:working_directory container-map)
+    "/de-app-work"))
+
+(defn container-working-directory-arg
+  [container-map]
+  (let [wd (container-working-directory container-map)]
+    (str "-w " wd)))
+
+(defn container-volume-args
+  [container-map]
+  (str "-v $(pwd):" (container-working-directory container-map) " "
+       (if (container-volumes? container-map)
+         (string/join " " (map
+                           (fn [volume]
+                             (str "-v " (:host_path volume) ":" (:container_path volume)))
+                           (:container_volumes container-map)))
+         "")))
+
+(defn container-device-args
+  [container-map]
+  (if (container-devices? container-map)
+    (string/join " " (map
+                      (fn [device]
+                        (str "--device=" (:host_path device) ":" (:container_path device)))
+                      (:container_devices container-map)))))
+
+(defn container-volumes-from-args
+  [container-map]
+  (if (container-volumes-from? container-map)
+    (string/join " " (map
+                      (fn [vf]
+                        (str "--volumes-from=" (:name vf)))
+                      (:container_volumes_from container-map)))))
+
+(defn container-name-arg
+  [container-map]
+  (if (contains? container-map :name)
+    (str "--name " (:name container-map))))
+
+(defn container-network-mode-arg
+  [container-map]
+  (if (contains? container-map :network_mode)
+    (str "--net=" (:network_mode container-map))))
+
+(defn container-cpu-shares-arg
+  [container-map]
+  (if (contains? container-map :cpu_shares)
+    (str "--cpu-shares=" (:cpu_shares container-map))))
+
+(defn container-memory-limit-arg
+  [container-map]
+  (if (contains? container-map :memory_limit)
+    (str "--memory=" (:memory_limit container-map) "b")))
+
+(defn container-image-arg
+  [container-map]
+  (let [image (:image container-map)
+        tag   (if (contains? image :tag) (str ":" (:tag image)) "")]
+    (str (:name image) tag)))
+
+(defn container-env-args
+  [step-map]
+  (if (contains? step-map :environment)
+    (string/join " " (map
+                      (fn [[k v]]
+                        (str "--env=\"" k "=" v "\""))
+                      (seq (:environment step-map))))))
+
+(defn container-args
+  [step-map]
+  (let [container-map (container-info step-map)]
+    (string/join
+     " "
+     (filter
+      (comp not nil?)
+      ["run -it"
+       (container-volume-args container-map)
+       (container-device-args container-map)
+       (container-volumes-from-args container-map)
+       (container-name-arg container-map)
+       (container-working-directory-arg container-map)
+       (container-name-arg container-map)
+       (container-memory-limit-arg container-map)
+       (container-cpu-shares-arg container-map)
+       (container-network-mode-arg container-map)
+       (container-env-args step-map)
+       (container-image-arg container-map)
+       (get-in step-map [:component :name])]))))
+
 (defn executable
   "Takes in a step map and returns the executable path. This will be the full
    path to the executable since they're the same across all of the Condor
    nodes."
   [step-map]
-  (ut/path-join
-   (get-in step-map [:component :location])
-   (get-in step-map [:component :name])))
+  (if (containerized? step-map)
+    "docker"
+    (ut/path-join
+     (get-in step-map [:component :location])
+     (get-in step-map [:component :name]))))
 
 (defn arguments
   "Takes in a step map map and returns the formatted arguments
    for that step in the analysis."
   [step-map]
-  (-> (get-in step-map [:config :params]) param-maps escape-params))
+  (let [cmd (-> (get-in step-map [:config :params]) param-maps escape-params)
+        exe (get-in step-map [:component :name])]
+    (if (containerized? step-map)
+      (str (container-args step-map) " " cmd)
+      cmd)))
 
 (defn stdin
   "Returns the path to the stdin file or nil if there isn't one. This should
@@ -248,8 +373,8 @@
    in the analysis. "
   [step-map]
   (if (contains? step-map :environment)
-    (format-env-variables (:environment step-map))
-    nil))
+    (if-not (containerized? step-map)
+      (format-env-variables (:environment step-map)))))
 
 (defn log-file
   "Returns the path to the condor log files."

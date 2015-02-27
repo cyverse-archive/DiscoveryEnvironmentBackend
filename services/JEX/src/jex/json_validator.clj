@@ -1,6 +1,5 @@
 (ns jex.json-validator
   (:require [cheshire.core :as cheshire]
-            [clojure.tools.logging :as log]
             [clojure.string :as string]
             [clojure.set :as set])
   (:use [clojure.test :only (function?)]))

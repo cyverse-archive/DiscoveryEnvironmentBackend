@@ -3,7 +3,9 @@
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
-            [clojure.tools.logging :as log]))
+            [taoensso.timbre :as log]))
+
+(log/refer-timbre)
 
 (defn- json-body?
   [request]

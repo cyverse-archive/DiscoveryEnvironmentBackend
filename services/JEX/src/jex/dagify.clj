@@ -1,9 +1,11 @@
 (ns jex.dagify
   (:use [clojure-commons.file-utils :as ut]
-        [clojure.string :only (join split trim blank?)]
-        [clojure.tools.logging :as log])
-  (:require [jex.config :as cfg])
+        [clojure.string :only (join split trim blank?)])
+  (:require [jex.config :as cfg]
+            [taoensso.timbre :as log])
   (:import [java.io File]))
+
+(log/refer-timbre)
 
 (defn irods-config
   []

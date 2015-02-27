@@ -14,17 +14,17 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "jex-standalone.jar"
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/tools.logging "0.2.3"]
-                 [org.clojure/java.classpath "0.1.0"]
-                 [cheshire "5.0.1"]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [com.taoensso/timbre "3.4.0"]
+                 [org.clojure/java.classpath "0.2.2"]
+                 [cheshire "5.4.0"]
                  [com.cemerick/url "0.1.1"]
-                 [compojure "1.0.1"]
-                 [ring/ring-jetty-adapter "1.0.1"]
+                 [compojure "1.3.2"]
+                 [ring/ring-jetty-adapter "1.3.2"]
                  [org.iplantc/clojure-commons "4.1.8"]
-                 [slingshot "0.10.3"]
-                 [me.raynes/fs "1.4.4"]
-                 [org.iplantc/common-cli "4.1.8"]]
+                 [slingshot "0.12.2"]
+                 [org.iplantc/common-cli "4.1.8"]
+                 [org.iplantc/common-cfg "4.1.8"]]
   :plugins [[org.iplantc/lein-iplant-rpm "4.1.8"]
             [lein-midje "3.1.1"]]
   :iplant-rpm {:summary "jex",
@@ -34,7 +34,7 @@
                :config-files ["log4j.properties"],
                :config-path "conf"
                :working-dir "pushd /var/lib/condor > /dev/null"}
-  :profiles {:dev {:dependencies [[midje "1.6.0"]]}}
+  :profiles {:dev {:dependencies [[midje "1.6.3"]]}}
   :aot [jex.core]
   :main jex.core
   :min-lein-version "2.0.0"

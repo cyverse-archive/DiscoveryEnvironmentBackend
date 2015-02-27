@@ -1,130 +1,139 @@
 (ns jex.config
-  (:use [clojure-commons.props]
-        [slingshot.slingshot :only [try+ throw+]])
-  (:require [clojure-commons.config :as cc]
-            [clojure-commons.error-codes :as ce]
-            [clojure.tools.logging :as log]))
+  (:require [bouncer [core :as b] [validators :as v]]
+            [common-cfg.cfg :as cfg]))
 
-(def ^:private props
-  "A ref for storing the configuration properties."
-  (ref nil))
+(dosync
+ (ref-set
+  cfg/validators
+  {:jar-path        [v/required cfg/stringv]
+   :nfs-base        [v/required cfg/stringv]
+   :irods-base      [v/required cfg/stringv]
+   :irods-user      [v/required cfg/stringv]
+   :irods-pass      [v/required cfg/stringv]
+   :irods-host      [v/required cfg/stringv]
+   :irods-port      [v/required cfg/stringv]
+   :irods-zone      [v/required cfg/stringv]
+   :irods-resc      cfg/stringv
+   :icommands-path  [v/required cfg/stringv]
+   :condor-log-path [v/required cfg/stringv]
+   :listen-port     [v/required cfg/stringv]
+   :filter-files    [v/required cfg/stringv]
+   :run-on-nfs      [v/required cfg/stringv]
+   :condor-config   [v/required cfg/stringv]
+   :path            [v/required cfg/stringv]
+   :request-disk    [v/required cfg/stringv]
+   :jex-events      [v/required cfg/stringv]
+   :log-file        cfg/stringv
+   :log-size        cfg/stringv
+   :log-backlog     cfg/stringv
+   :log-level       cfg/stringv})
 
-(def ^:private config-valid
-  "A ref for storing a configuration validity flag."
-  (ref true))
+ (ref-set
+  cfg/defaults
+  {:log-level   :info
+   :log-size    (* 100 1024  1024)
+   :log-backlog 10})
 
-(def ^:private configs
-  "A ref for storing the symbols used to get configuration settings."
-  (ref []))
+ (ref-set
+  cfg/filters
+  #{:irods-password}))
 
-(cc/defprop-str jar-path
+(defn jar-path
   "Returns the path to porklock on the filesystem out on the Condor cluster."
-  [props config-valid configs]
-  "jex.app.jar-path")
+  []
+  (:jar-path @cfg/cfg))
 
-(cc/defprop-str nfs-base
+(defn nfs-base
   "Returns the path to the NFS directory on the submission host."
-  [props config-valid configs]
-  "jex.app.nfs-base")
+  []
+  (:nfs-base @cfg/cfg))
 
-(cc/defprop-str irods-base
+(defn irods-base
   "Returns the path to the home directory in iRODS. Usually /iplant/home"
-  [props config-valid configs]
-  "jex.app.irods-base")
+  []
+  (:irods-base @cfg/cfg))
 
-(cc/defprop-str irods-user
+(defn irods-user
   "Returns the user that porklock should connect as."
-  [props config-valid configs]
-  "jex.app.irods-user")
+  []
+  (:irods-user @cfg/cfg))
 
-(cc/defprop-str irods-pass
+(defn irods-pass
   "Returns the iRODS user's password."
-  [props config-valid configs]
-  "jex.app.irods-pass")
+  []
+  (:irods-pass @cfg/cfg))
 
-(cc/defprop-str irods-host
+(defn irods-host
   "Returns the iRODS hostname/IP address."
-  [props config-valid configs]
-  "jex.app.irods-host")
+  []
+  (:irods-host @cfg/cfg))
 
-(cc/defprop-str irods-port
+(defn irods-port
   "Returns the iRODS port."
-  [props config-valid configs]
-  "jex.app.irods-port")
+  []
+  (:irods-port @cfg/cfg))
 
-(cc/defprop-str irods-zone
+(defn irods-zone
   "Returns the iRODS zone."
-  [props config-valid configs]
-  "jex.app.irods-zone")
+  []
+  (:irods-zone @cfg/cfg))
 
-(cc/defprop-optstr irods-resc
+(defn irods-resc
   "Returns the iRODS resource."
-  [props config-valid configs]
-  "jex.app.irods-resc")
+  []
+  (:irods-resc @cfg/cfg))
 
-(cc/defprop-str icommands-path
+(defn icommands-path
   "Returns the path to the iRODS icommands out on the Condor cluster."
-  [props config-valid configs]
-  "jex.app.icommands-path")
+  []
+  (:icommands-path @cfg/cfg))
 
-(cc/defprop-str condor-log-path
+(defn condor-log-path
   "Returns the path to the logs directory for Condor on the submission host."
-  [props config-valid configs]
-  "jex.app.condor-log-path")
+  []
+  (:condor-log-path @cfg/cfg))
 
-(cc/defprop-int listen-port
-  "Returns the port to accept requests on."
-  [props config-valid configs]
-  "jex.app.listen-port")
+(defn listen-port
+  "Returns the port to accept requests on as an integer."
+  []
+  (Integer/parseInt (:listen-port @cfg/cfg)))
 
-(cc/defprop-vec filter-files
+(defn filter-files
   "A vector of filenames that should not be returned by porklock."
-  [props config-valid configs]
-  "jex.app.filter-files")
+  []
+  (:filter-files @cfg/cfg))
 
-(cc/defprop-boolean run-on-nfs
-  "Whether or not the JEX should run on NFS."
-  [props config-valid configs]
-  "jex.app.run-on-nfs")
+(defn run-on-nfs
+  "Whether or not the JEX should run on NFS as a boolean."
+  []
+  (:run-on-nfs @cfg/cfg))
 
-(cc/defprop-str condor-config
+(defn condor-config
   "The path to the condor_config file."
-  [props config-valid configs]
-  "jex.env.condor-config")
+  []
+  (:condor-config @cfg/cfg))
 
-(cc/defprop-str path-env
+(defn path-env
   "The PATH environment variable value."
-  [props config-valid configs]
-  "jex.env.path")
+  []
+  (:path @cfg/cfg))
 
-(cc/defprop-str request-disk
+(defn request-disk
   "The amount of disk space needed for a job, in kilobytes."
-  [props config-valid configs]
-  "jex.app.request-disk")
+  []
+  (:request-disk @cfg/cfg))
 
-(cc/defprop-str jex-events-url
+(defn jex-events-url
   "The URL to the jobs endpoint of the jex-events service"
-  [props config-valid configs]
-  "jex.app.jex-events")
-
-(defn- validate-config
-  "Validates the configuration settings after they've been loaded."
   []
-  (when-not (cc/validate-config configs config-valid)
-    (throw+ {:error_code ce/ERR_CONFIG_INVALID})))
+  (:jex-events @cfg/cfg))
 
-(defn- exception-filters
+(defn log-level
+  "The log level. One of log, trace, debug, info, warn, error, or fatal."
   []
-  (mapv #(re-pattern (str %))
-        [(irods-user) (irods-pass)]))
+  (keyword (:log-level @cfg/cfg)))
 
-(defn register-exception-filters
+(defn log-file
+  "The path to the log file."
   []
-  (ce/register-filters (exception-filters)))
-
-(defn load-config-from-file
-  "Loads the configuration settings from a file."
-  [cfg-path]
-  (cc/load-config-from-file cfg-path props)
-  (cc/log-config props :filters [#"irods\-user"])
-  (validate-config))
+  (:log-file @cfg/cfg))

@@ -19,19 +19,25 @@
             [jex.process :as jp]
             [jex.json-body :as jb]
             [clojure.java.io :as ds]
-            [clojure.tools.logging :as log]
+            [taoensso.timbre :as log]
             [cheshire.core :as cheshire]
             [me.raynes.fs :as fs]
-            [common-cli.core :as ccli]))
+            [common-cli.core :as ccli]
+            [common-cfg.cfg :as cfg]))
+
+(log/refer-timbre)
+
+(defn req-logger
+  [handler]
+  (fn [req]
+     (log/info "request received:" req)
+     (handler req)))
 
 (defn do-submission
   "Handles a request on /. "
   [request]
   (try
     (let [body (:body request)]
-      (log/warn "Received job request:")
-      (log/warn (cheshire/encode body))
-
       (if (jp/validate-submission body)
         (let [[exit-code dag-id] (jp/submit body)]
           (cond
@@ -59,8 +65,9 @@
 
 (defn site-handler [routes]
   (-> routes
-    jb/parse-json-body
-    wrap-errors))
+      req-logger
+      jb/parse-json-body
+      wrap-errors))
 
 (def svc-info
   {:desc "Submits jobs to a Condor cluster for the DE."
@@ -82,5 +89,6 @@
       (ccli/exit 1 (str "The config file does not exist.")))
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
-    (load-config-from-file (:config options))
+    (println (:config options))
+    (cfg/load-config options)
     (jetty/run-jetty (site-handler jex-routes) {:port (listen-port)})))
