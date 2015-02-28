@@ -94,6 +94,72 @@ __Curl Command__:
 
     curl -d '{"add" : [{"attr" : "attr", "value" : "value", "unit" : "unit"}], "delete" : ["del1", "del2"]}' 'http://127.0.0.1:3000/secured/filesystem/metadata-batch?proxyToken=notReal&path=/iplant/home/johnw/LICENSE.txt'
 
+Adding Batch Metadata to Multiple Paths
+---------------------------------------
+__URL Path__: /secured/filesystem/metadata-batch-add
+
+__HTTP Method__: POST
+
+__Error codes__: ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_NOT_A_USER, ERR_NOT_UNIQUE
+
+__Request Query Parameters__:
+
+* proxyToken - A valid CAS ticket.
+* force - Omitting this parameter will cause this endpoint to validate that none of the given paths
+already have metadata set with any of the given attrs before adding the AVUs,
+otherwise an ERR_NOT_UNIQUE error is returned.
+
+__Request Body__:
+
+```json
+{
+    "paths": [
+        "/iplant/home/ipctest/folder-1",
+        "/iplant/home/ipctest/folder-2",
+        "/iplant/home/ipctest/file-1",
+        "/iplant/home/ipctest/file-2"
+    ],
+    "avus": [
+        {
+            "unit": "",
+            "value": "test value",
+            "attr": "new-attr-1"
+        },
+        {
+            "unit": "",
+            "value": "test value",
+            "attr": "new-attr-2"
+        },
+        {
+            "unit": "",
+            "value": "test value",
+            "attr": "new-attr-3"
+        }
+    ]
+}
+```
+
+Both "paths" and "avus" lists must be present and non-empty.
+
+__Response__:
+
+```json
+{
+    "paths": [
+        "/iplant/home/ipctest/folder-1",
+        "/iplant/home/ipctest/folder-2",
+        "/iplant/home/ipctest/file-1",
+        "/iplant/home/ipctest/file-2"
+    ],
+    "user":"ipctest"
+}
+```
+
+__Curl Command__:
+
+    curl -d '{"paths": ["/iplant/home/ipctest/folder-1","/iplant/home/ipctest/folder-2"], "avus": [{"attr": "attr", "value": "value", "unit": "unit"}]}' 'http://127.0.0.1:3000/secured/filesystem/metadata-batch-add?proxyToken=notReal&force=true'
+
+
 
 Getting Metadata
 ------------------------------------

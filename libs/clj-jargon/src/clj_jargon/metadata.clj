@@ -35,6 +35,14 @@
     #(= (:attr %1) attr)
     (get-metadata cm dir-path)))
 
+(defn get-attributes
+  "Returns a list of avu maps for a set of attributes associated with dir-path."
+  [cm attrs path]
+  (validate-path-lengths path)
+  (filter
+    #(contains? attrs (:attr %1))
+    (get-metadata cm path)))
+
 (defn get-attribute-value
   [cm apath attr val]
   (validate-path-lengths apath)

@@ -124,6 +124,7 @@
 * [GET /secured/filesystem/metadata](endpoints/filesystem/metadata.md#getting-metadata-)
 * [POST /secured/filesystem/metadata](endpoints/filesystem/metadata.md#setting-metadata-)
 * [POST /secured/filesystem/metadata-batch](endpoints/filesystem/metadata.md#setting-metadata-as-a-batch-operation-)
+* [POST /secured/filesystem/metadata-batch-add](endpoints/filesystem/metadata.md#adding-batch-metadata-to-multiple-paths)
 * [GET /secured/filesystem/metadata/template/:template_id](endpoints/filesystem/metadata.md#viewing-a-metadata-template-)
 * [GET /secured/filesystem/metadata/template/attr/:attribute_id](endpoints/filesystem/metadata.md#viewing-a-metadata-attribute-)
 * [GET /secured/filesystem/metadata/templates](endpoints/filesystem/metadata.md#listing-metadata-templates-)

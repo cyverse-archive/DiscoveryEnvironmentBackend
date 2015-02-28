@@ -160,6 +160,48 @@
             (add-metadata cm new-path attr value new-unit))))
       {:path new-path :user user})))
 
+(defn- find-attributes
+  [cm attrs path]
+  (let [matching-avus (get-attributes cm attrs path)]
+    (if-not (empty? matching-avus)
+      {:path path
+       :avus matching-avus}
+      nil)))
+
+(defn- validate-batch-add-attrs
+  "Throws an error if any of the given paths already have metadata set with any of the given attrs."
+  [cm paths attrs]
+  (let [duplicates (remove nil? (map (partial find-attributes cm attrs) paths))]
+    (when-not (empty? duplicates)
+      (throw+ {:error_code ERR_NOT_UNIQUE
+               :message    "Some paths already have metadata with some of the given attributes."
+               :duplicates duplicates}))))
+
+(defn- metadata-batch-add
+  "Adds metadata to the given paths for a user. The avu map should be in the
+   following format:
+   {
+      :paths []
+      :avus [{:attr :value :unit}]
+   }
+   All paths and values in the maps should be strings, just like with (metadata-set)."
+  [user force? {:keys [paths avus]}]
+  (with-jargon (icat/jargon-cfg) [cm]
+    (validators/user-exists cm user)
+    (validators/all-paths-exist cm paths)
+    (validators/all-paths-writeable cm user paths)
+    (authorized-avus avus)
+    (let [paths (set (map ft/rm-last-slash paths))
+          attrs (set (map :attr avus))]
+      (if-not force?
+        (validate-batch-add-attrs cm paths attrs))
+      (doseq [path paths]
+        (doseq [{:keys [attr value] :as avu} avus]
+          (let [new-unit (reserved-unit avu)]
+            (if-not (attr-value? cm path attr value)
+              (add-metadata cm path attr value new-unit)))))
+      {:paths paths :user user})))
+
 (defn metadata-delete
   "Deletes an AVU from path on behalf of a user. attr and value should be strings."
   [user path attr value]
@@ -172,13 +214,13 @@
     {:path path :user user}))
 
 (defn- check-avus
-  [adds]
+  [avus]
   (mapv
    #(and (map? %1)
          (contains? %1 :attr)
          (contains? %1 :value)
          (contains? %1 :unit))
-   adds))
+    avus))
 
 (defn do-metadata-get
   "Entrypoint for the API. Calls (metadata-get). Parameter should be a map
@@ -232,6 +274,23 @@
 
 (with-post-hook! #'do-metadata-batch-set (log-func "do-metadata-batch-set"))
 
+(defn do-metadata-batch-add
+  "Entrypoint for the API that calls (metadata-batch-add). Body is a map with :avus and :paths keys."
+  [{:keys [user force]} body]
+  (metadata-batch-add user force body))
+
+(with-pre-hook! #'do-metadata-batch-add
+  (fn [params {:keys [paths avus] :as body}]
+    (log-call "do-metadata-batch-add" params body)
+    (validate-map params {:user string?})
+    (validate-map body {:paths sequential? :avus sequential?})
+    (validate-field :paths paths (comp pos? count))
+    (validate-field :avus avus (comp pos? count))
+    (validate-field :avus avus (comp (partial every? true?) check-avus))
+    (log/info (icat/jargon-cfg))))
+
+(with-post-hook! #'do-metadata-batch-add (log-func "do-metadata-batch-add"))
+
 (defn do-metadata-delete
   "Entrypoint for the API that calls (metadata-delete). Parameter is a map
    with :user, :path, :attr, :value as keys. Values are strings."
@@ -247,4 +306,3 @@
                           :value string?})))
 
 (with-post-hook! #'do-metadata-delete (log-func "do-metadata-delete"))
-

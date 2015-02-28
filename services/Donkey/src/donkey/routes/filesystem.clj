@@ -104,6 +104,9 @@
     (POST "/filesystem/metadata-batch" [:as req]
       (controller req meta/do-metadata-batch-set :params :body))
 
+    (POST "/filesystem/metadata-batch-add" [:as req]
+      (controller req meta/do-metadata-batch-add :params :body))
+
     (GET "/filesystem/metadata/templates" [:as req]
       (controller req mt/do-metadata-template-list))
 
