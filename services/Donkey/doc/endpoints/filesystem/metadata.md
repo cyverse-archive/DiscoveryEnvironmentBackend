@@ -100,7 +100,7 @@ __URL Path__: /secured/filesystem/metadata-batch-add
 
 __HTTP Method__: POST
 
-__Error codes__: ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_NOT_A_USER, ERR_NOT_UNIQUE
+__Error codes__: ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS, ERR_NOT_UNIQUE
 
 __Request Query Parameters__:
 

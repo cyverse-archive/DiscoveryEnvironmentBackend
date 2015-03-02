@@ -285,6 +285,7 @@
     (validate-map params {:user string?})
     (validate-map body {:paths sequential? :avus sequential?})
     (validate-field :paths paths (comp pos? count))
+    (validate-num-paths paths)
     (validate-field :avus avus (comp pos? count))
     (validate-field :avus avus (comp (partial every? true?) check-avus))
     (log/info (icat/jargon-cfg))))
