@@ -15,7 +15,7 @@
   :uberjar-name "info-typer-standalone.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [com.novemberain/langohr "2.11.0"]
+                 [com.novemberain/langohr "2.11.0"]  ;; This is purposely held back because of API change breaking code
                  [me.raynes/fs "1.4.6"]
                  [org.iplantc/clj-jargon "4.1.9"]
                  [org.iplantc/clojure-commons "4.1.9"]
