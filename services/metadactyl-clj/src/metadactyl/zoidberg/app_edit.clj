@@ -349,37 +349,6 @@
         (persistence/set-task-tool task-id tool-id))
       (service/success-response (assoc app :groups (update-app-groups task-id groups))))))
 
-(defn add-app-to-user-dev-category
-  "Adds an app with the given ID to the current user's apps-under-development category."
-  [app-id]
-  (let [workspace-category-id (:root_category_id (get-workspace))
-        dev-group-id (get-app-subcategory-id workspace-category-id (workspace-dev-app-group-index))]
-    (add-app-to-category app-id dev-group-id)))
-
-(defn- add-single-step-task
-  "Adds a task as a single step to the given app, using the app's name, description, and label."
-  [{app-id :id :as app}]
-  (let [task (persistence/add-task app)]
-    (persistence/add-step app-id 0 {:task_id (:id task)})
-    task))
-
-(defn add-app
-  "This service will add a single-step App, including the information at its top level."
-  [{:keys [references groups] :as app}]
-  (transaction
-    (let [app-id (:id (persistence/add-app app))
-          tool-id (->> app :tools first :id)
-          task-id (-> (assoc app :id app-id)
-                      (add-single-step-task)
-                      (:id))]
-      (add-app-to-user-dev-category app-id)
-      (when-not (empty? references)
-        (persistence/set-app-references app-id references))
-      (when-not (nil? tool-id)
-        (persistence/set-task-tool task-id tool-id))
-      (dorun (map-indexed (partial update-app-group task-id) groups))
-      (get-app-ui app-id))))
-
 (defn- name-too-long?
   "Determines if a name is too long to be extended for a copy name."
   [original-name]
