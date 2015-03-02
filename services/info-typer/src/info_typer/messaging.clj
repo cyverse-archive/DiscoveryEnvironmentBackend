@@ -3,6 +3,7 @@
             [clojure.tools.logging :as log]
             [cheshire.core :as json]
             [slingshot.slingshot :refer [throw+ try+]]
+            [clj-jargon.by-uuid :as uuid]
             [clj-jargon.init :refer [with-jargon]]
             [clj-jargon.item-info :as info]
             [clj-jargon.metadata :as meta]
@@ -10,32 +11,35 @@
             [info-typer.amqp :as amqp]
             [info-typer.config :as cfg]
             [info-typer.irods :as irods])
-  (:import [clojure.lang IPersistentMap]))
+  (:import [clojure.lang IPersistentMap]
+           [java.util UUID]))
+
+
+(defn- get-file-id
+  [payload]
+  (try+
+    (-> payload (json/parse-string true) :entity UUID/fromString)
+    (catch Throwable _
+      (throw+ {:error_code "ERR_INVALID_JSON" :payload payload}))))
 
 
 (defn- filetype-message-handler
   [irods-cfg payload]
   (try+
     (with-jargon irods-cfg [cm]
-      (let [parsed-map (json/parse-string payload true)
-            path       (:path parsed-map)]
+      (let [id   (get-file-id payload)
+            path (uuid/get-path cm id)]
         (if (nil? path)
-          (throw+ {:error_code "ERR_INVALID_JSON" :payload payload}))
-        (if-not (info/exists? cm path)
-          (log/warn "[filetype-message-handler]" path
-            "does not exist, it probably got moved before the handler fired."))
-        (if (meta/attribute? cm path (cfg/garnish-type-attribute))
-          (log/warn "[filetype-message-handler]" path "already has an attribute called"
-            (cfg/garnish-type-attribute)))
-        (when (and (info/exists? cm path)
-                   (not (meta/attribute? cm path (cfg/garnish-type-attribute))))
-          (let [ctype (irods/content-type cm path)]
-            (when-not (or (nil? ctype) (string/blank? ctype))
-              (log/warn "[filetype-message-handler] adding type" ctype "to" path)
-              (meta/add-metadata cm path (cfg/garnish-type-attribute) ctype "")
-              (log/warn "[filetype-message-handler] done adding type" ctype "to" path))
-            (when (or (nil? ctype) (string/blank? ctype))
-              (log/warn "[filetype-message-handler] type was not detected for" path))))))
+          (log/error "file" id "does not exist")
+          (if (meta/attribute? cm path (cfg/garnish-type-attribute))
+            (log/warn "file" id "already has an attribute called" (cfg/garnish-type-attribute))
+              (let [ctype (irods/content-type cm path)]
+                (when-not (or (nil? ctype) (string/blank? ctype))
+                  (log/info "adding type" ctype "to file" id)
+                  (meta/add-metadata cm path (cfg/garnish-type-attribute) ctype "")
+                  (log/debug "done adding type" ctype "to file" id))
+                (when (or (nil? ctype) (string/blank? ctype))
+                  (log/warn "type was not detected for file" id)))))))
     (catch ce/error? err
       (log/error (ce/format-exception (:throwable &throw-context))))
     (catch Exception e
