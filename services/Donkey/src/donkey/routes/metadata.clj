@@ -73,8 +73,8 @@
     (GET "/apps" [:as {params :params}]
          (service/success-response (metadactyl/search-apps params)))
 
-    (POST "/apps" [:as req]
-          (create-app req))
+    (POST "/apps" [:as {:keys [body]}]
+          (service/success-response (metadactyl/create-app body)))
 
     (POST "/apps/arg-preview" [:as req]
           (preview-args req))

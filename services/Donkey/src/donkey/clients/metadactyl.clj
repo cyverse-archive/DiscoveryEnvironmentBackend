@@ -49,6 +49,15 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn create-app
+  [app]
+  (client/post (metadactyl-url "apps")
+               {:query-params     (secured-params)
+                :body             app
+                :content-type     :json
+                :as               :stream
+                :follow-redirects false}))
+
 (defn get-app
   [app-id]
   (-> (client/get (metadactyl-url "apps" app-id)
