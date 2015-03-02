@@ -6,6 +6,7 @@
             [clj-icat-direct.icat :as icat]
             [data-info.services.stat :as stat]
             [cheshire.core :as json]
+            [clj-jargon.by-uuid :as uuid]
             [clj-jargon.init :as init]
             [clojure-commons.error-codes :as error]
             [data-info.util.config :as cfg]
@@ -25,7 +26,7 @@
    Returns:
      It returns a path-stat map containing an additional UUID field."
   ([^IPersistentMap cm ^String user ^UUID uuid]
-    (if-let [path (irods/get-path cm uuid)]
+    (if-let [path (uuid/get-path cm uuid)]
       (assoc (stat/path-stat cm user path) :uuid uuid)
       (throw+ {:error_code error/ERR_DOES_NOT_EXIST :uuid uuid})))
 
