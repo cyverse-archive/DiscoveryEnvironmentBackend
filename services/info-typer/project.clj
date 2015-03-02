@@ -18,12 +18,12 @@
                  [com.novemberain/langohr "2.11.0"]  ;; This is purposely held back because of API change breaking code
                  [me.raynes/fs "1.4.6"]
                  [org.iplantc/clj-jargon "4.1.9"]
-                 [org.iplantc/clojure-commons "4.1.9"]
+                 [org.iplantc/clojure-commons "4.1.9" :exclusions [commons-logging]]
                  [org.iplantc/common-cli "4.1.9"]
                  [org.iplantc/heuristomancer "4.1.9"]]
   :plugins [[org.iplantc/lein-iplant-rpm "4.1.9"]]
   :main ^:skip-aot info-typer.core
-  :profiles {:dev {:resource-paths ["conf/test"]}
+  :profiles {:dev     {:resource-paths ["conf/test"]}
              :uberjar {:aot :all}}
   :iplant-rpm {:summary "iPlant iRODS info type detection service"
                :provides "info-typer"
