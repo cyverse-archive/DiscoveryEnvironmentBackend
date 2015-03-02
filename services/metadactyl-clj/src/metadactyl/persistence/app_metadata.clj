@@ -181,15 +181,19 @@
         (dorun (map (partial add-tool-data-file tool-id true) (:input_files test)))
         (dorun (map (partial add-tool-data-file tool-id false) (:output_files test)))))))
 
+(defn- prep-app
+  "Prepares an app for insertion into the database."
+  [app integration-data-id]
+  (-> (select-keys app [:id :name :description])
+      (assoc :integration_data_id integration-data-id
+             :edited_date         (sqlfn now))))
+
 (defn add-app
   "Adds top-level app info to the database and returns the new app info, including its new ID."
-  [app]
-  (let [integration-data-id (:id (get-integration-data current-user))
-        app (-> app
-                (select-keys [:id :name :description])
-                (assoc :integration_data_id integration-data-id
-                       :edited_date (sqlfn now)))]
-    (insert apps (values app))))
+  ([app]
+     (add-app app current-user))
+  ([app user]
+     (insert apps (values (prep-app app (:id (get-integration-data user)))))))
 
 (defn add-step
   "Adds an app step to the database for the given app ID."

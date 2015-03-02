@@ -10,6 +10,7 @@
             [donkey.util.transformers :as xforms]))
 
 (def metadactyl-sort-params [:limit :offset :sort-field :sort-dir])
+(def metadactyl-search-params (conj metadactyl-sort-params :search))
 
 (defn- secured-params
   ([]
@@ -42,12 +43,11 @@
                :follow-redirects false}))
 
 (defn search-apps
-  [search-term]
-  (-> (client/get (metadactyl-url "apps")
-                  {:query-params (secured-params {:search search-term})
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
+  [params]
+  (client/get (metadactyl-url "apps")
+              {:query-params     (secured-params (select-keys params metadactyl-search-params))
+               :as               :stream
+               :follow-redirects false}))
 
 (defn get-app
   [app-id]

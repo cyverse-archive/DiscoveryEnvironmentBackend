@@ -79,3 +79,7 @@
 (defn search-apps
   [user {:keys [search] :as params}]
   (.searchApps (get-apps-client user "") search params))
+
+(defn add-app
+  [user app]
+  (.addApp (get-apps-client user "") app))

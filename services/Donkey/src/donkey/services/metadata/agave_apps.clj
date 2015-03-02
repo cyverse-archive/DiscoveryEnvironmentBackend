@@ -170,12 +170,6 @@
   [agave {:keys [external-id]}]
   (service/assert-found (.getJobParams agave external-id) "HPC job" external-id))
 
-(defn search-apps
-  [agave-client search-term def-result]
-  (try+
-   (.searchApps agave-client search-term)
-   (catch [:error_code ce/ERR_UNAVAILABLE] _ def-result)))
-
 (defn- get-agave-task
   [agave external-app-id]
   ((comp first :tasks)

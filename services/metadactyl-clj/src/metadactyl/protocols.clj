@@ -5,4 +5,6 @@
   (listAppCategories [_ params])
   (hasCategory [_ category-id])
   (listAppsInCategory [_ category-id params])
-  (searchApps [_ search-term params]))
+  (searchApps [_ search-term params])
+  (canEditApps [_])
+  (addApp [_ app]))

@@ -3,8 +3,7 @@
                                         get-app-details
                                         get-app-description
                                         get-app-task-listing
-                                        get-app-tool-listing
-                                        search-apps]]
+                                        get-app-tool-listing]]
         [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.rating]
@@ -13,12 +12,14 @@
         [metadactyl.service.app-documentation :only [get-app-docs
                                                      owner-add-app-docs
                                                      owner-edit-app-docs]]
-        [metadactyl.zoidberg.app-edit :only [add-app copy-app get-app-ui relabel-app update-app]]
+        [metadactyl.user :only [current-user]]
+        [metadactyl.zoidberg.app-edit :only [copy-app get-app-ui relabel-app update-app]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
             [metadactyl.metadata.job-view :as jv]
             [metadactyl.service.app-metadata :as app-metadata]
+            [metadactyl.service.apps :as apps]
             [metadactyl.util.service :as service]
             [compojure.route :as route]
             [ring.swagger.schema :as ss]
@@ -32,7 +33,7 @@
         :notes "This service allows users to search for Apps based on a part of the App name or
         description. The response body contains an `apps` array that is in the same format as
         the `apps` array in the /apps/categories/:category-id endpoint response."
-        (ce/trap uri #(search-apps params)))
+        (service/coerced-trap uri AppListing apps/search-apps current-user params))
 
   (POST* "/" [:as {uri :uri}]
          :query [params SecuredQueryParamsRequired]
@@ -40,7 +41,7 @@
          :return App
          :summary "Add a new App."
          :notes "This service adds a new App to the user's workspace."
-         (ce/trap uri #(add-app body)))
+         (service/trap uri apps/add-app current-user body))
 
   (POST* "/arg-preview" [:as {uri :uri}]
          :query [params SecuredQueryParams]

@@ -18,4 +18,7 @@
 
   (searchApps [_ search-term params]
     (when (user-has-access-token?)
-      (listings/search-apps agave search-term params))))
+      (listings/search-apps agave search-term params)))
+
+  (canEditApps [_]
+    false))

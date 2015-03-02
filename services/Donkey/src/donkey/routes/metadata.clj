@@ -71,7 +71,7 @@
     [config/app-routes-enabled]
 
     (GET "/apps" [:as {params :params}]
-         (apps/search-apps params))
+         (service/success-response (metadactyl/search-apps params)))
 
     (POST "/apps" [:as req]
           (create-app req))
