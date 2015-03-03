@@ -66,7 +66,7 @@
 (defn- bind
   "Binds a queue to an exchange."
   [channel queue exchange routing-key]
-  (lq/bind channel queue exchange :routing-key routing-key)
+  (lq/bind channel queue exchange {:routing-key routing-key})
   channel)
 
 
@@ -74,7 +74,7 @@
   "Registers a callback function that fires every time a message enters the specified queue."
   [channel queue msg-fn & {:keys [auto-ack]
                            :or   {auto-ack true}}]
-  (lc/subscribe channel queue msg-fn :auto-ack true)
+  (lc/subscribe channel queue msg-fn {:auto-ack true})
   channel)
 
 
