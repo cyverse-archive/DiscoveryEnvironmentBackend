@@ -97,6 +97,7 @@
 * [POST /secured/fileio/saveas](endpoints/fileio.md#save-as)
 * [POST /secured/fileio/urlupload](endpoints/fileio.md#url-uploads)
 * [GET /secured/filesystem/:data-id/template-avus](endpoints/filesystem/metadata.md#viewing-all-metadata-template-avus-on-a-filefolder-)
+* [POST /secured/filesystem/:data-id/template-avus/copy](endpoints/filesystem/metadata.md#copying-all-metadata-template-avus-from-a-filefolder)
 * [DELETE /secured/filesystem/:data-id/template-avus/:template-id](endpoints/filesystem/metadata.md#removing-all-metadata-template-avus-on-a-filefolder-)
 * [GET /secured/filesystem/:data-id/template-avus/:template-id](endpoints/filesystem/metadata.md#viewing-a-metadata-templates-avus-on-a-filefolder-)
 * [POST /secured/filesystem/:data-id/template-avus/:template-id](endpoints/filesystem/metadata.md#adding-and-updating-metadata-template-avus-on-a-filefolder-)

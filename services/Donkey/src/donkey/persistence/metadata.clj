@@ -392,6 +392,15 @@
 
 ;; TEMPLATES
 
+(defn get-existing-metadata-template-avus-by-attr
+  "Finds all existing AVUs by the given data-id and the given set of attributes."
+  [data-id attributes]
+  (korma/with-db db/metadata
+    (select :avus
+      (where {:attribute   [in attributes]
+              :target_id   data-id
+              :target_type [in data-types]}))))
+
 (defn find-existing-metadata-template-avu
   "Finds an existing AVU by ID or attribute, and by target_id."
   [avu]
