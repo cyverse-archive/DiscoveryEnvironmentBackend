@@ -71,7 +71,7 @@
          is already marked as deleted is treated as a no-op rather than an error condition. If the
          App doesn't exist in the database at all, however, then that is treated as an error
          condition."
-         (ce/trap uri #(app-metadata/delete-apps body)))
+         (service/trap uri apps/delete-apps current-user body))
 
   (GET* "/:app-id" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]

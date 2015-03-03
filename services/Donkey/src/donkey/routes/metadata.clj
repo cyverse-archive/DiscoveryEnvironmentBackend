@@ -100,8 +100,8 @@
     (GET "/apps/pipelines/:app-id/ui" [app-id]
          (apps/edit-workflow app-id))
 
-    (POST "/apps/shredder" [:as req]
-          (delete-apps req))
+    (POST "/apps/shredder" [:as {:keys [body]}]
+          (service/success-response (metadactyl/delete-apps body)))
 
     (GET "/apps/:app-id" [app-id]
          (apps/get-app app-id))

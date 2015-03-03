@@ -68,12 +68,20 @@
                 :follow-redirects false}))
 
 (defn list-app-ids
-  "A service to get the list of app identifiers."
   []
   (client/get (metadactyl-url "apps" "ids")
               {:query-params     (secured-params)
                :as               :stream
                :follow-redirects false}))
+
+(defn delete-apps
+  [deletion-request]
+  (client/post (metadactyl-url "apps" "shredder")
+               {:query-params     (secured-params)
+                :body             deletion-request
+                :content-type     :json
+                :as               :stream
+                :follow-redirects false}))
 
 (defn get-app
   [app-id]

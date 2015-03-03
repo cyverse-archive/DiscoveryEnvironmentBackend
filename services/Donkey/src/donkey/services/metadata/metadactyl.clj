@@ -147,13 +147,6 @@
   (client/delete (metadactyl-url {} "apps" app-id)
                  {:as :stream}))
 
-(defn delete-apps
-  "This service will logically remove a list of apps from the DE."
-  [req]
-  (let [url (metadactyl-url {} "apps" "shredder")
-        req (metadactyl-request req)]
-    (forward-post url req)))
-
 (defn permanently-delete-apps
   "This service will permanently remove a list of apps from the DE."
   [req]

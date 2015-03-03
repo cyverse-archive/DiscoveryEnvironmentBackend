@@ -91,3 +91,7 @@
 (defn list-app-ids
   [user]
   (.listAppIds (get-apps-client user "")))
+
+(defn delete-apps
+  [user deletion-request]
+  (.deleteApps (get-apps-client user "") deletion-request))

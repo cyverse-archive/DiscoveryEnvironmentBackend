@@ -58,13 +58,6 @@
     (amp/remove-workflow-map-orphans))
   nil)
 
-(defn delete-apps
-  "This service marks existing apps as deleted in the database."
-  [req]
-  (validate-deletion-request req)
-  (transaction (dorun (map amp/delete-app (:app_ids req))))
-  {})
-
 (defn delete-app
   "This service marks an existing app as deleted in the database."
   [app-id]

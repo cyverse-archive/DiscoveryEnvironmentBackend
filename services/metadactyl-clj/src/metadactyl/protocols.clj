@@ -9,4 +9,5 @@
   (canEditApps [_])
   (addApp [_ app])
   (previewCommandLine [_ app])
-  (listAppIds [_]))
+  (listAppIds [_])
+  (deleteApps [_ deletion-request]))
