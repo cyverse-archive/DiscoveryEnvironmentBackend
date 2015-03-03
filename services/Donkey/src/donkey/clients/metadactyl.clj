@@ -67,6 +67,14 @@
                 :as               :stream
                 :follow-redirects false}))
 
+(defn list-app-ids
+  "A service to get the list of app identifiers."
+  []
+  (client/get (metadactyl-url "apps" "ids")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
 (defn get-app
   [app-id]
   (-> (client/get (metadactyl-url "apps" app-id)

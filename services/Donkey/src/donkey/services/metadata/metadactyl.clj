@@ -69,12 +69,6 @@
         req    (metadactyl-request req)]
     (forward-get url req)))
 
-(defn get-all-app-ids
-  "A service to get the list of app identifiers."
-  []
-  (client/get (metadactyl-url {} "apps" "ids")
-              {:as :stream}))
-
 (defn get-admin-app-categories
   [params]
   (client/get (metadactyl-url (select-keys params dm/metadactyl-sort-params)

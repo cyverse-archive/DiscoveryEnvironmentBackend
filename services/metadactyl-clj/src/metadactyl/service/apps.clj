@@ -87,3 +87,7 @@
 (defn preview-command-line
   [user app]
   (.previewCommandLine (get-apps-client user "") app))
+
+(defn list-app-ids
+  [user]
+  (.listAppIds (get-apps-client user "")))

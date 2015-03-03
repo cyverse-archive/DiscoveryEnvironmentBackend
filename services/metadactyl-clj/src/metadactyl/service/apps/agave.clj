@@ -21,4 +21,7 @@
       (listings/search-apps agave search-term params)))
 
   (canEditApps [_]
-    false))
+    false)
+
+  (listAppIds [_]
+    nil))

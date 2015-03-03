@@ -25,4 +25,7 @@
     (edit/add-app user app))
 
   (previewCommandLine [_ app]
-    (app-metadata/preview-command-line app)))
+    (app-metadata/preview-command-line app))
+
+  (listAppIds [_]
+    (listings/list-app-ids)))

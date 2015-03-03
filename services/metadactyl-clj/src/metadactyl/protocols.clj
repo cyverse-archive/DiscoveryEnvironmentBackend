@@ -8,4 +8,5 @@
   (searchApps [_ search-term params])
   (canEditApps [_])
   (addApp [_ app])
-  (previewCommandLine [_ app]))
+  (previewCommandLine [_ app])
+  (listAppIds [_]))

@@ -30,6 +30,7 @@
    :is_public  true
    :app_count  (count-deleted-and-orphaned-apps)})
 
+
 (defn- load-app-details
   "Retrieves the details for a single app."
   [app-id]
@@ -69,27 +70,6 @@
     (->> (format-app-details details tools)
          (remove-nil-vals)
          (service/success-response))))
-
-(defn load-app-ids
-  "Loads the identifiers for all apps that refer to valid tools from the database."
-  []
-  (map :id
-       (select [:apps :app]
-               (modifier "distinct")
-               (fields :app.id)
-               (join [:app_steps :step]
-                     {:app.id :step.app_id})
-               (where (not [(sqlfn :exists (subselect [:tasks :t]
-                                                      (join [:tools :dc]
-                                                            {:t.tool_id :dc.id})
-                                                      (where {:t.id :step.task_id
-                                                              :t.tool_id nil})))]))
-               (order :id :ASC))))
-
-(defn get-all-app-ids
-  "This service obtains the identifiers of all apps that refer to valid tools."
-  []
-  (service/success-response {:app_ids (load-app-ids)}))
 
 (defn get-app-description
   "This service obtains the description of an app."

@@ -1,6 +1,5 @@
 (ns metadactyl.routes.apps
-  (:use [metadactyl.app-listings :only [get-all-app-ids
-                                        get-app-details
+  (:use [metadactyl.app-listings :only [get-app-details
                                         get-app-description
                                         get-app-task-listing
                                         get-app-tool-listing]]
@@ -61,7 +60,7 @@
         :summary "List All App Identifiers"
         :notes "The export script needs to have a way to obtain the identifiers of all of the apps
         in the Discovery Environment, deleted or not. This service provides that information."
-        (ce/trap uri #(get-all-app-ids)))
+        (service/trap uri apps/list-app-ids current-user))
 
   (POST* "/shredder" [:as {uri :uri}]
          :query [params SecuredQueryParams]

@@ -33,4 +33,7 @@
     (.addApp (util/get-apps-client clients) app))
 
   (previewCommandLine [_ app]
-    (.previewCommandLine (util/get-apps-client clients) app)))
+    (.previewCommandLine (util/get-apps-client clients) app))
+
+  (listAppIds [_]
+    (apply merge-with concat (map #(.listAppIds %) clients))))

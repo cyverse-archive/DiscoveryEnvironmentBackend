@@ -80,7 +80,7 @@
           (service/success-response (metadactyl/preview-args body)))
 
     (GET "/apps/ids" []
-         (get-all-app-ids))
+         (service/success-response (metadactyl/list-app-ids)))
 
     (GET "/apps/elements" [:as {:keys [params]}]
          (get-all-workflow-elements params))
