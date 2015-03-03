@@ -53,7 +53,7 @@
          body also requires that each parameter contain a `value` field that contains the parameter
          value to include on the command line. The response body is in the same format as the
          `/arg-preview` service in the JEX. Please see the JEX documentation for more information."
-         (ce/trap uri #(service/success-response (app-metadata/preview-command-line body))))
+         (service/trap uri apps/preview-command-line current-user body))
 
   (GET* "/ids" [:as {uri :uri}]
         :query [params SecuredQueryParams]

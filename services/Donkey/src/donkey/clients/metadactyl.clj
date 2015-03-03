@@ -58,6 +58,15 @@
                 :as               :stream
                 :follow-redirects false}))
 
+(defn preview-args
+  [app]
+  (client/post (metadactyl-url "apps" "arg-preview")
+               {:query-params     (secured-params)
+                :body             app
+                :content-type     :json
+                :as               :stream
+                :follow-redirects false}))
+
 (defn get-app
   [app-id]
   (-> (client/get (metadactyl-url "apps" app-id)

@@ -7,4 +7,5 @@
   (listAppsInCategory [_ category-id params])
   (searchApps [_ search-term params])
   (canEditApps [_])
-  (addApp [_ app]))
+  (addApp [_ app])
+  (previewCommandLine [_ app]))

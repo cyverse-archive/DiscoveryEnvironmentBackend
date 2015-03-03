@@ -83,3 +83,7 @@
 (defn add-app
   [user app]
   (.addApp (get-apps-client user "") app))
+
+(defn preview-command-line
+  [user app]
+  (.previewCommandLine (get-apps-client user "") app))

@@ -30,4 +30,7 @@
     (some #(.canEditApps %) clients))
 
   (addApp [_ app]
-    (.addApp (util/get-apps-client clients) app)))
+    (.addApp (util/get-apps-client clients) app))
+
+  (previewCommandLine [_ app]
+    (.previewCommandLine (util/get-apps-client clients) app)))

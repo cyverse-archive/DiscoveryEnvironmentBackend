@@ -499,13 +499,6 @@
   (client/get (metadactyl-url {} "admin" "tool-requests" request-id)
               {:as :stream}))
 
-(defn preview-args
-  "Previews the command-line arguments for a job request."
-  [req]
-  (let [url (metadactyl-url {} "apps" "arg-preview")
-        req (metadactyl-request req)]
-    (forward-post url req)))
-
 (defn provide-user-feedback
   "Forwards feedback from the user to iPlant."
   [body]

@@ -76,8 +76,8 @@
     (POST "/apps" [:as {:keys [body]}]
           (service/success-response (metadactyl/create-app body)))
 
-    (POST "/apps/arg-preview" [:as req]
-          (preview-args req))
+    (POST "/apps/arg-preview" [:as {:keys [body]}]
+          (service/success-response (metadactyl/preview-args body)))
 
     (GET "/apps/ids" []
          (get-all-app-ids))
