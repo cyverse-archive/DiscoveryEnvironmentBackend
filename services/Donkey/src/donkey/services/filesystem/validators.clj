@@ -169,3 +169,10 @@
   (when (some #(ticket? cm (:username cm) %) ticket-ids)
     (throw+ {:ticket-ids (filterv #(ticket? cm (:username cm) %) ticket-ids)
              :error_code ERR_TICKET_EXISTS})))
+
+(defn duplicate-attrs-error
+  "Throws an ERR_NOT_UNIQUE error with the given duplicates list."
+  [duplicates]
+  (throw+ {:error_code ERR_NOT_UNIQUE
+           :message    "Some paths already have metadata with some of the given attributes."
+           :duplicates duplicates}))

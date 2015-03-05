@@ -566,3 +566,36 @@ __Curl Command__:
 
     curl -X DELETE "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10/b9315be3-5dd4-42bd-9b9f-b3486eee5a9b?proxyToken=notReal"
 
+Copying all Metadata from a File/Folder
+-----------------------------------------------------
+Copies all IRODS AVUs visible to the client and Metadata Template AVUs from the data item with the
+ID given in the URL to other data items with the IDs sent in the request body.
+
+__URL Path__: /secured/filesystem/:data-id/metadata/copy
+
+__HTTP Method__: POST
+
+__Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER, ERR_BAD_OR_MISSING_FIELD, ERR_NOT_UNIQUE
+
+__Request Query Parameters__:
+
+* proxyToken - A valid CAS ticket.
+* force - Omitting this parameter will cause this endpoint to validate that none of the given
+"destination_ids" already have IRODS metadata set with any of the attributes found in the source
+item's metadata, and no Metadata Template AVUs set with any of the attributes found in any of the
+Template AVUs associated with the source item; otherwise an ERR_NOT_UNIQUE error is returned.
+
+__Request Body__:
+
+```json
+{
+    "destination_ids": [
+        "c5d42092-df89-11e3-bf8b-6abdce5a08d5",
+        "..."
+    ]
+}
+```
+
+__Curl Command__:
+
+    curl -sd '{"destination_ids": ["c5d42092-df89-11e3-bf8b-6abdce5a08d5"]}' "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/metadata/copy?proxyToken=notReal&force=true"

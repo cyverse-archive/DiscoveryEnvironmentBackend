@@ -183,6 +183,9 @@
    [#(and (config/filesystem-routes-enabled)
           (config/metadata-routes-enabled))]
 
+   (POST "/filesystem/:data-id/metadata/copy" [data-id force :as req]
+     (controller req meta/do-metadata-copy :params data-id force :body))
+
    (GET "/filesystem/:data-id/template-avus" [data-id :as req]
      (controller req mta/do-metadata-template-avu-list :params data-id))
 
