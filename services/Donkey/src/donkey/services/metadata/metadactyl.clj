@@ -141,12 +141,6 @@
         req (metadactyl-request req)]
     (forward-patch url req)))
 
-(defn delete-app
-  "This service will logically remove an app from the DE."
-  [req app-id]
-  (client/delete (metadactyl-url {} "apps" app-id)
-                 {:as :stream}))
-
 (defn permanently-delete-apps
   "This service will permanently remove a list of apps from the DE."
   [req]

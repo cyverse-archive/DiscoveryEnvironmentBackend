@@ -46,4 +46,7 @@
     (.deleteApps (util/get-apps-client clients) deletion-request))
 
   (getAppJobView [_ app-id]
-    (job-view/get-app app-id clients)))
+    (job-view/get-app app-id clients))
+
+  (deleteApp [_ app-id]
+    (.deleteApp (util/get-apps-client clients) app-id)))

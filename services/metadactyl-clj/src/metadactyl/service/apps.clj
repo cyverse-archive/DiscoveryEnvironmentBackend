@@ -99,3 +99,7 @@
 (defn get-app-job-view
   [user app-id]
   (.getAppJobView (get-apps-client user "") app-id))
+
+(defn delete-app
+  [user app-id]
+  (.deleteApp (get-apps-client user "") app-id))

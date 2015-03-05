@@ -58,14 +58,6 @@
     (amp/remove-workflow-map-orphans))
   nil)
 
-(defn delete-app
-  "This service marks an existing app as deleted in the database."
-  [app-id]
-  (validate-app-existence app-id)
-  (validate-app-ownership (:username current-user) app-id)
-  (amp/delete-app app-id)
-  {})
-
 (defn preview-command-line
   "This service sends a command-line preview request to the JEX."
   [body]

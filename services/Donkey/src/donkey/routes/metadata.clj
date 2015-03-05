@@ -106,8 +106,8 @@
     (GET "/apps/:app-id" [app-id]
          (service/success-response (metadactyl/get-app app-id)))
 
-    (DELETE "/apps/:app-id" [app-id :as req]
-            (delete-app req app-id))
+    (DELETE "/apps/:app-id" [app-id]
+            (service/success-response (metadactyl/delete-app app-id)))
 
     (PATCH "/apps/:app-id" [app-id :as req]
            (update-app-labels req app-id))

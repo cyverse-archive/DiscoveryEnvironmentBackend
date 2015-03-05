@@ -12,4 +12,5 @@
   (previewCommandLine [_ app])
   (listAppIds [_])
   (deleteApps [_ deletion-request])
-  (getAppJobView [_ app-id]))
+  (getAppJobView [_ app-id])
+  (deleteApp [_ app-id]))

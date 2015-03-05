@@ -88,8 +88,9 @@
            :notes "An app can be marked as deleted in the DE without being completely removed from
            the database using this service. <b>Note</b>: an attempt to delete an App that is already
            marked as deleted is treated as a no-op rather than an error condition. If the App
-           doesn't exist in the database at all, however, then that is treated as an error condition."
-           (ce/trap uri #(app-metadata/delete-app app-id)))
+           doesn't exist in the database at all, however, then that is treated as an error
+           condition."
+           (service/trap uri apps/delete-app current-user app-id))
 
   (PATCH* "/:app-id" [:as {uri :uri}]
           :path-params [app-id :- AppIdPathParam]

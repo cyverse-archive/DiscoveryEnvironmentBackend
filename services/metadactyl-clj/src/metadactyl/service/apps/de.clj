@@ -41,4 +41,8 @@
 
   (getAppJobView [_ app-id]
     (when (util/uuid? app-id)
-      (job-view/get-app (uuidify app-id)))))
+      (job-view/get-app (uuidify app-id))))
+
+  (deleteApp [_ app-id]
+    (when (util/uuid? app-id)
+      (app-metadata/delete-app user (uuidify app-id)))))
