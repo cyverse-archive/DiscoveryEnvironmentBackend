@@ -38,18 +38,13 @@
   [request]
   (try
     (let [body (:body request)]
-      (if (jp/validate-submission body)
-        (let [[exit-code dag-id] (jp/submit body)]
-          (cond
-            (not= exit-code 0)
-            (throw+ {:error_code "ERR_FAILED_NON_ZERO"})
-
-            :else
-            {:sub_id dag-id}))
-        (throw+ {:error_code "ERR_INVALID_JSON"})))
-    (catch Exception e
-      (log/error e "job submission failed")
-      (throw+ {:error_code "ERR_UNHANDLED_EXCEPTION"}))))
+      (try
+        (when-not (jp/validate-submission body)
+          (throw+ {:error_code "ERR_INVALID_JSON"}))
+        (jp/submit body)
+        (catch Exception e
+          (log/error e "job submission failed")
+          (throw+ {:error_code "ERR_UNHANDLED_EXCEPTION"}))))))
 
 (defroutes jex-routes
   (GET "/" [] "Welcome to the JEX.")

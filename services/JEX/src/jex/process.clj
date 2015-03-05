@@ -9,7 +9,10 @@
             [clojure.java.shell :as sh]
             [clj-http.client :as http]
             [cemerick.url :refer (url url-encode)]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [clojure.string :as string]
+            [me.raynes.fs :as fs]
+            [clojure.java.io :as io]))
 
 (log/refer-timbre)
 
@@ -120,14 +123,14 @@
 
   (hash-map :params (ix/escape-params (ix/param-maps (:params param-obj)))))
 
-(defn log-submit-results
+(defn handle-submit-results
   "Logs the result of the call to condor_submit."
   [{:keys [exit out err]}]
-  (log/warn (str "Exit code of condor-submit: " exit))
-  (log/info (str "condor-submit-dag stdout:"))
-  (log/info out)
-  (log/info (str "condor-submit-dag stderr:"))
-  (log/info err))
+  (log/warn "Exit code of condor-submit:" exit)
+  (log/warn "condor_submit stdout:\n" out)
+  (log/warn "condor-submit-dag stderr:\n" err)
+  (if (pos? exit)
+    (throw (Exception. "condor_submit exited with a non-zero status."))))
 
 (defn parse-sub-id
   "Parses out the submission id from the output of the condor_submit."
@@ -154,28 +157,19 @@
 (defn condor-submit
   "Submits a job to Condor. sub-path should be the path to a Condor submission
    file."
-  [sub-path]
-  (let [result (sh/with-sh-env (condor-env) (sh/sh "condor_submit" sub-path))]
-    (log-submit-results result)
-    result))
+  [sub-path log-dir]
+  (let [uuid   (str (java.util.UUID/randomUUID))
+        path   (io/file (cfg/submission-path) (str uuid ".tmp"))
+        mvpath (io/file (cfg/submission-path) (str uuid ".submit"))
+        contents (str sub-path "\n" log-dir)]
+    (spit path contents)
+    (fs/rename path mvpath)))
 
 (defn submit
   "Applies the incoming tranformations to the submitted request, submits the
    job to the Condor cluster, applies outgoing transformations, and dumps the
    resulting map to the OSM."
   [submit-map]
-  (let [[sub-path updated-map] (generate-submission submit-map)
-        sub-result (condor-submit sub-path)
-        sub-id     (submission-id sub-result)]
-    (log/warn "Submitted Job:" sub-id)
-    (log/warn "Pushing to jex-events:\n\tCondorID:" sub-id
-              "\n\tUsername:" (:username updated-map)
-              "\n\tAppID:"  (:app_id updated-map)
-              "\n\tInvocationID:" (:uuid updated-map))
-    (try
-      (push-job-to-jex-events sub-id (:username updated-map) (:app_id updated-map) (:uuid updated-map))
-      (catch Exception e
-        (log/warn "Exception caught when sending event to jex-events, cancelling job:" e)
-        (condor-rm sub-id)
-        (throw e)))
-    [(:exit sub-result) sub-id]))
+  (let [[sub-path updated-map] (generate-submission submit-map)]
+    (log/warn "[submit] username:" (:username updated-map) "app:" (:app_id updated-map) "job:" (:uuid updated-map))
+    (condor-submit sub-path (dagify/local-log-dir updated-map))))

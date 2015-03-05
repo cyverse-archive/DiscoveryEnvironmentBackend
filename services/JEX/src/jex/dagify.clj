@@ -2,7 +2,8 @@
   (:use [clojure-commons.file-utils :as ut]
         [clojure.string :only (join split trim blank?)])
   (:require [jex.config :as cfg]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [me.raynes.fs :as fs])
   (:import [java.io File]))
 
 (log/refer-timbre)
@@ -19,20 +20,20 @@
 
 (defn irods-config-path
   "Generates the path to the irods-config file."
-  [{working-dir :working_dir}]
-  (ut/path-join working-dir "logs" "irods-config"))
+  [{condor-log-dir :condor-log-dir}]
+  (ut/path-join condor-log-dir "logs" "irods-config"))
 
 (defn script-output
   "Returns the path to the log containing the Condor logging
    from out on the execution nodes."
   [script-dir]
-  (ut/path-join script-dir "logs" "script-output.log"))
+  "logs/script-output.log")
 
 (defn script-error
   "Returns the path to the error log containing the Condor error
    logging from out on the execution nodes."
   [script-dir]
-  (ut/path-join script-dir "logs" "script-error.log"))
+  "logs/script-error.log")
 
 (defn script-log
   "Returns the path to the log containing the Condor logging
@@ -51,16 +52,15 @@
 (defn script-submission
   "Generates the Condor submission file that will execute the generated
    shell script."
-  [{:keys [username uuid working_dir script-path local-log-dir]
-    :as analysis-map}]
+  [{:keys [username uuid local-log-dir] :as analysis-map}]
   (str
    "universe = vanilla\n"
    "executable = /bin/bash\n"
    "rank = mips\n"
-   "arguments = \"" script-path "\"\n"
-   "output = " (script-output working_dir) "\n"
-   "error = " (script-error working_dir) "\n"
-   "log = " (script-log local-log-dir) "\n"
+   "arguments = \"iplant.sh\"\n"
+   "output = script-output.log\n"
+   "error = script-error.log\n"
+   "log = condor.log\n" 
    "request_disk = " (cfg/request-disk) "\n"
    "+IpcUuid = \"" uuid "\"\n"
    "+IpcJobId = \"generated_script\"\n"
@@ -72,7 +72,8 @@
    (ipc-exe analysis-map)
    (ipc-exe-path analysis-map)
    "should_transfer_files = YES\n"
-   "transfer_output_files = logs/de-transfer-trigger.txt\n"
+   "transfer_input_files = iplant.sh,irods-config\n"
+   "transfer_output_files = logs/de-transfer-trigger.log\n"
    "when_to_transfer_output = ON_EXIT_OR_EVICT\n"
    "notification = NEVER\n"
    "queue\n"))
@@ -112,39 +113,29 @@
    (jex.incoming-xforms/transform) and turns it into a shell script
    that will be run out on the Condor cluster. Needs refactoring."
   [analysis-map]
-  (let [job-uuid  (:uuid analysis-map)
-        job-dir   (str "iplant-de-jobs/" (:username analysis-map) "/" job-uuid)
-        irods-cfg (irods-config-path analysis-map)]
-    (str
-     "#!/bin/bash\n"
-     "set -x\n"
-     "readonly IPLANT_USER=" (:username analysis-map) "\n"
-     "export IPLANT_USER\n"
-     "export SCRIPT_LOCATION=${BASH_SOURCE}\n"
-     "mkdir -p logs\n"
-     fail-script
-     "touch logs/de-transfer-trigger.txt\n"
-     fail-script
-     "EXITSTATUS=0\n"
-     (join "\n" (map script-line (jobs-in-order analysis-map)))
-     "ps aux\n"
-     "echo -----\n"
-     "for i in $(ls logs); do\n"
-     "    echo logs/$i\n"
-     "    cat logs/$i\n"
-     "    echo -----\n"
-     "done\n"
-     "exit $EXITSTATUS\n")))
+  (str
+   "#!/bin/bash\n"
+   "set -x\n"
+   "readonly IPLANT_USER=" (:username analysis-map) "\n"
+   "export IPLANT_USER\n"
+   "export SCRIPT_LOCATION=${BASH_SOURCE}\n"
+   "EXITSTATUS=0\n"
+   "mkdir -p logs\n"
+   fail-script
+   "touch logs/de-transfer-trigger.log\n"
+   fail-script
+   (join "\n" (map script-line (jobs-in-order analysis-map)))
+   "exit $EXITSTATUS\n"))
 
 (defn create-submission-directory
   "Creates the local directory where the iplant.sh and iplant.cmd files get
    written out to."
-  [{script-dir :working_dir :as analysis-map}]
-  (let [dag-log-dir (ut/path-join script-dir "logs")]
-    (log/info (str "Creating submission directories: " dag-log-dir))
-    (if-not (.mkdirs (File. dag-log-dir))
-      (log/warn (str "Failed to create directory: " dag-log-dir)))
-    analysis-map))
+  [{script-dir :condor-log-dir :as analysis-map}]
+  (log/info (str "Creating submission directories: " script-dir))
+  (fs/mkdirs (fs/file script-dir "logs"))
+  (fs/chmod "+w" script-dir)
+  (fs/chmod "+w" (fs/file script-dir "logs"))
+  analysis-map)
 
 (defn local-log-dir
   "Create the path to the local directory containing the condor logs."
@@ -158,33 +149,43 @@
     (log/info (str "Creating the local log directory: " local-logs))
     (if-not (.mkdirs (File. local-logs))
       (log/warn (str "Failed to create directory " local-logs)))
+    (fs/chmod "+w" local-logs)
     analysis-map))
-
-(defn scriptpath
-  "Generates the path to the iplant.sh file."
-  [analysis-map]
-  (ut/path-join (:working_dir analysis-map) "logs" "iplant.sh"))
-
-(defn script-command-file
-  "Generates the path to the iplant.cmd file."
-  [analysis-map]
-  (ut/path-join (:working_dir analysis-map) "logs" "iplant.cmd"))
 
 (defn generate-script-submission
   "Generates and writes out the iplant.sh and iplant.cmd files."
   [analysis-map]
-  (spit (scriptpath analysis-map) (script analysis-map))
-  (log/warn "Wrote bash script to" (scriptpath analysis-map))
-  (spit (irods-config-path analysis-map) (irods-config))
-  (log/warn "Wrote iRODS config to" (irods-config-path analysis-map))
-  (spit
-   (script-command-file analysis-map)
-   (script-submission
-    (merge
-     analysis-map
-     {:script-path (scriptpath analysis-map)
-      :local-log-dir (local-log-dir analysis-map)})))
-  (log/warn "Write HTCondor submission file to" (script-command-file analysis-map))
+  (let [local-dir   (:condor-log-dir analysis-map)
+        script-path (str (fs/file local-dir "logs/iplant.sh"))
+        irods-path  (str (fs/file local-dir "logs/irods-config"))
+        cmd-path    (str (fs/file local-dir "logs/iplant.cmd"))]
+    (fs/chmod "+w" local-dir)
+
+    (spit script-path (script analysis-map))
+    (log/warn "Wrote bash script to" script-path)
+
+    (spit irods-path (irods-config))
+    (log/warn "Wrote iRODS config to" irods-path)
+
+    (spit
+     cmd-path
+     (script-submission
+      (merge
+       analysis-map
+       {:script-path script-path
+        :local-log-dir (local-log-dir analysis-map)})))
+    (log/warn "Wrote HTCondor submission file to" cmd-path)
+    
+    (doall
+     (fs/walk
+      (fn [root files dirs]
+        (log/warn "[walk]" root)
+        (fs/chmod "+w" root)
+        (doseq [f files]
+          (fs/chmod "+w" (fs/file root f)))
+        (doseq [d dirs]
+          (fs/chmod "+w" (fs/file root d))))
+      local-dir)))
   analysis-map)
 
 (defn cleanup-analysis-map
@@ -193,11 +194,11 @@
   (-> analysis-map
       (dissoc :steps)
       (assoc :executable "/bin/bash"
-             :args (scriptpath analysis-map)
+             :args "iplant.sh"
              :status "Submitted"
-             :output (script-output (:working_dir analysis-map))
-             :error (script-error (:working_dir analysis-map))
-             :log (local-log-dir analysis-map))))
+             :output "script-output.log"
+             :error "script-error.log"
+             :log "condor.log")))
 
 (defn dagify
   "Takes in analysis map that's been processed by
@@ -223,7 +224,6 @@
   [analysis-map]
   (-> analysis-map
       (create-submission-directory)
-      (create-local-log-directory)
       (generate-script-submission))
-  [(script-command-file analysis-map)
+  [(str (fs/file (:condor-log-dir analysis-map) "logs/iplant.cmd"))
    (cleanup-analysis-map analysis-map)])

@@ -24,7 +24,8 @@
                  [org.iplantc/clojure-commons "4.1.8"]
                  [slingshot "0.12.2"]
                  [org.iplantc/common-cli "4.1.8"]
-                 [org.iplantc/common-cfg "4.1.8"]]
+                 [org.iplantc/common-cfg "4.1.8"]
+                 [me.raynes/fs "1.4.6"]]
   :plugins [[org.iplantc/lein-iplant-rpm "4.1.8"]
             [lein-midje "3.1.1"]]
   :iplant-rpm {:summary "jex",

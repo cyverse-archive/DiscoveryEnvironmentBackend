@@ -26,7 +26,8 @@
    :log-file        cfg/stringv
    :log-size        cfg/stringv
    :log-backlog     cfg/stringv
-   :log-level       cfg/stringv})
+   :log-level       cfg/stringv
+   :submission-path [v/required cfg/stringv]})
 
  (ref-set
   cfg/defaults
@@ -137,3 +138,8 @@
   "The path to the log file."
   []
   (:log-file @cfg/cfg))
+
+(defn submission-path
+  "The path that the submission files should be written to."
+  []
+  (:submission-path @cfg/cfg))
