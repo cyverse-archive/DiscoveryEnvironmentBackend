@@ -229,11 +229,13 @@
 
 (defschema AppGroupJobView
   (assoc AppGroup
+    :id                   (describe String "The app group ID.")
     :step_number          (describe Long "The step number associated with this parameter group")
     OptionalParametersKey (describe [AppParameterJobView] ParameterListDocs)))
 
 (defschema AppJobView
   (assoc AppBase
+    :id               (describe String "The app ID.")
     :label            (describe String "An alias for the App's name")
     :deleted          AppDeletedParam
     :disabled         AppDisabledParam

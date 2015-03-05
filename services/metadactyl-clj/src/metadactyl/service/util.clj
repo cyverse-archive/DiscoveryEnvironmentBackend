@@ -1,6 +1,7 @@
 (ns metadactyl.service.util
   (:use [metadactyl.transformers :only [string->long]])
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string])
+  (:import [java.util UUID]))
 
 (defn- app-sorter
   [sort-field sort-dir]
@@ -29,3 +30,8 @@
     (if (pos? limit)
       (update-in res [:apps] (partial take limit))
       res)))
+
+(defn uuid?
+  [s]
+  (or (instance? UUID s)
+      (re-find #"\A\p{XDigit}{8}(?:-\p{XDigit}{4}){3}-\p{XDigit}{12}\z" s)))

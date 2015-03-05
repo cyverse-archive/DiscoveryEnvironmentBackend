@@ -1,4 +1,4 @@
-(ns metadactyl.metadata.job-view
+(ns metadactyl.service.apps.de.job-view
   (:use [korma.core]
         [kameleon.core]
         [kameleon.entities]

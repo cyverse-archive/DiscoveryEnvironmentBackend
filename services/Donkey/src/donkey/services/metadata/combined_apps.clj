@@ -82,7 +82,7 @@
 
 (defn- get-combined-app
   [agave app-id]
-  (let [metadactyl-app (metadactyl/get-app app-id)]
+  (let [metadactyl-app (service/decode-json (:body (metadactyl/get-app app-id)))]
     (->> (:groups metadactyl-app)
          (get-combined-groups agave app-id)
          (assoc metadactyl-app :groups))))

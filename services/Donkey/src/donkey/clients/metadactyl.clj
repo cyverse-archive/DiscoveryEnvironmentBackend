@@ -85,11 +85,10 @@
 
 (defn get-app
   [app-id]
-  (-> (client/get (metadactyl-url "apps" app-id)
-                  {:query-params (secured-params)
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
+  (client/get (metadactyl-url "apps" app-id)
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
 
 (defn admin-list-tool-requests
   [params]

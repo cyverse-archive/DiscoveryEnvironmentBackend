@@ -104,7 +104,7 @@
           (service/success-response (metadactyl/delete-apps body)))
 
     (GET "/apps/:app-id" [app-id]
-         (apps/get-app app-id))
+         (service/success-response (metadactyl/get-app app-id)))
 
     (DELETE "/apps/:app-id" [app-id :as req]
             (delete-app req app-id))

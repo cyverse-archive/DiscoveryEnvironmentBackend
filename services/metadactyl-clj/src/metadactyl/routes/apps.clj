@@ -16,7 +16,6 @@
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
-            [metadactyl.metadata.job-view :as jv]
             [metadactyl.service.app-metadata :as app-metadata]
             [metadactyl.service.apps :as apps]
             [metadactyl.util.service :as service]
@@ -74,13 +73,13 @@
          (service/trap uri apps/delete-apps current-user body))
 
   (GET* "/:app-id" [:as {uri :uri}]
-        :path-params [app-id :- AppIdPathParam]
+        :path-params [app-id :- AppIdJobViewPathParam]
         :query [params SecuredQueryParams]
         :summary "Obtain an app description."
         :return AppJobView
         :notes "This service allows the Discovery Environment user interface to obtain an
         app description that can be used to construct a job submission form."
-        (ce/trap uri #(service/success-response (jv/get-app app-id))))
+        (service/coerced-trap uri AppJobView apps/get-app-job-view current-user app-id))
 
   (DELETE* "/:app-id" [:as {uri :uri}]
            :path-params [app-id :- AppIdPathParam]

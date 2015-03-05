@@ -160,9 +160,6 @@
   (deleteRating [_ app-id]
     (metadactyl/delete-rating app-id))
 
-  (getApp [_ app-id]
-    (metadactyl/get-app app-id))
-
   (getAppDeployedComponents [_ app-id]
     (metadactyl/get-tools-in-app app-id))
 
@@ -256,9 +253,6 @@
       (metadactyl/delete-rating app-id)
       (throw+ {:error_code ce/ERR_BAD_REQUEST
                :reason     "HPC apps cannot be rated"})))
-
-  (getApp [_ app-id]
-    (ca/get-app agave-client app-id))
 
   (getAppDeployedComponents [_ app-id]
     (if (is-uuid? app-id)
@@ -418,12 +412,6 @@
   (with-db db/de
     (transaction
      (service/success-response (.deleteRating (get-app-lister) app-id)))))
-
-(defn get-app
-  [app-id]
-  (with-db db/de
-    (transaction
-     (service/success-response (.getApp (get-app-lister) app-id)))))
 
 (defn get-tools-in-app
   [app-id]

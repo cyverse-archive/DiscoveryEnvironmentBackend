@@ -4,10 +4,14 @@
   it interacts with to allow users to add new apps and edit existing ones. If this is not the case
   then the first app in the list that is capable of adding or editing apps wins."
   (:use [metadactyl.service.apps.combined.util :as util]
-        [metadactyl.util.assertions :only [assert-not-nil]]))
+        [metadactyl.util.assertions :only [assert-not-nil]])
+  (:require [metadactyl.service.apps.combined.job-view :as job-view]))
 
 (deftype CombinedApps [clients]
   metadactyl.protocols.Apps
+
+  (getClientName [_]
+    "combined")
 
   (listAppCategories [_ params]
     (apply concat (map #(.listAppCategories % params) clients)))
@@ -39,4 +43,7 @@
     (apply merge-with concat (map #(.listAppIds %) clients)))
 
   (deleteApps [_ deletion-request]
-    (.deleteApps (util/get-apps-client clients) deletion-request)))
+    (.deleteApps (util/get-apps-client clients) deletion-request))
+
+  (getAppJobView [_ app-id]
+    (job-view/get-app app-id clients)))

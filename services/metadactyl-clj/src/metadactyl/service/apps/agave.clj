@@ -1,9 +1,13 @@
 (ns metadactyl.service.apps.agave
   (:use [kameleon.uuids :only [uuidify]])
-  (:require [metadactyl.service.apps.agave.listings :as listings]))
+  (:require [metadactyl.service.apps.agave.listings :as listings]
+            [metadactyl.service.util :as util]))
 
 (deftype AgaveApps [agave user-has-access-token?]
   metadactyl.protocols.Apps
+
+  (getClientName [_]
+    "agave")
 
   (listAppCategories [_ {:keys [hpc]}]
     (when-not (and hpc (.equalsIgnoreCase hpc "false"))
@@ -24,4 +28,8 @@
     false)
 
   (listAppIds [_]
-    nil))
+    nil)
+
+  (getAppJobView [_ app-id]
+    (when-not (util/uuid? app-id)
+      (.getApp agave app-id))))

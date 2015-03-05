@@ -2,6 +2,7 @@
 
 (defprotocol Apps
   "A protocol used to provide an abstraction layer for dealing with app metadata."
+  (getClientName [_])
   (listAppCategories [_ params])
   (hasCategory [_ category-id])
   (listAppsInCategory [_ category-id params])
@@ -10,4 +11,5 @@
   (addApp [_ app])
   (previewCommandLine [_ app])
   (listAppIds [_])
-  (deleteApps [_ deletion-request]))
+  (deleteApps [_ deletion-request])
+  (getAppJobView [_ app-id]))
