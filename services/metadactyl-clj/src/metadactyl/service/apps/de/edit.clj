@@ -1,4 +1,4 @@
-(ns metadactyl.zoidberg.app-edit
+(ns metadactyl.service.apps.de.edit
   (:use [clojure.string :only [blank?]]
         [korma.core]
         [korma.db :only [transaction]]
@@ -7,15 +7,13 @@
         [kameleon.entities]
         [kameleon.uuids :only [uuidify]]
         [metadactyl.metadata.params :only [format-reference-genome-value]]
-        [metadactyl.user :only [current-user]]
         [metadactyl.util.config :only [workspace-dev-app-group-index]]
         [metadactyl.util.conversions :only [remove-nil-vals convert-rule-argument]]
         [metadactyl.validation :only [validate-parameter verify-app-editable verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as cc-errs]
-            [metadactyl.persistence.app-metadata :as persistence]
-            [metadactyl.util.service :as service]))
+            [metadactyl.persistence.app-metadata :as persistence]))
 
 (def ^:private copy-prefix "Copy of ")
 (def ^:private max-app-name-len 255)
@@ -203,7 +201,7 @@
   [app-id]
   (let [app (persistence/get-app app-id)]
     (verify-app-ownership app)
-    (service/success-response (format-app-for-editing app))))
+    (format-app-for-editing app)))
 
 (defn- update-parameter-argument
   "Adds a selection parameter's argument, and any of its child arguments and groups."
@@ -347,12 +345,12 @@
         (persistence/set-app-references app-id references))
       (when-not (nil? tool-id)
         (persistence/set-task-tool task-id tool-id))
-      (service/success-response (assoc app :groups (update-app-groups task-id groups))))))
+      (assoc app :groups (update-app-groups task-id groups)))))
 
 (defn add-app-to-user-dev-category
   "Adds an app with the given ID to the current user's apps-under-development category."
-  [app-id]
-  (let [workspace-category-id (:root_category_id (get-workspace))
+  [{:keys [username]} app-id]
+  (let [workspace-category-id (:root_category_id (get-workspace username))
         dev-group-id (get-app-subcategory-id workspace-category-id (workspace-dev-app-group-index))]
     (add-app-to-category app-id dev-group-id)))
 
@@ -365,14 +363,14 @@
 
 (defn add-app
   "This service will add a single-step App, including the information at its top level."
-  [{:keys [references groups] :as app}]
+  [user {:keys [references groups] :as app}]
   (transaction
-    (let [app-id (:id (persistence/add-app app))
+    (let [app-id  (:id (persistence/add-app app))
           tool-id (->> app :tools first :id)
           task-id (-> (assoc app :id app-id)
                       (add-single-step-task)
                       (:id))]
-      (add-app-to-user-dev-category app-id)
+      (add-app-to-user-dev-category user app-id)
       (when-not (empty? references)
         (persistence/set-app-references app-id references))
       (when-not (nil? tool-id)
@@ -437,3 +435,11 @@
       (persistence/get-app)
       (convert-app-to-copy)
       (add-app)))
+
+(defn relabel-app
+  "This service allows labels to be updated in any app, whether or not the app has been submitted
+   for public use."
+  [user {app-id :id :as body}]
+  (verify-app-ownership user (persistence/get-app app-id))
+  (transaction (persistence/update-app-labels body))
+  (get-app-ui app-id))

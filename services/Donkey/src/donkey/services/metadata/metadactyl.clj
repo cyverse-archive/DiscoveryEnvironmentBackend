@@ -69,12 +69,6 @@
         req    (metadactyl-request req)]
     (forward-get url req)))
 
-(defn get-all-app-ids
-  "A service to get the list of app identifiers."
-  []
-  (client/get (metadactyl-url {} "apps" "ids")
-              {:as :stream}))
-
 (defn get-admin-app-categories
   [params]
   (client/get (metadactyl-url (select-keys params dm/metadactyl-sort-params)
@@ -146,19 +140,6 @@
   (let [url (metadactyl-url {} "admin" "apps" app-id)
         req (metadactyl-request req)]
     (forward-patch url req)))
-
-(defn delete-app
-  "This service will logically remove an app from the DE."
-  [req app-id]
-  (client/delete (metadactyl-url {} "apps" app-id)
-                 {:as :stream}))
-
-(defn delete-apps
-  "This service will logically remove a list of apps from the DE."
-  [req]
-  (let [url (metadactyl-url {} "apps" "shredder")
-        req (metadactyl-request req)]
-    (forward-post url req)))
 
 (defn permanently-delete-apps
   "This service will permanently remove a list of apps from the DE."
@@ -361,13 +342,6 @@
   (client/get (metadactyl-url {} "apps" app-id "ui")
               {:as :stream}))
 
-(defn create-app
-  "This service creates an app in the current user's workspace."
-  [req]
-  (let [url (metadactyl-url {} "apps")
-        req (metadactyl-request req)]
-    (forward-post url req)))
-
 (defn copy-app
   "This service makes a copy of an app available in Tito for editing."
   [req app-id]
@@ -505,13 +479,6 @@
   [request-id]
   (client/get (metadactyl-url {} "admin" "tool-requests" request-id)
               {:as :stream}))
-
-(defn preview-args
-  "Previews the command-line arguments for a job request."
-  [req]
-  (let [url (metadactyl-url {} "apps" "arg-preview")
-        req (metadactyl-request req)]
-    (forward-post url req)))
 
 (defn provide-user-feedback
   "Forwards feedback from the user to iPlant."

@@ -148,9 +148,6 @@
 (deftype DeOnlyAppLister []
   AppLister
 
-  (searchApps [_ search-term]
-    (metadactyl/search-apps search-term))
-
   (addFavoriteApp [_ app-id]
     (metadactyl/add-favorite-app app-id))
 
@@ -162,9 +159,6 @@
 
   (deleteRating [_ app-id]
     (metadactyl/delete-rating app-id))
-
-  (getApp [_ app-id]
-    (metadactyl/get-app app-id))
 
   (getAppDeployedComponents [_ app-id]
     (metadactyl/get-tools-in-app app-id))
@@ -236,15 +230,6 @@
 (deftype DeHpcAppLister [agave-client user-has-access-token?]
   AppLister
 
-  (searchApps [_ search-term]
-    (let [def-result {:app_count 0 :apps {}}
-          de-apps    (metadactyl/search-apps search-term)
-          hpc-apps   (if (user-has-access-token?)
-                       (aa/search-apps agave-client search-term def-result)
-                       def-result)]
-      {:app_count (apply + (map :app_count [de-apps hpc-apps]))
-       :apps      (mapcat :apps [de-apps hpc-apps])}))
-
   (addFavoriteApp [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/add-favorite-app app-id)
@@ -268,9 +253,6 @@
       (metadactyl/delete-rating app-id)
       (throw+ {:error_code ce/ERR_BAD_REQUEST
                :reason     "HPC apps cannot be rated"})))
-
-  (getApp [_ app-id]
-    (ca/get-app agave-client app-id))
 
   (getAppDeployedComponents [_ app-id]
     (if (is-uuid? app-id)
@@ -403,15 +385,6 @@
        (get-de-hpc-app-lister state-info username)
        (DeOnlyAppLister.))))
 
-(defn search-apps
-  [{search-term :search}]
-  (when (string/blank? search-term)
-    (throw+ {:error_code ce/ERR_MISSING_QUERY_PARAMETER
-             :param      :search}))
-  (with-db db/de
-    (transaction
-     (service/success-response (.searchApps (get-app-lister) search-term)))))
-
 (defn add-favorite-app
   [app-id]
   (with-db db/de
@@ -439,12 +412,6 @@
   (with-db db/de
     (transaction
      (service/success-response (.deleteRating (get-app-lister) app-id)))))
-
-(defn get-app
-  [app-id]
-  (with-db db/de
-    (transaction
-     (service/success-response (.getApp (get-app-lister) app-id)))))
 
 (defn get-tools-in-app
   [app-id]

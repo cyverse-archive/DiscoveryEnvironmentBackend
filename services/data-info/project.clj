@@ -7,35 +7,35 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/data-info "4.1.8"
+(defproject org.iplantc/data-info "4.2.0"
   :description "provides the data information HTTP API"
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "data-info-standalone.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/core.memoize "0.5.6"]
+                 [org.clojure/core.memoize "0.5.7"]
                  [org.clojure/data.codec "0.1.0"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [org.clojure/tools.nrepl "0.2.6"]
-                 [cheshire "5.3.1"]
-                 [clj-time "0.8.0"]
+                 [org.clojure/tools.nrepl "0.2.7"]
+                 [cheshire "5.4.0"]
+                 [clj-time "0.9.0"]
                  [com.cemerick/url "0.1.1"]
-                 [compojure "1.2.1"]
-                 [dire "0.5.2"]
+                 [compojure "1.3.2"]
+                 [dire "0.5.3"]
                  [liberator "0.12.2"]
                  [me.raynes/fs "1.4.6"]
-                 [medley "0.5.3"]
+                 [medley "0.5.5"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [net.sf.opencsv/opencsv "2.3"]
-                 [org.apache.tika/tika-core "1.6"]
-                 [ring "1.3.1"]
-                 [slingshot "0.12.1"]
+                 [org.apache.tika/tika-core "1.7"]
+                 [ring "1.3.2"]
+                 [slingshot "0.12.2"]
                  [trptcolin/versioneer "0.1.1"]
-                 [org.iplantc/clj-icat-direct "4.1.8"]
-                 [org.iplantc/clj-jargon "4.1.8"]
-                 [org.iplantc/clojure-commons "4.1.8"]
-                 [org.iplantc/common-cli "4.1.8"]
-                 [org.iplantc/heuristomancer "4.1.8"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "4.1.8"]
+                 [org.iplantc/clj-icat-direct "4.2.0"]
+                 [org.iplantc/clj-jargon "4.2.0"]
+                 [org.iplantc/clojure-commons "4.2.0"]
+                 [org.iplantc/common-cli "4.2.0"]
+                 [org.iplantc/heuristomancer "4.2.0"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "4.2.0"]
             [lein-ring "0.8.8"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev     {:resource-paths ["conf/test"]}

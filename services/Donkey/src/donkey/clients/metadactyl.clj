@@ -10,6 +10,7 @@
             [donkey.util.transformers :as xforms]))
 
 (def metadactyl-sort-params [:limit :offset :sort-field :sort-dir])
+(def metadactyl-search-params (conj metadactyl-sort-params :search))
 
 (defn- secured-params
   ([]
@@ -42,20 +43,68 @@
                :follow-redirects false}))
 
 (defn search-apps
-  [search-term]
-  (-> (client/get (metadactyl-url "apps")
-                  {:query-params (secured-params {:search search-term})
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
+  [params]
+  (client/get (metadactyl-url "apps")
+              {:query-params     (secured-params (select-keys params metadactyl-search-params))
+               :as               :stream
+               :follow-redirects false}))
+
+(defn create-app
+  [app]
+  (client/post (metadactyl-url "apps")
+               {:query-params     (secured-params)
+                :body             app
+                :content-type     :json
+                :as               :stream
+                :follow-redirects false}))
+
+(defn preview-args
+  [app]
+  (client/post (metadactyl-url "apps" "arg-preview")
+               {:query-params     (secured-params)
+                :body             app
+                :content-type     :json
+                :as               :stream
+                :follow-redirects false}))
+
+(defn list-app-ids
+  []
+  (client/get (metadactyl-url "apps" "ids")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
+(defn delete-apps
+  [deletion-request]
+  (client/post (metadactyl-url "apps" "shredder")
+               {:query-params     (secured-params)
+                :body             deletion-request
+                :content-type     :json
+                :as               :stream
+                :follow-redirects false}))
 
 (defn get-app
   [app-id]
-  (-> (client/get (metadactyl-url "apps" app-id)
-                  {:query-params (secured-params)
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
+  (client/get (metadactyl-url "apps" app-id)
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
+(defn delete-app
+  [app-id]
+  (client/delete (metadactyl-url "apps" app-id)
+                 {:query-params     (secured-params)
+                  :as               :stream
+                  :follow-redirects false}))
+
+(defn relabel-app
+  [app-id relabel-request]
+  (client/patch (metadactyl-url "apps" app-id)
+                {:query-params     (secured-params)
+                 :body             relabel-request
+                 :content-type     :json
+                 :as               :stream
+                 :follow-redirects false}))
 
 (defn admin-list-tool-requests
   [params]

@@ -1,4 +1,4 @@
-(ns metadactyl.service.app-metadata
+(ns metadactyl.service.apps.de.metadata
   "DE app metadata services."
   (:use [clojure.java.io :only [reader]]
         [clojure-commons.validators]
@@ -8,7 +8,6 @@
                                     remove-app-from-category]]
         [kameleon.uuids :only [uuidify]]
         [metadactyl.app-validation :only [app-publishable?]]
-        [metadactyl.user :only [current-user]]
         [metadactyl.util.config :only [workspace-beta-app-category-id
                                        workspace-favorites-app-group-index]]
         [metadactyl.util.service :only [build-url success-response]]
@@ -38,25 +37,40 @@
 
 (defn- validate-deletion-request
   "Validates an app deletion request."
-  [req]
+  [user req]
   (when (empty? (:app_ids req))
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "no app identifiers provided"}))
-  (when (and (nil? (:username current-user)) (not (:root_deletion_request req)))
+  (when (and (nil? (:username user)) (not (:root_deletion_request req)))
     (throw+ {:error_code ce/ERR_BAD_REQUEST
              :reason     "no username provided for non-root deletion request"}))
   (dorun (map validate-app-existence (:app_ids req)))
   (when-not (:root_deletion_request req)
-    (dorun (map (partial validate-app-ownership (:username current-user)) (:app_ids req)))))
+    (dorun (map (partial validate-app-ownership (:username user)) (:app_ids req)))))
 
 (defn permanently-delete-apps
   "This service removes apps from the database rather than merely marking them as deleted."
-  [req]
-  (validate-deletion-request req)
+  [user req]
+  (validate-deletion-request user req)
   (transaction
     (dorun (map amp/permanently-delete-app (:app_ids req)))
     (amp/remove-workflow-map-orphans))
   nil)
+
+(defn delete-apps
+  "This service marks existing apps as deleted in the database."
+  [user req]
+  (validate-deletion-request user req)
+  (transaction (dorun (map amp/delete-app (:app_ids req))))
+  {})
+
+(defn delete-app
+  "This service marks an existing app as deleted in the database."
+  [user app-id]
+  (validate-app-existence app-id)
+  (validate-app-ownership (:username user) app-id)
+  (amp/delete-app app-id)
+  {})
 
 (defn preview-command-line
   "This service sends a command-line preview request to the JEX."
@@ -74,9 +88,9 @@
 (defn rate-app
   "Adds or updates a user's rating and comment ID for the given app. The request must contain either
    the rating or the comment ID, and the rating must be between 1 and 5, inclusive."
-  [app-id {:keys [rating comment_id] :as request}]
+  [user app-id {:keys [rating comment_id] :as request}]
   (validate-app-existence app-id)
-  (let [user-id (get-valid-user-id (:username current-user))]
+  (let [user-id (get-valid-user-id (:username user))]
     (when (and (nil? rating) (nil? comment_id))
       (throw+ {:error_code ce/ERR_BAD_REQUEST
                :reason     (str "No rating or comment ID given")}))
@@ -89,32 +103,32 @@
 
 (defn delete-app-rating
   "Removes a user's rating and comment ID for the given app."
-  [app-id]
+  [user app-id]
   (validate-app-existence app-id)
-  (let [user-id (get-valid-user-id (:username current-user))]
+  (let [user-id (get-valid-user-id (:username user))]
     (amp/delete-app-rating app-id user-id)
     (amp/get-app-avg-rating app-id)))
 
 (defn- get-favorite-category-id
   "Gets the current user's Favorites category ID."
-  []
+  [user]
   (get-app-subcategory-id
-    (:root_category_id (get-workspace))
+    (:root_category_id (get-workspace (:username user)))
     (workspace-favorites-app-group-index)))
 
 (defn add-app-favorite
   "Adds the given app to the current user's favorites list."
-  [app-id]
+  [user app-id]
   (let [app (amp/get-app app-id)
-        fav-category-id (get-favorite-category-id)]
+        fav-category-id (get-favorite-category-id user)]
     (add-app-to-category app-id fav-category-id))
   nil)
 
 (defn remove-app-favorite
   "Removes the given app from the current user's favorites list."
-  [app-id]
+  [user app-id]
   (let [app (amp/get-app app-id)
-        fav-category-id (get-favorite-category-id)]
+        fav-category-id (get-favorite-category-id user)]
   (remove-app-from-category app-id fav-category-id))
   nil)
 

@@ -307,7 +307,7 @@
                                                               :t.tool_id nil})))]))
                (order :id :ASC))))
 
-(defn get-all-app-ids
+(defn list-app-ids
   "This service obtains the identifiers of all apps that refer to valid tools."
   []
   {:app_ids (load-app-ids)})

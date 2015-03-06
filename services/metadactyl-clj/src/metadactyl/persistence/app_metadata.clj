@@ -181,15 +181,19 @@
         (dorun (map (partial add-tool-data-file tool-id true) (:input_files test)))
         (dorun (map (partial add-tool-data-file tool-id false) (:output_files test)))))))
 
+(defn- prep-app
+  "Prepares an app for insertion into the database."
+  [app integration-data-id]
+  (-> (select-keys app [:id :name :description])
+      (assoc :integration_data_id integration-data-id
+             :edited_date         (sqlfn now))))
+
 (defn add-app
   "Adds top-level app info to the database and returns the new app info, including its new ID."
-  [app]
-  (let [integration-data-id (:id (get-integration-data current-user))
-        app (-> app
-                (select-keys [:id :name :description])
-                (assoc :integration_data_id integration-data-id
-                       :edited_date (sqlfn now)))]
-    (insert apps (values app))))
+  ([app]
+     (add-app app current-user))
+  ([app user]
+     (insert apps (values (prep-app app (:id (get-integration-data user)))))))
 
 (defn add-step
   "Adds an app step to the database for the given app ID."
@@ -520,3 +524,34 @@
             (fields (raw "CAST(COALESCE(AVG(rating), 0.0) AS DOUBLE PRECISION) AS average"))
             (aggregate (count :rating) :total)
             (where {:app_id app-id}))))
+
+(defn load-app-steps
+  [app-id]
+  (select [:apps :a]
+          (join [:app_steps :s] {:a.id :s.app_id})
+          (join [:tasks :t] {:s.task_id :t.id})
+          (fields [:s.id              :step_id]
+                  [:t.tool_id         :tool_id]
+                  [:t.external_app_id :external_app_id])
+          (where {:a.id (uuidify app-id)})))
+
+(defn- mapping-base-query
+  []
+  (-> (select* [:workflow_io_maps :wim])
+      (join [:input_output_mapping :iom] {:wim.id :iom.mapping_id})
+      (fields [:wim.source_step     :source_id]
+              [:wim.target_step     :target_id]
+              [:iom.input           :input_id]
+              [:iom.external_input  :external_input_id]
+              [:iom.output          :output_id]
+              [:iom.external_output :external_output_id])))
+
+(defn load-target-step-mappings
+  [step-id]
+  (select (mapping-base-query)
+          (where {:wim.target_step step-id})))
+
+(defn load-app-mappings
+  [app-id]
+  (select (mapping-base-query)
+          (where {:wim.app_id (uuidify app-id)})))

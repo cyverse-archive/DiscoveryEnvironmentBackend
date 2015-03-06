@@ -99,6 +99,7 @@
            app-label   (get-app-name app)
            mod-time    (util/to-utc (:lastModified app))]
        {:groups           (group-format-fn app)
+        :deleted          false
         :disabled         (system-available? agave system-name)
         :label            app-label
         :id               (:id app)

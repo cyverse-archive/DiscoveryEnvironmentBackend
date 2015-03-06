@@ -71,16 +71,16 @@
     [config/app-routes-enabled]
 
     (GET "/apps" [:as {params :params}]
-         (apps/search-apps params))
+         (service/success-response (metadactyl/search-apps params)))
 
-    (POST "/apps" [:as req]
-          (create-app req))
+    (POST "/apps" [:as {:keys [body]}]
+          (service/success-response (metadactyl/create-app body)))
 
-    (POST "/apps/arg-preview" [:as req]
-          (preview-args req))
+    (POST "/apps/arg-preview" [:as {:keys [body]}]
+          (service/success-response (metadactyl/preview-args body)))
 
     (GET "/apps/ids" []
-         (get-all-app-ids))
+         (service/success-response (metadactyl/list-app-ids)))
 
     (GET "/apps/elements" [:as {:keys [params]}]
          (get-all-workflow-elements params))
@@ -100,17 +100,17 @@
     (GET "/apps/pipelines/:app-id/ui" [app-id]
          (apps/edit-workflow app-id))
 
-    (POST "/apps/shredder" [:as req]
-          (delete-apps req))
+    (POST "/apps/shredder" [:as {:keys [body]}]
+          (service/success-response (metadactyl/delete-apps body)))
 
     (GET "/apps/:app-id" [app-id]
-         (apps/get-app app-id))
+         (service/success-response (metadactyl/get-app app-id)))
 
-    (DELETE "/apps/:app-id" [app-id :as req]
-            (delete-app req app-id))
+    (DELETE "/apps/:app-id" [app-id]
+            (service/success-response (metadactyl/delete-app app-id)))
 
-    (PATCH "/apps/:app-id" [app-id :as req]
-           (update-app-labels req app-id))
+    (PATCH "/apps/:app-id" [app-id :as {:keys [body]}]
+           (service/success-response (metadactyl/relabel-app app-id body)))
 
     (PUT "/apps/:app-id" [app-id :as req]
          (update-app req app-id))

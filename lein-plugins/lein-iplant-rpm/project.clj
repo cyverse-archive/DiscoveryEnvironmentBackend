@@ -1,4 +1,4 @@
-(defproject org.iplantc/lein-iplant-rpm "4.1.8"
+(defproject org.iplantc/lein-iplant-rpm "4.2.0"
   :eval-in-leiningen true
   :description "Leiningen Plugin for generating RPMs for Clojure projects."
   :url "http://www.iplantcollaborative.org"
@@ -6,8 +6,8 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :classifiers [["javadoc" :javadoc]
                 ["sources" :sources]]
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [fleet "0.9.5"]]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [fleet "0.10.2"]]
   :repositories {"iplantCollaborative"
                  "http://katic.iplantcollaborative.org/archiva/repository/internal/"}
   :deploy-repositories [["sonatype-nexus-staging"

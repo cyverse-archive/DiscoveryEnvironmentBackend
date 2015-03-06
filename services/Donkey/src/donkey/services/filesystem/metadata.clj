@@ -2,19 +2,26 @@
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
+        [donkey.services.filesystem.metadata-template-avus :only [copy-template-avus-to-dest-ids
+                                                                  find-metadata-template-attributes
+                                                                  get-metadata-template-avu-copies]]
         [donkey.services.filesystem.validators]
+        [kameleon.uuids :only [uuidify]]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.metadata]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
+            [clojure.set :as set]
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.util.config :as cfg]
+            [donkey.persistence.metadata :as persistence]
             [donkey.services.filesystem.icat :as icat]
-            [donkey.services.filesystem.validators :as validators]))
+            [donkey.services.filesystem.uuids :as uuids]
+            [donkey.services.filesystem.validators :as validators]
+            [donkey.util.config :as cfg]))
 
 (defn- fix-unit
   "Used to replace the IPCRESERVED unit with an empty string."
@@ -160,6 +167,104 @@
             (add-metadata cm new-path attr value new-unit))))
       {:path new-path :user user})))
 
+(defn- find-attributes
+  [cm attrs path]
+  (let [matching-avus (get-attributes cm attrs path)]
+    (if-not (empty? matching-avus)
+      {:path path
+       :avus matching-avus}
+      nil)))
+
+(defn- validate-batch-add-attrs
+  "Throws an error if any of the given paths already have metadata set with any of the given attrs."
+  [cm paths attrs]
+  (let [duplicates (remove nil? (map (partial find-attributes cm attrs) paths))]
+    (when-not (empty? duplicates)
+      (validators/duplicate-attrs-error duplicates))))
+
+(defn- metadata-batch-add-to-path
+  "Adds metadata to the given path. If the destination path already has an AVU with the same attr
+   and value as one from the given avus list, that AVU is not added."
+  [cm path avus]
+  (doseq [{:keys [attr value] :as avu} avus]
+    (let [new-unit (reserved-unit avu)]
+      (if-not (attr-value? cm path attr value)
+        (add-metadata cm path attr value new-unit)))))
+
+(defn- metadata-batch-add
+  "Adds metadata to the given paths for a user. The avu map should be in the
+   following format:
+   {
+      :paths []
+      :avus [{:attr :value :unit}]
+   }
+   All paths and values in the maps should be strings, just like with (metadata-set)."
+  [user force? {:keys [paths avus]}]
+  (with-jargon (icat/jargon-cfg) [cm]
+    (validators/user-exists cm user)
+    (validators/all-paths-exist cm paths)
+    (validators/all-paths-writeable cm user paths)
+    (authorized-avus avus)
+    (let [paths (set (map ft/rm-last-slash paths))
+          attrs (set (map :attr avus))]
+      (if-not force?
+        (validate-batch-add-attrs cm paths attrs))
+      (doseq [path paths]
+        (metadata-batch-add-to-path cm path avus))
+      {:paths paths :user user})))
+
+(defn- format-template-avu
+  "Formats a Metadata Template AVU for JSON responses."
+  [avu]
+  (-> avu
+      (select-keys [:attribute :value :unit])
+      (set/rename-keys {:attribute :attr})))
+
+(defn- find-all-matching-attributes
+  "Returns a map containing a list of the AVUs for the given data-id that match the given set of
+   attrs, or nil if no matches were found."
+  [cm template-attrs irods-attrs {:keys [uuid path]}]
+  (let [matching-template-avus (persistence/get-existing-metadata-template-avus-by-attr uuid template-attrs)
+        matching-irods-avus (get-attributes cm irods-attrs path)]
+    (if-not (empty? (concat matching-irods-avus matching-template-avus))
+      {:id uuid
+       :path path
+       :irods-avus matching-irods-avus
+       :template-avus (map format-template-avu matching-template-avus)}
+      nil)))
+
+(defn- validate-dest-attrs
+  "Throws an error if any of the given dest-ids already have Metadata Template AVUs set with any of
+   the given attrs."
+  [cm user dest-items irods-avus templates]
+  (with-jargon (icat/jargon-cfg) [cm]
+    (let [template-attrs (set (map :attr (mapcat :avus templates)))
+          irods-attrs (set (map :attr irods-avus))
+          duplicates (remove nil? (map (partial find-all-matching-attributes cm template-attrs irods-attrs)
+                                       dest-items))]
+      (when-not (empty? duplicates)
+        (validators/duplicate-attrs-error duplicates)))))
+
+(defn- metadata-copy
+  "Copies all IRODS AVUs visible to the client, and Metadata Template AVUs, from the data item with
+   src-id to the items with dest-ids. When the 'force?' parameter is set, additional validation is
+   performed with the validate-dest-attrs function."
+  [user force? src-id dest-ids]
+  (with-jargon (icat/jargon-cfg) [cm]
+    (validators/user-exists cm user)
+    (let [src-path (:path (uuids/path-for-uuid cm user src-id))
+          dest-items (map (partial uuids/path-for-uuid cm user) dest-ids)
+          dest-paths (map :path dest-items)
+          irods-avus (list-path-metadata cm src-path)
+          template-avus (get-metadata-template-avu-copies src-id)]
+      (validators/path-readable cm user src-path)
+      (validators/all-paths-writeable cm user dest-paths)
+      (if-not force?
+        (validate-dest-attrs cm user dest-items irods-avus template-avus))
+      (doseq [path dest-paths]
+        (metadata-batch-add-to-path cm path irods-avus))
+      (copy-template-avus-to-dest-ids user template-avus dest-ids))))
+
 (defn metadata-delete
   "Deletes an AVU from path on behalf of a user. attr and value should be strings."
   [user path attr value]
@@ -172,13 +277,13 @@
     {:path path :user user}))
 
 (defn- check-avus
-  [adds]
+  [avus]
   (mapv
    #(and (map? %1)
          (contains? %1 :attr)
          (contains? %1 :value)
          (contains? %1 :unit))
-   adds))
+    avus))
 
 (defn do-metadata-get
   "Entrypoint for the API. Calls (metadata-get). Parameter should be a map
@@ -232,6 +337,24 @@
 
 (with-post-hook! #'do-metadata-batch-set (log-func "do-metadata-batch-set"))
 
+(defn do-metadata-batch-add
+  "Entrypoint for the API that calls (metadata-batch-add). Body is a map with :avus and :paths keys."
+  [{:keys [user force]} body]
+  (metadata-batch-add user force body))
+
+(with-pre-hook! #'do-metadata-batch-add
+  (fn [params {:keys [paths avus] :as body}]
+    (log-call "do-metadata-batch-add" params body)
+    (validate-map params {:user string?})
+    (validate-map body {:paths sequential? :avus sequential?})
+    (validate-field :paths paths (comp pos? count))
+    (validate-num-paths paths)
+    (validate-field :avus avus (comp pos? count))
+    (validate-field :avus avus (comp (partial every? true?) check-avus))
+    (log/info (icat/jargon-cfg))))
+
+(with-post-hook! #'do-metadata-batch-add (log-func "do-metadata-batch-add"))
+
 (defn do-metadata-delete
   "Entrypoint for the API that calls (metadata-delete). Parameter is a map
    with :user, :path, :attr, :value as keys. Values are strings."
@@ -248,3 +371,16 @@
 
 (with-post-hook! #'do-metadata-delete (log-func "do-metadata-delete"))
 
+(defn do-metadata-copy
+  "Entrypoint for the API that calls (metadata-copy)."
+  [{:keys [user]} data-id force? {dest-ids :destination_ids}]
+  (metadata-copy user force? (uuidify data-id) (map uuidify dest-ids)))
+
+(with-pre-hook! #'do-metadata-copy
+  (fn [{:keys [user] :as params} data-id force {dest-ids :destination_ids :as body}]
+    (log-call "do-metadata-copy" params data-id body)
+    (validate-map params {:user string?})
+    (validate-map body {:destination_ids sequential?})
+    (validate-num-paths dest-ids)))
+
+(with-post-hook! #'do-metadata-copy (log-func "do-metadata-copy"))

@@ -104,6 +104,9 @@
     (POST "/filesystem/metadata-batch" [:as req]
       (controller req meta/do-metadata-batch-set :params :body))
 
+    (POST "/filesystem/metadata-batch-add" [:as req]
+      (controller req meta/do-metadata-batch-add :params :body))
+
     (GET "/filesystem/metadata/templates" [:as req]
       (controller req mt/do-metadata-template-list))
 
@@ -180,8 +183,14 @@
    [#(and (config/filesystem-routes-enabled)
           (config/metadata-routes-enabled))]
 
+   (POST "/filesystem/:data-id/metadata/copy" [data-id force :as req]
+     (controller req meta/do-metadata-copy :params data-id force :body))
+
    (GET "/filesystem/:data-id/template-avus" [data-id :as req]
      (controller req mta/do-metadata-template-avu-list :params data-id))
+
+   (POST "/filesystem/:data-id/template-avus/copy" [data-id force :as req]
+     (controller req mta/do-copy-metadata-template-avus :params data-id force :body))
 
    (GET "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
      (controller req mta/do-metadata-template-avu-list :params data-id template-id))

@@ -75,3 +75,35 @@
   (let [state-info (str "type=apps&app-category=" category-id)
         client     (get-apps-client user state-info)]
     (.listAppsInCategory client category-id params)))
+
+(defn search-apps
+  [user {:keys [search] :as params}]
+  (.searchApps (get-apps-client user "") search params))
+
+(defn add-app
+  [user app]
+  (.addApp (get-apps-client user "") app))
+
+(defn preview-command-line
+  [user app]
+  (.previewCommandLine (get-apps-client user "") app))
+
+(defn list-app-ids
+  [user]
+  (.listAppIds (get-apps-client user "")))
+
+(defn delete-apps
+  [user deletion-request]
+  (.deleteApps (get-apps-client user "") deletion-request))
+
+(defn get-app-job-view
+  [user app-id]
+  (.getAppJobView (get-apps-client user "") app-id))
+
+(defn delete-app
+  [user app-id]
+  (.deleteApp (get-apps-client user "") app-id))
+
+(defn relabel-app
+  [user app]
+  (.relabelApp (get-apps-client user "") app))

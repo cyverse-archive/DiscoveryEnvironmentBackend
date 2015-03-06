@@ -1,10 +1,8 @@
 (ns metadactyl.routes.apps
-  (:use [metadactyl.app-listings :only [get-all-app-ids
-                                        get-app-details
+  (:use [metadactyl.app-listings :only [get-app-details
                                         get-app-description
                                         get-app-task-listing
-                                        get-app-tool-listing
-                                        search-apps]]
+                                        get-app-tool-listing]]
         [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.rating]
@@ -13,12 +11,13 @@
         [metadactyl.service.app-documentation :only [get-app-docs
                                                      owner-add-app-docs
                                                      owner-edit-app-docs]]
-        [metadactyl.zoidberg.app-edit :only [add-app copy-app get-app-ui relabel-app update-app]]
+        [metadactyl.user :only [current-user]]
+        [metadactyl.zoidberg.app-edit :only [copy-app get-app-ui update-app]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
-            [metadactyl.metadata.job-view :as jv]
             [metadactyl.service.app-metadata :as app-metadata]
+            [metadactyl.service.apps :as apps]
             [metadactyl.util.service :as service]
             [compojure.route :as route]
             [ring.swagger.schema :as ss]
@@ -32,7 +31,7 @@
         :notes "This service allows users to search for Apps based on a part of the App name or
         description. The response body contains an `apps` array that is in the same format as
         the `apps` array in the /apps/categories/:category-id endpoint response."
-        (ce/trap uri #(search-apps params)))
+        (service/coerced-trap uri AppListing apps/search-apps current-user params))
 
   (POST* "/" [:as {uri :uri}]
          :query [params SecuredQueryParamsRequired]
@@ -40,7 +39,7 @@
          :return App
          :summary "Add a new App."
          :notes "This service adds a new App to the user's workspace."
-         (ce/trap uri #(add-app body)))
+         (service/trap uri apps/add-app current-user body))
 
   (POST* "/arg-preview" [:as {uri :uri}]
          :query [params SecuredQueryParams]
@@ -52,7 +51,7 @@
          body also requires that each parameter contain a `value` field that contains the parameter
          value to include on the command line. The response body is in the same format as the
          `/arg-preview` service in the JEX. Please see the JEX documentation for more information."
-         (ce/trap uri #(service/success-response (app-metadata/preview-command-line body))))
+         (service/trap uri apps/preview-command-line current-user body))
 
   (GET* "/ids" [:as {uri :uri}]
         :query [params SecuredQueryParams]
@@ -60,7 +59,7 @@
         :summary "List All App Identifiers"
         :notes "The export script needs to have a way to obtain the identifiers of all of the apps
         in the Discovery Environment, deleted or not. This service provides that information."
-        (ce/trap uri #(get-all-app-ids)))
+        (service/trap uri apps/list-app-ids current-user))
 
   (POST* "/shredder" [:as {uri :uri}]
          :query [params SecuredQueryParams]
@@ -71,16 +70,16 @@
          is already marked as deleted is treated as a no-op rather than an error condition. If the
          App doesn't exist in the database at all, however, then that is treated as an error
          condition."
-         (ce/trap uri #(app-metadata/delete-apps body)))
+         (service/trap uri apps/delete-apps current-user body))
 
   (GET* "/:app-id" [:as {uri :uri}]
-        :path-params [app-id :- AppIdPathParam]
+        :path-params [app-id :- AppIdJobViewPathParam]
         :query [params SecuredQueryParams]
         :summary "Obtain an app description."
         :return AppJobView
         :notes "This service allows the Discovery Environment user interface to obtain an
         app description that can be used to construct a job submission form."
-        (ce/trap uri #(service/success-response (jv/get-app app-id))))
+        (service/coerced-trap uri AppJobView apps/get-app-job-view current-user app-id))
 
   (DELETE* "/:app-id" [:as {uri :uri}]
            :path-params [app-id :- AppIdPathParam]
@@ -89,8 +88,9 @@
            :notes "An app can be marked as deleted in the DE without being completely removed from
            the database using this service. <b>Note</b>: an attempt to delete an App that is already
            marked as deleted is treated as a no-op rather than an error condition. If the App
-           doesn't exist in the database at all, however, then that is treated as an error condition."
-           (ce/trap uri #(app-metadata/delete-app app-id)))
+           doesn't exist in the database at all, however, then that is treated as an error
+           condition."
+           (service/trap uri apps/delete-app current-user app-id))
 
   (PATCH* "/:app-id" [:as {uri :uri}]
           :path-params [app-id :- AppIdPathParam]
@@ -106,7 +106,7 @@
           only the 'name' (except in parameters and parameter arguments), 'description', 'label',
           and 'display' (only in parameter arguments) fields will be processed and updated by this
           endpoint."
-          (ce/trap uri #(relabel-app (assoc body :id app-id))))
+          (service/trap uri apps/relabel-app current-user (assoc body :id app-id)))
 
   (PUT* "/:app-id" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]

@@ -7,6 +7,7 @@
             [liberator.representation :as rep]
             [me.raynes.fs :as fs]
             [clj-icat-direct.icat :as icat]
+            [clj-jargon.by-uuid :as uuid]
             [clj-jargon.init :as init]
             [clj-jargon.item-info :as item]
             [clj-jargon.item-ops :as ops]
@@ -49,7 +50,7 @@
     (init/with-jargon (cfg/jargon-cfg) [cm]
       (if-not (user/user-exists? cm user)
         {::processable? false}
-        (if-let [path (irods/get-path cm (UUID/fromString url-id))]
+        (if-let [path (uuid/get-path cm (UUID/fromString url-id))]
           (when (perm/is-readable? cm user path)
             {::processable? true ::exists? true})
           {::processable? true ::exists? false})))

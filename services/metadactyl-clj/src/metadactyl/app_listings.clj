@@ -30,83 +30,6 @@
    :is_public  true
    :app_count  (count-deleted-and-orphaned-apps)})
 
-(defn- validate-app-pipeline-eligibility
-  "Validates an App for pipeline eligibility, throwing a slingshot stone ."
-  [app]
-  (let [app_id (:id app)
-        step_count (:step_count app)
-        overall_job_type (:overall_job_type app)]
-    (if (< step_count 1)
-      (throw+ {:reason
-               (str "Analysis, "
-                    app_id
-                    ", has too few steps for a pipeline.")}))
-    (if (> step_count 1)
-      (throw+ {:reason
-               (str "Analysis, "
-                    app_id
-                    ", has too many steps for a pipeline.")}))
-    (if-not (= overall_job_type "executable")
-      (throw+ {:reason
-               (str "Job type, "
-                    overall_job_type
-                    ", can't currently be included in a pipeline.")}))))
-
-(defn- format-app-pipeline-eligibility
-  "Validates an App for pipeline eligibility, reformatting its :overall_job_type value, and
-   replacing it with a :pipeline_eligibility map"
-  [app]
-  (let [pipeline_eligibility (try+
-                              (validate-app-pipeline-eligibility app)
-                              {:is_valid true
-                               :reason ""}
-                              (catch map? {:keys [reason]}
-                                {:is_valid false
-                                 :reason reason}))
-        app (dissoc app :overall_job_type)]
-    (assoc app :pipeline_eligibility pipeline_eligibility)))
-
-(defn- format-app-ratings
-  "Formats an App's :average_rating, :user_rating, and :comment_id values into a
-   :rating map."
-  [{:keys [average_rating total_ratings user_rating comment_id] :as app}]
-  (-> app
-    (dissoc :average_rating :total_ratings :user_rating :comment_id)
-    (assoc :rating (remove-nil-vals
-                     {:average average_rating
-                      :total total_ratings
-                      :user user_rating
-                      :comment_id comment_id}))))
-
-(defn- app-can-run?
-  [{tool-count :tool_count external-app-count :external_app_count task-count :task_count}]
-  (= (+ tool-count external-app-count) task-count))
-
-(defn format-app-listing
-  "Formats certain app fields into types more suitable for the client."
-  [app]
-  (-> (assoc app :can_run (app-can-run? app))
-      (dissoc :tool_count :task_count :external_app_count)
-      (format-app-ratings)
-      (format-app-pipeline-eligibility)
-      (assoc :can_favor true :can_rate true :app_type "DE")
-      (remove-nil-vals)))
-
-(defn search-apps
-  "This service searches for apps in the user's workspace and all public app
-   groups, based on a search term."
-  [params]
-  (let [search_term (curl/url-decode (:search params))
-        workspace (get-workspace)
-        total (count-search-apps-for-user search_term (:id workspace) params)
-        search_results (search-apps-for-user
-                        search_term
-                        workspace
-                        (workspace-favorites-app-group-index)
-                        params)
-        search_results (map format-app-listing search_results)]
-    (service/success-response {:app_count total
-                               :apps search_results})))
 
 (defn- load-app-details
   "Retrieves the details for a single app."
@@ -147,27 +70,6 @@
     (->> (format-app-details details tools)
          (remove-nil-vals)
          (service/success-response))))
-
-(defn load-app-ids
-  "Loads the identifiers for all apps that refer to valid tools from the database."
-  []
-  (map :id
-       (select [:apps :app]
-               (modifier "distinct")
-               (fields :app.id)
-               (join [:app_steps :step]
-                     {:app.id :step.app_id})
-               (where (not [(sqlfn :exists (subselect [:tasks :t]
-                                                      (join [:tools :dc]
-                                                            {:t.tool_id :dc.id})
-                                                      (where {:t.id :step.task_id
-                                                              :t.tool_id nil})))]))
-               (order :id :ASC))))
-
-(defn get-all-app-ids
-  "This service obtains the identifiers of all apps that refer to valid tools."
-  []
-  (service/success-response {:app_ids (load-app-ids)}))
 
 (defn get-app-description
   "This service obtains the description of an app."
