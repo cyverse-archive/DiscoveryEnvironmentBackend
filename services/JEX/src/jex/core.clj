@@ -19,32 +19,34 @@
             [jex.process :as jp]
             [jex.json-body :as jb]
             [clojure.java.io :as ds]
-            [taoensso.timbre :as log]
             [cheshire.core :as cheshire]
             [me.raynes.fs :as fs]
             [common-cli.core :as ccli]
+            [taoensso.timbre :as log]
             [common-cfg.cfg :as cfg]))
 
 (log/refer-timbre)
-
-(defn req-logger
-  [handler]
-  (fn [req]
-     (log/info "request received:" req)
-     (handler req)))
 
 (defn do-submission
   "Handles a request on /. "
   [request]
   (try
     (let [body (:body request)]
-      (try
-        (when-not (jp/validate-submission body)
-          (throw+ {:error_code "ERR_INVALID_JSON"}))
-        (jp/submit body)
-        (catch Exception e
-          (log/error e "job submission failed")
-          (throw+ {:error_code "ERR_UNHANDLED_EXCEPTION"}))))))
+      (log/warn "Received job request:")
+      (log/warn (cheshire/encode body))
+
+      (if (jp/validate-submission body)
+        (let [[exit-code dag-id] (jp/submit body)]
+          (cond
+            (not= exit-code 0)
+            (throw+ {:error_code "ERR_FAILED_NON_ZERO"})
+
+            :else
+            {:sub_id dag-id}))
+        (throw+ {:error_code "ERR_INVALID_JSON"})))
+    (catch Exception e
+      (log/error e "job submission failed")
+      (throw+ {:error_code "ERR_UNHANDLED_EXCEPTION"}))))
 
 (defroutes jex-routes
   (GET "/" [] "Welcome to the JEX.")
@@ -57,6 +59,12 @@
 
   (DELETE "/stop/:uuid" [uuid]
           (trap "stop" jp/stop-analysis uuid)))
+
+(defn req-logger
+  [handler]
+  (fn [req]
+    (log/info "request received:" req)
+    (handler req)))
 
 (defn site-handler [routes]
   (-> routes

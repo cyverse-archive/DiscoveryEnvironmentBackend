@@ -157,19 +157,28 @@
 (defn condor-submit
   "Submits a job to Condor. sub-path should be the path to a Condor submission
    file."
-  [sub-path log-dir]
-  (let [uuid   (str (java.util.UUID/randomUUID))
-        path   (io/file (cfg/submission-path) (str uuid ".tmp"))
-        mvpath (io/file (cfg/submission-path) (str uuid ".submit"))
-        contents (str sub-path "\n" log-dir)]
-    (spit path contents)
-    (fs/rename path mvpath)))
+  [work-dir sub-path]
+  (let [result (sh/with-sh-env (condor-env) (sh/sh "submitnerator.sh" work-dir sub-path))]
+    (handle-submit-results result)
+    result))
 
 (defn submit
   "Applies the incoming tranformations to the submitted request, submits the
    job to the Condor cluster, applies outgoing transformations, and dumps the
    resulting map to the OSM."
   [submit-map]
-  (let [[sub-path updated-map] (generate-submission submit-map)]
-    (log/warn "[submit] username:" (:username updated-map) "app:" (:app_id updated-map) "job:" (:uuid updated-map))
-    (condor-submit sub-path (dagify/local-log-dir updated-map))))
+  (let [[sub-path updated-map] (generate-submission submit-map)
+        sub-result (condor-submit (str (fs/parent sub-path)) sub-path)
+        sub-id     (submission-id sub-result)]
+    (log/warn "Submitted Job:" sub-id)
+    (log/warn "Pushing to jex-events:\n\tCondorID:" sub-id
+              "\n\tUsername:" (:username updated-map)
+              "\n\tAppID:"  (:app_id updated-map)
+              "\n\tInvocationID:" (:uuid updated-map))
+    (try
+      (push-job-to-jex-events sub-id (:username updated-map) (:app_id updated-map) (:uuid updated-map))
+      (catch Exception e
+        (log/warn "Exception caught when sending event to jex-events, cancelling job:" e)
+        (condor-rm sub-id)
+        (throw e)))
+    [(:exit sub-result) sub-id]))
