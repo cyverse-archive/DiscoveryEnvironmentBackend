@@ -430,11 +430,11 @@
 
 (defn copy-app
   "This service makes a copy of an App available in Tito for editing."
-  [app-id]
+  [user app-id]
   (-> app-id
       (persistence/get-app)
       (convert-app-to-copy)
-      (add-app)))
+      ((partial add-app user))))
 
 (defn relabel-app
   "This service allows labels to be updated in any app, whether or not the app has been submitted

@@ -53,4 +53,8 @@
 
   (updateApp [_ app]
     (when (util/uuid? (:id app))
-      (edit/update-app user app))))
+      (edit/update-app user app)))
+
+  (copyApp [_ app-id]
+    (when (util/uuid? app-id)
+      (edit/copy-app user app-id))))

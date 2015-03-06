@@ -111,3 +111,7 @@
 (defn update-app
   [user app]
   (.updateApp (get-apps-client user "") app))
+
+(defn copy-app
+  [user app-id]
+  (.copyApp (get-apps-client user "") app-id))

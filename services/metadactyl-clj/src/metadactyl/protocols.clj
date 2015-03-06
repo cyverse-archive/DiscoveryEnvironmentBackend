@@ -15,4 +15,5 @@
   (getAppJobView [_ app-id])
   (deleteApp [_ app-id])
   (relabelApp [_ app])
-  (updateApp [_ app]))
+  (updateApp [_ app])
+  (copyApp [_ app-id]))

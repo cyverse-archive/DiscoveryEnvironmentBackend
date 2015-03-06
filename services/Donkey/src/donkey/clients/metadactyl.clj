@@ -115,6 +115,13 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn copy-app
+  [app-id]
+  (client/post (metadactyl-url "apps" app-id "copy")
+               {:query-params     (secured-params)
+                :as               :stream
+                :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")

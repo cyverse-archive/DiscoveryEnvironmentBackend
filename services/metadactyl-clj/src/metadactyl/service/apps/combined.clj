@@ -55,4 +55,7 @@
     (.relabelApp (util/get-apps-client clients) app))
 
   (updateApp [_ app]
-    (.updateApp (util/get-apps-client clients) app)))
+    (.updateApp (util/get-apps-client clients) app))
+
+  (copyApp [_ app-id]
+    (.copyApp (util/get-apps-client clients) app-id)))

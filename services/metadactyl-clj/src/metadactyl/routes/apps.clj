@@ -12,7 +12,7 @@
                                                      owner-add-app-docs
                                                      owner-edit-app-docs]]
         [metadactyl.user :only [current-user]]
-        [metadactyl.zoidberg.app-edit :only [copy-app get-app-ui]]
+        [metadactyl.zoidberg.app-edit :only [get-app-ui]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -124,7 +124,7 @@
          :return App
          :summary "Make a Copy of an App Available for Editing"
          :notes "This service can be used to make a copy of an App in the user's workspace."
-         (ce/trap uri #(copy-app app-id)))
+         (service/trap uri apps/copy-app current-user app-id))
 
   (GET* "/:app-id/description" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]
