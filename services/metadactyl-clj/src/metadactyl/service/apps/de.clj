@@ -45,4 +45,8 @@
 
   (deleteApp [_ app-id]
     (when (util/uuid? app-id)
-      (app-metadata/delete-app user (uuidify app-id)))))
+      (app-metadata/delete-app user (uuidify app-id))))
+
+  (relabelApp [_ app]
+    (when (util/uuid? (:id app))
+      (edit/relabel-app user app))))

@@ -97,6 +97,15 @@
                   :as               :stream
                   :follow-redirects false}))
 
+(defn relabel-app
+  [app-id relabel-request]
+  (client/patch (metadactyl-url "apps" app-id)
+                {:query-params     (secured-params)
+                 :body             relabel-request
+                 :content-type     :json
+                 :as               :stream
+                 :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")

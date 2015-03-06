@@ -12,7 +12,7 @@
                                                      owner-add-app-docs
                                                      owner-edit-app-docs]]
         [metadactyl.user :only [current-user]]
-        [metadactyl.zoidberg.app-edit :only [copy-app get-app-ui relabel-app update-app]]
+        [metadactyl.zoidberg.app-edit :only [copy-app get-app-ui update-app]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -106,7 +106,7 @@
           only the 'name' (except in parameters and parameter arguments), 'description', 'label',
           and 'display' (only in parameter arguments) fields will be processed and updated by this
           endpoint."
-          (ce/trap uri #(relabel-app (assoc body :id app-id))))
+          (service/trap uri apps/relabel-app current-user (assoc body :id app-id)))
 
   (PUT* "/:app-id" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]

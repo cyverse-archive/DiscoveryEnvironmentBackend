@@ -49,4 +49,7 @@
     (job-view/get-app app-id clients))
 
   (deleteApp [_ app-id]
-    (.deleteApp (util/get-apps-client clients) app-id)))
+    (.deleteApp (util/get-apps-client clients) app-id))
+
+  (relabelApp [_ app]
+    (.relabelApp (util/get-apps-client clients) app)))

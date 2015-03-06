@@ -439,7 +439,7 @@
 (defn relabel-app
   "This service allows labels to be updated in any app, whether or not the app has been submitted
    for public use."
-  [{app-id :id :as body}]
-  (verify-app-ownership (persistence/get-app app-id))
+  [user {app-id :id :as body}]
+  (verify-app-ownership user (persistence/get-app app-id))
   (transaction (persistence/update-app-labels body))
   (get-app-ui app-id))

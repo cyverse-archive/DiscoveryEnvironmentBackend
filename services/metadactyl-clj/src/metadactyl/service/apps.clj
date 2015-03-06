@@ -103,3 +103,7 @@
 (defn delete-app
   [user app-id]
   (.deleteApp (get-apps-client user "") app-id))
+
+(defn relabel-app
+  [user app]
+  (.relabelApp (get-apps-client user "") app))
