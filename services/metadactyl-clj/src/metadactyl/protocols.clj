@@ -14,4 +14,5 @@
   (deleteApps [_ deletion-request])
   (getAppJobView [_ app-id])
   (deleteApp [_ app-id])
-  (relabelApp [_ app]))
+  (relabelApp [_ app])
+  (updateApp [_ app]))

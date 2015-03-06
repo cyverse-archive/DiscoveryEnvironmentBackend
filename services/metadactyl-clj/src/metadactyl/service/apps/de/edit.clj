@@ -330,8 +330,8 @@
 (defn update-app
   "This service will update a single-step App, including the information at its top level and the
    tool used by its single task, as long as the App has not been submitted for public use."
-  [{app-id :id :keys [references groups] :as app}]
-  (verify-app-editable (persistence/get-app app-id))
+  [user {app-id :id :keys [references groups] :as app}]
+  (verify-app-editable user (persistence/get-app app-id))
   (transaction
     (persistence/update-app app)
     (let [tool-id (->> app :tools first :id)

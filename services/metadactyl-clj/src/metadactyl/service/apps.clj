@@ -107,3 +107,7 @@
 (defn relabel-app
   [user app]
   (.relabelApp (get-apps-client user "") app))
+
+(defn update-app
+  [user app]
+  (.updateApp (get-apps-client user "") app))

@@ -12,7 +12,7 @@
                                                      owner-add-app-docs
                                                      owner-edit-app-docs]]
         [metadactyl.user :only [current-user]]
-        [metadactyl.zoidberg.app-edit :only [copy-app get-app-ui update-app]]
+        [metadactyl.zoidberg.app-edit :only [copy-app get-app-ui]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -116,7 +116,7 @@
         :summary "Update an App"
         :notes "This service updates a single-step App in the database, as long as the App has not
         been submitted for public use."
-        (ce/trap uri #(update-app (assoc body :id app-id))))
+        (service/trap uri apps/update-app current-user (assoc body :id app-id)))
 
   (POST* "/:app-id/copy" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]

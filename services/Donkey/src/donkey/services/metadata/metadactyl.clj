@@ -349,13 +349,6 @@
         req (metadactyl-request req)]
     (forward-post url req)))
 
-(defn update-app
-  "This service will update an existing single-step app in the DE."
-  [req app-id]
-  (let [url (metadactyl-url {} "apps" app-id)
-        req (metadactyl-request req)]
-    (forward-put url req)))
-
 (defn make-app-public
   "This service copies an app from a user's private workspace to the public workspace."
   [req app-id]

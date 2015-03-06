@@ -49,4 +49,8 @@
 
   (relabelApp [_ app]
     (when (util/uuid? (:id app))
-      (edit/relabel-app user app))))
+      (edit/relabel-app user app)))
+
+  (updateApp [_ app]
+    (when (util/uuid? (:id app))
+      (edit/update-app user app))))

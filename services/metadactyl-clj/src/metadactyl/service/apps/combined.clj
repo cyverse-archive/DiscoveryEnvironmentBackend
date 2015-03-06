@@ -52,4 +52,7 @@
     (.deleteApp (util/get-apps-client clients) app-id))
 
   (relabelApp [_ app]
-    (.relabelApp (util/get-apps-client clients) app)))
+    (.relabelApp (util/get-apps-client clients) app))
+
+  (updateApp [_ app]
+    (.updateApp (util/get-apps-client clients) app)))
