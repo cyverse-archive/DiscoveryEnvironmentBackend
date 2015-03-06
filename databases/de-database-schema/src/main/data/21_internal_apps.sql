@@ -23,6 +23,22 @@ INSERT INTO tools (id, "name", location, description, version, tool_type_id, int
     LIMIT 1;
 
 --
+-- A fake tool for testing.
+--
+INSERT INTO tools (id, "name", location, description, version, tool_type_id, integration_data_id)
+    SELECT '4c7105ce-b900-405f-b067-cd3b152d3b4b',
+           'notreal',
+           '/not/real/',
+           'not a real tool',
+           '1.0.0',
+           tool_types.id,
+           integration_data.id
+      FROM tool_types, integration_data
+     WHERE tool_types."name" = 'internal'
+       AND integration_data.integrator_name = 'Internal DE Tools'
+     LIMIT 1;
+
+--
 -- The internal app for the curl wrapper used for URL imports.
 --
 INSERT INTO apps (id, "name", description, integration_data_id, wiki_url, integration_date)
@@ -98,3 +114,22 @@ INSERT INTO app_steps (step, id, app_id, task_id) VALUES
      'EE78DEB5-EBBB-4D9D-8DCF-8DFE457A7856',
      '1E8F719B-0452-4D39-A2F3-8714793EE3E6',
      '212C5980-9A56-417E-A8C6-394AC445CA4D');
+
+INSERT INTO container_images (name, tag, url) VALUES
+    ('discoenv/curl-wrapper',
+     'latest',
+     'https://registry.hub.docker.com/u/discoenv/curl-wrapper/');
+
+INSERT INTO container_settings (tools_id)
+    SELECT tools.id
+      FROM tools
+     WHERE tools."name" = 'curl_wrapper.pl'
+     LIMIT 1;
+
+UPDATE ONLY tools SET container_images_id = (
+  SELECT container_images.id
+    FROM container_images
+   WHERE container_images."name" = 'discoenv/curl-wrapper'
+     AND container_images.tag = 'latest'
+   LIMIT 1
+);

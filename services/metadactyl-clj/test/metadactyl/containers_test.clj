@@ -21,6 +21,7 @@
 
 (def image-info-map (add-image-info {:name "discoenv/de-db" :tag "latest" :url "https://www.google.com"}))
 
+
 (deftest image-tests []
   (is (not (image? {:name "test" :tag "test"})))
 
@@ -32,7 +33,7 @@
          (dissoc (image-info (image-id {:name "discoenv/de-db" :tag "latest"})) :id))))
 
 
-(def tool-map (first (select tools)))
+(def tool-map (first (select tools (where {:name "notreal"}))))
 
 (def settings-map  (add-settings {:name "test"
                                   :cpu_shares 1024
