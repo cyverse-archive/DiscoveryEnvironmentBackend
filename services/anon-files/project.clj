@@ -20,7 +20,6 @@
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/common-cfg "5.0.0"]
                  [medley "0.1.5"]
-                 [me.raynes/fs "1.4.4"]
                  [compojure "1.1.6"]
                  [ring "1.2.1"]]
   :iplant-rpm {:summary "Serves up files and directories that are shared with the anonymous user in iRODS."
