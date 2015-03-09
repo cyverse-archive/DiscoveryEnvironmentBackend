@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/data-info "4.2.0"
+(defproject org.iplantc/data-info "5.0.0"
   :description "provides the data information HTTP API"
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "data-info-standalone.jar"
@@ -30,12 +30,12 @@
                  [ring "1.3.2"]
                  [slingshot "0.12.2"]
                  [trptcolin/versioneer "0.1.1"]
-                 [org.iplantc/clj-icat-direct "4.2.0"]
-                 [org.iplantc/clj-jargon "4.2.0"]
-                 [org.iplantc/clojure-commons "4.2.0"]
-                 [org.iplantc/common-cli "4.2.0"]
-                 [org.iplantc/heuristomancer "4.2.0"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "4.2.0"]
+                 [org.iplantc/clj-icat-direct "5.0.0"]
+                 [org.iplantc/clj-jargon "5.0.0"]
+                 [org.iplantc/clojure-commons "5.0.0"]
+                 [org.iplantc/common-cli "5.0.0"]
+                 [org.iplantc/heuristomancer "5.0.0"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]
             [lein-ring "0.8.8"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev     {:resource-paths ["conf/test"]}
