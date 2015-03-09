@@ -304,7 +304,7 @@
      " "
      (filter
       (comp not nil?)
-      ["run -it"
+      ["run --rm -a stdout -a stderr"
        (container-volume-args container-map)
        (container-device-args container-map)
        (container-volumes-from-args container-map)
@@ -400,16 +400,16 @@
   [condor-map]
   (for [[step-idx step] (step-iterator-vec condor-map)]
     (assoc step
-      :id (str "condor-" step-idx)
-      :type "condor"
+      :id              (str "condor-" step-idx)
+      :type            "condor"
       :submission_date (:submission_date condor-map)
-      :status "Submitted"
-      :environment (environment step)
-      :executable (executable step)
-      :arguments (arguments step)
-      :stdout (stdout step step-idx)
-      :stderr (stderr step step-idx)
-      :log-file (log-file step step-idx (:condor-log-dir condor-map)))))
+      :status          "Submitted"
+      :environment     (environment step)
+      :executable      (executable step)
+      :arguments       (arguments step)
+      :stdout          (stdout step step-idx)
+      :stderr          (stderr step step-idx)
+      :log-file        (log-file step step-idx (:condor-log-dir condor-map)))))
 
 (defn steps
   "Processes the steps in a map into a saner format. Returns a new version
@@ -431,6 +431,12 @@
    associated with the input job in question."
   [step-index input-index]
   (str "condor-" step-index "-input-" input-index))
+
+(defn input-executable
+  [step-map]
+  (if-not (containerized? step-map)
+    "java"
+    "docker"))
 
 (defn input-stdout
   "Takes in the step index and the input index and returns the path to the
@@ -456,12 +462,15 @@
 
 (defn input-arguments
   "Formats the arguments to porklock for an input job."
-  [condor-map source input-map]
-  (let [file-metadata (or (:file-metadata condor-map) [])]
-    (str "-jar " (cfg/jar-path)
+  [condor-map step-map source input-map]
+  (let [file-metadata (or (:file-metadata condor-map) [])
+        arg-prefix    (if-not (containerized? step-map)
+                        (str "-jar " (cfg/jar-path))
+                        (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock"))]
+    (str arg-prefix
          " get --user " (:username condor-map)
          " --source " (quote-value
-                        (handle-source-path source (:multiplicity input-map)))
+                       (handle-source-path source (:multiplicity input-map)))
          " --config " (irods-config condor-map)
          (file-metadata-arg file-metadata))))
 
@@ -490,10 +499,11 @@
      :retain          (:retain input)
      :multi           (:multiplicity input)
      :source          (:value input)
-     :executable      "java"
+     :executable      (input-executable step-map)
      :environment     (filetool-env)
      :arguments       (input-arguments
                        condor-map
+                       step-map
                        (:value input)
                        input)
      :stdout          (input-stdout step-idx input-idx)
@@ -519,12 +529,21 @@
 
 (defn output-arguments
   "Formats the porklock arguments for output jobs."
-  [user source dest]
-  (str "-jar " (cfg/jar-path)
-       " put --user " user
-       " --source " (quote-value source)
-       " --destination " (quote-value dest)
-       " --config logs/irods-config"))
+  [step-map user source dest]
+  (let [arg-prefix (if-not (containerized? step-map)
+                     (str "-jar " (cfg/jar-path))
+                     (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock"))]
+    (str arg-prefix
+         " put --user " user
+         " --source " (quote-value source)
+         " --destination " (quote-value dest)
+         " --config logs/irods-config")))
+
+(defn output-executable
+  [step-map]
+  (if-not (containerized? step-map)
+    "java"
+    "docker"))
 
 (defn output-id-str
   "Generates an identifier for output jobs based on the step index and the
@@ -558,8 +577,9 @@
      :retain          (:retain output)
      :multi           (:multiplicity output)
      :environment     (filetool-env)
-     :executable      "java"
+     :executable      (output-executable step-map)
      :arguments       (output-arguments
+                       step-map
                        (:username condor-map)
                        (:name output)
                        (:output_dir condor-map))
@@ -683,6 +703,32 @@
   [{analysis-id :app_id uuid :uuid :as condor-map}]
   (-> condor-map meta-analysis-id meta-app-execution))
 
+(defn shotgun-executable
+  [condor-map]
+  (if-not (containerized? (first (:steps condor-map)))
+    "java"
+    "docker"))
+
+(defn shotgun-arguments
+  [{output-dir    :output_dir
+    cinput-jobs   :all-input-jobs
+    coutput-jobs  :all-output-jobs
+    username      :username
+    file-metadata :file-metadata
+    :or {file-metadata []}
+    :as condor-map}]
+  (let [arg-prefix (if-not (containerized? (first (:steps condor-map)))
+                     (str "-jar " (cfg/jar-path))
+                     (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock"))]
+    (str arg-prefix
+         " put --user " username
+         " --config irods-config" 
+         " --destination " (quote-value output-dir)
+         (if (:skip-parent-meta condor-map) " --skip-parent-meta" "")
+         (file-metadata-arg file-metadata)
+         " "
+         (exclude-arg cinput-jobs coutput-jobs))))
+
 (defn shotgun-job-map
   "Formats a job definition for the output job that transfers
    all of the files back into iRODS after the analysis is complete."
@@ -697,19 +743,12 @@
   (log/info "shotgun-job-map")
   {:id          "output-last"
    :status      "Submitted"
-   :executable  "java"
+   :executable  (shotgun-executable condor-map)
    :environment (filetool-env)
    :stderr      "logs/output-last-stderr"
    :stdout      "logs/output-last-stdout"
-   :log-file    (ut/path-join condor-log "logs" "output-last-log")
-   :arguments   (str "-jar " (cfg/jar-path)
-                     " put --user " username
-                     " --config " (irods-config condor-map)
-                     " --destination " (quote-value output-dir)
-                     (if (:skip-parent-meta condor-map) " --skip-parent-meta" "")
-                     (file-metadata-arg file-metadata)
-                     " "
-                     (exclude-arg cinput-jobs coutput-jobs))})
+   :log-file    "logs/output-last-log"
+   :arguments   (shotgun-arguments condor-map)})
 
 (defn extra-jobs
   "Associates the :final-output-job and :imkdir-job definitions

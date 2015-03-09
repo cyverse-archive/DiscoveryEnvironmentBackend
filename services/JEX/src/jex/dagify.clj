@@ -125,9 +125,17 @@
      "EXITSTATUS=0\n"
      "mkdir -p logs\n"
      fail-script
-     "touch logs/de-transfer-trigger.txt\n"
+     "ls -al > logs/de-transfer-trigger.log\n"
      fail-script
      (join "\n" (map script-line (jobs-in-order analysis-map)))
+     "hostname\n"
+     "ps aux\n"
+     "echo -----\n"
+     "for i in $(ls logs); do\n"
+     "    echo logs/$i\n"
+     "    cat logs/$i\n"
+     "    echo -----\n"
+          "done\n"
      "exit $EXITSTATUS\n")))
 
 (defn local-log-dir
