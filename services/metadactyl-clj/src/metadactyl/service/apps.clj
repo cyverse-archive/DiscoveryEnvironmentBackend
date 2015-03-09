@@ -115,3 +115,7 @@
 (defn copy-app
   [user app-id]
   (.copyApp (get-apps-client user "") app-id))
+
+(defn get-app-description
+  [user app-id]
+  (.getAppDescription (get-apps-client user "") app-id))
