@@ -100,7 +100,9 @@
   (is (settings-has-volumes-from? (:id settings-map) (:id volumes-from-map))))
 
 
-(def updated-tool (update tools (set-fields {:container_images_id (:id image-info-map)})))
+(def updated-tool (update tools
+                          (set-fields {:container_images_id (:id image-info-map)})
+                          (where {:id (:id tool-map)})))
 
 (defn updated-tool-tests []
   (is (not (nil? (:id updated-tool))))

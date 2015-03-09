@@ -115,21 +115,14 @@ INSERT INTO app_steps (step, id, app_id, task_id) VALUES
      '1E8F719B-0452-4D39-A2F3-8714793EE3E6',
      '212C5980-9A56-417E-A8C6-394AC445CA4D');
 
-INSERT INTO container_images (name, tag, url) VALUES
-    ('discoenv/curl-wrapper',
+INSERT INTO container_images (id, "name", tag, url) VALUES
+    ('15959300-b972-4571-ace2-081af0909599',
+     'discoenv/curl-wrapper',
      'latest',
      'https://registry.hub.docker.com/u/discoenv/curl-wrapper/');
 
-INSERT INTO container_settings (tools_id)
-    SELECT tools.id
-      FROM tools
-     WHERE tools."name" = 'curl_wrapper.pl'
-     LIMIT 1;
+INSERT INTO container_settings (tools_id) VALUES ('681251EF-EE59-4FE9-9436-DC8A23FEB11A');
 
-UPDATE ONLY tools SET container_images_id = (
-  SELECT container_images.id
-    FROM container_images
-   WHERE container_images."name" = 'discoenv/curl-wrapper'
-     AND container_images.tag = 'latest'
-   LIMIT 1
-);
+UPDATE ONLY tools
+   SET container_images_id = '15959300-b972-4571-ace2-081af0909599'
+ WHERE id = '681251EF-EE59-4FE9-9436-DC8A23FEB11A';
