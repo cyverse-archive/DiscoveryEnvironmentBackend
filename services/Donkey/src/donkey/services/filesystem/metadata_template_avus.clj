@@ -62,9 +62,17 @@
       (assoc avu :id (:id existing-avu))
       avu)))
 
+(defn- resolve-data-type
+  "Returns a type converted from the type field of a stat result to a type expected by the
+   persistence/add-metadata-template-avus function."
+  [type]
+  (if (= type "file")
+    type
+    "folder"))
+
 (defn- set-metadata-template-avus
   "Adds or Updates AVUs associated with a Metadata Template for the given user's data item."
-  [user-id data-id template-id {avus :avus}]
+  [user-id {data-id :uuid type :type :as data-item} template-id {avus :avus}]
   (let [avus (map (partial find-existing-metadata-template-avu data-id) avus)
         existing-avus (filter :id avus)
         new-avus (map #(assoc % :id (uuid)) (remove :id avus))
@@ -74,10 +82,9 @@
      (when (seq existing-avus)
        (dorun (map (partial persistence/update-avu user-id) existing-avus)))
      (when (seq new-avus)
-       (with-jargon (icat/jargon-cfg) [fs]
-         (persistence/add-metadata-template-avus user-id
-                                                 new-avus
-                                                 (icat/resolve-data-type fs data-id))))
+       (persistence/add-metadata-template-avus user-id
+                                               new-avus
+                                               (resolve-data-type type)))
      (dorun (persistence/set-template-instances data-id template-id (map :id avus))))
     {:data_id data-id
      :template_id template-id
@@ -128,11 +135,11 @@
 
 (defn copy-template-avus-to-dest-ids
   "Copies all Metadata Template AVUs from templates to the items with the given data-ids."
-  [user templates dest-ids]
+  [user templates dest-items]
   (transaction
-    (doseq [data-id dest-ids]
+    (doseq [data-item dest-items]
       (doseq [{template-id :template_id :as template-avus} templates]
-        (set-metadata-template-avus user data-id template-id template-avus)))))
+        (set-metadata-template-avus user data-item template-id template-avus)))))
 
 (defn get-metadata-template-avu-copies
   "Fetches the list of Metadata Template AVUs for the given data-id, returning only the attr, value,
@@ -176,22 +183,21 @@
 (defn do-set-metadata-template-avus
   "Adds or Updates AVUs associated with a Metadata Template for the given user's data item."
   [{username :user} data-id template-id body]
-  (set-metadata-template-avus username
-                              (uuidify data-id)
-                              (uuidify template-id)
-                              body))
+  (with-jargon (icat/jargon-cfg) [cm]
+    (validators/user-exists cm username)
+    (let [{path :path :as data-item} (uuids/path-for-uuid cm username data-id)]
+      (validators/path-writeable cm username path)
+      (set-metadata-template-avus username
+                                  data-item
+                                  (uuidify template-id)
+                                  body))))
 
 (with-pre-hook! #'do-set-metadata-template-avus
   (fn [params data-id template-id body]
     (log-call "do-set-metadata-template-avus" params data-id template-id body)
     (templates/validate-metadata-template-exists template-id)
     (common-validators/validate-map body {:avus sequential?})
-    (common-validators/validate-map params {:user string?})
-    (with-jargon (icat/jargon-cfg) [cm]
-      (validators/user-exists cm (:user params))
-      (let [user (:user params)
-            path (:path (uuids/path-for-uuid cm user data-id))]
-        (validators/path-writeable cm user path)))))
+    (common-validators/validate-map params {:user string?})))
 
 (with-post-hook! #'do-set-metadata-template-avus (log-func "do-set-metadata-template-avus"))
 

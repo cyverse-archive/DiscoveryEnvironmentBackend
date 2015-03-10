@@ -60,13 +60,15 @@
 (defn attr-value?
   "Returns a truthy value if path has metadata that has an attribute of attr and
    a value of val."
-  [cm path attr val]
-  (-> (filter
-        #(and (= (:attr %1) attr)
-              (= (:value %1) val))
-        (get-metadata cm path))
-    count
-    pos?))
+  ([cm path attr val]
+    (attr-value? (get-metadata cm path) attr val))
+  ([metadata attr val]
+    (-> (filter
+          #(and (= (:attr %1) attr)
+                (= (:value %1) val))
+          metadata)
+      count
+      pos?)))
 
 (defn add-metadata
   [cm dir-path attr value unit]
