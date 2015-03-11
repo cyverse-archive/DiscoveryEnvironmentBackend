@@ -81,6 +81,7 @@ INSERT INTO parameters (id, "name", description, label, ordering, parameter_grou
     WHERE pt."name" = 'FileOutput'
     LIMIT 1;
 
+
 INSERT INTO file_parameters (id, parameter_id, info_type, data_format, data_source_id, retain)
     SELECT '75288DE6-323D-44CA-BEFA-8E14DAE109E4',
            '1DD009B1-CE1E-4933-ABA8-66314757288B',
@@ -115,6 +116,78 @@ INSERT INTO app_steps (step, id, app_id, task_id) VALUES
      '1E8F719B-0452-4D39-A2F3-8714793EE3E6',
      '212C5980-9A56-417E-A8C6-394AC445CA4D');
 
+--
+-- New containerized word count tool
+--
+INSERT INTO tools (id, "name", location, description, version, tool_type_id, integration_data_id)
+  SELECT '85cf7a33-386b-46fe-87c7-8c9d59972624',
+         'wc',
+         '',
+         'Word Count',
+         '0.0.1',
+         tool_types.id,
+         integration_data.id
+    FROM tool_types, integration_data
+   WHERE tool_types."name" = 'executable'
+     AND integration_data.integrator_name = 'Internal DE Tools'
+   LIMIT 1;
+
+--
+-- The app for word count
+--
+INSERT INTO apps(id, "name", description, integration_data_id, wiki_url, integration_date)
+   SELECT '67d15627-22c5-42bd-8daf-9af5deecceab',
+          'DE Word Count',
+          'Counts the number of words in a file',
+          integration_data.id,
+          '',
+          now()
+     FROM integration_data
+    WHERE integrator_name = 'Internal DE Tools'
+    LIMIT 1;
+
+INSERT INTO tasks (id, "name", description, label, tool_id) VALUES
+    ('1ac31629-231a-4090-b3b4-63ee078a0c37',
+     'DE Word Count',
+     'Counts the number of words in a file',
+     'DE Word Count',
+     '85cf7a33-386b-46fe-87c7-8c9d59972624');
+
+INSERT INTO parameter_groups (id, "name", description, label, task_id) VALUES
+    ('741711b0-0b95-4ac9-98b4-ca58225e76be',
+     'Parameters',
+     'Word count parameters',
+     'Parameters',
+     '1ac31629-231a-4090-b3b4-63ee078a0c37');
+
+INSERT INTO parameters (id, "name", description, label, ordering, parameter_group_id,
+                     parameter_type, display_order, required)
+  SELECT '13914010-89cd-406d-99c3-9c4ff8b023c3',
+         '',
+         'The file to count words in.',
+         'Input Filename',
+         0,
+         '741711b0-0b95-4ac9-98b4-ca58225e76be',
+         pt.id,
+         0,
+         TRUE
+    FROM parameter_types pt
+   WHERE pt."name" = 'FileInput'
+   LIMIT 1;
+
+INSERT INTO file_parameters (id, parameter_id, info_type, data_format, data_source_id, retain)
+    SELECT 'a350604d-48a0-4083-b6b3-425f3b1f7f51',
+           '13914010-89cd-406d-99c3-9c4ff8b023c3',
+           info_type.id,
+           data_formats.id,
+           data_source.id,
+           TRUE
+      FROM info_type, data_formats, data_source
+     WHERE info_type."name" = 'File'
+       AND data_formats."name" = 'Unspecified'
+       AND data_source."name" = 'file'
+     LIMIT 1;
+
 INSERT INTO container_images (id, "name", tag, url) VALUES
     ('15959300-b972-4571-ace2-081af0909599',
      'discoenv/curl-wrapper',
@@ -122,7 +195,13 @@ INSERT INTO container_images (id, "name", tag, url) VALUES
      'https://registry.hub.docker.com/u/discoenv/curl-wrapper/');
 
 INSERT INTO container_settings (tools_id) VALUES ('681251EF-EE59-4FE9-9436-DC8A23FEB11A');
+INSERT INTO container_settings (tools_id) VALUES ('85cf7a33-386b-46fe-87c7-8c9d59972624');
 
 UPDATE ONLY tools
    SET container_images_id = '15959300-b972-4571-ace2-081af0909599'
  WHERE id = '681251EF-EE59-4FE9-9436-DC8A23FEB11A';
+
+-- The wc tool reuses the curl-wrapper image.
+UPDATE ONLY tools
+   SET container_images_id = '15959300-b972-4571-ace2-081af0909599'
+ WHERE id = '85cf7a33-386b-46fe-87c7-8c9d59972624';
