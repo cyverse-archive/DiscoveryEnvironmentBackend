@@ -9,6 +9,9 @@
   []
   (println "\t* Adding the word count tool to the database")
   (exec-raw
+    "INSERT INTO integration_data (integrator_name, integrator_email)
+          VALUES ('Default DE Tools', 'support@iplantcollaborative.org');")
+  (exec-raw
       "INSERT INTO tools (id, \"name\", location, description, version, tool_type_id, integration_data_id)
         SELECT '85cf7a33-386b-46fe-87c7-8c9d59972624',
                'wc',
@@ -19,7 +22,7 @@
                integration_data.id
           FROM tool_types, integration_data
          WHERE tool_types.\"name\" = 'executable'
-           AND integration_data.integrator_name = 'Internal DE Tools'
+           AND integration_data.integrator_name = 'Default DE Tools'
          LIMIT 1;")
   (exec-raw
       "INSERT INTO apps(id, \"name\", description, integration_data_id, wiki_url, integration_date)
@@ -30,7 +33,7 @@
                 '',
                 now()
            FROM integration_data
-          WHERE integrator_name = 'Internal DE Tools'
+          WHERE integrator_name = 'Default DE Tools'
           LIMIT 1;")
   (exec-raw
       "INSERT INTO tasks (id, \"name\", description, label, tool_id) VALUES
