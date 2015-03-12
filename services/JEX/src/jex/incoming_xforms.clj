@@ -471,7 +471,7 @@
          " get --user " (:username condor-map)
          " --source " (quote-value
                        (handle-source-path source (:multiplicity input-map)))
-         " --config " (irods-config condor-map)
+         " --config irods-config"
          (file-metadata-arg file-metadata))))
 
 (defn input-iterator-vec
