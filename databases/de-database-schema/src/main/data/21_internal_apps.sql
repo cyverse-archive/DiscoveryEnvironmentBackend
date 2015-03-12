@@ -194,6 +194,16 @@ INSERT INTO file_parameters (id, parameter_id, info_type, data_format, data_sour
        AND data_source."name" = 'file'
      LIMIT 1;
 
+INSERT INTO app_category_app (app_category_id, app_id) VALUES
+    ('12c7a585-ec23-3352-e313-02e323112a7c',
+     '67d15627-22c5-42bd-8daf-9af5deecceab');
+
+INSERT INTO app_steps (step, id, app_id, task_id) VALUES
+    (0,
+     '089a61a0-23d9-4021-9354-a8498ef3ff19',
+     '67d15627-22c5-42bd-8daf-9af5deecceab',
+     '1ac31629-231a-4090-b3b4-63ee078a0c37');
+
 INSERT INTO container_images (id, "name", tag, url) VALUES
     ('15959300-b972-4571-ace2-081af0909599',
      'discoenv/curl-wrapper',

@@ -83,7 +83,17 @@
   (exec-raw
       "UPDATE ONLY tools
          SET container_images_id = '15959300-b972-4571-ace2-081af0909599'
-       WHERE id = '85cf7a33-386b-46fe-87c7-8c9d59972624';"))
+       WHERE id = '85cf7a33-386b-46fe-87c7-8c9d59972624';")
+  (exec-raw
+    "INSERT INTO app_category_app (app_category_id, app_id) VALUES
+        ('12c7a585-ec23-3352-e313-02e323112a7c',
+         '67d15627-22c5-42bd-8daf-9af5deecceab');")
+  (exec-raw
+    "INSERT INTO app_steps (step, id, app_id, task_id) VALUES
+        (0,
+         '089a61a0-23d9-4021-9354-a8498ef3ff19',
+         '67d15627-22c5-42bd-8daf-9af5deecceab',
+         '1ac31629-231a-4090-b3b4-63ee078a0c37');"))
 
 (defn convert
   []
