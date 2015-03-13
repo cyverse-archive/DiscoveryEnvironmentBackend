@@ -315,7 +315,10 @@
 (defn get-app-description
   "This service obtains the description of an app."
   [app-id]
-  (:description (first (select apps (where {:id app-id}))) ""))
+  (->> (select apps (where {:id app-id}))
+       (first)
+       (assert-not-nil [:app_id app-id])
+       (:description)))
 
 (defn- with-task-params
   "Includes a list of related file parameters in the query's result set,

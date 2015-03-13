@@ -112,11 +112,11 @@
     (PATCH "/apps/:app-id" [app-id :as {:keys [body]}]
            (service/success-response (metadactyl/relabel-app app-id body)))
 
-    (PUT "/apps/:app-id" [app-id :as req]
-         (update-app req app-id))
+    (PUT "/apps/:app-id" [app-id :as {:keys [body]}]
+         (service/success-response (metadactyl/update-app app-id body)))
 
-    (POST "/apps/:app-id/copy" [app-id :as req]
-          (copy-app req app-id))
+    (POST "/apps/:app-id/copy" [app-id]
+          (service/success-response (metadactyl/copy-app app-id)))
 
     (GET "/apps/:app-id/details" [app-id]
          (apps/get-app-details app-id))

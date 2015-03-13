@@ -24,6 +24,11 @@
             [mescal.de :as agave])
   (:import [java.util UUID]))
 
+(defn- retrieve-app
+  [app-id]
+  ((comp service/decode-json :body)
+   (metadactyl/get-app app-id)))
+
 (defn- count-de-jobs
   [filter include-hidden]
   (jp/count-de-jobs (:username current-user) filter include-hidden))
@@ -160,6 +165,9 @@
   (deleteRating [_ app-id]
     (metadactyl/delete-rating app-id))
 
+  (getApp [_ app-id]
+    (retrieve-app app-id))
+
   (getAppDeployedComponents [_ app-id]
     (metadactyl/get-tools-in-app app-id))
 
@@ -253,6 +261,9 @@
       (metadactyl/delete-rating app-id)
       (throw+ {:error_code ce/ERR_BAD_REQUEST
                :reason     "HPC apps cannot be rated"})))
+
+  (getApp [_ app-id]
+    (retrieve-app app-id))
 
   (getAppDeployedComponents [_ app-id]
     (if (is-uuid? app-id)

@@ -106,6 +106,22 @@
                  :as               :stream
                  :follow-redirects false}))
 
+(defn update-app
+  [app-id update-request]
+  (client/put (metadactyl-url "apps" app-id)
+              {:query-params     (secured-params)
+               :body             update-request
+               :content-type     :json
+               :as               :stream
+               :follow-redirects false}))
+
+(defn copy-app
+  [app-id]
+  (client/post (metadactyl-url "apps" app-id "copy")
+               {:query-params     (secured-params)
+                :as               :stream
+                :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")

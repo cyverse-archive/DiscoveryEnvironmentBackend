@@ -52,4 +52,15 @@
     (.deleteApp (util/get-apps-client clients) app-id))
 
   (relabelApp [_ app]
-    (.relabelApp (util/get-apps-client clients) app)))
+    (.relabelApp (util/get-apps-client clients) app))
+
+  (updateApp [_ app]
+    (.updateApp (util/get-apps-client clients) app))
+
+  (copyApp [_ app-id]
+    (.copyApp (util/get-apps-client clients) app-id))
+
+  (getAppDescription [_ app-id]
+    (->> (map #(.getAppDescription % app-id) clients)
+         (remove nil?)
+         (first))))

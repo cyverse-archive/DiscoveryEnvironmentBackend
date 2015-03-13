@@ -186,10 +186,14 @@
   "Adds metadata to the given path. If the destination path already has an AVU with the same attr
    and value as one from the given avus list, that AVU is not added."
   [cm path avus]
-  (doseq [{:keys [attr value] :as avu} avus]
-    (let [new-unit (reserved-unit avu)]
-      (if-not (attr-value? cm path attr value)
-        (add-metadata cm path attr value new-unit)))))
+  (loop [avus-current (get-metadata cm path)
+         avus-to-add  avus]
+    (when-not (empty? avus-to-add)
+      (let [{:keys [attr value] :as avu} (first avus-to-add)
+            new-unit (reserved-unit avu)]
+        (if-not (attr-value? avus-current attr value)
+          (add-metadata cm path attr value new-unit))
+        (recur (conj avus-current {:attr attr :value value :unit new-unit}) (rest avus-to-add))))))
 
 (defn- metadata-batch-add
   "Adds metadata to the given paths for a user. The avu map should be in the
@@ -263,7 +267,7 @@
         (validate-dest-attrs cm user dest-items irods-avus template-avus))
       (doseq [path dest-paths]
         (metadata-batch-add-to-path cm path irods-avus))
-      (copy-template-avus-to-dest-ids user template-avus dest-ids))))
+      (copy-template-avus-to-dest-ids user template-avus dest-items))))
 
 (defn metadata-delete
   "Deletes an AVU from path on behalf of a user. attr and value should be strings."
