@@ -86,7 +86,7 @@
        WHERE id = '85cf7a33-386b-46fe-87c7-8c9d59972624';")
   (exec-raw
     "INSERT INTO app_category_app (app_category_id, app_id) VALUES
-        ('12c7a585-ec23-3352-e313-02e323112a7c',
+        ('5401bd146c144470aedd57b47ea1b979',
          '67d15627-22c5-42bd-8daf-9af5deecceab');")
   (exec-raw
     "INSERT INTO app_steps (step, id, app_id, task_id) VALUES
