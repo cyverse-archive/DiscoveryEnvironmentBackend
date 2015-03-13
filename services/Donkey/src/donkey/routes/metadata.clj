@@ -119,7 +119,7 @@
           (service/success-response (metadactyl/copy-app app-id)))
 
     (GET "/apps/:app-id/details" [app-id]
-         (apps/get-app-details app-id))
+         (service/success-response (metadactyl/get-app-details app-id)))
 
     (GET "/apps/:app-id/documentation" [app-id]
          (apps/get-app-docs app-id))

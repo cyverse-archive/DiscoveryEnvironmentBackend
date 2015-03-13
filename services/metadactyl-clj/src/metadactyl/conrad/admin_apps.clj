@@ -1,9 +1,10 @@
 (ns metadactyl.conrad.admin-apps
-  (:use [metadactyl.app-listings :only [get-app-details]]
-        [metadactyl.persistence.app-metadata.relabel :only [update-app-labels]]
+  (:use [metadactyl.persistence.app-metadata.relabel :only [update-app-labels]]
+        [metadactyl.user :only [current-user]]
         [metadactyl.util.service :only [success-response]]
         [korma.db :only [transaction]])
-  (:require [metadactyl.persistence.app-metadata :as persistence]))
+  (:require [metadactyl.persistence.app-metadata :as persistence]
+            [metadactyl.service.apps :as apps]))
 
 (defn- validate-app-existence
   "Verifies that apps exist."
@@ -44,4 +45,4 @@
     (if (empty? (select-keys app [:name :description :wiki_url :references :groups]))
       (update-app-deleted-disabled app)
       (update-app-details app))
-    (get-app-details app-id)))
+    (apps/get-app-details current-user app-id)))

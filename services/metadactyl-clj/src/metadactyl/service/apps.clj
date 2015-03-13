@@ -119,3 +119,7 @@
 (defn get-app-description
   [user app-id]
   (.getAppDescription (get-apps-client user "") app-id))
+
+(defn get-app-details
+  [user app-id]
+  (.getAppDetails (get-apps-client user "") app-id))

@@ -17,4 +17,5 @@
   (relabelApp [_ app])
   (updateApp [_ app])
   (copyApp [_ app-id])
-  (getAppDescription [_ app-id]))
+  (getAppDescription [_ app-id])
+  (getAppDetails [_ app-id]))

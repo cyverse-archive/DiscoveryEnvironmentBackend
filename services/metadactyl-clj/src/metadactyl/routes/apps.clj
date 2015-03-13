@@ -1,6 +1,5 @@
 (ns metadactyl.routes.apps
-  (:use [metadactyl.app-listings :only [get-app-details
-                                        get-app-task-listing
+  (:use [metadactyl.app-listings :only [get-app-task-listing
                                         get-app-tool-listing]]
         [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
@@ -131,16 +130,17 @@
         :summary "Get an App Description"
         :notes "This service is used by Donkey to get App descriptions for job status update
         notifications. There is no request body and the response body contains only the App
-        description, with no special formatting."
+        description, with no special formatting. Note: this uses ce/trap because it returns
+        plain text."
         (ce/trap uri apps/get-app-description current-user app-id))
 
   (GET* "/:app-id/details" [:as {uri :uri}]
-        :path-params [app-id :- AppIdPathParam]
+        :path-params [app-id :- AppIdJobViewPathParam]
         :query [params SecuredQueryParams]
         :return AppDetails
         :summary "Get App Details"
         :notes "This service is used by the DE to obtain high-level details about a single App"
-        (ce/trap uri #(get-app-details app-id)))
+        (service/coerced-trap uri AppDetails apps/get-app-details current-user app-id))
 
   (GET* "/:app-id/documentation" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]

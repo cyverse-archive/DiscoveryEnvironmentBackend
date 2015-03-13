@@ -171,9 +171,6 @@
   (getAppDeployedComponents [_ app-id]
     (metadactyl/get-tools-in-app app-id))
 
-  (getAppDetails [_ app-id]
-    (metadactyl/get-app-details app-id))
-
   (getAppDocs [_ app-id]
     (metadactyl/get-app-docs app-id))
 
@@ -269,11 +266,6 @@
     (if (is-uuid? app-id)
       (metadactyl/get-tools-in-app app-id)
       {:deployed_components [(.getAppDeployedComponent agave-client app-id)]}))
-
-  (getAppDetails [_ app-id]
-    (if (is-uuid? app-id)
-      (metadactyl/get-app-details app-id)
-      (.getAppDetails agave-client app-id)))
 
   (getAppDocs [_ app-id]
     (if (is-uuid? app-id)
@@ -429,12 +421,6 @@
   (with-db db/de
     (transaction
      (service/success-response (.getAppDeployedComponents (get-app-lister) app-id)))))
-
-(defn get-app-details
-  [app-id]
-  (with-db db/de
-    (transaction
-     (service/success-response (.getAppDetails (get-app-lister) app-id)))))
 
 (defn get-app-docs
   [app-id]
