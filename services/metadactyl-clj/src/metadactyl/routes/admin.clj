@@ -149,7 +149,7 @@
          :notes "This endpoint adds an App Category under the given parent App Category, as long as
          that parent Category doesn't already have a subcategory with the given name and it doesn't
          directly contain its own Apps."
-         (ce/trap uri #(add-category body)))
+         (service/trap uri add-category body))
 
   (POST* "/shredder" [:as {uri :uri}]
          :query [params SecuredQueryParams]
