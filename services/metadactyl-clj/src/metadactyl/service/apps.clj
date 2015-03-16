@@ -123,3 +123,11 @@
 (defn get-app-details
   [user app-id]
   (.getAppDetails (get-apps-client user "") app-id))
+
+(defn remove-app-favorite
+  [user app-id]
+  (.removeAppFavorite (get-apps-client user "") app-id))
+
+(defn add-app-favorite
+  [user app-id]
+  (.addAppFavorite (get-apps-client user "") app-id))
