@@ -1,0 +1,6 @@
+FROM java:8
+
+RUN useradd -m -U -s /bin/bash iplant
+USER iplant
+WORKDIR /home/iplant
+EXPOSE 60000
