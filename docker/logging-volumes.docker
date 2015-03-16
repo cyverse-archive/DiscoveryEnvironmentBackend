@@ -18,5 +18,6 @@ RUN mkdir -p /var/log/donkey/ && \
     mkdir -p /var/log/saved-searches/ && \
     mkdir -p /var/log/tree-urls/ && \
     mkdir -p /var/log/user-preferences/ && \
-    mkdir -p /var/log/user-sessions/
+    mkdir -p /var/log/user-sessions/ && \
+    chmod -R +rw /var/log/
 VOLUME ["/var/log/"]
