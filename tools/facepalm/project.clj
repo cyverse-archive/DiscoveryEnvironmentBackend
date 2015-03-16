@@ -11,7 +11,6 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-
 (defproject org.iplantc/facepalm "5.0.0"
   :description "Command-line utility for DE database managment."
   :url "http://www.iplantcollaborative.org"

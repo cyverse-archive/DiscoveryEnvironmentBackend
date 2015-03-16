@@ -1,13 +1,11 @@
 (use '[clojure.java.shell :only (sh)])
 (require '[clojure.string :as string])
 
-
 (defn git-ref
   []
   (or (System/getenv "GIT_COMMIT")
     (string/trim (:out (sh "git" "rev-parse" "HEAD")))
     ""))
-
 
 (defproject info-typer "5.0.0"
   :description "An AMQP based info type detection service for iRODS"

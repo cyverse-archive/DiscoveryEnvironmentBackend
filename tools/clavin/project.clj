@@ -7,7 +7,11 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
+<<<<<<< HEAD
 (defproject org.iplantc/clavin "5.0.0"
+=======
+(defproject org.iplantc/clavin "4.2.1"
+>>>>>>> dev
   :description "A command-line tool for loading service configurations."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -18,9 +22,15 @@
                  [org.clojure/tools.cli "0.2.1"]
                  [medley "0.1.5"]
                  [me.raynes/fs "1.4.4"]
+<<<<<<< HEAD
                  [org.iplantc/clojure-commons "5.0.0"]]
   :plugins [[org.iplantc/lein-iplant-cmdtar "5.0.0"]
             [org.iplantc/lein-iplant-rpm "5.0.0"]]
+=======
+                 [org.iplantc/clojure-commons "4.2.1"]]
+  :plugins [[org.iplantc/lein-iplant-cmdtar "4.2.1"]
+            [org.iplantc/lein-iplant-rpm "4.2.1"]]
+>>>>>>> dev
   :iplant-rpm {:summary "Clavin"
                :type :command
                :provides "iplant-clavin"}

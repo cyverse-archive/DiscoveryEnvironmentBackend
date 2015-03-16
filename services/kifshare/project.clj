@@ -7,6 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
+<<<<<<< HEAD
 (defproject org.iplantc/kifshare "5.0.0"
   :description "iPlant Quickshare for iRODS"
   :url "http://www.iplantcollaborative.org"
@@ -50,7 +51,6 @@
 
   :plugins [[lein-ring "0.7.5"]
             [org.iplantc/lein-iplant-rpm "5.0.0"]]
-
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]
 

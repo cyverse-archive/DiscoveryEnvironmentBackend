@@ -122,6 +122,13 @@
                 :as               :stream
                 :follow-redirects false}))
 
+(defn get-app-details
+  [app-id]
+  (client/get (metadactyl-url "apps" app-id "details")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
@@ -149,14 +156,6 @@
 (defn get-tools-in-app
   [app-id]
   (-> (client/get (metadactyl-url "apps" app-id "tools")
-                  {:query-params (secured-params)
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn get-app-details
-  [app-id]
-  (-> (client/get (metadactyl-url "apps" app-id "details")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)

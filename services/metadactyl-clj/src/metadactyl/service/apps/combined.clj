@@ -63,4 +63,9 @@
   (getAppDescription [_ app-id]
     (->> (map #(.getAppDescription % app-id) clients)
          (remove nil?)
+         (first)))
+
+  (getAppDetails [_ app-id]
+    (->> (map #(.getAppDetails % app-id) clients)
+         (remove nil?)
          (first))))
