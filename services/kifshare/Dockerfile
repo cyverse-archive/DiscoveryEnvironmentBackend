@@ -1,7 +1,6 @@
-FROM java:8
+FROM discoenv/javabase
 
-ADD build/* /resources/
-
-ADD target/kifshare-standalone.jar /
-
-CMD ["java", "-jar", "kifshare-standalone.jar", "--help"]
+ADD build/* /iplant/home/resources/
+ADD target/kifshare-standalone.jar /home/iplant/
+ENTRYPOINT ["java", "-jar", "kifshare-standalone.jar"]
+CMD ["--help"]

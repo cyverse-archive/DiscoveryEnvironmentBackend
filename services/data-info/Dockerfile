@@ -1,5 +1,5 @@
-FROM java:8
+FROM discoenv/javabase
 
-ADD target/data-info-standalone.jar /
-
-CMD ["java", "-jar", "data-info-standalone.jar", "--help"]
+ADD target/data-info-standalone.jar /home/iplant/
+ENTRYPOINT ["java", "-jar", "data-info-standalone.jar"]
+CMD ["--help"]

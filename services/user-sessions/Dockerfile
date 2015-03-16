@@ -1,5 +1,5 @@
-FROM java:8
+FROM discoenv/javabase
 
-ADD target/user-sessions-standalone.jar /
-
-CMD ["java", "-jar", "user-sessions-standalone.jar", "--help"]
+ADD target/user-sessions-standalone.jar /home/iplant/
+ENTRYPOINT ["java", "-jar", "user-sessions-standalone.jar"]
+CMD ["--help"]

@@ -1,5 +1,5 @@
-FROM java:8
+FROM discoenv/javabase
 
-ADD target/monkey-standalone.jar /
-
-CMD ["java", "-jar", "monkey-standalone.jar", "--help"]
+ADD target/monkey-standalone.jar /home/iplant/
+ENTRYPOINT ["java", "-jar", "monkey-standalone.jar"]
+CMD ["--help"]

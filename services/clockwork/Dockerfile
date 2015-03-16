@@ -1,5 +1,5 @@
-FROM java:8
+FROM discoenv/javabase
 
-ADD target/clockwork-standalone.jar /
-
-CMD ["java", "-jar", "clockwork-standalone.jar", "--help"]
+ADD target/clockwork-standalone.jar /home/iplant/
+ENTRYPOINT ["java", "-jar", "clockwork-standalone.jar"]
+CMD ["--help"]
