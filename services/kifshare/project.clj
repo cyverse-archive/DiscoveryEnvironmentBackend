@@ -7,7 +7,6 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-<<<<<<< HEAD
 (defproject org.iplantc/kifshare "5.0.0"
   :description "iPlant Quickshare for iRODS"
   :url "http://www.iplantcollaborative.org"
