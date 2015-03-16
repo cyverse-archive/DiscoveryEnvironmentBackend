@@ -1,0 +1,22 @@
+FROM ubuntu:14.04
+
+RUN mkdir -p /var/log/donkey/ && \
+    mkdir -p /var/log/infosquito/ && \
+    mkdir -p /var/log/jex/ && \
+    mkdir -p /var/log/notificationagent/ && \
+    mkdir -p /var/log/anon-files/ && \
+    mkdir -p /var/log/clockwork/ && \
+    mkdir -p /var/log/condor-log-monitor/ && \
+    mkdir -p /var/log/data-info/ && \
+    mkdir -p /var/log/dewey/ && \
+    mkdir -p /var/log/info-typer/ && \
+    mkdir -p /var/log/iplant-email/ && \
+    mkdir -p /var/log/jex-events/ && \
+    mkdir -p /var/log/kifshare/ && \
+    mkdir -p /var/log/metadactyl/ && \
+    mkdir -p /var/log/monkey/ && \
+    mkdir -p /var/log/saved-searches/ && \
+    mkdir -p /var/log/tree-urls/ && \
+    mkdir -p /var/log/user-preferences/ && \
+    mkdir -p /var/log/user-sessions/
+VOLUME ["/var/log/"]
