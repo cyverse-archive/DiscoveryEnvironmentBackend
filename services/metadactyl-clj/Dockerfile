@@ -1,5 +1,9 @@
 FROM discoenv/javabase
 
 ADD target/metadactyl-standalone.jar /home/iplant/
-ENTRYPOINT ["java", "-jar", "metadactyl-standalone.jar"]
+ADD conf/main/log4j.properties /home/iplant/
+USER root
+RUN mkdir -p /var/log/metadactyl/ && chmod -R a+rw /var/log/metadactyl/
+USER iplant
+ENTRYPOINT ["java", "-cp", "/home/iplant/metadactyl-standalone.jar:/home/iplant/", "metadactyl.core"]
 CMD ["--help"]
