@@ -5,8 +5,8 @@
             [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]
             [clojure.string :as str]
-            [uri.core :as uri]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [common-cfg.cfg :as cfg]))
 
 (def ^:private props
   "A ref for storing the configuration properties."
@@ -196,28 +196,12 @@
   [props config-valid configs]
   "metadactyl.pgp.key-password")
 
-(defn- log-passthru
-  [msg val]
-  (log/warn msg val)
-  val)
-
-(defn- env-setting
-  [env]
-  (-> (System/getenv env)
-      (uri/make)
-      (uri/uri->map)
-      (assoc :scheme "http")
-      (uri/map->uri)
-      (str)))
-
 (def data-info-base
   (memoize
    (fn []
-     (log-passthru
-      "data-info base URL is"
-      (if (System/getenv "DATA_INFO_PORT")
-        (env-setting "DATA_INFO_PORT")
-        (data-info-base-url))))))
+     (if (System/getenv "DATA_INFO_PORT")
+       (cfg/env-setting "DATA_INFO_PORT")
+       (data-info-base-url)))))
 
 (defn- oauth-settings
   [api-name api-key api-secret auth-uri token-uri redirect-uri refresh-window]
@@ -240,6 +224,10 @@
      (agave-redirect-uri)
      (agave-oauth-refresh-window))))
 
+(defn log-environment
+  []
+  (log/warn "ENV?: metadactyl.data-info.base-url = " (data-info-base)))
+
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []
@@ -251,6 +239,7 @@
   [cfg-path]
   (cc/load-config-from-file cfg-path props)
   (cc/log-config props)
+  (log-environment)
   (validate-config))
 
 (def get-default-app-groups
