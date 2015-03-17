@@ -250,7 +250,7 @@
 
 (defn anon-file-url
   [p]
-  (let [aurl (url/url (cfg/anon-files-base-url))]
+  (let [aurl (url/url (cfg/anon-files-base))]
     (str (-> aurl (assoc :path (ft/path-join (:path aurl) (string/replace p #"^\/" "")))))))
 
 (defn anon-files-urls

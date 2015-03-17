@@ -3,7 +3,9 @@
   (:require [clojure.core.memoize :as memo]
             [clj-jargon.init :as init]
             [clojure-commons.config :as cc]
-            [clojure-commons.error-codes :as ce]))
+            [clojure-commons.error-codes :as ce]
+            [clojure.tools.logging :as log]
+            [common-cfg.cfg :as cfg]))
 
 
 (def svc-info
@@ -219,15 +221,25 @@
   []
   (filter #(not (nil? %)) [(icat-password) (icat-user) (irods-password) (irods-user)]))
 
+(def anon-files-base
+  (memoize
+   (fn []
+     (if (System/getenv "ANON_FILES_PORT")
+       (cfg/env-setting "ANON_FILES_PORT")
+       (anon-files-base-url)))))
+
+(defn log-environment
+  []
+  (log/warn "ENV? data-info.anon-files-base-url = " (anon-files-base)))
 
 (defn load-config-from-file
   "Loads the configuration settings from a file."
   [cfg-path]
   (cc/load-config-from-file cfg-path props)
   (cc/log-config props :filters [#"irods\.user" #"icat\.user"])
+  (log-environment)
   (validate-config)
   (ce/register-filters (exception-filters)))
-
 
 (def jargon-cfg
   (memo/memo #(init/init (irods-host)
