@@ -20,6 +20,7 @@
                  [clj-http "1.0.0"]
                  [clj-time "0.7.0"]
                  [com.cemerick/url "0.1.1"]
+                 [uri "1.1.0"]
                  [com.google.guava/guava "18.0"]
                  [compojure "1.2.1"]
                  [medley "0.5.1"]

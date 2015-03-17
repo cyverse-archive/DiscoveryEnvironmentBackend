@@ -86,13 +86,13 @@
   [submission]
   (let [output-dir (build-result-folder-path submission)]
     (try+
-      (http/post (service/build-url (config/data-info-base-url) "stat-gatherer")
+      (http/post (service/build-url (config/data-info-base) "stat-gatherer")
         {:query-params (secured-params)
          :body (cheshire/encode {:paths [output-dir]})
          :content-type :json
          :as :stream})
       (catch Object does-not-exist
-        (http/post (service/build-url (config/data-info-base-url) "data" "directory" "create")
+        (http/post (service/build-url (config/data-info-base) "data" "directory" "create")
           {:query-params (secured-params)
            :body (cheshire/encode {:path output-dir})
            :content-type :json
@@ -104,7 +104,7 @@
   [path]
   (when-not (empty? path)
     (try+
-      (->> (http/get (service/build-url (config/data-info-base-url) "entries" "path" path)
+      (->> (http/get (service/build-url (config/data-info-base) "entries" "path" path)
              {:query-params (secured-params)
               :as :stream})
            (:body)
@@ -121,7 +121,7 @@
   [paths]
   (when-not (empty? paths)
     (try+
-      (-> (http/post (service/build-url (config/data-info-base-url) "stat-gatherer")
+      (-> (http/post (service/build-url (config/data-info-base) "stat-gatherer")
             {:query-params (secured-params)
              :body (cheshire/encode {:paths paths})
              :content-type :json
