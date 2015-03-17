@@ -115,17 +115,6 @@
       {:path path
        :type ct})))
 
-(defn get-avus
-  "Returns a list of avu maps for set of attributes associated with dir-path"
-  [cm dir-path attr val]
-  (log/info "in get-avus")
-
-  (validate-path-lengths dir-path)
-  (filter
-    #(and (= (:attr %1) attr)
-          (= (:value %1) val))
-    (get-metadata cm dir-path)))
-
 (defn delete-type
   "Removes the association of type with path for the specified user."
   [user path type]
@@ -144,7 +133,7 @@
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
-    (delete-avus cm path (get-avus cm path (cfg/type-detect-type-attribute) type))
+    (delete-avus cm path (get-attribute-value cm path (cfg/type-detect-type-attribute) type))
     (log/info "Deleted type " type " from " path " for " user ".")
     {:path path
      :type type
