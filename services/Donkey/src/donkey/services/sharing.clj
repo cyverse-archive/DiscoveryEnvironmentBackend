@@ -3,7 +3,7 @@
         [clojure.string :only [join]]
         [slingshot.slingshot :only [try+]]
         [clojure-commons.file-utils :only [basename]]
-        [donkey.util.config :only [data-info-base-url]]
+        [donkey.util.config :only [data-info-base]]
         [donkey.util.service :only [build-url decode-stream success-response]]
         [donkey.util.transformers :only [add-current-user-to-url]]
         [donkey.auth.user-attributes])
@@ -19,7 +19,7 @@
 (defn- data-info-url
   "Builds a URL to the data-info service from the given relative URL path."
   [relative-url]
-  (add-current-user-to-url (build-url (data-info-base-url) relative-url)))
+  (add-current-user-to-url (build-url (data-info-base) relative-url)))
 
 (defn- share-list->path-list
   "Converts a list of maps with path key-values to a list of path strings."

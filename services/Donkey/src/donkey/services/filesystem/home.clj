@@ -10,7 +10,7 @@
 
 (defn do-homedir
   [{user :user}]
-  (let [url       (url/url (cfg/data-info-base-url) "home")
+  (let [url       (url/url (cfg/data-info-base) "home")
         req-map   {:query-params {:user user}}
         resp      (http/get (str url) req-map)
         home-path (:path (json/decode (:body resp) true))]

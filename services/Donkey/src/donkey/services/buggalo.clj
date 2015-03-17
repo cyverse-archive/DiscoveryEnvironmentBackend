@@ -1,7 +1,7 @@
 (ns donkey.services.buggalo
   (:use [clojure.java.io :only [copy file]]
         [clojure-commons.file-utils :only [with-temp-dir-in]]
-        [donkey.util.config :only [data-info-base-url tree-parser-url]]
+        [donkey.util.config :only [data-info-base tree-parser-url]]
         [donkey.services.buggalo.nexml :only [is-nexml? extract-trees-from-nexml]]
         [donkey.util.service :only [success-response temp-dir-failure-response]]
         [donkey.auth.user-attributes :only [current-user]]

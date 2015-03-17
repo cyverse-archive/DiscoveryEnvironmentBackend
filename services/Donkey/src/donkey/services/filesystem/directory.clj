@@ -116,7 +116,7 @@
   (let [nodes         (fs/split path)
         nodes         (if (= "/" (first nodes)) (next nodes) nodes)
         encoded-nodes (map url/url-encode nodes)]
-    (apply url/url (cfg/data-info-base-url) "navigation" "path" encoded-nodes)))
+    (apply url/url (cfg/data-info-base) "navigation" "path" encoded-nodes)))
 
 
 (defn- list-directories

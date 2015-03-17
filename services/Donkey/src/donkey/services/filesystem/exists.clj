@@ -34,7 +34,7 @@
 
 (defn do-exists
   [params body]
-  (let [url     (url/url (cfg/data-info-base-url) "existence-marker")
+  (let [url     (url/url (cfg/data-info-base) "existence-marker")
         req-map {:query-params params
                  :content-type :json
                  :body         (json/encode body)}]

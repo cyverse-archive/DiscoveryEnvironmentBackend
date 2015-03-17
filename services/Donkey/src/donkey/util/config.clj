@@ -716,6 +716,7 @@
 
 (defn log-environment
   []
+  (log/warn "ENV? donkey.data-info.base-url -" (data-info-base))
   (log/warn "ENV? donkey.metadactyl.base-url =" (metadactyl-base))
   (log/warn "ENV? donkey.notificationagent.base-url =" (notificationagent-base))
   (log/warn "ENV? donkey.jex-events.base-url =" (jex-events-base))

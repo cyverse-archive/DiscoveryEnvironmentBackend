@@ -398,7 +398,7 @@
                       code. For example, :404 handle-404 would define the function handle-404 for
                       handling 404 error responses."
   [^Keyword method ^String url-path ^IPersistentMap req-map & {:as error-handlers}]
-  (let [url (url/url (cfg/data-info-base-url) url-path)]
+  (let [url (url/url (cfg/data-info-base) url-path)]
     (try+
       ((resolve-http-call method) (str url) req-map)
       (catch #(not (nil? (:status %))) err
