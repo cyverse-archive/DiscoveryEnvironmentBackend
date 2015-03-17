@@ -6,7 +6,8 @@
             [taoensso.timbre.appenders.rotor :as rotor]
             [filevents.core :refer [watch]]
             [clojure.java.io :refer [reader]]
-            [me.raynes.fs :as fs])
+            [me.raynes.fs :as fs]
+            [uri.core :as uri])
   (:import [java.util Properties]))
 
 (timbre/refer-timbre)
@@ -47,6 +48,15 @@
                         {:path     (:log-file @cfg)
                          :max-size (:log-size @cfg)
                          :backlog  (:log-backlog @cfg)})))
+
+(defn env-setting
+  [env]
+  (-> (System/getenv env)
+      (uri/make)
+      (uri/uri->map)
+      (assoc :scheme "http")
+      (uri/map->uri)
+            (str)))
 
 (defn pprint-to-string
   [m]
