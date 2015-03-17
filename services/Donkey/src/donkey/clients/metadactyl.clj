@@ -20,7 +20,7 @@
 
 (defn- metadactyl-url
   [& components]
-  (str (apply curl/url (config/metadactyl-base-url) components)))
+  (str (apply curl/url (config/metadactyl-base) components)))
 
 (defn- add-agave-enabled-flag
   ([]

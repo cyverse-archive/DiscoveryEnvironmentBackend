@@ -9,7 +9,7 @@
 
 (defn saved-searches-url
   [user]
-  (str (url (saved-searches-base-url) user)))
+  (str (url (saved-searches-base) user)))
 
 (defn get-saved-searches
   [user]

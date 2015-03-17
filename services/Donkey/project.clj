@@ -29,6 +29,7 @@
                  [org.iplantc/heuristomancer "5.0.0"]
                  [org.iplantc/clj-icat-direct "5.0.0"]
                  [org.iplantc/common-cli "5.0.0"]
+                 [org.iplantc/common-cfg "5.0.0"]
                  [org/forester "1.005" ]
                  [org.nexml.model/nexml "1.5-SNAPSHOT"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]

@@ -57,7 +57,7 @@
 (defn perform-metadactyl-check
   []
   (try
-    (let [base-url (scrub-url (config/metadactyl-base-url))
+    (let [base-url (scrub-url (config/metadactyl-base))
           s        (:status (client/get base-url))]
       (log/info "HTTP Status from Metadactyl: " s)
       (<= 200 s 299))
@@ -69,7 +69,7 @@
 (defn perform-notificationagent-check
   []
   (try
-    (let [base-url (scrub-url (config/notificationagent-base-url))
+    (let [base-url (scrub-url (config/notificationagent-base))
           s        (:status (client/get base-url))]
       (log/info "HTTP Status from NotificationAgent: " s)
       (<= 200 s 299))

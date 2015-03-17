@@ -1,6 +1,6 @@
 (ns donkey.clients.notifications
   (:use [donkey.persistence.tool-requests :only [email-template-for]]
-        [donkey.util.config :only [notificationagent-base-url]]
+        [donkey.util.config :only [notificationagent-base]]
         [donkey.util.service :only [build-url build-url-with-query decode-stream]]
         [donkey.util.transformers :only [add-current-user-to-map]])
   (:require [cheshire.core :as cheshire]
@@ -15,7 +15,7 @@
   ([relative-url]
      (notificationagent-url relative-url {}))
   ([relative-url query]
-     (build-url-with-query (notificationagent-base-url)
+     (build-url-with-query (notificationagent-base)
                            (add-current-user-to-map query) relative-url)))
 
 (defn send-notification

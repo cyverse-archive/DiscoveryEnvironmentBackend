@@ -5,7 +5,7 @@
 
 (defn- jex-events-url
   [& components]
-  (str (apply curl/url (config/jex-events-base-url) components)))
+  (str (apply curl/url (config/jex-events-base) components)))
 
 (defn get-job-state
   [job-id]

@@ -8,7 +8,7 @@
 
 (defn tree-urls-url
   [sha1]
-  (str (url (tree-urls-base-url) sha1)))
+  (str (url (tree-urls-base) sha1)))
 
 (defn get-tree-urls
   [sha1]

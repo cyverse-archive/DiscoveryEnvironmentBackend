@@ -24,7 +24,7 @@
 
 (defn- secured-notification-url
   [req & components]
-  (apply build-url-with-query (notificationagent-base-url)
+  (apply build-url-with-query (notificationagent-base)
          (add-current-user-to-map (:params req)) components))
 
 (defn- secured-params
@@ -43,7 +43,7 @@
   "Adds the name and email of the currently authenticated user to the metadactyl URL with the given
    relative URL path."
   [query & components]
-  (apply build-url-with-query (metadactyl-base-url)
+  (apply build-url-with-query (metadactyl-base)
                               (secured-params query)
                               components))
 

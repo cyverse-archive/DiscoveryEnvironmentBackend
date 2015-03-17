@@ -4,7 +4,9 @@
             [cheshire.core :as cheshire]
             [clojure.string :as string]
             [clojure-commons.config :as cc]
-            [clojure-commons.error-codes :as ce]))
+            [clojure-commons.error-codes :as ce]
+            [common-cfg.cfg :as cfg]
+            [clojure.tools.logging :as log]))
 
 
 (def ^:private props
@@ -185,10 +187,24 @@
   [props config-valid configs app-routes-enabled]
   "donkey.metadactyl.base-url")
 
+(def metadactyl-base
+  (memoize
+   (fn []
+     (if (System/getenv "METADACTYL_PORT")
+       (cfg/env-setting "METADACTYL_PORT")
+       (metadactyl-base-url)))))
+
 (cc/defprop-str notificationagent-base-url
   "The base URL to use when connecting to the notification agent."
   [props config-valid configs notification-routes-enabled]
   "donkey.notificationagent.base-url")
+
+(def notificationagent-base
+  (memoize
+   (fn []
+     (if (System/getenv "NOTIFICATIONAGENT_PORT")
+       (cfg/env-setting "NOTIFICATIONAGENT_PORT")
+       (notificationagent-base-url)))))
 
 (cc/defprop-str userinfo-base-url
   "The base URL for the user info API."
@@ -351,6 +367,14 @@
   "The base URL to use when connecting to the JEX Events service."
   [props config-valid configs]
   "donkey.jex-events.base-url")
+
+(def jex-events-base
+  (memoize
+   (fn []
+     (if (System/getenv "JEX_EVENTS_PORT")
+       (cfg/env-setting "JEX_EVENTS_PORT")
+       (jex-events-base-url)))))
+
 ;;; End JEX Events connection information
 
 ;;; ICAT connection information
@@ -461,6 +485,13 @@
   "The base url for the anon-files server."
   [props config-valid configs filesystem-routes-enabled]
   "donkey.fs.anon-files-base-url")
+
+(def anon-files-base
+  (memoize
+   (fn []
+     (if (System/getenv "ANON_FILES_PORT")
+       (cfg/env-setting "ANON_FILES_PORT")
+       (anon-files-base-url)))))
 ;;; End Filesystem configuration
 
 (cc/defprop-int default-user-search-result-limit
@@ -480,6 +511,13 @@
   "The base URL for the data info service."
   [props config-valid configs filesystem-routes-enabled]
   "donkey.data-info.base-url")
+
+(def data-info-base
+  (memoize
+   (fn []
+     (if (System/getenv "DATA_INFO_PORT")
+       (cfg/env-setting "DATA_INFO_PORT")
+       (data-info-base-url)))))
 
 (cc/defprop-str tree-parser-url
   "The URL for the tree parser service."
@@ -562,20 +600,48 @@
   [props config-valid configs]
   "donkey.preferences.host")
 
+(def prefs-base
+  (memoize
+   (fn []
+     (if (System/getenv "USER_PREFERENCES_PORT")
+       (cfg/env-setting "USER_PREFERENCES_PORT")
+       (prefs-base-url)))))
+
 (cc/defprop-str sessions-base-url
   "The hostname of the user-sessions service"
   [props config-valid configs]
   "donkey.sessions.host")
+
+(def sessions-base
+  (memoize
+   (fn []
+     (if (System/getenv "USER_SESSIONS_PORT")
+       (cfg/env-setting "USER_SESSIONS_PORT")
+       (sessions-base-url)))))
 
 (cc/defprop-str saved-searches-base-url
   "The base URL of the saved-searches service"
   [props config-valid configs]
   "donkey.saved-searches.host")
 
+(def saved-searches-base
+  (memoize
+   (fn []
+     (if (System/getenv "SAVED_SEARCHES_PORT")
+       (cfg/env-setting "SAVED_SEARCHES_PORT")
+       (saved-searches-base-url)))))
+
 (cc/defprop-str tree-urls-base-url
   "The base URL of the tree-urls service"
   [props config-valid configs]
   "donkey.tree-urls.host")
+
+(def tree-urls-base
+  (memoize
+   (fn []
+     (if (System/getenv "TREE_URLS_PORT")
+       (cfg/env-setting "TREE_URLS_PORT")
+       (tree-urls-base-url)))))
 
 (cc/defprop-optstr keyring-path
   "The path to the secure PGP keyring."
@@ -648,10 +714,22 @@
      (agave-redirect-uri)
      (agave-oauth-refresh-window))))
 
+(defn log-environment
+  []
+  (log/warn "ENV? donkey.metadactyl.base-url =" (metadactyl-base))
+  (log/warn "ENV? donkey.notificationagent.base-url =" (notificationagent-base))
+  (log/warn "ENV? donkey.jex-events.base-url =" (jex-events-base))
+  (log/warn "ENV? donkey.anon-files.base-url =" (anon-files-base))
+  (log/warn "ENV? donkey.sessions.host =" (sessions-base))
+  (log/warn "ENV? donkey.saved-searches.host =" (saved-searches-base))
+  (log/warn "ENV? donkey.tree-urls.host =" (tree-urls-base))
+  (log/warn "ENV? donkey.preferences.host =" (prefs-base)))
+
 (defn load-config-from-file
   "Loads the configuration settings from a file."
   [cfg-path]
   (cc/load-config-from-file cfg-path props)
   (cc/log-config props :filters [#"irods\.user" #"icat\.user" #"oauth\.pem"])
+  (log-environment)
   (validate-config)
   (ce/register-filters (exception-filters)))
