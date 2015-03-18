@@ -338,8 +338,8 @@
 
 (defn do-metadata-copy
   "Entrypoint for the API that calls (metadata-copy)."
-  [{:keys [user]} data-id force? {dest-ids :destination_ids}]
-  (metadata-copy user force? (uuidify data-id) (map uuidify dest-ids)))
+  [{:keys [user]} data-id force {dest-ids :destination_ids}]
+  (metadata-copy user (Boolean/parseBoolean force) (uuidify data-id) (map uuidify dest-ids)))
 
 (with-pre-hook! #'do-metadata-copy
   (fn [{:keys [user] :as params} data-id force {dest-ids :destination_ids :as body}]

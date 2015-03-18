@@ -251,7 +251,7 @@
 (defn do-copy-metadata-template-avus
   "Copies Metadata Template AVUs from the given user's data item to other data items."
   [{:keys [user]} data-id force {dest-ids :destination_ids}]
-  (copy-metadata-template-avus user force (uuidify data-id) (map uuidify dest-ids)))
+  (copy-metadata-template-avus user (Boolean/parseBoolean force) (uuidify data-id) (map uuidify dest-ids)))
 
 (with-pre-hook! #'do-copy-metadata-template-avus
   (fn [{:keys [user] :as params} data-id force {dest-ids :destination_ids :as body}]
