@@ -2,13 +2,12 @@
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
-        [donkey.services.filesystem.metadata-template-avus :only [copy-template-avus-to-dest-ids
-                                                                  find-metadata-template-attributes
-                                                                  get-metadata-template-avu-copies]]
+        [donkey.services.filesystem.metadata-template-avus :only [copy-metadata-template-avus]]
         [donkey.services.filesystem.validators]
         [kameleon.uuids :only [uuidify]]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.metadata]
+        [korma.db :only [transaction]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.set :as set]
@@ -217,57 +216,19 @@
         (metadata-batch-add-to-path cm path avus))
       {:paths paths :user user})))
 
-(defn- format-template-avu
-  "Formats a Metadata Template AVU for JSON responses."
-  [avu]
-  (-> avu
-      (select-keys [:attribute :value :unit])
-      (set/rename-keys {:attribute :attr})))
-
-(defn- find-all-matching-attributes
-  "Returns a map containing a list of the AVUs for the given data-id that match the given set of
-   attrs, or nil if no matches were found."
-  [cm template-attrs irods-attrs {:keys [uuid path]}]
-  (let [matching-template-avus (persistence/get-existing-metadata-template-avus-by-attr uuid template-attrs)
-        matching-irods-avus (get-attributes cm irods-attrs path)]
-    (if-not (empty? (concat matching-irods-avus matching-template-avus))
-      {:id uuid
-       :path path
-       :irods-avus matching-irods-avus
-       :template-avus (map format-template-avu matching-template-avus)}
-      nil)))
-
-(defn- validate-dest-attrs
-  "Throws an error if any of the given dest-ids already have Metadata Template AVUs set with any of
-   the given attrs."
-  [cm user dest-items irods-avus templates]
-  (with-jargon (icat/jargon-cfg) [cm]
-    (let [template-attrs (set (map :attr (mapcat :avus templates)))
-          irods-attrs (set (map :attr irods-avus))
-          duplicates (remove nil? (map (partial find-all-matching-attributes cm template-attrs irods-attrs)
-                                       dest-items))]
-      (when-not (empty? duplicates)
-        (validators/duplicate-attrs-error duplicates)))))
-
 (defn- metadata-copy
   "Copies all IRODS AVUs visible to the client, and Metadata Template AVUs, from the data item with
    src-id to the items with dest-ids. When the 'force?' parameter is set, additional validation is
    performed with the validate-dest-attrs function."
   [user force? src-id dest-ids]
   (with-jargon (icat/jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (let [src-path (:path (uuids/path-for-uuid cm user src-id))
-          dest-items (map (partial uuids/path-for-uuid cm user) dest-ids)
-          dest-paths (map :path dest-items)
-          irods-avus (list-path-metadata cm src-path)
-          template-avus (get-metadata-template-avu-copies src-id)]
-      (validators/path-readable cm user src-path)
-      (validators/all-paths-writeable cm user dest-paths)
-      (if-not force?
-        (validate-dest-attrs cm user dest-items irods-avus template-avus))
-      (doseq [path dest-paths]
-        (metadata-batch-add-to-path cm path irods-avus))
-      (copy-template-avus-to-dest-ids user template-avus dest-items))))
+    (transaction
+      (let [{src-path :src dest-paths :paths :as results} (copy-metadata-template-avus
+                                                            cm user force? src-id dest-ids)
+            irods-avus (list-path-metadata cm src-path)]
+        (doseq [path dest-paths]
+          (metadata-batch-add-to-path cm path irods-avus))
+        results))))
 
 (defn metadata-delete
   "Deletes an AVU from path on behalf of a user. attr and value should be strings."

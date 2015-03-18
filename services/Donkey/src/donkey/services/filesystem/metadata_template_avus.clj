@@ -113,27 +113,26 @@
      (persistence/remove-avus avu-ids))
     (service/success-response)))
 
-(defn find-metadata-template-attributes
+(defn- find-metadata-template-attributes
   "Returns a map containing a list of the AVUs for the given data-id that match the given set of
    attrs, or nil if no matches were found."
-  [cm user attrs data-id]
-  (let [matching-avus (persistence/get-existing-metadata-template-avus-by-attr data-id attrs)]
+  [attrs {:keys [uuid path]}]
+  (let [matching-avus (persistence/get-existing-metadata-template-avus-by-attr uuid attrs)]
     (if-not (empty? matching-avus)
-      {:id   data-id
-       :path (:path (uuids/path-for-uuid cm user data-id))
+      {:id   uuid
+       :path path
        :avus (map format-avu matching-avus)}
       nil)))
 
 (defn- validate-dest-attrs
-  "Throws an error if any of the given dest-ids already have Metadata Template AVUs set with any of
-   the given attrs."
-  [user dest-ids attrs]
-  (with-jargon (icat/jargon-cfg) [cm]
-    (let [duplicates (remove nil? (map (partial find-metadata-template-attributes cm user attrs) dest-ids))]
-      (when-not (empty? duplicates)
-        (validators/duplicate-attrs-error duplicates)))))
+  "Throws an error if any of the given dest-items already have Metadata Template AVUs set with any
+   of the given attrs."
+  [dest-items attrs]
+  (let [duplicates (remove nil? (map (partial find-metadata-template-attributes attrs) dest-items))]
+    (when-not (empty? duplicates)
+      (validators/duplicate-attrs-error duplicates))))
 
-(defn copy-template-avus-to-dest-ids
+(defn- copy-template-avus-to-dest-ids
   "Copies all Metadata Template AVUs from templates to the items with the given data-ids."
   [user templates dest-items]
   (transaction
@@ -141,7 +140,20 @@
       (doseq [{template-id :template_id :as template-avus} templates]
         (set-metadata-template-avus user data-item template-id template-avus)))))
 
-(defn get-metadata-template-avu-copies
+(defn- get-metadata-copy-src-path
+  [cm user src-id]
+  (let [src-path (:path (uuids/path-for-uuid cm user src-id))]
+    (validators/path-readable cm user src-path)
+    src-path))
+
+(defn- get-metadata-copy-dest-paths
+  [cm user dest-ids]
+  (let [dest-items (map (partial uuids/path-for-uuid cm user) dest-ids)
+        dest-paths (map :path dest-items)]
+    (validators/all-paths-writeable cm user dest-paths)
+    dest-items))
+
+(defn- get-metadata-template-avu-copies
   "Fetches the list of Metadata Template AVUs for the given data-id, returning only the attr, value,
    and unit in each template's avu list."
   [data-id]
@@ -149,14 +161,23 @@
         format-avu-copies (partial map #(select-keys % [:attr :value :unit]))]
     (map #(medley/update % :avus format-avu-copies) templates)))
 
-(defn- copy-metadata-template-avus
+(defn copy-metadata-template-avus
   "Copies all Metadata Template AVUs from the data item with data-id to dest-ids. When the 'force?'
    parameter is set, additional validation is performed with the validate-dest-attrs function."
-  [user force? data-id dest-ids]
-  (let [templates (get-metadata-template-avu-copies data-id)]
-    (if-not force?
-      (validate-dest-attrs user dest-ids (set (map :attr (mapcat :avus templates)))))
-    (copy-template-avus-to-dest-ids user templates dest-ids)))
+  ([user force? data-id dest-ids]
+    (with-jargon (icat/jargon-cfg) [cm]
+      (copy-metadata-template-avus cm user force? data-id dest-ids)))
+  ([cm user force? data-id dest-ids]
+    (validators/user-exists cm user)
+    (let [src-path (get-metadata-copy-src-path cm user data-id)
+          dest-items (get-metadata-copy-dest-paths cm user dest-ids)
+          templates (get-metadata-template-avu-copies data-id)]
+      (if-not force?
+        (validate-dest-attrs dest-items (set (map :attr (mapcat :avus templates)))))
+      (copy-template-avus-to-dest-ids user templates dest-items)
+      {:user  user
+       :src   src-path
+       :paths (map :path dest-items)})))
 
 (defn do-metadata-template-avu-list
   "Lists AVUs associated with a Metadata Template for the given user's data item."
@@ -185,7 +206,7 @@
   [{username :user} data-id template-id body]
   (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm username)
-    (let [{path :path :as data-item} (uuids/path-for-uuid cm username data-id)]
+    (let [{path :path :as data-item} (uuids/path-for-uuid cm username (uuidify data-id))]
       (validators/path-writeable cm username path)
       (set-metadata-template-avus username
                                   data-item
@@ -236,12 +257,6 @@
   (fn [{:keys [user] :as params} data-id force {dest-ids :destination_ids :as body}]
     (log-call "do-copy-metadata-template-avus" params data-id body)
     (common-validators/validate-map body {:destination_ids sequential?})
-    (common-validators/validate-map params {:user string?})
-    (with-jargon (icat/jargon-cfg) [cm]
-      (validators/user-exists cm user)
-      (let [src-path (:path (uuids/path-for-uuid cm user data-id))
-            dest-paths (map (comp :path (partial uuids/path-for-uuid cm user)) dest-ids)]
-        (validators/path-readable cm user src-path)
-        (validators/all-paths-writeable cm user dest-paths)))))
+    (common-validators/validate-map params {:user string?})))
 
 (with-post-hook! #'do-copy-metadata-template-avus (log-func "do-copy-metadata-template-avus"))
