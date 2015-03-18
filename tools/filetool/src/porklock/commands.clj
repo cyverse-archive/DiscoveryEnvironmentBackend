@@ -160,7 +160,7 @@
                 (jg-perms/set-owner cm dir-dest (:user options)))
 
               (try+
-               (shell-out [(iput-path) "-f" "-P" src dest :env ic-env])
+               (shell-out [(iput-path) "--retries" "3" "-X" "irods.retries" "--lfrestart" "irods.lfretries" "-f" "-P" src dest :env ic-env])
                (catch [:error_code "ERR_BAD_EXIT_CODE"] err
                  (porkprint "Command exited with a non-zero status: " err)
                  (reset! error? true)))
@@ -169,16 +169,16 @@
               ;;; Apply the App and Execution metadata to the newly uploaded
               ;;; file/directory.
               (porkprint "Applying metadata to " dest)
-              (apply-metadata cm dest metadata)
+              (apply-metadata cm dest metadata)))))
 
-              (when-not skip-parent?
-                (porkprint "Applying metadata to " dest-dir)
-                (apply-metadata cm dest-dir metadata)
-                (doseq [fileobj (file-seq (jg-info/file cm dest-dir))]
-                  (let [filepath (.getAbsolutePath fileobj)
-                        dir?     (.isDirectory fileobj)]
-                    (jg-perms/set-owner cm filepath (:user options))
-                    (apply-metadata cm filepath metadata))))))))
+      (when-not skip-parent?
+        (porkprint "Applying metadata to " dest-dir)
+        (apply-metadata cm dest-dir metadata)
+        (doseq [fileobj (file-seq (jg-info/file cm dest-dir))]
+          (let [filepath (.getAbsolutePath fileobj)
+                dir?     (.isDirectory fileobj)]
+            (jg-perms/set-owner cm filepath (:user options))
+            (apply-metadata cm filepath metadata))))
       
       ;;; Transfer files from the NFS mount point into the logs
       ;;; directory of the destination
@@ -207,6 +207,12 @@
   [source destination env]
   (filter #(not (nil? %))
           [(iget-path)
+           "--retries"
+           "3"
+           "-X"
+           "irods.retries"
+           "--lfrestart"
+           "irods.lfretries"
            "-f"
            "-P"
            (if (.endsWith source "/")
