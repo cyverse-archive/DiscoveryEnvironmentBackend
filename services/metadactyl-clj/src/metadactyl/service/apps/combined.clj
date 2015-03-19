@@ -68,4 +68,10 @@
   (getAppDetails [_ app-id]
     (->> (map #(.getAppDetails % app-id) clients)
          (remove nil?)
-         (first))))
+         (first)))
+
+  (removeAppFavorite [_ app-id]
+    (.removeAppFavorite (util/get-apps-client clients) app-id))
+
+  (addAppFavorite [_ app-id]
+    (.addAppFavorite (util/get-apps-client clients) app-id)))

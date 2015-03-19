@@ -65,6 +65,8 @@
    ".irods/.irodsA" 
    ".irods/.irodsEnv"
    "logs/irods-config"
+   "irods.retries"
+   "irods.lfretries"
    "irods-config"
    ".irodsA"
    ".irodsEnv"])

@@ -160,7 +160,7 @@
                 (jg-perms/set-owner cm dir-dest (:user options)))
 
               (try+
-               (shell-out [(iput-path) "-f" "-P" src dest :env ic-env])
+               (shell-out [(iput-path) "--retries" "3" "-X" "irods.retries" "--lfrestart" "irods.lfretries" "-f" "-P" src dest :env ic-env])
                (catch [:error_code "ERR_BAD_EXIT_CODE"] err
                  (porkprint "Command exited with a non-zero status: " err)
                  (reset! error? true)))
@@ -178,8 +178,7 @@
           (let [filepath (.getAbsolutePath fileobj)
                 dir?     (.isDirectory fileobj)]
             (if-not (jg-perms/owns? cm (:user options) filepath)
-              (jg-perms/set-owner cm filepath (:user options)))
-            (apply-metadata cm filepath metadata))))
+              (jg-perms/set-owner cm filepath (:user options))))))
       
       ;;; Transfer files from the NFS mount point into the logs
       ;;; directory of the destination
@@ -208,6 +207,12 @@
   [source destination env]
   (filter #(not (nil? %))
           [(iget-path)
+           "--retries"
+           "3"
+           "-X"
+           "irods.retries"
+           "--lfrestart"
+           "irods.lfretries"
            "-f"
            "-P"
            (if (.endsWith source "/")

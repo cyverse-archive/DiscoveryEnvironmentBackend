@@ -65,4 +65,12 @@
 
   (getAppDetails [_ app-id]
     (when (util/uuid? app-id)
-      (listings/get-app-details (uuidify app-id)))))
+      (listings/get-app-details (uuidify app-id))))
+
+  (removeAppFavorite [_ app-id]
+    (when (util/uuid? app-id)
+      (app-metadata/remove-app-favorite user (uuidify app-id))))
+
+  (addAppFavorite [_ app-id]
+    (when (util/uuid? app-id)
+      (app-metadata/add-app-favorite user app-id))))

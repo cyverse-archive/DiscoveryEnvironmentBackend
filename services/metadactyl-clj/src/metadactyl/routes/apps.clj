@@ -175,7 +175,7 @@
            :notes "Apps can be marked as favorites in the DE, which allows users to access them
            without having to search. This service is used to remove an App from a user's favorites
            list."
-           (ce/trap uri #(app-metadata/remove-app-favorite app-id)))
+           (service/trap uri apps/remove-app-favorite current-user app-id))
 
   (PUT* "/:app-id/favorite" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]
@@ -183,7 +183,7 @@
         :summary "Marking an App as a Favorite"
         :notes "Apps can be marked as favorites in the DE, which allows users to access them without
         having to search. This service is used to add an App to a user's favorites list."
-        (ce/trap uri #(app-metadata/add-app-favorite app-id)))
+        (service/trap uri apps/add-app-favorite current-user app-id))
 
   (GET* "/:app-id/is-publishable" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]
