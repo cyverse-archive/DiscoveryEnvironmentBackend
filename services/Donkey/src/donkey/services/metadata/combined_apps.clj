@@ -420,7 +420,7 @@
   [agave {:keys [id username] :as job}]
   (if-let [step (first (find-incomplete-job-steps id))]
     (sync-incomplete-job-status agave job step)
-    (sync-complete-job-status agave job)))
+    (sync-complete-job-status job)))
 
 (defn- stop-job-step
   "Stops an individual step in a job."
