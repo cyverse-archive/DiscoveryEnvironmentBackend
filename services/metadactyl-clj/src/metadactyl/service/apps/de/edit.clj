@@ -12,7 +12,8 @@
         [metadactyl.validation :only [validate-parameter verify-app-editable verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as cc-errs]
+  (:require [clojure.set :as set]
+            [clojure-commons.error-codes :as cc-errs]
             [metadactyl.persistence.app-metadata :as persistence]))
 
 (def ^:private copy-prefix "Copy of ")
@@ -127,8 +128,9 @@
 
 (defn- format-file-params
   "Returns param with a file_parameters key/value map added if the param type matches one in the
-   persistence/param-file-types set. Only includes the repeat_option_flag key in the file_parameters
-   map if the param type is also the persistence/param-multi-input-type string."
+   persistence/param-file-types set, but not the persistence/param-input-reference-types set.
+   Only includes the repeat_option_flag key in the file_parameters map if the param type is also the
+   persistence/param-multi-input-type string."
   [{param-type :type :as param}]
   (let [file-param-keys [:format
                          :file_info_type
@@ -138,7 +140,9 @@
         file-param-keys (if (= persistence/param-multi-input-type param-type)
                           (conj file-param-keys :repeat_option_flag)
                           file-param-keys)]
-    (if (contains? persistence/param-file-types param-type)
+    (if (contains?
+          (set/difference persistence/param-file-types persistence/param-input-reference-types)
+          param-type)
       (assoc param :file_parameters (select-keys param file-param-keys))
       param)))
 
