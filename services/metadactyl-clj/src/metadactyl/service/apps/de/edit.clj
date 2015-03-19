@@ -232,13 +232,19 @@
     [(update-parameter-tree-root param-id (first arguments))]
     (doall (map-indexed (partial update-parameter-argument param-id nil) arguments))))
 
-(defn- save-file-parameter
-  "Save an App parameter's file settings."
-  [param-type {:keys [retain] :as file-parameter}]
-  (let [retain? (if (contains? persistence/param-output-types param-type)
-                  true
-                  retain)]
-    (persistence/add-file-parameter (remove-nil-vals (assoc file-parameter :retain retain?)))))
+(defn- format-file-parameter-for-save
+  "Formats an App parameter's file settings for saving to the db."
+  [param-id param-type {:keys [retain]
+                        :or {retain (contains? persistence/param-output-types param-type)}
+                        :as file-parameter}]
+  (remove-nil-vals
+    (if (contains? persistence/param-input-reference-types param-type)
+      {:parameter_id   param-id
+       :file_info_type param-type
+       :format         "Unspecified"
+       :data_source    "file"}
+      (assoc file-parameter :parameter_id param-id
+                            :retain retain))))
 
 (defn- add-validation-rule
   "Adds an App parameter's validator and its rule arguments."
@@ -283,7 +289,8 @@
     (dorun (map (partial add-validation-rule param-id) validators))
 
     (when (contains? persistence/param-file-types param-type)
-      (save-file-parameter param-type (assoc file-parameter :parameter_id param-id)))
+      (persistence/add-file-parameter
+        (format-file-parameter-for-save param-id param-type file-parameter)))
 
     (remove-nil-vals
         (assoc parameter
