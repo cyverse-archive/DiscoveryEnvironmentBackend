@@ -40,4 +40,8 @@
 
   (getAppDetails [_ app-id]
     (when-not (util/uuid? app-id)
-      (.getAppDetails agave app-id))))
+      (.getAppDetails agave app-id)))
+
+  (isAppPublishable [_ app-id]
+    (when-not (util/uuid? app-id)
+      false)))

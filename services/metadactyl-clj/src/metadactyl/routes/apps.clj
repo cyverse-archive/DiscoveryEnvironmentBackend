@@ -1,7 +1,6 @@
 (ns metadactyl.routes.apps
   (:use [metadactyl.app-listings :only [get-app-task-listing
                                         get-app-tool-listing]]
-        [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.tool :only [ToolListing]]
@@ -192,7 +191,7 @@
         :notes "A multi-step App can't be made public if any of the Tasks that are included in it
         are not public. This endpoint returns a true flag if the App is a single-step App or it's a
         multistep App in which all of the Tasks included in the pipeline are public."
-        (ce/trap uri #(hash-map :publishable (first (app-publishable? app-id)))))
+        (service/trap uri apps/app-publishable? current-user app-id))
 
   (POST* "/:app-id/publish" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]

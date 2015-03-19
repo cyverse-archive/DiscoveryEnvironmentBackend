@@ -137,7 +137,7 @@
          (service/success-response (metadactyl/add-favorite-app app-id)))
 
     (GET "/apps/:app-id/is-publishable" [app-id]
-         (app-publishable? app-id))
+         (service/success-response (metadactyl/app-publishable? app-id)))
 
     (POST "/apps/:app-id/publish" [app-id :as req]
           (make-app-public req app-id))

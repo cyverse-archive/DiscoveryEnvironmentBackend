@@ -131,3 +131,7 @@
 (defn add-app-favorite
   [user app-id]
   (.addAppFavorite (get-apps-client user "") app-id))
+
+(defn app-publishable?
+  [user app-id]
+  {:publishable (.isAppPublishable (get-apps-client user "") app-id)})

@@ -143,6 +143,13 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn app-publishable?
+  [app-id]
+  (client/get (metadactyl-url "apps" app-id "is-publishable")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
@@ -155,14 +162,6 @@
   [params]
   (-> (client/get (metadactyl-url "tool-requests" "status-codes")
                   {:query-params (secured-params (select-keys params [:filter]))
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn app-publishable?
-  [app-id]
-  (-> (client/get (metadactyl-url "apps" app-id "is-publishable")
-                  {:query-params (secured-params)
                    :as           :stream})
       (:body)
       (service/decode-json)))
