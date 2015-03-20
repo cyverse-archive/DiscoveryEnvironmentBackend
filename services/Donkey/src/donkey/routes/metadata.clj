@@ -143,7 +143,7 @@
           (service/success-response (metadactyl/make-app-public app-id body)))
 
     (DELETE "/apps/:app-id/rating" [app-id]
-            (apps/delete-rating app-id))
+            (service/success-response (metadactyl/delete-rating app-id)))
 
     (POST "/apps/:app-id/rating" [app-id :as {body :body}]
           (apps/rate-app body app-id))

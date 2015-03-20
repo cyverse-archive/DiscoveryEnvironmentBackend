@@ -139,3 +139,7 @@
 (defn make-app-public
   [user app]
   (.makeAppPublic (get-apps-client user "") app))
+
+(defn delete-app-rating
+  [user app-id]
+  (.deleteAppRating (get-apps-client user "") app-id))

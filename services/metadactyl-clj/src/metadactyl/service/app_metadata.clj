@@ -87,14 +87,6 @@
     (amp/rate-app app-id user-id request)
     (amp/get-app-avg-rating app-id)))
 
-(defn delete-app-rating
-  "Removes a user's rating and comment ID for the given app."
-  [app-id]
-  (validate-app-existence app-id)
-  (let [user-id (get-valid-user-id (:username current-user))]
-    (amp/delete-app-rating app-id user-id)
-    (amp/get-app-avg-rating app-id)))
-
 (defn- publish-app
   [{app-id :id :keys [references categories] :as app}]
   (transaction

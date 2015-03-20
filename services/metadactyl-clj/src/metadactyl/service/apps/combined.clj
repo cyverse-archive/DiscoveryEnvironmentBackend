@@ -80,4 +80,7 @@
     (.isAppPublishable (util/get-apps-client clients) app-id))
 
   (makeAppPublic [_ app]
-    (.makeAppPublic (util/get-apps-client clients) app)))
+    (.makeAppPublic (util/get-apps-client clients) app))
+
+  (deleteAppRating [_ app-id]
+    (.deleteAppRating (util/get-apps-client clients) app-id)))

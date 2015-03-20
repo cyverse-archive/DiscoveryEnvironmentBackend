@@ -156,9 +156,6 @@
   (rateApp [_ app-id rating comment-id]
     (metadactyl/rate-app app-id rating comment-id))
 
-  (deleteRating [_ app-id]
-    (metadactyl/delete-rating app-id))
-
   (getApp [_ app-id]
     (retrieve-app app-id))
 
@@ -232,12 +229,6 @@
   (rateApp [_ app-id rating comment-id]
     (if (is-uuid? app-id)
       (metadactyl/rate-app app-id rating comment-id)
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     "HPC apps cannot be rated"})))
-
-  (deleteRating [_ app-id]
-    (if (is-uuid? app-id)
-      (metadactyl/delete-rating app-id)
       (throw+ {:error_code ce/ERR_BAD_REQUEST
                :reason     "HPC apps cannot be rated"})))
 
@@ -380,12 +371,6 @@
         (.rateApp (get-app-lister) app-id
                   (service/required-field request :rating)
                   (:comment_id request)))))))
-
-(defn delete-rating
-  [app-id]
-  (with-db db/de
-    (transaction
-     (service/success-response (.deleteRating (get-app-lister) app-id)))))
 
 (defn get-tools-in-app
   [app-id]

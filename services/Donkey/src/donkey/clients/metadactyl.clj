@@ -159,6 +159,13 @@
                 :as               :stream
                 :follow-redirects false}))
 
+(defn delete-rating
+  [app-id]
+  (client/delete (metadactyl-url "apps" app-id "rating")
+                 {:query-params     (secured-params)
+                  :as               :stream
+                  :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
@@ -298,14 +305,6 @@
                     :body         (cheshire/encode (rate-app-request rating comment-id))
                     :content-type :json
                     :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn delete-rating
-  [app-id]
-  (-> (client/delete (metadactyl-url "apps" app-id "rating")
-                     {:query-params (secured-params)
-                      :as           :stream})
       (:body)
       (service/decode-json)))
 

@@ -212,7 +212,7 @@
            :summary "Delete an App Rating"
            :notes "The DE uses this service to remove a rating that a user has previously made. This
            service deletes the authenticated user's rating for the corresponding app-id."
-           (ce/trap uri #(service/success-response (app-metadata/delete-app-rating app-id))))
+           (service/trap uri apps/delete-app-rating current-user app-id))
 
   (POST* "/:app-id/rating" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]
