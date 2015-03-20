@@ -23,4 +23,5 @@
   (addAppFavorite [_ app-id])
   (isAppPublishable [_ app-id])
   (makeAppPublic [_ app])
-  (deleteAppRating [_ app-id]))
+  (deleteAppRating [_ app-id])
+  (rateApp [_ app-id rating]))

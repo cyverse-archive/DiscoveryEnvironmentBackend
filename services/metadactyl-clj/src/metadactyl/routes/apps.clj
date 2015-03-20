@@ -224,7 +224,7 @@
          the means to store the App rating. This service accepts a rating level between one and
          five, inclusive, and a comment identifier that refers to a comment in iPlant's Confluence
          wiki. The rating is stored in the database and associated with the authenticated user."
-         (ce/trap uri #(service/success-response (app-metadata/rate-app app-id body))))
+         (service/trap uri apps/rate-app current-user app-id body))
 
   (GET* "/:app-id/tasks" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]

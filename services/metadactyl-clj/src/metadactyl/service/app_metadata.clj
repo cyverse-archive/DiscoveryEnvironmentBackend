@@ -71,42 +71,6 @@
         :as               :stream}))
      true)))
 
-(defn rate-app
-  "Adds or updates a user's rating and comment ID for the given app. The request must contain either
-   the rating or the comment ID, and the rating must be between 1 and 5, inclusive."
-  [app-id {:keys [rating comment_id] :as request}]
-  (validate-app-existence app-id)
-  (let [user-id (get-valid-user-id (:username current-user))]
-    (when (and (nil? rating) (nil? comment_id))
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     (str "No rating or comment ID given")}))
-    (when (or (> 1 rating) (> rating 5))
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     (str "Rating must be an integer between 1 and 5 inclusive."
-                                " Invalid rating (" rating ") for App ID " app-id)}))
-    (amp/rate-app app-id user-id request)
-    (amp/get-app-avg-rating app-id)))
-
-(defn- publish-app
-  [{app-id :id :keys [references categories] :as app}]
-  (transaction
-    (amp/update-app app true)
-    (app-docs/add-app-docs app-id app)
-    (amp/set-app-references app-id references)
-    (amp/set-app-suggested-categories app-id categories)
-    (decategorize-app app-id)
-    (add-app-to-category app-id (uuidify (workspace-beta-app-category-id))))
-  nil)
-
-(defn make-app-public
-  [{app-id :id :as app}]
-  (verify-app-ownership (validate-app-existence app-id))
-  (let [[publishable? reason] (app-publishable? app-id)]
-    (if publishable?
-      (publish-app app)
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     reason}))))
-
 (defn get-app
   "This service obtains an app description that can be used to build a job submission form in
    the user interface."

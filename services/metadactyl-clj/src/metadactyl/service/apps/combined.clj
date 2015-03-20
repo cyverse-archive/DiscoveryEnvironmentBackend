@@ -83,4 +83,7 @@
     (.makeAppPublic (util/get-apps-client clients) app))
 
   (deleteAppRating [_ app-id]
-    (.deleteAppRating (util/get-apps-client clients) app-id)))
+    (.deleteAppRating (util/get-apps-client clients) app-id))
+
+  (rateApp [_ app-id rating]
+    (.rateApp (util/get-apps-client clients) app-id rating)))

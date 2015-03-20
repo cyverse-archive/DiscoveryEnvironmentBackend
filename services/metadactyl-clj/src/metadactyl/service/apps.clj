@@ -143,3 +143,7 @@
 (defn delete-app-rating
   [user app-id]
   (.deleteAppRating (get-apps-client user "") app-id))
+
+(defn rate-app
+  [user app-id rating]
+  (.rateApp (get-apps-client user "") app-id rating))

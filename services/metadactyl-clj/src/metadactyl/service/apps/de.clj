@@ -86,4 +86,8 @@
 
   (deleteAppRating [_ app-id]
     (when (util/uuid? app-id)
-      (app-metadata/delete-app-rating user app-id))))
+      (app-metadata/delete-app-rating user app-id)))
+
+  (rateApp [_ app-id rating]
+    (when (util/uuid? app-id)
+      (app-metadata/rate-app user app-id rating))))

@@ -166,6 +166,15 @@
                   :as               :stream
                   :follow-redirects false}))
 
+(defn rate-app
+  [app-id rating]
+  (client/post (metadactyl-url "apps" app-id "rating")
+               {:query-params     (secured-params)
+                :body             rating
+                :content-type     :json
+                :as               :stream
+                :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
@@ -288,22 +297,6 @@
                    {:query-params (secured-params)
                     :content-type :json
                     :body         (cheshire/encode submission)
-                    :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn- rate-app-request
-  [rating comment-id]
-  (xforms/remove-nil-vals
-   {:rating      rating
-    :comment_id  comment-id}))
-
-(defn rate-app
-  [app-id rating comment-id]
-  (-> (client/post (metadactyl-url "apps" app-id "rating")
-                   {:query-params (secured-params)
-                    :body         (cheshire/encode (rate-app-request rating comment-id))
-                    :content-type :json
                     :as           :stream})
       (:body)
       (service/decode-json)))

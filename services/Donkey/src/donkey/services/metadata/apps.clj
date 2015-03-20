@@ -153,9 +153,6 @@
 (deftype DeOnlyAppLister []
   AppLister
 
-  (rateApp [_ app-id rating comment-id]
-    (metadactyl/rate-app app-id rating comment-id))
-
   (getApp [_ app-id]
     (retrieve-app app-id))
 
@@ -225,12 +222,6 @@
 
 (deftype DeHpcAppLister [agave-client user-has-access-token?]
   AppLister
-
-  (rateApp [_ app-id rating comment-id]
-    (if (is-uuid? app-id)
-      (metadactyl/rate-app app-id rating comment-id)
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     "HPC apps cannot be rated"})))
 
   (getApp [_ app-id]
     (retrieve-app app-id))
@@ -361,16 +352,6 @@
      (if (config/agave-enabled)
        (get-de-hpc-app-lister state-info username)
        (DeOnlyAppLister.))))
-
-(defn rate-app
-  [body app-id]
-  (with-db db/de
-    (transaction
-     (let [request (service/decode-json body)]
-       (service/success-response
-        (.rateApp (get-app-lister) app-id
-                  (service/required-field request :rating)
-                  (:comment_id request)))))))
 
 (defn get-tools-in-app
   [app-id]

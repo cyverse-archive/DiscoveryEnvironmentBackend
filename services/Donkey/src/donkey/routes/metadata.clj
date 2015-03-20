@@ -146,7 +146,7 @@
             (service/success-response (metadactyl/delete-rating app-id)))
 
     (POST "/apps/:app-id/rating" [app-id :as {body :body}]
-          (apps/rate-app body app-id))
+          (service/success-response (metadactyl/rate-app app-id body)))
 
     (GET "/apps/:app-id/tasks" [app-id]
          (apps/list-app-tasks app-id))
