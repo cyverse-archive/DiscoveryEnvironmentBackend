@@ -1,8 +1,6 @@
 (ns metadactyl.routes.apps
-  (:use [metadactyl.app-listings :only [get-app-details
-                                        get-app-task-listing
+  (:use [metadactyl.app-listings :only [get-app-task-listing
                                         get-app-tool-listing]]
-        [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.tool :only [ToolListing]]
@@ -11,7 +9,7 @@
                                                      owner-add-app-docs
                                                      owner-edit-app-docs]]
         [metadactyl.user :only [current-user]]
-        [metadactyl.zoidberg.app-edit :only [get-app-ui]]
+        [metadactyl.service.apps.de.edit :only [get-app-ui]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -131,16 +129,17 @@
         :summary "Get an App Description"
         :notes "This service is used by Donkey to get App descriptions for job status update
         notifications. There is no request body and the response body contains only the App
-        description, with no special formatting."
+        description, with no special formatting. Note: this uses ce/trap because it returns
+        plain text."
         (ce/trap uri apps/get-app-description current-user app-id))
 
   (GET* "/:app-id/details" [:as {uri :uri}]
-        :path-params [app-id :- AppIdPathParam]
+        :path-params [app-id :- AppIdJobViewPathParam]
         :query [params SecuredQueryParams]
         :return AppDetails
         :summary "Get App Details"
         :notes "This service is used by the DE to obtain high-level details about a single App"
-        (ce/trap uri #(get-app-details app-id)))
+        (service/coerced-trap uri AppDetails apps/get-app-details current-user app-id))
 
   (GET* "/:app-id/documentation" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]
@@ -175,7 +174,7 @@
            :notes "Apps can be marked as favorites in the DE, which allows users to access them
            without having to search. This service is used to remove an App from a user's favorites
            list."
-           (ce/trap uri #(app-metadata/remove-app-favorite app-id)))
+           (service/trap uri apps/remove-app-favorite current-user app-id))
 
   (PUT* "/:app-id/favorite" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]
@@ -183,7 +182,7 @@
         :summary "Marking an App as a Favorite"
         :notes "Apps can be marked as favorites in the DE, which allows users to access them without
         having to search. This service is used to add an App to a user's favorites list."
-        (ce/trap uri #(app-metadata/add-app-favorite app-id)))
+        (service/trap uri apps/add-app-favorite current-user app-id))
 
   (GET* "/:app-id/is-publishable" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]
@@ -192,7 +191,7 @@
         :notes "A multi-step App can't be made public if any of the Tasks that are included in it
         are not public. This endpoint returns a true flag if the App is a single-step App or it's a
         multistep App in which all of the Tasks included in the pipeline are public."
-        (ce/trap uri #(hash-map :publishable (first (app-publishable? app-id)))))
+        (service/trap uri apps/app-publishable? current-user app-id))
 
   (POST* "/:app-id/publish" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]
@@ -254,4 +253,4 @@
         :notes "The app integration utility in the DE uses this service to obtain the App
         description JSON so that it can be edited. The App must have been integrated by the
         requesting user."
-        (ce/trap uri #(get-app-ui app-id))))
+        (service/trap uri get-app-ui app-id)))

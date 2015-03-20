@@ -153,12 +153,6 @@
 (deftype DeOnlyAppLister []
   AppLister
 
-  (addFavoriteApp [_ app-id]
-    (metadactyl/add-favorite-app app-id))
-
-  (removeFavoriteApp [_ app-id]
-    (metadactyl/remove-favorite-app app-id))
-
   (rateApp [_ app-id rating comment-id]
     (metadactyl/rate-app app-id rating comment-id))
 
@@ -170,9 +164,6 @@
 
   (getAppDeployedComponents [_ app-id]
     (metadactyl/get-tools-in-app app-id))
-
-  (getAppDetails [_ app-id]
-    (metadactyl/get-app-details app-id))
 
   (getAppDocs [_ app-id]
     (metadactyl/get-app-docs app-id))
@@ -238,18 +229,6 @@
 (deftype DeHpcAppLister [agave-client user-has-access-token?]
   AppLister
 
-  (addFavoriteApp [_ app-id]
-    (if (is-uuid? app-id)
-      (metadactyl/add-favorite-app app-id)
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     "HPC apps cannot be marked as favorites"})))
-
-  (removeFavoriteApp [_ app-id]
-    (if (is-uuid? app-id)
-      (metadactyl/remove-favorite-app app-id)
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     "HPC apps cannot be marked as favorites"})))
-
   (rateApp [_ app-id rating comment-id]
     (if (is-uuid? app-id)
       (metadactyl/rate-app app-id rating comment-id)
@@ -269,11 +248,6 @@
     (if (is-uuid? app-id)
       (metadactyl/get-tools-in-app app-id)
       {:deployed_components [(.getAppDeployedComponent agave-client app-id)]}))
-
-  (getAppDetails [_ app-id]
-    (if (is-uuid? app-id)
-      (metadactyl/get-app-details app-id)
-      (.getAppDetails agave-client app-id)))
 
   (getAppDocs [_ app-id]
     (if (is-uuid? app-id)
@@ -396,18 +370,6 @@
        (get-de-hpc-app-lister state-info username)
        (DeOnlyAppLister.))))
 
-(defn add-favorite-app
-  [app-id]
-  (with-db db/de
-    (transaction
-     (service/success-response (.addFavoriteApp (get-app-lister) app-id)))))
-
-(defn remove-favorite-app
-  [app-id]
-  (with-db db/de
-    (transaction
-     (service/success-response (.removeFavoriteApp (get-app-lister) app-id)))))
-
 (defn rate-app
   [body app-id]
   (with-db db/de
@@ -429,12 +391,6 @@
   (with-db db/de
     (transaction
      (service/success-response (.getAppDeployedComponents (get-app-lister) app-id)))))
-
-(defn get-app-details
-  [app-id]
-  (with-db db/de
-    (transaction
-     (service/success-response (.getAppDetails (get-app-lister) app-id)))))
 
 (defn get-app-docs
   [app-id]

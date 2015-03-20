@@ -1,4 +1,4 @@
-(defproject org.iplantc/clojure-commons "4.2.1"
+(defproject org.iplantc/clojure-commons "4.2.2"
   :description "Common Utilities for Clojure Projects"
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -7,7 +7,7 @@
                 ["sources" :sources]]
   :dependencies [[joda-time "2.4"]
                  [org.clojure/clojure "1.6.0"]
-                 [org.clojure/tools.logging "0.3.0"]
+                 [org.clojure/tools.logging "0.3.1"]
                  [clj-http "1.0.0"]
                  [clj-http-fake "0.7.8"]
                  [clj-time "0.8.0"]

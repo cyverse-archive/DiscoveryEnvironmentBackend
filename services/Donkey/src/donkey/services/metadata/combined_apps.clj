@@ -385,27 +385,42 @@
     (select-keys (.listJob agave external-id) [:status :enddate])
     (da/get-job-step-status external-id)))
 
+(defn- sync-incomplete-job-status
+  "Synchronizes the status of a job for which an incomplete step was found."
+  [agave {:keys [id username] :as job} step]
+  (if-let [step-status (get-job-step-status agave step)]
+    (let [step     (jp/lock-job-step id (:external-id step))
+          job      (jp/lock-job id)
+          status   (:status step-status)
+          end-date (db/timestamp-from-str (:enddate step-status))]
+      (update-job-status agave username job step status end-date))
+    (let [job (jp/lock-job id)]
+      (update-job-status agave username job step jp/failed-status (db/now)))))
+
+(defn- determine-job-status
+  "Determines the status of a job for synchronization in the case when all job steps are
+   marked as being in one of the completed statuses but the job itself is not."
+  [job-id]
+  (let [statuses (map :status (jp/list-job-steps job-id))
+        status   (first (filter (partial not= jp/completed-status) statuses))]
+    (cond (nil? status)                 jp/completed-status
+          (= jp/canceled-status status) status
+          (= jp/failed-status status)   status
+          :else                         jp/failed-status)))
+
+(defn- sync-complete-job-status
+  "Synchronizes the status of a job for which an incomplete step was not found."
+  [{:keys [id]}]
+  (let [{:keys [status]} (jp/lock-job id)]
+    (when-not (mu/is-completed? status)
+      (jp/update-job id {:status (determine-job-status id) :end-date (db/now)}))))
+
 (defn sync-job-status
   "Synchronizes the status of a job with the remote system."
   [agave {:keys [id username] :as job}]
   (if-let [step (first (find-incomplete-job-steps id))]
-
-    ;; We found an incomplete step to update.
-    (if-let [step-status (get-job-step-status agave step)]
-      (let [step     (jp/lock-job-step id (:external-id step))
-            job      (jp/lock-job id)
-            status   (:status step-status)
-            end-date (db/timestamp-from-str (:enddate step-status))]
-        (update-job-status agave username job step status end-date))
-      (let [job (jp/lock-job id)]
-        (update-job-status agave username job step jp/failed-status (db/now))))
-
-    ;; We didn't find an incomplete step to update.
-    (let [_             (jp/lock-job id)
-          steps         (jp/list-job-steps id)
-          all-complete? (every? mu/is-completed? (map :status steps))
-          status        (if all-complete? jp/completed-status jp/failed-status)]
-      (jp/update-job id {:status status :end-date (db/now)}))))
+    (sync-incomplete-job-status agave job step)
+    (sync-complete-job-status job)))
 
 (defn- stop-job-step
   "Stops an individual step in a job."

@@ -45,32 +45,6 @@
   [{:keys [id wiki_url] :as app}]
   (assoc app :wiki_url (if (get-documentation id) nil wiki_url)))
 
-(defn- format-app-details
-  "Formats information for the get-app-details service."
-  [details tools]
-  (let [app-id (:id details)]
-    (-> details
-      (select-keys [:id :integration_date :edited_date :deleted :disabled :wiki_url
-                    :integrator_name :integrator_email])
-      (assoc :name                 (:name details "")
-             :description          (:description details "")
-             :references           (map :reference_text (:app_references details))
-             :tools                (map remove-nil-vals tools)
-             :categories           (get-groups-for-app app-id)
-             :suggested_categories (get-suggested-groups-for-app app-id))
-      format-wiki-url)))
-
-(defn get-app-details
-  "This service obtains the high-level details of an app."
-  [app-id]
-  (let [details (load-app-details app-id)
-        tools   (get-app-tools app-id)]
-    (when (empty? tools)
-      (throw  (IllegalArgumentException. (str "no tools associated with app, " app-id))))
-    (->> (format-app-details details tools)
-         (remove-nil-vals)
-         (service/success-response))))
-
 (defn- with-task-params
   "Includes a list of related file parameters in the query's result set,
    with fields required by the client."

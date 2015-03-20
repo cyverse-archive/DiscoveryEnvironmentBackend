@@ -140,7 +140,6 @@
      :description          (:shortDescription app)
      :deleted              false
      :disabled             (system-available? agave (:executionSystem app))
-     :tito                 (:id app)
      :tools                [(format-deployed-component-for-app app)]
      :categories           [c/hpc-group-overview]
      :suggested_categories []}))

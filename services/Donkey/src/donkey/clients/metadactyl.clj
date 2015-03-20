@@ -122,6 +122,34 @@
                 :as               :stream
                 :follow-redirects false}))
 
+(defn get-app-details
+  [app-id]
+  (client/get (metadactyl-url "apps" app-id "details")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
+(defn remove-favorite-app
+  [app-id]
+  (client/delete (metadactyl-url "apps" app-id "favorite")
+                 {:query-params     (secured-params)
+                  :as               :stream
+                  :follow-redirects false}))
+
+(defn add-favorite-app
+  [app-id]
+  (client/put (metadactyl-url "apps" app-id "favorite")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
+(defn app-publishable?
+  [app-id]
+  (client/get (metadactyl-url "apps" app-id "is-publishable")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
@@ -138,25 +166,9 @@
       (:body)
       (service/decode-json)))
 
-(defn app-publishable?
-  [app-id]
-  (-> (client/get (metadactyl-url "apps" app-id "is-publishable")
-                  {:query-params (secured-params)
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
-
 (defn get-tools-in-app
   [app-id]
   (-> (client/get (metadactyl-url "apps" app-id "tools")
-                  {:query-params (secured-params)
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn get-app-details
-  [app-id]
-  (-> (client/get (metadactyl-url "apps" app-id "details")
                   {:query-params (secured-params)
                    :as           :stream})
       (:body)
@@ -261,22 +273,6 @@
                     :content-type :json
                     :body         (cheshire/encode submission)
                     :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn add-favorite-app
-  [app-id]
-  (-> (client/put (metadactyl-url "apps" app-id "favorite")
-                  {:query-params (secured-params)
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn remove-favorite-app
-  [app-id]
-  (-> (client/delete (metadactyl-url "apps" app-id "favorite")
-                     {:query-params (secured-params)
-                      :as           :stream})
       (:body)
       (service/decode-json)))
 

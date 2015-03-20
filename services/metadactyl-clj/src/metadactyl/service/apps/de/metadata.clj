@@ -7,7 +7,7 @@
                                     get-app-subcategory-id
                                     remove-app-from-category]]
         [kameleon.uuids :only [uuidify]]
-        [metadactyl.app-validation :only [app-publishable?]]
+        [metadactyl.service.apps.de.validation :only [app-publishable?]]
         [metadactyl.util.config :only [workspace-beta-app-category-id
                                        workspace-favorites-app-group-index]]
         [metadactyl.util.service :only [build-url success-response]]

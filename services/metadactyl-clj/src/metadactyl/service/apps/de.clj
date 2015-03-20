@@ -4,6 +4,7 @@
             [metadactyl.service.apps.de.job-view :as job-view]
             [metadactyl.service.apps.de.listings :as listings]
             [metadactyl.service.apps.de.metadata :as app-metadata]
+            [metadactyl.service.apps.de.validation :as app-validation]
             [metadactyl.service.util :as util]))
 
 (deftype DeApps [user]
@@ -61,4 +62,20 @@
 
   (getAppDescription [_ app-id]
     (when (util/uuid? app-id)
-      (listings/get-app-description (uuidify app-id)))))
+      (listings/get-app-description (uuidify app-id))))
+
+  (getAppDetails [_ app-id]
+    (when (util/uuid? app-id)
+      (listings/get-app-details (uuidify app-id))))
+
+  (removeAppFavorite [_ app-id]
+    (when (util/uuid? app-id)
+      (app-metadata/remove-app-favorite user (uuidify app-id))))
+
+  (addAppFavorite [_ app-id]
+    (when (util/uuid? app-id)
+      (app-metadata/add-app-favorite user app-id)))
+
+  (isAppPublishable [_ app-id]
+    (when (util/uuid? app-id)
+      (first (app-validation/app-publishable? app-id)))))

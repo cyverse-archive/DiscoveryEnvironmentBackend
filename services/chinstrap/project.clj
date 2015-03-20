@@ -1,9 +1,9 @@
-(defproject chinstrap "4.2.1"
+(defproject chinstrap "4.2.2"
   :description "Diagnostic and status front-end for backend data"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/tools.cli "0.3.1"]
-                 [org.iplantc/clojure-commons "4.2.1"]
-                 [org.iplantc/kameleon "4.2.1"]
+                 [org.iplantc/clojure-commons "4.2.2"]
+                 [org.iplantc/kameleon "4.2.2"]
                  [clj-time "0.7.0"]
                  [com.novemberain/monger "2.0.0"]
                  [korma/korma "0.3.0-RC5"]
@@ -11,7 +11,7 @@
                  [lib-noir "0.8.3"]
                  [compojure "1.1.8"]
                  [ring "1.3.0"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "4.2.1"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "4.2.2"]]
   :profiles {:dev {:resource-paths ["resources/conf/test"]}}
   :aot [chinstrap.server]
   :main chinstrap.server

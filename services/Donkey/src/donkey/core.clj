@@ -2,6 +2,7 @@
   (:gen-class)
   (:use [clojure.java.io :only [file]]
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
+        [clojure-commons.middleware :only [wrap-log-requests]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
         [donkey.routes.admin]
@@ -199,7 +200,8 @@
       req-logger
       wrap-keyword-params
       wrap-lcase-params
-      wrap-query-params))
+      wrap-query-params
+      wrap-log-requests))
 
 (def app
   (site-handler donkey-routes))

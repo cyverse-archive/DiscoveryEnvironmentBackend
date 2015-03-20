@@ -12,7 +12,8 @@
         [metadactyl.validation :only [validate-parameter verify-app-editable verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as cc-errs]
+  (:require [clojure.set :as set]
+            [clojure-commons.error-codes :as cc-errs]
             [metadactyl.persistence.app-metadata :as persistence]))
 
 (def ^:private copy-prefix "Copy of ")
@@ -127,8 +128,9 @@
 
 (defn- format-file-params
   "Returns param with a file_parameters key/value map added if the param type matches one in the
-   persistence/param-file-types set. Only includes the repeat_option_flag key in the file_parameters
-   map if the param type is also the persistence/param-multi-input-type string."
+   persistence/param-file-types set, but not the persistence/param-input-reference-types set.
+   Only includes the repeat_option_flag key in the file_parameters map if the param type is also the
+   persistence/param-multi-input-type string."
   [{param-type :type :as param}]
   (let [file-param-keys [:format
                          :file_info_type
@@ -138,7 +140,9 @@
         file-param-keys (if (= persistence/param-multi-input-type param-type)
                           (conj file-param-keys :repeat_option_flag)
                           file-param-keys)]
-    (if (contains? persistence/param-file-types param-type)
+    (if (contains?
+          (set/difference persistence/param-file-types persistence/param-input-reference-types)
+          param-type)
       (assoc param :file_parameters (select-keys param file-param-keys))
       param)))
 
@@ -232,13 +236,19 @@
     [(update-parameter-tree-root param-id (first arguments))]
     (doall (map-indexed (partial update-parameter-argument param-id nil) arguments))))
 
-(defn- save-file-parameter
-  "Save an App parameter's file settings."
-  [param-type {:keys [retain] :as file-parameter}]
-  (let [retain? (if (contains? persistence/param-output-types param-type)
-                  true
-                  retain)]
-    (persistence/add-file-parameter (remove-nil-vals (assoc file-parameter :retain retain?)))))
+(defn- format-file-parameter-for-save
+  "Formats an App parameter's file settings for saving to the db."
+  [param-id param-type {:keys [retain]
+                        :or {retain (contains? persistence/param-output-types param-type)}
+                        :as file-parameter}]
+  (remove-nil-vals
+    (if (contains? persistence/param-input-reference-types param-type)
+      {:parameter_id   param-id
+       :file_info_type param-type
+       :format         "Unspecified"
+       :data_source    "file"}
+      (assoc file-parameter :parameter_id param-id
+                            :retain retain))))
 
 (defn- add-validation-rule
   "Adds an App parameter's validator and its rule arguments."
@@ -283,7 +293,8 @@
     (dorun (map (partial add-validation-rule param-id) validators))
 
     (when (contains? persistence/param-file-types param-type)
-      (save-file-parameter param-type (assoc file-parameter :parameter_id param-id)))
+      (persistence/add-file-parameter
+        (format-file-parameter-for-save param-id param-type file-parameter)))
 
     (remove-nil-vals
         (assoc parameter

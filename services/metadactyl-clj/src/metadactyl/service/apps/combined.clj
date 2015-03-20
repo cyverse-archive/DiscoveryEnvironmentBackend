@@ -63,4 +63,18 @@
   (getAppDescription [_ app-id]
     (->> (map #(.getAppDescription % app-id) clients)
          (remove nil?)
-         (first))))
+         (first)))
+
+  (getAppDetails [_ app-id]
+    (->> (map #(.getAppDetails % app-id) clients)
+         (remove nil?)
+         (first)))
+
+  (removeAppFavorite [_ app-id]
+    (.removeAppFavorite (util/get-apps-client clients) app-id))
+
+  (addAppFavorite [_ app-id]
+    (.addAppFavorite (util/get-apps-client clients) app-id))
+
+  (isAppPublishable [_ app-id]
+    (.isAppPublishable (util/get-apps-client clients) app-id)))

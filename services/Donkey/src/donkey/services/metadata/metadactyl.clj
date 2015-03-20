@@ -349,11 +349,6 @@
         req (metadactyl-request req)]
     (forward-post url req)))
 
-(defn app-publishable?
-  "This service determines whether or not an app can safely be made public."
-  [app-id]
-  (cheshire/encode (dm/app-publishable? app-id)))
-
 (defn list-reference-genomes
   "Lists the reference genomes in the database."
   [params]

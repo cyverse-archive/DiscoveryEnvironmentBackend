@@ -119,7 +119,7 @@
           (service/success-response (metadactyl/copy-app app-id)))
 
     (GET "/apps/:app-id/details" [app-id]
-         (apps/get-app-details app-id))
+         (service/success-response (metadactyl/get-app-details app-id)))
 
     (GET "/apps/:app-id/documentation" [app-id]
          (apps/get-app-docs app-id))
@@ -131,13 +131,13 @@
            (apps/edit-app-docs app-id body))
 
     (DELETE "/apps/:app-id/favorite" [app-id]
-            (apps/remove-favorite-app app-id))
+            (service/success-response (metadactyl/remove-favorite-app app-id)))
 
     (PUT "/apps/:app-id/favorite" [app-id]
-         (apps/add-favorite-app app-id))
+         (service/success-response (metadactyl/add-favorite-app app-id)))
 
     (GET "/apps/:app-id/is-publishable" [app-id]
-         (app-publishable? app-id))
+         (service/success-response (metadactyl/app-publishable? app-id)))
 
     (POST "/apps/:app-id/publish" [app-id :as req]
           (make-app-public req app-id))

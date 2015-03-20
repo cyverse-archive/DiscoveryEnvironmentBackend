@@ -36,4 +36,12 @@
 
   (getAppDescription [_ app-id]
     (when-not (util/uuid? app-id)
-      (:description (.getApp agave app-id)))))
+      (:description (.getApp agave app-id))))
+
+  (getAppDetails [_ app-id]
+    (when-not (util/uuid? app-id)
+      (.getAppDetails agave app-id)))
+
+  (isAppPublishable [_ app-id]
+    (when-not (util/uuid? app-id)
+      false)))

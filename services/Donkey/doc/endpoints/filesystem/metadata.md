@@ -426,10 +426,10 @@ __Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NO
 __Request Query Parameters__:
 
 * proxyToken - A valid CAS ticket.
-* force - Omitting this parameter will cause this endpoint to validate that none of the given
-"destination_ids" already have Metadata Template AVUs set with any of the attributes found in any of
-the Metadata Template AVUs associated with the source "data-id", otherwise an ERR_NOT_UNIQUE error
-is returned.
+* force - Omitting this parameter, or setting its value to anything other than "true", will cause
+this endpoint to validate that none of the given "destination_ids" already have Metadata Template
+AVUs set with any of the attributes found in any of the Metadata Template AVUs associated with the
+source "data-id", otherwise an ERR_NOT_UNIQUE error is returned.
 
 __Request Body__:
 
@@ -437,6 +437,19 @@ __Request Body__:
 {
     "destination_ids": [
         "c5d42092-df89-11e3-bf8b-6abdce5a08d5",
+        "..."
+    ]
+}
+```
+
+__Response__:
+
+```json
+{
+    "user": "ipctest",
+    "src": "/iplant/home/ipctest/folder-1",
+    "paths": [
+        "/iplant/home/ipctest/folder-2",
         "..."
     ]
 }
@@ -580,10 +593,13 @@ __Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NO
 __Request Query Parameters__:
 
 * proxyToken - A valid CAS ticket.
-* force - Omitting this parameter will cause this endpoint to validate that none of the given
-"destination_ids" already have IRODS metadata set with any of the attributes found in the source
-item's metadata, and no Metadata Template AVUs set with any of the attributes found in any of the
-Template AVUs associated with the source item; otherwise an ERR_NOT_UNIQUE error is returned.
+* force - Omitting this parameter, or setting its value to anything other than "true", will cause
+this endpoint to validate that none of the given "destination_ids" already have Metadata Template
+AVUs set with any of the attributes found in any of the Metadata Template AVUs associated with the
+source "data-id", otherwise an ERR_NOT_UNIQUE error is returned.
+IRODS allows duplicate attributes with different values on files and folders, so this endpoint will
+also allow copies of IRODS AVUs to destination files/folders of duplicate attributes if the source
+file/folder has a different value.
 
 __Request Body__:
 
@@ -591,6 +607,19 @@ __Request Body__:
 {
     "destination_ids": [
         "c5d42092-df89-11e3-bf8b-6abdce5a08d5",
+        "..."
+    ]
+}
+```
+
+__Response__:
+
+```json
+{
+    "user": "ipctest",
+    "src": "/iplant/home/ipctest/folder-1",
+    "paths": [
+        "/iplant/home/ipctest/folder-2",
         "..."
     ]
 }

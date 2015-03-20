@@ -245,10 +245,17 @@
   {:id AppCategoryIdPathParam
    :name (describe String "The App Category's name")})
 
+(defschema AppDetailsTool
+  (assoc Tool
+    :id (describe String "The tool identifier.")))
+
 (defschema AppDetails
   (merge AppBase
-         {:tools
-          (describe [Tool] ToolListDocs)
+         {:id
+          (describe String "The app identifier.")
+
+          :tools
+          (describe [AppDetailsTool] ToolListDocs)
 
           :deleted
           AppDeletedParam

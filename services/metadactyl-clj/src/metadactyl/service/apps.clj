@@ -119,3 +119,19 @@
 (defn get-app-description
   [user app-id]
   (.getAppDescription (get-apps-client user "") app-id))
+
+(defn get-app-details
+  [user app-id]
+  (.getAppDetails (get-apps-client user "") app-id))
+
+(defn remove-app-favorite
+  [user app-id]
+  (.removeAppFavorite (get-apps-client user "") app-id))
+
+(defn add-app-favorite
+  [user app-id]
+  (.addAppFavorite (get-apps-client user "") app-id))
+
+(defn app-publishable?
+  [user app-id]
+  {:publishable (.isAppPublishable (get-apps-client user "") app-id)})
