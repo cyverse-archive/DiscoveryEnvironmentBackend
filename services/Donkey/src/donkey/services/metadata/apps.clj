@@ -252,8 +252,9 @@
   (getAppDocs [_ app-id]
     (if (is-uuid? app-id)
       (metadactyl/get-app-docs app-id)
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     "Cannot read documentation for HPC apps with this service"})))
+      {:app_id        app-id
+       :documentation ""
+       :references    []}))
 
   (addAppDocs [_ app-id docs]
     (if (is-uuid? app-id)
