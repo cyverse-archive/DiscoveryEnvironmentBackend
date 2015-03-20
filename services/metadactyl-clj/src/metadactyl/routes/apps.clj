@@ -203,7 +203,7 @@
          information and suggested location then places the App in the Beta category. A Tito
          administrator can subsequently move the App to the suggested location at a later time if it
          proves to be useful."
-         (ce/trap uri #(app-metadata/make-app-public (assoc body :id app-id))))
+         (service/trap uri apps/make-app-public current-user (assoc body :id app-id)))
 
   (DELETE* "/:app-id/rating" [:as {uri :uri}]
            :path-params [app-id :- AppIdPathParam]

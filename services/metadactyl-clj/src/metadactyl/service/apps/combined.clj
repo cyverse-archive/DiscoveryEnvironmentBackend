@@ -77,4 +77,7 @@
     (.addAppFavorite (util/get-apps-client clients) app-id))
 
   (isAppPublishable [_ app-id]
-    (.isAppPublishable (util/get-apps-client clients) app-id)))
+    (.isAppPublishable (util/get-apps-client clients) app-id))
+
+  (makeAppPublic [_ app]
+    (.makeAppPublic (util/get-apps-client clients) app)))

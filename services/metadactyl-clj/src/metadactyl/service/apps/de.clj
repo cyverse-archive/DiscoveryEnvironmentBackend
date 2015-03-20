@@ -78,4 +78,8 @@
 
   (isAppPublishable [_ app-id]
     (when (util/uuid? app-id)
-      (first (app-validation/app-publishable? app-id)))))
+      (first (app-validation/app-publishable? app-id))))
+
+  (makeAppPublic [_ app]
+    (when (util/uuid? (:id app))
+      (app-metadata/make-app-public user app))))

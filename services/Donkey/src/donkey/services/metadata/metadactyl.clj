@@ -342,13 +342,6 @@
   (client/get (metadactyl-url {} "apps" app-id "ui")
               {:as :stream}))
 
-(defn make-app-public
-  "This service copies an app from a user's private workspace to the public workspace."
-  [req app-id]
-  (let [url (metadactyl-url {} "apps" app-id "publish")
-        req (metadactyl-request req)]
-    (forward-post url req)))
-
 (defn list-reference-genomes
   "Lists the reference genomes in the database."
   [params]

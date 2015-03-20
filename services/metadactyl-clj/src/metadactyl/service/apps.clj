@@ -135,3 +135,7 @@
 (defn app-publishable?
   [user app-id]
   {:publishable (.isAppPublishable (get-apps-client user "") app-id)})
+
+(defn make-app-public
+  [user app]
+  (.makeAppPublic (get-apps-client user "") app))

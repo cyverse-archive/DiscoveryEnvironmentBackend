@@ -139,8 +139,8 @@
     (GET "/apps/:app-id/is-publishable" [app-id]
          (service/success-response (metadactyl/app-publishable? app-id)))
 
-    (POST "/apps/:app-id/publish" [app-id :as req]
-          (make-app-public req app-id))
+    (POST "/apps/:app-id/publish" [app-id :as {:keys [body]}]
+          (service/success-response (metadactyl/make-app-public app-id body)))
 
     (DELETE "/apps/:app-id/rating" [app-id]
             (apps/delete-rating app-id))

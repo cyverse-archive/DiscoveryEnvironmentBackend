@@ -21,4 +21,5 @@
   (getAppDetails [_ app-id])
   (removeAppFavorite [_ app-id])
   (addAppFavorite [_ app-id])
-  (isAppPublishable [_ app-id]))
+  (isAppPublishable [_ app-id])
+  (makeAppPublic [_ app]))

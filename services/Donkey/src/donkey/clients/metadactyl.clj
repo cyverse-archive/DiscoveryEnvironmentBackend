@@ -150,6 +150,15 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn make-app-public
+  [app-id app]
+  (client/post (metadactyl-url "apps" app-id "publish")
+               {:query-params     (secured-params)
+                :body             app
+                :content-type     :json
+                :as               :stream
+                :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
