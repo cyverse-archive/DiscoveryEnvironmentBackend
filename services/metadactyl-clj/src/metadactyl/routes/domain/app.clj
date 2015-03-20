@@ -218,6 +218,26 @@
 (defschema AppTaskListing
   (assoc AppBase :tasks (describe [AppTask] "The App's tasks")))
 
+(defschema NewAppFileParameterDetails
+  {:id          (describe String "The parameter's ID")
+   :name        (describe String "The Parameter's name")
+   :description (describe String "The Parameter's description")
+   :label       (describe String "The Input Parameter's label or the Output Parameter's value")
+   :format      (describe String "The Parameter's file format")
+   :required    (describe Boolean "Whether or not a value is required for this Parameter")})
+
+(defschema NewAppTask
+  {:id          (describe String "The task's ID")
+   :name        (describe String "The Task's name")
+   :description (describe String "The Task's description")
+   :inputs      (describe [NewAppFileParameterDetails] "The Task's input parameters")
+   :outputs     (describe [NewAppFileParameterDetails] "The Task's output parameters")})
+
+(defschema NewAppTaskListing
+  (assoc AppBase
+    :id    (describe String "The App's ID.")
+    :tasks (describe [NewAppTask] "The App's tasks")))
+
 (defschema AppParameterJobView
   (assoc AppParameter
     :id

@@ -90,4 +90,8 @@
 
   (rateApp [_ app-id rating]
     (when (util/uuid? app-id)
-      (app-metadata/rate-app user app-id rating))))
+      (app-metadata/rate-app user app-id rating)))
+
+  (getAppTaskListing [_ app-id]
+    (when (util/uuid? app-id)
+      (listings/get-app-task-listing (uuidify app-id)))))

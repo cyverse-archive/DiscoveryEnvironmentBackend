@@ -1,6 +1,5 @@
 (ns metadactyl.routes.apps
-  (:use [metadactyl.app-listings :only [get-app-task-listing
-                                        get-app-tool-listing]]
+  (:use [metadactyl.app-listings :only [get-app-tool-listing]]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.tool :only [ToolListing]]
@@ -227,14 +226,14 @@
          (service/trap uri apps/rate-app current-user app-id body))
 
   (GET* "/:app-id/tasks" [:as {uri :uri}]
-        :path-params [app-id :- AppIdPathParam]
+        :path-params [app-id :- AppIdJobViewPathParam]
         :query [params SecuredQueryParams]
-        :return AppTaskListing
+        :return NewAppTaskListing
         :summary "List Tasks with File Parameters in an App"
         :notes "When a pipeline is being created, the UI needs to know what types of files are
         consumed by and what types of files are produced by each App's task in the pipeline. This
         service provides that information."
-        (ce/trap uri #(get-app-task-listing app-id)))
+        (service/coerced-trap uri NewAppTaskListing apps/get-app-task-listing current-user app-id))
 
   (GET* "/:app-id/tools" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]

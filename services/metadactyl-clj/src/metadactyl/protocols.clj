@@ -24,4 +24,5 @@
   (isAppPublishable [_ app-id])
   (makeAppPublic [_ app])
   (deleteAppRating [_ app-id])
-  (rateApp [_ app-id rating]))
+  (rateApp [_ app-id rating])
+  (getAppTaskListing [_ app-id]))

@@ -44,4 +44,8 @@
 
   (isAppPublishable [_ app-id]
     (when-not (util/uuid? app-id)
-      false)))
+      false))
+
+  (getAppTaskListing [_ app-id]
+    (when-not (util/uuid? app-id)
+      (.listAppTasks agave app-id))))

@@ -175,6 +175,13 @@
                 :as               :stream
                 :follow-redirects false}))
 
+(defn list-app-tasks
+  [app-id]
+  (client/get (metadactyl-url "apps" app-id "tasks")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
@@ -244,14 +251,6 @@
                      :content-type :json
                      :body         (cheshire/encode docs)
                      :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn list-app-tasks
-  [app-id]
-  (-> (client/get (metadactyl-url "apps" app-id "tasks")
-                  {:query-params (secured-params)
-                   :as           :stream})
       (:body)
       (service/decode-json)))
 

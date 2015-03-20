@@ -149,7 +149,7 @@
           (service/success-response (metadactyl/rate-app app-id body)))
 
     (GET "/apps/:app-id/tasks" [app-id]
-         (apps/list-app-tasks app-id))
+         (service/success-response (metadactyl/list-app-tasks app-id)))
 
     (GET "/apps/:app-id/tools" [app-id]
          (apps/get-tools-in-app app-id))
