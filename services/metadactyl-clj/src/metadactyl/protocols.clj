@@ -25,4 +25,5 @@
   (makeAppPublic [_ app])
   (deleteAppRating [_ app-id])
   (rateApp [_ app-id rating])
-  (getAppTaskListing [_ app-id]))
+  (getAppTaskListing [_ app-id])
+  (getAppToolListing [_ app-id]))

@@ -90,13 +90,3 @@
   "Fetches a formatted list of tasks for the given IDs with their inputs and outputs."
   [task-ids]
   (map format-task (get-tasks task-ids)))
-
-(defn get-app-tool-listing
-  "A service to list the tools used by an app."
-  [app-id]
-  (let [app (get-app app-id)
-        tasks (:tasks (first (select apps
-                               (with tasks (fields :tool_id))
-                               (where {:apps.id app-id}))))
-        tool-ids (map :tool_id tasks)]
-    (service/success-response {:tools (get-tools-by-id tool-ids)})))

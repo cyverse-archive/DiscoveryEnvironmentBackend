@@ -156,9 +156,6 @@
   (getApp [_ app-id]
     (retrieve-app app-id))
 
-  (getAppDeployedComponents [_ app-id]
-    (metadactyl/get-tools-in-app app-id))
-
   (getAppDocs [_ app-id]
     (metadactyl/get-app-docs app-id))
 
@@ -222,11 +219,6 @@
 
   (getApp [_ app-id]
     (retrieve-app app-id))
-
-  (getAppDeployedComponents [_ app-id]
-    (if (is-uuid? app-id)
-      (metadactyl/get-tools-in-app app-id)
-      {:deployed_components [(.getAppDeployedComponent agave-client app-id)]}))
 
   (getAppDocs [_ app-id]
     (if (is-uuid? app-id)
@@ -344,12 +336,6 @@
      (if (config/agave-enabled)
        (get-de-hpc-app-lister state-info username)
        (DeOnlyAppLister.))))
-
-(defn get-tools-in-app
-  [app-id]
-  (with-db db/de
-    (transaction
-     (service/success-response (.getAppDeployedComponents (get-app-lister) app-id)))))
 
 (defn get-app-docs
   [app-id]

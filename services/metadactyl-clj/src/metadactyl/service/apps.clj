@@ -151,3 +151,7 @@
 (defn get-app-task-listing
   [user app-id]
   (.getAppTaskListing (get-apps-client user "") app-id))
+
+(defn get-app-tool-listing
+  [user app-id]
+  (.getAppToolListing (get-apps-client user "") app-id))

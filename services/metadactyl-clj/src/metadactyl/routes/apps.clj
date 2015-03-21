@@ -1,8 +1,7 @@
 (ns metadactyl.routes.apps
-  (:use [metadactyl.app-listings :only [get-app-tool-listing]]
-        [metadactyl.routes.domain.app]
+  (:use [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.rating]
-        [metadactyl.routes.domain.tool :only [ToolListing]]
+        [metadactyl.routes.domain.tool :only [NewToolListing]]
         [metadactyl.routes.params]
         [metadactyl.service.app-documentation :only [get-app-docs
                                                      owner-add-app-docs
@@ -236,13 +235,13 @@
         (service/coerced-trap uri NewAppTaskListing apps/get-app-task-listing current-user app-id))
 
   (GET* "/:app-id/tools" [:as {uri :uri}]
-        :path-params [app-id :- AppIdPathParam]
+        :path-params [app-id :- AppIdJobViewPathParam]
         :query [params SecuredQueryParams]
-        :return ToolListing
+        :return NewToolListing
         :summary "List Tools used by an App"
         :notes "This service lists information for all of the tools that are associated with an App.
         This information used to be included in the results of the App listing service."
-        (ce/trap uri #(get-app-tool-listing app-id)))
+        (service/coerced-trap uri NewToolListing apps/get-app-tool-listing current-user app-id))
 
   (GET* "/:app-id/ui" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]

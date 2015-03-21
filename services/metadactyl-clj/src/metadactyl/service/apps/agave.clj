@@ -48,4 +48,8 @@
 
   (getAppTaskListing [_ app-id]
     (when-not (util/uuid? app-id)
-      (.listAppTasks agave app-id))))
+      (.listAppTasks agave app-id)))
+
+  (getAppToolListing [_ app-id]
+    (when-not (util/uuid? app-id)
+      (.getAppToolListing agave app-id))))

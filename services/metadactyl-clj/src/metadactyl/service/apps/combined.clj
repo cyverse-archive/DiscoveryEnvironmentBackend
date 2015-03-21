@@ -91,4 +91,9 @@
   (getAppTaskListing [_ app-id]
     (->> (map #(.getAppTaskListing % app-id) clients)
          (remove nil?)
+         (first)))
+
+  (getAppToolListing [_ app-id]
+    (->> (map #(.getAppToolListing % app-id) clients)
+         (remove nil?)
          (first))))

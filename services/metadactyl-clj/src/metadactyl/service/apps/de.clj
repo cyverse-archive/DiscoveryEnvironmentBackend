@@ -94,4 +94,8 @@
 
   (getAppTaskListing [_ app-id]
     (when (util/uuid? app-id)
-      (listings/get-app-task-listing (uuidify app-id)))))
+      (listings/get-app-task-listing (uuidify app-id))))
+
+  (getAppToolListing [_ app-id]
+    (when (util/uuid? app-id)
+      (listings/get-app-tool-listing (uuidify app-id)))))

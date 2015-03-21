@@ -152,7 +152,7 @@
          (service/success-response (metadactyl/list-app-tasks app-id)))
 
     (GET "/apps/:app-id/tools" [app-id]
-         (apps/get-tools-in-app app-id))
+         (service/success-response (metadactyl/get-tools-in-app app-id)))
 
     (GET "/apps/:app-id/ui" [app-id]
          (edit-app app-id))))
