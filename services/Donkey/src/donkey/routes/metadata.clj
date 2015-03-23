@@ -155,7 +155,7 @@
          (service/success-response (metadactyl/get-tools-in-app app-id)))
 
     (GET "/apps/:app-id/ui" [app-id]
-         (edit-app app-id))))
+         (service/success-response (metadactyl/get-app-ui app-id)))))
 
 (defn analysis-routes
   []

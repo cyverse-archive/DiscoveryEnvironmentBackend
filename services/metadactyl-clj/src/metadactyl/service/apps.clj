@@ -155,3 +155,7 @@
 (defn get-app-tool-listing
   [user app-id]
   (.getAppToolListing (get-apps-client user "") app-id))
+
+(defn get-app-ui
+  [user app-id]
+  (.getAppUi (get-apps-client user "") app-id))

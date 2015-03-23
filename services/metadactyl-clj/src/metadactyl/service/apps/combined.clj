@@ -96,4 +96,7 @@
   (getAppToolListing [_ app-id]
     (->> (map #(.getAppToolListing % app-id) clients)
          (remove nil?)
-         (first))))
+         (first)))
+
+  (getAppUi [_ app-id]
+    (.getAppUi (util/get-apps-client clients) app-id)))

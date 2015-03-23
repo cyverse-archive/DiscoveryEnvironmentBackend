@@ -202,14 +202,17 @@
 
 (defn get-app-ui
   "This service prepares a JSON response for editing an App in the client."
-  [app-id]
+  [user app-id]
   (let [app (persistence/get-app app-id)]
-    (verify-app-ownership app)
+    (verify-app-ownership user app)
     (format-app-for-editing app)))
 
 (defn- update-parameter-argument
   "Adds a selection parameter's argument, and any of its child arguments and groups."
-  [param-id parent-id display-order {param-value-id :id groups :groups arguments :arguments :as parameter-value}]
+  [param-id parent-id display-order {param-value-id :id
+                                     groups         :groups
+                                     arguments      :arguments
+                                     :as            parameter-value}]
   (let [insert-values (remove-nil-vals
                         (assoc parameter-value :id (uuidify param-value-id)
                                                :parameter_id param-id
@@ -387,7 +390,7 @@
       (when-not (nil? tool-id)
         (persistence/set-task-tool task-id tool-id))
       (dorun (map-indexed (partial update-app-group task-id) groups))
-      (get-app-ui app-id))))
+      (get-app-ui user app-id))))
 
 (defn- name-too-long?
   "Determines if a name is too long to be extended for a copy name."
@@ -453,4 +456,4 @@
   [user {app-id :id :as body}]
   (verify-app-ownership user (persistence/get-app app-id))
   (transaction (persistence/update-app-labels body))
-  (get-app-ui app-id))
+  (get-app-ui user app-id))

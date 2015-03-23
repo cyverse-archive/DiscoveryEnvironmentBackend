@@ -98,4 +98,8 @@
 
   (getAppToolListing [_ app-id]
     (when (util/uuid? app-id)
-      (listings/get-app-tool-listing (uuidify app-id)))))
+      (listings/get-app-tool-listing (uuidify app-id))))
+
+  (getAppUi [_ app-id]
+    (when (util/uuid? app-id)
+      (edit/get-app-ui user app-id))))

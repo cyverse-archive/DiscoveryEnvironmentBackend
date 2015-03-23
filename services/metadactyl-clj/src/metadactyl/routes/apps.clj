@@ -7,7 +7,6 @@
                                                      owner-add-app-docs
                                                      owner-edit-app-docs]]
         [metadactyl.user :only [current-user]]
-        [metadactyl.service.apps.de.edit :only [get-app-ui]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -251,4 +250,4 @@
         :notes "The app integration utility in the DE uses this service to obtain the App
         description JSON so that it can be edited. The App must have been integrated by the
         requesting user."
-        (service/trap uri get-app-ui app-id)))
+        (service/trap uri apps/get-app-ui current-user app-id)))

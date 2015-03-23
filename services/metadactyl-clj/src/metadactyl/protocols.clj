@@ -26,4 +26,5 @@
   (deleteAppRating [_ app-id])
   (rateApp [_ app-id rating])
   (getAppTaskListing [_ app-id])
-  (getAppToolListing [_ app-id]))
+  (getAppToolListing [_ app-id])
+  (getAppUi [_ app-id]))

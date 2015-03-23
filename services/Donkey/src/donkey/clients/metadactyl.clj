@@ -182,6 +182,13 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn get-app-ui
+  [app-id]
+  (client/get (metadactyl-url "apps" app-id "ui")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
