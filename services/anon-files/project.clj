@@ -29,4 +29,3 @@
                :config-path "resources/main"}
   :plugins [[lein-ring "0.8.10"]
             [org.iplantc/lein-iplant-rpm "5.0.0"]])
-

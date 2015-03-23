@@ -1,7 +1,6 @@
 (ns metadactyl.routes.apps
   (:use [metadactyl.app-listings :only [get-app-task-listing
                                         get-app-tool-listing]]
-        [metadactyl.app-validation :only [app-publishable?]]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.tool :only [ToolListing]]
@@ -10,7 +9,7 @@
                                                      owner-add-app-docs
                                                      owner-edit-app-docs]]
         [metadactyl.user :only [current-user]]
-        [metadactyl.zoidberg.app-edit :only [get-app-ui]]
+        [metadactyl.service.apps.de.edit :only [get-app-ui]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -192,7 +191,7 @@
         :notes "A multi-step App can't be made public if any of the Tasks that are included in it
         are not public. This endpoint returns a true flag if the App is a single-step App or it's a
         multistep App in which all of the Tasks included in the pipeline are public."
-        (ce/trap uri #(hash-map :publishable (first (app-publishable? app-id)))))
+        (service/trap uri apps/app-publishable? current-user app-id))
 
   (POST* "/:app-id/publish" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]
@@ -254,4 +253,4 @@
         :notes "The app integration utility in the DE uses this service to obtain the App
         description JSON so that it can be edited. The App must have been integrated by the
         requesting user."
-        (ce/trap uri #(get-app-ui app-id))))
+        (service/trap uri get-app-ui app-id)))

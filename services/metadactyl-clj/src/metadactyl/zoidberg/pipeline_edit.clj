@@ -13,13 +13,14 @@
                                                     get-app
                                                     remove-app-steps
                                                     update-app]]
+        [metadactyl.user :only [current-user]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
         [metadactyl.validation :only [validate-external-app-step
                                       validate-pipeline
                                       verify-app-editable
                                       verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
-        [metadactyl.zoidberg.app-edit :only [add-app-to-user-dev-category app-copy-name]])
+        [metadactyl.service.apps.de.edit :only [add-app-to-user-dev-category app-copy-name]])
   (:require [metadactyl.util.service :as service]
             [clojure.tools.logging :as log]))
 
@@ -187,7 +188,7 @@
   (validate-pipeline app)
   (transaction
     (let [app-id (:id (add-app app))]
-      (add-app-to-user-dev-category app-id)
+      (add-app-to-user-dev-category current-user app-id)
       (add-app-steps-mappings (assoc app :id app-id))
       app-id)))
 

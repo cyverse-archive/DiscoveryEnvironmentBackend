@@ -14,7 +14,7 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [com.novemberain/langohr "3.1.0"]
-                 [me.raynes/fs "1.4.6"]
+                 [me.raynes/fs "1.4.6"] d
                  [org.iplantc/clj-jargon "5.0.0"]
                  [org.iplantc/clojure-commons "5.0.0" :exclusions [commons-logging]]
                  [org.iplantc/common-cli "5.0.0"]

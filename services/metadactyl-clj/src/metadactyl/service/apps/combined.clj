@@ -74,4 +74,7 @@
     (.removeAppFavorite (util/get-apps-client clients) app-id))
 
   (addAppFavorite [_ app-id]
-    (.addAppFavorite (util/get-apps-client clients) app-id)))
+    (.addAppFavorite (util/get-apps-client clients) app-id))
+
+  (isAppPublishable [_ app-id]
+    (.isAppPublishable (util/get-apps-client clients) app-id)))
