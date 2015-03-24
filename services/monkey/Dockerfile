@@ -1,5 +1,6 @@
 FROM discoenv/javabase
 
 ADD target/monkey-standalone.jar /home/iplant/
-ENTRYPOINT ["java", "-jar", "monkey-standalone.jar"]
+ADD conf/main/log4j.properties /home/iplant/
+ENTRYPOINT ["java", "-cp", ".:monkey-standalone.jar", "monkey.core"]
 CMD ["--help"]
