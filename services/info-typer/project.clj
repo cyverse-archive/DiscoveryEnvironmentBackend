@@ -4,17 +4,20 @@
 (defn git-ref
   []
   (or (System/getenv "GIT_COMMIT")
-    (string/trim (:out (sh "git" "rev-parse" "HEAD")))
-    ""))
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
 
-(defproject info-typer "5.0.0"
+(defproject org.iplantc/info-typer "5.0.0"
   :description "An AMQP based info type detection service for iRODS"
+  :url "http://www.iplantcollaborative.org"
+  :license {:name "BSD"
+            :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "info-typer-standalone.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [com.novemberain/langohr "3.1.0"]
-                 [me.raynes/fs "1.4.6"] d
+                 [me.raynes/fs "1.4.6"]
                  [org.iplantc/clj-jargon "5.0.0"]
                  [org.iplantc/clojure-commons "5.0.0" :exclusions [commons-logging]]
                  [org.iplantc/common-cli "5.0.0"]
