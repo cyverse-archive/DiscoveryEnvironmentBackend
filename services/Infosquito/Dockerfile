@@ -1,5 +1,6 @@
 FROM discoenv/javabase
 
 ADD target/infosquito-standalone.jar /home/iplant/
-ENTRYPOINT ["java", "-jar", "infosquito-standalone.jar"]
+ADD conf/log4j.properties /home/iplant/
+ENTRYPOINT ["java", "-cp", ".:infosquito-standalone.jar", "infosquito.core"]
 CMD ["--help"]
