@@ -1,6 +1,7 @@
 FROM java:8
 
-RUN useradd -m -U -s /bin/bash iplant
+RUN useradd -m -U -s /bin/bash -u 1337 iplant
 USER iplant
+RUN mkdir -p /home/iplant/logs/
 WORKDIR /home/iplant
 EXPOSE 60000
