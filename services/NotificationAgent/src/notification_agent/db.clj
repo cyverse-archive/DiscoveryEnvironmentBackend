@@ -36,6 +36,18 @@
   (or (:id (first (select users (where {:username username}))))
       (:id (insert users (values {:username username})))))
 
+(defn- lock-user
+  "Locks a user in the database. This function calls get-user-id first to ensure that the user
+   exists in the database then creates a row-level lock on the users table."
+  [username]
+  (let [id (get-user-id username)]
+    (-> (select* users)
+        (where {:id id})
+        (#(str (as-sql %) " for update"))
+        (#(exec-raw [% [id]] :results))
+        (first)
+        (:id))))
+
 (defn- parse-date
   "Parses a date that is specified as a string representing the number of
    milliseconds since January 1, 1970."
@@ -211,7 +223,7 @@
     (insert notifications
             (values {:uuid         uuid
                      :type         type
-                     :user_id      (get-user-id username)
+                     :user_id      (lock-user username)
                      :subject      subject
                      :message      message
                      :date_created (parse-date created-date)}))
@@ -605,7 +617,7 @@
   (exec-raw [(str "INSERT INTO system_notification_acknowledgments
                        (user_id, system_notification_id, state)
                      VALUES (?, ?, '" ack-state "')")
-             [(get-user-id user) (system-notif-id sys-note-uuid)]]))
+             [(lock-user user) (system-notif-id sys-note-uuid)]]))
 
 ;; NOT API
 (defn insert-seen-ack
@@ -613,7 +625,7 @@
    The state is set to acknowledged, and the given time used for the date acknowledged."
   [seen-date user sys-note-uuid]
   (exec-raw ["INSERT INTO system_notification_acknowledgments VALUES (?, ?, 'acknowledged', ?)"
-             [(get-user-id user)
+             [(lock-user user)
               (system-notif-id sys-note-uuid)
               (parse-date seen-date)]]))
 
@@ -626,7 +638,7 @@
   (exec-raw [(str "UPDATE system_notification_acknowledgments
                      SET state = '" ack-state "'
                      WHERE user_id = ? AND system_notification_id = ?")
-             [(get-user-id user) (system-notif-id sys-note-uuid)]]))
+             [(lock-user user) (system-notif-id sys-note-uuid)]]))
 
 ;; NOT API
 (defn update-ack-to-seen
@@ -638,7 +650,7 @@
                SET state = 'acknowledged', date_acknowledged = ?
                WHERE user_id = ? AND system_notification_id = ?"
              [(parse-date seen-date)
-              (get-user-id user)
+              (lock-user user)
               (system-notif-id sys-note-uuid)]]))
 
 ;; NOT API
