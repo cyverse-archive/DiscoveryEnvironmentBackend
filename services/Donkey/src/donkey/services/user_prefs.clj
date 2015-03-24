@@ -59,9 +59,8 @@
   [prefs]
   (let [out-dir (:systemDefaultOutputDir prefs)]
     (if (map? out-dir)
-      (do (println "yay") (println out-dir) (:path out-dir))
-      (do (println "nay") out-dir))))
-
+      (:path out-dir)
+      out-dir)))
 
 (defn- create-system-default-output-dir
   "Creates the system default output dir."
@@ -69,8 +68,8 @@
   (let [sys-output-dir (ft/rm-last-slash (sysdefoutdir prefs))
         output-dir     (ft/rm-last-slash (extract-default-output-dir prefs))
         user           (:shortUsername current-user)]
-    (log/warn "sys-output-dir" sys-output-dir)
-    (log/warn "output-dir" output-dir)
+    (log/debug "sys-output-dir" sys-output-dir)
+    (log/debug "output-dir" output-dir)
     (cond
       (not (string/blank? output-dir))     (di/ensure-dir-created user output-dir)
       (not (string/blank? sys-output-dir)) (di/ensure-dir-created user sys-output-dir)
@@ -94,7 +93,6 @@
 
 (defn- get-user-prefs
   [user prefs]
-  (log/warn "get-user-prefs")
   (->> prefs
       (handle-blank-default-output-dir user)
       (handle-string-default-output-dir)
@@ -117,7 +115,6 @@
   "Retrieves or saves the user's preferences."
   ([user]
      (let [prefs (get-prefs user)]
-       (log/warn "Getting user prefs")
        (get-user-prefs user prefs)))
   ([user req-prefs-string]
      (let [prefs (if-not (map? req-prefs-string)
