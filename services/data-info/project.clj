@@ -15,7 +15,7 @@
                  [org.clojure/core.memoize "0.5.7"]
                  [org.clojure/data.codec "0.1.0"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [org.clojure/tools.nrepl "0.2.7"]
+                 [org.clojure/tools.nrepl "0.2.9"]
                  [cheshire "5.4.0"]
                  [clj-time "0.9.0"]
                  [com.cemerick/url "0.1.1"]
