@@ -1,10 +1,10 @@
 (ns donkey.services.filesystem.stat
   (:use [clojure-commons.validators]
         [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-info :only [is-dir? stat]]
+        [clj-jargon.item-info :only [exists? is-dir? stat]]
         [clj-jargon.item-ops :only [input-stream]]
         [clj-jargon.metadata :only [get-attribute]]
-        [clj-jargon.permissions :only [list-user-perms permission-for owns?]])
+        [clj-jargon.permissions :only [is-writeable? list-user-perms permission-for owns?]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
             [cemerick.url :as url]
@@ -86,6 +86,27 @@
   ([user path]
    (with-jargon (jargon/jargon-cfg) [cm]
      (path-stat cm user path))))
+
+
+(defn- dir-stack
+  "Obtains a stack of parent directories for a directory path."
+  [path]
+  (take-while (complement nil?) (iterate ft/dirname path)))
+
+
+(defn- deepest-extant-parent
+  "Finds the deepest parent of a path that exists."
+  [cm path]
+  (first (filter (partial exists? cm) (dir-stack path))))
+
+
+(defn can-create-dir?
+  ([cm user path]
+     ((every-pred (partial is-dir? cm) (partial is-writeable? cm user))
+      (log/spy :warn (deepest-extant-parent cm path))))
+  ([user path]
+     (with-jargon (jargon/jargon-cfg) [cm]
+       (can-create-dir? cm user path))))
 
 
 (defn- fmt-stat-response
