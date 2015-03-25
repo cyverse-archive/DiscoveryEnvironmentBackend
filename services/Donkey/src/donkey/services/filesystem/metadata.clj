@@ -16,7 +16,6 @@
             [cheshire.core :as json]
             [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.persistence.metadata :as persistence]
             [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as validators]

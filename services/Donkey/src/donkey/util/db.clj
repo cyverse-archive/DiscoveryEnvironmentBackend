@@ -1,5 +1,6 @@
 (ns donkey.util.db
   (:use [donkey.util.config]
+        [kameleon.db :only [define-metadata-database]]
         [korma.db]))
 
 (defn- create-db-spec
@@ -26,6 +27,6 @@
   []
   (let [spec (create-db-spec)
         metadata-spec (create-metadata-db-spec)]
+    (define-metadata-database metadata-spec)
     (defonce de (create-db spec))
-    (defonce metadata (create-db metadata-spec))
     (default-connection de)))

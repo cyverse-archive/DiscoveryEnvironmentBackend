@@ -1,9 +1,15 @@
 (ns kameleon.db
+  (:use [korma.core]
+        [korma.db])
   (:require [clj-time.coerce :as tc]
             [clj-time.core :as t]
             [clj-time.format :as tf]
             [clojure.string :as string])
   (:import [java.sql Timestamp]))
+
+(defn ->enum-val
+  [val]
+  (raw (str \' val \')))
 
 (def ^:private timestamp-parser
   (tf/formatter (t/default-time-zone)
@@ -59,3 +65,8 @@
   [timestamp]
   (when-not (nil? timestamp)
     (str (.getTime timestamp))))
+
+(defn define-metadata-database
+  "Defines the metadata database connection to use from within Clojure."
+  [metadata-spec]
+  (defonce metadata (create-db metadata-spec)))
