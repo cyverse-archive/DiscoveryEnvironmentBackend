@@ -43,7 +43,8 @@
   (fn [req]
     (log/info "REQUEST:" req)
     (let [resp (handler req)]
-      (log/info "RESPONSE:" resp))))
+      (log/info "RESPONSE:" resp)
+      resp)))
 
 
 (defn- pre-process-request
