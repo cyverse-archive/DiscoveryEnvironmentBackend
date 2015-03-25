@@ -89,6 +89,12 @@
    :else
    nil))
 
+(defn can-create-dir?
+  "Determines if a directory exists or can be created."
+  [user path]
+  (log/warn "checking to see if" path "can be created")
+  (st/can-create-dir? user path))
+
 (defn gen-output-dir
   "Either obtains or creates a default output directory using a specified base name."
   [base]

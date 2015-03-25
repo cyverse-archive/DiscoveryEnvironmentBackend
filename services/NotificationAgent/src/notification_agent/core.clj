@@ -1,10 +1,10 @@
 (ns notification-agent.core
   (:gen-class)
   (:use [clojure.java.io :only [file]]
-        [clojure-commons.error-codes :only [trap]]
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
+        [korma.db :only [transaction]]
         [ring.middleware keyword-params nested-params]
         [notification-agent.delete]
         [notification-agent.notifications]
@@ -13,11 +13,16 @@
         [slingshot.slingshot :only [try+]])
   (:require [compojure.route :as route]
             [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as ce]
             [notification-agent.config :as config]
             [notification-agent.db :as db]
             [ring.adapter.jetty :as jetty]
             [common-cli.core :as ccli]
             [me.raynes.fs :as fs]))
+
+(defn- trap
+  [ctx f]
+  (transaction (ce/trap ctx f)))
 
 (defroutes notificationagent-routes
   (GET  "/" []
