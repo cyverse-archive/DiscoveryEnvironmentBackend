@@ -297,6 +297,31 @@
                         (str "--env=\"" k "=" v "\""))
                       (seq (:environment step-map))))))
 
+(defn backwards-compatible?
+  "Returns true if the docker image is 'centos:5' and the path to the
+   executable contains either /usr/local2 or /usr/local3. Yeah, it's
+   weird."
+  [step-map]
+  (let [loc (get-in step-map [:component :location])
+        img (container-image-arg (container-info step-map))]
+
+    (and (= img "centos:5")
+         (or (re-find #"^\/usr\/local2" loc)
+             (re-find #"^\/usr\/local3" loc)))))
+
+(defn container-tool-executable
+  [step-map]
+  (if (backwards-compatible? step-map)
+    (ut/path-join
+     (get-in step-map [:component :location])
+     (get-in step-map [:component :name]))
+    (get-in step-map [:component :name])))
+
+(defn backwards-compatible-args
+  [step-map]
+  (if (backwards-compatible? step-map)
+    (str "-v /usr/local2/:/usr/local2")))
+
 (defn container-args
   [step-map]
   (let [container-map (container-info step-map)]
@@ -305,6 +330,7 @@
      (filter
       (comp not nil?)
       ["run --rm -a stdout -a stderr"
+       (backwards-compatible-args step-map)
        (container-volume-args container-map)
        (container-device-args container-map)
        (container-volumes-from-args container-map)
@@ -316,7 +342,7 @@
        (container-network-mode-arg container-map)
        (container-env-args step-map)
        (container-image-arg container-map)
-       (get-in step-map [:component :name])]))))
+       (container-tool-executable step-map)]))))
 
 (defn executable
   "Takes in a step map and returns the executable path. This will be the full
@@ -333,8 +359,7 @@
   "Takes in a step map map and returns the formatted arguments
    for that step in the analysis."
   [step-map]
-  (let [cmd (-> (get-in step-map [:config :params]) param-maps escape-params)
-        exe (get-in step-map [:component :name])]
+  (let [cmd (-> (get-in step-map [:config :params]) param-maps escape-params)]
     (if (containerized? step-map)
       (str (container-args step-map) " " cmd)
       cmd)))
@@ -722,7 +747,7 @@
                      (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock"))]
     (str arg-prefix
          " put --user " username
-         " --config irods-config" 
+         " --config irods-config"
          " --destination " (quote-value output-dir)
          (if (:skip-parent-meta condor-map) " --skip-parent-meta" "")
          (file-metadata-arg file-metadata)
