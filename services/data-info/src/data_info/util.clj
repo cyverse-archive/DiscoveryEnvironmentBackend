@@ -41,8 +41,10 @@
 (defn req-logger
   [handler]
   (fn [req]
-    (log/info "Request received:" req)
-    (handler req)))
+    (log/info "REQUEST:" req)
+    (let [resp (handler req)]
+      (log/info "RESPONSE:" resp)
+      resp)))
 
 
 (defn- pre-process-request
