@@ -34,17 +34,9 @@
 (defn- add-system-default-output-dir
   "Adds system default output directory to the preferences that are passed in."
   [prefs]
-  (cond
-   (not (contains? prefs :systemDefaultOutputDir))
-   (assoc prefs :systemDefaultOutputDir {:id   (system-default-output-dir)
-                                         :path (system-default-output-dir)})
-
-   (not (map? (:systemDefaultOutputDir prefs)))
-   (assoc prefs :systemDefaultOutputDir {:id (:systemDefaultOutputDir prefs)
-                                         :path (:systemDefaultOutputDir prefs)})
-
-   :else
-   prefs))
+  (assoc prefs
+    :systemDefaultOutputDir {:id   (system-default-output-dir)
+                             :path (system-default-output-dir)}))
 
 (defn- sysdefoutdir
   [prefs]
@@ -53,8 +45,10 @@
       (:path out-dir)
       out-dir)))
 
-(defn- create-system-default-output-dir
-  "Creates the system default output dir."
+(defn- create-default-output-dir
+  "Creates the default output directory if it doesn't exist already. If the user has selected a
+   default output directory then this function ensures that it exists. Otherwise, this function
+   ensures that the system default output directory exists."
   [prefs]
   (let [sys-output-dir (ft/rm-last-slash (sysdefoutdir prefs))
         output-dir     (ft/rm-last-slash (extract-default-output-dir prefs))
@@ -82,16 +76,27 @@
       (assoc prefs default-output-dir-key {:id output-dir :path output-dir})
       prefs)))
 
+(defn validate-selected-output-dir
+  [prefs]
+  (let [user                (:shortUsername current-user)
+        user-default        (log/spy :warn (default-output-dir-key prefs))
+        sys-default         (log/spy :warn (:systemDefaultOutputDir prefs))
+        restore-sys-default #(assoc prefs default-output-dir-key sys-default)]
+    (cond (= user-default sys-default)                   prefs
+          (di/can-create-dir? user (:path user-default)) prefs
+          :else                                          (restore-sys-default))))
+
 (defn process-outgoing
   [user prefs]
   (->> prefs
        (handle-blank-default-output-dir user)
        (handle-string-default-output-dir)
        (add-system-default-output-dir)
-       (create-system-default-output-dir)))
+       (validate-selected-output-dir)
+       (create-default-output-dir)))
 
 (defn process-incoming
   [user prefs]
   (->> prefs
        (add-system-default-output-dir)
-       (create-system-default-output-dir)))
+       (create-default-output-dir)))
