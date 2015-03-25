@@ -2,7 +2,8 @@
   (:use [clj-jargon.validations]
         [clj-jargon.item-info]
         [clj-jargon.permissions])
-  (:require [clojure-commons.file-utils :as ft])
+  (:require [clojure-commons.file-utils :as ft]
+            [clojure.java.io :as io])
   (:import [org.irods.jargon.core.pub.io IRODSFileReader]))
 
 (defn mkdir
@@ -96,3 +97,14 @@
   (let [dto (data-transfer-obj cm)
         res (or (:defaultResource cm) "demoResc")]
     (.copy dto source res dest nil nil)))
+
+(defn copy-stream
+  [cm istream user dest-path]
+  (let [ostream (output-stream cm dest-path)]
+    (try
+      (io/copy istream ostream)
+      (finally
+        (.close istream)
+        (.close ostream)
+        (set-owner cm dest-path user)))
+    (stat cm dest-path)))
