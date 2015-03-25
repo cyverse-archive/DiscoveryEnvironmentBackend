@@ -16,8 +16,8 @@
             [donkey.services.metadata.util :as mu]
             [donkey.services.metadata.property-values :as property-values]
             [donkey.util :as util]
-            [donkey.util.db :as db]
             [donkey.util.service :as service]
+            [kameleon.db :as db]
             [kameleon.uuids :as uuids]))
 
 (declare submit-next-step)

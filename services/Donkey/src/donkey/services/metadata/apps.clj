@@ -21,6 +21,7 @@
             [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.util.service :as service]
+            [kameleon.db :as kdb]
             [mescal.de :as agave])
   (:import [java.util UUID]))
 
@@ -413,7 +414,7 @@
              job-step                   (jp/lock-job-step (:job-id job-step) external-id)
              {:keys [username] :as job} (jp/lock-job (:job-id job-step))
              batch                      (when (:parent-id job) (jp/lock-job (:parent-id job)))
-             end-date                   (db/timestamp-from-str end-date)
+             end-date                   (kdb/timestamp-from-str end-date)
              app-lister                 (get-app-lister "" username)]
          (service/assert-found job "job" (:job-id job-step))
          (with-directory-user [username]
@@ -433,7 +434,7 @@
            job-step                   (jp/lock-job-step uuid external-id)
            {:keys [username] :as job} (jp/lock-job uuid)
            batch                      (when (:parent-id job) (jp/lock-job (:parent-id job)))
-           end-time                   (db/timestamp-from-str end-time)
+           end-time                   (kdb/timestamp-from-str end-time)
            app-lister                 (get-app-lister "" username)]
        (service/assert-found job "job" uuid)
        (service/assert-found job-step "job step" (str uuid "/" external-id))

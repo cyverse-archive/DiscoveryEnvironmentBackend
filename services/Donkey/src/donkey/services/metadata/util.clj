@@ -7,8 +7,8 @@
             [donkey.clients.notifications :as dn]
             [donkey.persistence.jobs :as jp]
             [donkey.util.config :as config]
-            [donkey.util.db :as db]
-            [donkey.util.service :as service]))
+            [donkey.util.service :as service]
+            [kameleon.db :as db]))
 
 (defn is-completed?
   [job-status]
