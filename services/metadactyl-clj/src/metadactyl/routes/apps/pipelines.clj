@@ -2,8 +2,7 @@
   (:use [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.params]
         [metadactyl.user :only [current-user]]
-        [metadactyl.zoidberg.pipeline-edit :only [copy-pipeline
-                                                  edit-pipeline]]
+        [metadactyl.zoidberg.pipeline-edit :only [edit-pipeline]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -29,7 +28,8 @@
         :summary "Update a Pipeline"
         :notes "This service updates an existing Pipeline in the database, as long as the Pipeline
         has not been submitted for public use."
-        (service/coerced-trap uri Pipeline apps/update-pipeline (assoc body :id app-id)))
+        (service/coerced-trap uri Pipeline apps/update-pipeline current-user
+                              (assoc body :id app-id)))
 
   (POST* "/:app-id/copy" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]
@@ -39,7 +39,7 @@
          :notes "This service can be used to make a copy of a Pipeline in the user's workspace. This
          endpoint will copy the App details, steps, and mappings, but will not copy tasks used in
          the Pipeline steps."
-         (service/coerced-trap uri Pipeline copy-pipeline app-id))
+         (service/coerced-trap uri Pipeline apps/copy-pipeline current-user app-id))
 
   (GET* "/:app-id/ui" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]

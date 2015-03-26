@@ -112,4 +112,7 @@
     pipeline)
 
   (updatePipeline [_ pipeline]
-    (pipeline-edit/update-pipeline user pipeline)))
+    (pipeline-edit/update-pipeline user pipeline))
+
+  (copyPipeline [_ app-id]
+    (pipeline-edit/copy-pipeline user app-id)))

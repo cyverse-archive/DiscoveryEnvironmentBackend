@@ -207,6 +207,13 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn copy-workflow
+  [app-id]
+  (client/post (metadactyl-url "apps" "pipelines" app-id "copy")
+               {:query-params     (secured-params)
+                :as               :stream
+                :follow-redirects :false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
@@ -284,14 +291,6 @@
   (-> (client/get (metadactyl-url "apps" "pipelines" app-id "ui")
                   {:query-params (secured-params)
                    :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn copy-workflow
-  [app-id]
-  (-> (client/post (metadactyl-url "apps" "pipelines" app-id "copy")
-                   {:query-params (secured-params)
-                    :as           :stream})
       (:body)
       (service/decode-json)))
 

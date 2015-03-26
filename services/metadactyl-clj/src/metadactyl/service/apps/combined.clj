@@ -108,4 +108,7 @@
     (reduce (fn [acc client] (.formatPipelineTasks client acc)) pipeline clients))
 
   (updatePipeline [self pipeline]
-    (.formatPipelineTasks self (.updatePipeline (util/get-apps-client clients) pipeline))))
+    (.formatPipelineTasks self (.updatePipeline (util/get-apps-client clients) pipeline)))
+
+  (copyPipeline [self app-id]
+    (.formatPipelineTasks self (.copyPipeline (util/get-apps-client clients) app-id))))

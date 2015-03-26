@@ -95,7 +95,7 @@
          (service/success-response (metadactyl/update-pipeline app-id body)))
 
     (POST "/apps/pipelines/:app-id/copy" [app-id]
-          (apps/copy-workflow app-id))
+          (service/success-response (metadactyl/copy-pipeline app-id)))
 
     (GET "/apps/pipelines/:app-id/ui" [app-id]
          (apps/edit-workflow app-id))

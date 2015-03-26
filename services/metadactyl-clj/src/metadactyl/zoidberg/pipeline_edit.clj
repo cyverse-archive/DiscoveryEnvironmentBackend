@@ -121,87 +121,9 @@
                :steps steps
                :mappings mappings))))
 
-(defn- convert-app-to-copy
-  "Adds copies of the steps and mappings fields to the app, and formats
-   appropriate app fields to prepare it for saving as a copy."
-  [app]
-  (let [steps (get-steps (:id app))
-        mappings (get-mappings steps)
-        steps (map format-step steps)]
-    (-> app
-        (select-keys [:description])
-        (assoc :name (app-copy-name (:name app)))
-        (assoc :steps steps)
-        (assoc :mappings mappings))))
-
 (defn edit-pipeline
   "This service prepares a JSON response for editing a Pipeline in the client."
   [app-id]
   (let [app (get-app app-id)]
     (verify-app-editable app)
     (service/success-response (format-workflow app))))
-
-(defn- add-app-mapping
-  [app-id steps {:keys [source_step target_step map] :as mapping}]
-  (add-mapping {:app_id app-id
-                :source_step (nth steps source_step)
-                :target_step (nth steps target_step)
-                :map map}))
-
-(defn- generate-external-app-task
-  [step]
-  {:name            (:name step)
-   :description     (:description step)
-   :label           (:name step)
-   :external_app_id (:external_app_id step)})
-
-(defn- add-external-app-task
-  [step-number step]
-  (validate-external-app-step step-number step)
-  (-> step generate-external-app-task add-task))
-
-(defn- add-pipeline-step
-  [app-id step-number step]
-  (if (nil? (:task_id step))
-    (let [task-id (:id (add-external-app-task step-number step))]
-      (add-step app-id step-number (assoc step :task_id task-id)))
-    (add-step app-id step-number step)))
-
-(defn- add-pipeline-steps
-  [app-id steps]
-  "Adds steps to a pipeline. The app type isn't stored in the database, but needs to be kept in
-   the list of steps so that external steps can be distinguished from DE steps. The two types of
-   steps normally can't be distinguished without examining the associated task."
-  (doall
-    (map-indexed (fn [step-number step]
-                   (assoc (add-pipeline-step app-id step-number step)
-                     :app_type (:app_type step)))
-                 steps)))
-
-(defn- add-app-steps-mappings
-  [{app-id :id steps :steps mappings :mappings}]
-  (let [steps (add-pipeline-steps app-id steps)]
-    (dorun (map (partial add-app-mapping app-id steps) mappings))))
-
-(defn- add-pipeline-app
-  [app]
-  (validate-pipeline app)
-  (transaction
-    (let [app-id (:id (add-app app))]
-      (add-app-to-user-dev-category current-user app-id)
-      (add-app-steps-mappings (assoc app :id app-id))
-      app-id)))
-
-(defn add-pipeline
-  [workflow]
-  (let [app-id (add-pipeline-app workflow)]
-    (edit-pipeline app-id)))
-
-(defn copy-pipeline
-  "This service makes a copy of a Pipeline for the current user and returns the JSON for editing the
-   copy in the client."
-  [app-id]
-  (let [app (get-app app-id)
-        app (convert-app-to-copy app)
-        app-id (add-pipeline-app app)]
-    (edit-pipeline app-id)))

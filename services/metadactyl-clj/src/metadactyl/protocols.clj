@@ -30,4 +30,5 @@
   (getAppUi [_ app-id])
   (addPipeline [_ pipeline])
   (formatPipelineTasks [_ pipeline])
-  (updatePipeline [_ pipeline]))
+  (updatePipeline [_ pipeline])
+  (copyPipeline [_ app-id]))
