@@ -92,7 +92,7 @@
           (service/success-response (metadactyl/add-pipeline body)))
 
     (PUT "/apps/pipelines/:app-id" [app-id :as {:keys [body]}]
-         (apps/update-pipeline app-id body))
+         (service/success-response (metadactyl/update-pipeline app-id body)))
 
     (POST "/apps/pipelines/:app-id/copy" [app-id]
           (apps/copy-workflow app-id))

@@ -109,4 +109,7 @@
     (pipeline-edit/add-pipeline user pipeline))
 
   (formatPipelineTasks [_ pipeline]
-    pipeline))
+    pipeline)
+
+  (updatePipeline [_ pipeline]
+    (pipeline-edit/update-pipeline user pipeline)))

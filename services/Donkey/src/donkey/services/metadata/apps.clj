@@ -172,9 +172,6 @@
   (adminEditAppDocs [_ app-id docs]
     (metadactyl/admin-edit-app-docs app-id docs))
 
-  (editWorkflow [_ app-id]
-    (metadactyl/edit-workflow app-id))
-
   (copyWorkflow [_ app-id]
     (metadactyl/copy-workflow app-id))
 
@@ -248,9 +245,6 @@
       (metadactyl/admin-edit-app-docs app-id docs)
       (throw+ {:error_code ce/ERR_BAD_REQUEST
                :reason     "Cannot edit documentation for HPC apps with this service"})))
-
-  (editWorkflow [_ app-id]
-    (aa/format-pipeline-tasks agave-client (metadactyl/edit-workflow app-id)))
 
   (copyWorkflow [_ app-id]
     (aa/format-pipeline-tasks agave-client (metadactyl/copy-workflow app-id)))
@@ -550,11 +544,6 @@
   [job-id]
   (with-db db/de
     (service/success-response (.getAppRerunInfo (get-app-lister) job-id))))
-
-(defn edit-workflow
-  [app-id]
-  (with-db db/de
-    (service/success-response (.editWorkflow (get-app-lister) app-id))))
 
 (defn copy-workflow
   [app-id]

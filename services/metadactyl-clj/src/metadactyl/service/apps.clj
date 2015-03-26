@@ -163,3 +163,7 @@
 (defn add-pipeline
   [user pipeline]
   (.addPipeline (get-apps-client user "") pipeline))
+
+(defn update-pipeline
+  [user pipeline]
+  (.updatePipeline (get-apps-client user "") pipeline))

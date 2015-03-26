@@ -29,4 +29,5 @@
   (getAppToolListing [_ app-id])
   (getAppUi [_ app-id])
   (addPipeline [_ pipeline])
-  (formatPipelineTasks [_ pipeline]))
+  (formatPipelineTasks [_ pipeline])
+  (updatePipeline [_ pipeline]))

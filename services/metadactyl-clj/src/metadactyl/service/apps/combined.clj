@@ -105,4 +105,7 @@
     (.formatPipelineTasks self (.addPipeline (util/get-apps-client clients) pipeline)))
 
   (formatPipelineTasks [_ pipeline]
-    (reduce (fn [acc client] (.formatPipelineTasks client acc)) pipeline clients)))
+    (reduce (fn [acc client] (.formatPipelineTasks client acc)) pipeline clients))
+
+  (updatePipeline [self pipeline]
+    (.formatPipelineTasks self (.updatePipeline (util/get-apps-client clients) pipeline))))

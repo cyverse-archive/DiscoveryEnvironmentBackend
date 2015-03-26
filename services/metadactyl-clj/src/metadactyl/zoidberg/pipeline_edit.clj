@@ -192,25 +192,9 @@
       (add-app-steps-mappings (assoc app :id app-id))
       app-id)))
 
-(defn- update-pipeline-app
-  [app]
-  (validate-pipeline app)
-  (transaction
-    (let [app-id (:id app)]
-      (verify-app-editable (get-app app-id))
-      (update-app app)
-      (remove-app-steps app-id)
-      (add-app-steps-mappings app)
-      app-id)))
-
 (defn add-pipeline
   [workflow]
   (let [app-id (add-pipeline-app workflow)]
-    (edit-pipeline app-id)))
-
-(defn update-pipeline
-  [workflow]
-  (let [app-id (update-pipeline-app workflow)]
     (edit-pipeline app-id)))
 
 (defn copy-pipeline
