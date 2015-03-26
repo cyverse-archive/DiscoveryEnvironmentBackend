@@ -2,7 +2,9 @@
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.item-ops :only [copy-stream]]
         [clj-jargon.metadata]
+        [kameleon.uuids :only [uuidify]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
@@ -10,10 +12,13 @@
             [cheshire.core :as json]
             [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [data-info.services.directory :as directory]
+            [data-info.services.stat :as stat]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.util.paths :as paths]
-            [data-info.util.validators :as validators]))
+            [data-info.util.validators :as validators]
+            [kameleon.metadata.avu :as db]))
 
 
 (defn- fix-unit
@@ -171,6 +176,41 @@
     (delete-metadata cm path attr value)
     {:path path :user user}))
 
+(defn- format-template-avus
+  [{:keys [template_id avus]}]
+  (map #(assoc % :template_id template_id) avus))
+
+(defn- get-metadata-template-avus
+  [data-id]
+  (mapcat format-template-avus (:templates (db/metadata-template-list data-id))))
+
+(defn- build-metadata-for-data-item
+  [cm user recursive? {:keys [id path] :as src-data}]
+  (let [metadata (list-path-metadata cm path)
+        template-avus (get-metadata-template-avus (uuidify id))]
+    (-> src-data
+      (assoc :metadata (concat metadata template-avus)))))
+
+(defn- build-metadata-for-save
+  [cm user src-data recursive?]
+  (-> (build-metadata-for-data-item cm user recursive? src-data)
+      (json/encode {:pretty true})))
+
+(defn metadata-save
+  "Allows user to save metadata from a path."
+  [user path dest recursive?]
+  (with-jargon (cfg/jargon-cfg) [cm]
+    (validators/user-exists cm user)
+    (let [dest-dir (ft/dirname dest)
+          src-data (stat/path-stat cm user path)]
+      (validators/path-readable cm user path)
+      (validators/path-exists cm dest-dir)
+      (validators/path-writeable cm user dest-dir)
+      (validators/path-not-exists cm dest)
+
+      (with-in-str (build-metadata-for-save cm user src-data recursive?)
+        {:file (stat/decorate-stat cm user (copy-stream cm *in* user dest))}))))
+
 (defn- check-avus
   [adds]
   (mapv
@@ -247,3 +287,15 @@
                           :value string?})))
 
 (with-post-hook! #'do-metadata-delete (dul/log-func "do-metadata-delete"))
+
+(defn do-metadata-save
+  "Entrypoint for the API. Calls (metadata-save)."
+  [{:keys [user path dest recursive]}]
+  (metadata-save user (ft/rm-last-slash path) (ft/rm-last-slash dest) (Boolean/parseBoolean recursive)))
+
+(with-pre-hook! #'do-metadata-save
+  (fn [params]
+    (dul/log-call "do-metadata-save" params)
+    (validate-map params {:user string? :path string? :dest string?})))
+
+(with-post-hook! #'do-metadata-save (dul/log-func "do-metadata-save"))
