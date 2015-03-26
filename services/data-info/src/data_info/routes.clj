@@ -46,7 +46,7 @@
   (POST "/stat-gatherer" [:as req]
     (util/controller req stat/do-stat :params :body))
 
-  #_ (;; These routes have not been migrated yet
+  #_(;; These routes have not been migrated yet
        (POST "/data/directory/create" [:as req]
          (util/controller req create/do-create :params :body))
 
