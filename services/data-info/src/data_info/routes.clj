@@ -47,7 +47,7 @@
     (util/controller req stat/do-stat :params :body))
 
   (POST "/data/metadata/save" [:as req]
-    (util/controller req meta/do-metadata-save :params))
+    (util/controller req meta/do-metadata-save :params :body))
 
   #_ (;; These routes have not been migrated yet
        (POST "/data/directory/create" [:as req]

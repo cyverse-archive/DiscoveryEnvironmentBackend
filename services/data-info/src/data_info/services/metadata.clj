@@ -315,12 +315,13 @@
 
 (defn do-metadata-save
   "Entrypoint for the API. Calls (metadata-save)."
-  [{:keys [user path dest recursive]}]
-  (metadata-save user (ft/rm-last-slash path) (ft/rm-last-slash dest) (Boolean/parseBoolean recursive)))
+  [{:keys [user path]} {:keys [dest recursive]}]
+  (metadata-save user (ft/rm-last-slash path) (ft/rm-last-slash dest) (boolean recursive)))
 
 (with-pre-hook! #'do-metadata-save
-  (fn [params]
+  (fn [params body]
     (dul/log-call "do-metadata-save" params)
-    (validate-map params {:user string? :path string? :dest string?})))
+    (validate-map params {:user string? :path string?})
+    (validate-map body {:dest string?})))
 
 (with-post-hook! #'do-metadata-save (dul/log-func "do-metadata-save"))
