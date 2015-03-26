@@ -4,6 +4,7 @@
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [copy-stream]]
         [clj-jargon.metadata]
+        [clj-jargon.validations :only [validate-path-lengths]]
         [kameleon.uuids :only [uuidify]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
@@ -176,7 +177,19 @@
     (delete-metadata cm path attr value)
     {:path path :user user}))
 
+(defn- stat-is-dir?
+  [{:keys [type]}]
+  (= :dir type))
+
+(defn- segregate-files-from-folders
+  "Takes a list of path-stat results and splits the folders and files into a map with :folders and
+   :files keys, with the segregated lists as values."
+  [folder-children]
+  (zipmap [:folders :files]
+    ((juxt filter remove) #(stat-is-dir? %) folder-children)))
+
 (defn- format-template-avus
+  "Takes a Metadata Template map and returns just its :avus list, adding the template ID to each AVU."
   [{:keys [template_id avus]}]
   (map #(assoc % :template_id template_id) avus))
 
@@ -184,16 +197,25 @@
   [data-id]
   (mapcat format-template-avus (:templates (db/metadata-template-list data-id))))
 
-(defn- build-metadata-for-data-item
-  [cm user recursive? {:keys [id path] :as src-data}]
+(defn- get-data-item-metadata-for-save
+  "Adds a :metadata key to the given data-item, with a list of all IRODS and Template AVUs together
+   as the key's value. If recursive? is true and data-item is a folder, then includes all files and
+   subfolders (plus all their files and subfolders) with their metadata in the resulting stat map."
+  [cm user recursive? {:keys [id path] :as data-item}]
   (let [metadata (list-path-metadata cm path)
-        template-avus (get-metadata-template-avus (uuidify id))]
-    (-> src-data
-      (assoc :metadata (concat metadata template-avus)))))
+        template-avus (get-metadata-template-avus (uuidify id))
+        data-item (assoc data-item :metadata (concat metadata template-avus))
+        path->metadata (comp (partial get-data-item-metadata-for-save cm user recursive?)
+                             (partial stat/path-stat cm user))]
+    (if (and recursive? (stat-is-dir? data-item))
+      (merge data-item
+             (segregate-files-from-folders
+               (map path->metadata (directory/get-paths-in-folder user path))))
+      data-item)))
 
 (defn- build-metadata-for-save
-  [cm user src-data recursive?]
-  (-> (build-metadata-for-data-item cm user recursive? src-data)
+  [cm user data-item recursive?]
+  (-> (get-data-item-metadata-for-save cm user recursive? data-item)
       (json/encode {:pretty true})))
 
 (defn metadata-save
@@ -207,6 +229,9 @@
       (validators/path-exists cm dest-dir)
       (validators/path-writeable cm user dest-dir)
       (validators/path-not-exists cm dest)
+      (validate-path-lengths dest)
+      (when recursive?
+        (validators/validate-num-paths-under-folder user path))
 
       (with-in-str (build-metadata-for-save cm user src-data recursive?)
         {:file (stat/decorate-stat cm user (copy-stream cm *in* user dest))}))))

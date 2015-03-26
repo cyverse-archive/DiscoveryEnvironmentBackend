@@ -100,6 +100,7 @@
 
 (defn copy-stream
   [cm istream user dest-path]
+  (validate-path-lengths dest-path)
   (let [ostream (output-stream cm dest-path)]
     (try
       (io/copy istream ostream)
