@@ -99,4 +99,10 @@
          (first)))
 
   (getAppUi [_ app-id]
-    (.getAppUi (util/get-apps-client clients) app-id)))
+    (.getAppUi (util/get-apps-client clients) app-id))
+
+  (addPipeline [self pipeline]
+    (.formatPipelineTasks self (.addPipeline (util/get-apps-client clients) pipeline)))
+
+  (formatPipelineTasks [_ pipeline]
+    (reduce (fn [acc client] (.formatPipelineTasks client acc)) pipeline clients)))

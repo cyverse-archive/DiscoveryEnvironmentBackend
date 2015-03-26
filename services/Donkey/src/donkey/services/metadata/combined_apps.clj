@@ -100,13 +100,7 @@
   [{app-type :app_type :as step}]
   (if (= app-type "External")
     (assoc (dissoc step :task_id) :external_app_id (:task_id step))
-    step))
-
-(defn create-pipeline
-  [agave pipeline]
-  (->> (update-in pipeline [:steps] (partial map prepare-pipeline-step))
-       (metadactyl/create-pipeline)
-       (aa/format-pipeline-tasks agave)))
+    (update-in )))
 
 (defn update-pipeline
   [agave app-id pipeline]

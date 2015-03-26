@@ -89,7 +89,7 @@
          (get-workflow-elements element-type params))
 
     (POST "/apps/pipelines" [:as {:keys [body]}]
-          (apps/create-pipeline body))
+          (service/success-response (metadactyl/add-pipeline body)))
 
     (PUT "/apps/pipelines/:app-id" [app-id :as {:keys [body]}]
          (apps/update-pipeline app-id body))

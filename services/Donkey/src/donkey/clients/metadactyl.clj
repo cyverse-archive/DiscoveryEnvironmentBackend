@@ -189,6 +189,15 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn add-pipeline
+  [pipeline]
+  (client/post (metadactyl-url "apps" "pipelines")
+               {:query-params     (secured-params)
+                :content-type     :json
+                :body             pipeline
+                :as               :stream
+                :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
@@ -273,16 +282,6 @@
   [app-id]
   (-> (client/post (metadactyl-url "apps" "pipelines" app-id "copy")
                    {:query-params (secured-params)
-                    :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn create-pipeline
-  [pipeline]
-  (-> (client/post (metadactyl-url "apps" "pipelines")
-                   {:query-params (secured-params)
-                    :content-type :json
-                    :body         (cheshire/encode pipeline)
                     :as           :stream})
       (:body)
       (service/decode-json)))

@@ -178,9 +178,6 @@
   (copyWorkflow [_ app-id]
     (metadactyl/copy-workflow app-id))
 
-  (createPipeline [_ pipeline]
-    (metadactyl/create-pipeline pipeline))
-
   (updatePipeline [_ app-id pipeline]
     (metadactyl/update-pipeline app-id pipeline))
 
@@ -257,9 +254,6 @@
 
   (copyWorkflow [_ app-id]
     (aa/format-pipeline-tasks agave-client (metadactyl/copy-workflow app-id)))
-
-  (createPipeline [_ pipeline]
-    (ca/create-pipeline agave-client pipeline))
 
   (updatePipeline [_ app-id pipeline]
     (ca/update-pipeline agave-client app-id pipeline))
@@ -566,13 +560,6 @@
   [app-id]
   (with-db db/de
     (service/success-response (.copyWorkflow (get-app-lister) app-id))))
-
-(defn create-pipeline
-  [body]
-  (with-db db/de
-    (-> (get-app-lister)
-        (.createPipeline (service/decode-json body))
-        (service/success-response))))
 
 (defn update-pipeline
   [app-id body]

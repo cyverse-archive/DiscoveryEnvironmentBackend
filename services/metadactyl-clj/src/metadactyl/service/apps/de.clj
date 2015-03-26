@@ -4,6 +4,7 @@
             [metadactyl.service.apps.de.job-view :as job-view]
             [metadactyl.service.apps.de.listings :as listings]
             [metadactyl.service.apps.de.metadata :as app-metadata]
+            [metadactyl.service.apps.de.pipeline-edit :as pipeline-edit]
             [metadactyl.service.apps.de.validation :as app-validation]
             [metadactyl.service.util :as util]))
 
@@ -102,4 +103,10 @@
 
   (getAppUi [_ app-id]
     (when (util/uuid? app-id)
-      (edit/get-app-ui user app-id))))
+      (edit/get-app-ui user app-id)))
+
+  (addPipeline [_ pipeline]
+    (pipeline-edit/add-pipeline user pipeline))
+
+  (formatPipelineTasks [_ pipeline]
+    pipeline))

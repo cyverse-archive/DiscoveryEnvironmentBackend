@@ -27,4 +27,6 @@
   (rateApp [_ app-id rating])
   (getAppTaskListing [_ app-id])
   (getAppToolListing [_ app-id])
-  (getAppUi [_ app-id]))
+  (getAppUi [_ app-id])
+  (addPipeline [_ pipeline])
+  (formatPipelineTasks [_ pipeline]))

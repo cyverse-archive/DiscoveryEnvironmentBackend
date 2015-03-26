@@ -1,13 +1,15 @@
 (ns metadactyl.routes.apps.pipelines
   (:use [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.params]
-        [metadactyl.zoidberg.pipeline-edit :only [add-pipeline
-                                                  copy-pipeline
+        [metadactyl.user :only [current-user]]
+        [metadactyl.zoidberg.pipeline-edit :only [copy-pipeline
                                                   edit-pipeline
                                                   update-pipeline]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
+            [metadactyl.service.apps :as apps]
+            [metadactyl.util.service :as service]
             [ring.swagger.schema :as ss]
             [schema.core :as s]))
 
@@ -18,7 +20,7 @@
          :return Pipeline
          :summary "Create a Pipeline"
          :notes "This service adds a new Pipeline."
-         (ce/trap uri #(add-pipeline body)))
+         (service/coerced-trap uri Pipeline apps/add-pipeline current-user body))
 
   (PUT* "/:app-id" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]
