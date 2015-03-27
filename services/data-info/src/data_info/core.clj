@@ -83,15 +83,14 @@
   (icat/configure-icat))
 
 
-(defn- app
-  []
+(def app
   (-> routes/all-routes
-    util/trap-handler
-    util/req-logger
-    #_(liberator/wrap-trace :header :ui)
-    params/wrap-keyword-params
-    wrap-lcase-params
-    wrap-query-params))
+      util/req-logger
+      util/trap-handler
+      #_(liberator/wrap-trace :header :ui)
+      params/wrap-keyword-params
+      wrap-lcase-params
+      wrap-query-params))
 
 
 (defn- cli-options
@@ -113,4 +112,4 @@
       (ccli/exit 1 "The config file is not readable."))
     (load-configuration-from-file (:config options))
     (icat/configure-icat)
-    (jetty/run-jetty (app) {:port (config/listen-port)})))
+    (jetty/run-jetty app {:port (config/listen-port)})))

@@ -32,13 +32,13 @@
 
   (HEAD "/entries/id/:entry-id" [entry-id user] (entry/id-entry entry-id user))
 
-  (GET "/entries/path/:zone/*" [zone *] (entry/dispatch-path-to-resource zone *))
+  (GET "/entries/path/:zone/*" [zone & {path :*}] (entry/dispatch-path-to-resource zone path))
 
   (POST "/existence-marker" [:as req]
     (util/controller req exists/do-exists :params :body))
 
-  (GET "/navigation/path/:zone/*" [* :as req]
-    (util/controller req (partial dir/do-directory *) :params))
+  (GET "/navigation/path/:zone/*" [:as req]
+    (util/controller req (partial dir/do-directory (:* (:params req))) :params))
 
   (GET "/home" [:as req]
     (util/controller req home/do-homedir :params))
@@ -49,7 +49,7 @@
   (POST "/data/:data-id/metadata/save" [data-id :as req]
     (util/controller req meta/do-metadata-save data-id :params :body))
 
-  #_ (;; These routes have not been migrated yet
+  #_(;; These routes have not been migrated yet
        (POST "/data/directory/create" [:as req]
          (util/controller req create/do-create :params :body))
 

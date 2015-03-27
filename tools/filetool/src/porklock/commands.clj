@@ -160,7 +160,7 @@
                 (jg-perms/set-owner cm dir-dest (:user options)))
 
               (try+
-               (shell-out [(iput-path) "--retries" "3" "-X" "irods.retries" "--lfrestart" "irods.lfretries" "-f" "-P" src dest :env ic-env])
+               (shell-out [(iput-path) "-b" "--retries" "3" "-X" "irods.retries" "--lfrestart" "irods.lfretries" "-f" "-P" src dest :env ic-env])
                (catch [:error_code "ERR_BAD_EXIT_CODE"] err
                  (porkprint "Command exited with a non-zero status: " err)
                  (reset! error? true)))
