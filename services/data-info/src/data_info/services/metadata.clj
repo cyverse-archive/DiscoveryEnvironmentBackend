@@ -15,6 +15,7 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.services.directory :as directory]
             [data-info.services.stat :as stat]
+            [data-info.services.uuids :as uuids]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.util.paths :as paths]
@@ -216,22 +217,25 @@
 (defn- build-metadata-for-save
   [cm user data-item recursive?]
   (-> (get-data-item-metadata-for-save cm user recursive? data-item)
+      (dissoc :uuid)
       (json/encode {:pretty true})))
 
 (defn metadata-save
-  "Allows user to save metadata from a path."
-  [user path dest recursive?]
+  "Allows a user to export metadata from a file or folder with the given data-id to a file specified
+   by dest."
+  [user data-id dest recursive?]
   (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (let [dest-dir (ft/dirname dest)
-          src-data (stat/path-stat cm user path)]
-      (validators/path-readable cm user path)
+          src-data (uuids/path-for-uuid cm user data-id)
+          src-path (:path src-data)]
+      (validators/path-readable cm user src-path)
       (validators/path-exists cm dest-dir)
       (validators/path-writeable cm user dest-dir)
       (validators/path-not-exists cm dest)
       (validate-path-lengths dest)
       (when recursive?
-        (validators/validate-num-paths-under-folder user path))
+        (validators/validate-num-paths-under-folder user src-path))
 
       (with-in-str (build-metadata-for-save cm user src-data recursive?)
         {:file (stat/decorate-stat cm user (copy-stream cm *in* user dest))}))))
@@ -315,13 +319,13 @@
 
 (defn do-metadata-save
   "Entrypoint for the API. Calls (metadata-save)."
-  [{:keys [user path]} {:keys [dest recursive]}]
-  (metadata-save user (ft/rm-last-slash path) (ft/rm-last-slash dest) (boolean recursive)))
+  [data-id {:keys [user]} {:keys [dest recursive]}]
+  (metadata-save user (uuidify data-id) (ft/rm-last-slash dest) (boolean recursive)))
 
 (with-pre-hook! #'do-metadata-save
-  (fn [params body]
-    (dul/log-call "do-metadata-save" params)
-    (validate-map params {:user string? :path string?})
+  (fn [data-id params body]
+    (dul/log-call "do-metadata-save" params body)
+    (validate-map params {:user string?})
     (validate-map body {:dest string?})))
 
 (with-post-hook! #'do-metadata-save (dul/log-func "do-metadata-save"))

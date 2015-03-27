@@ -496,7 +496,7 @@ the request body by the "dest" path. If the "recursive" field is present and is 
 the source path is a folder, then all files and subfolders (plus all their files and subfolders)
 under the source folder will be included in the exported file, along with all of their metadata.
 
-__URL Path__: /data/metadata/save
+__URL Path__: /data/{data-id}/metadata/save
 
 __HTTP Method__: POST
 
@@ -507,7 +507,6 @@ ERR_BAD_BASENAME_LENGTH, ERR_TOO_MANY_RESULTS
 __Request Query Parameters__:
 
 * user - The iRODS username of the client requesting the export.
-* path - The iRODS path to the file or directory that the metadata is associated with.
 
 __Request Body__:
 
@@ -540,4 +539,4 @@ __Response__:
 
 __Curl Command__:
 
-    curl -d '{"dest": "/iplant/home/ipctest/metadata.json", "recursive": true}' 'http://127.0.0.1:3000/data/metadata/save?user=ipctest&path=/iplant/home/ipctest/test_folder'
+    curl -d '{"dest": "/iplant/home/ipctest/metadata.json", "recursive": true}' 'http://127.0.0.1:3000/data/642ad94c-bd2a-11e4-891f-6abdce5a08d5/metadata/save?user=ipctest'
