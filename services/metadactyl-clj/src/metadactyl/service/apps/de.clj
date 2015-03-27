@@ -1,6 +1,7 @@
 (ns metadactyl.service.apps.de
   (:use [kameleon.uuids :only [uuidify]])
   (:require [metadactyl.service.apps.de.edit :as edit]
+            [metadactyl.service.apps.de.job-listings :as job-listings]
             [metadactyl.service.apps.de.job-view :as job-view]
             [metadactyl.service.apps.de.listings :as listings]
             [metadactyl.service.apps.de.metadata :as app-metadata]
@@ -118,4 +119,7 @@
     (pipeline-edit/copy-pipeline user app-id))
 
   (editPipeline [_ app-id]
-    (pipeline-edit/edit-pipeline user app-id)))
+    (pipeline-edit/edit-pipeline user app-id))
+
+  (listJobs [_ params]
+    (job-listings/list-jobs user params)))

@@ -1,5 +1,6 @@
 (ns metadactyl.service.util
-  (:use [metadactyl.transformers :only [string->long]])
+  (:use [clojure-commons.core :only [remove-nil-vals]]
+        [metadactyl.transformers :only [string->long]])
   (:require [clojure.string :as string])
   (:import [java.util UUID]))
 
@@ -35,3 +36,13 @@
   [s]
   (or (instance? UUID s)
       (re-find #"\A\p{XDigit}{8}(?:-\p{XDigit}{4}){3}-\p{XDigit}{12}\z" s)))
+
+(defn default-search-params
+  [params default-sort-field deault-sort-dir]
+  (remove-nil-vals
+   {:limit          (string->long (:limit params "0"))
+    :offset         (string->long (:offset params "0"))
+    :sort-field     (keyword (:sort-field params default-sort-field))
+    :sort-dir       (keyword (:sort-dir params default-sort-dir))
+    :filter         ()
+    :include-hidden}))

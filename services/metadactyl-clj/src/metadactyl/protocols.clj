@@ -32,4 +32,5 @@
   (formatPipelineTasks [_ pipeline])
   (updatePipeline [_ pipeline])
   (copyPipeline [_ app-id])
-  (editPipeline [_ app-id]))
+  (editPipeline [_ app-id])
+  (listJobs [_ params]))
