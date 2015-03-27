@@ -186,6 +186,9 @@
    (POST "/filesystem/:data-id/metadata/copy" [data-id force :as req]
      (controller req meta/do-metadata-copy :params data-id force :body))
 
+   (POST "/filesystem/:data-id/metadata/save" [data-id :as req]
+     (controller req meta/do-metadata-save data-id :params :body))
+
    (GET "/filesystem/:data-id/template-avus" [data-id :as req]
      (controller req mta/do-metadata-template-avu-list :params data-id))
 
