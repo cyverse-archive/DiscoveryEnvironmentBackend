@@ -98,7 +98,7 @@
           (service/success-response (metadactyl/copy-pipeline app-id)))
 
     (GET "/apps/pipelines/:app-id/ui" [app-id]
-         (apps/edit-workflow app-id))
+         (service/success-response (metadactyl/edit-pipeline app-id)))
 
     (POST "/apps/shredder" [:as {:keys [body]}]
           (service/success-response (metadactyl/delete-apps body)))

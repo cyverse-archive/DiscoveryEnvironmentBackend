@@ -23,6 +23,10 @@
                      string refers to an internal task then this must be a string representation
                      of a UUID. Otherwise, it should be the ID of the external app.")
 
+   (optional-key :external_app_id)
+   (describe String "A string referring to an external app that is used to perform the step. This
+                     field is required any time the task ID isn't provided.")
+
    :app_type
    (describe String "The Step's App type")})
 

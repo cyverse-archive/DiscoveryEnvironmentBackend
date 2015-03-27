@@ -31,4 +31,5 @@
   (addPipeline [_ pipeline])
   (formatPipelineTasks [_ pipeline])
   (updatePipeline [_ pipeline])
-  (copyPipeline [_ app-id]))
+  (copyPipeline [_ app-id])
+  (editPipeline [_ app-id]))

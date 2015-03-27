@@ -2,7 +2,6 @@
   (:use [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.params]
         [metadactyl.user :only [current-user]]
-        [metadactyl.zoidberg.pipeline-edit :only [edit-pipeline]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -49,4 +48,4 @@
         :notes "The DE uses this service to obtain a JSON representation of a Pipeline for editing.
         The Pipeline must have been integrated by the requesting user, and it must not already be
         public."
-        (service/coerced-trap uri Pipeline edit-pipeline app-id)))
+        (service/coerced-trap uri Pipeline apps/edit-pipeline current-user app-id)))

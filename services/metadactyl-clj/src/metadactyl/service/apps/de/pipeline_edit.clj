@@ -228,5 +228,5 @@
   [user app-id]
   (->> (get-app app-id)
        (convert-app-to-copy)
-       (add-pipeline-app)
+       (add-pipeline-app user)
        (edit-pipeline user)))

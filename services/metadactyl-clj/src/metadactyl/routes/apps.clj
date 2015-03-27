@@ -226,12 +226,12 @@
   (GET* "/:app-id/tasks" [:as {uri :uri}]
         :path-params [app-id :- AppIdJobViewPathParam]
         :query [params SecuredQueryParams]
-        :return NewAppTaskListing
+        :return AppTaskListing
         :summary "List Tasks with File Parameters in an App"
         :notes "When a pipeline is being created, the UI needs to know what types of files are
         consumed by and what types of files are produced by each App's task in the pipeline. This
         service provides that information."
-        (service/coerced-trap uri NewAppTaskListing apps/get-app-task-listing current-user app-id))
+        (service/coerced-trap uri AppTaskListing apps/get-app-task-listing current-user app-id))
 
   (GET* "/:app-id/tools" [:as {uri :uri}]
         :path-params [app-id :- AppIdJobViewPathParam]

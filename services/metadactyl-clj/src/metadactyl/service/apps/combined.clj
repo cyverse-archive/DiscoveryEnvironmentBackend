@@ -111,4 +111,7 @@
     (.formatPipelineTasks self (.updatePipeline (util/get-apps-client clients) pipeline)))
 
   (copyPipeline [self app-id]
-    (.formatPipelineTasks self (.copyPipeline (util/get-apps-client clients) app-id))))
+    (.formatPipelineTasks self (.copyPipeline (util/get-apps-client clients) app-id)))
+
+  (editPipeline [self app-id]
+    (.formatPipelineTasks self (.editPipeline (util/get-apps-client clients) app-id))))

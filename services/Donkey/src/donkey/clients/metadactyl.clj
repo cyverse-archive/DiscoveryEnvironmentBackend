@@ -207,12 +207,19 @@
                :as               :stream
                :follow-redirects false}))
 
-(defn copy-workflow
+(defn copy-pipeline
   [app-id]
   (client/post (metadactyl-url "apps" "pipelines" app-id "copy")
                {:query-params     (secured-params)
                 :as               :stream
                 :follow-redirects :false}))
+
+(defn edit-pipeline
+  [app-id]
+  (client/get (metadactyl-url "apps" "pipelines" app-id "ui")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects :false}))
 
 (defn admin-list-tool-requests
   [params]
@@ -283,14 +290,6 @@
                      :content-type :json
                      :body         (cheshire/encode docs)
                      :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn edit-workflow
-  [app-id]
-  (-> (client/get (metadactyl-url "apps" "pipelines" app-id "ui")
-                  {:query-params (secured-params)
-                   :as           :stream})
       (:body)
       (service/decode-json)))
 

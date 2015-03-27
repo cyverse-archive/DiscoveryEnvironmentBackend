@@ -171,3 +171,7 @@
 (defn copy-pipeline
   [user app-id]
   (.copyPipeline (get-apps-client user "") app-id))
+
+(defn edit-pipeline
+  [user app-id]
+  (.editPipeline (get-apps-client user "") app-id))
