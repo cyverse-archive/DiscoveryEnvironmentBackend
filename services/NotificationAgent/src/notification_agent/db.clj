@@ -582,8 +582,11 @@
    Required Parameters:
      uuid - The system notification uuid."
   [uuid]
-  (delete system_notification_acknowledgments
-          (where {:system_notification_id (system-notif-id uuid)})))
+  (let [id (system-notif-id uuid)]
+    (delete system_notification_acknowledgments
+            (where {:system_notification_id id}))
+    (delete system_notifications
+            (where {:id id}))))
 
 ;; NOT API
 (defn ack-exists?
