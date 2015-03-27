@@ -159,7 +159,7 @@
 
 (defn submit-job-step
   [agave-client job-info job-step submission]
-  (:id (submit-agave-job agave-client submission (:id job-info) (:step-number job-step))))
+  (:id (submit-job agave-client submission (:id job-info) (:step-number job-step))))
 
 (defn get-agave-app-rerun-info
   [agave {:keys [external-id]}]
