@@ -1,10 +1,10 @@
-(ns facepalm.c197-2015031001
+(ns facepalm.c199-2015053003
   (:use [korma.core]
         [kameleon.sql-reader :only [exec-sql-statement]]))
 
 (def ^:private version
   "The destination database version."
-  "1.9.7:20150310.01")
+  "1.9.9:20150530.03")
 
 (defn- add-curl-wrapper-container
   []
@@ -41,7 +41,7 @@
          LIMIT 1;"))
 
 (defn convert
-  "Performs the conversion for database version 1.9.7:20150310.01"
+  "Performs the conversion for database version 1.9.9:20150530.03"
   []
   (println "Performing the conversion for" version)
   (add-curl-wrapper-container)

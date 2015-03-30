@@ -1,10 +1,10 @@
-(ns facepalm.c197-2015021101
+(ns facepalm.c199-2015053002
   (:use [korma.core]
         [kameleon.sql-reader :only [load-sql-file]]))
 
 (def ^:private version
   "The destination database version."
-  "1.9.7:20150211.01")
+  "1.9.9:20150530.02")
 
 (defn- add-container-settings-id-column
   []
@@ -14,7 +14,7 @@
   (load-sql-file "constraints/03_tools.sql"))
 
 (defn convert
-  "Performs the conversion for database version 1.9.7:20150211.01"
+  "Performs the conversion for database version 1.9.9:20150530.02"
   []
   (println "Performing the conversion for" version)
   (add-container-settings-id-column))

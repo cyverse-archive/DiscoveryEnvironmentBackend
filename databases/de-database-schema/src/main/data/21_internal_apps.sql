@@ -210,8 +210,25 @@ INSERT INTO container_images (id, "name", tag, url) VALUES
      'latest',
      'https://registry.hub.docker.com/u/discoenv/curl-wrapper/');
 
+INSERT INTO container_images (id, "name", tag, url) VALUES
+    ('fc210a84-f7cd-4067-939c-a68ec3e3bd2b',
+     'discoenv/backwards-compat',
+     'latest',
+     'https://registry.hub.docker.com/u/discoenv/backwards-compat');
+
 INSERT INTO container_settings (tools_id) VALUES ('681251EF-EE59-4FE9-9436-DC8A23FEB11A');
 INSERT INTO container_settings (tools_id) VALUES ('85cf7a33-386b-46fe-87c7-8c9d59972624');
+
+-- Insert default container settings for tools that don't already have them.
+INSERT INTO container_settings (tools_id)
+  SELECT tools.id
+    FROM tools
+   WHERE tools.id NOT IN (
+     SELECT container_settings.tools_id
+       FROM container_settings
+      WHERE container_settings.tools_id IS NOT NULL
+   )
+   AND tools.name != 'notreal';
 
 UPDATE ONLY tools
    SET container_images_id = '15959300-b972-4571-ace2-081af0909599'
@@ -221,3 +238,8 @@ UPDATE ONLY tools
 UPDATE ONLY tools
    SET container_images_id = '15959300-b972-4571-ace2-081af0909599'
  WHERE id = '85cf7a33-386b-46fe-87c7-8c9d59972624';
+
+-- Everything else should use the discoenv/backwards-compat:latest container.
+UPDATE ONLY tools
+   SET container_images_id = 'fc210a84-f7cd-4067-939c-a68ec3e3bd2b'
+ WHERE container_images_id IS NULL;

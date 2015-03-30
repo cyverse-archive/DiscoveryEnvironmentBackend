@@ -1,9 +1,9 @@
-(ns facepalm.c197-2015031201
+(ns facepalm.c199-2015053004
     (:use [korma.core]))
 
 (def ^:private version
     "The destination database version."
-    "1.9.7:20150312.01")
+    "1.9.9:20150530.04")
 
 (defn- add-de-word-count-tool
   []
