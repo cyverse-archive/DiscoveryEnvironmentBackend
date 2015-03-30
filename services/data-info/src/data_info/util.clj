@@ -2,10 +2,10 @@
   "Utility functions for defining services in data-info. This namespace is used by data-info.core
    and several other top-level service definition namespaces."
   (:require [clojure.tools.logging :as log]
-            [slingshot.slingshot :refer [try+]]
-            [clojure-commons.error-codes :as ce]
-            [data-info.util.service :as svc]
-            [data-info.util.transformers :as transform]))
+    [slingshot.slingshot :refer [try+]]
+    [clojure-commons.error-codes :as ce]
+    [data-info.util.service :as svc]
+    [data-info.util.transformers :as transform]))
 
 
 (defn- determine-response
@@ -41,8 +41,10 @@
 (defn req-logger
   [handler]
   (fn [req]
-    (log/info "Request received:" req)
-    (handler req)))
+    (log/info "REQUEST:" (dissoc req :body))
+    (let [resp (handler req)]
+      (log/info "RESPONSE:" (dissoc resp :body))
+      resp)))
 
 
 (defn- pre-process-request
@@ -65,4 +67,4 @@
   (let [p (if (contains? (set args) :body)
             (partial ctlr req true func)
             (partial ctlr req false func))]
-      (apply p args)))
+    (apply p args)))

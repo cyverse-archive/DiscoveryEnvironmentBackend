@@ -6,6 +6,7 @@
             [clj-http.client :as client]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as ce]
             [notification-agent.db :as db])
   (:import [java.io IOException]
            [java.util Comparator]))
@@ -121,7 +122,11 @@
 
 (defn delete-system-msg
   [uuid]
-  {:system-notification (db/delete-system-notification uuid)})
+  (if-let [msg (db/get-system-notification-by-uuid uuid)]
+    (do (db/delete-system-notification uuid)
+        {:system-notification msg})
+    (throw+ {:error_code    ce/ERR_NOT_FOUND
+             :system_msg_id uuid})))
 
 (defn get-system-msg-types
   []

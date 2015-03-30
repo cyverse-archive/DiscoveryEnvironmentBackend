@@ -78,8 +78,7 @@
         zone "zone"
         res  "resource"
         acnt (IRODSAccount. host port user pass home zone res)
-        ctor #(->IRODSProxyStub (atom init-repo) (atom false))
-        fs   (ctor)
+        fs   #(->IRODSProxyStub (atom init-repo) (atom false))
         aof  (.getIRODSAccessObjectFactory fs)]
     {:host                host 
      :port                (Integer/toString port) 
@@ -91,9 +90,8 @@
      :max-retries         0
      :retry-sleep         0
      :use-trash           false
-     :proxy-ctor          ctor
+     :proxy               fs
      :irodsAccount        acnt
-     :fileSystem          fs
      :accessObjectFactory aof
      :collectionAO        (.getCollectionAO aof acnt)
      :dataObjectAO        (.getDataObjectAO aof acnt)
@@ -118,7 +116,7 @@
     (is (= "resource" (:defaultResource cfg)))
     (is (= 0 (:max-retries cfg)))
     (is (= false (:use-trash cfg)))
-    (is (= default-proxy-ctor (:proxy-ctor cfg)))))
+    (is (= (default-proxy-ctor) (:proxy cfg)))))
 
 
 (deftest test-init-options
@@ -131,7 +129,7 @@
     (is (= 1 (:max-retries cfg)))
     (is (= 2 (:retry-sleep cfg)))
     (is (= true (:use-trash cfg)))
-    (is (= test-ctor (:proxy-ctor cfg)))))
+    (is (= (test-ctor) (:proxy cfg)))))
 
 
 (deftest test-with-jargon
@@ -145,7 +143,7 @@
                                 :max-retries     0
                                 :retry-sleep     0
                                 :use-trash       false
-                                :proxy-ctor      #(->IRODSProxyStub (atom init-repo) closed?-ref)})]
+                                :proxy           (->IRODSProxyStub (atom init-repo) closed?-ref)}]
     (testing "normal operation"
       (let [closed? (atom false)
             cfg     (->cfg closed?)]
@@ -153,7 +151,7 @@
           (doall (map #(is (= (% cfg) (% cm))) 
                       (keys cfg)))
           (is (instance? IRODSAccount (:irodsAccount cm)))
-          (is (instance? IRODSProxyStub (:fileSystem cm)))
+          (is (instance? IRODSProxyStub (:proxy cm)))
           (is (instance? IRODSAccessObjectFactory (:accessObjectFactory cm)))
           (is (instance? CollectionAO (:collectionAO cm)))
           (is (instance? DataObjectAO (:dataObjectAO cm)))

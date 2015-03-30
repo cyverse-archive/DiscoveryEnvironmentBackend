@@ -13,7 +13,7 @@
 (defn clean-return
   [cm retval]
   (log/debug curr-with-jargon-index "- cleaning up and returning a plain value")
-  (.close (:fileSystem cm))
+  (.close (:proxy cm))
   retval)
 
 (defn dirty-return
@@ -37,7 +37,7 @@
       (close []
         (log/debug with-jargon-index "- closing the proxy input stream")
         (.close istream)
-        (.close (:fileSystem cm))))))
+        (.close (:proxy cm))))))
 
 (defn proxy-input-stream-return
   [cm retval]
@@ -89,7 +89,7 @@
            :else                                    (dirty-return ~cm-sym retval#)))
         (catch Object o1#
           (ss/try+
-            (.close (:fileSystem ~cm-sym))
+            (.close (:proxy ~cm-sym))
             (catch Object o2#))
           (ss/throw+))))))
 
@@ -148,7 +148,7 @@
      :max-retries     max-retries
      :retry-sleep     retry-sleep
      :use-trash       use-trash
-     :proxy-ctor      proxy-ctor})
+     :proxy           (proxy-ctor)})
 
 (defn account
   ([cfg]
@@ -166,18 +166,16 @@
   "Throws:
      org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to iRODS"
   [cfg]
-  (let [acnt        (account cfg)
-        file-system ((:proxy-ctor cfg))
-        aof         (.getIRODSAccessObjectFactory file-system)]
+  (let [acnt (account cfg)
+        aof  (.getIRODSAccessObjectFactory (:proxy cfg))]
     (assoc cfg
       :irodsAccount        acnt
-      :fileSystem          file-system
       :accessObjectFactory aof
       :collectionAO        (.getCollectionAO aof acnt)
       :dataObjectAO        (.getDataObjectAO aof acnt)
       :userAO              (.getUserAO aof acnt)
       :userGroupAO         (.getUserGroupAO aof acnt)
-      :fileFactory         (.getIRODSFileFactory file-system acnt)
+      :fileFactory         (.getIRODSFileFactory (:proxy cfg) acnt)
       :fileSystemAO        (.getIRODSFileSystemAO aof acnt)
       :lister              (.getCollectionAndDataObjectListAndSearchAO aof
                                                                        acnt)
