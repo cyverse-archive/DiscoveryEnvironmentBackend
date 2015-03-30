@@ -29,8 +29,6 @@ RUN yum update -y && yum install -y \
     alsa-lib-1.0.17-1.el5 \
     amtu-1.0.6-2.el5 \
     anacron-2.3-45.el5.centos \
-    apr-1.2.7-11.el5_6.5 \
-    apr-util-1.2.7-11.el5_5.2 \
     aspell-0.60.3-13 \
     aspell-en-6.0-3 \
     at-3.1.8-84.el5_11.1 \
@@ -39,9 +37,6 @@ RUN yum update -y && yum install -y \
     atlas-3.8.3-1.el5 \
     attr-2.4.32-1.1 \
     audiofile-0.2.6-5 \
-    audit-1.8-2.el5 \
-    audit-libs-python-1.8-2.el5 \
-    authconfig-5.3.21-7.el5 \
     bc-1.06-21 \
     binutils220-2.20.51.0.2-5.29.el5 \
     bison-2.3-2.1 \
@@ -50,7 +45,6 @@ RUN yum update -y && yum install -y \
     blas-3.0-38.el5 \
     blt-2.4-21.z.el5 \
     boost-1.33.1-16.el5_9 \
-    bridge-utils-1.1-3.el5 \
     bwidget-1.8.0-1.el5 \
     byacc-1.9-29.2.2 \
     bzip2-1.0.3-6.el5_5 \
@@ -58,15 +52,12 @@ RUN yum update -y && yum install -y \
     cairo-1.2.4-5.el5 \
     ccid-1.3.8-2.el5 \
     cfitsio-3.030-2.el5 \
-    checkpolicy-1.33.1-6.el5 \
     chkfontpath-1.10.1-1.1 \
     compat-gcc-34-3.4.6-4.1 \
     compat-gcc-34-g77-3.4.6-4.1 \
     compat-libf2c-34-3.4.6-4.1 \
     compat-libstdc++-33-3.2.3-61 \
     conman-0.1.9.2-8.el5 \
-    cpp-4.1.2-55.el5 \
-    crash-5.1.8-2.el5.centos \
     curl-7.15.5-17.el5_9 \
     cyrus-sasl-2.1.22-7.el5_8.1 \
     cyrus-sasl-md5-2.1.22-7.el5_8.1 \
@@ -87,7 +78,6 @@ RUN yum update -y && yum install -y \
     elfutils-0.137-3.el5 \
     elfutils-libs-0.137-3.el5 \
     elinks-0.11.1-8.el5_9 \
-    epel-release-5-4 \
     esound-0.2.36-4 \
     fbset-2.1-22 \
     fetchmail-6.3.6-4.el5 \
@@ -103,10 +93,6 @@ RUN yum update -y && yum install -y \
     gail-1.9.2-3.el5_4 \
     gamin-0.1.7-10.el5 \
     gamin-python-0.1.7-10.el5 \
-    gcc-4.1.2-55.el5 \
-    gcc-c++-4.1.2-55.el5 \
-    gcc-gfortran-4.1.2-55.el5 \
-    gcc44-4.4.7-1.el5 \
     geos-2.2.3-3.el5 \
     gettext-0.17-1.el5 \
     ghostscript-8.70-15.el5_9.3 \
