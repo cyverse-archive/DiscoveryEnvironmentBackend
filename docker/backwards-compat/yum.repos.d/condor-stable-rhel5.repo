@@ -1,0 +1,5 @@
+[condor-stable]
+name=Condor Stable RPM Repository for Redhat Enterprise Linux 5
+baseurl=http://www.cs.wisc.edu/condor/yum/stable/rhel5
+enabled=1
+gpgcheck=0
