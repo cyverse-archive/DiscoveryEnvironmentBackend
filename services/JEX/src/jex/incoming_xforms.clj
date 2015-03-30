@@ -305,7 +305,7 @@
   (let [loc (get-in step-map [:component :location])
         img (container-image-arg (container-info step-map))]
 
-    (and (= img "centos:5")
+    (and (= img "discoenv/backwards-compat:latest")
          (or (re-find #"^\/usr\/local2" loc)
              (re-find #"^\/usr\/local3" loc)))))
 
