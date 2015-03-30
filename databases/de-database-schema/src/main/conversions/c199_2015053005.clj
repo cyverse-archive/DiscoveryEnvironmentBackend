@@ -9,7 +9,7 @@
   []
   (println "\t* Adding the backwards compatibility container to the database")
   (exec-raw
-    "INSERT INTO container_images (id, "name", tag, url) VALUES
+    "INSERT INTO container_images (id, \"name\", tag, url) VALUES
         ('fc210a84-f7cd-4067-939c-a68ec3e3bd2b',
          'discoenv/backwards-compat',
          'latest',
