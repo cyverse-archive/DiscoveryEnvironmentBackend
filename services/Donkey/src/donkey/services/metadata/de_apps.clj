@@ -12,9 +12,8 @@
             [donkey.services.metadata.property-values :as property-values]
             [donkey.services.metadata.util :as mu]
             [donkey.util.config :as config]
-            [donkey.util.db :as db]
             [donkey.util.service :as service]
-            [donkey.util.time :as time-utils])
+            [kameleon.db :as db])
   (:import [java.util UUID]))
 
 (defn- get-end-date

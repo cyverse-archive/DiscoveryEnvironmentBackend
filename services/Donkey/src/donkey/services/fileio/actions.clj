@@ -28,19 +28,6 @@
   (with-jargon (jargon/jargon-cfg) [cm]
     (set-metadata cm path attr value unit)))
 
-(defn- scruffy-copy
-  [cm istream user dest-path]
-  (log/warn "In scruffy-copy")
-  (let [ostream (output-stream cm dest-path)]
-    (try
-      (io/copy istream ostream)
-      (finally
-        (.close istream)
-        (.close ostream)
-        (set-owner cm dest-path user)))
-    {:id          dest-path
-     :permissions (dataobject-perm-map cm user dest-path)}))
-
 (defn copy-metadata
   "Copies AVUs from src and applies them to dest."
   [cm src dest]
@@ -49,13 +36,13 @@
 
 (defn save
   [cm istream user dest-path]
-  (log/warn "In save function for " user dest-path)
+  (log/info "In save function for " user dest-path)
   (let [ddir (ft/dirname dest-path)]
     (when-not (exists? cm ddir)
       (mkdirs cm ddir))
 
-    (scruffy-copy cm istream user dest-path)
-    (log/warn "save function after copy.")
+    (copy-stream cm istream user dest-path)
+    (log/info "save function after copy.")
     dest-path))
 
 (defn store

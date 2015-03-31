@@ -51,6 +51,13 @@
 (defschema ToolListing
   {:tools (describe [Tool] "Listing of App Tools")})
 
+(defschema NewTool
+  (assoc Tool
+    :id (describe String "The tool's ID")))
+
+(defschema NewToolListing
+  {:tools (describe [NewTool] "Listing of App Tools")})
+
 (defschema ToolRequestStatus
   {(optional-key :status)
    (describe String

@@ -4,6 +4,7 @@
             [metadactyl.service.apps.de.job-view :as job-view]
             [metadactyl.service.apps.de.listings :as listings]
             [metadactyl.service.apps.de.metadata :as app-metadata]
+            [metadactyl.service.apps.de.pipeline-edit :as pipeline-edit]
             [metadactyl.service.apps.de.validation :as app-validation]
             [metadactyl.service.util :as util]))
 
@@ -78,4 +79,43 @@
 
   (isAppPublishable [_ app-id]
     (when (util/uuid? app-id)
-      (first (app-validation/app-publishable? app-id)))))
+      (first (app-validation/app-publishable? app-id))))
+
+  (makeAppPublic [_ app]
+    (when (util/uuid? (:id app))
+      (app-metadata/make-app-public user app)))
+
+  (deleteAppRating [_ app-id]
+    (when (util/uuid? app-id)
+      (app-metadata/delete-app-rating user app-id)))
+
+  (rateApp [_ app-id rating]
+    (when (util/uuid? app-id)
+      (app-metadata/rate-app user app-id rating)))
+
+  (getAppTaskListing [_ app-id]
+    (when (util/uuid? app-id)
+      (listings/get-app-task-listing (uuidify app-id))))
+
+  (getAppToolListing [_ app-id]
+    (when (util/uuid? app-id)
+      (listings/get-app-tool-listing (uuidify app-id))))
+
+  (getAppUi [_ app-id]
+    (when (util/uuid? app-id)
+      (edit/get-app-ui user app-id)))
+
+  (addPipeline [_ pipeline]
+    (pipeline-edit/add-pipeline user pipeline))
+
+  (formatPipelineTasks [_ pipeline]
+    pipeline)
+
+  (updatePipeline [_ pipeline]
+    (pipeline-edit/update-pipeline user pipeline))
+
+  (copyPipeline [_ app-id]
+    (pipeline-edit/copy-pipeline user app-id))
+
+  (editPipeline [_ app-id]
+    (pipeline-edit/edit-pipeline user app-id)))

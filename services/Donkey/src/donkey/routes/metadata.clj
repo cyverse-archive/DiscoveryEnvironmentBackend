@@ -89,16 +89,16 @@
          (get-workflow-elements element-type params))
 
     (POST "/apps/pipelines" [:as {:keys [body]}]
-          (apps/create-pipeline body))
+          (service/success-response (metadactyl/add-pipeline body)))
 
     (PUT "/apps/pipelines/:app-id" [app-id :as {:keys [body]}]
-         (apps/update-pipeline app-id body))
+         (service/success-response (metadactyl/update-pipeline app-id body)))
 
     (POST "/apps/pipelines/:app-id/copy" [app-id]
-          (apps/copy-workflow app-id))
+          (service/success-response (metadactyl/copy-pipeline app-id)))
 
     (GET "/apps/pipelines/:app-id/ui" [app-id]
-         (apps/edit-workflow app-id))
+         (service/success-response (metadactyl/edit-pipeline app-id)))
 
     (POST "/apps/shredder" [:as {:keys [body]}]
           (service/success-response (metadactyl/delete-apps body)))
@@ -139,23 +139,23 @@
     (GET "/apps/:app-id/is-publishable" [app-id]
          (service/success-response (metadactyl/app-publishable? app-id)))
 
-    (POST "/apps/:app-id/publish" [app-id :as req]
-          (make-app-public req app-id))
+    (POST "/apps/:app-id/publish" [app-id :as {:keys [body]}]
+          (service/success-response (metadactyl/make-app-public app-id body)))
 
     (DELETE "/apps/:app-id/rating" [app-id]
-            (apps/delete-rating app-id))
+            (service/success-response (metadactyl/delete-rating app-id)))
 
     (POST "/apps/:app-id/rating" [app-id :as {body :body}]
-          (apps/rate-app body app-id))
+          (service/success-response (metadactyl/rate-app app-id body)))
 
     (GET "/apps/:app-id/tasks" [app-id]
-         (apps/list-app-tasks app-id))
+         (service/success-response (metadactyl/list-app-tasks app-id)))
 
     (GET "/apps/:app-id/tools" [app-id]
-         (apps/get-tools-in-app app-id))
+         (service/success-response (metadactyl/get-tools-in-app app-id)))
 
     (GET "/apps/:app-id/ui" [app-id]
-         (edit-app app-id))))
+         (service/success-response (metadactyl/get-app-ui app-id)))))
 
 (defn analysis-routes
   []

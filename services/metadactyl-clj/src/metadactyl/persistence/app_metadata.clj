@@ -202,6 +202,7 @@
   [app-id step-number step]
   (let [step (-> step
                  (select-keys [:task_id])
+                 (update-in [:task_id] uuidify)
                  (assoc :app_id app-id
                         :step step-number))]
     (insert app_steps (values step))))

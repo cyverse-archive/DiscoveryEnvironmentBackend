@@ -135,3 +135,43 @@
 (defn app-publishable?
   [user app-id]
   {:publishable (.isAppPublishable (get-apps-client user "") app-id)})
+
+(defn make-app-public
+  [user app]
+  (.makeAppPublic (get-apps-client user "") app))
+
+(defn delete-app-rating
+  [user app-id]
+  (.deleteAppRating (get-apps-client user "") app-id))
+
+(defn rate-app
+  [user app-id rating]
+  (.rateApp (get-apps-client user "") app-id rating))
+
+(defn get-app-task-listing
+  [user app-id]
+  (.getAppTaskListing (get-apps-client user "") app-id))
+
+(defn get-app-tool-listing
+  [user app-id]
+  (.getAppToolListing (get-apps-client user "") app-id))
+
+(defn get-app-ui
+  [user app-id]
+  (.getAppUi (get-apps-client user "") app-id))
+
+(defn add-pipeline
+  [user pipeline]
+  (.addPipeline (get-apps-client user "") pipeline))
+
+(defn update-pipeline
+  [user pipeline]
+  (.updatePipeline (get-apps-client user "") pipeline))
+
+(defn copy-pipeline
+  [user app-id]
+  (.copyPipeline (get-apps-client user "") app-id))
+
+(defn edit-pipeline
+  [user app-id]
+  (.editPipeline (get-apps-client user "") app-id))

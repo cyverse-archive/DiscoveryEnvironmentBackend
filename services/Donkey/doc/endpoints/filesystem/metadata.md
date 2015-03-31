@@ -628,3 +628,13 @@ __Response__:
 __Curl Command__:
 
     curl -sd '{"destination_ids": ["c5d42092-df89-11e3-bf8b-6abdce5a08d5"]}' "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/metadata/copy?proxyToken=notReal&force=true"
+
+Exporting Metadata to a File
+----------------------------
+
+Secured Endpoint: POST /secured/filesystem/{data-id}/metadata/save
+
+Delegates to data-info: POST /data/{data-id}/metadata/save
+
+This endpoint is a passthrough to the data-info endpoint above.
+Please see the data-info documentation for more information.

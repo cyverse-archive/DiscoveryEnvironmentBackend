@@ -13,10 +13,11 @@
             [clojure.set :as set]
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
+            [cemerick.url :as url]
             [cheshire.core :as json]
+            [clj-http.client :as http]
             [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.persistence.metadata :as persistence]
             [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as validators]
@@ -349,3 +350,19 @@
     (validate-num-paths dest-ids)))
 
 (with-post-hook! #'do-metadata-copy (log-func "do-metadata-copy"))
+
+(defn do-metadata-save
+  "Forwards request to data-info service."
+  [data-id params body]
+  (let [url (url/url (cfg/data-info-base-url) "data" data-id "metadata" "save")
+        req-map {:query-params params
+                 :content-type :json
+                 :body         (json/encode body)}]
+    (http/post (str url) req-map)))
+
+(with-pre-hook! #'do-metadata-save
+  (fn [data-id params body]
+    (log-call "do-metadata-save" params body)
+    (validate-map params {:user string?})))
+
+(with-post-hook! #'do-metadata-save (log-func "do-metadata-save"))

@@ -1,6 +1,7 @@
 (ns metadactyl.service.apps.agave
   (:use [kameleon.uuids :only [uuidify]])
   (:require [metadactyl.service.apps.agave.listings :as listings]
+            [metadactyl.service.apps.agave.pipelines :as pipelines]
             [metadactyl.service.util :as util]))
 
 (deftype AgaveApps [agave user-has-access-token?]
@@ -44,4 +45,15 @@
 
   (isAppPublishable [_ app-id]
     (when-not (util/uuid? app-id)
-      false)))
+      false))
+
+  (getAppTaskListing [_ app-id]
+    (when-not (util/uuid? app-id)
+      (.listAppTasks agave app-id)))
+
+  (getAppToolListing [_ app-id]
+    (when-not (util/uuid? app-id)
+      (.getAppToolListing agave app-id)))
+
+  (formatPipelineTasks [_ pipeline]
+    (pipelines/format-pipeline-tasks agave pipeline)))

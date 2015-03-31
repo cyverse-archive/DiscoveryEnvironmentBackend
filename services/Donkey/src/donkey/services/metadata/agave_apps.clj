@@ -12,9 +12,8 @@
             [donkey.persistence.jobs :as jp]
             [donkey.services.metadata.util :as mu]
             [donkey.util.config :as config]
-            [donkey.util.db :as db]
-            [donkey.util.time :as time-utils]
             [donkey.util.service :as service]
+            [kameleon.db :as db]
             [schema.core :as s])
   (:import [java.util UUID]))
 
@@ -156,7 +155,7 @@
     {:id         (str id)
      :name       (:name job)
      :status     (:status job)
-     :start-date (time-utils/millis-from-str (str (:startdate job)))}))
+     :start-date (db/millis-from-str (str (:startdate job)))}))
 
 (defn submit-job-step
   [agave-client job-info job-step submission]

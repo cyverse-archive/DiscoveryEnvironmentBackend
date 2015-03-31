@@ -118,6 +118,8 @@
      "set -x\n"
      "readonly IPLANT_USER=" (:username analysis-map) "\n"
      "export IPLANT_USER\n"
+     "readonly IPLANT_EXECUTION_ID=" (:uuid analysis-map) "\n"
+     "export IPLANT_EXECUTION_ID\n"
      "export SCRIPT_LOCATION=${BASH_SOURCE}\n"
      "mkdir -p logs\n"
      fail-script

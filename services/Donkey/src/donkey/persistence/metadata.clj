@@ -1,17 +1,9 @@
 (ns donkey.persistence.metadata
   (:use korma.core)
   (:require [korma.db :as korma]
-            [donkey.util.db :as db])
+            [kameleon.db :as db])
   (:import [java.util UUID]
            [clojure.lang IPersistentMap ISeq]))
-
-
-(defn- ->enum-val
-  [val]
-  (raw (str \' val \')))
-
-
-(def ^:private data-types [(->enum-val "file") (->enum-val "folder")])
 
 
 ;; COMMENTS
@@ -42,7 +34,7 @@
                  (insert :comments
                    (values {:owner_id    owner
                             :target_id   target-id
-                            :target_type (->enum-val target-type)
+                            :target_type (db/->enum-val target-type)
                             :value       comment})))))
 
 (defn comment-on?
@@ -163,7 +155,7 @@
        (korma/with-db db/metadata
          (select :favorites
            (fields :target_id)
-           (where {:target_type [in (map ->enum-val target-types)]
+           (where {:target_type [in (map db/->enum-val target-types)]
                    :owner_id    user})))))
 
 (defn insert-favorite
@@ -178,7 +170,7 @@
   (korma/with-db db/metadata
     (insert :favorites
       (values {:target_id   target-id
-               :target_type (->enum-val target-type)
+               :target_type (db/->enum-val target-type)
                :owner_id    user})))
   nil)
 
@@ -348,7 +340,7 @@
      tag-ids     - the collection of tags to attach"
   [attacher target-id target-type tag-ids]
   (when-not (empty? tag-ids)
-    (let [target-type (->enum-val target-type)
+    (let [target-type (db/->enum-val target-type)
           new-values  (map #(hash-map :tag_id      %
                                       :target_id   target-id
                                       :target_type target-type
@@ -388,118 +380,3 @@
   (korma/with-db db/metadata
     (select :attached_tags
       (where {:tag_id tag-id :detached_on nil}))))
-
-
-;; TEMPLATES
-
-(defn get-existing-metadata-template-avus-by-attr
-  "Finds all existing AVUs by the given data-id and the given set of attributes."
-  [data-id attributes]
-  (korma/with-db db/metadata
-    (select :avus
-      (where {:attribute   [in attributes]
-              :target_id   data-id
-              :target_type [in data-types]}))))
-
-(defn find-existing-metadata-template-avu
-  "Finds an existing AVU by ID or attribute, and by target_id."
-  [avu]
-  (let [id-key (if (:id avu) :id :attribute)]
-    (korma/with-db db/metadata
-      (first
-        (select :avus
-          (where {id-key       (id-key avu)
-                  :target_id   (:target_id avu)
-                  :target_type [in data-types]}))))))
-
-(defn get-avus-for-metadata-template
-  "Gets AVUs for the given Metadata Template."
-  [data-id template-id]
-  (korma/with-db db/metadata
-    (select :avus
-            (join [:template_instances :t]
-                  {:t.avu_id :avus.id})
-            (where {:t.template_id template-id
-                    :avus.target_id data-id
-                    :avus.target_type [in data-types]}))))
-
-(defn get-metadata-template-ids
-  "Finds Metadata Template IDs associated with the given user's data item."
-  [data-id]
-  (korma/with-db db/metadata
-    (select [:template_instances :t]
-            (fields :template_id)
-            (join :avus {:t.avu_id :avus.id})
-            (where {:avus.target_id data-id
-                    :avus.target_type [in data-types]})
-            (group :template_id))))
-
-(defn remove-avu-template-instances
-  "Removes the given Metadata Template AVU associations."
-  [template-id avu-ids]
-  (korma/with-db db/metadata
-    (delete :template_instances
-            (where {:template_id template-id
-                    :avu_id [in avu-ids]}))))
-
-(defn add-template-instances
-  "Associates the given AVU with the given Metadata Template ID."
-  [template-id avu-ids]
-  (korma/with-db db/metadata
-    (korma/transaction
-     (remove-avu-template-instances template-id avu-ids)
-     (insert :template_instances
-             (values
-              (map #(hash-map :template_id template-id, :avu_id %) avu-ids))))))
-
-(defn add-metadata-template-avus
-  "Adds the given AVUs to the Metadata database."
-  [user-id avus target-type]
-  (let [fmt-avu #(assoc %
-                   :created_by user-id
-                   :modified_by user-id
-                   :target_type (->enum-val target-type))]
-    (korma/with-db db/metadata
-      (insert :avus (values (map fmt-avu avus))))))
-
-(defn update-avu
-  "Updates the attribute, value, unit, modified_by, and modified_on fields of the given AVU."
-  [user-id avu]
-  (korma/with-db db/metadata
-    (update :avus
-            (set-fields (-> (select-keys avu [:attribute :value :unit])
-                            (assoc :modified_by user-id
-                                   :modified_on (sqlfn now))))
-            (where (select-keys avu [:id])))))
-
-(defn remove-avus
-  "Removes AVUs with the given IDs from the Metadata database."
-  [avu-ids]
-  (korma/with-db db/metadata
-    (delete :avus (where {:id [in avu-ids]}))))
-
-(defn remove-avu
-  "Removes the AVU with the given ID from the Metadata database."
-  [avu-id]
-  (korma/with-db db/metadata
-    (delete :avus (where {:id avu-id}))))
-
-(defn remove-data-item-template-instances
-  "Removes all Metadata Template AVU associations from the given data item."
-  [data-id]
-  (let [avu-id-select (-> (select* :avus)
-                          (fields :id)
-                          (where {:target_id data-id
-                                  :target_type [in data-types]}))]
-    (korma/with-db db/metadata
-    (delete :template_instances (where {:avu_id [in (subselect avu-id-select)]})))))
-
-(defn set-template-instances
-  "Associates the given AVU IDs with the given Metadata Template ID,
-   removing all other Metadata Template ID associations."
-  [data-id template-id avu-ids]
-  (korma/with-db db/metadata
-    (korma/transaction
-     (remove-data-item-template-instances data-id)
-     (add-template-instances template-id avu-ids))))
-

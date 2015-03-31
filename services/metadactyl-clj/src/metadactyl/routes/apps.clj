@@ -1,15 +1,12 @@
 (ns metadactyl.routes.apps
-  (:use [metadactyl.app-listings :only [get-app-task-listing
-                                        get-app-tool-listing]]
-        [metadactyl.routes.domain.app]
+  (:use [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.rating]
-        [metadactyl.routes.domain.tool :only [ToolListing]]
+        [metadactyl.routes.domain.tool :only [NewToolListing]]
         [metadactyl.routes.params]
         [metadactyl.service.app-documentation :only [get-app-docs
                                                      owner-add-app-docs
                                                      owner-edit-app-docs]]
         [metadactyl.user :only [current-user]]
-        [metadactyl.service.apps.de.edit :only [get-app-ui]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
@@ -203,7 +200,7 @@
          information and suggested location then places the App in the Beta category. A Tito
          administrator can subsequently move the App to the suggested location at a later time if it
          proves to be useful."
-         (ce/trap uri #(app-metadata/make-app-public (assoc body :id app-id))))
+         (service/trap uri apps/make-app-public current-user (assoc body :id app-id)))
 
   (DELETE* "/:app-id/rating" [:as {uri :uri}]
            :path-params [app-id :- AppIdPathParam]
@@ -212,7 +209,7 @@
            :summary "Delete an App Rating"
            :notes "The DE uses this service to remove a rating that a user has previously made. This
            service deletes the authenticated user's rating for the corresponding app-id."
-           (ce/trap uri #(service/success-response (app-metadata/delete-app-rating app-id))))
+           (service/trap uri apps/delete-app-rating current-user app-id))
 
   (POST* "/:app-id/rating" [:as {uri :uri}]
          :path-params [app-id :- AppIdPathParam]
@@ -224,26 +221,26 @@
          the means to store the App rating. This service accepts a rating level between one and
          five, inclusive, and a comment identifier that refers to a comment in iPlant's Confluence
          wiki. The rating is stored in the database and associated with the authenticated user."
-         (ce/trap uri #(service/success-response (app-metadata/rate-app app-id body))))
+         (service/trap uri apps/rate-app current-user app-id body))
 
   (GET* "/:app-id/tasks" [:as {uri :uri}]
-        :path-params [app-id :- AppIdPathParam]
+        :path-params [app-id :- AppIdJobViewPathParam]
         :query [params SecuredQueryParams]
         :return AppTaskListing
         :summary "List Tasks with File Parameters in an App"
         :notes "When a pipeline is being created, the UI needs to know what types of files are
         consumed by and what types of files are produced by each App's task in the pipeline. This
         service provides that information."
-        (ce/trap uri #(get-app-task-listing app-id)))
+        (service/coerced-trap uri AppTaskListing apps/get-app-task-listing current-user app-id))
 
   (GET* "/:app-id/tools" [:as {uri :uri}]
-        :path-params [app-id :- AppIdPathParam]
+        :path-params [app-id :- AppIdJobViewPathParam]
         :query [params SecuredQueryParams]
-        :return ToolListing
+        :return NewToolListing
         :summary "List Tools used by an App"
         :notes "This service lists information for all of the tools that are associated with an App.
         This information used to be included in the results of the App listing service."
-        (ce/trap uri #(get-app-tool-listing app-id)))
+        (service/coerced-trap uri NewToolListing apps/get-app-tool-listing current-user app-id))
 
   (GET* "/:app-id/ui" [:as {uri :uri}]
         :path-params [app-id :- AppIdPathParam]
@@ -253,4 +250,4 @@
         :notes "The app integration utility in the DE uses this service to obtain the App
         description JSON so that it can be edited. The App must have been integrated by the
         requesting user."
-        (service/trap uri get-app-ui app-id)))
+        (service/trap uri apps/get-app-ui current-user app-id)))

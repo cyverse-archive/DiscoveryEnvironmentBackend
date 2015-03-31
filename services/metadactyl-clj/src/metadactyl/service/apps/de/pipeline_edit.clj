@@ -1,11 +1,10 @@
-(ns metadactyl.zoidberg.pipeline-edit
+(ns metadactyl.service.apps.de.pipeline-edit
   (:use [korma.core]
         [korma.db :only [transaction]]
         [kameleon.core]
         [kameleon.entities]
-        [kameleon.uuids :only [uuid]]
+        [kameleon.uuids :only [uuidify]]
         [medley.core :only [find-first]]
-        [metadactyl.app-listings :only [get-tasks-with-file-params]]
         [metadactyl.persistence.app-metadata :only [add-app
                                                     add-mapping
                                                     add-step
@@ -13,15 +12,12 @@
                                                     get-app
                                                     remove-app-steps
                                                     update-app]]
-        [metadactyl.user :only [current-user]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
         [metadactyl.validation :only [validate-external-app-step
                                       validate-pipeline
-                                      verify-app-editable
-                                      verify-app-ownership]]
-        [metadactyl.workspace :only [get-workspace]]
+                                      verify-app-editable]]
         [metadactyl.service.apps.de.edit :only [add-app-to-user-dev-category app-copy-name]])
-  (:require [metadactyl.util.service :as service]
+  (:require [metadactyl.service.apps.de.listings :as listings]
             [clojure.tools.logging :as log]))
 
 (defn- add-app-type
@@ -113,7 +109,7 @@
   (let [steps (get-steps (:id app))
         mappings (get-mappings steps)
         task-ids (set (map :task_id steps))
-        tasks (get-tasks-with-file-params task-ids)
+        tasks (listings/get-tasks-with-file-params task-ids)
         steps (map format-step steps)]
     (-> app
         (select-keys [:id :name :description])
@@ -136,10 +132,10 @@
 
 (defn edit-pipeline
   "This service prepares a JSON response for editing a Pipeline in the client."
-  [app-id]
+  [user app-id]
   (let [app (get-app app-id)]
-    (verify-app-editable app)
-    (service/success-response (format-workflow app))))
+    (verify-app-editable user app)
+    (format-workflow app)))
 
 (defn- add-app-mapping
   [app-id steps {:keys [source_step target_step map] :as mapping}]
@@ -184,40 +180,53 @@
     (dorun (map (partial add-app-mapping app-id steps) mappings))))
 
 (defn- add-pipeline-app
-  [app]
+  [user app]
   (validate-pipeline app)
   (transaction
     (let [app-id (:id (add-app app))]
-      (add-app-to-user-dev-category current-user app-id)
+      (add-app-to-user-dev-category user app-id)
       (add-app-steps-mappings (assoc app :id app-id))
       app-id)))
 
 (defn- update-pipeline-app
-  [app]
+  [user app]
   (validate-pipeline app)
   (transaction
     (let [app-id (:id app)]
-      (verify-app-editable (get-app app-id))
+      (verify-app-editable user (get-app app-id))
       (update-app app)
       (remove-app-steps app-id)
       (add-app-steps-mappings app)
       app-id)))
 
+(defn- prepare-pipeline-step
+  "Prepares a single step in a pipeline for submission to metadactyl. DE steps can be left as-is.
+   External steps need to have the task_id field moved to the external_app_id field."
+  [{app-type :app_type :as step}]
+  (if (= app-type "External")
+    (assoc (dissoc step :task_id) :external_app_id (:task_id step))
+    (update-in step [:task_id] uuidify)))
+
+(defn- preprocess-pipeline
+  [pipeline]
+  (update-in pipeline [:steps] (partial map prepare-pipeline-step)))
+
 (defn add-pipeline
-  [workflow]
-  (let [app-id (add-pipeline-app workflow)]
-    (edit-pipeline app-id)))
+  [user workflow]
+  (->> (preprocess-pipeline workflow)
+       (add-pipeline-app user)
+       (edit-pipeline user)))
 
 (defn update-pipeline
-  [workflow]
-  (let [app-id (update-pipeline-app workflow)]
-    (edit-pipeline app-id)))
+  [user workflow]
+  (let [app-id (update-pipeline-app user workflow)]
+    (edit-pipeline user app-id)))
 
 (defn copy-pipeline
   "This service makes a copy of a Pipeline for the current user and returns the JSON for editing the
    copy in the client."
-  [app-id]
-  (let [app (get-app app-id)
-        app (convert-app-to-copy app)
-        app-id (add-pipeline-app app)]
-    (edit-pipeline app-id)))
+  [user app-id]
+  (->> (get-app app-id)
+       (convert-app-to-copy)
+       (add-pipeline-app user)
+       (edit-pipeline user)))

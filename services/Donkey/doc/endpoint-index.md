@@ -153,6 +153,7 @@
 * [POST /secured/filesystem/user-permissions](endpoints/filesystem/permissions.md#listing-user-permissions-)
 * [GET /secured/filesystem/user-trash-dir](endpoints/filesystem/user-trash-dir.md#getting-the-path-to-a-users-trash-directory--)
 * [POST /secured/filesystem/uuids-for-paths](endpoints/filesystem/uuids.md#uuids-for-paths-)
+* [POST /secured/filesystem/{data-id}/metadata/save](endpoints/filesystem/metadata.md#exporting-metadata-to-a-file)
 * [GET /secured/filetypes/auto-type](endpoints/filetypes.md#preview-what-the-automatically-assigned-type-would-be-)
 * [POST /secured/filetypes/auto-type](endpoints/filetypes.md#automatically-assign-a-type-to-a-file-)
 * [DELETE /secured/filetypes/type](endpoints/filetypes.md#delete-a-file-type-from-a-file-)

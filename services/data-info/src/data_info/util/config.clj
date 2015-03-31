@@ -186,6 +186,48 @@
 ; End ICAT connection information.
 
 
+;;;Metadata database connection information
+
+(cc/defprop-str metadata-db-driver-class
+  "The name of the JDBC driver to use."
+  [props config-valid configs]
+  "data-info.metadata.driver" )
+
+(cc/defprop-str metadata-db-subprotocol
+  "The subprotocol to use when connecting to the database (e.g.
+   postgresql)."
+  [props config-valid configs]
+  "data-info.metadata.subprotocol")
+
+(cc/defprop-str metadata-db-host
+  "The host name or IP address to use when
+   connecting to the database."
+  [props config-valid configs]
+  "data-info.metadata.host")
+
+(cc/defprop-str metadata-db-port
+  "The port number to use when connecting to the database."
+  [props config-valid configs]
+  "data-info.metadata.port")
+
+(cc/defprop-str metadata-db-name
+  "The name of the database to connect to."
+  [props config-valid configs]
+  "data-info.metadata.db")
+
+(cc/defprop-str metadata-db-user
+  "The username to use when authenticating to the database."
+  [props config-valid configs]
+  "data-info.metadata.user")
+
+(cc/defprop-str metadata-db-password
+  "The password to use when authenticating to the database."
+  [props config-valid configs]
+  "data-info.metadata.password")
+
+;;;End Metadata database connection information
+
+
 ; type detection configuration
 
 (cc/defprop-str type-detect-type-attribute
