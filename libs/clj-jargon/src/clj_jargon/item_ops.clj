@@ -2,9 +2,11 @@
   (:use [clj-jargon.validations]
         [clj-jargon.item-info]
         [clj-jargon.permissions])
-  (:require [clojure-commons.file-utils :as ft]
-            [clojure.java.io :as io])
-  (:import [org.irods.jargon.core.pub.io IRODSFileReader]))
+  (:require [clojure-commons.file-utils :as ft])
+  (:import [org.irods.jargon.core.pub.io IRODSFileReader]
+           [org.irods.jargon.core.transfer TransferStatusCallbackListener
+              TransferStatusCallbackListener$FileStatusCallbackResponse
+              TransferStatusCallbackListener$CallbackResponse]))
 
 (defn mkdir
   [cm dir-path]
@@ -109,3 +111,27 @@
         (.close ostream)
         (set-owner cm dest-path user)))
     (stat cm dest-path)))
+
+(def file-status-response TransferStatusCallbackListener$FileStatusCallbackResponse)
+
+(def callback-response TransferStatusCallbackListener$CallbackResponse)
+
+(defn transfer-callback-listener
+  "Returns an instance of TransferStatusCallbackListener with the overallStatusCallback(),
+   statusCallback(), and transferAsksWhetherToForceOperation() functions delegated to the
+   functions passed in."
+  [cm overall-status-callback-fn]
+  (reify TransferStatusCallbackListener
+    (overallStatusCallback [this transfer-status]
+      (overall-status-callback-fn transfer-status)
+    #_(statusCallback [this transfer-status]
+      (status-callback-fn transfer-status))
+    #_(transferAsksWhetherToForceOperation [this abs-path collection?]
+      (transfer-asks-fn abs-path collection?)))))
+
+(defn iput
+  "Transfers local-path to remote-path, using tcl as the TransferStatusCallbackListener.
+   tcl can also be set to nil."
+  [cm local-path remote-path tcl]
+  (let [dto (data-transfer-obj cm)]
+    (.putOperation dto local-path remote-path "" tcl nil)))
