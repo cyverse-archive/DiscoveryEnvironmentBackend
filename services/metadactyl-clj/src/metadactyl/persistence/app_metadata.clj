@@ -558,3 +558,8 @@
   [app-id]
   (select (mapping-base-query)
           (where {:wim.app_id (uuidify app-id)})))
+
+(defn load-app-details
+  [app-ids]
+  (select app_listing
+          (where {:id [in (map uuidify app-ids)]})))

@@ -3,6 +3,7 @@
 (defprotocol Apps
   "A protocol used to provide an abstraction layer for dealing with app metadata."
   (getClientName [_])
+  (getJobTypes [_])
   (listAppCategories [_ params])
   (hasCategory [_ category-id])
   (listAppsInCategory [_ category-id params])
@@ -33,4 +34,5 @@
   (updatePipeline [_ pipeline])
   (copyPipeline [_ app-id])
   (editPipeline [_ app-id])
-  (listJobs [_ params]))
+  (listJobs [_ params])
+  (loadAppTables [_ app-ids]))

@@ -1,12 +1,13 @@
 (ns metadactyl.service.apps.de
   (:use [kameleon.uuids :only [uuidify]])
-  (:require [metadactyl.service.apps.de.edit :as edit]
-            [metadactyl.service.apps.de.job-listings :as job-listings]
+  (:require [metadactyl.persistence.app-metadata :as ap]
+            [metadactyl.service.apps.de.edit :as edit]
             [metadactyl.service.apps.de.job-view :as job-view]
             [metadactyl.service.apps.de.listings :as listings]
             [metadactyl.service.apps.de.metadata :as app-metadata]
             [metadactyl.service.apps.de.pipeline-edit :as pipeline-edit]
             [metadactyl.service.apps.de.validation :as app-validation]
+            [metadactyl.service.apps.job-listings :as job-listings]
             [metadactyl.service.util :as util]))
 
 (deftype DeApps [user]
@@ -14,6 +15,9 @@
 
   (getClientName [_]
     "de")
+
+  (getJobTypes [_]
+    ["DE"])
 
   (listAppCategories [_ params]
     (listings/get-app-groups user params))
@@ -121,5 +125,12 @@
   (editPipeline [_ app-id]
     (pipeline-edit/edit-pipeline user app-id))
 
-  (listJobs [_ params]
-    (job-listings/list-jobs user params)))
+  (listJobs [self params]
+    (job-listings/list-jobs self user params))
+
+  (loadAppTables [_ app-ids]
+    (->> (filter util/uuid? app-ids)
+         (ap/load-app-details)
+         (map (juxt (comp str :id) identity))
+         (into {})
+         (vector))))

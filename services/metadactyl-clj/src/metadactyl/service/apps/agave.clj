@@ -2,13 +2,17 @@
   (:use [kameleon.uuids :only [uuidify]])
   (:require [metadactyl.service.apps.agave.listings :as listings]
             [metadactyl.service.apps.agave.pipelines :as pipelines]
+            [metadactyl.service.apps.job-listings :as job-listings]
             [metadactyl.service.util :as util]))
 
-(deftype AgaveApps [agave user-has-access-token?]
+(deftype AgaveApps [agave user-has-access-token? user]
   metadactyl.protocols.Apps
 
   (getClientName [_]
     "agave")
+
+  (getJobTypes [_]
+    ["Agave"])
 
   (listAppCategories [_ {:keys [hpc]}]
     (when-not (and hpc (.equalsIgnoreCase hpc "false"))
@@ -56,4 +60,14 @@
       (.getAppToolListing agave app-id)))
 
   (formatPipelineTasks [_ pipeline]
-    (pipelines/format-pipeline-tasks agave pipeline)))
+    (pipelines/format-pipeline-tasks agave pipeline))
+
+  (listJobs [self params]
+    (job-listings/list-jobs self user params))
+
+  (loadAppTables [_ _]
+    (->> (.listApps agave)
+         (:apps)
+         (map (juxt :id identity))
+         (into {})
+         (vector))))

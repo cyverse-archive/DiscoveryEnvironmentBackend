@@ -47,23 +47,25 @@
      (config/agave-jobs-enabled))))
 
 (defn- get-agave-apps-client
-  [state-info username]
+  [state-info {:keys [username] :as user}]
   (metadactyl.service.apps.agave.AgaveApps.
    (get-agave-client state-info username)
-   (partial has-access-token (config/agave-oauth-settings) username)))
+   (partial has-access-token (config/agave-oauth-settings) username)
+   user))
 
 (defn- get-apps-client-list
   [user state-info]
   (vector (metadactyl.service.apps.de.DeApps. user)
           (when (and user (config/agave-enabled))
-            (get-agave-apps-client state-info (:username user)))))
+            (get-agave-apps-client state-info user))))
 
 (defn- get-apps-client
   ([user]
      (get-apps-client user ""))
   ([user state-info]
      (metadactyl.service.apps.combined.CombinedApps.
-      (remove nil? (get-apps-client-list user state-info)))))
+      (remove nil? (get-apps-client-list user state-info))
+      user)))
 
 (defn get-app-categories
   [user params]
@@ -178,4 +180,4 @@
 
 (defn list-jobs
   [user params]
-  (.listJobs (get-apps-client user "") app-id))
+  (.listJobs (get-apps-client user "") params))

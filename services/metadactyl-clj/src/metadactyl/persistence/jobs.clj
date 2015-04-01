@@ -116,12 +116,12 @@
   (save-job job-info submission)
   (dorun (map save-job-step job-steps)))
 
-(defn- agave-job-subselect
-  []
+(defn- job-type-subselect
+  [types]
   (subselect [:job_steps :s]
              (join [:job_types :t] {:s.job_type_id :t.id})
              (where {:j.id   :s.job_id
-                     :t.name agave-job-type})))
+                     :t.name [in types]})))
 
 (defn- internal-app-subselect
   []
@@ -155,13 +155,13 @@
    (select (add-job-query-filter-clause (count-jobs-base username include-hidden) filter)
            (where {:j.deleted false}))))
 
-(defn count-de-jobs
-  "Counts the number of undeleted DE jobs int he database for a user."
-  [username filter include-hidden]
+(defn count-jobs-of-types
+  "Counts the number of undeleted jobs of the given types in the database for a user."
+  [username filter include-hidden types]
   ((comp :count first)
    (select (add-job-query-filter-clause (count-jobs-base username include-hidden) filter)
            (where {:j.deleted false})
-           (where (not (exists (agave-job-subselect)))))))
+           (where (not (exists (job-type-subselect types)))))))
 
 (defn- translate-sort-field
   "Translates the sort field sent to get-jobs to a value that can be used in the query."
@@ -242,13 +242,13 @@
       (limit (nil-if-zero row-limit))
       (select)))
 
-(defn list-de-jobs
-  "Gets a list of jobs that contain only DE steps."
-  [username row-limit row-offset sort-field sort-order filter include-hidden]
+(defn list-jobs-of-types
+  "Gets a list of jobs that contain only steps of the given types."
+  [username row-limit row-offset sort-field sort-order filter include-hidden types]
   (-> (select* (add-job-query-filter-clause (job-base-query) filter))
       (where {:j.deleted  false
               :j.username username})
-      (where (not (exists (agave-job-subselect))))
+      (where (not (exists (job-type-subselect types))))
       (add-internal-app-clause include-hidden)
       (order (translate-sort-field sort-field) sort-order)
       (offset (nil-if-zero row-offset))
