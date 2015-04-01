@@ -40,8 +40,8 @@
 (defn default-search-params
   [params default-sort-field default-sort-dir]
   (remove-nil-vals
-   {:limit          (string->long (:limit params "0"))
-    :offset         (string->long (:offset params "0"))
+   {:limit          (:limit params 0)
+    :offset         (:offset params 0)
     :sort-field     (keyword (:sort-field params default-sort-field))
     :sort-dir       (keyword (:sort-dir params default-sort-dir))
     :filter         (:filter params)

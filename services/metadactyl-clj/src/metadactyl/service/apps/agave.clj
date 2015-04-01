@@ -66,8 +66,10 @@
     (job-listings/list-jobs self user params))
 
   (loadAppTables [_ _]
-    (->> (.listApps agave)
-         (:apps)
-         (map (juxt :id identity))
-         (into {})
-         (vector))))
+    (if (user-has-access-token?)
+      (->> (.listApps agave)
+           (:apps)
+           (map (juxt :id identity))
+           (into {})
+           (vector))
+      [])))

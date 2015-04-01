@@ -121,7 +121,7 @@
   (subselect [:job_steps :s]
              (join [:job_types :t] {:s.job_type_id :t.id})
              (where {:j.id   :s.job_id
-                     :t.name [in types]})))
+                     :t.name [not-in types]})))
 
 (defn- internal-app-subselect
   []

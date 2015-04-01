@@ -22,7 +22,7 @@
    (describe Boolean "Indicates whether the analysis is a batch analysis.")
 
    (optional-key :description)
-   (describe Boolean "The analysis description.")
+   (describe String "The analysis description.")
 
    (optional-key :enddate)
    (describe Timestamp "The time the analysis ended.")
@@ -46,9 +46,12 @@
    (describe String "The status of the analysis.")
 
    :username
-   (describe String "The name of the user who submitted the analysis.")})
+   (describe String "The name of the user who submitted the analysis.")
+
+   (optional-key :wiki_url)
+   (describe String "The URL to app documentation in Confluence.")})
 
 (defschema AnalysisList
-  {:analyses (describe [Analysis] "The list of analyses.")
-   :timestap (describe Timestamp "The time the analysis list was retrieved.")
-   :total    (describe Long "The total number of analyses in the result set.")})
+  {:analyses  (describe [Analysis] "The list of analyses.")
+   :timestamp (describe Timestamp "The time the analysis list was retrieved.")
+   :total     (describe Long "The total number of analyses in the result set.")})
