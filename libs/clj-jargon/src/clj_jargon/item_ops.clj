@@ -2,7 +2,8 @@
   (:use [clj-jargon.validations]
         [clj-jargon.item-info]
         [clj-jargon.permissions])
-  (:require [clojure-commons.file-utils :as ft])
+  (:require [clojure-commons.file-utils :as ft]
+            [clojure.java.io :as io])
   (:import [org.irods.jargon.core.pub.io IRODSFileReader]
            [org.irods.jargon.core.transfer TransferStatusCallbackListener
               TransferStatusCallbackListener$FileStatusCallbackResponse
