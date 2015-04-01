@@ -10,13 +10,16 @@
             [donkey.util.transformers :as xforms]))
 
 (def metadactyl-sort-params [:limit :offset :sort-field :sort-dir])
+(def metadactyl-include-hidden-sort-params (conj metadactyl-sort-params :include-hidden))
 (def metadactyl-search-params (conj metadactyl-sort-params :search))
 
 (defn- secured-params
   ([]
      (secured-params {}))
   ([existing-params]
-     (xforms/add-current-user-to-map existing-params)))
+     (xforms/add-current-user-to-map existing-params))
+  ([existing-params param-keys]
+     (secured-params (select-keys existing-params param-keys))))
 
 (defn- metadactyl-url
   [& components]
@@ -31,21 +34,21 @@
 (defn get-app-categories
   [params]
   (client/get (metadactyl-url "apps" "categories")
-              {:query-params     (secured-params (select-keys params [:public]))
+              {:query-params     (secured-params params [:public])
                :as               :stream
                :follow-redirects false}))
 
 (defn apps-in-category
   [category-id params]
   (client/get (metadactyl-url "apps" "categories" category-id)
-              {:query-params     (secured-params (select-keys params metadactyl-sort-params))
+              {:query-params     (secured-params params metadactyl-sort-params)
                :as               :stream
                :follow-redirects false}))
 
 (defn search-apps
   [params]
   (client/get (metadactyl-url "apps")
-              {:query-params     (secured-params (select-keys params metadactyl-search-params))
+              {:query-params     (secured-params params metadactyl-search-params)
                :as               :stream
                :follow-redirects false}))
 
@@ -212,14 +215,21 @@
   (client/post (metadactyl-url "apps" "pipelines" app-id "copy")
                {:query-params     (secured-params)
                 :as               :stream
-                :follow-redirects :false}))
+                :follow-redirects false}))
 
 (defn edit-pipeline
   [app-id]
   (client/get (metadactyl-url "apps" "pipelines" app-id "ui")
               {:query-params     (secured-params)
                :as               :stream
-               :follow-redirects :false}))
+               :follow-redirects false}))
+
+(defn list-jobs
+  [params]
+  (client/get (metadactyl-url "analyses")
+              {:query-params     (secured-params params metadactyl-include-hidden-sort-params)
+               :as               :stream
+               :follow-redirects false}))
 
 (defn admin-list-tool-requests
   [params]

@@ -163,7 +163,7 @@
    [config/app-routes-enabled]
 
    (GET "/analyses" [:as {:keys [params]}]
-        (apps/list-jobs params))
+        (service/success-response (metadactyl/list-jobs params)))
 
    (POST "/analyses" [:as {:keys [body]}]
          (apps/submit-job body))

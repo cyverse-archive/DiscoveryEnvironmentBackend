@@ -45,4 +45,4 @@
     :sort-field     (keyword (:sort-field params default-sort-field))
     :sort-dir       (keyword (:sort-dir params default-sort-dir))
     :filter         (:filter params)
-    :include-hidden (Boolean/parseBoolean (:include-hidden params "false"))}))
+    :include-hidden (:include-hidden params false)}))

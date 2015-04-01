@@ -30,41 +30,6 @@
   ((comp service/decode-json :body)
    (metadactyl/get-app app-id)))
 
-(defn- count-de-jobs
-  [filter include-hidden]
-  (jp/count-de-jobs (:username current-user) filter include-hidden))
-
-(defn- count-jobs
-  [filter include-hidden]
-  (jp/count-jobs (:username current-user) filter include-hidden))
-
-(defn- load-app-details
-  [agave jobs]
-  [(->> (filter (fn [{:keys [job-type]}] (= jp/de-job-type job-type)) jobs)
-        (map :app-id)
-        (da/load-app-details))
-   (aa/load-app-details agave)])
-
-(defn- list-all-jobs
-  [agave limit offset sort-field sort-order filter include-hidden]
-  (let [user       (:username current-user)
-        jobs       (jp/list-jobs user limit offset sort-field sort-order filter include-hidden)
-        app-tables (load-app-details agave jobs)]
-    (remove nil? (map (partial mu/format-job app-tables) jobs))))
-
-(defn- list-de-jobs
-  [limit offset sort-field sort-order filter include-hidden]
-  (let [user       (:username current-user)
-        jobs       (jp/list-de-jobs user limit offset sort-field sort-order filter include-hidden)
-        app-tables [(da/load-app-details (map :app-id jobs))]]
-    (mapv (partial mu/format-job app-tables) jobs)))
-
-(defn- unrecognized-job-type
-  [job-type]
-  (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-           :argument   "job_type"
-           :value      job-type}))
-
 (defn- get-first-job-step
   [{:keys [id]}]
   (service/assert-found (jp/get-job-step-number id 1) "first step in job" id))
@@ -178,12 +143,6 @@
   (submitJob [_ submission]
     (da/submit-job submission))
 
-  (countJobs [_ filter include-hidden]
-    (count-de-jobs filter include-hidden))
-
-  (listJobs [_ limit offset sort-field sort-order filter include-hidden]
-    (list-de-jobs limit offset sort-field sort-order filter include-hidden))
-
   (syncJobStatus [_ job]
     (da/sync-job-status job))
 
@@ -248,14 +207,6 @@
 
   (submitJob [_ submission]
     (ca/submit-job agave-client submission))
-
-  (countJobs [_ filter include-hidden]
-    (count-jobs filter include-hidden))
-
-  (listJobs [_ limit offset sort-field sort-order filter include-hidden]
-    (if (user-has-access-token?)
-      (list-all-jobs agave-client limit offset sort-field sort-order filter include-hidden)
-      (list-de-jobs limit offset sort-field sort-order filter include-hidden)))
 
   (syncJobStatus [_ job]
     (if (user-has-access-token?)
@@ -351,27 +302,6 @@
     (transaction
      (service/success-response
       (.submitJob (get-app-lister) (service/decode-json body))))))
-
-(defn list-jobs
-  [{:keys [limit offset sort-field sort-order filter include-hidden]
-    :or   {limit          "0"
-           offset         "0"
-           sort-field     :startdate
-           sort-order     :desc
-           include-hidden "false"}}]
-  (with-db db/de
-    (transaction
-     (let [limit          (Long/parseLong limit)
-           offset         (Long/parseLong offset)
-           sort-field     (keyword sort-field)
-           sort-order     (keyword sort-order)
-           app-lister     (get-app-lister)
-           include-hidden (Boolean/parseBoolean include-hidden)
-           filter         (when-not (nil? filter) (service/decode-json filter))]
-       (service/success-response
-        {:analyses  (.listJobs app-lister limit offset sort-field sort-order filter include-hidden)
-         :timestamp (str (System/currentTimeMillis))
-         :total     (.countJobs app-lister filter include-hidden)})))))
 
 (defn- get-unique-job-step
   "Gest a unique job step for an external ID. An exception is thrown if no job step
