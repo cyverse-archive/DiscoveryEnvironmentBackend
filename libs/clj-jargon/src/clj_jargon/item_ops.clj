@@ -113,22 +113,26 @@
         (set-owner cm dest-path user)))
     (stat cm dest-path)))
 
-(def file-status-response TransferStatusCallbackListener$FileStatusCallbackResponse)
-
-(def callback-response TransferStatusCallbackListener$CallbackResponse)
+(def continue TransferStatusCallbackListener$FileStatusCallbackResponse/CONTINUE)
+(def skip TransferStatusCallbackListener$FileStatusCallbackResponse/SKIP)
+(def cancel TransferStatusCallbackListener$CallbackResponse/CANCEL)
+(def no-for-all TransferStatusCallbackListener$CallbackResponse/NO_FOR_ALL)
+(def no-this-file TransferStatusCallbackListener$CallbackResponse/NO_THIS_FILE)
+(def yes-for-all TransferStatusCallbackListener$CallbackResponse/YES_FOR_ALL)
+(def yes-this-file TransferStatusCallbackListener$CallbackResponse/YES_THIS_FILE)
 
 (defn transfer-callback-listener
   "Returns an instance of TransferStatusCallbackListener with the overallStatusCallback(),
    statusCallback(), and transferAsksWhetherToForceOperation() functions delegated to the
    functions passed in."
-  [cm overall-status-callback-fn]
+  [overall-status-callback-fn status-callback-fn transfer-asks-fn]
   (reify TransferStatusCallbackListener
     (overallStatusCallback [this transfer-status]
-      (overall-status-callback-fn transfer-status)
-    #_(statusCallback [this transfer-status]
+      (overall-status-callback-fn transfer-status))
+    (statusCallback [this transfer-status]
       (status-callback-fn transfer-status))
-    #_(transferAsksWhetherToForceOperation [this abs-path collection?]
-      (transfer-asks-fn abs-path collection?)))))
+    (transferAsksWhetherToForceOperation [this abs-path collection?]
+      (transfer-asks-fn abs-path collection?))))
 
 (defn iput
   "Transfers local-path to remote-path, using tcl as the TransferStatusCallbackListener.
