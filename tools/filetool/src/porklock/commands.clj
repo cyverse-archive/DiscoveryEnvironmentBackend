@@ -2,7 +2,6 @@
   (:use [porklock.pathing]
         [porklock.system]
         [porklock.config]
-        [porklock.shell-interop]
         [porklock.fileops :only [absify]]
         [clojure.pprint :only [pprint]]
         [slingshot.slingshot :only [try+]])
@@ -54,28 +53,6 @@
           (when (empty? (avu? cm dest (first tuple) (second tuple)))
             (porkprint "Adding metadata " (first tuple) " " (second tuple) " " dest)
             (apply (partial meta/add-metadata cm dest) tuple)))))))
-
-(defn irods-env-contents
-  [options]
-  (str
-    "irodsHost "     (irods-host) "\n"
-    "irodsPort "     (irods-port) "\n"
-    "irodsUserName " (irods-user) "\n"
-    "irodsZone "     (irods-zone) "\n"
-    "irodsHome "     (irods-home) "\n"))
-
-(defn make-irods-env
-  [env]
-  (shell-out [(iinit-path) :in (irods-pass) :env env] :skip-err true))
-
-(defn icommands-env
-  "Constructs an environment variable map for the icommands."
-  [options]
-  (let [env {"irodsAuthFileName" (irods-auth-filepath)
-             "irodsEnvFile"      (irods-env-filepath)}]
-    (spit (irods-env-filepath) (irods-env-contents options))
-    (make-irods-env env)
-    (merge env {"clientUserName" (:user options)})))
 
 (defn user-home-dir
   [cm username]
@@ -152,7 +129,6 @@
   (let [source-dir      (ft/abs-path (:source options))
         dest-dir        (:destination options)
         irods-cfg       (init-jargon (:config options))
-        ic-env          (icommands-env options)
         transfer-files  (files-to-transfer options)
         metadata        (:meta options)
         skip-parent?    (:skip-parent-meta options)
@@ -233,7 +209,7 @@
                   dest-path (ft/path-join dest (ft/basename src))]
               (try+
                (when-not (or (.isDirectory fileobj) (contains? exclusions src))
-                 (shell-out [(iput-path) "-f" "-P" src dest :env ic-env])
+                 (ops/iput cm src dest)
                  (perms/set-owner cm dest-path (:user options))
                  (apply-metadata cm dest-path metadata))
                (catch [:error_code "ERR_BAD_EXIT_CODE"] err
@@ -242,24 +218,6 @@
 
       (if @error?
         (throw (Exception. "An error occurred tranferring files into iRODS. Please check the above logs for more information."))))))
-
-(defn- iget-args
-  [source destination env]
-  (filter #(not (nil? %))
-          [(iget-path)
-           "--retries"
-           "3"
-           "-X"
-           "irods.retries"
-           "--lfrestart"
-           "irods.lfretries"
-           "-f"
-           "-P"
-           (if (.endsWith source "/")
-             "-r")
-           (ft/rm-last-slash source)
-           (ft/add-trailing-slash destination)
-           :env env]))
 
 (defn apply-input-metadata
   [cm user fpath meta]
@@ -278,9 +236,7 @@
   (let [source    (:source options)
         dest      (:destination options)
         irods-cfg (init-jargon (:config options))
-        ic-env    (icommands-env options)
         srcdir    (ft/rm-last-slash source)
-        args      (iget-args source dest ic-env)
         metadata  (:meta options)]
     (jg/with-jargon irods-cfg [cm]
       (apply-input-metadata cm (:user options) srcdir metadata)
