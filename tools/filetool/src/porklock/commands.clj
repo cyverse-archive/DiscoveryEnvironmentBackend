@@ -284,4 +284,4 @@
         metadata  (:meta options)]
     (jg/with-jargon irods-cfg [cm]
       (apply-input-metadata cm (:user options) srcdir metadata)
-      (shell-out args))))
+      (ops/iget cm source dest tcl))))

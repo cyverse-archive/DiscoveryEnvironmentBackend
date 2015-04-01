@@ -7,7 +7,8 @@
   (:import [org.irods.jargon.core.pub.io IRODSFileReader]
            [org.irods.jargon.core.transfer TransferStatusCallbackListener
               TransferStatusCallbackListener$FileStatusCallbackResponse
-              TransferStatusCallbackListener$CallbackResponse]))
+              TransferStatusCallbackListener$CallbackResponse
+              DefaultTransferControlBlock]))
 
 (defn mkdir
   [cm dir-path]
@@ -120,6 +121,7 @@
 (def no-this-file TransferStatusCallbackListener$CallbackResponse/NO_THIS_FILE)
 (def yes-for-all TransferStatusCallbackListener$CallbackResponse/YES_FOR_ALL)
 (def yes-this-file TransferStatusCallbackListener$CallbackResponse/YES_THIS_FILE)
+(def tcb (DefaultTransferControlBlock/instance))
 
 (defn transfer-callback-listener
   "Returns an instance of TransferStatusCallbackListener with the overallStatusCallback(),
@@ -140,3 +142,11 @@
   [cm local-path remote-path tcl]
   (let [dto (data-transfer-obj cm)]
     (.putOperation dto local-path remote-path "" tcl nil)))
+
+(defn iget
+  "Transfers remote-path to local-path, using tcl as the TransferStatusCallbackListener"
+  ([cm remote-path local-path tcl]
+    (iget cm remote-path local-path tcl tcb))
+  ([cm remote-path local-path tcl control-block]
+    (let [dto (data-transfer-obj cm)]
+      (.getOperation dto remote-path local-path "" tcl control-block))))
