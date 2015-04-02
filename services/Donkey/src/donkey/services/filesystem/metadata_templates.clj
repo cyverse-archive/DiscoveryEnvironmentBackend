@@ -60,9 +60,12 @@
 (defn- add-attr-enum-values
   [{:keys [id type] :as attr}]
   (if (= "Enum" type)
-    (->> (doall (map :value (select :metadata_attr_enum_values
-                              (fields :value)
-                              (where {:attribute_id id}))))
+    (->> (select :metadata_attr_enum_values
+           (fields :id
+                   :value
+                   :is_default)
+           (where {:attribute_id id})
+           (order :display_order))
          (assoc attr :values))
     attr))
 
