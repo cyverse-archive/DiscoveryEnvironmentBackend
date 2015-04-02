@@ -465,155 +465,15 @@ $ curl -s "http://by-tor:8888/analyses/5b46cfc7-c363-4aaa-9260-b3b6bfe7177b/rela
 
 Secured Endpoint: POST /analyses
 
-For DE jobs, this endpoint forwards the request to metadactyl. For Agave jobs,
-this endpoint forwards a request to Agave. For jobs containing both DE and Agave
-job steps, this endpoint splits the job into multiple components and coordinates
-job submissions to both systems.
-
-The response body for this service is in the following format:
-
-```json
-{
-    "id": "job-id",
-    "name": "Job Name",
-    "status": "Submitted",
-    "start-date": start-date-as-milliseconds-since-epoch
-}
-```
-
-Please see the metadactyl documentation for information about the request body
-format.
+This endpoint forwards all requests to metadactyl. Please see the metadactyl
+documentation for details.
 
 ## Listing Jobs
 
 *Secured Endpoint:* GET /analyses
 
-Information about the status of jobs that have previously been submitted for
-execution can be obtained using this service. The DE uses this service to
-populate the _Analyses_ window. The response body for this service is in the
-following format:
-
-```json
-{
-    "analyses": [
-        {
-            "app_description": "analysis-description",
-            "app_id": "analysis-id",
-            "app_name": "analysis-name",
-            "app_disabled": false,
-            "description": "job-description",
-            "enddate": "end-date-as-milliseconds-since-epoch",
-            "id": "job-id",
-            "name": "job-name",
-            "resultfolderid": "path-to-result-folder",
-            "startdate": "start-date-as-milliseconds-since-epoch",
-            "status": "job-status-code",
-            "username": "fully-qualified-username",
-            "wiki_url": "analysis-documentation-link",
-            "batch": "batch-flag",
-            "parent_id": "parent-identifier"
-        },
-        ...
-    ],
-    "timestamp": "timestamp",
-    "total": "total"
-}
-```
-
-With no query string parameters aside from the authentication token, this service returns
-information about all jobs ever run by the user that haven't been marked as deleted in descending
-order by start time (that is, the `startdate` field in the result). Several query-string parameters
-are available to alter the way this service behaves:
-
-| Name | Description | Default |
-| ---- | ----------- | ------- |
-| limit | The maximum number of results to return. If this value is zero or negative then all results will be returned. | 0 |
-| offset | The index of the first result to return. | 0 |
-| sort-field | The name of the field that results are sorted by. Valid values for this parameter are `name`, `app_name`, `startdate`, `enddate`, and `status`. | startdate |
-| sort-order | `asc` or `ASC` for ascending and `desc` or `DESC` for descending. | desc |
-| filter | Allows results to be filtered based on the value of some result field.  The format of this parameter is `[{"field":"some_field", "value":"search-term"}, ...]`, where `field` is the name of the field on which the filter is based and `value` is the search value. If `field` is `name` or `app_name`, then `value` can be contained anywhere, case-insensitive, in the corresponding field. For example, to obtain the list of all jobs that were executed using an application with `CACE` anywhere in its name, the parameter value can be `[{"field":"app_name","value":"cace"}]`. To find a job with a specific `id`, the parameter value can be `[{"field":"id","value":"C09F5907-B2A2-4429-A11E-5B96F421C3C1"}]`. To find jobs associated with a specific `parent_id`, the parameter value can be `[{"field":"parent_id","value":"b4c2f624-7cbd-496e-adad-5be8d0d3b941"}]`. It's also possible to search for jobs without a parent using this parameter value: `[{"field":"parent_id","value":null}]`. |
-
-Note that the JSON value used by the filter parameter can potentially contain characters that must
-be URL encoded. For example, the URL encoded version of `[{"field":"app_name","value":"cace"}]`
-would be:
-
-```
-%5B%7B%22field%22%3A%22app_name%22%2C%22value%22%3A%22cace%22%7D%5D
-```
-
-Of course, this is a pain to type in, for example, a `curl` command. If you're calling the service
-using curl then a bash function that encodes strings for you will be very helpful. If you have a
-recent version of Python installed then this function will work:
-
-```bash
-function urlencode {
-    python -c "import urllib;import sys;print urllib.quote_plus(sys.argv[1])" "$1"
-}
-```
-
-With this function defined, a `curl` command to call this service with a filter can be simplified to
-something like this:
-
-```
-curl -s "http://by-tor:8888/secured/analyses?proxyToken=$(cas-ticket)&filter=$(urlencode '[{"field":"app_name","value":"cace"}]')" | python -mjson.tool
-```
-
-Here's an example using no parameters:
-
-```
-$ curl -s "http://by-tor:8888/analyses?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "analyses": [
-        {
-            "app_description": "Counts and summarizes the number of lines, words, and bytes in a target file",
-            "app_disabled": true,
-            "app_id": "c7f05682-23c8-4182-b9a2-e09650a5f49b",
-            "app_name": "Word Count",
-            "deleted": null,
-            "description": "Testing some jobs, yo.",
-            "enddate": "1415040070501",
-            "id": "6821c5c2-45b1-4f02-92fd-9c02992be7cc",
-            "name": "wc_10291330",
-            "resultfolderid": "/iplant/home/snow-dog/analyses/wc_10291330-2014-11-03-18-37-04.1",
-            "startdate": "1415039824186",
-            "status": "Failed",
-            "username": "snow-dog@iplantcollaborative.org",
-            "wiki_url": "https://pods.iplantcollaborative.org/wiki/display/DEapps/Word%20Count"
-        },
-        ...
-    ],
-    "timestamp": "1415050735387",
-    "total": 19
-}
-```
-
-Here's an example of a search with a limit of one result:
-
-```
-$ curl -s "http://by-tor:8888/analyses?proxyToken=$(cas-ticket)&limit=1" | python -mjson.tool
-{
-    "analyses": [
-        {
-            "app_description": "Counts and summarizes the number of lines, words, and bytes in a target file",
-            "app_disabled": true,
-            "app_id": "c7f05682-23c8-4182-b9a2-e09650a5f49b",
-            "app_name": "Word Count",
-            "deleted": null,
-            "description": "Testing some jobs, yo.",
-            "enddate": "1415040070501",
-            "id": "6821c5c2-45b1-4f02-92fd-9c02992be7cc",
-            "name": "wc_10291330",
-            "resultfolderid": "/iplant/home/snow-dog/analyses/wc_10291330-2014-11-03-18-37-04.1",
-            "startdate": "1415039824186",
-            "status": "Failed",
-            "username": "snow-dog@iplantcollaborative.org",
-            "wiki_url": "https://pods.iplantcollaborative.org/wiki/display/DEapps/Word%20Count"
-        }
-    ],
-    "timestamp": "1415050829308",
-    "total": 19
-}
-```
+This service forwards all requests to metadactyl. Please see the metadactyl
+documentation for more details.
 
 ## Deleting a Job
 
