@@ -224,7 +224,7 @@
                   dest-path (ft/path-join dest (ft/basename src))]
               (try+
                (when-not (or (.isDirectory fileobj) (contains? exclusions src))
-                 (retry 10 ops/iput cm src dest)
+                 (retry 10 ops/iput cm src dest tcl)
                  (perms/set-owner cm dest-path (:user options))
                  (apply-metadata cm dest-path metadata))
                (catch [:error_code "ERR_BAD_EXIT_CODE"] err
