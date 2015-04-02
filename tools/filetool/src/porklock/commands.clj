@@ -14,6 +14,8 @@
             [clojure.java.io :as io]
             [clojure-commons.file-utils :as ft]))
 
+(def porkprint (partial println "[porklock] "))
+
 (defn init-jargon
   [cfg-path]
   (load-config-from-file cfg-path)
@@ -24,6 +26,21 @@
            (irods-home)
            (irods-zone)
            (irods-resc)))
+
+(defn retry
+  "Attempt calling (func) with args a maximum of 'times' times if an error occurs.
+   Adapted from a stackoverflow solution: http://stackoverflow.com/a/12068946"
+  [max-attempts func & args]
+  (let [result (try
+                  {:value (apply func args)}
+                  (catch Exception e
+                    (porkprint "Error calling a function. " max-attempts " attempts remaining: " e)
+                    (if-not (pos? max-attempts)
+                      (throw e)
+                      {:exception e})))]
+    (if (:exception result)
+      (recur (dec max-attempts) func args)
+      (:value result))))
 
 (defn fix-meta
   [m]
@@ -36,8 +53,6 @@
 (defn avu?
   [cm path attr value]
   (filter #(= value (:value %)) (meta/get-attribute cm path attr)))
-
-(def porkprint (partial println "[porklock] "))
 
 (defn apply-metadata
   [cm destination meta]
@@ -177,7 +192,7 @@
                 (perms/set-owner cm dir-dest (:user options)))
 
               (try
-                (ops/iput cm src dest tcl)
+                (retry 10 ops/iput cm src dest tcl)
                (catch Exception err
                  (porkprint "iput failed: " err)
                  (reset! error? true)))
@@ -209,7 +224,7 @@
                   dest-path (ft/path-join dest (ft/basename src))]
               (try+
                (when-not (or (.isDirectory fileobj) (contains? exclusions src))
-                 (ops/iput cm src dest)
+                 (retry 10 ops/iput cm src dest)
                  (perms/set-owner cm dest-path (:user options))
                  (apply-metadata cm dest-path metadata))
                (catch [:error_code "ERR_BAD_EXIT_CODE"] err
@@ -240,4 +255,4 @@
         metadata  (:meta options)]
     (jg/with-jargon irods-cfg [cm]
       (apply-input-metadata cm (:user options) srcdir metadata)
-      (ops/iget cm source dest tcl))))
+      (retry 10 ops/iget cm source dest tcl))))
