@@ -193,6 +193,9 @@
 
               (try
                 (retry 10 ops/iput cm src dest tcl)
+                (when-not (perms/owns? cm (:user options) dest)
+                  (porkprint "Setting owner of " dest " to " (:user options))
+                  (perms/set-owner cm dest (:user options)))
                (catch Exception err
                  (porkprint "iput failed: " err)
                  (reset! error? true)))
