@@ -36,4 +36,6 @@
   (editPipeline [_ app-id])
   (listJobs [_ params])
   (loadAppTables [_ app-ids])
-  (submitJob [_ submission]))
+  (submitJob [_ submission])
+  (prepareJobSubmission [_ submission])
+  (sendJobSubmission [_ submission job]))
