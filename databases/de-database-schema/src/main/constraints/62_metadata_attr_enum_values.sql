@@ -14,3 +14,10 @@ ALTER TABLE ONLY metadata_attr_enum_values
 ADD CONSTRAINT metadata_attr_enum_values_attribute_id_fkey
 FOREIGN KEY (attribute_id)
 REFERENCES metadata_attributes(id) ON DELETE CASCADE;
+
+--
+-- Add a uniqueness constraint for each attribute's enum value.
+--
+ALTER TABLE ONLY metadata_attr_enum_values
+ADD CONSTRAINT metadata_attr_enum_values_unique
+UNIQUE(attribute_id, value);
