@@ -18,7 +18,7 @@
    (optional-key :app_name)
    (describe String "The name of the app used to perform the analysis.")
 
-   :batch
+   (optional-key :batch)
    (describe Boolean "Indicates whether the analysis is a batch analysis.")
 
    (optional-key :description)

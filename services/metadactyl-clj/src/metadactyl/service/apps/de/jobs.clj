@@ -1,10 +1,9 @@
-(ns metadactyl.analyses
+(ns metadactyl.service.apps.de.jobs
   (:use [clojure.string :only [split-lines]]
         [clojure-commons.file-utils :only [build-result-folder-path path-join]]
         [kameleon.jobs :only [get-job-type-id save-job save-job-step]]
         [kameleon.queries :only [get-user-id]]
         [medley.core :only [dissoc-in]]
-        [metadactyl.user :only [current-user]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
         [korma.core]
         [korma.db :only [transaction]]
@@ -15,14 +14,15 @@
             [clojure-commons.error-codes :as ce]
             [kameleon.uuids :as uuids]
             [me.raynes.fs :as fs]
-            [metadactyl.analyses.base :as ab]
             [metadactyl.persistence.app-metadata :as ap]
+            [metadactyl.persistence.jobs :as jp]
+            [metadactyl.service.apps.de.jobs.base :as jb]
             [metadactyl.util.config :as config]
             [metadactyl.util.service :as service]))
 
 (defn- secured-params
-  []
-  {:user (:shortUsername current-user)})
+  [user]
+  {:user (:shortUsername user)})
 
 (defn- pre-process-jex-step
   "Removes the input array of a fAPI step's config."
@@ -48,7 +48,7 @@
 
 (defn- store-submitted-job
   "Saves information about a job in the database."
-  [job submission status]
+  [user job submission status]
   (let [job-info (-> job
                      (select-keys [:parent_id :app_id :app_name :app_description :notify])
                      (assoc :job_name           (:name job)
@@ -56,7 +56,7 @@
                             :app_wiki_url       (:wiki_url job)
                             :result_folder_path (:output_dir job)
                             :start_date         (sqlfn now)
-                            :user_id            (get-user-id (:username current-user))
+                            :user_id            (get-user-id (:username user))
                             :status             status))]
     (save-job job-info (cheshire/encode submission))))
 
@@ -73,27 +73,27 @@
 
 (defn- save-job-submission
   "Saves a DE job and its job-step in the database."
-  ([job submission]
-   (save-job-submission job submission "Submitted"))
-  ([job submission status]
+  ([user job submission]
+   (save-job-submission user job submission "Submitted"))
+  ([user job submission status]
    (transaction
-     (let [job-id (:id (store-submitted-job job submission status))]
+     (let [job-id (:id (store-submitted-job user job submission status))]
        (store-job-step job-id job status)
        job-id))))
 
 (defn- get-batch-output-dir
   "Builds the parent output folder path for batch jobs, and creating it if it doesn't exist."
-  [submission]
+  [user submission]
   (let [output-dir (build-result-folder-path submission)]
     (try+
       (http/post (service/build-url (config/data-info-base-url) "stat-gatherer")
-        {:query-params (secured-params)
+        {:query-params (secured-params user)
          :body (cheshire/encode {:paths [output-dir]})
          :content-type :json
          :as :stream})
       (catch Object does-not-exist
         (http/post (service/build-url (config/data-info-base-url) "data" "directory" "create")
-          {:query-params (secured-params)
+          {:query-params (secured-params user)
            :body (cheshire/encode {:path output-dir})
            :content-type :json
            :as :stream})))
@@ -101,11 +101,11 @@
 
 (defn- get-path-list-contents
   "Gets the contents of the given path list as a vector of each of its paths (assuming one per line)"
-  [path]
+  [user path]
   (when-not (empty? path)
     (try+
       (->> (http/get (service/build-url (config/data-info-base-url) "entries" "path" path)
-             {:query-params (secured-params)
+             {:query-params (secured-params user)
               :as :stream})
            (:body)
            (slurp)
@@ -118,11 +118,11 @@
                  :message "Could get file contents of path list input"})))))
 
 (defn- get-file-stats
-  [paths]
+  [user paths]
   (when-not (empty? paths)
     (try+
       (-> (http/post (service/build-url (config/data-info-base-url) "stat-gatherer")
-            {:query-params (secured-params)
+            {:query-params (secured-params user)
              :body (cheshire/encode {:paths paths})
              :content-type :json
              :as :stream})
@@ -162,15 +162,15 @@
     paths))
 
 (defn- get-path-list-stats
-  [job]
+  [user job]
   (let [inputs (mapcat (comp :input :config) (:steps job))
-        file-stats-map (get-file-stats (set (map :value inputs)))
+        file-stats-map (get-file-stats user (set (map :value inputs)))
         file-stats (map second (:paths file-stats-map))]
     (filter #(= (:infoType %) (config/path-list-info-type)) file-stats)))
 
 (defn- get-path-list-contents-map
-  [paths]
-  (let [path-lists (into {} (map #(vector % (get-path-list-contents %)) paths))
+  [user paths]
+  (let [path-lists (into {} (map #(vector % (get-path-list-contents user %)) paths))
         first-list-count (count (second (first path-lists)))]
     (when (> first-list-count (config/path-list-max-paths))
       (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
@@ -209,14 +209,14 @@
                           :params [list-params params]))))
 
 (defn- submit-one-de-job
-  [submission job]
+  [user submission job]
   (try+
     (do-jex-submission job)
-    (save-job-submission job submission)
+    (save-job-submission user job submission)
     (catch Object o
       (if (nil? (:parent_id job))
         (throw+ o)
-        (save-job-submission job submission "Failed")))))
+        (save-job-submission user job submission "Failed")))))
 
 (defn- update-batch-config
   [batch-path-map [list-params params]]
@@ -251,7 +251,7 @@
                                       :params (concat list-params params)))))
 
 (defn- submit-job-in-batch
-  [submission job batch-job-id job-number & batch-paths]
+  [user submission job batch-job-id job-number & batch-paths]
   (let [batch-path-map (into {} batch-paths)
         job-suffix (str "analysis-" (inc job-number))
         job (assoc job :parent_id batch-job-id
@@ -261,48 +261,46 @@
                        :uuid (uuids/uuid))
         submission (assoc submission
                      :config (update-batch-config batch-path-map (:config submission)))]
-    (submit-one-de-job submission job)))
+    (submit-one-de-job user submission job)))
 
 (defn- path-list-map-entry->path-contents-pairs
   [[path-list-path path-list-contents]]
   (map (juxt (constantly path-list-path) identity) path-list-contents))
 
 (defn- submit-batch-de-job
-  [{config :config :as submission} {steps :steps :as job} path-list-stats]
+  [user {config :config :as submission} {steps :steps :as job} path-list-stats]
   (let [path-list-paths (path-list-stats->validated-paths path-list-stats
                                                           (mapcat (comp :input :config) steps))
-        path-lists (get-path-list-contents-map path-list-paths)
+        path-lists (get-path-list-contents-map user path-list-paths)
         transposed-list-path (map path-list-map-entry->path-contents-pairs path-lists)
-        job (assoc job :output_dir (get-batch-output-dir submission)
+        job (assoc job :output_dir (get-batch-output-dir user submission)
                        :create_output_subdir false
                        :group (config/jex-batch-group-name))
-        batch-job-id (save-job-submission job submission)
+        batch-job-id (save-job-submission user job submission)
         job (assoc job :steps (map (partial build-batch-partitioned-job-step path-lists) steps))
         submission (assoc submission
-                     :config (get-partitioned-submission-config-entries path-lists config))]
-    (dorun (apply (partial map (partial submit-job-in-batch submission job batch-job-id) (range))
-                  transposed-list-path))))
+                     :config (get-partitioned-submission-config-entries path-lists config))
+        submit-batch-job (partial submit-job-in-batch user submission job batch-job-id)]
+    (apply (partial map submit-batch-job (range)) transposed-list-path)))
 
 (defn- submit-de-only-job
-  [submission job path-list-stats]
+  [user submission job path-list-stats]
   (if (empty? path-list-stats)
-    (submit-one-de-job submission job)
-    (submit-batch-de-job submission job path-list-stats)))
+    (submit-one-de-job user submission job)
+    (submit-batch-de-job user submission job path-list-stats)))
 
-(defn- submit-job
-  [submission job]
+(defn submit
+  [user submission job]
   (let [de-only-job? (zero? (ap/count-external-steps (:app_id job)))
-        path-list-stats (get-path-list-stats job)]
+        path-list-stats (get-path-list-stats user job)]
     (if de-only-job?
-      (submit-de-only-job submission job path-list-stats)
+      (submit-de-only-job user submission job path-list-stats)
       (if (empty? path-list-stats)
         (do-jex-submission job)
         (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
                  :message "HT Analysis Path Lists are not supported in Apps with Agave steps."}))))
   job)
 
-(defn submit
-  [{:keys [user email]} submission]
-  (->> (ab/build-submission user email submission)
-       (remove-nil-vals)
-       (submit-job submission)))
+(defn build-submission
+  [user submission]
+  (remove-nil-vals (jb/build-submission user submission)))

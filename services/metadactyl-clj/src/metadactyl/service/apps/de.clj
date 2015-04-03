@@ -1,6 +1,7 @@
 (ns metadactyl.service.apps.de
   (:use [kameleon.uuids :only [uuidify]])
   (:require [metadactyl.persistence.app-metadata :as ap]
+            [metadactyl.service.apps.de.jobs :as jobs]
             [metadactyl.service.apps.de.edit :as edit]
             [metadactyl.service.apps.de.job-view :as job-view]
             [metadactyl.service.apps.de.listings :as listings]
@@ -133,4 +134,10 @@
          (ap/load-app-details)
          (map (juxt (comp str :id) identity))
          (into {})
-         (vector))))
+         (vector)))
+
+  (prepareJobSubmission [_ submission]
+    (jobs/build-submission user submission))
+
+  (submitJob [_ submission job]
+    (jobs/submit user submission job)))

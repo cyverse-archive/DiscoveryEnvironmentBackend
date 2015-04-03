@@ -1,11 +1,11 @@
-(ns metadactyl.analyses.params
+(ns metadactyl.service.apps.de.jobs.params
   (:use [kameleon.uuids :only [uuidify]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [me.raynes.fs :as fs]
-            [metadactyl.analyses.util :as util]
+            [metadactyl.service.apps.de.jobs.util :as util]
             [metadactyl.util.config :as config]))
 
 (def ^:private irods-home-pattern

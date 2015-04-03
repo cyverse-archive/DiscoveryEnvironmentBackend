@@ -2,7 +2,6 @@
   (:use [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
   (:require [cemerick.url :as curl]
-            [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [mescal.de :as agave]
             [metadactyl.persistence.oauth :as op]
@@ -10,6 +9,7 @@
             [metadactyl.service.apps.combined]
             [metadactyl.service.apps.de]
             [metadactyl.util.config :as config]
+            [metadactyl.util.json :as json-util]
             [metadactyl.util.service :as service]))
 
 (defn- authorization-uri
@@ -181,3 +181,11 @@
 (defn list-jobs
   [user params]
   (.listJobs (get-apps-client user "") params))
+
+(defn submit-job
+  [user submission]
+  (json-util/log-json "submission" submission)
+  (let [apps-client (get-apps-client user "")]
+    (->> (.prepareJobSubmission apps-client submission)
+         (json-util/log-json "job")
+         (.submitJob apps-client submission))))

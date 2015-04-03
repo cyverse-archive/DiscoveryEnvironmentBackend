@@ -1,5 +1,6 @@
 (ns metadactyl.service.apps.job-listings
-  (:use [metadactyl.util.conversions :only [remove-nil-vals]])
+  (:use [kameleon.uuids :only [uuidify]]
+        [metadactyl.util.conversions :only [remove-nil-vals]])
   (:require [kameleon.db :as db]
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.service.util :as util]))

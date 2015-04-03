@@ -6,7 +6,6 @@
         [metadactyl.user :only [current-user]]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
-            [metadactyl.analyses :as analyses]
             [metadactyl.service.apps :as apps]
             [metadactyl.util.service :as service]))
 
@@ -26,4 +25,4 @@
          element in the analysis submission is a map from parameter IDs as they appear in
          the response from the `/apps/:app-id` endpoint to the desired values for those
          parameters."
-         (ce/trap uri #(service/success-response (analyses/submit params body)))))
+         (service/coerced-trap uri JexSubmission apps/submit-job current-user body)))

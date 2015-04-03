@@ -1,4 +1,4 @@
-(ns metadactyl.analyses.common
+(ns metadactyl.service.apps.de.jobs.common
   (:use [kameleon.core]
         [kameleon.entities]
         [kameleon.uuids :only [uuid]]
@@ -7,8 +7,8 @@
         [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.conversions :only [remove-nil-vals]])
   (:require [clojure.string :as string]
-            [metadactyl.analyses.params :as params]
-            [metadactyl.analyses.util :as util]))
+            [metadactyl.service.apps.de.jobs.params :as params]
+            [metadactyl.service.apps.de.jobs.util :as util]))
 
 (defn- format-io-map
   [mapping]
