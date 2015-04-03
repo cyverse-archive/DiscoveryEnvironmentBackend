@@ -185,7 +185,4 @@
 (defn submit-job
   [user submission]
   (json-util/log-json "submission" submission)
-  (let [apps-client (get-apps-client user "")]
-    (->> (.prepareJobSubmission apps-client submission)
-         (json-util/log-json "job")
-         (.submitJob apps-client submission))))
+  (.submitJob (get-apps-client user "") submission))

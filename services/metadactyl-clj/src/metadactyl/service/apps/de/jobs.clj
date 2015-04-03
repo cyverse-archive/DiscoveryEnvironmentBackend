@@ -18,6 +18,7 @@
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.service.apps.de.jobs.base :as jb]
             [metadactyl.util.config :as config]
+            [metadactyl.util.json :as json-util]
             [metadactyl.util.service :as service]))
 
 (defn- secured-params
@@ -289,7 +290,7 @@
     (submit-one-de-job user submission job)
     (submit-batch-de-job user submission job path-list-stats)))
 
-(defn submit
+(defn- submit-job
   [user submission job]
   (let [de-only-job? (zero? (ap/count-external-steps (:app_id job)))
         path-list-stats (get-path-list-stats user job)]
@@ -301,6 +302,9 @@
                  :message "HT Analysis Path Lists are not supported in Apps with Agave steps."}))))
   job)
 
-(defn build-submission
+(defn submit
   [user submission]
-  (remove-nil-vals (jb/build-submission user submission)))
+  (->> (jb/build-submission user submission)
+       (remove-nil-vals)
+       (json-util/log-json "job")
+       (submit-job user submission)))

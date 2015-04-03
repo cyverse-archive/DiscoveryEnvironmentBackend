@@ -136,8 +136,5 @@
          (into {})
          (vector)))
 
-  (prepareJobSubmission [_ submission]
-    (jobs/build-submission user submission))
-
-  (submitJob [_ submission job]
-    (jobs/submit user submission job)))
+  (submitJob [_ submission]
+    (jobs/submit user submission)))
