@@ -7,6 +7,7 @@
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.0"]
+                 [clj-time "0.9.0"]
                  [korma "0.3.3"]
                  [me.raynes/fs "1.4.6"]
                  [postgresql "9.1-901-1.jdbc4"]

@@ -8,7 +8,7 @@
   (:require [clojure-commons.error-codes :as error-codes]
             [clojure-commons.validators :as common-validators]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.persistence.metadata :as persistence]
+            [kameleon.metadata.avu :as persistence]
             [donkey.services.filesystem.metadata-templates :as templates]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as validators]
@@ -16,37 +16,6 @@
             [donkey.util.service :as service]
             [donkey.services.filesystem.icat :as icat]
             [medley.core :as medley]))
-
-(defn- format-avu
-  "Formats a Metadata Template AVU for JSON responses."
-  [avu]
-  (let [convert-timestamp #(assoc %1 %2 (db/millis-from-timestamp (%2 %1)))]
-    (-> avu
-        (convert-timestamp :created_on)
-        (convert-timestamp :modified_on)
-        (assoc :attr (:attribute avu))
-        (dissoc :attribute :target_type))))
-
-(defn- get-metadata-template-avus
-  "Gets a map containing AVUs for the given Metadata Template and the template's ID."
-  [data-id template-id]
-  (let [avus (persistence/get-avus-for-metadata-template data-id template-id)]
-    {:template_id template-id
-     :avus (map format-avu avus)}))
-
-(defn- metadata-template-list
-  "Lists all Metadata Template AVUs for the given user's data item."
-  [data-id]
-  (let [template-ids (persistence/get-metadata-template-ids data-id)]
-    {:data_id data-id
-     :templates (map (comp (partial get-metadata-template-avus data-id) :template_id)
-                     template-ids)}))
-
-(defn- metadata-template-avu-list
-  "Lists AVUs for the given Metadata Template on the given user's data item."
-  [data-id template-id]
-  (assoc (get-metadata-template-avus data-id template-id)
-    :data_id data-id))
 
 (defn- find-existing-metadata-template-avu
   "Formats the given AVU for adding or updating.
@@ -88,7 +57,7 @@
      (dorun (persistence/set-template-instances data-id template-id (map :id avus))))
     {:data_id data-id
      :template_id template-id
-     :avus (map (comp filter-avu-keys format-avu) avus)}))
+     :avus (map (comp filter-avu-keys persistence/format-avu) avus)}))
 
 (defn- remove-metadata-template-avu
   "Removes the given Metadata Template AVU association for the given user's data item."
@@ -121,7 +90,7 @@
     (if-not (empty? matching-avus)
       {:id   uuid
        :path path
-       :avus (map format-avu matching-avus)}
+       :avus (map persistence/format-avu matching-avus)}
       nil)))
 
 (defn- validate-dest-attrs
@@ -157,7 +126,7 @@
   "Fetches the list of Metadata Template AVUs for the given data-id, returning only the attr, value,
    and unit in each template's avu list."
   [data-id]
-  (let [templates (:templates (metadata-template-list data-id))
+  (let [templates (:templates (persistence/metadata-template-list data-id))
         format-avu-copies (partial map #(select-keys % [:attr :value :unit]))]
     (map #(medley/update % :avus format-avu-copies) templates)))
 
@@ -182,11 +151,11 @@
 (defn do-metadata-template-avu-list
   "Lists AVUs associated with a Metadata Template for the given user's data item."
   ([params data-id]
-   (metadata-template-list (uuidify data-id)))
+   (persistence/metadata-template-list (uuidify data-id)))
 
   ([params data-id template-id]
-   (metadata-template-avu-list (uuidify data-id)
-                               (uuidify template-id))))
+   (persistence/metadata-template-avu-list (uuidify data-id)
+                                           (uuidify template-id))))
 
 (with-pre-hook! #'do-metadata-template-avu-list
   (fn [params data-id & [template-id]]

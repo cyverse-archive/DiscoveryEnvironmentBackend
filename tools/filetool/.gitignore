@@ -10,3 +10,5 @@ bin
 \#*\#
 /target/
 .nrepl-port
+/foo/
+irods-config

@@ -144,8 +144,8 @@
   nil)
 
 (defn make-app-public
-  [{app-id :id :as app}]
-  (verify-app-ownership (validate-app-existence app-id))
+  [user {app-id :id :as app}]
+  (verify-app-ownership user (validate-app-existence app-id))
   (let [[publishable? reason] (app-publishable? app-id)]
     (if publishable?
       (publish-app app)

@@ -3,6 +3,7 @@
         [compojure.api.sweet]
         [compojure.api.legacy]
         [metadactyl.routes.domain.analysis]
+        [metadactyl.routes.domain.analysis.listing]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.category]
         [metadactyl.routes.domain.app.element]

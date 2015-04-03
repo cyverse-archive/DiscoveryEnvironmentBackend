@@ -2,6 +2,7 @@
 
 * [GET /](endpoints/service-info.md)
 * [POST /cart](endpoints/cart.md)
+* [POST /data/{data-id}/metadata/save](endpoints/filesystem/metadata.md#exporting-metadata-to-a-file)
 
 ## Unmigrated Endpoints
 

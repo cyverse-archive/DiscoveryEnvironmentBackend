@@ -121,74 +121,8 @@ Please see the metadactyl documentation for more information.
 
 Secured Endpoint: GET /apps/{app-id}/tasks
 
-This service obtains the lists of inputs and outputs for an app. For apps that
-run within the DE itself, this service delegates to the metadactyl endpoint,
-`GET /apps/{app-id}/tasks`. For other apps, the response is assembled
-within Donkey from information received from remote services. Here's an
-example:
-
-```
-$ curl -s "http://by-tor:8888/secured/apps/wc-osg-1.00u1/data-objects?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "id": "wc-osg-1.00u1",
-    "inputs": [
-        {
-            "arguments": [],
-            "data_object": {
-                "cmdSwitch": "query1",
-                "description": "",
-                "file_info_type": "File",
-                "format": "Unspecified",
-                "id": "query1",
-                "multiplicity": "One",
-                "name": "File to count words in: ",
-                "order": 1,
-                "required": false,
-                "retain": false
-            },
-            "defaultValue": "",
-            "description": "",
-            "id": "query1",
-            "isVisible": true,
-            "label": "File to count words in: ",
-            "name": "query1",
-            "order": 0,
-            "required": false,
-            "type": "FileInput",
-            "validators": []
-        }
-    ],
-    "name": "wc-osg [wc-osg-1.00u1]",
-    "outputs": [
-        {
-            "arguments": [],
-            "data_object": {
-                "cmdSwitch": "outputWC",
-                "description": "Results of WC",
-                "file_info_type": "File",
-                "format": "Unspecified",
-                "id": "outputWC",
-                "multiplicity": "One",
-                "name": "Text file",
-                "order": 1,
-                "required": false,
-                "retain": false
-            },
-            "defaultValue": "wc_out.txt",
-            "description": "Results of WC",
-            "id": "outputWC",
-            "isVisible": false,
-            "label": "Text file",
-            "name": "outputWC",
-            "order": 0,
-            "required": false,
-            "type": "Output",
-            "validators": []
-        }
-    ]
-}
-
-```
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Categorizing Apps
 
@@ -212,61 +146,15 @@ Please see the metadactyl documentation for more information.
 
 Secured Endpoint: GET /apps/{app-id}
 
-This service handles three different classes of apps. Apps that run exclusively in the DE, apps
-that run exclusively in Agave, and apps that contain both DE steps and Agave steps.  In all
-three cases, the response format is the same as in the corresponding metadactyl endpoint, `GET
-/apps/{app-id}`. Please see the metadactyl documentation for more information about the format
-of the response body.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Getting App Details
 
 Secured Endpoint: GET /apps/{app-id}/details
 
-This service is used by the DE to obtain high-level details about a single
-analysis.
-
-For DE apps, this service delegates the call to the metadactyl endpoint, `/apps/{app-id}/details`.
-Please see the metadactyl documentation for more information about its response format.
-
-For Agave apps, this service retrieves the information it needs to format the response from Agave.
-Here's an example of an Agave app listing:
-
-```
- curl -s "http://gargery:31325/apps/wc-1.00u1/details?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "components": [
-        {
-            "attribution": "",
-            "description": "Count words in a file",
-            "id": "wc-1.00u1",
-            "location": "/ipcservices/applications",
-            "name": "wc-1.00u1.zip",
-            "type": "HPC",
-            "version": "1.00"
-        }
-    ],
-    "description": "Count words in a file",
-    "edited_date": "1383351103584",
-    "groups": [
-        {
-            "id": "HPC",
-            "name": "High-Performance Computing"
-        }
-    ],
-    "id": "wc-1.00u1",
-    "label": "Word Count",
-    "name": "Word Count",
-    "published_date": "1383351103584",
-    "refrences": [],
-    "suggested_groups": [
-        {
-            "id": "HPC",
-            "name": "High-Performance Computing"
-        }
-    ],
-    "tito": "wc-1.00u1"
-}
-```
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## App Documentation
 

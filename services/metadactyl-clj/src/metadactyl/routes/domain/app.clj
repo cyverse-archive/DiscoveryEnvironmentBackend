@@ -201,7 +201,7 @@
           OptionalGroupsKey          (describe [AppGroup] GroupListDocs)}))
 
 (defschema AppFileParameterDetails
-  {:id          (describe UUID "A UUID that is used to identify the Parameter")
+  {:id          (describe String "The Parameter's ID")
    :name        (describe String "The Parameter's name")
    :description (describe String "The Parameter's description")
    :label       (describe String "The Input Parameter's label or the Output Parameter's value")
@@ -209,14 +209,16 @@
    :required    (describe Boolean "Whether or not a value is required for this Parameter")})
 
 (defschema AppTask
-  {:id          (describe UUID "A UUID that is used to identify the Task")
+  {:id          (describe String "The Task's ID")
    :name        (describe String "The Task's name")
    :description (describe String "The Task's description")
    :inputs      (describe [AppFileParameterDetails] "The Task's input parameters")
    :outputs     (describe [AppFileParameterDetails] "The Task's output parameters")})
 
 (defschema AppTaskListing
-  (assoc AppBase :tasks (describe [AppTask] "The App's tasks")))
+  (assoc AppBase
+    :id    (describe String "The App's ID.")
+    :tasks (describe [AppTask] "The App's tasks")))
 
 (defschema AppParameterJobView
   (assoc AppParameter

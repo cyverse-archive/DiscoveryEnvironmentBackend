@@ -117,7 +117,7 @@
        (map (juxt :id identity))
        (into {})))
 
-(defn format-deployed-component-for-app
+(defn format-tool-for-app
   [{path :deploymentPath :as app}]
   {:attribution ""
    :description (:shortDescription app)
@@ -140,7 +140,7 @@
      :description          (:shortDescription app)
      :deleted              false
      :disabled             (system-available? agave (:executionSystem app))
-     :tools                [(format-deployed-component-for-app app)]
+     :tools                [(format-tool-for-app app)]
      :categories           [c/hpc-group-overview]
      :suggested_categories []}))
 

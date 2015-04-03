@@ -16,8 +16,8 @@
             [donkey.services.metadata.util :as mu]
             [donkey.services.metadata.property-values :as property-values]
             [donkey.util :as util]
-            [donkey.util.db :as db]
             [donkey.util.service :as service]
+            [kameleon.db :as db]
             [kameleon.uuids :as uuids]))
 
 (declare submit-next-step)
@@ -100,13 +100,7 @@
   [{app-type :app_type :as step}]
   (if (= app-type "External")
     (assoc (dissoc step :task_id) :external_app_id (:task_id step))
-    step))
-
-(defn create-pipeline
-  [agave pipeline]
-  (->> (update-in pipeline [:steps] (partial map prepare-pipeline-step))
-       (metadactyl/create-pipeline)
-       (aa/format-pipeline-tasks agave)))
+    (update-in )))
 
 (defn update-pipeline
   [agave app-id pipeline]

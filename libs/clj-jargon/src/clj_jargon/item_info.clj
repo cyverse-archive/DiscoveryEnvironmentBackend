@@ -141,6 +141,7 @@
      :path          path
      :type          :file
      :file-size     (.getDataSize data-obj)
+     :md5           (.getChecksum data-obj)
      :date-created  (long (.. data-obj getUpdatedAt getTime))
      :date-modified (long (.. data-obj getUpdatedAt getTime))}))
 

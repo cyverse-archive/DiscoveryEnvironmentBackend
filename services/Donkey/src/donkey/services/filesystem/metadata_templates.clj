@@ -57,12 +57,30 @@
     (->> (doall (map :id (select (sqlfn :metadata_attribute_synonyms id))))
          (assoc attr :synonyms))))
 
+(defn- add-attr-enum-values
+  [{:keys [id type] :as attr}]
+  (if (= "Enum" type)
+    (->> (select :metadata_attr_enum_values
+           (fields :id
+                   :value
+                   :is_default)
+           (where {:attribute_id id})
+           (order :display_order))
+         (assoc attr :values))
+    attr))
+
+(defn- format-attribute
+  [attr]
+  (->> attr
+    add-attr-synonyms
+    add-attr-enum-values))
+
 (defn- view-metadata-template
   [id]
   (with-db db/de
     {:id         id
      :name       (get-metadata-template-name id)
-     :attributes (doall (map add-attr-synonyms (list-metadata-template-attributes id)))}))
+     :attributes (doall (map format-attribute (list-metadata-template-attributes id)))}))
 
 (defn- get-metadata-attribute
   [id]
@@ -76,7 +94,7 @@
   [id]
   (with-db db/de
     (if-let [attr (get-metadata-attribute id)]
-      (add-attr-synonyms attr)
+      (format-attribute attr)
       (service/not-found "metadata attribute" id))))
 
 (defn do-metadata-template-list

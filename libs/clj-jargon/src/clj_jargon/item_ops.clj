@@ -2,8 +2,13 @@
   (:use [clj-jargon.validations]
         [clj-jargon.item-info]
         [clj-jargon.permissions])
-  (:require [clojure-commons.file-utils :as ft])
-  (:import [org.irods.jargon.core.pub.io IRODSFileReader]))
+  (:require [clojure-commons.file-utils :as ft]
+            [clojure.java.io :as io])
+  (:import [org.irods.jargon.core.pub.io IRODSFileReader]
+           [org.irods.jargon.core.transfer TransferStatusCallbackListener
+              TransferStatusCallbackListener$FileStatusCallbackResponse
+              TransferStatusCallbackListener$CallbackResponse
+              DefaultTransferControlBlock]))
 
 (defn mkdir
   [cm dir-path]
@@ -96,3 +101,52 @@
   (let [dto (data-transfer-obj cm)
         res (or (:defaultResource cm) "demoResc")]
     (.copy dto source res dest nil nil)))
+
+(defn copy-stream
+  [cm istream user dest-path]
+  (validate-path-lengths dest-path)
+  (let [ostream (output-stream cm dest-path)]
+    (try
+      (io/copy istream ostream)
+      (finally
+        (.close istream)
+        (.close ostream)
+        (set-owner cm dest-path user)))
+    (stat cm dest-path)))
+
+(def continue TransferStatusCallbackListener$FileStatusCallbackResponse/CONTINUE)
+(def skip TransferStatusCallbackListener$FileStatusCallbackResponse/SKIP)
+(def cancel TransferStatusCallbackListener$CallbackResponse/CANCEL)
+(def no-for-all TransferStatusCallbackListener$CallbackResponse/NO_FOR_ALL)
+(def no-this-file TransferStatusCallbackListener$CallbackResponse/NO_THIS_FILE)
+(def yes-for-all TransferStatusCallbackListener$CallbackResponse/YES_FOR_ALL)
+(def yes-this-file TransferStatusCallbackListener$CallbackResponse/YES_THIS_FILE)
+(def tcb (DefaultTransferControlBlock/instance))
+
+(defn transfer-callback-listener
+  "Returns an instance of TransferStatusCallbackListener with the overallStatusCallback(),
+   statusCallback(), and transferAsksWhetherToForceOperation() functions delegated to the
+   functions passed in."
+  [overall-status-callback-fn status-callback-fn transfer-asks-fn]
+  (reify TransferStatusCallbackListener
+    (overallStatusCallback [this transfer-status]
+      (overall-status-callback-fn transfer-status))
+    (statusCallback [this transfer-status]
+      (status-callback-fn transfer-status))
+    (transferAsksWhetherToForceOperation [this abs-path collection?]
+      (transfer-asks-fn abs-path collection?))))
+
+(defn iput
+  "Transfers local-path to remote-path, using tcl as the TransferStatusCallbackListener.
+   tcl can also be set to nil."
+  [cm local-path remote-path tcl]
+  (let [dto (data-transfer-obj cm)]
+    (.putOperation dto local-path remote-path "" tcl nil)))
+
+(defn iget
+  "Transfers remote-path to local-path, using tcl as the TransferStatusCallbackListener"
+  ([cm remote-path local-path tcl]
+    (iget cm remote-path local-path tcl tcb))
+  ([cm remote-path local-path tcl control-block]
+    (let [dto (data-transfer-obj cm)]
+      (.getOperation dto remote-path local-path "" tcl control-block))))

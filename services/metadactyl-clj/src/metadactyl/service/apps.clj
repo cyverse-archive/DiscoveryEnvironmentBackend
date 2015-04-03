@@ -2,7 +2,6 @@
   (:use [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
   (:require [cemerick.url :as curl]
-            [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [mescal.de :as agave]
             [metadactyl.persistence.oauth :as op]
@@ -10,6 +9,7 @@
             [metadactyl.service.apps.combined]
             [metadactyl.service.apps.de]
             [metadactyl.util.config :as config]
+            [metadactyl.util.json :as json-util]
             [metadactyl.util.service :as service]))
 
 (defn- authorization-uri
@@ -47,23 +47,25 @@
      (config/agave-jobs-enabled))))
 
 (defn- get-agave-apps-client
-  [state-info username]
+  [state-info {:keys [username] :as user}]
   (metadactyl.service.apps.agave.AgaveApps.
    (get-agave-client state-info username)
-   (partial has-access-token (config/agave-oauth-settings) username)))
+   (partial has-access-token (config/agave-oauth-settings) username)
+   user))
 
 (defn- get-apps-client-list
   [user state-info]
   (vector (metadactyl.service.apps.de.DeApps. user)
           (when (and user (config/agave-enabled))
-            (get-agave-apps-client state-info (:username user)))))
+            (get-agave-apps-client state-info user))))
 
 (defn- get-apps-client
   ([user]
      (get-apps-client user ""))
   ([user state-info]
      (metadactyl.service.apps.combined.CombinedApps.
-      (remove nil? (get-apps-client-list user state-info)))))
+      (remove nil? (get-apps-client-list user state-info))
+      user)))
 
 (defn get-app-categories
   [user params]
@@ -135,3 +137,55 @@
 (defn app-publishable?
   [user app-id]
   {:publishable (.isAppPublishable (get-apps-client user "") app-id)})
+
+(defn make-app-public
+  [user app]
+  (.makeAppPublic (get-apps-client user "") app))
+
+(defn delete-app-rating
+  [user app-id]
+  (.deleteAppRating (get-apps-client user "") app-id))
+
+(defn rate-app
+  [user app-id rating]
+  (.rateApp (get-apps-client user "") app-id rating))
+
+(defn get-app-task-listing
+  [user app-id]
+  (.getAppTaskListing (get-apps-client user "") app-id))
+
+(defn get-app-tool-listing
+  [user app-id]
+  (.getAppToolListing (get-apps-client user "") app-id))
+
+(defn get-app-ui
+  [user app-id]
+  (.getAppUi (get-apps-client user "") app-id))
+
+(defn add-pipeline
+  [user pipeline]
+  (.addPipeline (get-apps-client user "") pipeline))
+
+(defn update-pipeline
+  [user pipeline]
+  (.updatePipeline (get-apps-client user "") pipeline))
+
+(defn copy-pipeline
+  [user app-id]
+  (.copyPipeline (get-apps-client user "") app-id))
+
+(defn edit-pipeline
+  [user app-id]
+  (.editPipeline (get-apps-client user "") app-id))
+
+(defn list-jobs
+  [user params]
+  (.listJobs (get-apps-client user "") params))
+
+(defn submit-job
+  [user submission]
+  (json-util/log-json "submission" submission)
+  (let [apps-client (get-apps-client user "")]
+    (->> (.prepareJobSubmission apps-client submission)
+         (json-util/log-json "job")
+         (.submitJob apps-client submission))))

@@ -10,7 +10,7 @@
   (getApp [_ app-id])
   (getAppDetails [_ app-id])
   (listAppTasks [_ app-id])
-  (getAppDeployedComponent [_ app-id])
+  (getAppToolListing [_ app-id])
   (submitJob [_ submission])
   (listJobs [_] [_ job-ids])
   (listJob [_ job-id])
@@ -36,8 +36,8 @@
     (v2/get-app-details agave app-id))
   (listAppTasks [_ app-id]
     (v2/list-app-tasks agave app-id))
-  (getAppDeployedComponent [_ app-id]
-    (v2/get-app-deployed-component agave app-id))
+  (getAppToolListing [_ app-id]
+    (v2/get-app-tool-listing agave app-id))
   (submitJob [_ submission]
     (v2/submit-job agave submission))
   (listJobs [_]

@@ -35,6 +35,7 @@
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/common-cfg "5.0.0"]
+                 [org.iplantc/kameleon "5.0.0"]
                  [org.iplantc/heuristomancer "5.0.0"]]
   :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]
             [lein-ring "0.8.8"]

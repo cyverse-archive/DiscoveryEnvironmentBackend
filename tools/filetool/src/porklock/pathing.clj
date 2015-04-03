@@ -6,63 +6,10 @@
   (:require [clojure.string :as string]
             [clojure-commons.file-utils :as ft]))
 
-(defn pwd
-  "Returns the path to the current working directory."
-  []
-  (System/getProperty "user.dir"))
-
-(defn user-irods-dir
-  "Returns the full path to the user's .irods directory."
-  []
-  (.mkdirs (as-file "./.irods"))
-  "./.irods")
-
-(defn irods-auth-filepath
-  "Returns the path where the .irodsA should be."
-  []
-  (ft/path-join (user-irods-dir) ".irodsA"))
-
-(defn irods-env-filepath
-  "Returns the path to where the .irodsEnv file should be."
-  []
-  (ft/path-join (user-irods-dir) ".irodsEnv"))
-
-(defn imkdir-path
-  "Returns the path to the imkdir executable or an empty
-   string if imkdir couldn't be found."
-  []
-  (find-file-in-path "imkdir"))
-
-(defn iput-path
-  "Returns the path to the iput executable or an empty
-   string if iput couldn't be found."
-  []
-  (find-file-in-path "iput"))
-
-(defn iget-path
-  "Returns the path to the iget executable, or an empty
-   string if iget cannot be found."
-  []
-  (find-file-in-path "iget"))
-
-(defn ils-path
-  "Returns the path to the ils executable or an empty
-   string if ils couldn't be found."
-  []
-  (find-file-in-path "ils"))
-
-(defn iinit-path
-  "Returns the path to the iinit executable or an empty
-   string if iinit couldn't be found."
-  []
-  (find-file-in-path "iinit"))
-
 (defn relative-paths-to-exclude
   []
-  [(irods-auth-filepath) 
-   (irods-env-filepath) 
-   ".irods" 
-   ".irods/.irodsA" 
+  [".irods"
+   ".irods/.irodsA"
    ".irods/.irodsEnv"
    "logs/irods-config"
    "irods.retries"
@@ -76,22 +23,22 @@
   [{source :source excludes :exclude delimiter :exclude-delimiter}]
   (let [irods-files (relative-paths-to-exclude)]
     (if-not (string/blank? excludes)
-      (mapv 
-        #(if-not (.startsWith % "/") 
+      (mapv
+        #(if-not (.startsWith % "/")
            (ft/path-join source %)
-           %) 
-        (concat 
-          (string/split excludes (re-pattern delimiter)) 
+           %)
+        (concat
+          (string/split excludes (re-pattern delimiter))
           irods-files))
-      (mapv 
-        #(ft/path-join source %) 
+      (mapv
+        #(ft/path-join source %)
         irods-files))))
 
 (defn exclude-files
   "Splits up the exclude option and turns them all into absolute paths."
   [{excludes :exclude delimiter :exclude-delimiter :as in-map}]
   (let [irods-files (relative-paths-to-exclude)]
-    (if-not (string/blank? excludes)  
+    (if-not (string/blank? excludes)
       (concat
         (exclude-files-from-dir in-map)
         (absify (concat (string/split excludes (re-pattern delimiter)) irods-files)))
@@ -100,7 +47,7 @@
 (defn include-files
   "Splits up the include option and turns them all into absolute paths."
   [{includes :include delimiter :include-delimiter}]
-  (if-not (string/blank? includes) 
+  (if-not (string/blank? includes)
     (absify (string/split includes (re-pattern delimiter)))
     []))
 
@@ -148,13 +95,12 @@
   "Constructs a list of absolute destination paths based on the
    input and the given source directory."
   [transfer-files source-dir dest-dir]
-  
+
   (let [sdir (ft/add-trailing-slash source-dir)]
-    (apply 
-      merge 
+    (apply
+      merge
       (map
         #(if (str-contains? %1 sdir)
-           {%1 (fix-path %1 sdir dest-dir)} 
+           {%1 (fix-path %1 sdir dest-dir)}
            {%1 %1})
         transfer-files))))
-

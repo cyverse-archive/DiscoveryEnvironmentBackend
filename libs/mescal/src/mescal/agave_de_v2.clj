@@ -45,9 +45,9 @@
   [agave app-id]
   (apps/format-app-tasks (.getApp agave app-id)))
 
-(defn get-app-deployed-component
+(defn get-app-tool-listing
   [agave app-id]
-  (apps/format-deployed-component-for-app (.getApp agave app-id)))
+  {:tools [(apps/format-tool-for-app (.getApp agave app-id))]})
 
 (defn submit-job
   [agave submission]

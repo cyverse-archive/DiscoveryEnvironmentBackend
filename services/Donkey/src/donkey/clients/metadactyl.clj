@@ -10,13 +10,16 @@
             [donkey.util.transformers :as xforms]))
 
 (def metadactyl-sort-params [:limit :offset :sort-field :sort-dir])
+(def metadactyl-include-hidden-sort-params (conj metadactyl-sort-params :include-hidden))
 (def metadactyl-search-params (conj metadactyl-sort-params :search))
 
 (defn- secured-params
   ([]
      (secured-params {}))
   ([existing-params]
-     (xforms/add-current-user-to-map existing-params)))
+     (xforms/add-current-user-to-map existing-params))
+  ([existing-params param-keys]
+     (secured-params (select-keys existing-params param-keys))))
 
 (defn- metadactyl-url
   [& components]
@@ -31,21 +34,21 @@
 (defn get-app-categories
   [params]
   (client/get (metadactyl-url "apps" "categories")
-              {:query-params     (secured-params (select-keys params [:public]))
+              {:query-params     (secured-params params [:public])
                :as               :stream
                :follow-redirects false}))
 
 (defn apps-in-category
   [category-id params]
   (client/get (metadactyl-url "apps" "categories" category-id)
-              {:query-params     (secured-params (select-keys params metadactyl-sort-params))
+              {:query-params     (secured-params params metadactyl-sort-params)
                :as               :stream
                :follow-redirects false}))
 
 (defn search-apps
   [params]
   (client/get (metadactyl-url "apps")
-              {:query-params     (secured-params (select-keys params metadactyl-search-params))
+              {:query-params     (secured-params params metadactyl-search-params)
                :as               :stream
                :follow-redirects false}))
 
@@ -150,6 +153,84 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn make-app-public
+  [app-id app]
+  (client/post (metadactyl-url "apps" app-id "publish")
+               {:query-params     (secured-params)
+                :body             app
+                :content-type     :json
+                :as               :stream
+                :follow-redirects false}))
+
+(defn delete-rating
+  [app-id]
+  (client/delete (metadactyl-url "apps" app-id "rating")
+                 {:query-params     (secured-params)
+                  :as               :stream
+                  :follow-redirects false}))
+
+(defn rate-app
+  [app-id rating]
+  (client/post (metadactyl-url "apps" app-id "rating")
+               {:query-params     (secured-params)
+                :body             rating
+                :content-type     :json
+                :as               :stream
+                :follow-redirects false}))
+
+(defn list-app-tasks
+  [app-id]
+  (client/get (metadactyl-url "apps" app-id "tasks")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
+(defn get-app-ui
+  [app-id]
+  (client/get (metadactyl-url "apps" app-id "ui")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
+(defn add-pipeline
+  [pipeline]
+  (client/post (metadactyl-url "apps" "pipelines")
+               {:query-params     (secured-params)
+                :content-type     :json
+                :body             pipeline
+                :as               :stream
+                :follow-redirects false}))
+
+(defn update-pipeline
+  [app-id pipeline]
+  (client/put (metadactyl-url "apps" "pipelines" app-id)
+              {:query-params     (secured-params)
+               :content-type     :json
+               :body             pipeline
+               :as               :stream
+               :follow-redirects false}))
+
+(defn copy-pipeline
+  [app-id]
+  (client/post (metadactyl-url "apps" "pipelines" app-id "copy")
+               {:query-params     (secured-params)
+                :as               :stream
+                :follow-redirects false}))
+
+(defn edit-pipeline
+  [app-id]
+  (client/get (metadactyl-url "apps" "pipelines" app-id "ui")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
+(defn list-jobs
+  [params]
+  (client/get (metadactyl-url "analyses")
+              {:query-params     (secured-params params metadactyl-include-hidden-sort-params)
+               :as               :stream
+               :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
@@ -222,50 +303,6 @@
       (:body)
       (service/decode-json)))
 
-(defn list-app-tasks
-  [app-id]
-  (-> (client/get (metadactyl-url "apps" app-id "tasks")
-                  {:query-params (secured-params)
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn edit-workflow
-  [app-id]
-  (-> (client/get (metadactyl-url "apps" "pipelines" app-id "ui")
-                  {:query-params (secured-params)
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn copy-workflow
-  [app-id]
-  (-> (client/post (metadactyl-url "apps" "pipelines" app-id "copy")
-                   {:query-params (secured-params)
-                    :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn create-pipeline
-  [pipeline]
-  (-> (client/post (metadactyl-url "apps" "pipelines")
-                   {:query-params (secured-params)
-                    :content-type :json
-                    :body         (cheshire/encode pipeline)
-                    :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn update-pipeline
-  [app-id pipeline]
-  (-> (client/put (metadactyl-url "apps" "pipelines" app-id)
-                  {:query-params (secured-params)
-                   :content-type :json
-                   :body         (cheshire/encode pipeline)
-                   :as           :stream})
-      (:body)
-      (service/decode-json)))
-
 (defn submit-job
   [submission]
   (-> (client/post (metadactyl-url "analyses")
@@ -273,30 +310,6 @@
                     :content-type :json
                     :body         (cheshire/encode submission)
                     :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn- rate-app-request
-  [rating comment-id]
-  (xforms/remove-nil-vals
-   {:rating      rating
-    :comment_id  comment-id}))
-
-(defn rate-app
-  [app-id rating comment-id]
-  (-> (client/post (metadactyl-url "apps" app-id "rating")
-                   {:query-params (secured-params)
-                    :body         (cheshire/encode (rate-app-request rating comment-id))
-                    :content-type :json
-                    :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn delete-rating
-  [app-id]
-  (-> (client/delete (metadactyl-url "apps" app-id "rating")
-                     {:query-params (secured-params)
-                      :as           :stream})
       (:body)
       (service/decode-json)))
 

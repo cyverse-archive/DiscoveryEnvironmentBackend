@@ -81,6 +81,9 @@
 (s/defschema SecuredIncludeHiddenParams
   (merge SecuredQueryParams IncludeHiddenParams))
 
+(s/defschema SecuredIncludeHiddenPagingParams
+  (merge SecuredPagingParams IncludeHiddenParams))
+
 (s/defschema ToolSearchParams
   (merge SecuredPagingParams IncludeHiddenParams
     {:search (ss/describe String "The pattern to match in an Tool's Name or Description.")}))

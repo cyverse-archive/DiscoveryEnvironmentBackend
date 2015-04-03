@@ -13,6 +13,7 @@
             [me.raynes.fs :as fs]
             [ring.middleware.keyword-params :as params]
             [common-cli.core :as ccli]
+            [data-info.util.db :as db]
             [data-info.routes :as routes]
             [data-info.services.icat :as icat]
             [data-info.util :as util]))
@@ -65,7 +66,8 @@
    (load-configuration-from-file (find-configuration-file)))
 
   ([path]
-   (config/load-config-from-file path)))
+    (config/load-config-from-file path)
+    (db/define-database)))
 
 
 (defn lein-ring-init
@@ -108,6 +110,6 @@
       (ccli/exit 1 (str "The config file does not exist.")))
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
-    (config/load-config-from-file (:config options))
+    (load-configuration-from-file (:config options))
     (icat/configure-icat)
     (jetty/run-jetty app {:port (config/listen-port)})))

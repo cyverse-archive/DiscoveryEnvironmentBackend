@@ -45,7 +45,10 @@
         metadactyl.protocols
         metadactyl.service.apps.de
         metadactyl.service.apps.agave
-        metadactyl.service.apps.combined]
+        metadactyl.service.apps.combined
+        metadactyl.service.apps.de.jobs.condor
+        metadactyl.service.apps.de.jobs.fapi
+        metadactyl.service.apps.de.jobs.protocol]
   :main metadactyl.core
   :ring {:handler metadactyl.routes.api/app
          :init metadactyl.core/load-config-from-file

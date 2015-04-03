@@ -4,14 +4,18 @@
   it interacts with to allow users to add new apps and edit existing ones. If this is not the case
   then the first app in the list that is capable of adding or editing apps wins."
   (:use [metadactyl.service.apps.combined.util :as util]
+        [metadactyl.service.apps.job-listings :as job-listings]
         [metadactyl.util.assertions :only [assert-not-nil]])
   (:require [metadactyl.service.apps.combined.job-view :as job-view]))
 
-(deftype CombinedApps [clients]
+(deftype CombinedApps [clients user]
   metadactyl.protocols.Apps
 
   (getClientName [_]
     "combined")
+
+  (getJobTypes [_]
+    (apply concat (map #(.getJobTypes %) clients)))
 
   (listAppCategories [_ params]
     (apply concat (map #(.listAppCategories % params) clients)))
@@ -77,4 +81,53 @@
     (.addAppFavorite (util/get-apps-client clients) app-id))
 
   (isAppPublishable [_ app-id]
-    (.isAppPublishable (util/get-apps-client clients) app-id)))
+    (.isAppPublishable (util/get-apps-client clients) app-id))
+
+  (makeAppPublic [_ app]
+    (.makeAppPublic (util/get-apps-client clients) app))
+
+  (deleteAppRating [_ app-id]
+    (.deleteAppRating (util/get-apps-client clients) app-id))
+
+  (rateApp [_ app-id rating]
+    (.rateApp (util/get-apps-client clients) app-id rating))
+
+  (getAppTaskListing [_ app-id]
+    (->> (map #(.getAppTaskListing % app-id) clients)
+         (remove nil?)
+         (first)))
+
+  (getAppToolListing [_ app-id]
+    (->> (map #(.getAppToolListing % app-id) clients)
+         (remove nil?)
+         (first)))
+
+  (getAppUi [_ app-id]
+    (.getAppUi (util/get-apps-client clients) app-id))
+
+  (addPipeline [self pipeline]
+    (.formatPipelineTasks self (.addPipeline (util/get-apps-client clients) pipeline)))
+
+  (formatPipelineTasks [_ pipeline]
+    (reduce (fn [acc client] (.formatPipelineTasks client acc)) pipeline clients))
+
+  (updatePipeline [self pipeline]
+    (.formatPipelineTasks self (.updatePipeline (util/get-apps-client clients) pipeline)))
+
+  (copyPipeline [self app-id]
+    (.formatPipelineTasks self (.copyPipeline (util/get-apps-client clients) app-id)))
+
+  (editPipeline [self app-id]
+    (.formatPipelineTasks self (.editPipeline (util/get-apps-client clients) app-id)))
+
+  (listJobs [self params]
+    (job-listings/list-jobs self user params))
+
+  (loadAppTables [_ app-ids]
+    (apply concat (map  #(.loadAppTables % app-ids) clients)))
+
+  (prepareJobSubmission [_ submission]
+    (.prepareJobSubmission (util/get-apps-client clients) submission))
+
+  (submitJob [_ submission job]
+    (.submitJob (util/get-apps-client clients) submission job)))

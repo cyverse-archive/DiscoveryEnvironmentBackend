@@ -79,8 +79,8 @@
 (defn validate-selected-output-dir
   [prefs]
   (let [user                (:shortUsername current-user)
-        user-default        (log/spy :warn (default-output-dir-key prefs))
-        sys-default         (log/spy :warn (:systemDefaultOutputDir prefs))
+        user-default        (default-output-dir-key prefs)
+        sys-default         (:systemDefaultOutputDir prefs)
         restore-sys-default #(assoc prefs default-output-dir-key sys-default)]
     (cond (= user-default sys-default)                   prefs
           (di/can-create-dir? user (:path user-default)) prefs

@@ -334,21 +334,6 @@
   [req uuid]
   (forward-delete (secured-notification-url req "admin" "system" uuid) req))
 
-(defn edit-app
-  "This service makes an app available in Tito for editing and returns a
-   representation of the app in the JSON format required by the DE as of
-   version 1.8."
-  [app-id]
-  (client/get (metadactyl-url {} "apps" app-id "ui")
-              {:as :stream}))
-
-(defn make-app-public
-  "This service copies an app from a user's private workspace to the public workspace."
-  [req app-id]
-  (let [url (metadactyl-url {} "apps" app-id "publish")
-        req (metadactyl-request req)]
-    (forward-post url req)))
-
 (defn list-reference-genomes
   "Lists the reference genomes in the database."
   [params]
