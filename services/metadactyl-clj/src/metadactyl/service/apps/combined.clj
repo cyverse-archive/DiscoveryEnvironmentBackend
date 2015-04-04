@@ -127,4 +127,6 @@
     (apply concat (map  #(.loadAppTables % app-ids) clients)))
 
   (submitJob [_ submission]
-    (.submitJob (util/get-apps-client clients) submission)))
+    (->> (map #(.submitJob % submission) clients)
+         (remove nil?)
+         (first))))

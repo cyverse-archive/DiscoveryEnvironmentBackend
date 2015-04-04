@@ -138,7 +138,8 @@
          (vector)))
 
   (submitJob [this submission]
-    (jobs/submit this submission))
+    (when (util/uuid? (:app_id submission))
+      (jobs/submit this submission)))
 
   (prepareJobSubmission [_ submission]
     (de-jobs/build-submission user submission))

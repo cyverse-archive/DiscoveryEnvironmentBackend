@@ -2,7 +2,9 @@
   (:use [kameleon.uuids :only [uuidify]])
   (:require [metadactyl.service.apps.agave.listings :as listings]
             [metadactyl.service.apps.agave.pipelines :as pipelines]
+            [metadactyl.service.apps.agave.jobs :as agave-jobs]
             [metadactyl.service.apps.job-listings :as job-listings]
+            [metadactyl.service.jobs :as jobs]
             [metadactyl.service.util :as util]))
 
 (deftype AgaveApps [agave user-has-access-token? user]
@@ -72,4 +74,14 @@
            (map (juxt :id identity))
            (into {})
            (vector))
-      [])))
+      []))
+
+  (submitJob [this submission]
+    (when-not (util/uuid? (:app_id submission))
+      (jobs/submit this submission)))
+
+  (prepareJobSubmission [_ submission]
+    (agave-jobs/prepare-submission agave submission))
+
+  (sendJobSubmission [_ submission job]
+    (agave-jobs/send-submission agave submission job)))

@@ -12,6 +12,8 @@
   (listAppTasks [_ app-id])
   (getAppToolListing [_ app-id])
   (submitJob [_ submission])
+  (prepareJobSubmission [_ submission])
+  (sendJobSubmission [_ submission])
   (listJobs [_] [_ job-ids])
   (listJob [_ job-id])
   (listJobIds [_])
@@ -38,8 +40,13 @@
     (v2/list-app-tasks agave app-id))
   (getAppToolListing [_ app-id]
     (v2/get-app-tool-listing agave app-id))
-  (submitJob [_ submission]
-    (v2/submit-job agave submission))
+  (submitJob [this submission]
+    (->> (.prepareSubmission this submission)
+         (.sendSubmission this)))
+  (prepareJobSubmission [_ submission]
+    (v2/prepare-job-submission agave submission))
+  (sendJobSubmission [_ submission]
+    (v2/send-job-submission agave submission))
   (listJobs [_]
     (v2/list-jobs agave jobs-enabled?))
   (listJobs [_ job-ids]
