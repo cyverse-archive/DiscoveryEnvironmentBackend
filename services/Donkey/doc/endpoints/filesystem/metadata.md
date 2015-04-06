@@ -240,7 +240,7 @@ __Curl Command__:
 
 Viewing a Metadata Template
 ---------------------------
-__URL Path__: /secured/filesystem/metadata/template/:template_id
+__URL Path__: /secured/filesystem/metadata/template/{template_id}
 
 __HTTP Method__: GET
 
@@ -248,21 +248,43 @@ __Error Codes__: ERR_NOT_FOUND
 
 __Response__:
 
-    {
-        "attributes": [
-            {
-                "description": "project name",
-                "id": "33e3e3d8-cd48-4572-8b16-89207b1609ec",
-                "name": "project",
-                "required": true,
-                "synonyms": [],
-                "type": "String"
-            },
-            ...
-        ],
-        "id": "59bd3d26-34d5-4e75-99f5-840a20089caf",
-        "name": "iDS Genome Sequences"
-    }
+```json
+{
+    "attributes": [
+        {
+            "description": "project name",
+            "id": "33e3e3d8-cd48-4572-8b16-89207b1609ec",
+            "name": "project",
+            "required": true,
+            "synonyms": [],
+            "type": "String"
+        },
+        {
+            "id": "e7eb8aba-dc88-11e4-a4a9-2737bfa49b5e",
+            "name": "medical_relevance",
+            "description": "Indicate whether BioProject is of medical relevance",
+            "synonyms": [],
+            "required": true,
+            "type": "Enum",
+            "values": [
+                {
+                    "is_default": false,
+                    "value": "Yes",
+                    "id": "e7ec2b0a-dc88-11e4-a4aa-1f3133b20123"
+                },
+                {
+                    "is_default": false,
+                    "value": "No",
+                    "id": "e7ec83b6-dc88-11e4-a4ab-138d88f41d44"
+                }
+            ]
+        },
+        ...
+    ],
+    "id": "59bd3d26-34d5-4e75-99f5-840a20089caf",
+    "name": "iDS Genome Sequences"
+}
+```
 
 __Curl Command__:
 
@@ -270,7 +292,7 @@ __Curl Command__:
 
 Viewing a Metadata Attribute
 ----------------------------
-__URL Path__: /secured/filesystem/metadata/template/attr/:attribute_id
+__URL Path__: /secured/filesystem/metadata/template/attr/{attribute_id}
 
 __HTTP Method__: GET
 
@@ -278,14 +300,16 @@ __Error Codes__: ERR_NOT_FOUND
 
 __Response__:
 
-    {
-        "description": "project name",
-        "id": "33e3e3d8-cd48-4572-8b16-89207b1609ec",
-        "name": "project",
-        "required": true,
-        "synonyms": [],
-        "type": "String"
-    }
+```json
+{
+    "description": "project name",
+    "id": "33e3e3d8-cd48-4572-8b16-89207b1609ec",
+    "name": "project",
+    "required": true,
+    "synonyms": [],
+    "type": "String"
+}
+```
 
 __Curl Command__:
 
