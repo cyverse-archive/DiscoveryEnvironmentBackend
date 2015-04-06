@@ -126,8 +126,5 @@
   (loadAppTables [_ app-ids]
     (apply concat (map  #(.loadAppTables % app-ids) clients)))
 
-  (prepareJobSubmission [_ submission]
-    (.prepareJobSubmission (util/get-apps-client clients) submission))
-
-  (submitJob [_ submission job]
-    (.submitJob (util/get-apps-client clients) submission job)))
+  (submitJob [_ submission]
+    (.submitJob (util/get-apps-client clients) submission)))

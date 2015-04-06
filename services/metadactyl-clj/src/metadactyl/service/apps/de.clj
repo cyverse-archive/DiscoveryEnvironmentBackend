@@ -1,7 +1,7 @@
 (ns metadactyl.service.apps.de
   (:use [kameleon.uuids :only [uuidify]])
   (:require [metadactyl.persistence.app-metadata :as ap]
-            [metadactyl.service.apps.de.jobs :as jobs]
+            [metadactyl.service.apps.de.jobs :as de-jobs]
             [metadactyl.service.apps.de.edit :as edit]
             [metadactyl.service.apps.de.job-view :as job-view]
             [metadactyl.service.apps.de.listings :as listings]
@@ -9,6 +9,7 @@
             [metadactyl.service.apps.de.pipeline-edit :as pipeline-edit]
             [metadactyl.service.apps.de.validation :as app-validation]
             [metadactyl.service.apps.job-listings :as job-listings]
+            [metadactyl.service.apps.jobs :as jobs]
             [metadactyl.service.util :as util]))
 
 (deftype DeApps [user]
@@ -136,8 +137,11 @@
          (into {})
          (vector)))
 
-  (prepareJobSubmission [_ submission]
-    (jobs/build-submission user submission))
+  (submitJob [this submission]
+    (jobs/submit this submission))
 
-  (submitJob [_ submission job]
-    (jobs/submit user submission job)))
+  (prepareJobSubmission [_ submission]
+    (de-jobs/build-submission user submission))
+
+  (sendJobSubmission [_ submission job]
+    (de-jobs/submit user submission job)))
