@@ -1,0 +1,16 @@
+{
+  "invocation_id" : "test_invocation",
+  "application_id" : "test_application",
+  "submitter" : "test_submitter",
+  "logs_dir" : "logs",
+  "commands" : [
+  {"cmd" : ["grep", "test_grep"],
+   "env" : ["FOO=bar"],
+   "stdout" : "logs/test.stdout",
+   "stderr" : "logs/test.stderr",
+   "stdin"  : "logs/test.stdin"},
+  {"cmd" : ["wc", "-l"],
+   "stdin" : "logs/test.stdout",
+   "stdout" : "logs/test.stdout2",
+   "stderr" : "logs/test.stderr2"}]
+}
