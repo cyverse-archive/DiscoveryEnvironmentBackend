@@ -181,6 +181,7 @@ func (cl *Commands) Execute() []error {
 			cl.SendUpdate("Failed", fmt.Sprintf("Command %d of %d failed. Check logs for the reason.", n+1, numCmds))
 			errors = append(errors, err)
 		}
+		cl.SendUpdate("Running", fmt.Sprintf("Command %d of %d completed", n+1, numCmds))
 	}
 	if len(errors) == 0 {
 		cl.SendUpdate("Completed", "Analysis complete")
