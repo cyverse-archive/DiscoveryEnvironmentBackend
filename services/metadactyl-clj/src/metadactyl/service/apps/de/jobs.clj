@@ -12,6 +12,7 @@
             [clj-http.client :as http]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
+            [kameleon.db :as db]
             [kameleon.uuids :as uuids]
             [me.raynes.fs :as fs]
             [metadactyl.persistence.app-metadata :as ap]
@@ -289,6 +290,24 @@
     (submit-one-de-job user submission job)
     (submit-batch-de-job user submission job path-list-stats)))
 
+(defn- format-job-submission-response
+  [user jex-submission batch?]
+  (remove-nil-vals
+   {:app_description (:app_description jex-submission)
+    :app_disabled    false
+    :app_id          (:app_id jex-submission)
+    :app_name        (:app_name jex-submission)
+    :batch           batch?
+    :description     (:description jex-submission)
+    :id              (str (:uuid jex-submission))
+    :name            (:name jex-submission)
+    :notify          (:notify jex-submission)
+    :resultfolderid  (:output_dir jex-submission)
+    :startdate       (str (.getTime (db/now)))
+    :status          jp/submitted-status
+    :username        (:username user)
+    :wiki_url        (:wiki_url jex-submission)}))
+
 (defn submit
   [user submission job]
   (let [de-only-job? (zero? (ap/count-external-steps (:app_id job)))
@@ -298,8 +317,8 @@
       (if (empty? path-list-stats)
         (do-jex-submission job)
         (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-                 :message "HT Analysis Path Lists are not supported in Apps with Agave steps."}))))
-  job)
+                 :message "HT Analysis Path Lists are not supported in Apps with Agave steps."})))
+    (format-job-submission-response user job (empty? path-list-stats))))
 
 (defn build-submission
   [user submission]

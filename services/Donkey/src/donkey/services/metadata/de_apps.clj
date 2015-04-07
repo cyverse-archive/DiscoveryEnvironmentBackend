@@ -36,7 +36,7 @@
 (defn submit-job
   [submission]
   (let [submission (prepare-submission submission (UUID/randomUUID))
-        uuid       (:uuid (metadactyl/submit-job submission))
+        uuid       (:id (metadactyl/submit-job submission))
         job-id     ((comp :job-id first) (jp/get-job-steps-by-external-id uuid))
         job        (jp/get-job-by-id job-id)]
     (mu/send-job-status-notification job jp/submitted-status nil)
@@ -49,7 +49,7 @@
   [submission]
   (->> (prepare-submission submission (UUID/randomUUID))
        (metadactyl/submit-job)
-       (:uuid)))
+       (:id)))
 
 (defn load-app-details
   [ids]

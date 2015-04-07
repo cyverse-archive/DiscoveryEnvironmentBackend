@@ -41,8 +41,8 @@
   (getAppToolListing [_ app-id]
     (v2/get-app-tool-listing agave app-id))
   (submitJob [this submission]
-    (->> (.prepareSubmission this submission)
-         (.sendSubmission this)))
+    (->> (.prepareJobSubmission this submission)
+         (.sendJobSubmission this)))
   (prepareJobSubmission [_ submission]
     (v2/prepare-job-submission agave submission))
   (sendJobSubmission [_ submission]

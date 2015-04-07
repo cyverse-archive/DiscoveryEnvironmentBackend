@@ -139,7 +139,7 @@
 
   (submitJob [this submission]
     (when (util/uuid? (:app_id submission))
-      (jobs/submit this submission)))
+      (jobs/submit this (update-in submission [:app_id] uuidify))))
 
   (prepareJobSubmission [_ submission]
     (de-jobs/build-submission user submission))

@@ -1,10 +1,14 @@
 (ns metadactyl.service.apps.agave.jobs
-  (:use [slingshot.slingshot :only [try+]])
+  (:use [metadactyl.util.conversions :only [remove-nil-vals]]
+        [slingshot.slingshot :only [try+]])
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
+            [kameleon.db :as db]
             [kameleon.uuids :as uuids]
+            [metadactyl.persistence.jobs :as jp]
             [metadactyl.util.config :as config]
             [metadactyl.util.service :as service]
             [schema.core :as s]))
@@ -25,10 +29,11 @@
 
 (defn prepare-submission
   [agave submission]
-  (format-submission agave
-                     (uuids/uuid)
-                     (ft/build-result-folder-path submission)
-                     submission))
+  (->> (format-submission agave
+                          (or (:job_id submission) (uuids/uuid))
+                          (ft/build-result-folder-path submission)
+                          submission)
+       (.prepareJobSubmission agave)))
 
 (def NonBlankString
   (s/both s/Str (s/pred (complement string/blank?) 'non-blank?)))
@@ -39,7 +44,7 @@
    :app_id          NonBlankString
    :app_description s/Str
    :app_name        NonBlankString
-   :app-disabled    s/Bool
+   :app_disabled    s/Bool
    :description     s/Str
    :enddate         s/Str
    :name            NonBlankString
@@ -60,27 +65,68 @@
      (service/request-failure (str "Unexpected job submission response: "
                                    (.getMessage (:throwable &throw-context)))))))
 
+(defn- determine-start-time
+  [job]
+  (or (db/timestamp-from-str (str (:startdate job)))
+      (db/now)))
+
 (defn- send-submission*
-  [agave submission job]
-  (assoc (.submitJob agave job)
-    :notify (:notify submission false)
-    :name   (:name submission)))
+  [agave user submission job]
+  (let [job-info (.sendJobSubmission agave job)]
+    (assoc job-info
+      :name      (:name submission)
+      :notify    (:notify submission false)
+      :startdate (determine-start-time job)
+      :username  (:username user))))
 
-;; TODO: implement me!
 (defn- store-agave-job
-  [id job submission])
+  [job-id job submission]
+  (jp/save-job {:id                 job-id
+                :job-name           (:name job)
+                :description        (:description job)
+                :app-id             (:app_id job)
+                :app-name           (:app_name job)
+                :app-description    (:app_details job)
+                :app-wiki-url       (:wiki_url job)
+                :result-folder-path (:resultfolderid job)
+                :start-date         (:startdate job)
+                :username           (:username job)
+                :status             (:status job)
+                :notify             (:notify job)}
+               submission))
 
-;; TODO: implement me!
 (defn- store-job-step
-  [id job])
+  [job-id job]
+  (jp/save-job-step {:job-id          job-id
+                     :step-number     1
+                     :external-id     (:id job)
+                     :start-date      (:startdate job)
+                     :status          (:status job)
+                     :job-type        jp/agave-job-type
+                     :app-step-number 1}))
 
-;; TODO: implement me!
 (defn- format-job-submission-response
-  [submission job])
+  [submission job]
+  (remove-nil-vals
+   {:app_description (:app_description job)
+    :app_disabled    false
+    :app_id          (:app_id job)
+    :app_name        (:app_name job)
+    :batch           false
+    :description     (:description job)
+    :enddate         (:enddate job)
+    :id              (:job_id submission)
+    :name            (:name job)
+    :notify          (:notify job)
+    :resultfolderid  (:resultfolderid job)
+    :startdate       (str (.getTime (:startdate job)))
+    :status          jp/submitted-status
+    :username        (:username job)
+    :wiki_url        (:wiki_url job)}))
 
 (defn send-submission
-  [agave {id :job_id :as submission} job]
-  (let [job (send-submission* agave submission job)]
+  [agave user {id :job_id :as submission} job]
+  (let [job (send-submission* agave user submission job)]
     (store-agave-job id job submission)
     (store-job-step id job)
     (format-job-submission-response submission job)))

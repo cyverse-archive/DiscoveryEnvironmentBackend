@@ -10,7 +10,10 @@
 
 (defschema AnalysisSubmission
   {:app_id
-   (describe UUID "The UUID of the app used to perform the analysis.")
+   (describe String "The ID of the app used to perform the analysis.")
+
+   (optional-key :job_id)
+   (describe UUID "The UUID of the job being submitted.")
 
    (optional-key :callback)
    (describe String "The callback URL to use for job status updates.")

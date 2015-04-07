@@ -4,7 +4,7 @@
             [metadactyl.service.apps.agave.pipelines :as pipelines]
             [metadactyl.service.apps.agave.jobs :as agave-jobs]
             [metadactyl.service.apps.job-listings :as job-listings]
-            [metadactyl.service.jobs :as jobs]
+            [metadactyl.service.apps.jobs :as jobs]
             [metadactyl.service.util :as util]))
 
 (deftype AgaveApps [agave user-has-access-token? user]
@@ -84,4 +84,4 @@
     (agave-jobs/prepare-submission agave submission))
 
   (sendJobSubmission [_ submission job]
-    (agave-jobs/send-submission agave submission job)))
+    (agave-jobs/send-submission agave user submission job)))

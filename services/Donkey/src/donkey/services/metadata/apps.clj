@@ -206,7 +206,7 @@
     (ca/update-pipeline agave-client app-id pipeline))
 
   (submitJob [_ submission]
-    (ca/submit-job agave-client submission))
+    (ca/submit-job submission))
 
   (syncJobStatus [_ job]
     (if (user-has-access-token?)

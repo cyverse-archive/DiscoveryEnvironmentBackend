@@ -187,32 +187,32 @@
     external-id))
 
 (defn- submit-agave-job-step
-  [agave job-info {:keys [app-step-number] :as job-step} submission]
+  [job-info {:keys [app-step-number] :as job-step} submission]
   (let [app-steps     (ap/load-app-steps (:app-id job-info))
         curr-app-step (nth app-steps (dec app-step-number))
         output-dir    (:result-folder-path job-info)
         submission    (assoc (mu/update-submission-result-folder submission output-dir)
                         :app_id (:external_app_id curr-app-step)
                         :paramPrefix (:step_id curr-app-step))
-        external-id (aa/submit-job-step agave job-info job-step submission)]
+        external-id (aa/submit-job-step job-info job-step submission)]
     (record-step-submission external-id job-info job-step)
     external-id))
 
 (defn- submit-job-step
-  [agave job-info job-step submission]
+  [job-info job-step submission]
   (if (is-de-job-step? job-step)
     (submit-de-job-step job-info job-step submission)
-    (submit-agave-job-step agave job-info job-step submission)))
+    (submit-agave-job-step job-info job-step submission)))
 
 (defn- submit-combined-job
   "Submits a DE job to the remote system. A DE job is a job using any app defined in the DE
    database, which may consist of Agave steps, DE steps or both."
-  [agave app-id job-id job-steps submission]
+  [app-id job-id job-steps submission]
   (let [app-info  (service/assert-found (ap/load-app-info app-id) "app" app-id)
         job-info  (build-job-save-info (ft/build-result-folder-path submission)
                                        job-id app-info submission)]
     (jp/save-multistep-job job-info job-steps submission)
-    (submit-job-step agave job-info (first job-steps) submission)
+    (submit-job-step job-info (first job-steps) submission)
     (mu/send-job-status-notification job-info jp/submitted-status nil)
     {:id         job-id
      :name       (:job-name job-info)
@@ -234,22 +234,22 @@
 
 (defn- submit-de-job
   "Submits a DE-only job or a DE job composed of Agave steps, DE steps or both."
-  [agave app-id submission]
+  [app-id submission]
   (let [job-id    (uuids/uuid)
         job-steps (map (partial build-job-step-save-info job-id)
                        (validate-job-steps app-id (load-job-steps app-id)))]
     (if (every? is-de-job-step? job-steps)
       (submit-de-only-job (first job-steps) submission)
-      (submit-combined-job agave app-id job-id job-steps submission))))
+      (submit-combined-job app-id job-id job-steps submission))))
 
 (defn submit-job
   "Submits a job for execution. The job may run exclusively in Agave, exclusively in the DE, or it
    may have steps that run on both systems."
-  [agave submission]
+  [submission]
   (let [app-id (:app_id submission)]
     (if (util/is-uuid? app-id)
-      (submit-de-job agave (uuids/uuidify app-id) submission)
-      (aa/submit-agave-job agave submission))))
+      (submit-de-job (uuids/uuidify app-id) submission)
+      (aa/submit-agave-job submission))))
 
 (defn- get-job-submission-config
   [job]
