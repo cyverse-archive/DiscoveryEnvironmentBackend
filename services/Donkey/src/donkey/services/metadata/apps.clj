@@ -1,8 +1,7 @@
 (ns donkey.services.metadata.apps
   (:use [clojure-commons.validators :only [validate-map]]
         [donkey.auth.user-attributes :only [current-user with-directory-user]]
-        [donkey.util :only [is-uuid?]]
-        [kameleon.uuids :only [uuidify]]
+        [kameleon.uuids :only [is-uuid? uuidify]]
         [korma.db :only [transaction with-db]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [cemerick.url :as curl]

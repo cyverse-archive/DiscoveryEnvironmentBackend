@@ -15,7 +15,6 @@
             [donkey.services.metadata.de-apps :as da]
             [donkey.services.metadata.util :as mu]
             [donkey.services.metadata.property-values :as property-values]
-            [donkey.util :as util]
             [donkey.util.service :as service]
             [kameleon.db :as db]
             [kameleon.uuids :as uuids]))
@@ -89,7 +88,7 @@
 
 (defn get-app
   [agave app-id]
-  (if (util/is-uuid? app-id)
+  (if (uuids/is-uuid? app-id)
     (get-combined-app agave app-id)
     (do (mu/assert-agave-enabled agave)
         (.getApp agave app-id))))
@@ -247,7 +246,7 @@
    may have steps that run on both systems."
   [submission]
   (let [app-id (:app_id submission)]
-    (if (util/is-uuid? app-id)
+    (if (uuids/is-uuid? app-id)
       (submit-de-job (uuids/uuidify app-id) submission)
       (aa/submit-agave-job submission))))
 
