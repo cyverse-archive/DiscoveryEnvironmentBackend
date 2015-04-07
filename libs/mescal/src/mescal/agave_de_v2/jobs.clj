@@ -69,12 +69,14 @@
 (defn prepare-submission
   [agave app submission]
   (->> (assoc (prepare-params agave app (:paramPrefix submission) (:config submission))
-         :name          (build-job-name submission)
-         :appId         (:app_id submission)
-         :archive       true
-         :archivePath   (.agaveFilePath agave (:output_dir submission))
-         :archiveSystem (.storageSystem agave)
-         :notifications (job-notifications (:callbackUrl submission)))
+         :name           (build-job-name submission)
+         :appId          (:app_id submission)
+         :appName        (app-listings/get-app-name app)
+         :appDescription (:shortDescription app "")
+         :archive        true
+         :archivePath    (.agaveFilePath agave (:output_dir submission))
+         :archiveSystem  (.storageSystem agave)
+         :notifications  (job-notifications (:callbackUrl submission)))
        (remove-vals nil?)))
 
 (defn- app-enabled?
@@ -88,27 +90,41 @@
   (when-let [agave-path (or (:archivePath job) (get-in job [:_links :archiveData :href]))]
     (.irodsFilePath agave agave-path)))
 
+(defn format-job*
+  [agave app-id app-name app-description job]
+  {:id              (str (:id job))
+   :app_id          app-id
+   :app_description app-description
+   :app_name        app-name
+   :description     ""
+   :enddate         (or (util/to-utc (:endTime job)) "")
+   :name            (:name job)
+   :raw_status      (:status job)
+   :resultfolderid  (get-result-folder-id agave job)
+   :startdate       (or (util/to-utc (:startTime job)) "")
+   :status          (job-status-translations (:status job) "")
+   :wiki_url        ""})
+
 (defn format-job
-  ([agave jobs-enabled? app-info-map job]
-     (let [app-id   (:appId job)
-           app-info (app-info-map app-id {})]
-       {:id              (str (:id job))
-        :app_id          app-id
-        :app_description (:shortDescription app-info "")
-        :app_name        (app-listings/get-app-name app-info)
-        :description     ""
-        :enddate         (or (util/to-utc (:endTime job)) "")
-        :name            (:name job)
-        :raw_status      (:status job)
-        :resultfolderid  (get-result-folder-id agave job)
-        :startdate       (or (util/to-utc (:startTime job)) "")
-        :status          (job-status-translations (:status job) "")
-        :wiki_url        ""}))
-  ([agave jobs-enabled? statuses app-info-map job]
-     (let [app-id   (:appId job)
-           app-info (app-info-map app-id {})]
+  ([agave jobs-enabled? app-info-map {app-id :appId :as job}]
+     (let [app-info (app-info-map app-id {})]
+       (format-job* agave
+                    app-id
+                    (app-listings/get-app-name app-info)
+                    (:shortDescription app-info "")
+                    job)))
+  ([agave jobs-enabled? statuses app-info-map {app-id :appId :as job}]
+     (let [app-info (app-info-map app-id {})]
        (assoc (format-job agave jobs-enabled? app-info-map job)
          :app-disabled (not (app-enabled? statuses jobs-enabled? app-info))))))
+
+(defn format-job-submisison-response
+  [agave submission job]
+  (format-job* agave
+               (:appId submission)
+               (:appName submission)
+               (:appDescription submission)
+               job))
 
 (defn translate-job-status
   [status]

@@ -56,7 +56,7 @@
 (defn send-job-submission
   [agave submission]
   (let [app-info (apps/load-app-info agave [:appId submission])]
-    (jobs/format-job agave true app-info (.submitJob agave submission))))
+    (jobs/format-job-submisison-response agave submission (.submitJob agave submission))))
 
 (defn- format-jobs
   [agave jobs-enabled? jobs]
