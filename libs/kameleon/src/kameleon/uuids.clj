@@ -7,7 +7,7 @@
 (defn is-uuid?
   [id]
   (or (instance? java.util.UUID id)
-      (some #(re-find % id) uuid-regexes)))
+      (and (string? id) (some #(re-find % id) uuid-regexes))))
 
 (defn uuid
   []
