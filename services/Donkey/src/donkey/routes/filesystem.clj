@@ -217,4 +217,7 @@
            (config/metadata-routes-enabled))]
 
     (POST "/filesystem/metadata/templates" [:as req]
-      (controller req mt/do-metadata-template-add :body))))
+      (controller req mt/do-metadata-template-add :body))
+
+    (POST "/filesystem/metadata/templates/:template-id" [template-id :as req]
+      (controller req mt/do-metadata-template-edit template-id :body))))

@@ -19,7 +19,7 @@
 
 (defn validate-metadata-template-exists
   [id]
-  (when-not (get-metadata-template (UUID/fromString id))
+  (when-not (get-metadata-template (uuidify id))
     (throw+ {:error_code error-codes/ERR_DOES_NOT_EXIST
              :metadata_template id})))
 
@@ -118,16 +118,19 @@
       first
       :id))
 
+(defn- format-attribute-for-save
+  [{:keys [type] :as attribute}]
+  (-> attribute
+      (update-in [:id] uuidify)
+      (update-in [:required] boolean)
+      (select-keys [:id :name :description :required])
+      (assoc :value_type_id (get-metadata-value-type-id type))
+      remove-nil-values))
+
 (defn- add-metadata-template-attribute
   "Adds a Metadata Template Attribute and any associated Enum values to the database."
   [template-id order {enum-values :values type :type :as attribute}]
-  (let [attribute (-> attribute
-                      (update-in [:id] uuidify)
-                      (update-in [:required] boolean)
-                      (select-keys [:id :name :description :required])
-                      (assoc :value_type_id (get-metadata-value-type-id type))
-                      remove-nil-values)
-        attr-id (:id (insert :metadata_attributes (values attribute)))]
+  (let [attr-id (:id (insert :metadata_attributes (values (format-attribute-for-save attribute))))]
     (insert :metadata_template_attrs (values {:template_id template-id
                                               :attribute_id attr-id
                                               :display_order order}))
@@ -145,6 +148,54 @@
         (dorun
           (map-indexed (partial add-metadata-template-attribute template-id) attributes))
         template-id))))
+
+(defn- update-metadata-template-attribute
+  "Updates a Metadata Template Attribute and deletes then re-adds any associated Enum values."
+  [template-id order {enum-values :values :as attribute}]
+  (let [attribute (format-attribute-for-save attribute)
+        attr-id (:id attribute)]
+    (update :metadata_attributes
+      (set-fields (select-keys attribute [:name :description :required :value_type_id]))
+      (where {:id attr-id}))
+    (insert :metadata_template_attrs (values {:template_id template-id
+                                              :attribute_id attr-id
+                                              :display_order order}))
+    (delete :metadata_attr_enum_values (where {:attribute_id attr-id}))
+    (dorun
+      (map-indexed (partial add-metadata-attribute-enum-value attr-id) enum-values))))
+
+(defn- edit-metadata-template-attribute
+  "Updates a Metadata Template Attribute, or adds it if it does not already exist in the database."
+  [template-id order {:keys [id] :as attribute}]
+  (let [attr-exists? (and id (get-metadata-attribute (uuidify id)))]
+    (if attr-exists?
+      (update-metadata-template-attribute template-id order attribute)
+      (add-metadata-template-attribute template-id order attribute))))
+
+(defn- delete-orphan-attributes
+  "Deletes all metadata_attributes that are not associated with a Metadata Template and are not a
+   synonym for another attribute."
+  []
+  (delete :metadata_attributes
+    (where (not (exists (subselect [:metadata_template_attrs :ta]
+                          (where {:metadata_attributes.id :ta.attribute_id})))))
+    (where (not (exists (subselect [:metadata_attr_synonyms :s]
+                          (where {:metadata_attributes.id :s.synonym_id})))))))
+
+(defn- edit-metadata-template
+  "Updates a Metadata Template and adds or updates its associated Attributes. Also deletes any
+   orphaned Attributes."
+  [{:keys [id attributes] :as template}]
+  (with-db db/de
+    (transaction
+      (update :metadata_templates
+        (set-fields (select-keys template [:name :deleted]))
+        (where {:id id}))
+      (delete :metadata_template_attrs (where {:template_id id}))
+      (dorun
+        (map-indexed (partial edit-metadata-template-attribute id) attributes))
+      (delete-orphan-attributes)))
+  id)
 
 (defn do-metadata-template-list
   []
@@ -204,3 +255,19 @@
     (validate-metadata-template body)))
 
 (with-post-hook! #'do-metadata-template-add (log-func "do-metadata-template-add"))
+
+(defn do-metadata-template-edit
+  [template-id template]
+  (-> template
+      (assoc :id (uuidify template-id))
+      edit-metadata-template
+      view-metadata-template))
+
+(with-pre-hook! #'do-metadata-template-edit
+  (fn [template-id template]
+    (log-call "do-metadata-template-edit")
+    (common-validators/validate-field :template-id template-id is-uuid?)
+    (validate-metadata-template-exists template-id)
+    (validate-metadata-template template)))
+
+(with-post-hook! #'do-metadata-template-edit (log-func "do-metadata-template-edit"))
