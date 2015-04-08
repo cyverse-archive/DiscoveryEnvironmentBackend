@@ -197,6 +197,14 @@
       (delete-orphan-attributes)))
   id)
 
+(defn- delete-metadata-template
+  "Sets a Metadata Template's deleted flag to 'true'."
+  [template-id]
+  (with-db db/de
+    (update :metadata_templates
+      (set-fields {:deleted true})
+      (where {:id template-id}))))
+
 (defn do-metadata-template-list
   []
   {:metadata_templates (list-metadata-templates)})
@@ -271,3 +279,16 @@
     (validate-metadata-template template)))
 
 (with-post-hook! #'do-metadata-template-edit (log-func "do-metadata-template-edit"))
+
+(defn do-metadata-template-delete
+  [template-id]
+  (delete-metadata-template (uuidify template-id))
+  nil)
+
+(with-pre-hook! #'do-metadata-template-delete
+  (fn [template-id]
+    (log-call "do-metadata-template-delete")
+    (common-validators/validate-field :template-id template-id is-uuid?)
+    (validate-metadata-template-exists template-id)))
+
+(with-post-hook! #'do-metadata-template-delete (log-func "do-metadata-template-delete"))

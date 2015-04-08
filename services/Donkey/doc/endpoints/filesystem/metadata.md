@@ -511,6 +511,18 @@ curl -sd '
 ' "http://127.0.0.1:3000/admin/filesystem/metadata/templates/59bd3d26-34d5-4e75-99f5-840a20089caf?proxyToken=notReal"
 ```
 
+Marking a Metadata Template as Deleted
+----------------------------------------------------------
+__URL Path__: /admin/filesystem/metadata/templates/{template-id}
+
+__HTTP Method__: DELETE
+
+__Error Codes__: ERR_DOES_NOT_EXIST
+
+__Curl Command__:
+
+    curl -X DELETE "http://127.0.0.1:3000/admin/filesystem/metadata/templates/59bd3d26-34d5-4e75-99f5-840a20089caf?proxyToken=notReal"
+
 Viewing all Metadata Template AVUs on a File/Folder
 -----------------------------------------------------
 __URL Path__: /secured/filesystem/:data-id/template-avus
