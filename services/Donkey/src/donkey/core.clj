@@ -87,6 +87,7 @@
     (admin-category-routes)
     (admin-apps-routes)
     (admin-app-comment-routes)
+    (admin-filesystem-metadata-routes)
     (admin-notification-routes)
     (admin-reference-genomes-routes)
     (admin-tool-routes)

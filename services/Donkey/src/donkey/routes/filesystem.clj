@@ -208,3 +208,13 @@
      [data-id template-id avu-id :as req]
      (controller req mta/do-remove-metadata-template-avus :params data-id template-id avu-id))))
 
+(defn admin-filesystem-metadata-routes
+  "The admin routes for file metadata endpoints."
+  []
+  (optional-routes
+    [#(and (config/admin-routes-enabled)
+           (config/filesystem-routes-enabled)
+           (config/metadata-routes-enabled))]
+
+    (POST "/filesystem/metadata/templates" [:as req]
+      (controller req mt/do-metadata-template-add :body))))
