@@ -135,4 +135,5 @@
                                          job-id app-info submission)
         job-step    (first job-steps)]
     (jp/save-multistep-job job-info job-steps submission)
-    (submit-job-step (get-apps-client clients job-step) job-info job-step submission)))
+    (submit-job-step (get-apps-client clients job-step) job-info job-step submission)
+    job-id))

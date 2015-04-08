@@ -128,7 +128,7 @@
   (loadAppTables [_ app-ids]
     (apply concat (map  #(.loadAppTables % app-ids) clients)))
 
-  (submitJob [this submission]
+  (submitJob [self submission]
     (if-let [apps-client (util/apps-client-for-job submission clients)]
       (.submitJob apps-client submission)
-      (combined-jobs/submit user clients submission))))
+      (job-listings/list-job self (combined-jobs/submit user clients submission)))))
