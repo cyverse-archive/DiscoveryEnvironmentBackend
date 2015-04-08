@@ -16,6 +16,7 @@
 * [DELETE /admin/filesystem/entry/{entry-id}/comments/{comment-id}](endpoints/comments.md#administratively-deleting-a-comment)
 * [GET /admin/filesystem/index](endpoints/filesystem/search.md#endpoints:)
 * [POST /admin/filesystem/index](endpoints/filesystem/search.md#endpoint)
+* [POST /admin/filesystem/metadata/templates](endpoints/filesystem/metadata.md#adding-metadata-templates)
 * [GET /admin/notifications/system](endpoints/notifications.md#endpoints-for-system-messages-aka-system-notifications)
 * [PUT /admin/notifications/system](endpoints/notifications.md#endpoints-for-system-messages-aka-system-notifications)
 * [GET /admin/notifications/system-types](endpoints/notifications.md#endpoints-for-system-messages-aka-system-notifications)
