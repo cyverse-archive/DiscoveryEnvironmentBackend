@@ -15,6 +15,10 @@
 (def de-job-type "DE")
 (def agave-job-type "Agave")
 
+(def de-client-name "de")
+(def agave-client-name "agave")
+(def combined-client-name "combined")
+
 (def pending-status "Pending")
 (def canceled-status "Canceled")
 (def failed-status "Failed")

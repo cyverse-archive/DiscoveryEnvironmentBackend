@@ -1,20 +1,20 @@
 (ns metadactyl.service.apps.agave
   (:use [kameleon.uuids :only [uuidify]])
-  (:require [metadactyl.service.apps.agave.listings :as listings]
+  (:require [metadactyl.persistence.jobs :as jp]
+            [metadactyl.service.apps.agave.listings :as listings]
             [metadactyl.service.apps.agave.pipelines :as pipelines]
             [metadactyl.service.apps.agave.jobs :as agave-jobs]
             [metadactyl.service.apps.job-listings :as job-listings]
-            [metadactyl.service.apps.jobs :as jobs]
             [metadactyl.service.util :as util]))
 
 (deftype AgaveApps [agave user-has-access-token? user]
   metadactyl.protocols.Apps
 
   (getClientName [_]
-    "agave")
+    jp/agave-client-name)
 
   (getJobTypes [_]
-    ["Agave"])
+    [jp/agave-job-type])
 
   (listAppCategories [_ {:keys [hpc]}]
     (when-not (and hpc (.equalsIgnoreCase hpc "false"))
@@ -78,10 +78,7 @@
 
   (submitJob [this submission]
     (when-not (util/uuid? (:app_id submission))
-      (jobs/submit this submission)))
+      (agave-jobs/submit agave user submission)))
 
-  (prepareJobSubmission [_ submission]
-    (agave-jobs/prepare-submission agave submission))
-
-  (sendJobSubmission [_ submission job]
-    (agave-jobs/send-submission agave user submission job)))
+  (submitJobStep [_ job]
+    (:id (.sendJobSubmission agave job))))

@@ -10,6 +10,7 @@
             [kameleon.uuids :as uuids]
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.util.config :as config]
+            [metadactyl.util.json :as json-util]
             [metadactyl.util.service :as service]
             [schema.core :as s]))
 
@@ -27,7 +28,7 @@
          :output_dir           result-folder-path
          :create_output_subdir false)))
 
-(defn prepare-submission
+(defn- prepare-submission
   [agave submission]
   (->> (format-submission agave
                           (or (:job_id submission) (uuids/uuid))
@@ -124,9 +125,15 @@
     :username        (:username job)
     :wiki_url        (:wiki_url job)}))
 
-(defn send-submission
+(defn- send-submission
   [agave user {id :job_id :as submission} job]
   (let [job (send-submission* agave user submission job)]
     (store-agave-job id job submission)
     (store-job-step id job)
     (format-job-submission-response submission job)))
+
+(defn submit
+  [agave user submission]
+  (->> (prepare-submission agave submission)
+       (json-util/log-json "job")
+       (send-submission agave user submission)))

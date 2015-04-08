@@ -478,7 +478,7 @@
    (select [:app_steps :s]
      (aggregate (count :external_app_id) :count)
      (join [:tasks :t] {:s.task_id :t.id})
-     (where {:s.app_id app-id})
+     (where {:s.app_id (uuidify app-id)})
      (where (raw "t.external_app_id IS NOT NULL")))))
 
 (defn permanently-delete-app
@@ -527,6 +527,11 @@
             (fields (raw "CAST(COALESCE(AVG(rating), 0.0) AS DOUBLE PRECISION) AS average"))
             (aggregate (count :rating) :total)
             (where {:app_id app-id}))))
+
+(defn load-app-info
+  [app-id]
+  (first
+   (select [:apps :a] (where {:id (uuidify app-id)}))))
 
 (defn load-app-steps
   [app-id]
