@@ -70,50 +70,6 @@
   [props config-valid configs]
   "metadactyl.db.password")
 
-(cc/defprop-vec hibernate-resources
-  "The names of the hibernate resource files to include in the Hibernate
-   session factory configuration."
-  [props config-valid configs]
-  "metadactyl.hibernate.resources")
-
-(cc/defprop-vec hibernate-packages
-  "The names of Java packages that Hibernate needs to scan for JPA
-   annotations."
-  [props config-valid configs]
-  "metadactyl.hibernate.packages")
-
-(cc/defprop-str hibernate-dialect
-  "The dialect that Hibernate should use when generating SQL."
-  [props config-valid configs]
-  "metadactyl.hibernate.dialect")
-
-(cc/defprop-str osm-base-url
-  "The base URL to use when connecting to the OSM."
-  [props config-valid configs]
-  "metadactyl.osm.base-url")
-
-(cc/defprop-int osm-connection-timeout
-  "The maximum number of milliseconds to wait for a connection to the OSM."
-  [props config-valid configs]
-  "metadactyl.osm.connection-timeout")
-
-(cc/defprop-str osm-encoding
-  "The character encoding to use when communicating with the OSM."
-  [props config-valid configs]
-  "metadactyl.osm.encoding")
-
-(cc/defprop-str osm-jobs-bucket
-  "The OSM bucket containing information about jobs that the user has
-   submitted."
-  [props config-valid configs]
-  "metadactyl.osm.jobs-bucket")
-
-(cc/defprop-str osm-job-request-bucket
-  "The OSM bucket containing job submission requests that were sent from the
-   UI to metadactyl."
-  [props config-valid configs]
-  "metadactyl.osm.job-request-bucket")
-
 (cc/defprop-str jex-base-url
   "The base URL to use when connecting to the JEX."
   [props config-valid configs]
