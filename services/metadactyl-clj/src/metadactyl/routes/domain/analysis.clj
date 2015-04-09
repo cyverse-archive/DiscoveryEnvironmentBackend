@@ -57,6 +57,12 @@
    (optional-key :archive_logs)
    (describe Bool "True if the job logs should be uploaded to the data store.")})
 
+(defschema AnalysisResponse
+  {:id         (describe UUID "The ID of the submitted analysis.")
+   :name       (describe String "The name of the submitted analysis.")
+   :status     (describe String "The current status of the analysis.")
+   :start-date (describe String "The analysis start date as milliseconds since the epoch.")})
+
 (defschema JexStepComponent
   {(optional-key :description)
    (describe String "A brief description of the component.")

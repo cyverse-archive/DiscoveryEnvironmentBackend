@@ -194,6 +194,11 @@
   [props config-valid configs]
   "metadactyl.pgp.key-password")
 
+(cc/defprop-str notification-agent-base
+  "The base URL for the notification agent."
+  [props config-valid configs]
+  "metadactyl.notificationagent.base-url")
+
 (defn- oauth-settings
   [api-name api-key api-secret auth-uri token-uri redirect-uri refresh-window]
   {:api-name       api-name

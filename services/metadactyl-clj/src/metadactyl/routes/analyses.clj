@@ -20,9 +20,9 @@
   (POST* "/" [:as {:keys [uri]}]
          :query  [params SecuredQueryParamsEmailRequired]
          :body   [body AnalysisSubmission]
-         :return Analysis
+         :return AnalysisResponse
          :notes  "This service allows users to submit analyses for execution. The `config`
          element in the analysis submission is a map from parameter IDs as they appear in
          the response from the `/apps/:app-id` endpoint to the desired values for those
          parameters."
-         (service/coerced-trap uri Analysis apps/submit-job current-user body)))
+         (service/coerced-trap uri AnalysisResponse apps/submit-job current-user body)))
