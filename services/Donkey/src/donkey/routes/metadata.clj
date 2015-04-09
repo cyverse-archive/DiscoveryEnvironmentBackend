@@ -224,6 +224,9 @@
     (POST "/tools" [:as {:keys [body]}]
           (import-tools body))
 
+    (PATCH "/tools/:tool-id" [tool-id :as {:keys [body]}]
+           (metadactyl/update-tool tool-id body))
+
     (GET "/tool-requests" [:as {params :params}]
          (admin-list-tool-requests params))
 

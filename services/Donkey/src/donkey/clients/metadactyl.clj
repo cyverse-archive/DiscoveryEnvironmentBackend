@@ -329,6 +329,13 @@
                 :body         (cheshire/encode body)
                 :content-type :json}))
 
+(defn update-tool
+  [tool-id tool]
+  (client/patch (metadactyl-url "admin" "tools" tool-id)
+                {:query-params (secured-params)
+                 :body         tool
+                 :content-type :json}))
+
 (defn get-oauth-access-token
   [api-name {:keys [code state]}]
   (-> (client/get (metadactyl-url "oauth" "access-code" api-name)

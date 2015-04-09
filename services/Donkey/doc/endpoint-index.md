@@ -35,6 +35,7 @@
 * [GET /admin/tool-requests/{tool-request-id}](endpoints/app-metadata.md#listing-tool-installation-request-details)
 * [POST /admin/tool-requests/{tool-request-id}/status](endpoints/app-metadata.md#updating-a-tool-installation-request)
 * [POST /admin/tools](endpoints/app-metadata.md#importing-tools)
+* [PATCH /admin/tools/{tool-id}](endpoints/app-metadata.md#updating-tools)
 * [GET /analyses](endpoints/app-execution.md#listing-jobs)
 * [POST /analyses](endpoints/app-execution.md#submitting-a-job-for-execution)
 * [POST /analyses/shredder](endpoints/app-execution.md#deleting-multiple-jobs)

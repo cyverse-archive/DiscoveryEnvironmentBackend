@@ -24,6 +24,7 @@
     * [Updating a Pipeline](#updating-a-pipeline)
     * [Updating App Labels](#updating-app-labels)
     * [Importing Tools](#importing-tools)
+    * [Updating Tools](#updating-tools)
     * [Rating Apps](#rating-apps)
     * [Deleting App Ratings](#deleting-app-ratings)
     * [Searching for Apps](#searching-for-apps)
@@ -331,6 +332,15 @@ the tool is imported successfully.
 
 The response body for this service contains a brief description of the reason for the failure if the
 tools can't be imported.
+
+## Updating Tools
+
+Secured Endpoint: PATCH /admin/tools/{tool-id}
+
+Delegates to metadactyl: PATCH /admin/tools/{tool-id}
+
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Rating Apps
 
