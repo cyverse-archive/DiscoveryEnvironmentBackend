@@ -1,6 +1,8 @@
 (ns donkey.services.filesystem.metadata-templates
   (:use [clojure-commons.core :only [remove-nil-values]]
+        [donkey.auth.user-attributes :only [current-user]]
         [donkey.services.filesystem.common-paths]
+        [kameleon.queries :only [get-user-id]]
         [kameleon.uuids :only [is-uuid? uuidify]]
         [korma.core]
         [korma.db :only [transaction with-db]]
@@ -9,13 +11,21 @@
             [clojure-commons.validators :as common-validators]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.db :as db]
-            [donkey.util.service :as service])
-  (:import [java.util UUID]))
+            [donkey.util.service :as service]))
 
 (defn- get-metadata-template
   [id]
   (with-db db/de
-    (first (select :metadata_templates (where {:id id})))))
+    (first (select [:metadata_templates :template]
+             (join [:users :created_by] {:template.created_by :created_by.id})
+             (join [:users :modified_by] {:template.modified_by :modified_by.id})
+             (fields :template.id
+                     :template.name
+                     [:created_by.username :created_by]
+                     :created_on
+                     [:modified_by.username :modified_by]
+                     :modified_on)
+             (where {:template.id id})))))
 
 (defn validate-metadata-template-exists
   [id]
@@ -30,10 +40,10 @@
             (fields :id :name)
             (where {:deleted false}))))
 
-(defn- get-metadata-template-name
+(defn- get-valid-metadata-template
   [id]
-  (if-let [template-name (:name (get-metadata-template id))]
-    template-name
+  (if-let [template (get-metadata-template id)]
+    template
     (service/not-found "metadata template" id)))
 
 (defn- attr-fields
@@ -43,13 +53,19 @@
           [:attr.name        :name]
           [:attr.description :description]
           [:attr.required    :required]
-          [:value_type.name  :type]))
+          [:value_type.name  :type]
+          [:created_by.username :created_by]
+          :created_on
+          [:modified_by.username :modified_by]
+          :modified_on))
 
 (defn- list-metadata-template-attributes
   [id]
   (select [:metadata_template_attrs :mta]
           (join [:metadata_attributes :attr] {:mta.attribute_id :attr.id})
           (join [:metadata_value_types :value_type] {:attr.value_type_id :value_type.id})
+          (join [:users :created_by] {:attr.created_by :created_by.id})
+          (join [:users :modified_by] {:attr.modified_by :modified_by.id})
           (attr-fields)
           (where {:mta.template_id id})
           (order [:mta.display_order])))
@@ -81,15 +97,17 @@
 (defn- view-metadata-template
   [id]
   (with-db db/de
-    {:id         id
-     :name       (get-metadata-template-name id)
-     :attributes (doall (map format-attribute (list-metadata-template-attributes id)))}))
+    (let [template (get-valid-metadata-template id)]
+      (assoc template
+        :attributes (doall (map format-attribute (list-metadata-template-attributes id)))))))
 
 (defn- get-metadata-attribute
   [id]
   (first
    (select [:metadata_attributes :attr]
            (join [:metadata_value_types :value_type] {:attr.value_type_id :value_type.id})
+           (join [:users :created_by] {:attr.created_by :created_by.id})
+           (join [:users :modified_by] {:attr.modified_by :modified_by.id})
            (attr-fields)
            (where {:attr.id id}))))
 
@@ -129,8 +147,12 @@
 
 (defn- add-metadata-template-attribute
   "Adds a Metadata Template Attribute and any associated Enum values to the database."
-  [template-id order {enum-values :values type :type :as attribute}]
-  (let [attr-id (:id (insert :metadata_attributes (values (format-attribute-for-save attribute))))]
+  [user-id template-id order {enum-values :values type :type :as attribute}]
+  (let [attribute (-> attribute
+                      format-attribute-for-save
+                      (assoc :created_by  user-id
+                             :modified_by user-id))
+        attr-id (:id (insert :metadata_attributes (values attribute)))]
     (insert :metadata_template_attrs (values {:template_id template-id
                                               :attribute_id attr-id
                                               :display_order order}))
@@ -139,23 +161,31 @@
 
 (defn- add-metadata-template
   "Adds a Metadata Template and its associated Attributes to the database."
-  [{:keys [attributes] :as template}]
+  [{:keys [username]} {:keys [attributes] :as template}]
   (with-db db/de
     (transaction
-      (let [template (remove-nil-values (update-in template [:id] uuidify))
-            template-id (:id (insert :metadata_templates
-                                     (values (select-keys template [:id :name]))))]
+      (let [user-id (get-user-id username)
+            template (-> template
+                         (select-keys [:id :name])
+                         (update-in [:id] uuidify)
+                         (assoc :created_by  user-id
+                                :modified_by user-id)
+                         remove-nil-values)
+            template-id (:id (insert :metadata_templates (values template)))]
         (dorun
-          (map-indexed (partial add-metadata-template-attribute template-id) attributes))
+          (map-indexed (partial add-metadata-template-attribute user-id template-id) attributes))
         template-id))))
 
 (defn- update-metadata-template-attribute
   "Updates a Metadata Template Attribute and deletes then re-adds any associated Enum values."
-  [template-id order {enum-values :values :as attribute}]
-  (let [attribute (format-attribute-for-save attribute)
+  [user-id template-id order {enum-values :values :as attribute}]
+  (let [attribute (-> attribute
+                      format-attribute-for-save
+                      (assoc :modified_by user-id
+                             :modified_on (sqlfn now)))
         attr-id (:id attribute)]
     (update :metadata_attributes
-      (set-fields (select-keys attribute [:name :description :required :value_type_id]))
+      (set-fields (dissoc attribute :id))
       (where {:id attr-id}))
     (insert :metadata_template_attrs (values {:template_id template-id
                                               :attribute_id attr-id
@@ -166,11 +196,11 @@
 
 (defn- edit-metadata-template-attribute
   "Updates a Metadata Template Attribute, or adds it if it does not already exist in the database."
-  [template-id order {:keys [id] :as attribute}]
+  [user-id template-id order {:keys [id] :as attribute}]
   (let [attr-exists? (and id (get-metadata-attribute (uuidify id)))]
     (if attr-exists?
-      (update-metadata-template-attribute template-id order attribute)
-      (add-metadata-template-attribute template-id order attribute))))
+      (update-metadata-template-attribute user-id template-id order attribute)
+      (add-metadata-template-attribute user-id template-id order attribute))))
 
 (defn- delete-orphan-attributes
   "Deletes all metadata_attributes that are not associated with a Metadata Template and are not a
@@ -185,24 +215,29 @@
 (defn- edit-metadata-template
   "Updates a Metadata Template and adds or updates its associated Attributes. Also deletes any
    orphaned Attributes."
-  [{:keys [id attributes] :as template}]
+  [{:keys [username]} {:keys [id attributes] :as template}]
   (with-db db/de
     (transaction
-      (update :metadata_templates
-        (set-fields (select-keys template [:name :deleted]))
-        (where {:id id}))
-      (delete :metadata_template_attrs (where {:template_id id}))
-      (dorun
-        (map-indexed (partial edit-metadata-template-attribute id) attributes))
-      (delete-orphan-attributes)))
+      (let [user-id (get-user-id username)
+            template (-> template
+                         (select-keys [:name :deleted])
+                         (assoc :modified_by user-id
+                                :modified_on (sqlfn now)))]
+        (update :metadata_templates (set-fields template) (where {:id id}))
+        (delete :metadata_template_attrs (where {:template_id id}))
+        (dorun
+          (map-indexed (partial edit-metadata-template-attribute user-id id) attributes))
+        (delete-orphan-attributes))))
   id)
 
 (defn- delete-metadata-template
   "Sets a Metadata Template's deleted flag to 'true'."
-  [template-id]
+  [{:keys [username]} template-id]
   (with-db db/de
     (update :metadata_templates
-      (set-fields {:deleted true})
+      (set-fields {:deleted true
+                   :modified_by (get-user-id username)
+                   :modified_on (sqlfn now)})
       (where {:id template-id}))))
 
 (defn do-metadata-template-list
@@ -217,7 +252,7 @@
 
 (defn do-metadata-template-view
   [id]
-  (view-metadata-template (UUID/fromString id)))
+  (view-metadata-template (uuidify id)))
 
 (with-pre-hook! #'do-metadata-template-view
   (fn [id]
@@ -227,7 +262,7 @@
 
 (defn do-metadata-attribute-view
   [id]
-  (view-metadata-attribute (UUID/fromString id)))
+  (view-metadata-attribute (uuidify id)))
 
 (with-pre-hook! #'do-metadata-attribute-view
   (fn [id]
@@ -253,9 +288,9 @@
 
 (defn do-metadata-template-add
   [template]
-  (-> template
-      add-metadata-template
-      view-metadata-template))
+  (->> template
+       (add-metadata-template current-user)
+       view-metadata-template))
 
 (with-pre-hook! #'do-metadata-template-add
   (fn [body]
@@ -266,10 +301,9 @@
 
 (defn do-metadata-template-edit
   [template-id template]
-  (-> template
-      (assoc :id (uuidify template-id))
-      edit-metadata-template
-      view-metadata-template))
+  (->> (assoc template :id (uuidify template-id))
+       (edit-metadata-template current-user)
+       view-metadata-template))
 
 (with-pre-hook! #'do-metadata-template-edit
   (fn [template-id template]
@@ -282,7 +316,7 @@
 
 (defn do-metadata-template-delete
   [template-id]
-  (delete-metadata-template (uuidify template-id))
+  (delete-metadata-template current-user (uuidify template-id))
   nil)
 
 (with-pre-hook! #'do-metadata-template-delete

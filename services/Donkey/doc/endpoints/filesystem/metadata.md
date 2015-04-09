@@ -365,6 +365,10 @@ __Response__:
             "description": "project name",
             "id": "33e3e3d8-cd48-4572-8b16-89207b1609ec",
             "name": "project",
+            "modified_on": "2015-04-09T00:22:44Z",
+            "modified_by": "<public>",
+            "created_on": "2015-04-09T00:22:44Z",
+            "created_by": "<public>",
             "required": true,
             "synonyms": [],
             "type": "String"
@@ -373,6 +377,10 @@ __Response__:
             "id": "e7eb8aba-dc88-11e4-a4a9-2737bfa49b5e",
             "name": "medical_relevance",
             "description": "Indicate whether BioProject is of medical relevance",
+            "modified_on": "2015-04-09T00:22:44Z",
+            "modified_by": "<public>",
+            "created_on": "2015-04-09T00:22:44Z",
+            "created_by": "<public>",
             "synonyms": [],
             "required": true,
             "type": "Enum",
@@ -391,6 +399,10 @@ __Response__:
         },
         ...
     ],
+    "modified_on": "2015-04-09T00:22:44Z",
+    "modified_by": "<public>",
+    "created_on": "2015-04-09T00:22:44Z",
+    "created_by": "<public>",
     "id": "59bd3d26-34d5-4e75-99f5-840a20089caf",
     "name": "iDS Genome Sequences"
 }
@@ -466,6 +478,10 @@ __Response__:
             "description": "project name",
             "id": "33e3e3d8-cd48-4572-8b16-89207b1609ec",
             "name": "project",
+            "modified_on": "2015-04-09T00:38:31Z",
+            "modified_by": "<public>",
+            "created_on": "2015-04-09T00:22:44Z",
+            "created_by": "<public>",
             "required": true,
             "synonyms": [],
             "type": "String"
@@ -474,6 +490,10 @@ __Response__:
             "id": "e7eb8aba-dc88-11e4-a4a9-2737bfa49b5e",
             "name": "medical_relevance",
             "description": "Indicate whether BioProject is of medical relevance",
+            "modified_on": "2015-04-09T00:38:31Z",
+            "modified_by": "<public>",
+            "created_on": "2015-04-09T00:22:44Z",
+            "created_by": "<public>",
             "synonyms": [],
             "required": true,
             "type": "Enum",
@@ -492,6 +512,10 @@ __Response__:
         },
         ...
     ],
+    "modified_on": "2015-04-09T00:38:31Z",
+    "modified_by": "<public>",
+    "created_on": "2015-04-09T00:22:44Z",
+    "created_by": "<public>",
     "id": "59bd3d26-34d5-4e75-99f5-840a20089caf",
     "name": "iDS Genome Sequences"
 }
