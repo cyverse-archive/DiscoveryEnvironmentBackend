@@ -107,62 +107,6 @@
        (metadactyl/update-pipeline app-id)
        (aa/format-pipeline-tasks agave)))
 
-(defn- app-step-partitioner
-  "Partitions app steps into units of execution. Each external app step has to run by itself.
-   Consecutive DE app steps can be combined into a single step."
-  [{external-app-id :external_app_id step-number :app_step_number}]
-  (when-not (nil? external-app-id)
-    (str external-app-id "/" step-number)))
-
-(defn- add-job-step-type
-  "Determines the type of a job step."
-  [job-step]
-  (assoc job-step
-    :job_type (if (nil? (:external_app_id job-step)) jp/de-job-type jp/agave-job-type)))
-
-(defn- load-job-steps
-  "Loads the app steps from the database, grouping consecutive DE steps into a single step."
-  [app-id]
-  (->> (map (fn [n step] (assoc step :app_step_number n))
-            (iterate inc 1)
-            (ap/load-app-steps app-id))
-       (partition-by app-step-partitioner)
-       (map first)
-       (map (fn [n step] (assoc step :step_number n))
-            (iterate inc 1))
-       (map add-job-step-type)))
-
-(defn- validate-job-steps
-  "Verifies that at least one step is associated with a job submission."
-  [app-id steps]
-  (when (empty? steps)
-    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-             :reason     (str "app " app-id " has no steps")}))
-  steps)
-
-(defn- build-job-save-info
-  [result-folder-path job-id app-info submission]
-  {:id                 job-id
-   :job-name           (:name submission)
-   :description        (:description submission)
-   :app-id             (:id app-info)
-   :app-name           (:name app-info)
-   :app-description    (:description app-info)
-   :app-wiki-url       (:wiki_url app-info)
-   :result-folder-path result-folder-path
-   :start-date         (db/now)
-   :status             "Submitted"
-   :username           (:username current-user)
-   :notify             (:notify submission false)})
-
-(defn- build-job-step-save-info
-  [job-id job-step]
-  {:job-id          job-id
-   :step-number     (:step_number job-step)
-   :status          jp/pending-status
-   :job-type        (:job_type job-step)
-   :app-step-number (:app_step_number job-step)})
-
 (defn- is-de-job-step?
   [job-step]
   (= (:job-type job-step) jp/de-job-type))
@@ -202,53 +146,6 @@
   (if (is-de-job-step? job-step)
     (submit-de-job-step job-info job-step submission)
     (submit-agave-job-step job-info job-step submission)))
-
-(defn- submit-combined-job
-  "Submits a DE job to the remote system. A DE job is a job using any app defined in the DE
-   database, which may consist of Agave steps, DE steps or both."
-  [app-id job-id job-steps submission]
-  (let [app-info  (service/assert-found (ap/load-app-info app-id) "app" app-id)
-        job-info  (build-job-save-info (ft/build-result-folder-path submission)
-                                       job-id app-info submission)]
-    (jp/save-multistep-job job-info job-steps submission)
-    (submit-job-step job-info (first job-steps) submission)
-    (mu/send-job-status-notification job-info jp/submitted-status nil)
-    {:id         job-id
-     :name       (:job-name job-info)
-     :status     (:status job-info)
-     :start-date (db/millis-from-timestamp (:start-date job-info))}))
-
-(defn- submit-de-only-job
-  "Submits a DE-only job to the remote system. A DE-only job is a job using any app defined in the
-   DE database and consists only of DE steps."
-  [job-step submission]
-  (let [uuid     (submit-de-job-step nil job-step submission)
-        job-id   ((comp :job-id first) (jp/get-job-steps-by-external-id uuid))
-        job-info (jp/get-job-by-id job-id)]
-    (mu/send-job-status-notification job-info jp/submitted-status nil)
-    {:id         (:id job-info)
-     :name       (:job-name job-info)
-     :status     (:status job-info)
-     :start-date (db/millis-from-timestamp (:start-date job-info))}))
-
-(defn- submit-de-job
-  "Submits a DE-only job or a DE job composed of Agave steps, DE steps or both."
-  [app-id submission]
-  (let [job-id    (uuids/uuid)
-        job-steps (map (partial build-job-step-save-info job-id)
-                       (validate-job-steps app-id (load-job-steps app-id)))]
-    (if (every? is-de-job-step? job-steps)
-      (submit-de-only-job (first job-steps) submission)
-      (submit-combined-job app-id job-id job-steps submission))))
-
-(defn submit-job
-  "Submits a job for execution. The job may run exclusively in Agave, exclusively in the DE, or it
-   may have steps that run on both systems."
-  [submission]
-  (let [app-id (:app_id submission)]
-    (if (uuids/is-uuid? app-id)
-      (submit-de-job (uuids/uuidify app-id) submission)
-      (aa/submit-agave-job submission))))
 
 (defn- get-job-submission-config
   [job]

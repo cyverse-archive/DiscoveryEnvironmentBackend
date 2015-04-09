@@ -139,9 +139,6 @@
   (updatePipeline [_ app-id pipeline]
     (metadactyl/update-pipeline app-id pipeline))
 
-  (submitJob [_ submission]
-    (da/submit-job submission))
-
   (syncJobStatus [_ job]
     (da/sync-job-status job))
 
@@ -203,9 +200,6 @@
 
   (updatePipeline [_ app-id pipeline]
     (ca/update-pipeline agave-client app-id pipeline))
-
-  (submitJob [_ submission]
-    (ca/submit-job submission))
 
   (syncJobStatus [_ job]
     (if (user-has-access-token?)
@@ -294,13 +288,6 @@
   [app-id body]
   (service/success-response
     (.adminEditAppDocs (get-app-lister) app-id (service/decode-json body))))
-
-(defn submit-job
-  [body]
-  (with-db db/de
-    (transaction
-     (service/success-response
-      (.submitJob (get-app-lister) (service/decode-json body))))))
 
 (defn- get-unique-job-step
   "Gest a unique job step for an external ID. An exception is thrown if no job step

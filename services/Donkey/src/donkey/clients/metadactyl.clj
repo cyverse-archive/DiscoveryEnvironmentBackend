@@ -231,6 +231,15 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn send-job-submission
+  [submission]
+  (client/post (metadactyl-url "analyses")
+               {:query-params     (secured-params)
+                :content-type     :json
+                :body             submission
+                :as               :stream
+                :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")

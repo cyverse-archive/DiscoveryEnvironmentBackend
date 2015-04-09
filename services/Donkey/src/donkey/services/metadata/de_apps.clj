@@ -16,13 +16,6 @@
             [kameleon.db :as db])
   (:import [java.util UUID]))
 
-(defn- get-end-date
-  [{:keys [status completion_date now_date]}]
-  (case status
-    jp/failed-status    (db/timestamp-from-str now_date)
-    jp/completed-status (db/timestamp-from-str completion_date)
-    nil))
-
 (defn- de-job-callback-url
   []
   (str (curl/url (config/donkey-base-url) "callbacks" "de-job")))
@@ -33,28 +26,11 @@
     :uuid     (str job-id)
     :callback (de-job-callback-url)))
 
-(defn submit-job
-  [submission]
-  (let [submission (prepare-submission submission (UUID/randomUUID))
-        uuid       (:id (metadactyl/submit-job submission))
-        job-id     ((comp :job-id first) (jp/get-job-steps-by-external-id uuid))
-        job        (jp/get-job-by-id job-id)]
-    (mu/send-job-status-notification job jp/submitted-status nil)
-    {:id         (:id job)
-     :name       (:job-name job)
-     :status     (:status job)
-     :start-date (db/millis-from-timestamp (:start-date job))}))
-
 (defn submit-job-step
   [submission]
   (->> (prepare-submission submission (UUID/randomUUID))
        (metadactyl/submit-job)
        (:id)))
-
-(defn load-app-details
-  [ids]
-  (into {} (map (juxt (comp str :id) identity)
-                (ap/load-app-details ids))))
 
 (defn get-job-step-status
   [id]
