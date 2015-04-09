@@ -37,4 +37,4 @@
   (listJobs [_ params])
   (loadAppTables [_ app-ids])
   (submitJob [_ submission])
-  (submitJobStep [_ submission]))
+  (submitJobStep [_ job-id submission]))

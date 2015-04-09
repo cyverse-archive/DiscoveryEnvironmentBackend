@@ -77,34 +77,33 @@
        (map (partial build-job-step-save-info job-id))))
 
 (defn- prepare-de-job-step-submission
-  [client job-info job-step submission]
-  (.prepareJobSubmission
-   client
-   (assoc submission
-     :create_output_subdir false
-     :output_dir           (:result-folder-path job-info)
-     :starting_step        (:app-step-number job-step))))
+  [job-info job-step submission]
+  (assoc submission
+    :create_output_subdir false
+    :output_dir           (:result-folder-path job-info)
+    :starting_step        (:app-step-number job-step)
+    :step_number          (:step-number job-step)))
 
 (defn- get-current-app-step
   [{:keys [app-id]} {:keys [app-step-number]}]
   (nth (ap/load-app-steps app-id) (dec app-step-number)))
 
 (defn- prepare-agave-job-step-submission
-  [client job-info job-step submission]
+  [job-info job-step submission]
   (let [app-step (get-current-app-step job-info job-step)]
-    (.prepareJobSubmission
-     client
-     (assoc submission
-       :create_output_subdir false
-       :output_dir           (:result-folder-path job-info)
-       :app_id               (:external_app_id app-step)
-       :paramPrefix          (:step_id app-step)))))
+    (assoc submission
+      :create_output_subdir false
+      :output_dir           (:result-folder-path job-info)
+      :app_id               (:external_app_id app-step)
+      :paramPrefix          (:step_id app-step)
+      :starting_step        (:app-step-number job-step)
+      :step_number          (:step-number job-step))))
 
 (defn- prepare-job-step-submission
-  [client job-info job-step submission]
+  [job-info job-step submission]
   (if (is-de-job-step? job-step)
-    (prepare-de-job-step-submission client job-info job-step submission)
-    (prepare-agave-job-step-submission client job-info job-step submission)))
+    (prepare-de-job-step-submission job-info job-step submission)
+    (prepare-agave-job-step-submission job-info job-step submission)))
 
 (defn- record-step-submission
   [job-id step-number external-id]
@@ -114,11 +113,10 @@
         (jp/update-job-step-number job-id step-number)))
 
 (defn- submit-job-step
-  [client job-info job-step submission]
-  (->> (prepare-job-step-submission client job-info job-step submission)
-       (json-util/log-json "job-step")
-       (.submitJobStep client)
-       (record-step-submission (:id job-info) (:step-number job-step))))
+  [client {:keys [id] :as job-info} job-step submission]
+  (->> (prepare-job-step-submission job-info job-step submission)
+       (.submitJobStep client id)
+       (record-step-submission id (:step-number job-step))))
 
 (defn- get-apps-client
   [clients job-step]

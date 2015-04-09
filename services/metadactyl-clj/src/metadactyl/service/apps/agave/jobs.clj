@@ -21,10 +21,10 @@
 
 (defn- format-submission
   [agave job-id result-folder-path submission]
-  (->> (assoc (dissoc submission :starting_step)
+  (->> (assoc (dissoc submission :starting_step :step_number)
          :callbackUrl          (build-callback-url job-id)
          :job_id               job-id
-         :step_number          (:starting_step submission 1)
+         :step_number          (:step_number submission 1)
          :output_dir           result-folder-path
          :create_output_subdir false)))
 
@@ -134,7 +134,14 @@
 
 (defn submit
   [agave user submission]
-  (let [job-id (uuids/uuidify (or (:job_id submission) (uuids/uuid)))]
+  (let [job-id (or (:job_id submission) (uuids/uuid))]
     (->> (prepare-submission agave job-id submission)
          (json-util/log-json "job")
          (send-submission agave user job-id submission))))
+
+(defn submit-step
+  [agave job-id submission]
+  (->> (prepare-submission agave job-id submission)
+       (json-util/log-json "job step")
+       (.sendJobSubmission agave)
+       (:id)))

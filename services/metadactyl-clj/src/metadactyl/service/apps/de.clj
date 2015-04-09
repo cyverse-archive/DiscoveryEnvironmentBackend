@@ -141,5 +141,5 @@
     (when (util/uuid? (:app_id submission))
       (de-jobs/submit user (update-in submission [:app_id] uuidify))))
 
-  (submitJobStep [_ job]
-    (:id (de-jobs/submit-job-step job))))
+  (submitJobStep [_ _ submission]
+    (de-jobs/submit-step user (update-in submission [:app_id] uuidify))))

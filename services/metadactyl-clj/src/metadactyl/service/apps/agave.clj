@@ -80,5 +80,5 @@
     (when-not (util/uuid? (:app_id submission))
       (agave-jobs/submit agave user submission)))
 
-  (submitJobStep [_ job]
-    (:id (.sendJobSubmission agave job))))
+  (submitJobStep [_ job-id submission]
+    (agave-jobs/submit-step agave job-id submission)))

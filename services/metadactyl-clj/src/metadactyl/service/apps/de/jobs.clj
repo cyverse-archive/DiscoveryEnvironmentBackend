@@ -331,6 +331,9 @@
        (json-util/log-json "job")
        (submit-job user submission)))
 
-(defn submit-job-step
-  [job]
-  (do-jex-submission job))
+(defn submit-step
+  [user submission]
+  (let [job-step (build-submission user submission)]
+    (json-util/log-json "job step" job-step)
+    (do-jex-submission job-step)
+    (:uuid job-step)))
