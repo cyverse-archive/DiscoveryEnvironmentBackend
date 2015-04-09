@@ -112,7 +112,7 @@
           <b>Note</b>: Although this endpoint accepts all App Group and Parameter fields within the
           'groups' array, only their 'description', 'label', and 'display' (only in parameter
           arguments) fields will be processed and updated by this endpoint."
-          (ce/trap uri #(update-app (assoc body :id app-id))))
+          (service/coerced-trap uri AppDetails update-app (assoc body :id app-id)))
 
   (PATCH* "/:app-id/documentation" [:as {uri :uri body :body}]
           :path-params [app-id :- AppIdPathParam]
