@@ -29,9 +29,9 @@
          :create_output_subdir false)))
 
 (defn- prepare-submission
-  [agave submission]
+  [agave job-id submission]
   (->> (format-submission agave
-                          (or (:job_id submission) (uuids/uuid))
+                          job-id
                           (ft/build-result-folder-path submission)
                           submission)
        (.prepareJobSubmission agave)))
@@ -107,7 +107,7 @@
                      :app-step-number 1}))
 
 (defn- format-job-submission-response
-  [submission job]
+  [job-id submission job]
   (remove-nil-vals
    {:app_description (:app_description job)
     :app_disabled    false
@@ -116,7 +116,7 @@
     :batch           false
     :description     (:description job)
     :enddate         (:enddate job)
-    :id              (:job_id submission)
+    :id              job-id
     :name            (:name job)
     :notify          (:notify job)
     :resultfolderid  (:resultfolderid job)
@@ -126,14 +126,15 @@
     :wiki_url        (:wiki_url job)}))
 
 (defn- send-submission
-  [agave user {id :job_id :as submission} job]
+  [agave user job-id submission job]
   (let [job (send-submission* agave user submission job)]
-    (store-agave-job id job submission)
-    (store-job-step id job)
-    (format-job-submission-response submission job)))
+    (store-agave-job job-id job submission)
+    (store-job-step job-id job)
+    (format-job-submission-response job-id submission job)))
 
 (defn submit
   [agave user submission]
-  (->> (prepare-submission agave submission)
-       (json-util/log-json "job")
-       (send-submission agave user submission)))
+  (let [job-id (uuids/uuidify (or (:job_id submission) (uuids/uuid)))]
+    (->> (prepare-submission agave job-id submission)
+         (json-util/log-json "job")
+         (send-submission agave user job-id submission))))
