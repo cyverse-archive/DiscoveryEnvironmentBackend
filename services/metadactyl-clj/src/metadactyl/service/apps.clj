@@ -186,7 +186,7 @@
 (defn- format-job-submission-response
   [job-info]
   {:id         (:id job-info)
-   :name       (:job-name job-info)
+   :name       (:name job-info)
    :status     (:status job-info)
    :start-date (:startdate job-info)})
 
