@@ -81,4 +81,8 @@
       (agave-jobs/submit agave user submission)))
 
   (submitJobStep [_ job-id submission]
-    (agave-jobs/submit-step agave job-id submission)))
+    (agave-jobs/submit-step agave job-id submission))
+
+  (translateJobStatus [self job-type status]
+    (when (contains? (set (.getJobTypes self)) job-type)
+      (.translateJobStatus agave status))))

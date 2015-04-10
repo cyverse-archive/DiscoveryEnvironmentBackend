@@ -1,7 +1,9 @@
 (ns metadactyl.service.apps
-  (:use [korma.db :only [transaction]]
+  (:use [kameleon.uuids :only [uuidify]]
+        [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
   (:require [cemerick.url :as curl]
+            [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [mescal.de :as agave]
             [metadactyl.clients.notifications :as cn]
@@ -9,6 +11,7 @@
             [metadactyl.service.apps.agave]
             [metadactyl.service.apps.combined]
             [metadactyl.service.apps.de]
+            [metadactyl.service.apps.jobs :as jobs]
             [metadactyl.util.config :as config]
             [metadactyl.util.json :as json-util]
             [metadactyl.util.service :as service]))
@@ -196,3 +199,13 @@
   (let [job-info (.submitJob (get-apps-client user "") submission)]
     (cn/send-job-status-update username email job-info)
     (format-job-submission-response job-info)))
+
+;; TODO: the user isn't available when we get to this point, so we're going to have to look
+;; up the user information first. Chances are that this will require us to actually lock the
+;; job step and job before we can obtain the apps client. This will require some significant
+;; code reorganization.
+(defn update-job-status
+  ([external-id status end-date]
+     (jobs/update-job-status (get-apps-client user "") external-id status end-date))
+  ([job-id external-id status end-date]
+     (jobs/update-job-status (get-apps-client user "") job-id external-id status end-date)))

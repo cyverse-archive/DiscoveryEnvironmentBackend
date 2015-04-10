@@ -142,4 +142,8 @@
       (de-jobs/submit user (update-in submission [:app_id] uuidify))))
 
   (submitJobStep [_ _ submission]
-    (de-jobs/submit-step user (update-in submission [:app_id] uuidify))))
+    (de-jobs/submit-step user (update-in submission [:app_id] uuidify)))
+
+  (translateJobStatus [self job-type status]
+    (when (contains? (set (.getJobTypes self)) job-type)
+      status)))

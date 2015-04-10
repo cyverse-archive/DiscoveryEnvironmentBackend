@@ -131,4 +131,9 @@
   (submitJob [self submission]
     (if-let [apps-client (util/apps-client-for-job submission clients)]
       (.submitJob apps-client submission)
-      (job-listings/list-job self (combined-jobs/submit user clients submission)))))
+      (job-listings/list-job self (combined-jobs/submit user clients submission))))
+
+  (translateJobStatus [_ job-type status]
+    (->> (map #(.translateJobStatus % status) clients)
+         (remove nil?)
+         (first))))
