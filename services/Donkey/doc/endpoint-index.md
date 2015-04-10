@@ -190,8 +190,6 @@
 * [POST /secured/remove-collaborators](endpoints/collaborators.md#removing-collaborators)
 * [GET /secured/saved-searches](endpoints/misc.md#getting-saved-searches)
 * [POST /secured/saved-searches](endpoints/misc.md#setting-saved-searches)
-* [GET /secured/search-history](endpoints/misc.md#retrieving-user-search-history)
-* [POST /secured/search-history](endpoints/misc.md#saving-user-search-history)
 * [DELETE /secured/sessions](endpoints/misc.md#removing-user-session-data)
 * [GET /secured/sessions](endpoints/misc.md#retrieving-user-session-data)
 * [POST /secured/sessions](endpoints/misc.md#saving-user-session-data)
