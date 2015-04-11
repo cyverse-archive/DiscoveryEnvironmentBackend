@@ -38,4 +38,5 @@
   (loadAppTables [_ app-ids])
   (submitJob [_ submission])
   (submitJobStep [_ job-id submission])
-  (translateJobStatus [_ job-type status]))
+  (translateJobStatus [_ job-type status])
+  (updateJobStatus [_ job-step job batch status end-date]))

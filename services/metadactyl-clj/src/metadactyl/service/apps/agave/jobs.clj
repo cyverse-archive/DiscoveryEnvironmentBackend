@@ -145,3 +145,8 @@
        (json-util/log-json "job step")
        (.sendJobSubmission agave)
        (:id)))
+
+(defn update-job-status
+  [agave job-step job batch status end-date]
+  (let [status (.translateJobStatus agave status)]
+    ()))

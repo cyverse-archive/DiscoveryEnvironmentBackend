@@ -199,6 +199,21 @@
   [props config-valid configs]
   "metadactyl.notificationagent.base-url")
 
+(cc/defprop-str userinfo-base
+  "The base URL for the user info service."
+  [props config-valid configs]
+  "metadactyl.userinfo.base-url")
+
+(cc/defprop-str userinfo-key
+  "The client key for the user info service."
+  [props config-valid configs]
+  "metadactyl.userinfo.client-key")
+
+(cc/defprop-str userinfo-secret
+  "The client secret for the user info service."
+  [props config-valid configs]
+  "metadactyl.userinfo.password")
+
 (defn- oauth-settings
   [api-name api-key api-secret auth-uri token-uri redirect-uri refresh-window]
   {:api-name       api-name

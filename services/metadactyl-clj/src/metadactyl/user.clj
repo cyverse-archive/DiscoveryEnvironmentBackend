@@ -1,8 +1,10 @@
 (ns metadactyl.user
   (:use [metadactyl.util.config :only [uid-domain]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as common-errors]
+            [metadactyl.clients.trellis :as trellis]
             [metadactyl.util.service :as service]))
 
 (def
@@ -11,7 +13,6 @@
    current-user nil)
 
 (defn user-from-attributes
-  "Creates an instance of org.iplantc.authn.user.User from the given map."
   [user-attributes]
   (log/debug user-attributes)
   (let [uid (user-attributes :user)]
@@ -36,3 +37,15 @@
   [handler & [opts]]
   (fn [{uri :uri :as request}]
     (common-errors/trap uri #(with-user [(:params request)] (handler request)))))
+
+(defn load-user
+  "Loads information for the user with the given username."
+  [username]
+  (let [short-username (string/replace username #"@.*" "")
+        user-info      (trellis/get-user-details short-username)]
+    {:username      username
+     :password      nil
+     :email         (:email user-info)
+     :shortUsername short-username
+     :first-name    (:firstname user-info)
+     :last-name     (:lastname user-info)}))
