@@ -321,13 +321,20 @@
                  :message "HT Analysis Path Lists are not supported in Apps with Agave steps."})))
     (format-job-submission-response user job (empty? path-list-stats))))
 
+(defn- prep-submission
+  [submission]
+  (assoc submission
+    :output_dir           (build-result-folder-path submission)
+    :create_output_subdir false))
+
 (defn- build-submission
   [user submission]
   (remove-nil-vals (jb/build-submission user submission)))
 
 (defn submit
   [user submission]
-  (->> (build-submission user submission)
+  (->> (prep-submission submission)
+       (build-submission user)
        (json-util/log-json "job")
        (submit-job user submission)))
 
