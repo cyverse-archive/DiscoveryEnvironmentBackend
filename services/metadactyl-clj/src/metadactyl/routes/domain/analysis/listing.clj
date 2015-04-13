@@ -1,9 +1,15 @@
 (ns metadactyl.routes.domain.analysis.listing
   (:use [ring.swagger.schema :only [describe]]
-        [schema.core :only [defschema optional-key Any Bool]])
+        [schema.core :only [defschema optional-key Any Int Bool]])
   (:import [java.util UUID]))
 
 (def Timestamp (describe String "A timestamp in milliseconds since the epoch."))
+
+(defschema BatchStatus
+  {:total     (describe Int "The total number of jobs in the batch.")
+   :completed (describe Int "The number of completed jobs in the batch.")
+   :running   (describe Int "The number of running jobs in the batch.")
+   :submitted (describe Int "The number of submitted jobs in the batch.")})
 
 (defschema Analysis
   {(optional-key :app_description)
@@ -49,7 +55,13 @@
    (describe String "The name of the user who submitted the analysis.")
 
    (optional-key :wiki_url)
-   (describe String "The URL to app documentation in Confluence.")})
+   (describe String "The URL to app documentation in Confluence.")
+
+   (optional-key :parent_id)
+   (describe UUID "The identifier of the parent analysis.")
+
+   (optional-key :batch_status)
+   (describe BatchStatus "A summary of the status of the batch.")})
 
 (defschema AnalysisList
   {:analyses  (describe [Analysis] "The list of analyses.")
