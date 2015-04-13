@@ -430,7 +430,7 @@ RUN yum update -y && yum install -y \
     xz-libs-4.999.9-0.3.beta.20091007git.el5 \
     zip-2.31-2.el5
 
-RUN yum install --nogpgchecks -y rpms/*.rpm
+RUN yum install --nogpgcheck -y rpms/*.rpm
 
 ENV PATH /usr/kerberos/bin:/usr/local2/icommands:/usr/local2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/bin:/usr/bin
 VOLUME ["/usr/local2/", "/usr/local3/", "/data2/", "/condor01/"]
