@@ -295,20 +295,6 @@ ALTER TABLE ONLY metadata_value_types
     PRIMARY KEY (id);
 
 --
--- Primary Key for the metadata_templates table.
---
-ALTER TABLE ONLY metadata_templates
-    ADD CONSTRAINT metadata_templates_pkey
-    PRIMARY KEY (id);
-
---
--- Primary Key for the metadata_attributes table.
---
-ALTER TABLE ONLY metadata_attributes
-    ADD CONSTRAINT metadata_attributes_pkey
-    PRIMARY KEY (id);
-
---
 -- Primary Key for the tree_urls table.
 --
 ALTER TABLE ONLY tree_urls
@@ -840,14 +826,6 @@ ALTER TABLE ONLY logins
     REFERENCES users(id);
 
 --
--- Foreign key constraint for the value_type_id field of the metadata_attributes table.
---
-ALTER TABLE ONLY metadata_attributes
-    ADD CONSTRAINT metadata_attributes_value_type_id_fkey
-    FOREIGN KEY (value_type_id)
-    REFERENCES metadata_value_types(id);
-
---
 -- Foreign key constraint for the template_id field of the metadata_template_attrs table.
 --
 ALTER TABLE ONLY metadata_template_attrs
@@ -861,22 +839,6 @@ ALTER TABLE ONLY metadata_template_attrs
 ALTER TABLE ONLY metadata_template_attrs
     ADD CONSTRAINT metadata_template_attrs_attribute_id_fkey
     FOREIGN KEY (attribute_id)
-    REFERENCES metadata_attributes(id);
-
---
--- Foreign key constraint for the attribute_id field of the metadata_attr_synonyms table.
---
-ALTER TABLE ONLY metadata_attr_synonyms
-    ADD CONSTRAINT metadata_attr_synonyms_attribute_id_fkey
-    FOREIGN KEY (attribute_id)
-    REFERENCES metadata_attributes(id);
-
---
--- Foreign key constraint for the synonym_id field of the metadata_attr_synonyms table.
---
-ALTER TABLE ONLY metadata_attr_synonyms
-    ADD CONSTRAINT metadata_attr_synonyms_synonym_id_fkey
-    FOREIGN KEY (synonym_id)
     REFERENCES metadata_attributes(id);
 
 --

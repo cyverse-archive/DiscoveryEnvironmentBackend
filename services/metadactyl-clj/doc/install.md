@@ -19,28 +19,65 @@ Here's an example configuration file:
 
 ```properties
 # Connection details.
-metadactyl.app.listen-port = 65007
+metadactyl.app.listen-port = 60000
+
+# Route-independent feature flags.
+metadactyl.features.agave      = true
+metadactyl.features.agave.jobs = true
 
 # Database settings.
 metadactyl.db.driver      = org.postgresql.Driver
 metadactyl.db.subprotocol = postgresql
 metadactyl.db.host        = localhost
-metadactyl.db.port        = 65001
-metadactyl.db.name        = some-db
-metadactyl.db.user        = some-user
-metadactyl.db.password    = some-password
+metadactyl.db.port        = 5432
+metadactyl.db.name        = de
+metadactyl.db.user        = de
+metadactyl.db.password    = somepassword
 
 # JEX connection settings.
-metadactyl.jex.base-url = http://localhost:65006
+metadactyl.jex.base-url = http://localhost:8889
+
+# Data Info connection settings.
+metadactyl.data-info.base-url = http://localhost:8890
 
 # Workspace app group names.
 metadactyl.workspace.root-app-group            = Workspace
 metadactyl.workspace.default-app-groups        = ["Apps under development","Favorite Apps"]
 metadactyl.workspace.dev-app-group-index       = 0
 metadactyl.workspace.favorites-app-group-index = 1
+metadactyl.workspace.beta-app-category-id      = 665F28B8-2336-4780-A26D-29F608082FD2
+metadactyl.workspace.public-id                 = 00000000-0000-0000-0000-000000000000
 
 # The domain name to append to the user id to get the fully qualified user id.
-metadactyl.uid.domain = iplantcollaborative.org
+metadactyl.uid.domain = example.org
+
+# The path to the home directory in iRODS.
+metadactyl.irods.home = /example/home
+
+# Batch job settings.
+metadactyl.batch.group               = batch_processing
+metadactyl.batch.path-list.info-type = ht-analysis-path-list
+metadactyl.batch.path-list.max-paths = 16
+metadactyl.batch.path-list.max-size  = 1048576
+
+# Agave connection settings.
+metadactyl.agave.base-url             = https://localhost/agave
+metadactyl.agave.key                  = D381A69F-7EF8-4BA4-BB21-4C13722E2355
+metadactyl.agave.secret               = ED9FA012-8A1A-4EFB-9122-27BAF8CD2B1A
+metadactyl.agave.oauth-base           = https://localhost/agave/oauth2
+metadactyl.agave.oauth-refresh-window = 5
+metadactyl.agave.redirect-uri         = https://localhost/de/oauth/callback/agave
+metadactyl.agave.storage-system       = localhost
+
+# Agave callback settings.
+metadactyl.agave.callback-base = https://localhost/de/agave-cb
+
+# PGP Settings
+metadactyl.pgp.keyring-path = /path/to/secring.gpg
+metadactyl.pgp.key-password = C7E70F82-66F1-4213-B95F-03B31519B9D8
+
+# Notification agent connection settings.
+metadactyl.notificationagent.base-url = http://localhost:8891
 ```
 
 Generally, the database and service connection settings will have to be
@@ -68,8 +105,10 @@ log4j.rootLogger=WARN, A
 
 # Either comment these lines out or change the appender to B when running
 # metadactyl-clj in the foreground.
-log4j.logger.JsonLogger=debug, JSON
-log4j.additivity.JsonLogger=false
+log4j.logger.metadactyl.util.json=debug, JSON
+log4j.additivity.metadactyl.util.json=false
+
+log4j.logger.clojure-commons.config = INFO
 
 # Use this appender for logging JSON when running metadactyl-clj in the background.
 log4j.appender.JSON=org.apache.log4j.RollingFileAppender

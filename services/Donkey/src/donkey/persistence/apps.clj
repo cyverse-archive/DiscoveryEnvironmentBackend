@@ -7,12 +7,6 @@
         [korma.db :only [with-db]])
   (:require [donkey.util.db :as db]))
 
-(defn load-app-details
-  [app-ids]
-  (with-db db/de
-    (select app_listing
-            (where {:id [in (map uuidify app-ids)]}))))
-
 (defn- default-value-subselect
   []
   (subselect [:parameter_values :pv]

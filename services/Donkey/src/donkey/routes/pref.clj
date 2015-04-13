@@ -17,13 +17,4 @@
          (do-post-prefs (slurp body)))
 
    (DELETE "/preferences" []
-           (remove-prefs))
-
-   #_(GET "/search-history" []
-        (search-history))
-
-   #_(POST "/search-history" [:as {body :body}]
-         (search-history (slurp body)))
-
-   #_(DELETE "/search-history" []
-           (clear-search-history))))
+           (remove-prefs))))

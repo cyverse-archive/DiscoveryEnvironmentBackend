@@ -49,13 +49,14 @@
   [agave app-id]
   {:tools [(apps/format-tool-for-app (.getApp agave app-id))]})
 
-(defn submit-job
+(defn prepare-job-submission
   [agave submission]
-  (let [app-id (:app_id submission)
-        app    (.getApp agave app-id)]
-    (->> (jobs/prepare-submission agave app submission)
-         (.submitJob agave)
-         (jobs/format-job agave true (get-system-statuses agave) {app-id app}))))
+  (jobs/prepare-submission agave (.getApp agave (:app_id submission)) submission))
+
+(defn send-job-submission
+  [agave submission]
+  (let [app-info (apps/load-app-info agave [:appId submission])]
+    (jobs/format-job-submisison-response agave submission (.submitJob agave submission))))
 
 (defn- format-jobs
   [agave jobs-enabled? jobs]

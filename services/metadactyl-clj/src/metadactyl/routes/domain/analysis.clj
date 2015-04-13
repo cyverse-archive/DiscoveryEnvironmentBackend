@@ -11,7 +11,10 @@
 
 (defschema AnalysisSubmission
   {:app_id
-   (describe UUID "The UUID of the app used to perform the analysis.")
+   (describe String "The ID of the app used to perform the analysis.")
+
+   (optional-key :job_id)
+   (describe UUID "The UUID of the job being submitted.")
 
    (optional-key :callback)
    (describe String "The callback URL to use for job status updates.")
@@ -54,6 +57,12 @@
 
    (optional-key :archive_logs)
    (describe Bool "True if the job logs should be uploaded to the data store.")})
+
+(defschema AnalysisResponse
+  {:id         (describe UUID "The ID of the submitted analysis.")
+   :name       (describe String "The name of the submitted analysis.")
+   :status     (describe String "The current status of the analysis.")
+   :start-date (describe String "The analysis start date as milliseconds since the epoch.")})
 
 (defschema JexStepComponent
   {(optional-key :description)

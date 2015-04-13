@@ -14,6 +14,7 @@
                  [com.cemerick/url "0.1.1"]
                  [log4j/log4j "1.2.17"]
                  [me.raynes/fs "1.4.6"]
+                 [medley "0.5.5"]
                  [slingshot "0.10.3"]
                  [org.mongodb/mongo-java-driver "2.12.3"]
                  [commons-configuration/commons-configuration "1.10"]

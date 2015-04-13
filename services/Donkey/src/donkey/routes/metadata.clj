@@ -166,7 +166,7 @@
         (service/success-response (metadactyl/list-jobs params)))
 
    (POST "/analyses" [:as {:keys [body]}]
-         (apps/submit-job body))
+         (service/success-response (metadactyl/send-job-submission body)))
 
    (PATCH "/analyses/:analysis-id" [analysis-id :as {body :body}]
           (apps/update-job analysis-id body))
@@ -223,6 +223,9 @@
 
     (POST "/tools" [:as {:keys [body]}]
           (import-tools body))
+
+    (PATCH "/tools/:tool-id" [tool-id :as {:keys [body]}]
+           (metadactyl/update-tool tool-id body))
 
     (GET "/tool-requests" [:as {params :params}]
          (admin-list-tool-requests params))

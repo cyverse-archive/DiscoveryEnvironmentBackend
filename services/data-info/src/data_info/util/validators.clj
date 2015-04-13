@@ -1,5 +1,6 @@
 (ns data-info.util.validators
-  (:use [slingshot.slingshot :only [throw+]])
+  (:use [kameleon.uuids :only [is-uuid?]]
+        [slingshot.slingshot :only [throw+]])
   (:require [clojure.set :as set]
             [clojure.string :as str]
             [clj-icat-direct.icat :as icat]
@@ -45,16 +46,6 @@
       (throw+ {:error_code error/ERR_BAD_REQUEST
                :param      param-name
                :value      param-val}))))
-
-
-(def ^:private uuid-regexes
-  [#"^\p{XDigit}{8}(?:-\p{XDigit}{4}){3}-\p{XDigit}{12}$"
-   #"^[at]\p{XDigit}{32}"])
-
-
-(defn- is-uuid?
-  [id]
-  (some #(re-find % id) uuid-regexes))
 
 
 (defn valid-uuid-param

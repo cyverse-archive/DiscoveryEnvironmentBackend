@@ -24,15 +24,22 @@
   [user path]
   (log/debug (str "create " user " " path))
   (with-jargon (cfg/jargon-cfg) [cm]
-    (let [fixed-path (ft/rm-last-slash path)]
+    (let [fixed-path (ft/rm-last-slash path)
+          path-stack (take-while (complement nil?) (iterate ft/dirname fixed-path))
+          [existing-paths paths-to-mk] ((juxt filter remove) #(item/exists? cm %) path-stack)
+          target-dir (first existing-paths)]
+      (when-not target-dir
+        (throw+ {:error_code ERR_DOES_NOT_EXIST
+                 :path (last paths-to-mk)}))
       (when-not (duv/good-string? fixed-path)
         (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                  :path path}))
       (validators/user-exists cm user)
-      (validators/path-writeable cm user (ft/dirname fixed-path))
+      (validators/path-writeable cm user target-dir)
       (validators/path-not-exists cm fixed-path)
-      (ops/mkdir cm fixed-path)
-      (set-owner cm fixed-path user)
+      (ops/mkdirs cm fixed-path)
+      (doseq [new-path paths-to-mk]
+        (set-owner cm new-path user))
       (stat/path-stat cm user fixed-path))))
 
 (defn do-create

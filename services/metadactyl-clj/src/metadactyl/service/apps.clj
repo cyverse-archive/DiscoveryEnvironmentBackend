@@ -4,6 +4,7 @@
   (:require [cemerick.url :as curl]
             [clojure-commons.error-codes :as ce]
             [mescal.de :as agave]
+            [metadactyl.clients.notifications :as cn]
             [metadactyl.persistence.oauth :as op]
             [metadactyl.service.apps.agave]
             [metadactyl.service.apps.combined]
@@ -182,7 +183,16 @@
   [user params]
   (.listJobs (get-apps-client user "") params))
 
+(defn- format-job-submission-response
+  [job-info]
+  {:id         (:id job-info)
+   :name       (:name job-info)
+   :status     (:status job-info)
+   :start-date (:startdate job-info)})
+
 (defn submit-job
-  [user submission]
+  [{username :shortUsername email :email :as user} submission]
   (json-util/log-json "submission" submission)
-  (.submitJob (get-apps-client user "") submission))
+  (let [job-info (.submitJob (get-apps-client user "") submission)]
+    (cn/send-job-status-update username email job-info)
+    (format-job-submission-response job-info)))

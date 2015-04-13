@@ -83,3 +83,8 @@
     {:analyses  (map (partial format-job app-tables) jobs)
      :timestamp (str (System/currentTimeMillis))
      :total     (count-jobs user params types)}))
+
+(defn list-job
+  [apps-client job-id]
+  (let [job-info (jp/get-job-by-id job-id)]
+    (format-job (.loadAppTables apps-client [(:app-id job-info)]) job-info)))

@@ -9,9 +9,6 @@
     * [Saving User Preferences](#saving-user-preferences)
     * [Retrieving User Preferences](#retrieving-user-preferences)
     * [Removing User Preferences](#removing-user-preferences)
-    * [Saving User Search History](#saving-user-search-history)
-    * [Retrieving User Search History](#retrieving-user-search-history)
-    * [Deleting User Search History](#deleting-user-search-history)
     * [Determining a User's Default Output Directory](#determining-a-users-default-output-directory)
     * [Resetting a user's default output directory.](#resetting-a-users-default-output-directory.)
     * [Obtaining Identifiers](#obtaining-identifiers)
@@ -237,44 +234,6 @@ Check the HTTP status code of the response to determine success. It should be in
 
 An attempt to remove preference data that doesn't already exist will be silently
 ignored.
-
-## Saving User Search History
-
-Secured Endpoint: POST /secured/search-history
-
-This service can be used to save arbitrary user search history information. The
-POST body is stored without modification and be retrieved by sending a GET
-request to the same URL.
-
-Example:
-
-```
-$ curl -sd data "http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)"
-data
-```
-
-## Retrieving User Search History
-
-Secured Endpoint: GET /secured/search-history
-
-This service can be used to retrieve a user's search history.
-
-Example:
-
-```
-$ curl -s "http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)"
-data
-```
-
-## Deleting User Search History
-
-This service can be used to delete a user's search history.
-
-Example:
-
-```
-$ curl -XDELETE -s "http://by-tor:8888/secured/search-history?proxyToken=$(cas-ticket)"
-```
 
 ## Determining a User's Default Output Directory
 

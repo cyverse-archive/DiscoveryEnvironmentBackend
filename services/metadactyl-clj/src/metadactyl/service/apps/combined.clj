@@ -3,16 +3,18 @@
   or more other implementations. This implementation expects at most one the implementations that
   it interacts with to allow users to add new apps and edit existing ones. If this is not the case
   then the first app in the list that is capable of adding or editing apps wins."
-  (:use [metadactyl.service.apps.combined.util :as util]
-        [metadactyl.service.apps.job-listings :as job-listings]
-        [metadactyl.util.assertions :only [assert-not-nil]])
-  (:require [metadactyl.service.apps.combined.job-view :as job-view]))
+  (:use [metadactyl.util.assertions :only [assert-not-nil]])
+  (:require [metadactyl.persistence.jobs :as jp]
+            [metadactyl.service.apps.job-listings :as job-listings]
+            [metadactyl.service.apps.combined.job-view :as job-view]
+            [metadactyl.service.apps.combined.jobs :as combined-jobs]
+            [metadactyl.service.apps.combined.util :as util]))
 
 (deftype CombinedApps [clients user]
   metadactyl.protocols.Apps
 
   (getClientName [_]
-    "combined")
+    jp/combined-client-name)
 
   (getJobTypes [_]
     (apply concat (map #(.getJobTypes %) clients)))
@@ -32,7 +34,7 @@
   (searchApps [_ search-term params]
     (->> (map #(.searchApps % search-term (select-keys params [:search])) clients)
          (remove nil?)
-         (combine-app-search-results params)))
+         (util/combine-app-search-results params)))
 
   (canEditApps [_]
     (some #(.canEditApps %) clients))
@@ -126,5 +128,7 @@
   (loadAppTables [_ app-ids]
     (apply concat (map  #(.loadAppTables % app-ids) clients)))
 
-  (submitJob [_ submission]
-    (.submitJob (util/get-apps-client clients) submission)))
+  (submitJob [self submission]
+    (if-let [apps-client (util/apps-client-for-job submission clients)]
+      (.submitJob apps-client submission)
+      (job-listings/list-job self (combined-jobs/submit user clients submission)))))

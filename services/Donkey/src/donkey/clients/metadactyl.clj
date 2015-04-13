@@ -231,6 +231,15 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn send-job-submission
+  [submission]
+  (client/post (metadactyl-url "analyses")
+               {:query-params     (secured-params)
+                :content-type     :json
+                :body             submission
+                :as               :stream
+                :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
@@ -319,6 +328,13 @@
                {:query-params (secured-params)
                 :body         (cheshire/encode body)
                 :content-type :json}))
+
+(defn update-tool
+  [tool-id tool]
+  (client/patch (metadactyl-url "admin" "tools" tool-id)
+                {:query-params (secured-params)
+                 :body         tool
+                 :content-type :json}))
 
 (defn get-oauth-access-token
   [api-name {:keys [code state]}]

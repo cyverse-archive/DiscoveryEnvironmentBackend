@@ -9,15 +9,6 @@
   (:require [clojure-commons.error-codes :as ce]
             [clojure.tools.logging :as log]))
 
-(def ^:private uuid-regexes
-  [#"^\p{XDigit}{8}(?:-\p{XDigit}{4}){3}-\p{XDigit}{12}$"
-   #"^[at]\p{XDigit}{32}"])
-
-(defn is-uuid?
-  [id]
-  (or (instance? java.util.UUID id)
-      (some #(re-find % id) uuid-regexes)))
-
 (defn trap-handler
   [handler]
   (fn [{:keys [uri] :as req}]

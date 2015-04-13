@@ -1,6 +1,7 @@
 (ns metadactyl.service.apps.de
   (:use [kameleon.uuids :only [uuidify]])
   (:require [metadactyl.persistence.app-metadata :as ap]
+            [metadactyl.persistence.jobs :as jp]
             [metadactyl.service.apps.de.jobs :as de-jobs]
             [metadactyl.service.apps.de.edit :as edit]
             [metadactyl.service.apps.de.job-view :as job-view]
@@ -9,17 +10,16 @@
             [metadactyl.service.apps.de.pipeline-edit :as pipeline-edit]
             [metadactyl.service.apps.de.validation :as app-validation]
             [metadactyl.service.apps.job-listings :as job-listings]
-            [metadactyl.service.apps.jobs :as jobs]
             [metadactyl.service.util :as util]))
 
 (deftype DeApps [user]
   metadactyl.protocols.Apps
 
   (getClientName [_]
-    "de")
+    jp/de-client-name)
 
   (getJobTypes [_]
-    ["DE"])
+    [jp/de-job-type])
 
   (listAppCategories [_ params]
     (listings/get-app-groups user params))
@@ -138,10 +138,8 @@
          (vector)))
 
   (submitJob [this submission]
-    (jobs/submit this submission))
+    (when (util/uuid? (:app_id submission))
+      (de-jobs/submit user (update-in submission [:app_id] uuidify))))
 
-  (prepareJobSubmission [_ submission]
-    (de-jobs/build-submission user submission))
-
-  (sendJobSubmission [_ submission job]
-    (de-jobs/submit user submission job)))
+  (submitJobStep [_ _ submission]
+    (de-jobs/submit-step user (update-in submission [:app_id] uuidify))))

@@ -49,7 +49,7 @@
                  [net.sf.opencsv/opencsv "2.3"]
                  [de.ubercode.clostache/clostache "1.4.0"]
                  [me.raynes/fs "1.4.6"]
-                 [medley "0.5.3"]
+                 [medley "0.5.5"]
                  [dire "0.5.3"]
                  [mvxcvi/clj-pgp "0.8.0"]
                  [prismatic/schema "0.3.3"]

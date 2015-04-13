@@ -12,12 +12,14 @@
             [clj-http.client :as http]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
+            [kameleon.db :as db]
             [kameleon.uuids :as uuids]
             [me.raynes.fs :as fs]
             [metadactyl.persistence.app-metadata :as ap]
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.service.apps.de.jobs.base :as jb]
             [metadactyl.util.config :as config]
+            [metadactyl.util.json :as json-util]
             [metadactyl.util.service :as service]))
 
 (defn- secured-params
@@ -289,7 +291,25 @@
     (submit-one-de-job user submission job)
     (submit-batch-de-job user submission job path-list-stats)))
 
-(defn submit
+(defn- format-job-submission-response
+  [user jex-submission batch?]
+  (remove-nil-vals
+   {:app_description (:app_description jex-submission)
+    :app_disabled    false
+    :app_id          (:app_id jex-submission)
+    :app_name        (:app_name jex-submission)
+    :batch           batch?
+    :description     (:description jex-submission)
+    :id              (str (:uuid jex-submission))
+    :name            (:name jex-submission)
+    :notify          (:notify jex-submission)
+    :resultfolderid  (:output_dir jex-submission)
+    :startdate       (str (.getTime (db/now)))
+    :status          jp/submitted-status
+    :username        (:username user)
+    :wiki_url        (:wiki_url jex-submission)}))
+
+(defn- submit-job
   [user submission job]
   (let [de-only-job? (zero? (ap/count-external-steps (:app_id job)))
         path-list-stats (get-path-list-stats user job)]
@@ -298,9 +318,29 @@
       (if (empty? path-list-stats)
         (do-jex-submission job)
         (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-                 :message "HT Analysis Path Lists are not supported in Apps with Agave steps."}))))
-  job)
+                 :message "HT Analysis Path Lists are not supported in Apps with Agave steps."})))
+    (format-job-submission-response user job (empty? path-list-stats))))
 
-(defn build-submission
+(defn- prep-submission
+  [submission]
+  (assoc submission
+    :output_dir           (build-result-folder-path submission)
+    :create_output_subdir false))
+
+(defn- build-submission
   [user submission]
   (remove-nil-vals (jb/build-submission user submission)))
+
+(defn submit
+  [user submission]
+  (->> (prep-submission submission)
+       (build-submission user)
+       (json-util/log-json "job")
+       (submit-job user submission)))
+
+(defn submit-step
+  [user submission]
+  (let [job-step (build-submission user submission)]
+    (json-util/log-json "job step" job-step)
+    (do-jex-submission job-step)
+    (:uuid job-step)))
