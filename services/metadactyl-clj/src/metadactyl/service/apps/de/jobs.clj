@@ -283,7 +283,7 @@
         submission (assoc submission
                      :config (get-partitioned-submission-config-entries path-lists config))
         submit-batch-job (partial submit-job-in-batch user submission job batch-job-id)]
-    (apply (partial map submit-batch-job (range)) transposed-list-path)))
+    (apply (partial mapv submit-batch-job (range)) transposed-list-path)))
 
 (defn- submit-de-only-job
   [user submission job path-list-stats]
