@@ -7,6 +7,7 @@
         [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.conversions :only [remove-nil-vals]])
   (:require [clojure.string :as string]
+            [metadactyl.containers :as c]
             [metadactyl.service.apps.de.jobs.params :as params]
             [metadactyl.service.apps.de.jobs.util :as util]))
 
