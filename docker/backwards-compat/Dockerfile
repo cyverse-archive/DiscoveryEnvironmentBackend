@@ -3,27 +3,31 @@ FROM centos:5
 ADD https://dl.fedoraproject.org/pub/epel/epel-release-latest-5.noarch.rpm /
 RUN rpm -Uvh epel-release-latest-5.noarch.rpm
 COPY yum.repos.d/* /etc/yum.repos.d/
+ADD http://de.iplantcollaborative.org/dl/d/D293B8D0-00E6-4394-962F-E1B761B3992E/R-RM2-0.0-4.el5.noarch.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/003F9900-6F84-4C51-82C2-0DDF4BE56F36/R-biglm-0.4-1.el5.1.x86_64.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/2E0A5AB2-13CA-477F-8DAB-5ACDF249A2C5/R-DBI-0.2.5-3.el5.noarch.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/9A5F7DB7-B766-4CBA-8714-4E5697CB0BBE/R-RScaLAPACK-0.5.1-10.el5.x86_64.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/DC4FAAD6-4EA4-4BCE-B910-CE10D90625B8/R-core-2.15.2-1.el5.x86_64.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/598A732F-E87D-4F5F-9DB4-9E33B2B8C185/R-hdf5-1.6.9-1.el5.x86_64.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/80617FF1-3D18-4027-9890-30EBAEBFD761/R-lmtest-0.9.29-1.el5.x86_64.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/EA03BF40-48F8-46AD-B6B6-FEA42104D011/R-car-1.2-16.1.el5.noarch.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/1FA9033C-850C-4F61-891B-F45CAF604C5F/R-multcomp-0.993-1.el5.noarch.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/8AEC7825-7874-4CA6-B8E6-EA26657082CE/R-msm-1.1-1.el5.x86_64.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/91D9AB23-5570-4B91-B02B-51364A6A9324/R-mvtnorm-0.9.9991-1.el5.x86_64.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/F008359B-1A10-4BD9-B9C2-3BC12358C6F2/R-systemfit-0.8-6.el5.noarch.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/B52E39E7-5239-476C-8F52-BE83375AC975/R-nws-1.7.0.1-3.el5.noarch.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/16BA1CD4-3D6B-46FA-A103-08CC2D818C76/R-zoo-1.7.6-2.el5.x86_64.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/D4DA247A-014A-479D-BD7C-9330A9A6B580/R-qtl-1.29.2-1.el5.x86_64.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/3C167066-B14E-4B82-A297-456A7E43D274/libRmath-devel-2.15.2-1.el5.x86_64.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/6C4FAA1C-FE02-4EEC-99FB-7B37049CD657/R-2.15.2-1.el5.x86_64.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/A967C202-D23F-4369-9766-3448336A19F8/R-devel-2.15.2-1.el5.x86_64.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/D172302A-8988-468C-B162-0B3F2E158657/libRmath-2.15.2-1.el5.x86_64.rpm /rpms/
 
 RUN yum update -y && yum install -y \
+    curl \
     GConf2-2.14.0-9.el5 \
     ImageMagick-6.2.8.0-15.el5_8 \
     ORBit2-2.14.3-5.el5 \
-    R-2.15.2-1.el5 \
-    R-DBI-0.2.5-3.el5 \
-    R-RM2-0.0-4.el5 \
-    R-RScaLAPACK-0.5.1-10.el5 \
-    R-biglm-0.4-1.el5.1 \
-    R-car-1.2-16.1.el5 \
-    R-core-2.15.2-1.el5 \
-    R-hdf5-1.6.9-1.el5 \
-    R-lmtest-0.9.29-1.el5 \
-    R-msm-1.1-1.el5 \
-    R-multcomp-0.993-1.el5 \
-    R-mvtnorm-0.9.9991-1.el5 \
-    R-nws-1.7.0.1-3.el5 \
-    R-qtl-1.29.2-1.el5 \
-    R-systemfit-0.8-6.el5 \
-    R-zoo-1.7.6-2.el5 \
     acl-2.2.39-8.el5 \
     acpid-1.0.4-12.el5 \
     alsa-lib-1.0.17-1.el5 \
@@ -425,6 +429,8 @@ RUN yum update -y && yum install -y \
     xz-4.999.9-0.3.beta.20091007git.el5 \
     xz-libs-4.999.9-0.3.beta.20091007git.el5 \
     zip-2.31-2.el5
+
+RUN yum install --nogpgchecks -y rpms/*.rpm
 
 ENV PATH /usr/kerberos/bin:/usr/local2/icommands:/usr/local2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/bin:/usr/bin
 VOLUME ["/usr/local2/", "/usr/local3/", "/data2/", "/condor01/"]
