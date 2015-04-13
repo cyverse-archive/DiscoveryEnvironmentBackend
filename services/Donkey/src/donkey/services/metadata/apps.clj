@@ -139,6 +139,9 @@
   (updatePipeline [_ app-id pipeline]
     (metadactyl/update-pipeline app-id pipeline))
 
+  (submitJob [_ job]
+    (metadactyl/submit-job job))
+
   (syncJobStatus [_ job]
     (da/sync-job-status job))
 
@@ -200,6 +203,9 @@
 
   (updatePipeline [_ app-id pipeline]
     (ca/update-pipeline agave-client app-id pipeline))
+
+  (submitJob [_ job]
+    (metadactyl/submit-job job))
 
   (syncJobStatus [_ job]
     (if (user-has-access-token?)
