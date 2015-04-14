@@ -50,7 +50,8 @@
           :memory_limit 2048
           :network_mode "bridge"
           :working_directory "/work"
-          :tools_id (:id tool-map)}
+          :tools_id (:id tool-map)
+          :entrypoint nil}
          (dissoc (settings (:id settings-map)) :id)))
 
   (is (settings? (:id settings-map)))
@@ -106,6 +107,6 @@
 
 (defn updated-tool-tests []
   (is (not (nil? (:id updated-tool))))
-  
+
   (is (= (dissoc image-info-map :id)
          (tool-image-info (:id updated-tool)))))
