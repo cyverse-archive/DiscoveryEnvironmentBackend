@@ -320,7 +320,7 @@
 (defn backwards-compatible-args
   [step-map]
   (if (backwards-compatible? step-map)
-    (str "-v /usr/local2/:/usr/local2")))
+    (str "-v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/")))
 
 (defn container-args
   [step-map]
