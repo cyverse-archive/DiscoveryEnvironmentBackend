@@ -31,5 +31,9 @@ CREATE TABLE container_settings (
   -- The name of the running container. Most of the time this will be null, but
   -- we should have the option if we need it. Note that this is different from
   -- the image name.
-  name text
+  name text,
+
+  -- The entrypoint of the running container. This will let us override a
+  -- container's default entrypoint, if it has one and it's necessary.
+  entrypoint text
 );
