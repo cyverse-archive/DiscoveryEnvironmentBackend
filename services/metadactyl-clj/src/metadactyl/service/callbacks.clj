@@ -10,4 +10,4 @@
   (service/assert-valid status "no status provided")
   (log/info (str "received a status update for DE job " uuid ": status = " status))
   (when-not (= status jp/submitted-status)
-    (apps/update-de-job-status uuid status end-date)))
+    (apps/update-job-status uuid status end-date)))

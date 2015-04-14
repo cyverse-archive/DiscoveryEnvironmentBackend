@@ -344,3 +344,9 @@
     (json-util/log-json "job step" job-step)
     (do-jex-submission job-step)
     (:uuid job-step)))
+
+(defn update-job-status
+  [{:keys [external-id] :as job-step} {job-id :id :as job} status end-date]
+  (when (jp/status-follows? status (:status job-step))
+    (jp/update-job-step job-id external-id status end-date)
+    (jp/update-job job-id status end-date)))

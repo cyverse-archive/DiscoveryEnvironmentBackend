@@ -37,6 +37,21 @@
    failed-status    4
    canceled-status  4})
 
+(defn status-follows?
+  "Determines whether or not the new job status follows the old job status."
+  [new-status old-status]
+  (> (job-status-order new-status) (job-status-order old-status)))
+
+(defn completed?
+  [job-status]
+  (completed-status-codes job-status))
+
+(defn running?
+  [job-status]
+  (= running-status job-status))
+
+(def not-completed? (complement is-completed?))
+
 (defn- nil-if-zero
   "Returns nil if the argument value is zero."
   [v]

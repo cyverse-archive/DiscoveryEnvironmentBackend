@@ -2,6 +2,7 @@
 
 (defprotocol Apps
   "A protocol used to provide an abstraction layer for dealing with app metadata."
+  (getUser [_])
   (getClientName [_])
   (getJobTypes [_])
   (listAppCategories [_ params])
@@ -39,4 +40,4 @@
   (submitJob [_ submission])
   (submitJobStep [_ job-id submission])
   (translateJobStatus [_ job-type status])
-  (updateJobStatus [_ job-step job batch status end-date]))
+  (updateJobStatus [_ job-step job status end-date]))

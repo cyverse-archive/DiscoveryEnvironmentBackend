@@ -15,6 +15,9 @@
 (deftype DeApps [user]
   metadactyl.protocols.Apps
 
+  (getUser [_]
+    user)
+
   (getClientName [_]
     jp/de-client-name)
 
@@ -146,4 +149,8 @@
 
   (translateJobStatus [self job-type status]
     (when (contains? (set (.getJobTypes self)) job-type)
-      status)))
+      status))
+
+  (updateJobStatus [self job-step job status end-date]
+    (when (contains? (set (.getJobTypes self)) (:job-type job-step))
+      (de-jobs/update-job-status job-step job status end-date))))

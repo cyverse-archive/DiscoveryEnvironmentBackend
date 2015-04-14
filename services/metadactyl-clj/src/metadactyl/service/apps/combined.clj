@@ -13,6 +13,9 @@
 (deftype CombinedApps [clients user]
   metadactyl.protocols.Apps
 
+  (getuser [_]
+    user)
+
   (getClientName [_]
     jp/combined-client-name)
 
@@ -136,4 +139,7 @@
   (translateJobStatus [_ job-type status]
     (->> (map #(.translateJobStatus % status) clients)
          (remove nil?)
-         (first))))
+         (first)))
+
+  (updateJobStatus [_ job-step job status end-date]
+    (combined-jobs/update-job-status self clients job-step job status end-date)))

@@ -1,6 +1,8 @@
 (ns metadactyl.service.apps.jobs
   (:require [kameleon.db :as db]
+            [metadactyl.clients.notifications :as cn]
             [metadactyl.persistence.jobs :as jp]
+            [metadactyl.service.apps.job-listings :as listings]
             [metadactyl.util.service :as service]))
 
 (defn get-unique-job-step
@@ -22,6 +24,32 @@
 (defn lock-job
   (service/assert-found (jp/lock-job job-id) "job" job-id))
 
+(defn- send-job-status-update
+  [apps-client {job-id :id prev-status :status app-id :app-id}]
+  (let [{curr-status :status :as job} (jp/get-job-by-id job-id)]
+    (when-not (= prev-status curr-status)
+      (cn/send-job-status-update
+       (.getUser apps-client)
+       (listings/format-job (.loadAppsTables apps-client [app-id]) job)))))
+
+(defn- determine-batch-status
+  [{:keys [id]}]
+  (let [children (jp/list-child-jobs id)]
+    (cond (every? (comp jp/is-completed? :status) children) jp/completed-status
+          (some (comp jp/is-running? :status) children)     jp/running-status
+          :else                                             jp/submitted-status)))
+
+(defn- update-batch-status
+  [batch end-date]
+  (let [new-status (determine-batch-status batch)]
+    (when-not (= (:status batch) new-status)
+      (jp/update-job (:id batch) {:status new-status :end-date completion-date})
+      (jp/update-job-steps (:id batch) new-status completion-date))))
+
 (defn update-job-status
-  [apps-client job-step job batch status end-date]
-  (.updateJobStatus apps-client job-step job batch status (db/timestamp-from-str end-date)))
+  [apps-client job-step {:keys id :as job} batch status end-date]
+  (when (jp/completed? (:status job))
+    (service/bad-request "received a job status update for completed or canceled job, " id))
+  (.updateJobStatus apps-client job-step job batch status (db/timestamp-from-str end-date))
+  (when batch (update-batch-status batch end-date))
+  (send-job-status-update apps-client (or batch job)))

@@ -10,6 +10,9 @@
 (deftype AgaveApps [agave user-has-access-token? user]
   metadactyl.protocols.Apps
 
+  (getUser [_]
+    user)
+
   (getClientName [_]
     jp/agave-client-name)
 
@@ -87,6 +90,6 @@
     (when (contains? (set (.getJobTypes self)) job-type)
       (.translateJobStatus agave status)))
 
-  (updateJobStatus [self job-step job batch status end-date]
+  (updateJobStatus [self job-step job status end-date]
     (when (contains? (set (.getJobTypes self)) (:job-type job-step))
-      (agave-jobs/update-job-status agave job-step job batch status end-date))))
+      (agave-jobs/update-job-status agave job-step job status end-date))))

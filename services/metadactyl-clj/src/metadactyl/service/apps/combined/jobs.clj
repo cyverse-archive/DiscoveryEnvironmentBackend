@@ -1,6 +1,7 @@
 (ns metadactyl.service.apps.combined.jobs
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as ce]
+  (:require [cheshire.core :as cheshire]
+            [clojure-commons.error-codes :as ce]
             [clojure-commons.file-utils :as ft]
             [kameleon.db :as db]
             [kameleon.uuids :as uuids]
@@ -135,3 +136,92 @@
     (jp/save-multistep-job job-info job-steps submission)
     (submit-job-step (get-apps-client clients job-step) job-info job-step submission)
     job-id))
+
+(defn- pipeline-status-changed?
+  [step-number max-step-number status]
+  (or (and (= step-number 1)
+           (jp/not-completed? status))
+      (and (= step-number max-step-number)
+           (jp/is-completed? status))
+      (= status jp/failed-status)))
+
+(defn- handle-pipeline-status-change
+  [job-id {:keys [step-number]} max-step-number status]
+  (when (pipeline-status-changed? step-number max-step-number status)
+    (jp/update-job job-id status end-time)))
+
+(defn- ready-for-next-step?
+  [step-number max-step-number status]
+  (and (not= step-number max-step-number)
+       (= status jp/completed-status)))
+
+(defn- load-mapped-inputs
+  [app-steps {:keys [app-step-number]}]
+  (->> (dec app-step-number)
+       (nth app-steps)
+       (:step_id)
+       (ap/load-target-step-mappings)))
+
+(defn- build-config-output-id
+  [io-map]
+  (keyword (str (:source_id io-map) "_" (or (:output_id io-map) (:external_output_id io-map)))))
+
+(defn- build-config-input-id
+  [io-map]
+  (keyword (str (:target_id io-map) "_" (or (:input_id io-map) (:external_input_id io-map)))))
+
+;; TODO: reimplement me!!!!
+(defn- get-default-output-name
+  [apps-client {source-id :source_id output-id :output_id} app-steps]
+  (let [{external_app_id} (first (filter #(= source-id (:step_id %)) app-steps))]
+    (.getDefaultOutputName apps-client (or (:external_app_id step) (:template_id step) output-id))))
+
+(defn- get-input-path
+  [apps-client {:keys [result-folder-path]} config app-steps io-map]
+  (->> (if-let [prop-value (get config (build-config-output-id io-map))]
+         prop-value
+         (get-default-output-name apps-client io-map app-steps))))
+
+(defn- add-mapped-inputs-to-config
+  [apps-client job submission app-steps io-mappings]
+  (update-in submission [:config]
+             (fn [config]
+               (reduce (fn [config io-map]
+                         (assoc config
+                           (build-config-input-id io-map)
+                           (get-input-path apps-client job config app-steps io-map)))
+                       config io-mappings))))
+
+(defn- add-mapped-inputs
+  [apps-client job next-step submission]
+  (let [app-steps (ap/load-app-steps (:app_id job))]
+    (->> (load-mapped-inputs app-steps next-step)
+         (add-mapped-inputs-to-config apps-client job submission app-steps))))
+
+(defn- submit-next-step
+  [clients job {:keys [job-id step-number] :as job-step}]
+  (let [next-step   (jp/get-job-step-number job-id (inc step-number))
+        apps-client (get-apps-client clients next-step)]
+    (->> (cheshire/decode (.getValue (:submission job)) true)
+         (add-mapped-inputs apps-client job next-step)
+         (submit-job-step apps-client job next-step))))
+
+(defn- handle-next-step-submission
+  [clients job {:keys [step-number] :as job-step} max-step-number status]
+  (when (ready-for-next-step? step-number max-step-number status)
+    (submit-next-step clients job job-step)))
+
+(defn- update-pipeline-status
+  [apps-client clients max-step-number job-step {job-id :id :as job} status end-date]
+  (let [status (.translateJobStatus apps-client status)]
+    (when (jp/status-follows? status (:status job-step))
+      (jp/update-job-step job-id (:external-id job-step) status end-date)
+      (handle-pipeline-status-change job-id job-step max-step-number status)
+      (handle-next-step-submission clients job job-step max-step-number status))))
+
+(defn update-job-status
+  [apps-client clients job-step job status end-date]
+  (let [max-step-number (jp/get-max-step-number (:id job))]
+    (if (= max-step-number 1)
+      (.updateJobStatus (get-apps-client clients job-step) job-step job status end-date)
+      (update-pipeline-status apps-client clients max-step-number job-step job status end-date))))

@@ -8,6 +8,7 @@
             [clojure-commons.file-utils :as ft]
             [kameleon.db :as db]
             [kameleon.uuids :as uuids]
+            [metadactyl.clients.notifications :as cn]
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.util.config :as config]
             [metadactyl.util.json :as json-util]
@@ -147,6 +148,8 @@
        (:id)))
 
 (defn update-job-status
-  [agave job-step job batch status end-date]
+  [agave {:keys [external-id] :as job-step} {job-id :id :as job} status end-date]
   (let [status (.translateJobStatus agave status)]
-    ()))
+    (when (jp/status-follows? status (:status job-step))
+      (jp/update-job-step job-id external-id status end-date)
+      (jp/update-job job-id status end-date))))
