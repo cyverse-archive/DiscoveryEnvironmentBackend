@@ -216,7 +216,9 @@ INSERT INTO container_images (id, "name", tag, url) VALUES
      'latest',
      'https://registry.hub.docker.com/u/discoenv/backwards-compat');
 
-INSERT INTO container_settings (tools_id) VALUES ('681251EF-EE59-4FE9-9436-DC8A23FEB11A');
+INSERT INTO container_settings (tools_id, network_mode)
+  VALUES ('681251EF-EE59-4FE9-9436-DC8A23FEB11A', 'bridge');
+
 INSERT INTO container_settings (tools_id) VALUES ('85cf7a33-386b-46fe-87c7-8c9d59972624');
 
 -- Insert default container settings for tools that don't already have them.
