@@ -271,7 +271,8 @@
 (defn container-network-mode-arg
   [container-map]
   (if (contains? container-map :network_mode)
-    (str "--net=" (:network_mode container-map))))
+    (str "--net=" (:network_mode container-map))
+    "--net=none"))
 
 (defn container-cpu-shares-arg
   [container-map]
@@ -288,6 +289,12 @@
   (let [image (:image container-map)
         tag   (if (contains? image :tag) (str ":" (:tag image)) "")]
     (str (:name image) tag)))
+
+(defn container-entrypoint-arg
+  [container-map]
+  (if (and (contains? container-map :entrypoint)
+           (not (string/blank? (:entrypoint container-map))))
+    (str "--entrypoint=\"" (:entrypoint container-map) "\"")))
 
 (defn container-env-args
   [step-map]
@@ -341,6 +348,7 @@
        (container-cpu-shares-arg container-map)
        (container-network-mode-arg container-map)
        (container-env-args step-map)
+       (container-entrypoint-arg container-map)
        (container-image-arg container-map)
        (container-tool-executable step-map)]))))
 
