@@ -8,8 +8,8 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [org.iplantc/clojure-commons "4.2.3"]
-                 [org.slf4j/slf4j-api "1.7.10"]
-                 [org.slf4j/slf4j-log4j12 "1.7.10"]
+                 [org.slf4j/slf4j-api "1.7.12"]
+                 [org.slf4j/slf4j-log4j12 "1.7.12"]
                  [org.iplantc.core.jargon/jargon-core "4.0.2.1.1"
                   :exclusions [[org.jglobus/JGlobus-Core]
                                [org.slf4j/slf4j-api]
