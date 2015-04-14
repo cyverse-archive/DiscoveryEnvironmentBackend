@@ -13,7 +13,10 @@
 (def AppIdPathParam (ss/describe UUID "The App's UUID"))
 (def AppIdJobViewPathParam (ss/describe String "The App's ID"))
 (def AppCategoryIdPathParam (ss/describe UUID "The App Category's UUID"))
-(def ApiName (ss/describe String "The name of the external API."))
+
+(def ApiName (ss/describe String "The name of the external API"))
+
+(def AnalysisIdPathParam (ss/describe UUID "The Analysis UUID"))
 
 (def NonBlankString
   (ss/describe

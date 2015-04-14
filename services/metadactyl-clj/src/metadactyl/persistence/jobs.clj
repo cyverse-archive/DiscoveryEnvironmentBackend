@@ -50,7 +50,7 @@
   [job-status]
   (= running-status job-status))
 
-(def not-completed? (complement is-completed?))
+(def not-completed? (complement completed?))
 
 (defn- nil-if-zero
   "Returns nil if the argument value is zero."

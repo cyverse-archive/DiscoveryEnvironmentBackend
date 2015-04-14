@@ -153,4 +153,7 @@
 
   (updateJobStatus [self job-step job status end-date]
     (when (contains? (set (.getJobTypes self)) (:job-type job-step))
-      (de-jobs/update-job-status job-step job status end-date))))
+      (de-jobs/update-job-status job-step job status end-date)))
+
+  (getDefaultOutputName [_ io-map source-step]
+    (de-jobs/get-default-output-name io-map source-step)))

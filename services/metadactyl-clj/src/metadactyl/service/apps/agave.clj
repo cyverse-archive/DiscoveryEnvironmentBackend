@@ -92,4 +92,7 @@
 
   (updateJobStatus [self job-step job status end-date]
     (when (contains? (set (.getJobTypes self)) (:job-type job-step))
-      (agave-jobs/update-job-status agave job-step job status end-date))))
+      (agave-jobs/update-job-status agave job-step job status end-date)))
+
+  (getDefaultOutputName [_ io-map source-step]
+    (agave-jobs/get-default-output-name agave io-map source-step)))

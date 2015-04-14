@@ -22,6 +22,7 @@
                         (str job-id "/" external-id)))
 
 (defn lock-job
+  [job-id]
   (service/assert-found (jp/lock-job job-id) "job" job-id))
 
 (defn- send-job-status-update
@@ -35,21 +36,21 @@
 (defn- determine-batch-status
   [{:keys [id]}]
   (let [children (jp/list-child-jobs id)]
-    (cond (every? (comp jp/is-completed? :status) children) jp/completed-status
-          (some (comp jp/is-running? :status) children)     jp/running-status
-          :else                                             jp/submitted-status)))
+    (cond (every? (comp jp/completed? :status) children) jp/completed-status
+          (some (comp jp/running? :status) children)     jp/running-status
+          :else                                          jp/submitted-status)))
 
 (defn- update-batch-status
   [batch end-date]
   (let [new-status (determine-batch-status batch)]
     (when-not (= (:status batch) new-status)
-      (jp/update-job (:id batch) {:status new-status :end-date completion-date})
-      (jp/update-job-steps (:id batch) new-status completion-date))))
+      (jp/update-job (:id batch) {:status new-status :end-date end-date})
+      (jp/update-job-steps (:id batch) new-status end-date))))
 
 (defn update-job-status
-  [apps-client job-step {:keys id :as job} batch status end-date]
+  [apps-client job-step {:keys [id] :as job} batch status end-date]
   (when (jp/completed? (:status job))
     (service/bad-request "received a job status update for completed or canceled job, " id))
-  (.updateJobStatus apps-client job-step job batch status (db/timestamp-from-str end-date))
+  (.updateJobStatus apps-client job-step job status (db/timestamp-from-str end-date))
   (when batch (update-batch-status batch end-date))
   (send-job-status-update apps-client (or batch job)))

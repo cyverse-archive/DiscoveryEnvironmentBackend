@@ -210,11 +210,11 @@
 (defn update-job-status
   ([external-id status end-date]
      (let [{:keys [job-id]} (jobs/get-unique-job-step external-id)]
-       (update-job-status apps-client job-id external-id status end-date)))
+       (update-job-status job-id external-id status end-date)))
   ([job-id external-id status end-date]
      (transaction
       (let [job-step (jobs/lock-job-step job-id external-id)
             job      (jobs/lock-job job-id)
             batch    (when-let [parent-id (:parent-id job)] (jobs/lock-job parent-id))]
         (-> (get-apps-client-for-username (:username job))
-            (jobs/update-job-status job-step job batch))))))
+            (jobs/update-job-status job-step job batch status end-date))))))

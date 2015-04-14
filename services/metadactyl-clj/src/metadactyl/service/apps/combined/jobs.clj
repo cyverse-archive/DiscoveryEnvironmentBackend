@@ -115,9 +115,10 @@
 
 (defn- submit-job-step
   [client {:keys [id] :as job-info} job-step submission]
-  (->> (prepare-job-step-submission job-info job-step submission)
-       (.submitJobStep client id)
-       (record-step-submission id (:step-number job-step))))
+  (throw (Exception. "Not gonna d'it!"))
+  #_(->> (prepare-job-step-submission job-info job-step submission)
+         (.submitJobStep client id)
+         (record-step-submission id (:step-number job-step))))
 
 (defn- get-apps-client
   [clients job-step]
@@ -142,13 +143,13 @@
   (or (and (= step-number 1)
            (jp/not-completed? status))
       (and (= step-number max-step-number)
-           (jp/is-completed? status))
+           (jp/completed? status))
       (= status jp/failed-status)))
 
 (defn- handle-pipeline-status-change
-  [job-id {:keys [step-number]} max-step-number status]
+  [job-id {:keys [step-number]} max-step-number status end-date]
   (when (pipeline-status-changed? step-number max-step-number status)
-    (jp/update-job job-id status end-time)))
+    (jp/update-job job-id status end-date)))
 
 (defn- ready-for-next-step?
   [step-number max-step-number status]
@@ -170,58 +171,60 @@
   [io-map]
   (keyword (str (:target_id io-map) "_" (or (:input_id io-map) (:external_input_id io-map)))))
 
-;; TODO: reimplement me!!!!
+(defn- find-source-step
+  [app-steps source-id]
+  (first (filter (comp (partial = source-id) :step_id) app-steps)))
+
 (defn- get-default-output-name
-  [apps-client {source-id :source_id output-id :output_id} app-steps]
-  (let [{external_app_id} (first (filter #(= source-id (:step_id %)) app-steps))]
-    (.getDefaultOutputName apps-client (or (:external_app_id step) (:template_id step) output-id))))
+  [combined-client {source-id :source_id :as io-map} app-steps]
+  (.getDefaultOutputName combined-client io-map (find-source-step app-steps source-id)))
 
 (defn- get-input-path
-  [apps-client {:keys [result-folder-path]} config app-steps io-map]
+  [combined-client {:keys [result-folder-path]} config app-steps io-map]
   (->> (if-let [prop-value (get config (build-config-output-id io-map))]
          prop-value
-         (get-default-output-name apps-client io-map app-steps))))
+         (get-default-output-name combined-client io-map app-steps))))
 
 (defn- add-mapped-inputs-to-config
-  [apps-client job submission app-steps io-mappings]
+  [combined-client job submission app-steps io-mappings]
   (update-in submission [:config]
              (fn [config]
                (reduce (fn [config io-map]
                          (assoc config
                            (build-config-input-id io-map)
-                           (get-input-path apps-client job config app-steps io-map)))
+                           (get-input-path combined-client job config app-steps io-map)))
                        config io-mappings))))
 
 (defn- add-mapped-inputs
-  [apps-client job next-step submission]
-  (let [app-steps (ap/load-app-steps (:app_id job))]
+  [combined-client job next-step submission]
+  (let [app-steps (ap/load-app-steps (:app-id job))]
     (->> (load-mapped-inputs app-steps next-step)
-         (add-mapped-inputs-to-config apps-client job submission app-steps))))
+         (add-mapped-inputs-to-config combined-client job submission app-steps))))
 
 (defn- submit-next-step
-  [clients job {:keys [job-id step-number] :as job-step}]
-  (let [next-step   (jp/get-job-step-number job-id (inc step-number))
-        apps-client (get-apps-client clients next-step)]
+  [combined-client clients job {:keys [job-id step-number] :as job-step}]
+  (let [next-step (jp/get-job-step-number job-id (inc step-number))]
     (->> (cheshire/decode (.getValue (:submission job)) true)
-         (add-mapped-inputs apps-client job next-step)
-         (submit-job-step apps-client job next-step))))
+         (add-mapped-inputs combined-client job next-step)
+         (submit-job-step (get-apps-client clients next-step) job next-step))))
 
 (defn- handle-next-step-submission
-  [clients job {:keys [step-number] :as job-step} max-step-number status]
+  [combined-client clients job {:keys [step-number] :as job-step} max-step-number status]
   (when (ready-for-next-step? step-number max-step-number status)
-    (submit-next-step clients job job-step)))
+    (submit-next-step combined-client clients job job-step)))
 
 (defn- update-pipeline-status
-  [apps-client clients max-step-number job-step {job-id :id :as job} status end-date]
-  (let [status (.translateJobStatus apps-client status)]
+  [combined-client clients max-step-number job-step {job-id :id :as job} status end-date]
+  (let [status (.translateJobStatus combined-client (:job-type job-step) status)]
     (when (jp/status-follows? status (:status job-step))
       (jp/update-job-step job-id (:external-id job-step) status end-date)
-      (handle-pipeline-status-change job-id job-step max-step-number status)
-      (handle-next-step-submission clients job job-step max-step-number status))))
+      (handle-pipeline-status-change job-id job-step max-step-number status end-date)
+      (handle-next-step-submission combined-client clients job job-step max-step-number status))))
 
 (defn update-job-status
-  [apps-client clients job-step job status end-date]
+  [combined-client clients job-step job status end-date]
   (let [max-step-number (jp/get-max-step-number (:id job))]
     (if (= max-step-number 1)
       (.updateJobStatus (get-apps-client clients job-step) job-step job status end-date)
-      (update-pipeline-status apps-client clients max-step-number job-step job status end-date))))
+      (update-pipeline-status combined-client clients max-step-number job-step job status
+                              end-date))))

@@ -36,3 +36,9 @@
   (cond (not (uuid? app-id))                     (get-apps-client clients jp/agave-client-name)
         (zero? (ap/count-external-steps app-id)) (get-apps-client clients jp/de-client-name)
         :else                                    nil))
+
+(defn apps-client-for-step
+  [clients job-step]
+  (if (:external_app_id job-step)
+    (get-apps-client clients jp/agave-client-name)
+    (get-apps-client clients jp/de-client-name)))
