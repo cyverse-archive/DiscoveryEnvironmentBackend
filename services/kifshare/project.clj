@@ -17,28 +17,28 @@
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "kifshare-standalone.jar"
 
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/tools.logging "0.2.3"]
-                 [org.clojure/core.memoize "0.5.3"]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [org.clojure/tools.logging "0.3.1"]
+                 [org.clojure/core.memoize "0.5.7"]
                  [org.iplantc/clj-jargon "4.2.3"]
                  [org.iplantc/clojure-commons "4.2.3"]
                  [org.iplantc/common-cli "4.2.3"]
-                 [me.raynes/fs "1.4.4"]
-                 [cheshire "5.0.1"]
-                 [slingshot "0.10.1"]
-                 [compojure "1.1.3"]
-                 [ring/ring-jetty-adapter "1.1.6"]
-                 [ring/ring-devel "1.1.6"]
-                 [de.ubercode.clostache/clostache "1.3.0"]
-                 [com.cemerick/url "0.0.6"]
-                 [lamina "0.5.0-beta9"]
-                 [clj-http "0.6.5"]]
+                 [me.raynes/fs "1.4.6"]
+                 [cheshire "5.4.0"]
+                 [slingshot "0.12.2"]
+                 [compojure "1.3.3"]
+                 [ring/ring-jetty-adapter "1.3.2"]
+                 [ring/ring-devel "1.3.2"]
+                 [de.ubercode.clostache/clostache "1.4.0"]
+                 [com.cemerick/url "0.1.1"]
+                 [lamina "0.5.6"]
+                 [clj-http "1.1.0"]]
 
   :ring {:init kifshare.config/init
          :handler kifshare.core/app}
 
   :profiles {:dev     {:resource-paths ["build"]
-                       :dependencies [[midje "1.4.0"]]
+                       :dependencies [[midje "1.6.3"]]
                        :plugins [[lein-midje "2.0.1"]]}
              :uberjar {:aot :all}}
 
