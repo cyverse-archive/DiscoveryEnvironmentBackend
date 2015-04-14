@@ -150,17 +150,25 @@
      :use-trash       use-trash
      :proxy           (proxy-ctor)})
 
-(defn account
-  ([cfg]
-    (account cfg (:username cfg) (:password cfg)))
-  ([cfg user pass]
-    (IRODSAccount. (:host cfg)
-                   (Integer/parseInt (:port cfg))
-                   user
-                   pass
-                   (:home cfg)
-                   (:zone cfg)
-                   (:defaultResource cfg))))
+(defn override-user-account
+  [cfg user pass]
+  (IRODSAccount. (:host cfg)
+    (Integer/parseInt (:port cfg))
+    user
+    pass
+    (:home cfg)
+    (:zone cfg)
+    (:defaultResource cfg)))
+
+(defn- account
+  [cfg]
+  (IRODSAccount. (:host cfg)
+                 (Integer/parseInt (:port cfg))
+                 (:username cfg)
+                 (:password cfg)
+                 (:home cfg)
+                 (:zone cfg)
+                 (:defaultResource cfg)))
 
 (defn- context-map
   "Throws:
