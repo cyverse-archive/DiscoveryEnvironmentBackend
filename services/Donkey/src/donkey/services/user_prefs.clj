@@ -64,7 +64,6 @@
   []
   (-> (:username current-user)
       (user-prefs)
-      (cheshire/decode true)
       (output-dir/extract-default-output-dir)))
 
 (defn do-get-prefs
