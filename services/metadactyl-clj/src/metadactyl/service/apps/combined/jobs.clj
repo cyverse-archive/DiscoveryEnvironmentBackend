@@ -180,9 +180,11 @@
 
 (defn- get-input-path
   [combined-client {:keys [result-folder-path]} config app-steps io-map]
-  (->> (if-let [prop-value (get config (build-config-output-id io-map))]
-         prop-value
-         (get-default-output-name combined-client io-map app-steps))))
+  (ft/path-join
+   result-folder-path
+   (->> (if-let [prop-value (get config (build-config-output-id io-map))]
+          prop-value
+          (get-default-output-name combined-client io-map app-steps)))))
 
 (defn- add-mapped-inputs-to-config
   [combined-client job submission app-steps io-mappings]
