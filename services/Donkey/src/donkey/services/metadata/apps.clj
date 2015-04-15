@@ -295,62 +295,6 @@
   (service/success-response
     (.adminEditAppDocs (get-app-lister) app-id (service/decode-json body))))
 
-(defn- get-unique-job-step
-  "Gest a unique job step for an external ID. An exception is thrown if no job step
-  is found or if multiple job steps are found."
-  [external-id]
-  (let [job-steps (jp/get-job-steps-by-external-id external-id)]
-    (when (empty? job-steps)
-      (service/not-found "job step" external-id))
-    (when (> (count job-steps) 1)
-      (service/not-unique "job step" external-id))
-    (first job-steps)))
-
-(defn update-de-job-status
-  "Updates the job status. Important note: this function currently assumes that the
-  external identifier is unique."
-  [external-id status end-date]
-  (with-db db/de
-    (transaction
-     (if (= status jp/submitted-status)
-       (service/success-response)
-       (let [job-step                   (get-unique-job-step external-id)
-             job-step                   (jp/lock-job-step (:job-id job-step) external-id)
-             {:keys [username] :as job} (jp/lock-job (:job-id job-step))
-             batch                      (when (:parent-id job) (jp/lock-job (:parent-id job)))
-             end-date                   (kdb/timestamp-from-str end-date)
-             app-lister                 (get-app-lister "" username)]
-         (service/assert-found job "job" (:job-id job-step))
-         (with-directory-user [username]
-           (try+
-            (.updateJobStatus app-lister username job job-step status end-date)
-            (when batch (.updateBatchStatus app-lister batch end-date))
-            (catch Object o
-              (let [msg (str "DE job status update failed for " external-id)]
-                (log/warn o msg)
-                (throw+))))))))))
-
-(defn update-agave-job-status
-  [uuid status end-time external-id]
-  (with-db db/de
-    (transaction
-     (let [uuid                       (UUID/fromString uuid)
-           job-step                   (jp/lock-job-step uuid external-id)
-           {:keys [username] :as job} (jp/lock-job uuid)
-           batch                      (when (:parent-id job) (jp/lock-job (:parent-id job)))
-           end-time                   (kdb/timestamp-from-str end-time)
-           app-lister                 (get-app-lister "" username)]
-       (service/assert-found job "job" uuid)
-       (service/assert-found job-step "job step" (str uuid "/" external-id))
-       (with-directory-user [username]
-         (try+
-          (.updateJobStatus app-lister username job job-step status end-time)
-          (when batch (.updateBatchStatus app-lister batch end-time))
-          (catch Object o
-            (let [msg (str "Agave job status update failed for " uuid "/" external-id)]
-              (log/warn o msg)
-              (throw+)))))))))
-
 (defn- sync-job-status
   [job]
   (with-directory-user [(:username job)]
