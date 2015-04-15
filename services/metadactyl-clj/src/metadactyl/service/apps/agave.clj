@@ -88,7 +88,7 @@
 
   (translateJobStatus [self job-type status]
     (when (contains? (set (.getJobTypes self)) job-type)
-      (.translateJobStatus agave status)))
+      (or (.translateJobStatus agave status) status)))
 
   (updateJobStatus [self job-step job status end-date]
     (when (contains? (set (.getJobTypes self)) (:job-type job-step))

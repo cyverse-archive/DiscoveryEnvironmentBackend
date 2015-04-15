@@ -71,7 +71,7 @@
     (let [step  (lock-job-step id (:external-id step))
           job   (lock-job id)
           batch (when-let [parent-id (:parent-id job)] (lock-job parent-id))]
-      (update-job-status apps-client step job batch jp/failed-status (db/now)))))
+      (update-job-status apps-client step job batch jp/failed-status (db/now-str)))))
 
 (defn- determine-job-status
   "Determines the status of a job for synchronization in the case when all job steps are
