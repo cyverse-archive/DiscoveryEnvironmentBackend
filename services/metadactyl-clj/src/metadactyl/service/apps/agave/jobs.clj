@@ -157,3 +157,9 @@
 (defn get-default-output-name
   [agave {external-output-id :external_output_id} {external-app-id :external_app_id}]
   (.getDefaultOutputName agave external-app-id external-output-id))
+
+(defn get-job-step-status
+  [agave {:keys [external-id]}]
+  (try+
+   (select-keys (.listJob agave external-id) [:status :enddate])
+   (catch [:status 404] _ nil)))

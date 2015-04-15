@@ -41,4 +41,5 @@
   (submitJobStep [_ job-id submission])
   (translateJobStatus [_ job-type status])
   (updateJobStatus [_ job-step job status end-date])
-  (getDefaultOutputName [_ io-map source-step]))
+  (getDefaultOutputName [_ io-map source-step])
+  (getJobStepStatus [_ job-step]))

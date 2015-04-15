@@ -95,4 +95,7 @@
       (agave-jobs/update-job-status agave job-step job status end-date)))
 
   (getDefaultOutputName [_ io-map source-step]
-    (agave-jobs/get-default-output-name agave io-map source-step)))
+    (agave-jobs/get-default-output-name agave io-map source-step))
+
+  (getJobStepStatus [_ job-step]
+    (agave-jobs/get-job-step-status agave job-step)))

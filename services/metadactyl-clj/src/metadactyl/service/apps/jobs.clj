@@ -54,3 +54,44 @@
   (.updateJobStatus apps-client job-step job status (db/timestamp-from-str end-date))
   (when batch (update-batch-status batch end-date))
   (send-job-status-update apps-client (or batch job)))
+
+(defn- find-incomplete-job-steps
+  [job-id]
+  (remove (comp jp/completed? :status) (jp/list-job-steps job-id)))
+
+(defn- sync-incomplete-job-status
+  [apps-client {:keys [id] :as job} step]
+  (if-let [step-status (.getJobStepStatus apps-client step)]
+    (let [step     (lock-job-step id (:external-id step))
+          job      (lock-job id)
+          batch    (when-let [parent-id (:parent-id job)] (lock-job parent-id))
+          status   (:status step-status)
+          end-date (db/timestamp-from-str (:enddate step-status))]
+      (update-job-status apps-client step job batch status end-date))
+    (let [step  (lock-job-step id (:external-id step))
+          job   (lock-job id)
+          batch (when-let [parent-id (:parent-id job)] (lock-job parent-id))]
+      (update-job-status apps-client step job batch jp/failed-status (db/now)))))
+
+(defn- determine-job-status
+  "Determines the status of a job for synchronization in the case when all job steps are
+   marked as being in one of the completed statuses but the job itself is not."
+  [job-id]
+  (let [statuses (map :status (jp/list-job-steps job-id))
+        status   (first (filter (partial not= jp/completed-status) statuses))]
+    (cond (nil? status)                 jp/completed-status
+          (= jp/canceled-status status) status
+          (= jp/failed-status status)   status
+          :else                         jp/failed-status)))
+
+(defn- sync-complete-job-status
+  [{:keys [id]}]
+  (let [{:keys [status]} (jp/lock-job id)]
+    (when-not (jp/completed? status)
+      (jp/update-job id {:status (determine-job-status id) :end-date (db/now)}))))
+
+(defn sync-job-status
+  [apps-client {:keys [id] :as job}]
+  (if-let [step (first (find-incomplete-job-steps id))]
+    (sync-incomplete-job-status apps-client job step)
+    (sync-complete-job-status job)))

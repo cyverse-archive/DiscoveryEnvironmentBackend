@@ -37,8 +37,18 @@
         (zero? (ap/count-external-steps app-id)) (get-apps-client clients jp/de-client-name)
         :else                                    nil))
 
-(defn apps-client-for-step
+(defn apps-client-for-app-step
   [clients job-step]
   (if (:external_app_id job-step)
     (get-apps-client clients jp/agave-client-name)
     (get-apps-client clients jp/de-client-name)))
+
+(defn is-de-job-step?
+  [job-step]
+  (= (:job-type job-step) jp/de-job-type))
+
+(defn apps-client-for-job-step
+  [clients job-step]
+  (if (is-de-job-step? job-step)
+    (get-apps-client clients jp/de-client-name)
+    (get-apps-client clients jp/agave-client-name)))

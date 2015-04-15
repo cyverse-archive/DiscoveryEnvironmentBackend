@@ -156,4 +156,7 @@
       (de-jobs/update-job-status job-step job status end-date)))
 
   (getDefaultOutputName [_ io-map source-step]
-    (de-jobs/get-default-output-name io-map source-step)))
+    (de-jobs/get-default-output-name io-map source-step))
+
+  (getJobStepStatus [_ job-step]
+    (de-jobs/get-job-step-status job-step)))

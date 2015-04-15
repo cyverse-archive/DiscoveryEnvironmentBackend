@@ -145,4 +145,7 @@
     (combined-jobs/update-job-status self clients job-step job status end-date))
 
   (getDefaultOutputName [_ io-map source-step]
-    (.getDefaultOutputName (util/apps-client-for-step clients source-step) io-map source-step)))
+    (.getDefaultOutputName (util/apps-client-for-app-step clients source-step) io-map source-step))
+
+  (getJobStepStatus [_ job-step]
+    (.getJobStepStatus (util/apps-client-for-job-step clients job-step) job-step)))

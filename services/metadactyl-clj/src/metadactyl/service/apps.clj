@@ -1,13 +1,15 @@
 (ns metadactyl.service.apps
   (:use [kameleon.uuids :only [uuidify]]
         [korma.db :only [transaction]]
-        [slingshot.slingshot :only [throw+]])
+        [slingshot.slingshot :only [try+ throw+]])
   (:require [cemerick.url :as curl]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [mescal.de :as agave]
             [metadactyl.clients.notifications :as cn]
+            [metadactyl.persistence.jobs :as jp]
             [metadactyl.persistence.oauth :as op]
+            [metadactyl.protocols]
             [metadactyl.service.apps.agave]
             [metadactyl.service.apps.combined]
             [metadactyl.service.apps.de]
@@ -218,3 +220,21 @@
             batch    (when-let [parent-id (:parent-id job)] (jobs/lock-job parent-id))]
         (-> (get-apps-client-for-username (:username job))
             (jobs/update-job-status job-step job batch status end-date))))))
+
+(defn- sync-job-status
+  [{:keys [username id] :as job}]
+  (try+
+   (log/info "synchronizing the job status for" id)
+   (transaction (jobs/sync-job-status (get-apps-client-for-username username) job))
+   (catch Object _
+     (log/error (:throwable &throw-context) "unable to sync the job status for job" id))))
+
+(defn sync-job-statuses
+  []
+  (log/info "synchronizing job statuses")
+  (try+
+   (dorun (map sync-job-status (jp/list-incomplete-jobs)))
+   (catch Object _
+     (log/error (:throwable &throw-context)
+                "error while obtaining the list of jobs to synchronize.")))
+  (log/info "done syncrhonizing job statuses"))

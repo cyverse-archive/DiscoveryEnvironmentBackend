@@ -11,10 +11,6 @@
             [metadactyl.util.json :as json-util]
             [metadactyl.util.service :as service]))
 
-(defn- is-de-job-step?
-  [job-step]
-  (= (:job-type job-step) jp/de-job-type))
-
 (defn- app-step-partitioner
   "Partitions app steps into units of execution. Each external app step has to run by itself.
   Consecutive DE app steps can be combined into a single step."
@@ -102,7 +98,7 @@
 
 (defn- prepare-job-step-submission
   [job-info job-step submission]
-  (if (is-de-job-step? job-step)
+  (if (cu/is-de-job-step? job-step)
     (prepare-de-job-step-submission job-info job-step submission)
     (prepare-agave-job-step-submission job-info job-step submission)))
 
@@ -119,12 +115,6 @@
        (.submitJobStep client id)
        (record-step-submission id (:step-number job-step))))
 
-(defn- get-apps-client
-  [clients job-step]
-  (if (is-de-job-step? job-step)
-    (cu/get-apps-client clients jp/de-client-name)
-    (cu/get-apps-client clients jp/agave-client-name)))
-
 (defn submit
   [user clients {app-id :app_id :as submission}]
   (let [job-id      (uuids/uuid)
@@ -134,7 +124,7 @@
                                          job-id app-info submission)
         job-step    (first job-steps)]
     (jp/save-multistep-job job-info job-steps submission)
-    (submit-job-step (get-apps-client clients job-step) job-info job-step submission)
+    (submit-job-step (cu/apps-client-for-job-step clients job-step) job-info job-step submission)
     job-id))
 
 (defn- pipeline-status-changed?
@@ -207,7 +197,7 @@
   (let [next-step (jp/get-job-step-number job-id (inc step-number))]
     (->> (cheshire/decode (.getValue (:submission job)) true)
          (add-mapped-inputs combined-client job next-step)
-         (submit-job-step (get-apps-client clients next-step) job next-step))))
+         (submit-job-step (cu/apps-client-for-job-step clients next-step) job next-step))))
 
 (defn- handle-next-step-submission
   [combined-client clients job {:keys [step-number] :as job-step} max-step-number status]
@@ -226,6 +216,6 @@
   [combined-client clients job-step job status end-date]
   (let [max-step-number (jp/get-max-step-number (:id job))]
     (if (= max-step-number 1)
-      (.updateJobStatus (get-apps-client clients job-step) job-step job status end-date)
+      (.updateJobStatus (cu/apps-client-for-job-step clients job-step) job-step job status end-date)
       (update-pipeline-status combined-client clients max-step-number job-step job status
                               end-date))))
