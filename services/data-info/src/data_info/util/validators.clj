@@ -22,9 +22,11 @@
 
    Returns:
      It returns false if the string contains at least one problematic character, otherwise false."
-  [^IPersistentCollection bad-chars ^String to-check]
-  (let [chars-to-check (set (seq to-check))]
-    (empty? (set/intersection (set bad-chars) chars-to-check))))
+  ([^String to-check]
+    (good-string? (seq (cfg/bad-chars)) to-check))
+  ([^IPersistentCollection bad-chars ^String to-check]
+    (let [chars-to-check (set (seq to-check))]
+      (empty? (set/intersection (set bad-chars) chars-to-check)))))
 
 
 (defn valid-bool-param

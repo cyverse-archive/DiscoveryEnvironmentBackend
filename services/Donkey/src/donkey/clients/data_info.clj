@@ -4,6 +4,7 @@
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [cemerick.url :as url]
+            [cheshire.core :as json]
             [clj-http.client :as http]
             [me.raynes.fs :as fs]
             [clj-icat-direct.icat :as db]
@@ -69,6 +70,14 @@
   [^String user ^String dir]
   (cr/ensure-created user dir))
 
+(defn create-dir
+  [params body]
+  (let [url     (url/url (cfg/data-info-base-url) "data" "directory" "create")
+        req-map {:query-params params
+                 :content-type :json
+                 :body         (json/encode body)}]
+    (http/post (str url) req-map)))
+
 
 (defn get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If
@@ -78,7 +87,9 @@
   (log/debug "getting or creating dir: path =" path)
   (cond
    (not (e/path-exists? path))
-   (cr/create (:shortUsername current-user) path)
+   (-> (create-dir {:user (:shortUsername current-user)} {:path path})
+       :body
+       json/decode)
 
    (and (e/path-exists? path) (st/path-is-dir? path))
    path

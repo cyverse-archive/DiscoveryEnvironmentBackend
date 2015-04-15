@@ -1,63 +1,10 @@
 (ns donkey.services.filesystem.create
-  (:use [clojure-commons.error-codes]
-        [clojure-commons.validators]
-        [donkey.services.filesystem.validators]
-        [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.permissions :only [set-owner collection-perm-map]]
-        [slingshot.slingshot :only [try+ throw+]])
+  (:use [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.permissions :only [set-owner]])
   (:require [clojure.tools.logging :as log]
-            [clojure.string :as string]
-            [clojure-commons.file-utils :as ft]
-            [cheshire.core :as json]
-            [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clj-jargon.item-info :as item]
             [clj-jargon.item-ops :as ops]
-            [donkey.util.validators :as duv]
-            [donkey.services.filesystem.common-paths :as paths]
-            [donkey.services.filesystem.icat :as cfg]
-            [donkey.services.filesystem.stat :as stat]
-            [donkey.services.filesystem.validators :as validators]))
-
-(defn create
-  "Creates a directory at path on behalf of a user. The user
-   becomes the owner of the new directory."
-  [user path]
-  (log/debug (str "create " user " " path))
-  (with-jargon (cfg/jargon-cfg) [cm]
-    (let [fixed-path (ft/rm-last-slash path)
-          path-stack (take-while (complement nil?) (iterate ft/dirname fixed-path))
-          [existing-paths paths-to-mk] ((juxt filter remove) #(item/exists? cm %) path-stack)
-          target-dir (first existing-paths)]
-      (when-not target-dir
-        (throw+ {:error_code ERR_DOES_NOT_EXIST
-                 :path (last paths-to-mk)}))
-      (when-not (duv/good-string? fixed-path)
-        (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-                 :path path}))
-      (validators/user-exists cm user)
-      (validators/path-writeable cm user target-dir)
-      (validators/path-not-exists cm fixed-path)
-      (ops/mkdirs cm fixed-path)
-      (doseq [new-path paths-to-mk]
-        (set-owner cm new-path user))
-      (stat/path-stat cm user fixed-path))))
-
-(defn do-create
-  "Entrypoint for the API that calls (create)."
-  [{user :user} {path :path}]
-  (create user path))
-
-(with-pre-hook! #'do-create
-  (fn [params body]
-    (paths/log-call "do-create" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:path string?})
-    (log/info "Body: " body)
-    (when (paths/super-user? (:user params))
-      (throw+ {:error_code ERR_NOT_AUTHORIZED :user (:user params)}))))
-
-(with-post-hook! #'do-create (paths/log-func "do-create"))
-
+            [donkey.services.filesystem.icat :as cfg]))
 
 (defn ensure-created
   "If a folder doesn't exist, it creates the folder and makes the given user an owner of it.

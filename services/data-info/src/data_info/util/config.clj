@@ -64,6 +64,12 @@
   "data-info.copy-key")
 
 
+(cc/defprop-str bad-chars
+  "The characters that are considered invalid in iRODS dir- and filenames."
+  [props config-valid configs]
+  "data-info.bad-chars")
+
+
 (cc/defprop-int max-paths-in-request
   "The number of paths that are allowable in an API request."
   [props config-valid configs]
