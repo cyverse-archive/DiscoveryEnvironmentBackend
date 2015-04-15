@@ -26,10 +26,10 @@
   (with-jargon (cfg/jargon-cfg) [cm]
     (let [fixed-path (ft/rm-last-slash path)
           path-stack (take-while (complement nil?) (iterate ft/dirname fixed-path))
-          [existing-paths paths-to-mk] ((juxt filter remove) #(item/exists? cm %) path-stack)
+          ;; Using group-by rather than (juxt filter remove) to force list evaluation so set-owner
+          ;; will be called correctly in the doseq below...
+          {existing-paths true paths-to-mk false} (group-by (partial item/exists? cm) path-stack)
           target-dir (first existing-paths)]
-      (log/spy existing-paths)
-      (log/spy paths-to-mk)
       (when-not target-dir
         (throw+ {:error_code ERR_DOES_NOT_EXIST
                  :path (last paths-to-mk)}))
