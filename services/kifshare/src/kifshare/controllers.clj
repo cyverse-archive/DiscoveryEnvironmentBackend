@@ -101,7 +101,7 @@
   (log/debug "entered page kifshare.controllers/download-file")
 
   (try+
-    (jinit/with-jargon (jargon-config) [cm :auto-close false]
+    (jinit/with-jargon (jargon-config) :auto-close false [cm]
       (let [ticket-info (tickets/ticket-info cm ticket-id)]
         (log/warn "Downloading " ticket-id " as " filename)
         (if (and (range-request? ring-request) (valid-range? ring-request))
@@ -137,12 +137,11 @@
 
 (defn file-info
   ([ticket-id ring-request]
-     (try+
-      (jinit/with-jargon (jargon-config) [cm :auto-close false]
-        (let [ticket-info (tickets/ticket-info cm ticket-id)]
-          {:status 200
-           :headers {"Content-Length" (str (:filesize ticket-info))
-                     "Content-Disposition" (str "filename=\"" (:filename ticket-info) "\"")
-                     "Accept-Ranges" "bytes"}}))))
+   (jinit/with-jargon (jargon-config) :auto-close false [cm]
+     (let [ticket-info (tickets/ticket-info cm ticket-id)]
+       {:status  200
+        :headers {"Content-Length"      (str (:filesize ticket-info))
+                  "Content-Disposition" (str "filename=\"" (:filename ticket-info) "\"")
+                  "Accept-Ranges"       "bytes"}})))
   ([ticket-id filename ring-request]
-     (file-info ticket-id ring-request)))
+   (file-info ticket-id ring-request)))

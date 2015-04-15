@@ -44,19 +44,99 @@
   (log/debug curr-with-jargon-index "- returning a proxy input stream...")
   (proxy-input-stream cm retval))
 
+
+(defn- account
+  [cfg client-user]
+  (IRODSAccount/instanceWithProxy (:host cfg)
+                                  (Integer/parseInt (:port cfg))
+                                  client-user
+                                  (:password cfg)
+                                  (:home cfg)
+                                  (:zone cfg)
+                                  (:defaultResource cfg)
+                                  (:username cfg)
+                                  (:zone cfg)))
+
+
+(defn- context-map
+  "Throws:
+     org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to iRODS"
+  [cfg client-user]
+  (let [acnt (account cfg client-user)
+        aof  (.getIRODSAccessObjectFactory (:proxy cfg))]
+    (assoc cfg
+      :irodsAccount        acnt
+      :accessObjectFactory aof
+      :collectionAO        (.getCollectionAO aof acnt)
+      :dataObjectAO        (.getDataObjectAO aof acnt)
+      :userAO              (.getUserAO aof acnt)
+      :userGroupAO         (.getUserGroupAO aof acnt)
+      :fileFactory         (.getIRODSFileFactory (:proxy cfg) acnt)
+      :fileSystemAO        (.getIRODSFileSystemAO aof acnt)
+      :lister              (.getCollectionAndDataObjectListAndSearchAO aof acnt)
+      :quotaAO             (.getQuotaAO aof acnt)
+      :executor            (.getIRODSGenQueryExecutor aof acnt))))
+
+
+(defn- log-value
+  [msg value]
+  (log/debug curr-with-jargon-index "-" msg value)
+  value)
+
+
+(defn- get-context
+  "Throws:
+     org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to iRODS"
+  [cfg client-user]
+  (let [retval {:succeeded true :retval nil :exception nil :retry false}]
+    (try
+      (log-value "retval:" (assoc retval :retval (context-map cfg client-user)))
+      (catch java.net.ConnectException e
+        (log/debug curr-with-jargon-index "- caught a ConnectException:" e)
+        (log/debug curr-with-jargon-index "- need to retry...")
+        (assoc retval :exception e :succeeded false :retry true))
+      (catch java.lang.Exception e
+        (log/debug curr-with-jargon-index "- got an Exception:" e)
+        (log/debug curr-with-jargon-index "- shouldn't retry...")
+        (assoc retval :exception e :succeeded false :retry false)))))
+
+
+(defn create-jargon-context-map
+  "Creates a map containing instances of commonly used Jargon objects.
+
+   Throws:
+     org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to iRODS"
+  [cfg client-user]
+  (loop [num-tries 0]
+    (let [retval (get-context cfg client-user)
+          error? (not (:succeeded retval))
+          retry? (:retry retval)]
+      (cond
+        (and error? retry? (< num-tries (:max-retries cfg)))
+        (do (Thread/sleep (:retry-sleep cfg))
+            (recur (inc num-tries)))
+
+        error?
+        (throw (:exception retval))
+
+        :else (:retval retval)))))
+
+
 (defmacro with-jargon
   "An iRODS connection is opened, binding the connection's context to the symbolic cm-sym value.
    Next it evaluates the body expressions. Finally, it closes the iRODS connection*. The body
    expressions should use the value of cm-sym to access the iRODS context.
 
-   Parameters:
-     cfg - The Jargon configuration used to connect to iRODS.
-     [cm-sym] - Holds the name of the binding to the iRODS context map used by the body expressions.
-     body - Zero or more expressions to be evaluated while an iRODS connection is open.
+   Calling:
+   (with-jargon cfg [cm-sym] body)
+   (with-jargon cfg :auto-close auto-close [cm-sym] body)
 
-   Options:
-     Options are named parameters passed to this macro after the context map symbol.
-     :auto-close - true if the connection should be closed automatically (default: true)
+   Parameters:
+     cfg        - The Jargon configuration used to connect to iRODS.
+     [cm-sym]   - Holds the name of the binding to the iRODS context map used by the body
+                  expressions.
+     body       - Zero or more expressions to be evaluated while an iRODS connection is open.
+     auto-close - true if the connection should be closed automatically (default: true)
 
    Returns:
      It returns the result from evaluating the last expression in the body.*
@@ -67,9 +147,8 @@
     Example:
       (def config (init ...))
 
-     (with-jargon config
-       [ctx]
-       (list-all ctx \"/zone/home/user/\"))
+      (with-jargon config [ctx]
+        (list-all ctx \"/zone/home/user/\"))
 
    * If an IRODSFileInputStream is the result of the last body expression, the iRODS connection is
      not closed. Instead, a special InputStream is returned that when closed, closes the iRODS
@@ -77,21 +156,25 @@
      then the connection is not closed automatically. In that case, the caller must take steps to
      ensure that the connection will be closed (for example, by including a proxy input stream
      somewhere in the result and calling the close method on that proxy input stream later)."
-  [cfg [cm-sym & {:keys [auto-close] :or {auto-close true}}] & body]
-  `(binding [curr-with-jargon-index (dosync (alter with-jargon-index inc))]
-     (log/debug "curr-with-jargon-index:" curr-with-jargon-index)
-     (when-let [~cm-sym (create-jargon-context-map ~cfg)]
-       (ss/try+
-        (let [retval# (do ~@body)]
-          (cond
-           (instance? java.io.InputStream retval#) (proxy-input-stream-return ~cm-sym retval#)
-           ~auto-close                              (clean-return ~cm-sym retval#)
-           :else                                    (dirty-return ~cm-sym retval#)))
-        (catch Object o1#
-          (ss/try+
-            (.close (:proxy ~cm-sym))
-            (catch Object o2#))
-          (ss/throw+))))))
+  [cfg & params]
+  (let [[opts-map [[cm-sym] & body]] (split-with #(not (vector? %)) params)
+         opts                      (apply hash-map opts-map)
+         auto-close                (if (nil? (:auto-close opts)) true (:auto-close opts))]
+    `(binding [curr-with-jargon-index (dosync (alter with-jargon-index inc))]
+       (log/debug "curr-with-jargon-index:" curr-with-jargon-index)
+       (when-let [~cm-sym (create-jargon-context-map ~cfg (:username ~cfg))]
+         (ss/try+
+           (let [retval# (do ~@body)]
+             (cond
+               (instance? java.io.InputStream retval#) (proxy-input-stream-return ~cm-sym retval#)
+               ~auto-close                             (clean-return ~cm-sym retval#)
+               :else                                   (dirty-return ~cm-sym retval#)))
+           (catch Object o1#
+             (ss/try+
+               (.close (:proxy ~cm-sym))
+               (catch Object o2#))
+             (ss/throw+)))))))
+
 
 (defmacro log-stack-trace
   [msg]
@@ -159,74 +242,3 @@
     (:home cfg)
     (:zone cfg)
     (:defaultResource cfg)))
-
-(defn- account
-  [cfg]
-  (IRODSAccount. (:host cfg)
-                 (Integer/parseInt (:port cfg))
-                 (:username cfg)
-                 (:password cfg)
-                 (:home cfg)
-                 (:zone cfg)
-                 (:defaultResource cfg)))
-
-(defn- context-map
-  "Throws:
-     org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to iRODS"
-  [cfg]
-  (let [acnt (account cfg)
-        aof  (.getIRODSAccessObjectFactory (:proxy cfg))]
-    (assoc cfg
-      :irodsAccount        acnt
-      :accessObjectFactory aof
-      :collectionAO        (.getCollectionAO aof acnt)
-      :dataObjectAO        (.getDataObjectAO aof acnt)
-      :userAO              (.getUserAO aof acnt)
-      :userGroupAO         (.getUserGroupAO aof acnt)
-      :fileFactory         (.getIRODSFileFactory (:proxy cfg) acnt)
-      :fileSystemAO        (.getIRODSFileSystemAO aof acnt)
-      :lister              (.getCollectionAndDataObjectListAndSearchAO aof
-                                                                       acnt)
-      :quotaAO             (.getQuotaAO aof acnt)
-      :executor            (.getIRODSGenQueryExecutor aof acnt))))
-
-(defn- log-value
-  [msg value]
-  (log/debug curr-with-jargon-index "-" msg value)
-  value)
-
-(defn- get-context
-  "Throws:
-     org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to iRODS"
-  [cfg]
-  (let [retval {:succeeded true :retval nil :exception nil :retry false}]
-    (try
-      (log-value "retval:" (assoc retval :retval (context-map cfg)))
-      (catch java.net.ConnectException e
-        (log/debug curr-with-jargon-index "- caught a ConnectException:" e)
-        (log/debug curr-with-jargon-index "- need to retry...")
-        (assoc retval :exception e :succeeded false :retry true))
-      (catch java.lang.Exception e
-        (log/debug curr-with-jargon-index "- got an Exception:" e)
-        (log/debug curr-with-jargon-index "- shouldn't retry...")
-        (assoc retval :exception e :succeeded false :retry false)))))
-
-(defn create-jargon-context-map
-  "Creates a map containing instances of commonly used Jargon objects.
-
-   Throws:
-     org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to iRODS"
-  [cfg]
-  (loop [num-tries 0]
-    (let [retval (get-context cfg)
-          error? (not (:succeeded retval))
-          retry? (:retry retval)]
-      (cond
-        (and error? retry? (< num-tries (:max-retries cfg)))
-        (do (Thread/sleep (:retry-sleep cfg))
-          (recur (inc num-tries)))
-
-        error?
-        (throw (:exception retval))
-
-        :else (:retval retval)))))
