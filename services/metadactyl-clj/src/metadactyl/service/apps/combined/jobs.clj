@@ -115,10 +115,9 @@
 
 (defn- submit-job-step
   [client {:keys [id] :as job-info} job-step submission]
-  (throw (Exception. "Not gonna d'it!"))
-  #_(->> (prepare-job-step-submission job-info job-step submission)
-         (.submitJobStep client id)
-         (record-step-submission id (:step-number job-step))))
+  (->> (prepare-job-step-submission job-info job-step submission)
+       (.submitJobStep client id)
+       (record-step-submission id (:step-number job-step))))
 
 (defn- get-apps-client
   [clients job-step]
