@@ -5,6 +5,7 @@
         [clojure-commons.middleware :only [wrap-log-requests]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
+        [ring.middleware.keyword-params]
         [donkey.routes.admin]
         [donkey.routes.callbacks]
         [donkey.routes.data]
@@ -25,9 +26,7 @@
         [donkey.routes.tags]
         [donkey.routes.comments]
         [donkey.auth.user-attributes]
-        [donkey.util]
         [donkey.util.service]
-        [ring.middleware keyword-params multipart-params]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [compojure.route :as route]
             [clojure.tools.logging :as log]
@@ -38,8 +37,11 @@
             [donkey.tasks :as tasks]
             [clojure.tools.nrepl.server :as nrepl]
             [me.raynes.fs :as fs]
+            [ring.middleware.multipart-params :as multipart]
             [common-cli.core :as ccli]
-            [donkey.services.filesystem.icat :as icat]))
+            [donkey.services.filesystem.icat :as icat]
+            [donkey.util :as util]))
+
 
 (defn delayed-handler
   [routes-fn]
@@ -49,7 +51,7 @@
 
 (defn secured-routes-no-context
   []
-  (flagged-routes
+  (util/flagged-routes
     (app-category-routes)
     (apps-routes)
     (app-comment-routes)
@@ -59,29 +61,30 @@
 
 (defn secured-routes
   []
-  (flagged-routes
-   (secured-notification-routes)
-   (secured-metadata-routes)
-   (secured-pref-routes)
-   (secured-collaborator-routes)
-   (secured-user-info-routes)
-   (secured-tree-viewer-routes)
-   (secured-data-routes)
-   (secured-session-routes)
-   (secured-fileio-routes)
-   (secured-filesystem-routes)
-   (secured-filesystem-metadata-routes)
-   (secured-coge-routes)
-   (secured-search-routes)
-   (secured-oauth-routes)
-   (secured-favorites-routes)
-   (secured-tag-routes)
-   (data-comment-routes)
-   (route/not-found (unrecognized-path-response))))
+  (util/flagged-routes
+    (secured-notification-routes)
+    (secured-metadata-routes)
+    (secured-pref-routes)
+    (secured-collaborator-routes)
+    (secured-user-info-routes)
+    (secured-tree-viewer-routes)
+    (secured-data-routes)
+    (secured-session-routes)
+    (secured-fileio-routes)
+    (secured-filesystem-routes)
+    (secured-filesystem-metadata-routes)
+    (secured-coge-routes)
+    (secured-search-routes)
+    (secured-oauth-routes)
+    (secured-favorites-routes)
+    (secured-tag-routes)
+    (data-comment-routes)
+    (route/not-found (unrecognized-path-response))))
+
 
 (defn admin-routes
   []
-  (flagged-routes
+  (util/flagged-routes
     (secured-admin-routes)
     (admin-data-comment-routes)
     (admin-category-routes)
@@ -127,18 +130,19 @@
 
 (defn donkey-routes
   []
-  (flagged-routes
-   (unsecured-misc-routes)
-   (unsecured-notification-routes)
-   (unsecured-tree-viewer-routes)
-   (unsecured-fileio-routes)
-   (unsecured-callback-routes)
-   (context "/admin" [] admin-handler)
-   (context "/secured" [] secured-handler)
-   secured-handler-no-context
-   (route/not-found (unrecognized-path-response))))
+  (util/flagged-routes
+    (unsecured-misc-routes)
+    (unsecured-notification-routes)
+    (unsecured-tree-viewer-routes)
+    (unsecured-fileio-routes)
+    (unsecured-callback-routes)
+    (context "/admin" [] admin-handler)
+    (context "/secured" [] secured-handler)
+    secured-handler-no-context
+    (route/not-found (unrecognized-path-response))))
 
-(defn start-nrepl
+
+(defn- start-nrepl
   []
   (nrepl/start-server :port 7888))
 
@@ -196,13 +200,14 @@
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler routes-fn)
-      (wrap-multipart-params {:store fileio/store-irods})
-      trap-handler
-      req-logger
-      wrap-keyword-params
-      wrap-lcase-params
-      wrap-query-params
-      wrap-log-requests))
+    (multipart/wrap-multipart-params {:store fileio/store-irods})
+    util/trap-handler
+    util/req-logger
+    wrap-keyword-params
+    wrap-lcase-params
+    wrap-query-params
+    wrap-log-requests))
+
 
 (def app
   (site-handler donkey-routes))
