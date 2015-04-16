@@ -1,7 +1,7 @@
 (ns clj-jargon.init
   (:require [clojure.tools.logging :as log]
             [slingshot.slingshot :as ss]
-            :require [clojure-commons.file-utils :as ft])
+            [clojure-commons.file-utils :as ft])
   (:import [org.irods.jargon.core.connection IRODSAccount]
            [org.irods.jargon.core.pub.io IRODSFileInputStream]
            [org.irods.jargon.core.pub IRODSFileSystem]))
@@ -129,20 +129,23 @@
 
    Calling:
    (with-jargon cfg [cm-sym] body)
-   (with-jargon cfg :auto-close auto-close [cm-sym] body)
+   (with-jargon cfg :opt-k opt-v ... [cm-sym] body)
 
    Parameters:
-     cfg        - The Jargon configuration used to connect to iRODS.
-     [cm-sym]   - Holds the name of the binding to the iRODS context map used by the body
-                  expressions.
-     body       - Zero or more expressions to be evaluated while an iRODS connection is open.
-     auto-close - true if the connection should be closed automatically (default: true)
+     cfg      - The Jargon configuration used to connect to iRODS.
+     [cm-sym] - Holds the name of the binding to the iRODS context map used by the body expressions.
+     body     - Zero or more expressions to be evaluated while an iRODS connection is open.
+
+   Options:
+     :auto-close  - true if the connection should be closed automatically (default: true)
+     :client-user - the user to operate as inside of iRODS (default: (:username cfg))
 
    Returns:
      It returns the result from evaluating the last expression in the body.*
 
     Throws:
-      org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to iRODS
+      org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to
+                                                        iRODS.
 
     Example:
       (def config (init ...))
@@ -158,22 +161,23 @@
      somewhere in the result and calling the close method on that proxy input stream later)."
   [cfg & params]
   (let [[opts-map [[cm-sym] & body]] (split-with #(not (vector? %)) params)
-         opts                      (apply hash-map opts-map)
-         auto-close                (if (nil? (:auto-close opts)) true (:auto-close opts))]
-    `(binding [curr-with-jargon-index (dosync (alter with-jargon-index inc))]
-       (log/debug "curr-with-jargon-index:" curr-with-jargon-index)
-       (when-let [~cm-sym (create-jargon-context-map ~cfg (:username ~cfg))]
-         (ss/try+
-           (let [retval# (do ~@body)]
-             (cond
-               (instance? java.io.InputStream retval#) (proxy-input-stream-return ~cm-sym retval#)
-               ~auto-close                             (clean-return ~cm-sym retval#)
-               :else                                   (dirty-return ~cm-sym retval#)))
-           (catch Object o1#
-             (ss/try+
-               (.close (:proxy ~cm-sym))
-               (catch Object o2#))
-             (ss/throw+)))))))
+         opts                        (apply hash-map opts-map)]
+    `(let [auto-close#  (if (nil? (:auto-close ~opts)) true (:auto-close ~opts))
+           client-user# (if (:client-user ~opts) (:client-user ~opts) (:username ~cfg))]
+       (binding [curr-with-jargon-index (dosync (alter with-jargon-index inc))]
+         (log/debug "curr-with-jargon-index:" curr-with-jargon-index)
+         (when-let [~cm-sym (create-jargon-context-map ~cfg client-user#)]
+           (ss/try+
+             (let [retval# (do ~@body)]
+               (cond
+                 (instance? java.io.InputStream retval#) (proxy-input-stream-return ~cm-sym retval#)
+                 auto-close#                             (clean-return ~cm-sym retval#)
+                 :else                                   (dirty-return ~cm-sym retval#)))
+             (catch Object o1#
+               (ss/try+
+                 (.close (:proxy ~cm-sym))
+                 (catch Object o2#))
+               (ss/throw+))))))))
 
 
 (defmacro log-stack-trace
