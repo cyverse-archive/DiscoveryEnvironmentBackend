@@ -22,6 +22,8 @@ ADD http://de.iplantcollaborative.org/dl/d/3C167066-B14E-4B82-A297-456A7E43D274/
 ADD http://de.iplantcollaborative.org/dl/d/6C4FAA1C-FE02-4EEC-99FB-7B37049CD657/R-2.15.2-1.el5.x86_64.rpm /rpms/
 ADD http://de.iplantcollaborative.org/dl/d/A967C202-D23F-4369-9766-3448336A19F8/R-devel-2.15.2-1.el5.x86_64.rpm /rpms/
 ADD http://de.iplantcollaborative.org/dl/d/D172302A-8988-468C-B162-0B3F2E158657/libRmath-2.15.2-1.el5.x86_64.rpm /rpms/
+ADD http://de.iplantcollaborative.org/dl/d/4A092F95-39AC-4C68-B3DA-916E7228CF78/R-library.tar.gz /R-library.tar.gz
+
 
 RUN yum update -y && yum install -y \
     curl \
@@ -431,6 +433,7 @@ RUN yum update -y && yum install -y \
     zip-2.31-2.el5
 
 RUN yum install --nogpgcheck -y rpms/*.rpm
+RUN tar -xzf /R-library.tar.gz
 
 ENV PATH /usr/kerberos/bin:/usr/local2/icommands:/usr/local2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/bin:/usr/bin
 VOLUME ["/usr/local2/", "/usr/local3/", "/data2/", "/condor01/"]
