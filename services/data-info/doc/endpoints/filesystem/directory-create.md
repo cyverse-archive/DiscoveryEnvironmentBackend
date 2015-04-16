@@ -6,7 +6,7 @@ the request, the `/tempZone/home/rods/test1` directory does not exist, and the r
 write permissions on the `/tempZone/home/rods` folder, then all 3 `test*` folders will be created
 for the requesting user.
 
-__URL Path__: /secured/filesystem/directory/create
+__URL Path__: /data/directory/create
 
 __HTTP Method__: POST
 
