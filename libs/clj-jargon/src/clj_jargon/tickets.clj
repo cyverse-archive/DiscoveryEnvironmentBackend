@@ -1,6 +1,6 @@
 (ns clj-jargon.tickets
   (:use [clj-jargon.validations]
-        [clj-jargon.init :only [account proxy-input-stream]]
+        [clj-jargon.init :only [override-user-account proxy-input-stream]]
         [clj-jargon.cart :only [temp-password]]
         [clj-jargon.item-info :only [file is-dir?]]
         [clj-jargon.item-ops :only [input-stream]])
@@ -17,7 +17,7 @@
    Probably doesn't need to be called directly."
   [cm user]
   (let [tsf (TicketServiceFactoryImpl. (:accessObjectFactory cm))]
-    (.instanceTicketAdminService tsf (account cm user (temp-password cm user)))))
+    (.instanceTicketAdminService tsf (override-user-account cm user (temp-password cm user)))))
 
 (defn set-ticket-options
   "Sets the optional settings for a ticket, such as the expiration date

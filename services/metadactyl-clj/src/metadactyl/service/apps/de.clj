@@ -15,6 +15,9 @@
 (deftype DeApps [user]
   metadactyl.protocols.Apps
 
+  (getUser [_]
+    user)
+
   (getClientName [_]
     jp/de-client-name)
 
@@ -142,4 +145,18 @@
       (de-jobs/submit user (update-in submission [:app_id] uuidify))))
 
   (submitJobStep [_ _ submission]
-    (de-jobs/submit-step user (update-in submission [:app_id] uuidify))))
+    (de-jobs/submit-step user (update-in submission [:app_id] uuidify)))
+
+  (translateJobStatus [self job-type status]
+    (when (contains? (set (.getJobTypes self)) job-type)
+      status))
+
+  (updateJobStatus [self job-step job status end-date]
+    (when (contains? (set (.getJobTypes self)) (:job-type job-step))
+      (de-jobs/update-job-status job-step job status end-date)))
+
+  (getDefaultOutputName [_ io-map source-step]
+    (de-jobs/get-default-output-name io-map source-step))
+
+  (getJobStepStatus [_ job-step]
+    (de-jobs/get-job-step-status job-step)))

@@ -8,6 +8,7 @@
   (:require [donkey.util.config :as config]
             [clojure.tools.logging :as log]
             [dire.core :refer [with-pre-hook!]]
+            [donkey.clients.data-info :as data]
             [donkey.services.filesystem.create :as create]
             [donkey.services.filesystem.directory :as dir]
             [donkey.services.filesystem.exists :as exists]
@@ -69,7 +70,7 @@
       (controller req dir/do-paged-listing :params))
 
     (POST "/filesystem/directory/create" [:as req]
-      (controller req create/do-create :params :body))
+      (controller req data/create-dir :params :body))
 
     (POST "/filesystem/rename" [:as req]
       (controller req rename/do-rename :params :body))

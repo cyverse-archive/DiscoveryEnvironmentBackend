@@ -539,6 +539,7 @@
           (join [:app_steps :s] {:a.id :s.app_id})
           (join [:tasks :t] {:s.task_id :t.id})
           (fields [:s.id              :step_id]
+                  [:t.id              :task_id]
                   [:t.tool_id         :tool_id]
                   [:t.external_app_id :external_app_id])
           (where {:a.id (uuidify app-id)})))
@@ -568,3 +569,17 @@
   [app-ids]
   (select app_listing
           (where {:id [in (map uuidify app-ids)]})))
+
+(defn get-default-output-name
+  [task-id parameter-id]
+  (some->> (-> (select* [:tasks :t])
+               (join [:parameter_groups :pg] {:t.id :pg.task_id})
+               (join [:parameters :p] {:pg.id :p.parameter_group_id})
+               (join [:parameter_values :pv] {:p.id :pv.parameter_id})
+               (fields [:pv.value :default_value])
+               (where {:pv.is_default true
+                       :t.id          task-id
+                       :p.id          parameter-id})
+               (select))
+           (first)
+           (:default_value)))

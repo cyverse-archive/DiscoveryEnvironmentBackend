@@ -15,6 +15,7 @@
             [kameleon.db :as db]
             [kameleon.uuids :as uuids]
             [me.raynes.fs :as fs]
+            [metadactyl.clients.jex-events :as jex-events]
             [metadactyl.persistence.app-metadata :as ap]
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.service.apps.de.jobs.base :as jb]
@@ -41,12 +42,12 @@
 (defn- do-jex-submission
   [job]
   (try+
-    (http/post (config/jex-base-url)
-               {:body         (cheshire/encode (pre-process-jex-submission job))
-                :content-type :json})
-    (catch Object o
-      (log/error (:throwable &throw-context) "job submission failed")
-      (throw+ {:error_code ce/ERR_REQUEST_FAILED}))))
+   (http/post (config/jex-base-url)
+              {:body         (cheshire/encode (pre-process-jex-submission job))
+               :content-type :json})
+   (catch Object o
+     (log/error (:throwable &throw-context) "job submission failed")
+     (throw+ {:error_code ce/ERR_REQUEST_FAILED}))))
 
 (defn- store-submitted-job
   "Saves information about a job in the database."
@@ -76,29 +77,29 @@
 (defn- save-job-submission
   "Saves a DE job and its job-step in the database."
   ([user job submission]
-   (save-job-submission user job submission "Submitted"))
+     (save-job-submission user job submission "Submitted"))
   ([user job submission status]
-   (transaction
-     (let [job-id (:id (store-submitted-job user job submission status))]
-       (store-job-step job-id job status)
-       job-id))))
+     (transaction
+      (let [job-id (:id (store-submitted-job user job submission status))]
+        (store-job-step job-id job status)
+        job-id))))
 
 (defn- get-batch-output-dir
   "Builds the parent output folder path for batch jobs, and creating it if it doesn't exist."
   [user submission]
   (let [output-dir (build-result-folder-path submission)]
     (try+
-      (http/post (service/build-url (config/data-info-base-url) "stat-gatherer")
-        {:query-params (secured-params user)
-         :body (cheshire/encode {:paths [output-dir]})
-         :content-type :json
-         :as :stream})
-      (catch Object does-not-exist
-        (http/post (service/build-url (config/data-info-base-url) "data" "directory" "create")
-          {:query-params (secured-params user)
-           :body (cheshire/encode {:path output-dir})
-           :content-type :json
-           :as :stream})))
+     (http/post (service/build-url (config/data-info-base-url) "stat-gatherer")
+                {:query-params (secured-params user)
+                 :body (cheshire/encode {:paths [output-dir]})
+                 :content-type :json
+                 :as :stream})
+     (catch Object does-not-exist
+       (http/post (service/build-url (config/data-info-base-url) "data" "directory" "create")
+                  {:query-params (secured-params user)
+                   :body (cheshire/encode {:path output-dir})
+                   :content-type :json
+                   :as :stream})))
     output-dir))
 
 (defn- get-path-list-contents
@@ -106,34 +107,34 @@
   [user path]
   (when-not (empty? path)
     (try+
-      (->> (http/get (service/build-url (config/data-info-base-url) "entries" "path" path)
-             {:query-params (secured-params user)
-              :as :stream})
-           (:body)
-           (slurp)
-           (split-lines)
-           (remove empty?)
-           (drop 1))
-      (catch Object o
-        (log/error (:throwable &throw-context) "job submission failed")
-        (throw+ {:error_code ce/ERR_REQUEST_FAILED
-                 :message "Could get file contents of path list input"})))))
+     (->> (http/get (service/build-url (config/data-info-base-url) "entries" "path" path)
+                    {:query-params (secured-params user)
+                     :as :stream})
+          (:body)
+          (slurp)
+          (split-lines)
+          (remove empty?)
+          (drop 1))
+     (catch Object o
+       (log/error (:throwable &throw-context) "job submission failed")
+       (throw+ {:error_code ce/ERR_REQUEST_FAILED
+                :message "Could get file contents of path list input"})))))
 
 (defn- get-file-stats
   [user paths]
   (when-not (empty? paths)
     (try+
-      (-> (http/post (service/build-url (config/data-info-base-url) "stat-gatherer")
-            {:query-params (secured-params user)
-             :body (cheshire/encode {:paths paths})
-             :content-type :json
-             :as :stream})
-          (:body)
-          (service/parse-json))
-      (catch Object o
-        (log/error (:throwable &throw-context) "job submission failed")
-        (throw+ {:error_code ce/ERR_REQUEST_FAILED
-                 :message "Could not lookup info types of inputs"})))))
+     (-> (http/post (service/build-url (config/data-info-base-url) "stat-gatherer")
+                    {:query-params (secured-params user)
+                     :body (cheshire/encode {:paths paths})
+                     :content-type :json
+                     :as :stream})
+         (:body)
+         (service/parse-json))
+     (catch Object o
+       (log/error (:throwable &throw-context) "job submission failed")
+       (throw+ {:error_code ce/ERR_REQUEST_FAILED
+                :message "Could not lookup info types of inputs"})))))
 
 (defn- validate-path-list-stats
   [file-stats]
@@ -156,7 +157,7 @@
 
 (defn- path-list-stats->validated-paths
   "Validates the given list of path-list stats, then extracts and validates their paths against the
-   given list of job inputs, returning the validated paths."
+  given list of job inputs, returning the validated paths."
   [path-list-stats inputs]
   (dorun (map validate-path-list-stats path-list-stats))
   (let [paths (set (map :path path-list-stats))]
@@ -213,12 +214,12 @@
 (defn- submit-one-de-job
   [user submission job]
   (try+
-    (do-jex-submission job)
-    (save-job-submission user job submission)
-    (catch Object o
-      (if (nil? (:parent_id job))
-        (throw+ o)
-        (save-job-submission user job submission "Failed")))))
+   (do-jex-submission job)
+   (save-job-submission user job submission)
+   (catch Object o
+     (if (nil? (:parent_id job))
+       (throw+ o)
+       (save-job-submission user job submission "Failed")))))
 
 (defn- update-batch-config
   [batch-path-map [list-params params]]
@@ -257,10 +258,10 @@
   (let [batch-path-map (into {} batch-paths)
         job-suffix (str "analysis-" (inc job-number))
         job (assoc job :parent_id batch-job-id
-                       :name (str (:name job) " - " job-suffix)
-                       :output_dir (path-join (:output_dir job) job-suffix)
-                       :steps (map (partial update-batch-step batch-path-map) (:steps job))
-                       :uuid (uuids/uuid))
+                   :name (str (:name job) " - " job-suffix)
+                   :output_dir (path-join (:output_dir job) job-suffix)
+                   :steps (map (partial update-batch-step batch-path-map) (:steps job))
+                   :uuid (uuids/uuid))
         submission (assoc submission
                      :config (update-batch-config batch-path-map (:config submission)))]
     (submit-one-de-job user submission job)))
@@ -276,8 +277,8 @@
         path-lists (get-path-list-contents-map user path-list-paths)
         transposed-list-path (map path-list-map-entry->path-contents-pairs path-lists)
         job (assoc job :output_dir (get-batch-output-dir user submission)
-                       :create_output_subdir false
-                       :group (config/jex-batch-group-name))
+                   :create_output_subdir false
+                   :group (config/jex-batch-group-name))
         batch-job-id (save-job-submission user job submission)
         job (assoc job :steps (map (partial build-batch-partitioned-job-step path-lists) steps))
         submission (assoc submission
@@ -344,3 +345,21 @@
     (json-util/log-json "job step" job-step)
     (do-jex-submission job-step)
     (:uuid job-step)))
+
+(defn update-job-status
+  [{:keys [external-id] :as job-step} {job-id :id :as job} status end-date]
+  (when (jp/status-follows? status (:status job-step))
+    (jp/update-job-step job-id external-id status end-date)
+    (jp/update-job job-id status end-date)))
+
+(defn get-default-output-name
+  [{output-id :output_id} {task-id :task_id}]
+  (ap/get-default-output-name task-id output-id))
+
+(defn get-job-step-status
+  [{:keys [external-id]}]
+  (try+
+   (when-let [step (jex-events/get-job-state external-id)]
+     {:status  (:status step)
+      :enddate (:completion_date step)})
+   (catch [:status 404] _ nil)))

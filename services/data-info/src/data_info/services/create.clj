@@ -2,7 +2,7 @@
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.permissions :only [set-owner collection-perm-map]]
+        [clj-jargon.permissions :only [set-owner]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
@@ -24,12 +24,24 @@
   [user path]
   (log/debug (str "create " user " " path))
   (with-jargon (cfg/jargon-cfg) [cm]
-    (let [fixed-path (ft/rm-last-slash path)]
+    (let [fixed-path (ft/rm-last-slash path)
+          path-stack (take-while (complement nil?) (iterate ft/dirname fixed-path))
+          ;; Using group-by rather than (juxt filter remove) to force list evaluation so set-owner
+          ;; will be called correctly in the doseq below...
+          {existing-paths true paths-to-mk false} (group-by (partial item/exists? cm) path-stack)
+          target-dir (first existing-paths)]
+      (when-not target-dir
+        (throw+ {:error_code ERR_DOES_NOT_EXIST
+                 :path (last paths-to-mk)}))
+      (when-not (validators/good-string? fixed-path)
+        (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+                 :path path}))
       (validators/user-exists cm user)
-      (validators/path-writeable cm user (ft/dirname fixed-path))
+      (validators/path-writeable cm user target-dir)
       (validators/path-not-exists cm fixed-path)
-      (ops/mkdir cm fixed-path)
-      (set-owner cm fixed-path user)
+      (ops/mkdirs cm fixed-path)
+      (doseq [new-path paths-to-mk]
+        (set-owner cm new-path user))
       (stat/path-stat cm user fixed-path))))
 
 (defn do-create
@@ -47,17 +59,3 @@
       (throw+ {:error_code ERR_NOT_AUTHORIZED :user (:user params)}))))
 
 (with-post-hook! #'do-create (dul/log-func "do-create"))
-
-
-(defn ensure-created
-  "If a folder doesn't exist, it creates the folder and makes the given user an owner of it.
-
-   Parameters:
-     user - the username of the user to become an owner of the new folder
-     dir  - the absolute path to the folder"
-  [^String user ^String dir]
-  (with-jargon (cfg/jargon-cfg) [cm]
-    (when-not (item/exists? cm dir)
-      (log/info "creating" dir)
-      (ops/mkdirs cm dir)
-      (set-owner cm dir user))))

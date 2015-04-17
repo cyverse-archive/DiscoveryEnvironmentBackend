@@ -13,6 +13,9 @@
 (deftype CombinedApps [clients user]
   metadactyl.protocols.Apps
 
+  (getUser [_]
+    user)
+
   (getClientName [_]
     jp/combined-client-name)
 
@@ -131,4 +134,18 @@
   (submitJob [self submission]
     (if-let [apps-client (util/apps-client-for-job submission clients)]
       (.submitJob apps-client submission)
-      (job-listings/list-job self (combined-jobs/submit user clients submission)))))
+      (job-listings/list-job self (combined-jobs/submit user clients submission))))
+
+  (translateJobStatus [_ job-type status]
+    (->> (map #(.translateJobStatus % job-type status) clients)
+         (remove nil?)
+         (first)))
+
+  (updateJobStatus [self job-step job status end-date]
+    (combined-jobs/update-job-status self clients job-step job status end-date))
+
+  (getDefaultOutputName [_ io-map source-step]
+    (.getDefaultOutputName (util/apps-client-for-app-step clients source-step) io-map source-step))
+
+  (getJobStepStatus [_ job-step]
+    (.getJobStepStatus (util/apps-client-for-job-step clients job-step) job-step)))

@@ -30,4 +30,3 @@
   :plugins [[lein-ring "0.8.10"]
             [lein-midje "3.1.1"]
             [org.iplantc/lein-iplant-rpm "5.0.0"]])
-            

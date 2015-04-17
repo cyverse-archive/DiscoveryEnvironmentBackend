@@ -23,8 +23,8 @@
   "Sends a notification to a user."
   [m]
   (http/post (notificationagent-url "notification")
-               {:content-type :json
-                :body (cheshire/encode m)}))
+             {:content-type :json
+              :body (cheshire/encode m)}))
 
 (defn- send-email?
   [job-info]
@@ -52,8 +52,10 @@
 
 (defn send-job-status-update
   "Sends notification of an Agave or DE job status update to the user."
-  [username email-address job-info]
-  (try
-    (send-notification (format-job-status-update username email-address job-info))
-    (catch Exception e
-      (log/warn e "unable to send job status update notification for" (:id job-info)))))
+  ([username email-address job-info]
+     (try
+       (send-notification (format-job-status-update username email-address job-info))
+       (catch Exception e
+         (log/warn e "unable to send job status update notification for" (:id job-info)))))
+  ([{username :shortUsername email-address :email} job-info]
+     (send-job-status-update username email-address job-info)))

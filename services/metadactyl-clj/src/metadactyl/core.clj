@@ -5,13 +5,15 @@
   (:require [clojure.tools.logging :as log]
             [common-cli.core :as ccli]
             [me.raynes.fs :as fs]
+            [metadactyl.tasks :as tasks]
             [metadactyl.util.config :as config]
             [ring.adapter.jetty :as jetty]))
 
 (defn- init-service
   "Initializes the service."
   []
-  (define-database))
+  (define-database)
+  (tasks/schedule-tasks))
 
 (defn- iplant-conf-dir-file
   [filename]

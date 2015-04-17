@@ -355,6 +355,10 @@ func (d *Databaser) GetJobByInvocationID(invocationID string) (*JobRecord, error
 		&jr.CondorID,
 		&invid,
 	)
+	// rows.Scan returns ErrNoRows if no rows were found.
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	// This evil has been perpetrated to avoid an issue where time.Time instances
 	// set to their zero value and stored in PostgreSQL with timezone info can
 	// come back as Time instances from __before__ the epoch. We need to re-zero

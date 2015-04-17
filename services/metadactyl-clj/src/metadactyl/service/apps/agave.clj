@@ -10,6 +10,9 @@
 (deftype AgaveApps [agave user-has-access-token? user]
   metadactyl.protocols.Apps
 
+  (getUser [_]
+    user)
+
   (getClientName [_]
     jp/agave-client-name)
 
@@ -81,4 +84,18 @@
       (agave-jobs/submit agave user submission)))
 
   (submitJobStep [_ job-id submission]
-    (agave-jobs/submit-step agave job-id submission)))
+    (agave-jobs/submit-step agave job-id submission))
+
+  (translateJobStatus [self job-type status]
+    (when (contains? (set (.getJobTypes self)) job-type)
+      (or (.translateJobStatus agave status) status)))
+
+  (updateJobStatus [self job-step job status end-date]
+    (when (contains? (set (.getJobTypes self)) (:job-type job-step))
+      (agave-jobs/update-job-status agave job-step job status end-date)))
+
+  (getDefaultOutputName [_ io-map source-step]
+    (agave-jobs/get-default-output-name agave io-map source-step))
+
+  (getJobStepStatus [_ job-step]
+    (agave-jobs/get-job-step-status agave job-step)))

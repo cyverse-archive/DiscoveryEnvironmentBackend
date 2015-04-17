@@ -208,6 +208,31 @@
   [props config-valid configs]
   "metadactyl.notificationagent.base-url")
 
+(cc/defprop-str userinfo-base
+  "The base URL for the user info service."
+  [props config-valid configs]
+  "metadactyl.userinfo.base-url")
+
+(cc/defprop-str userinfo-key
+  "The client key for the user info service."
+  [props config-valid configs]
+  "metadactyl.userinfo.client-key")
+
+(cc/defprop-str userinfo-secret
+  "The client secret for the user info service."
+  [props config-valid configs]
+  "metadactyl.userinfo.password")
+
+(cc/defprop-str jex-events-base-url
+  "The base URL for the JEX events service."
+  [props config-valid configs]
+  "metadactyl.jex-events.base-url")
+
+(cc/defprop-int job-status-poll-interval
+  "The job status polling interval in minutes."
+  [props config-valid configs]
+  "metadactyl.jobs.poll-interval")
+
 (defn- oauth-settings
   [api-name api-key api-secret auth-uri token-uri redirect-uri refresh-window]
   {:api-name       api-name
