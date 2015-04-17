@@ -16,7 +16,6 @@
             [clojure.string :as string]
             [donkey.util.ssl :as ssl]
             [clojure.tools.logging :as log]
-            [ring.util.response :as rsp-utils]
             [cemerick.url :as url-parser]
             [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
@@ -47,7 +46,6 @@
   (let [uuid     (gen-uuid)
         filename (str orig-filename "." uuid)
         user     (cfg/irods-user)
-        home     (cfg/irods-home)
         temp-dir (cfg/fileio-temp-dir)]
     (if-not (valid/good-string? orig-filename)
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
@@ -104,7 +102,7 @@
       (log/warn (str "Dest: " dest))
       (log/warn (str "Fname: " fname))
       (log/warn (str "Addr: " addr))
-      (with-open [istream (in-stream addr)]
+      (with-open [_ (in-stream addr)]
         (log/warn "connection to" addr "successfully established"))
       (actions/urlimport user addr fname dest))))
 
