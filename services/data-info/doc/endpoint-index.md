@@ -2,7 +2,7 @@
 
 * [GET /](endpoints/service-info.md)
 * [POST /cart](endpoints/cart.md)
-* [POST /data/directory/create](endpoints/filesystem/directory-create.md#directory-creation)
+* [POST /data/directories](endpoints/filesystem/directory-create.md#directory-creation)
 * [POST /data/{data-id}/metadata/save](endpoints/filesystem/metadata.md#exporting-metadata-to-a-file)
 
 ## Unmigrated Endpoints

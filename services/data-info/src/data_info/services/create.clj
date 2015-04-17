@@ -17,43 +17,58 @@
             [data-info.util.paths :as paths]
             [data-info.services.stat :as stat]))
 
+(defn- sort-existing
+  [cm path]
+  (when-not (validators/good-string? path)
+    (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
+             :path path}))
+  (validators/path-not-exists cm path)
 
-(defn create
-  "Creates a directory at path on behalf of a user. The user
-   becomes the owner of the new directory."
-  [user path]
-  (log/debug (str "create " user " " path))
+  (let [path-stack (take-while (complement nil?) (iterate ft/dirname path))
+        ;; Using group-by rather than (juxt filter remove) to force list evaluation so set-owner
+        ;; will be called correctly in the doseq below...
+        {existing-paths true paths-to-mk false} (group-by (partial item/exists? cm) path-stack)
+        target-dir (first existing-paths)]
+
+    (when-not target-dir
+      (throw+ {:error_code ERR_DOES_NOT_EXIST
+               :path (last paths-to-mk)}))
+
+    [(first existing-paths) paths-to-mk]))
+
+(defn- create
+  "Creates directories for the given paths on behalf of a user. The user becomes the owner of the
+   new directories."
+  [user paths]
+  (log/debug (str "create " user " " paths))
   (with-jargon (cfg/jargon-cfg) [cm]
-    (let [fixed-path (ft/rm-last-slash path)
-          path-stack (take-while (complement nil?) (iterate ft/dirname fixed-path))
-          ;; Using group-by rather than (juxt filter remove) to force list evaluation so set-owner
-          ;; will be called correctly in the doseq below...
-          {existing-paths true paths-to-mk false} (group-by (partial item/exists? cm) path-stack)
-          target-dir (first existing-paths)]
-      (when-not target-dir
-        (throw+ {:error_code ERR_DOES_NOT_EXIST
-                 :path (last paths-to-mk)}))
-      (when-not (validators/good-string? fixed-path)
-        (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-                 :path path}))
-      (validators/user-exists cm user)
-      (validators/path-writeable cm user target-dir)
-      (validators/path-not-exists cm fixed-path)
-      (ops/mkdirs cm fixed-path)
-      (doseq [new-path paths-to-mk]
-        (set-owner cm new-path user))
-      (stat/path-stat cm user fixed-path))))
+    (validators/validate-num-paths paths)
+    (validators/user-exists cm user)
+    (let [paths (set (map ft/rm-last-slash paths))
+          sorted-paths (map (partial sort-existing cm) paths)
+          target-dirs (set (map first sorted-paths))
+          set-own-paths (set (map (comp last second) sorted-paths))
+          paths-to-mk (sort (set (mapcat second sorted-paths)))]
+      (doseq [target-dir target-dirs]
+        (validators/path-writeable cm user target-dir))
+      (doseq [path paths]
+        ;; Don't attempt to create the parent of a dir that was already created in this request.
+        (when-not (item/exists? cm path)
+          (ops/mkdirs cm path)))
+      (doseq [new-parent-dir set-own-paths]
+        (set-owner cm new-parent-dir user))
+      {:paths paths-to-mk})))
 
 (defn do-create
   "Entrypoint for the API that calls (create)."
-  [{user :user} {path :path}]
-  (create user path))
+  [{user :user} {paths :paths}]
+  (create user paths))
 
 (with-pre-hook! #'do-create
   (fn [params body]
     (dul/log-call "do-create" params body)
     (validate-map params {:user string?})
-    (validate-map body {:path string?})
+    (validate-map body {:paths sequential?})
     (log/info "Body: " body)
     (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED :user (:user params)}))))

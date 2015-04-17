@@ -95,9 +95,9 @@
                  :content-type :json
                  :as :stream})
      (catch Object does-not-exist
-       (http/post (service/build-url (config/data-info-base-url) "data" "directory" "create")
+       (http/post (service/build-url (config/data-info-base-url) "data" "directories")
                   {:query-params (secured-params user)
-                   :body (cheshire/encode {:path output-dir})
+                   :body (cheshire/encode {:paths [output-dir]})
                    :content-type :json
                    :as :stream})))
     output-dir))
