@@ -35,7 +35,6 @@
             [donkey.util.config :as config]
             [donkey.util.db :as db]
             [donkey.services.fileio.controllers :as fileio]
-            [donkey.tasks :as tasks]
             [clojure.tools.nrepl.server :as nrepl]
             [me.raynes.fs :as fs]
             [common-cli.core :as ccli]
@@ -185,8 +184,7 @@
   []
   (load-configuration-from-file)
   (icat/configure-icat)
-  (start-nrepl)
-  (tasks/schedule-tasks))
+  (start-nrepl))
 
 (defn repl-init
   []
@@ -230,5 +228,4 @@
     (config/load-config-from-file (:config options))
     (db/define-database)
     (icat/configure-icat)
-    (tasks/schedule-tasks)
     (jetty/run-jetty app {:port (config/listen-port)})))

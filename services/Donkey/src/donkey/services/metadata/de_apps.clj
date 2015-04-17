@@ -37,23 +37,3 @@
   (when-let [step (jex-events/get-job-state id)]
     {:status  (:status step)
      :enddate (:completion_date step)}))
-
-(defn update-job-status
-  "Updates the status of a job. If this function is called then Agave jobs are disabled, so
-   there will always be only one job step."
-  [username job job-step status end-time]
-  (when-not (= (:status job-step) status)
-    (jp/update-job-step (:id job) (:external-id job-step) status end-time)
-    (jp/update-job (:id job) status end-time)
-    (mu/send-job-status-notification job status end-time)))
-
-(defn sync-job-status
-  [{:keys [id] :as job}]
-  (let [steps     (jp/list-job-steps id)
-        _         (assert (= 1 (count steps)))
-        step      (first steps)
-        step-info (get-job-step-status (:external-id step))
-        status    (:status step-info)
-        end-time  (db/timestamp-from-str (:enddate step-info))]
-    (jp/update-job-step-number id 1 {status status :end-time end-time})
-    (jp/update-job id status end-time)))
