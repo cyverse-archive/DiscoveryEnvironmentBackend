@@ -12,8 +12,7 @@
 (defn- init-service
   "Initializes the service."
   []
-  (define-database)
-  (tasks/schedule-tasks))
+  (define-database))
 
 (defn- iplant-conf-dir-file
   [filename]
@@ -77,5 +76,6 @@
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
     (load-config-from-file (:config options))
+    (tasks/schedule-tasks)
     (log/warn "Listening on" (config/listen-port))
     (jetty/run-jetty app {:port (config/listen-port)})))

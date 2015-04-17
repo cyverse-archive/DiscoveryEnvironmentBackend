@@ -50,7 +50,7 @@
 (defn update-job-status
   [apps-client job-step {:keys [id] :as job} batch status end-date]
   (when (jp/completed? (:status job))
-    (service/bad-request "received a job status update for completed or canceled job, " id))
+    (service/bad-request (str "received a job status update for completed or canceled job, " id)))
   (.updateJobStatus apps-client job-step job status (db/timestamp-from-str end-date))
   (when batch (update-batch-status batch end-date))
   (send-job-status-update apps-client (or batch job)))
