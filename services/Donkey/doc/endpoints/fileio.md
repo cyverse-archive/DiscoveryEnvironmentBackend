@@ -49,6 +49,56 @@ This will result is the file contents being printed out to stdout. Redirect to a
 
 ## Uploading
 
+__URL Path__: /secured//fileio/upload
+
+__HTTP Method__: POST
+
+__Request Query Parameters__:
+
+* proxyToken - A valid CAS proxy ticket.
+* dest - The path to the iRODS folder where the file(s) will be uploaded.
+
+__Request Form Fields__:
+
+* file - The contents of the file to be uploaded.
+
+__Error Codes__:
+
++ ERR_MISSING_FORM_FIELD (One of the form data fields is missing)
++ ERR_MISSING_QUERY_PARAMETER (Query parameter is missing)
++ ERR_NOT_A_USER (Invalid user specified)
++ ERR_DOES_NOT_EXIST (Destination directory doesn't exist)
++ ERR_NOT_WRITEABLE (Destination directory isn't writeable)
+
+__Response Body__:
+
+A success will return JSON like this:
+
+```json
+{
+    "file": {
+        "id": "<path to the file>",
+        "path": "<path to the file>",
+        "label": "<basename of the file path>",
+        "permission": "own",
+        "date-created": <seconds since the epoch>,
+        "date-modified": <seconds since the epoch>,
+        "file-size": <size in bytes>
+    }
+}
+```
+
+__Curl Command__:
+
+Uploading is handled through multipart requests:
+
+    curl -F file=@testfile.txt "localhost:31325/secured/fileio/upload?proxyToken=fake&dest=/iplant/home/testuser"
+
+Notice that the `dest` value points to a directory and not a file.
+
+
+## Uploading (DEPRECATED)
+
 __URL Path__: /fileio/upload
 
 __HTTP Method__: POST
