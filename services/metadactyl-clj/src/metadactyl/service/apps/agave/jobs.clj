@@ -147,19 +147,30 @@
        (.sendJobSubmission agave)
        (:id)))
 
+(defn- translate-job-status
+  [agave status]
+  (if-not (jp/valid-status? status)
+    (.translateJobStatus agave status)
+    status))
+
 (defn update-job-status
   [agave {:keys [external-id] :as job-step} {job-id :id :as job} status end-date]
-  (let [status (.translateJobStatus agave status)]
-    (when (jp/status-follows? status (:status job-step))
+  (let [status (translate-job-status agave status)]
+    (when (and status (jp/status-follows? status (:status job-step)))
       (jp/update-job-step job-id external-id status end-date)
       (jp/update-job job-id status end-date))))
 
 (defn get-default-output-name
   [agave {external-output-id :external_output_id} {external-app-id :external_app_id}]
-  (.getDefaultOutputName agave external-app-id external-output-id))
+  (log/warnf "external-output-id = '%s'; external-app-id = '%s'" external-output-id external-app-id)
+  (log/spy :warn (.getDefaultOutputName agave external-app-id external-output-id)))
 
 (defn get-job-step-status
   [agave {:keys [external-id]}]
   (try+
    (select-keys (.listJob agave external-id) [:status :enddate])
    (catch [:status 404] _ nil)))
+
+(defn prepare-step-submission
+  [agave job-id submission]
+  (prepare-submission agave job-id submission))

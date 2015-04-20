@@ -70,13 +70,24 @@
   [^String user ^String dir]
   (cr/ensure-created user dir))
 
-(defn create-dir
+(defn create-dirs
   [params body]
-  (let [url     (url/url (cfg/data-info-base-url) "data" "directory" "create")
+  (let [url     (url/url (cfg/data-info-base-url) "data" "directories")
         req-map {:query-params params
                  :content-type :json
                  :body         (json/encode body)}]
     (http/post (str url) req-map)))
+
+(defn create-dir
+  [params {:keys [path]}]
+  (let [url     (url/url (cfg/data-info-base-url) "data" "directories")
+        req-map {:query-params params
+                 :content-type :json
+                 :body         (json/encode {:paths [path]})}]
+    (http/post (str url) req-map)
+    (-> (st/do-stat params {:paths [path]})
+        :paths
+        (get path))))
 
 
 (defn get-or-create-dir
@@ -87,9 +98,7 @@
   (log/debug "getting or creating dir: path =" path)
   (cond
    (not (e/path-exists? path))
-   (-> (create-dir {:user (:shortUsername current-user)} {:path path})
-       :body
-       json/decode)
+    (create-dir {:user (:shortUsername current-user)} {:path path})
 
    (and (e/path-exists? path) (st/path-is-dir? path))
    path

@@ -142,15 +142,6 @@
   (submitJob [_ job]
     (metadactyl/submit-job job))
 
-  (syncJobStatus [_ job]
-    (da/sync-job-status job))
-
-  (updateJobStatus [_ username job job-step status end-time]
-    (da/update-job-status username job job-step status end-time))
-
-  (updateBatchStatus [_ batch completion-date]
-    (update-batch-status batch completion-date))
-
   (stopJob [_ job]
     (ca/stop-job job))
 
@@ -206,17 +197,6 @@
 
   (submitJob [_ job]
     (metadactyl/submit-job job))
-
-  (syncJobStatus [_ job]
-    (if (user-has-access-token?)
-      (ca/sync-job-status agave-client job)
-      (da/sync-job-status job)))
-
-  (updateJobStatus [_ username job job-step status end-time]
-    (ca/update-job-status agave-client username job job-step status end-time))
-
-  (updateBatchStatus [_ batch completion-date]
-    (update-batch-status batch completion-date))
 
   (stopJob [_ job]
     (ca/stop-job agave-client job))
@@ -294,25 +274,6 @@
   [app-id body]
   (service/success-response
     (.adminEditAppDocs (get-app-lister) app-id (service/decode-json body))))
-
-(defn- sync-job-status
-  [job]
-  (with-directory-user [(:username job)]
-    (try+
-     (log/warn "synchronizing the job status for" (:id job))
-     (transaction (.syncJobStatus (get-app-lister "" (:username job)) job))
-     (catch Object e
-       (log/error e "unable to sync the job status for job" (:id job))))))
-
-(defn sync-job-statuses
-  []
-  (log/warn "synchronizing job statuses")
-  (with-db db/de
-    (try+
-     (dorun (map sync-job-status (jp/list-incomplete-jobs)))
-     (catch Object e
-       (log/error e "error while obtaining the list of jobs to synchronize."))))
-  (log/warn "done syncrhonizing job statuses"))
 
 (defn- validate-job-ownership
   [{:keys [id user]}]

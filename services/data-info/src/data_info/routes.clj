@@ -46,11 +46,11 @@
   (POST "/stat-gatherer" [:as req]
     (util/controller req stat/do-stat :params :body))
 
+  (POST "/data/directories" [:as req]
+    (util/controller req create/do-create :params :body))
+
   (POST "/data/:data-id/metadata/save" [data-id :as req]
     (util/controller req meta/do-metadata-save data-id :params :body))
-
-  (POST "/data/directory/create" [:as req]
-    (util/controller req create/do-create :params :body))
 
   #_(;; These routes have not been migrated yet
        (POST "/data/rename" [:as req]

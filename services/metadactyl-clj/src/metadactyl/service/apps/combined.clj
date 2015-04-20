@@ -148,4 +148,7 @@
     (.getDefaultOutputName (util/apps-client-for-app-step clients source-step) io-map source-step))
 
   (getJobStepStatus [_ job-step]
-    (.getJobStepStatus (util/apps-client-for-job-step clients job-step) job-step)))
+    (.getJobStepStatus (util/apps-client-for-job-step clients job-step) job-step))
+
+  (buildNextStepSubmission [self job-step job]
+    (combined-jobs/build-next-step-submission self clients job-step job)))

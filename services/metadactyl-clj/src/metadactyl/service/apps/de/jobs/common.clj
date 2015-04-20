@@ -20,7 +20,9 @@
   (->> (select [:workflow_io_maps :wim]
                (join [:input_output_mapping :iom] {:wim.id :iom.mapping_id})
                (fields :wim.source_step :iom.output :wim.target_step :iom.input)
-               (where {:wim.app_id app-id}))
+               (where {:wim.app_id          app-id
+                       :iom.external_input  nil
+                       :iom.external_output nil}))
        (map format-io-map)
        (into {})))
 

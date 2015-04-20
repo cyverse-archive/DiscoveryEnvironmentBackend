@@ -209,6 +209,12 @@
     (cn/send-job-status-update username email job-info)
     (format-job-submission-response job-info)))
 
+(defn check-next-step-submission
+  [job-id external-id]
+  (let [job-step (jobs/lock-job-step job-id external-id)
+        job      (jobs/lock-job job-id)]
+    (.buildNextStepSubmission (get-apps-client-for-username (:username job)) job-step job)))
+
 (defn update-job-status
   ([external-id status end-date]
      (let [{:keys [job-id]} (jobs/get-unique-job-step external-id)]

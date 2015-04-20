@@ -19,8 +19,6 @@
             [kameleon.db :as db]
             [kameleon.uuids :as uuids]))
 
-(declare submit-next-step)
-
 (defn- remove-mapped-inputs
   [mapped-props group]
   (assoc group :parameters (remove (comp mapped-props :id) (:parameters group))))
@@ -107,46 +105,6 @@
        (metadactyl/update-pipeline app-id)
        (aa/format-pipeline-tasks agave)))
 
-(defn- is-de-job-step?
-  [job-step]
-  (= (:job-type job-step) jp/de-job-type))
-
-(defn- record-step-submission
-  [external-id job-info job-step]
-  (jp/update-job-step-number (:id job-info)
-                             (:step-number job-step)
-                             {:external-id external-id
-                              :status      "Submitted"
-                              :start-date  (db/now)}))
-
-(defn- submit-de-job-step
-  [job-info {:keys [app-step-number] :as job-step} submission]
-  (let [output-dir (ft/build-result-folder-path submission)
-        submission (assoc (mu/update-submission-result-folder submission output-dir)
-                     :starting_step app-step-number)
-        external-id (da/submit-job-step submission)]
-    (when-not (nil? job-info)
-      (record-step-submission external-id job-info job-step))
-    external-id))
-
-(defn- submit-agave-job-step
-  [job-info {:keys [app-step-number] :as job-step} submission]
-  (let [app-steps     (ap/load-app-steps (:app-id job-info))
-        curr-app-step (nth app-steps (dec app-step-number))
-        output-dir    (:result-folder-path job-info)
-        submission    (assoc (mu/update-submission-result-folder submission output-dir)
-                        :app_id (:external_app_id curr-app-step)
-                        :paramPrefix (:step_id curr-app-step))
-        external-id (aa/submit-job-step job-info job-step submission)]
-    (record-step-submission external-id job-info job-step)
-    external-id))
-
-(defn- submit-job-step
-  [job-info job-step submission]
-  (if (is-de-job-step? job-step)
-    (submit-de-job-step job-info job-step submission)
-    (submit-agave-job-step job-info job-step submission)))
-
 (defn- get-job-submission-config
   [job]
   (let [submission (:submission job)]
@@ -179,138 +137,11 @@
         update-groups #(map update-group %)]
     (update-in app [:groups] update-groups)))
 
-(defn- translate-job-status
-  "Translates an Agave status code to something more consistent with the DE's status codes."
-  [agave {:keys [job-type]} status]
-  (if (= jp/agave-job-type job-type)
-    (or (.translateJobStatus agave status) status)
-    status))
-
-(defn- get-default-output-name
-  "Determines the default name of a job output."
-  [agave source-id output-id app-steps]
-  (let [step (first (filter #(= source-id (:step_id %)) app-steps))]
-    (if (:external_app_id step)
-      (.getDefaultOutputName agave (:external_app_id step) output-id)
-      (ap/get-default-output-name (:template_id step) output-id))))
-
-(defn- get-input-path
-  "Determines the path of a mapped input."
-  [agave job config app-steps input]
-  (let [source-id        (:source_id input)
-        source-name      (:source_name input)
-        output-id        (:output_id input)
-        config-output-id (str source-name "_" output-id)]
-    (if-let [prop-value (get config config-output-id)]
-      (ft/path-join (:result-folder-path job) prop-value)
-      (ft/path-join (:result-folder-path job)
-                    (get-default-output-name agave source-id output-id app-steps)))))
-
-(defn- add-mapped-inputs
-  "Adds the mapped inputs to the job submission for the next step."
-  [agave job submission app-steps mapped-inputs]
-  (update-in submission [:config]
-             (fn [config]
-               (reduce (fn [config input]
-                         (assoc config
-                           (keyword (str (:target_name input) "_" (:input_id input)))
-                           (get-input-path agave job config app-steps input)))
-                       config mapped-inputs))))
-
-(defn- status-follows?
-  "Determines whether or not the new job status follows the old job status."
-  [new-status old-status]
-  (> (jp/job-status-order new-status) (jp/job-status-order old-status)))
-
-(defn update-job-status
-  "Updates the status of a job. The job may have multiple steps, so the overall job status is only
-   changed when first step changes to any status up to Running, the last step changes to any status
-   after Running, or the status of any step changes to Failed."
-  [agave username job job-step status end-time]
-  (let [{job-id :id}                      job
-        {:keys [external-id step-number]} job-step
-        max-step                          (jp/get-max-step-number job-id)
-        first-step?                       (= step-number 1)
-        last-step?                        (= step-number max-step)
-        status                            (translate-job-status agave job-step status)]
-    (if (mu/is-completed? (:status job))
-      (log/warn (str "received a job status update for completed or canceled job, " job-id))
-      (when (status-follows? status (:status job-step))
-        (jp/update-job-step job-id external-id status end-time)
-        (when (or (and first-step? (mu/not-completed? status))
-                  (and last-step? (mu/is-completed? status))
-                  (= status jp/failed-status))
-          (jp/update-job job-id status end-time)
-          (mu/send-job-status-notification job status end-time))
-        (when (and (not last-step?) (= status jp/completed-status))
-          (submit-next-step agave username job job-step))))))
-
-(defn- submit-next-step
-  "Submits the next step in a job pipeline."
-  [agave username job {:keys [job-id step-number] :as job-step}]
-  (let [next-step-number (inc step-number)
-        next-step        (jp/get-job-step-number job-id next-step-number)
-        app-step-number  (:app-step-number next-step)
-        app-steps        (ap/load-app-steps (:app-id job))
-        next-app-step    (nth app-steps (dec app-step-number))
-        mapped-inputs    (ap/load-target-step-mappings (:step_id next-app-step))
-        submission       (service/decode-json (.getValue (:submission job)))
-        submission       (add-mapped-inputs agave job submission app-steps mapped-inputs)]
-    (try+
-     (submit-job-step agave job next-step submission)
-     (catch Object o
-       (log/warn (str "unable to submit the next step in job " (:id job)))
-       (update-job-status agave username job next-step jp/failed-status (db/now))
-       (throw+)))))
-
 (defn- find-incomplete-job-steps
   "Finds the list of incomplete job steps associated with a job. An empty list is returned if the
    job has no incomplete steps."
   [job-id]
   (remove (comp mu/is-completed? :status) (jp/list-job-steps job-id)))
-
-(defn- get-job-step-status
-  [agave {:keys [job-type external-id]}]
-  (if (= job-type jp/agave-job-type)
-    (select-keys (.listJob agave external-id) [:status :enddate])
-    (da/get-job-step-status external-id)))
-
-(defn- sync-incomplete-job-status
-  "Synchronizes the status of a job for which an incomplete step was found."
-  [agave {:keys [id username] :as job} step]
-  (if-let [step-status (get-job-step-status agave step)]
-    (let [step     (jp/lock-job-step id (:external-id step))
-          job      (jp/lock-job id)
-          status   (:status step-status)
-          end-date (db/timestamp-from-str (:enddate step-status))]
-      (update-job-status agave username job step status end-date))
-    (let [job (jp/lock-job id)]
-      (update-job-status agave username job step jp/failed-status (db/now)))))
-
-(defn- determine-job-status
-  "Determines the status of a job for synchronization in the case when all job steps are
-   marked as being in one of the completed statuses but the job itself is not."
-  [job-id]
-  (let [statuses (map :status (jp/list-job-steps job-id))
-        status   (first (filter (partial not= jp/completed-status) statuses))]
-    (cond (nil? status)                 jp/completed-status
-          (= jp/canceled-status status) status
-          (= jp/failed-status status)   status
-          :else                         jp/failed-status)))
-
-(defn- sync-complete-job-status
-  "Synchronizes the status of a job for which an incomplete step was not found."
-  [{:keys [id]}]
-  (let [{:keys [status]} (jp/lock-job id)]
-    (when-not (mu/is-completed? status)
-      (jp/update-job id {:status (determine-job-status id) :end-date (db/now)}))))
-
-(defn sync-job-status
-  "Synchronizes the status of a job with the remote system."
-  [agave {:keys [id username] :as job}]
-  (if-let [step (first (find-incomplete-job-steps id))]
-    (sync-incomplete-job-status agave job step)
-    (sync-complete-job-status job)))
 
 (defn- stop-job-step
   "Stops an individual step in a job."

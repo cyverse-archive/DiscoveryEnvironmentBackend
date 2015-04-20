@@ -95,9 +95,9 @@
                  :content-type :json
                  :as :stream})
      (catch Object does-not-exist
-       (http/post (service/build-url (config/data-info-base-url) "data" "directory" "create")
+       (http/post (service/build-url (config/data-info-base-url) "data" "directories")
                   {:query-params (secured-params user)
-                   :body (cheshire/encode {:path output-dir})
+                   :body (cheshire/encode {:paths [output-dir]})
                    :content-type :json
                    :as :stream})))
     output-dir))
@@ -353,7 +353,9 @@
     (jp/update-job job-id status end-date)))
 
 (defn get-default-output-name
-  [{output-id :output_id} {task-id :task_id}]
+  [{output-id :output_id :as io-map} {task-id :task_id :as source-step}]
+  (log/spy :warn io-map)
+  (log/spy :warn source-step)
   (ap/get-default-output-name task-id output-id))
 
 (defn get-job-step-status
@@ -363,3 +365,7 @@
      {:status  (:status step)
       :enddate (:completion_date step)})
    (catch [:status 404] _ nil)))
+
+(defn prepare-step
+  [user submission]
+  (build-submission user submission))

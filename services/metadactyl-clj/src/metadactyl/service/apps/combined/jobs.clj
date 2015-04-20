@@ -1,6 +1,7 @@
 (ns metadactyl.service.apps.combined.jobs
   (:use [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
+            [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [clojure-commons.file-utils :as ft]
             [kameleon.db :as db]
@@ -166,7 +167,8 @@
 
 (defn- get-default-output-name
   [combined-client {source-id :source_id :as io-map} app-steps]
-  (.getDefaultOutputName combined-client io-map (find-source-step app-steps source-id)))
+  (->> (find-source-step app-steps source-id)
+       (.getDefaultOutputName combined-client io-map)))
 
 (defn- get-input-path
   [combined-client {:keys [result-folder-path]} config app-steps io-map]
@@ -219,3 +221,12 @@
       (.updateJobStatus (cu/apps-client-for-job-step clients job-step) job-step job status end-date)
       (update-pipeline-status combined-client clients max-step-number job-step job status
                               end-date))))
+
+(defn build-next-step-submission
+  [combined-client clients {:keys [job-id step-number]} job]
+  (let [next-step (jp/get-job-step-number job-id (inc step-number))
+        client    (cu/apps-client-for-job-step clients next-step)]
+    (->> (cheshire/decode (.getValue (:submission job)) true)
+         (add-mapped-inputs combined-client job next-step)
+         (prepare-job-step-submission job next-step)
+         (.prepareStepSubmission client job-id))))

@@ -32,7 +32,10 @@
 
 (defschema Pipeline
   (merge AppTaskListing
-    {:steps
+    {:id
+     (describe UUID "The pipeline's ID")
+
+     :steps
      (describe [PipelineStep] "The Pipeline's steps")
 
      :mappings

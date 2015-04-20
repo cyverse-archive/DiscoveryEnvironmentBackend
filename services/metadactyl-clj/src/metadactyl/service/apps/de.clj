@@ -159,4 +159,7 @@
     (de-jobs/get-default-output-name io-map source-step))
 
   (getJobStepStatus [_ job-step]
-    (de-jobs/get-job-step-status job-step)))
+    (de-jobs/get-job-step-status job-step))
+
+  (prepareStepSubmission [_ _ submission]
+    (de-jobs/prepare-step user (update-in submission [:app_id] uuidify))))

@@ -219,7 +219,7 @@
 
 (defn update-pipeline
   [user workflow]
-  (let [app-id (update-pipeline-app user workflow)]
+  (let [app-id (update-pipeline-app user (preprocess-pipeline workflow))]
     (edit-pipeline user app-id)))
 
 (defn copy-pipeline

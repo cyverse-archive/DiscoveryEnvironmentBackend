@@ -88,7 +88,7 @@
 
   (translateJobStatus [self job-type status]
     (when (contains? (set (.getJobTypes self)) job-type)
-      (.translateJobStatus agave status)))
+      (or (.translateJobStatus agave status) status)))
 
   (updateJobStatus [self job-step job status end-date]
     (when (contains? (set (.getJobTypes self)) (:job-type job-step))
@@ -98,4 +98,7 @@
     (agave-jobs/get-default-output-name agave io-map source-step))
 
   (getJobStepStatus [_ job-step]
-    (agave-jobs/get-job-step-status agave job-step)))
+    (agave-jobs/get-job-step-status agave job-step))
+
+  (prepareStepSubmission [_ job-id submission]
+    (agave-jobs/prepare-step-submission agave job-id submission)))
