@@ -226,7 +226,7 @@
 
 (defn -main
   [& args]
-  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+  (let [{:keys [options]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The config file does not exist.")))
     (when-not (fs/readable? (:config options))
