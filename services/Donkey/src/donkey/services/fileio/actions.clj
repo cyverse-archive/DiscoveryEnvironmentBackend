@@ -9,12 +9,9 @@
         [donkey.util.service :only [success-response]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cemerick.url :as url]
-            [cheshire.core :as json]
             [clojure-commons.file-utils :as ft]
-            [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [clojure.string :as string]
-            [clj-http.client :as client]
             [ring.util.response :as rsp-utils]
             [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
