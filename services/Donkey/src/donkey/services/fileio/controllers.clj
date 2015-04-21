@@ -4,9 +4,7 @@
         [clj-jargon.permissions]
         [clj-jargon.users :only [user-exists?]]
         [clojure-commons.error-codes]
-        [clojure-commons.validators]
         [donkey.util.service :only [success-response]]
-        [donkey.util.validators]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [donkey.services.fileio.actions :as actions]
@@ -17,6 +15,7 @@
             [donkey.util.ssl :as ssl]
             [clojure.tools.logging :as log]
             [cemerick.url :as url-parser]
+            [clojure-commons.validators :as ccv]
             [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
             [donkey.util.validators :as valid]
@@ -67,13 +66,13 @@
 (defn download
   [req-params]
   (let [params (add-current-user-to-map req-params)]
-    (validate-map params {:user string? :path string?})
+    (ccv/validate-map params {:user string? :path string?})
     (actions/download (:user params) (:path params))))
 
 
 (defn finish-upload
   [req-params]
-  (validate-map req-params {"file" string? :dest string?})
+  (ccv/validate-map req-params {"file" string? :dest string?})
   (let [params  (add-current-user-to-map req-params)
         user    (:user params)
         dest    (:dest params)
@@ -88,7 +87,7 @@
   ^:deprecated
   [req-params req-multipart]
   (log/info "Detected params: " req-params)
-  (validate-map req-params {"file" string? "user" string? "dest" string?})
+  (ccv/validate-map req-params {"file" string? "user" string? "dest" string?})
   (let [user    (get req-params "user")
         dest    (get req-params "dest")
         up-path (get req-multipart "file")]
@@ -117,9 +116,9 @@
 (defn urlupload
   [req-params req-body]
   (let [params (add-current-user-to-map req-params)
-        body   (parse-body (slurp req-body))]
-    (validate-map params {:user string?})
-    (validate-map body {:dest string? :address string?})
+        body   (valid/parse-body (slurp req-body))]
+    (ccv/validate-map params {:user string?})
+    (ccv/validate-map body {:dest string? :address string?})
     (let [user    (:user params)
           dest    (string/trim (:dest body))
           addr    (string/trim (:address body))
@@ -136,9 +135,9 @@
   [req-params req-body]
   (log/info "Detected params: " req-params)
   (let [params (add-current-user-to-map req-params)
-        body   (parse-body (slurp req-body))]
-    (validate-map params {:user string?})
-    (validate-map body {:dest string? :content string?})
+        body   (valid/parse-body (slurp req-body))]
+    (ccv/validate-map params {:user string?})
+    (ccv/validate-map body {:dest string? :content string?})
     (let [user      (:user params)
           dest      (string/trim (:dest body))
           tmp-file  (str dest "." (gen-uuid))
@@ -181,9 +180,9 @@
 (defn saveas
   [req-params req-body]
   (let [params (add-current-user-to-map req-params)
-        body   (parse-body (slurp req-body))]
-    (validate-map params {:user string?})
-    (validate-map body {:dest string? :content string?})
+        body   (valid/parse-body (slurp req-body))]
+    (ccv/validate-map params {:user string?})
+    (ccv/validate-map body {:dest string? :content string?})
     (let [user (:user params)
           dest (string/trim (:dest body))
           cont (:content body)]
