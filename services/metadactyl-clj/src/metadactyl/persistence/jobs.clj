@@ -90,7 +90,7 @@
   "Filters results returned by the given job query by adding a (where (or ...)) clause based on the
    given filter map."
   [query filter]
-  (if (nil? filter)
+  (if (empty? filter)
     query
     (where query (apply or (map filter-map->where-clause filter)))))
 

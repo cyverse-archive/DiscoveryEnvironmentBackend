@@ -6,16 +6,25 @@
         [metadactyl.user :only [current-user]]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
+            [metadactyl.json :as json]
             [metadactyl.service.apps :as apps]
+            [metadactyl.util.coercions :as coercions]
             [metadactyl.util.service :as service]))
 
 (defroutes* analyses
   (GET* "/" [:as {:keys [uri]}]
-        :query   [params SecuredIncludeHiddenPagingParams]
+        :query   [{:keys [filter] :as params} SecuredAnalysisListingParams]
         :return  AnalysisList
         :notes "This service allows users to list analyses that they've previously submitted
         for execution."
-        (service/coerced-trap uri AnalysisList apps/list-jobs current-user params))
+        ;; JSON query params are not currently supported by compojure-api,
+        ;; so we have to decode the String filter param and validate it here.
+        (service/coerced-trap uri AnalysisList
+          apps/list-jobs
+          current-user
+          (coercions/coerce!
+            (assoc SecuredAnalysisListingParams OptionalKeyFilter [FilterParams])
+            (assoc params :filter (json/from-json filter)))))
 
   (POST* "/" [:as {:keys [uri]}]
          :query  [params SecuredQueryParamsEmailRequired]
