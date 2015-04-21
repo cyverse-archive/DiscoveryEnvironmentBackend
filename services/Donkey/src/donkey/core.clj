@@ -29,7 +29,6 @@
         [donkey.util.service]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [compojure.route :as route]
-            [clojure.tools.logging :as log]
             [ring.adapter.jetty :as jetty]
             [donkey.util.config :as config]
             [donkey.util.db :as db]
