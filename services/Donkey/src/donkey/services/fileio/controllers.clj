@@ -42,6 +42,7 @@
   (actions/store cm istream user (ft/path-join dest-dir filename)))
 
 (defn store-irods
+  ^:deprecated
   [{stream :stream orig-filename :filename}]
   (let [uuid     (gen-uuid)
         filename (str orig-filename "." uuid)
@@ -74,7 +75,7 @@
 
 
 (defn unsecured-upload
-  ^{:deprecated true}
+  ^:deprecated
   [req-params req-multipart]
   (log/info "Detected params: " req-params)
   (validate-map req-params {"file" string? "user" string? "dest" string?})

@@ -36,6 +36,7 @@
   (util/optional-routes [config/data-routes-enabled]
 
     (POST "/fileio/upload" [:as req]
+      ^:deprecated
       (let [req' (multipart/multipart-params-request req {:store fio/store-irods})]
         (log/info "Request: " req')
         (fio/unsecured-upload (:params req') (:multipart-params req'))))))
