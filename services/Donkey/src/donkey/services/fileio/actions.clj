@@ -1,7 +1,6 @@
 (ns donkey.services.fileio.actions
   (:use [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info]
-        [clj-jargon.item-ops]
         [clj-jargon.metadata]
         [clj-jargon.users :only [user-exists?]]
         [clj-jargon.permissions]
@@ -13,6 +12,7 @@
             [clojure.tools.logging :as log]
             [clojure.string :as string]
             [ring.util.response :as rsp-utils]
+            [clj-jargon.item-ops :as ops]
             [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
             [donkey.services.fileio.config :as jargon]
@@ -36,9 +36,8 @@
   (log/info "In save function for " user dest-path)
   (let [ddir (ft/dirname dest-path)]
     (when-not (exists? cm ddir)
-      (mkdirs cm ddir))
-
-    (copy-stream cm istream user dest-path)
+      (ops/mkdirs cm ddir))
+    (ops/copy-stream cm istream user dest-path)
     (log/info "save function after copy.")
     dest-path))
 
@@ -73,7 +72,7 @@
 
     (if (= (file-size cm file-path) 0)
       ""
-      (input-stream cm file-path))))
+      (ops/input-stream cm file-path))))
 
 (defn- new-filename
   [tmp-path]
@@ -81,25 +80,16 @@
 
 
 (defn finish-upload
-  [user tmp-path fpath]
-  (let [final-path (ft/rm-last-slash fpath)]
+  [user path folder]
+  (let [folder (ft/rm-last-slash folder)]
     (with-jargon (jargon/jargon-cfg) [cm]
       (when-not (user-exists? cm user)
         (throw+ {:error_code ERR_NOT_A_USER :user user}))
-      (when-not (exists? cm final-path)
-        (throw+ {:error_code ERR_DOES_NOT_EXIST :id final-path}))
-      (when-not (is-writeable? cm user final-path)
-        (throw+ {:error_code ERR_NOT_WRITEABLE :id final-path}))
-      (let [new-fname (new-filename tmp-path)
-            new-path  (ft/path-join final-path new-fname)]
-        (if (exists? cm new-path)
-          (delete cm new-path))
-        (move cm tmp-path new-path
-          :user               user
-          :admin-users        (cfg/irods-admins)
-          :skip-source-perms? true)
-        (set-owner cm new-path user)
-        (success-response {:file (data/path-stat user new-path)})))))
+      (when-not (is-writeable? cm user folder)
+        (ops/delete cm path)
+        (throw+ {:error_code ERR_NOT_WRITEABLE :id folder}))
+      (set-owner cm path user)
+      (success-response {:file (data/path-stat user path)}))))
 
 
 (defn upload
@@ -122,8 +112,9 @@
 
       (let [new-fname (new-filename tmp-path)
             new-path  (ft/path-join final-path new-fname)]
-        (if (exists? cm new-path) (delete cm new-path))
-        (move cm tmp-path new-path
+        (if (exists? cm new-path)
+          (ops/delete cm new-path))
+        (ops/move cm tmp-path new-path
           :user               user
           :admin-users        (cfg/irods-admins)
           :skip-source-perms? true)

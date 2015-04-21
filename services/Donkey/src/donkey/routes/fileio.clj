@@ -16,8 +16,8 @@
     (GET "/fileio/download" [:as {:keys [params]}]
       (fio/download params))
 
-    (POST "/fileio/upload" [:as req]
-      (let [store (partial fio/upload (config/irods-user) (config/fileio-temp-dir))
+    (POST "/fileio/upload" [dest :as req]
+      (let [store (partial fio/upload (config/irods-user) dest)
             req'  (multipart/multipart-params-request req {:store store})]
         (fio/finish-upload (:params req'))))
 

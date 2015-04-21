@@ -1,6 +1,5 @@
 (ns donkey.services.fileio.controllers
   (:use [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-info]
         [clj-jargon.permissions]
         [clj-jargon.users :only [user-exists?]]
         [clojure-commons.error-codes]
@@ -15,6 +14,8 @@
             [donkey.util.ssl :as ssl]
             [clojure.tools.logging :as log]
             [cemerick.url :as url-parser]
+            [clj-jargon.item-info :as info]
+            [clj-jargon.item-ops :as ops]
             [clojure-commons.validators :as ccv]
             [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
@@ -42,12 +43,17 @@
 
 
 (defn upload
-  [user temp-dir {stream :stream orig-filename :filename}]
-  (let [filename (str orig-filename "." (gen-uuid))]
-    (if-not (valid/good-string? orig-filename)
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :path orig-filename}))
+  [user dest-dir {stream :stream filename :filename}]
+  (ccv/validate-field "dest" dest-dir)
+  (when-not (valid/good-string? filename)
+    (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :path filename}))
+  (let [dest-file (ft/path-join dest-dir filename)]
     (with-jargon (jargon/jargon-cfg) [cm]
-      (store cm stream filename user temp-dir))))
+      (when-not (info/exists? cm dest-dir)
+        (throw+ {:error_code ERR_DOES_NOT_EXIST :id dest-dir}))
+      (if (info/exists? cm dest-file)
+        (ops/delete cm dest-file))
+      (actions/store cm stream user dest-file))))
 
 
 (defn store-irods
@@ -72,15 +78,11 @@
 
 (defn finish-upload
   [req-params]
-  (ccv/validate-map req-params {"file" string? :dest string?})
   (let [params  (add-current-user-to-map req-params)
         user    (:user params)
         dest    (:dest params)
         up-path (get params "file")]
-    (if-not (valid/good-string? up-path)
-      {:status 500
-       :body   (json/generate-string {:error_code ERR_BAD_OR_MISSING_FIELD :path up-path})}
-      (actions/finish-upload user up-path dest))))
+    (actions/finish-upload user up-path dest)))
 
 
 (defn unsecured-upload
@@ -148,7 +150,7 @@
           (throw+ {:user       user
                    :error_code ERR_NOT_A_USER}))
 
-        (when-not (exists? cm dest)
+        (when-not (info/exists? cm dest)
           (throw+ {:error_code ERR_DOES_NOT_EXIST
                    :path       dest}))
 
@@ -188,22 +190,13 @@
           cont (:content body)]
       (with-jargon (jargon/jargon-cfg) [cm]
         (when-not (user-exists? cm user)
-          (throw+ {:user       user
-                   :error_code ERR_NOT_A_USER}))
-
-        (when-not (exists? cm (ft/dirname dest))
-          (throw+ {:error_code ERR_DOES_NOT_EXIST
-                   :path       (ft/dirname dest)}))
-
+          (throw+ {:error_code ERR_NOT_A_USER :user user}))
+        (when-not (info/exists? cm (ft/dirname dest))
+          (throw+ {:error_code ERR_DOES_NOT_EXIST :path (ft/dirname dest)}))
         (when-not (is-writeable? cm user (ft/dirname dest))
-          (throw+ {:error_code ERR_NOT_WRITEABLE
-                   :path       (ft/dirname dest)}))
-
-        (when (exists? cm dest)
-          (throw+ {:error_code ERR_EXISTS
-                   :path       dest}))
-
+          (throw+ {:error_code ERR_NOT_WRITEABLE :path (ft/dirname dest)}))
+        (when (info/exists? cm dest)
+          (throw+ {:error_code ERR_EXISTS :path dest}))
         (with-in-str cont
           (actions/store cm *in* user dest))
-
         (success-response {:file (data/path-stat user dest)})))))
