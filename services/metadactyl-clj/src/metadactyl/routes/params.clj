@@ -84,8 +84,38 @@
 (s/defschema SecuredIncludeHiddenParams
   (merge SecuredQueryParams IncludeHiddenParams))
 
-(s/defschema SecuredIncludeHiddenPagingParams
-  (merge SecuredPagingParams IncludeHiddenParams))
+(s/defschema FilterParams
+  {:field
+   (ss/describe String "The name of the field on which the filter is based.")
+
+   :value
+   (ss/describe String
+     "The search value. If `field` is `name` or `app_name`, then `value` can be contained anywhere,
+      case-insensitive, in the corresponding field.")})
+
+;; JSON query params are not currently supported by compojure-api,
+;; so we have to define "filter" in this schema as a String for now.
+(def OptionalKeyFilter (s/optional-key :filter))
+
+(s/defschema SecuredAnalysisListingParams
+  (merge SecuredPagingParams IncludeHiddenParams
+    {OptionalKeyFilter
+     (ss/describe String
+       "Allows results to be filtered based on the value of some result field.
+        The format of this parameter is
+        `[{\"field\":\"some_field\", \"value\":\"search-term\"}, ...]`, where `field` is the name of
+        the field on which the filter is based and `value` is the search value.
+        If `field` is `name` or `app_name`, then `value` can be contained anywhere,
+        case-insensitive, in the corresponding field.
+        For example, to obtain the list of all jobs that were executed using an application with
+        `CACE` anywhere in its name, the parameter value can be
+        `[{\"field\":\"app_name\",\"value\":\"cace\"}]`.
+        To find a job with a specific `id`, the parameter value can be
+        `[{\"field\":\"id\",\"value\":\"C09F5907-B2A2-4429-A11E-5B96F421C3C1\"}]`.
+        To find jobs associated with a specific `parent_id`, the parameter value can be
+        `[{\"field\":\"parent_id\",\"value\":\"b4c2f624-7cbd-496e-adad-5be8d0d3b941\"}]`.
+        It's also possible to search for jobs without a parent using this parameter value:
+        `[{\"field\":\"parent_id\",\"value\":null}]`.")}))
 
 (s/defschema ToolSearchParams
   (merge SecuredPagingParams IncludeHiddenParams

@@ -10,7 +10,7 @@
             [donkey.util.transformers :as xforms]))
 
 (def metadactyl-sort-params [:limit :offset :sort-field :sort-dir])
-(def metadactyl-include-hidden-sort-params (conj metadactyl-sort-params :include-hidden))
+(def metadactyl-analysis-listing-params (conj metadactyl-sort-params :include-hidden :filter))
 (def metadactyl-search-params (conj metadactyl-sort-params :search))
 
 (defn- secured-params
@@ -227,7 +227,7 @@
 (defn list-jobs
   [params]
   (client/get (metadactyl-url "analyses")
-              {:query-params     (secured-params params metadactyl-include-hidden-sort-params)
+              {:query-params     (secured-params params metadactyl-analysis-listing-params)
                :as               :stream
                :follow-redirects false}))
 

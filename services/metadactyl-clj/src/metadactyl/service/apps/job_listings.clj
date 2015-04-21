@@ -76,10 +76,12 @@
   (jp/count-jobs-of-types username filter include-hidden types))
 
 (defn list-jobs
-  [apps-client user params]
-  (let [types      (.getJobTypes apps-client)
-        jobs       (list-jobs* user (util/default-search-params params :startdate :desc) types)
-        app-tables (.loadAppTables apps-client (map :app-id jobs))]
+  [apps-client user {:keys [sort-field] :as params}]
+  (let [default-sort-dir (if (nil? sort-field) :desc :asc)
+        search-params    (util/default-search-params params :startdate default-sort-dir)
+        types            (.getJobTypes apps-client)
+        jobs             (list-jobs* user search-params types)
+        app-tables       (.loadAppTables apps-client (map :app-id jobs))]
     {:analyses  (map (partial format-job app-tables) jobs)
      :timestamp (str (System/currentTimeMillis))
      :total     (count-jobs user params types)}))
