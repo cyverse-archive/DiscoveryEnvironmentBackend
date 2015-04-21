@@ -184,12 +184,14 @@
      (db/define-database)))
 
 (defn lein-ring-init
+  "This function is used by leiningen ring plugin to initialize donkey."
   []
   (load-configuration-from-file)
   (icat/configure-icat)
   (start-nrepl))
 
 (defn repl-init
+  "This function is used to manually initialize donkey from the leiningen REPL."
   []
   (load-configuration-from-file)
   (icat/configure-icat))
