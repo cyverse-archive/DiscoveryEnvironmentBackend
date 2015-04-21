@@ -80,7 +80,7 @@
     (if-not (valid/good-string? up-path)
       {:status 500
        :body   (json/generate-string {:error_code ERR_BAD_OR_MISSING_FIELD :path up-path})}
-      (actions/upload user up-path dest))))
+      (actions/finish-upload user up-path dest))))
 
 
 (defn unsecured-upload

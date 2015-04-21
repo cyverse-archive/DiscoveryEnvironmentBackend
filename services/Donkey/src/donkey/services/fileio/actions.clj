@@ -79,7 +79,31 @@
   [tmp-path]
   (string/join "." (drop-last (string/split (ft/basename tmp-path) #"\."))))
 
+
+(defn finish-upload
+  [user tmp-path fpath]
+  (let [final-path (ft/rm-last-slash fpath)]
+    (with-jargon (jargon/jargon-cfg) [cm]
+      (when-not (user-exists? cm user)
+        (throw+ {:error_code ERR_NOT_A_USER :user user}))
+      (when-not (exists? cm final-path)
+        (throw+ {:error_code ERR_DOES_NOT_EXIST :id final-path}))
+      (when-not (is-writeable? cm user final-path)
+        (throw+ {:error_code ERR_NOT_WRITEABLE :id final-path}))
+      (let [new-fname (new-filename tmp-path)
+            new-path  (ft/path-join final-path new-fname)]
+        (if (exists? cm new-path)
+          (delete cm new-path))
+        (move cm tmp-path new-path
+          :user               user
+          :admin-users        (cfg/irods-admins)
+          :skip-source-perms? true)
+        (set-owner cm new-path user)
+        (success-response {:file (data/path-stat user new-path)})))))
+
+
 (defn upload
+  ^:deprecated
   [user tmp-path fpath]
   (log/info "In upload for " user tmp-path fpath)
   (let [final-path (ft/rm-last-slash fpath)]
