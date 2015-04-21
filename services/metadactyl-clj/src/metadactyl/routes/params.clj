@@ -89,7 +89,7 @@
    (ss/describe String "The name of the field on which the filter is based.")
 
    :value
-   (ss/describe String
+   (ss/describe (s/maybe String)
      "The search value. If `field` is `name` or `app_name`, then `value` can be contained anywhere,
       case-insensitive, in the corresponding field.")})
 
