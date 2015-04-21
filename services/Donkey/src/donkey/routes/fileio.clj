@@ -15,6 +15,9 @@
     (GET "/fileio/download" [:as {:keys [params]}]
       (fio/download params))
 
+    (POST "/fileio/upload" [:as req]
+      (fio/upload (:params req)))
+
     (POST "/fileio/urlupload" [:as {:keys [params body]}]
       (fio/urlupload params body))
 
@@ -33,4 +36,4 @@
     (POST "/fileio/upload" [:as req]
       (do
         (log/info "Request: " req)
-        (fio/upload (:params req) (:multipart-params req))))))
+        (fio/unsecured-upload (:params req) (:multipart-params req))))))

@@ -59,7 +59,22 @@
     (validate-map params {:user string? :path string?})
     (actions/download (:user params) (:path params))))
 
+
 (defn upload
+  [req-params]
+  (validate-map req-params {"file" string? :dest string?})
+  (let [params  (add-current-user-to-map req-params)
+        user    (:user params)
+        dest    (:dest params)
+        up-path (get params "file")]
+    (if-not (valid/good-string? up-path)
+      {:status 500
+       :body   (json/generate-string {:error_code ERR_BAD_OR_MISSING_FIELD :path up-path})}
+      (actions/upload user up-path dest))))
+
+
+(defn unsecured-upload
+  ^{:deprecated true}
   [req-params req-multipart]
   (log/info "Detected params: " req-params)
   (validate-map req-params {"file" string? "user" string? "dest" string?})
