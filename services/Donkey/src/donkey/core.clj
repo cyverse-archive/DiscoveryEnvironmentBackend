@@ -32,10 +32,8 @@
             [ring.adapter.jetty :as jetty]
             [donkey.util.config :as config]
             [donkey.util.db :as db]
-            [donkey.services.fileio.controllers :as fileio]
             [clojure.tools.nrepl.server :as nrepl]
             [me.raynes.fs :as fs]
-            [ring.middleware.multipart-params :as multipart]
             [common-cli.core :as ccli]
             [donkey.services.filesystem.icat :as icat]
             [donkey.util :as util]))
@@ -199,7 +197,6 @@
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler routes-fn)
-    (multipart/wrap-multipart-params {:store fileio/store-irods})
     util/trap-handler
     util/req-logger
     wrap-keyword-params
