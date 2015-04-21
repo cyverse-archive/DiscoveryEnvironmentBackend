@@ -41,6 +41,16 @@
   [cm istream filename user dest-dir]
   (actions/store cm istream user (ft/path-join dest-dir filename)))
 
+
+(defn upload
+  [user temp-dir {stream :stream orig-filename :filename}]
+  (let [filename (str orig-filename "." (gen-uuid))]
+    (if-not (valid/good-string? orig-filename)
+      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :path orig-filename}))
+    (with-jargon (jargon/jargon-cfg) [cm]
+      (store cm stream filename user temp-dir))))
+
+
 (defn store-irods
   ^:deprecated
   [{stream :stream orig-filename :filename}]
@@ -61,7 +71,7 @@
     (actions/download (:user params) (:path params))))
 
 
-(defn upload
+(defn finish-upload
   [req-params]
   (validate-map req-params {"file" string? :dest string?})
   (let [params  (add-current-user-to-map req-params)
