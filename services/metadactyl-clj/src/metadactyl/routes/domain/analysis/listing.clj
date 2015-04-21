@@ -1,5 +1,6 @@
 (ns metadactyl.routes.domain.analysis.listing
-  (:use [ring.swagger.schema :only [describe]]
+  (:use [metadactyl.routes.params :only [ResultsTotalParam]]
+        [ring.swagger.schema :only [describe]]
         [schema.core :only [defschema optional-key Any Int Bool]])
   (:import [java.util UUID]))
 
@@ -66,4 +67,4 @@
 (defschema AnalysisList
   {:analyses  (describe [Analysis] "The list of analyses.")
    :timestamp (describe Timestamp "The time the analysis list was retrieved.")
-   :total     (describe Long "The total number of analyses in the result set.")})
+   :total     ResultsTotalParam})

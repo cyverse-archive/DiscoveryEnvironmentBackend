@@ -18,6 +18,10 @@
 
 (def AnalysisIdPathParam (ss/describe UUID "The Analysis UUID"))
 
+(def ResultsTotalParam
+  (ss/describe Long
+    "The total number of results that would be returned without limits and offsets applied."))
+
 (def NonBlankString
   (ss/describe
    (s/both String (s/pred (complement clojure.string/blank?) 'non-blank?))
