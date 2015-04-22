@@ -36,7 +36,8 @@
             [me.raynes.fs :as fs]
             [common-cli.core :as ccli]
             [donkey.services.filesystem.icat :as icat]
-            [donkey.util :as util]))
+            [donkey.util :as util]
+            [donkey.util.transformers :as transform]))
 
 
 (defn delayed-handler
@@ -112,17 +113,30 @@
       config/pgt-callback-base
       config/pgt-callback-path)))
 
+
+(defn- wrap-user-info
+  [handler]
+  (fn [request]
+    (handler (assoc request :user-info (transform/add-current-user-to-map {})))))
+
+
 (def secured-handler-no-context
   (-> (delayed-handler secured-routes-no-context)
-      (cas-store-user)))
+    wrap-user-info
+    (cas-store-user)))
+
 
 (def secured-handler
   (-> (delayed-handler secured-routes)
-      (cas-store-user)))
+    wrap-user-info
+    (cas-store-user)))
+
 
 (def admin-handler
   (-> (delayed-handler admin-routes)
-      (cas-store-admin-user)))
+    wrap-user-info
+    (cas-store-admin-user)))
+
 
 (defn donkey-routes
   []
