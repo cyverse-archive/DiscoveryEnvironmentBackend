@@ -279,10 +279,10 @@
   [task]
   (insert tasks (values (filter-valid-task-values task))))
 
-(defn set-task-tool
-  "Sets the given tool-id as the given task's tool."
-  [task-id tool-id]
-  (update tasks (set-fields {:tool_id tool-id}) (where {:id task-id})))
+(defn update-task
+  "Updates a task in the database."
+  [{task-id :id :as task}]
+  (update tasks (set-fields (filter-valid-task-values task)) (where {:id task-id})))
 
 (defn remove-app-steps
   "Removes all steps from an App. This delete will cascade to workflow_io_maps and
