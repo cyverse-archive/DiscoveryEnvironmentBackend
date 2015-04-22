@@ -7,7 +7,6 @@
         [slingshot.slingshot :only [try+ throw+]])
   (:require [donkey.services.fileio.actions :as actions]
             [cheshire.core :as json]
-            [clj-jargon.item-ops :as jargon-ops]
             [clojure-commons.file-utils :as ft]
             [clojure.string :as string]
             [donkey.util.ssl :as ssl]
@@ -140,12 +139,9 @@
     (ccv/validate-map body {:dest string? :content string?})
     (let [user      (:user params)
           dest      (string/trim (:dest body))
-          tmp-file  (str dest "." (gen-uuid))
           content   (:content body)
           file-size (count (.getBytes content "UTF-8"))]
-      (with-jargon (jargon/jargon-cfg) [cm]
-        (when-not (user-exists? cm user)
-          (throw+ {:error_code ERR_NOT_A_USER :user user}))
+      (with-jargon (jargon/jargon-cfg) :client-user user [cm]
         (when-not (info/exists? cm dest)
           (throw+ {:error_code ERR_DOES_NOT_EXIST :path dest}))
         (when-not (perm/is-writeable? cm user dest)
@@ -154,22 +150,14 @@
           (throw+ {:error_code "ERR_FILE_SIZE_TOO_LARGE"
                    :path       dest
                    :size       file-size}))
-
-        ;; Jargon will delete dest before writing its new contents, which will cause the old version
-        ;; of the file to be put into the Trash. So rename dest to tmp-file, then force-delete
-        ;; tmp-file after a successful save of the new contents.
-        (jargon-ops/move cm dest tmp-file :user user :admin-users (cfg/irods-admins))
         (try+
           (with-in-str content
             (actions/save cm *in* user dest))
-          (actions/copy-metadata cm tmp-file dest)
-          (jargon-ops/delete cm tmp-file true)
           (catch Object e
             (log/warn e)
-            (jargon-ops/move cm tmp-file dest :user user :admin-users (cfg/irods-admins))
-            (throw+)))
+            (throw+))))
+      (success-response {:file (data/path-stat user dest)}))))
 
-        (success-response {:file (data/path-stat user dest)})))))
 
 (defn saveas
   [req-params req-body]
