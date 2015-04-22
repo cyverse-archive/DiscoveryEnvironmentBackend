@@ -168,15 +168,11 @@
     (let [user (:user params)
           dest (string/trim (:dest body))
           cont (:content body)]
-      (with-jargon (jargon/jargon-cfg) [cm]
-        (when-not (user-exists? cm user)
-          (throw+ {:error_code ERR_NOT_A_USER :user user}))
+      (with-jargon (jargon/jargon-cfg) :client-user user [cm]
         (when-not (info/exists? cm (ft/dirname dest))
           (throw+ {:error_code ERR_DOES_NOT_EXIST :path (ft/dirname dest)}))
-        (when-not (perm/is-writeable? cm user (ft/dirname dest))
-          (throw+ {:error_code ERR_NOT_WRITEABLE :path (ft/dirname dest)}))
         (when (info/exists? cm dest)
           (throw+ {:error_code ERR_EXISTS :path dest}))
         (with-in-str cont
-          (actions/store cm *in* user dest))
-        (success-response {:file (data/path-stat user dest)})))))
+          (actions/store cm *in* user dest)))
+      (success-response {:file (data/path-stat user dest)}))))
