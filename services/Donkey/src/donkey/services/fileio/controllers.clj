@@ -1,6 +1,5 @@
 (ns donkey.services.fileio.controllers
   (:use [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.permissions]
         [clj-jargon.users :only [user-exists?]]
         [clojure-commons.error-codes]
         [donkey.util.service :only [success-response]]
@@ -14,13 +13,15 @@
             [donkey.util.ssl :as ssl]
             [clojure.tools.logging :as log]
             [cemerick.url :as url-parser]
+            [ring.middleware.multipart-params :as multipart]
             [clj-jargon.item-info :as info]
-            [clj-jargon.item-ops :as ops]
+            [clj-jargon.permissions :as perm]
             [clojure-commons.validators :as ccv]
             [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
             [donkey.util.validators :as valid]
-            [donkey.services.fileio.config :as jargon]))
+            [donkey.services.fileio.config :as jargon])
+  (:import [clojure.lang IPersistentMap]))
 
 
 (defn- in-stream
@@ -37,25 +38,6 @@
   (str (java.util.UUID/randomUUID)))
 
 
-(defn- store
-  [cm istream filename user dest-dir]
-  (actions/store cm istream user (ft/path-join dest-dir filename)))
-
-
-(defn upload
-  [user dest-dir {stream :stream filename :filename}]
-  (ccv/validate-field "dest" dest-dir)
-  (when-not (valid/good-string? filename)
-    (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :path filename}))
-  (let [dest-file (ft/path-join dest-dir filename)]
-    (with-jargon (jargon/jargon-cfg) [cm]
-      (when-not (info/exists? cm dest-dir)
-        (throw+ {:error_code ERR_DOES_NOT_EXIST :id dest-dir}))
-      (if (info/exists? cm dest-file)
-        (ops/delete cm dest-file))
-      (actions/store cm stream user dest-file))))
-
-
 (defn store-irods
   ^:deprecated
   [{stream :stream orig-filename :filename}]
@@ -67,7 +49,8 @@
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :path orig-filename}))
     (with-jargon (jargon/jargon-cfg) [cm]
-      (store cm stream filename user temp-dir))))
+      (actions/store cm stream user (ft/path-join temp-dir filename)))))
+
 
 (defn download
   [req-params]
@@ -76,13 +59,29 @@
     (actions/download (:user params) (:path params))))
 
 
-(defn finish-upload
-  [req-params]
-  (let [params  (add-current-user-to-map req-params)
-        user    (:user params)
-        dest    (:dest params)
-        up-path (get params "file")]
-    (actions/finish-upload user up-path dest)))
+(defn- store-from-form
+  [user dest-dir {istream :stream filename :filename}]
+  (when-not (valid/good-string? filename)
+    (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :path filename}))
+  (let [dest-path (ft/path-join dest-dir filename)]
+    (actions/upload (jargon/jargon-cfg) user dest-path istream)
+    dest-path))
+
+
+(defn upload
+  "This is the business logic of behind the POST /secured/fileio/upload endpoint.
+
+   Params:
+     user - the who will own the data object being uploaded
+     dest - the value of the dest query parameter
+     req  - the ring request map"
+  [^String user ^String dest ^IPersistentMap req]
+  (ccv/validate-field "dest" dest)
+  (let [store                   (partial store-from-form user dest)
+        {{file "file"} :params} (multipart/multipart-params-request req {:store store})]
+    (when-not file
+      (throw+ {:error_code ERR_MISSING_FORM_FIELD :field "file"}))
+    (success-response {:file (data/path-stat user file)})))
 
 
 (defn unsecured-upload
@@ -95,10 +94,9 @@
         up-path (get req-multipart "file")]
     (if-not (valid/good-string? up-path)
       {:status 500
-       :body   (json/generate-string
-                 {:error_code ERR_BAD_OR_MISSING_FIELD
-                  :path       up-path})}
-      (actions/upload user up-path dest))))
+       :body   (json/generate-string {:error_code ERR_BAD_OR_MISSING_FIELD :path up-path})}
+      (actions/upload-and-move user up-path dest))))
+
 
 (defn url-filename
   [address]
@@ -147,17 +145,11 @@
           file-size (count (.getBytes content "UTF-8"))]
       (with-jargon (jargon/jargon-cfg) [cm]
         (when-not (user-exists? cm user)
-          (throw+ {:user       user
-                   :error_code ERR_NOT_A_USER}))
-
+          (throw+ {:error_code ERR_NOT_A_USER :user user}))
         (when-not (info/exists? cm dest)
-          (throw+ {:error_code ERR_DOES_NOT_EXIST
-                   :path       dest}))
-
-        (when-not (is-writeable? cm user dest)
-          (throw+ {:error_code ERR_NOT_WRITEABLE
-                   :path       dest}))
-
+          (throw+ {:error_code ERR_DOES_NOT_EXIST :path dest}))
+        (when-not (perm/is-writeable? cm user dest)
+          (throw+ {:error_code ERR_NOT_WRITEABLE :path dest}))
         (when (> file-size (cfg/fileio-max-edit-file-size))
           (throw+ {:error_code "ERR_FILE_SIZE_TOO_LARGE"
                    :path       dest
@@ -193,7 +185,7 @@
           (throw+ {:error_code ERR_NOT_A_USER :user user}))
         (when-not (info/exists? cm (ft/dirname dest))
           (throw+ {:error_code ERR_DOES_NOT_EXIST :path (ft/dirname dest)}))
-        (when-not (is-writeable? cm user (ft/dirname dest))
+        (when-not (perm/is-writeable? cm user (ft/dirname dest))
           (throw+ {:error_code ERR_NOT_WRITEABLE :path (ft/dirname dest)}))
         (when (info/exists? cm dest)
           (throw+ {:error_code ERR_EXISTS :path dest}))
