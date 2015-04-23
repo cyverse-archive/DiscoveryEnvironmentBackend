@@ -2,9 +2,11 @@
   (:require [clojure.tools.logging :as log]
             [slingshot.slingshot :as ss]
             [clojure-commons.file-utils :as ft])
-  (:import [org.irods.jargon.core.connection IRODSAccount]
-           [org.irods.jargon.core.pub.io IRODSFileInputStream]
-           [org.irods.jargon.core.pub IRODSFileSystem]))
+  (:import [java.io InputStream]
+           [java.net ConnectException]
+           [org.irods.jargon.core.connection IRODSAccount]
+           [org.irods.jargon.core.pub IRODSAccessObjectFactory  ; Hint for Cursive inspection
+                                      IRODSFileSystem]))
 
 ; Debuging code.
 (def with-jargon-index (ref 0))
@@ -24,7 +26,7 @@
 (defn proxy-input-stream
   [cm istream]
   (let [with-jargon-index curr-with-jargon-index]
-    (proxy [java.io.InputStream] []
+    (proxy [InputStream] []
       (available [] (.available istream))
       (mark [readlimit] (.mark istream readlimit))
       (markSupported [] (.markSupported istream))
@@ -91,11 +93,11 @@
   (let [retval {:succeeded true :retval nil :exception nil :retry false}]
     (try
       (log-value "retval:" (assoc retval :retval (context-map cfg client-user)))
-      (catch java.net.ConnectException e
+      (catch ConnectException e
         (log/debug curr-with-jargon-index "- caught a ConnectException:" e)
         (log/debug curr-with-jargon-index "- need to retry...")
         (assoc retval :exception e :succeeded false :retry true))
-      (catch java.lang.Exception e
+      (catch Exception e
         (log/debug curr-with-jargon-index "- got an Exception:" e)
         (log/debug curr-with-jargon-index "- shouldn't retry...")
         (assoc retval :exception e :succeeded false :retry false)))))
@@ -170,9 +172,9 @@
            (ss/try+
              (let [retval# (do ~@body)]
                (cond
-                 (instance? java.io.InputStream retval#) (proxy-input-stream-return ~cm-sym retval#)
-                 auto-close#                             (clean-return ~cm-sym retval#)
-                 :else                                   (dirty-return ~cm-sym retval#)))
+                 (instance? InputStream retval#) (proxy-input-stream-return ~cm-sym retval#)
+                 auto-close#                     (clean-return ~cm-sym retval#)
+                 :else                           (dirty-return ~cm-sym retval#)))
              (catch Object o1#
                (ss/try+
                  (.close (:proxy ~cm-sym))
