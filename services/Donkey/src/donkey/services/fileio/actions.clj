@@ -22,11 +22,6 @@
            [clojure.lang IPersistentMap]))
 
 
-(defn set-meta
-  [path attr value unit]
-  (with-jargon (jargon/jargon-cfg) [cm]
-    (set-metadata cm path attr value unit)))
-
 (defn copy-metadata
   "Copies AVUs from src and applies them to dest."
   [cm src dest]
@@ -67,7 +62,7 @@
      dest-path - the absolute path to the data object after it has been uploaded
      istream   - an input stream containing the contents of the data object."
   [^IPersistentMap irods-cfg ^String user ^String dest-path ^InputStream istream]
-  (with-jargon irods-cfg :client-user user [cm]
+  (with-jargon irods-cfg [cm]
     (let [dest-dir (ft/dirname dest-path)]
       (when-not (info/exists? cm dest-dir)
         (throw+ {:error_code ERR_DOES_NOT_EXIST :path dest-dir}))
@@ -79,9 +74,7 @@
 
 (defn- get-istream
   [user file-path]
-  (with-jargon (jargon/jargon-cfg) [cm]
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER :user user}))
+  (with-jargon (jargon/jargon-cfg) :client-user user [cm]
     (when-not (info/exists? cm file-path)
       (throw+ {:error_code ERR_DOES_NOT_EXIST :path file-path}))
     (when-not (perm/is-readable? cm user file-path)
