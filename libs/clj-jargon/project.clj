@@ -10,10 +10,7 @@
                  [org.iplantc/clojure-commons "4.2.4"]
                  [org.slf4j/slf4j-api "1.7.12"]
                  [org.slf4j/slf4j-log4j12 "1.7.12"]
-                 [org.iplantc.core.jargon/jargon-core "4.0.2.1.1"
-                  :exclusions [[org.jglobus/JGlobus-Core]
-                               [org.slf4j/slf4j-api]
-                               [org.slf4j/slf4j-log4j12]]]
+                 [org.iplantc.core.jargon/jargon-core "4.0.2.1.2"]
                  [org.iplantc.core.jargon/jargon-data-utils "4.0.2.1.1"
                   :exclusions [[org.slf4j/slf4j-api]
                                [org.slf4j/slf4j-log4j12]]]
