@@ -10,7 +10,6 @@
             [clj-jargon.item-ops :as ops]
             [clj-jargon.metadata :as meta]
             [clj-jargon.permissions :as perms]
-            [clojure.string :as string]
             [clojure.java.io :as io]
             [clojure-commons.file-utils :as ft]))
 
@@ -78,23 +77,6 @@
   (let [parent (ft/dirname full-path)]
     (= parent (ft/path-join "/" zone "home"))))
 
-(defn halting-folders
-  [cm username]
-  (set (user-home-dir cm username)
-    (ft/path-join "/" (:zone cm) "home" "shared")))
-
-(defn halt?
-  [cm username path-to-test]
-  (or (contains? (halting-folders cm username) path-to-test)
-      (home-folder? (:zone cm) path-to-test)))
-
-(defn set-parent-owner
-  [cm username dir-dest]
-  (loop [p (ft/dirname dir-dest)]
-    (when-not (halt? cm username p)
-      (if-not (perms/owns? cm username p )
-        (perms/set-owner cm p username))
-      (recur (ft/dirname p)))))
 
 (defn iput-status
   "Callback function for the overallStatus function for a TransferCallbackListener."
@@ -209,8 +191,7 @@
         (porkprint "Applying metadata to " dest-dir)
         (apply-metadata cm dest-dir metadata)
         (doseq [fileobj (file-seq (info/file cm dest-dir))]
-          (let [filepath (.getAbsolutePath fileobj)
-                dir?     (.isDirectory fileobj)]
+          (let [filepath (.getAbsolutePath fileobj)]
             (perms/set-owner cm filepath (:user options))
             (apply-metadata cm filepath metadata))))
 
