@@ -123,33 +123,29 @@
   "Runs the iput icommand, tranferring files from the --source
    to the remote --destination."
   [options]
-  (let [source-dir      (ft/abs-path (:source options))
-        dest-dir        (:destination options)
-        irods-cfg       (init-jargon (:config options))
-        transfer-files  (files-to-transfer options)
-        metadata        (:meta options)
-        skip-parent?    (:skip-parent-meta options)
-        dest-files      (relative-dest-paths transfer-files source-dir dest-dir)
-        error?          (atom false)]
+  (let [source-dir     (ft/abs-path (:source options))
+        dest-dir       (:destination options)
+        irods-cfg      (init-jargon (:config options))
+        transfer-files (files-to-transfer options)
+        metadata       (:meta options)
+        skip-parent?   (:skip-parent-meta options)
+        dest-files     (relative-dest-paths transfer-files source-dir dest-dir)
+        error?         (atom false)
+        user           (:user options)]
     (jg/with-jargon irods-cfg [cm]
       (when-not (info/exists? cm (ft/dirname dest-dir))
         (porkprint (ft/dirname dest-dir) "does not exist.")
         (System/exit 1))
-
-      (when (and (not (perms/is-writeable? cm (:user options) (ft/dirname dest-dir)))
-                 (not= (user-home-dir cm (:user options))
-                       (ft/rm-last-slash dest-dir)))
+      (when (and (not (perms/is-writeable? cm user (ft/dirname dest-dir)))
+                 (not= (user-home-dir cm user) (ft/rm-last-slash dest-dir)))
         (porkprint (ft/dirname dest-dir) "is not writeable.")
         (System/exit 1))
-
       (when-not (info/exists? cm dest-dir)
         (porkprint "Path " dest-dir " does not exist. Creating it.")
         (ops/mkdirs cm dest-dir))
-
-      (when-not (perms/owns? cm (:user options) dest-dir)
-        (porkprint "Setting the owner of " dest-dir " to " (:user options))
-        (perms/set-owner cm dest-dir (:user options)))
-
+      (when-not (perms/owns? cm user dest-dir)
+        (porkprint "Setting the owner of " dest-dir " to " user)
+        (perms/set-owner cm dest-dir user))
       (doseq [[src dest]  (seq dest-files)]
         (let [dir-dest (ft/dirname dest)]
           (if-not (or (.isFile (io/file src))
@@ -169,15 +165,15 @@
 
               ;;; Since we run as a proxy account, the destination directory
               ;;; needs to have the owner set to the user that ran the app.
-              (when-not (perms/owns? cm (:user options) dir-dest)
-                (porkprint "Setting owner of " dir-dest " to " (:user options))
-                (perms/set-owner cm dir-dest (:user options)))
+              (when-not (perms/owns? cm user dir-dest)
+                (porkprint "Setting owner of " dir-dest " to " user)
+                (perms/set-owner cm dir-dest user))
 
               (try
                 (retry 10 ops/iput cm src dest tcl)
-                (when-not (perms/owns? cm (:user options) dest)
-                  (porkprint "Setting owner of " dest " to " (:user options))
-                  (perms/set-owner cm dest (:user options)))
+                (when-not (perms/owns? cm user dest)
+                  (porkprint "Setting owner of " dest " to " user)
+                  (perms/set-owner cm dest user))
                (catch Exception err
                  (porkprint "iput failed: " err)
                  (reset! error? true)))
@@ -192,7 +188,7 @@
         (apply-metadata cm dest-dir metadata)
         (doseq [fileobj (file-seq (info/file cm dest-dir))]
           (let [filepath (.getAbsolutePath fileobj)]
-            (perms/set-owner cm filepath (:user options))
+            (perms/set-owner cm filepath user)
             (apply-metadata cm filepath metadata))))
 
       ;;; Transfer files from the NFS mount point into the logs
@@ -209,7 +205,7 @@
               (try+
                (when-not (or (.isDirectory fileobj) (contains? exclusions src))
                  (retry 10 ops/iput cm src dest tcl)
-                 (perms/set-owner cm dest-path (:user options))
+                 (perms/set-owner cm dest-path user)
                  (apply-metadata cm dest-path metadata))
                (catch [:error_code "ERR_BAD_EXIT_CODE"] err
                  (porkprint "Command exited with a non-zero status: " err)
