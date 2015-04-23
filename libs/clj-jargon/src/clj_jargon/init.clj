@@ -1,7 +1,6 @@
 (ns clj-jargon.init
   (:require [clojure.tools.logging :as log]
-            [slingshot.slingshot :as ss]
-            [clojure-commons.file-utils :as ft])
+            [slingshot.slingshot :as ss])
   (:import [java.io InputStream]
            [java.net ConnectException]
            [org.irods.jargon.core.connection IRODSAccount]
@@ -19,7 +18,7 @@
   retval)
 
 (defn dirty-return
-  [cm retval]
+  [retval]
   (log/debug curr-with-jargon-index "- returning without cleaning up...")
   retval)
 
@@ -174,7 +173,7 @@
                (cond
                  (instance? InputStream retval#) (proxy-input-stream-return ~cm-sym retval#)
                  auto-close#                     (clean-return ~cm-sym retval#)
-                 :else                           (dirty-return ~cm-sym retval#)))
+                 :else                           (dirty-return retval#)))
              (catch Object o1#
                (ss/try+
                  (.close (:proxy ~cm-sym))
