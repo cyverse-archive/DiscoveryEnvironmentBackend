@@ -218,6 +218,6 @@
         irods-cfg (init-jargon (:config options))
         srcdir    (ft/rm-last-slash source)
         metadata  (:meta options)]
-    (jg/with-jargon irods-cfg [cm]
+    (jg/with-jargon irods-cfg :client-user (:user options) [cm]
       (apply-input-metadata cm (:user options) srcdir metadata)
       (retry 10 ops/iget cm source dest tcl))))
