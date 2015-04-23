@@ -132,7 +132,7 @@
         dest-files     (relative-dest-paths transfer-files source-dir dest-dir)
         error?         (atom false)
         user           (:user options)]
-    (jg/with-jargon irods-cfg [cm]
+    (jg/with-jargon irods-cfg :client-user user [cm]
       (when-not (info/exists? cm (ft/dirname dest-dir))
         (porkprint (ft/dirname dest-dir) "does not exist.")
         (System/exit 1))
@@ -143,10 +143,7 @@
       (when-not (info/exists? cm dest-dir)
         (porkprint "Path " dest-dir " does not exist. Creating it.")
         (ops/mkdirs cm dest-dir))
-      (when-not (perms/owns? cm user dest-dir)
-        (porkprint "Setting the owner of " dest-dir " to " user)
-        (perms/set-owner cm dest-dir user))
-      (doseq [[src dest]  (seq dest-files)]
+      (doseq [[src dest] (seq dest-files)]
         (let [dir-dest (ft/dirname dest)]
           (if-not (or (.isFile (io/file src))
                       (.isDirectory (io/file src)))
@@ -163,20 +160,11 @@
               (porkprint "Applying metadata to" dir-dest)
               (apply-metadata cm dir-dest metadata)
 
-              ;;; Since we run as a proxy account, the destination directory
-              ;;; needs to have the owner set to the user that ran the app.
-              (when-not (perms/owns? cm user dir-dest)
-                (porkprint "Setting owner of " dir-dest " to " user)
-                (perms/set-owner cm dir-dest user))
-
               (try
                 (retry 10 ops/iput cm src dest tcl)
-                (when-not (perms/owns? cm user dest)
-                  (porkprint "Setting owner of " dest " to " user)
-                  (perms/set-owner cm dest user))
-               (catch Exception err
-                 (porkprint "iput failed: " err)
-                 (reset! error? true)))
+                (catch Exception err
+                  (porkprint "iput failed: " err)
+                  (reset! error? true)))
 
               ;;; Apply the App and Execution metadata to the newly uploaded
               ;;; file/directory.
@@ -187,9 +175,7 @@
         (porkprint "Applying metadata to " dest-dir)
         (apply-metadata cm dest-dir metadata)
         (doseq [fileobj (file-seq (info/file cm dest-dir))]
-          (let [filepath (.getAbsolutePath fileobj)]
-            (perms/set-owner cm filepath user)
-            (apply-metadata cm filepath metadata))))
+          (apply-metadata cm (.getAbsolutePath fileobj) metadata)))
 
       ;;; Transfer files from the NFS mount point into the logs
       ;;; directory of the destination
@@ -205,7 +191,6 @@
               (try+
                (when-not (or (.isDirectory fileobj) (contains? exclusions src))
                  (retry 10 ops/iput cm src dest tcl)
-                 (perms/set-owner cm dest-path user)
                  (apply-metadata cm dest-path metadata))
                (catch [:error_code "ERR_BAD_EXIT_CODE"] err
                  (porkprint "Command exited with a non-zero status: " err)
