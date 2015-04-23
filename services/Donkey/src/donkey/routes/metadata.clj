@@ -169,7 +169,7 @@
          (service/success-response (metadactyl/send-job-submission body)))
 
    (PATCH "/analyses/:analysis-id" [analysis-id :as {body :body}]
-          (apps/update-job analysis-id body))
+          (service/success-response (metadactyl/update-job analysis-id body)))
 
    (DELETE "/analyses/:analysis-id" [analysis-id]
            (apps/delete-job analysis-id))

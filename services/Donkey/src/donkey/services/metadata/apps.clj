@@ -316,31 +316,6 @@
   [job-id]
   (delete-selected-jobs [(uuidify job-id)]))
 
-(defn- validate-job-existence
-  [id]
-  (when-not (jp/get-job-by-id id)
-    (service/not-found "job" id)))
-
-(defn- validate-job-update
-  [body]
-  (let [supported-fields #{:name :description}
-        invalid-fields   (remove supported-fields (keys body))]
-    (when (seq invalid-fields)
-      (throw+ {:error_code ce/ERR_BAD_OR_MISSING_FIELD
-               :reason     (str "unrecognized fields: " invalid-fields)}))))
-
-(defn update-job
-  [id body]
-  (with-db db/de
-    (transaction
-     (let [id   (UUID/fromString id)
-           body (service/decode-json body)]
-       (validate-job-existence id)
-       (validate-job-update body)
-       (-> (jp/update-job id body)
-           (dissoc :submission)
-           (service/success-response))))))
-
 (defn stop-job
   [id]
   (with-db db/de
