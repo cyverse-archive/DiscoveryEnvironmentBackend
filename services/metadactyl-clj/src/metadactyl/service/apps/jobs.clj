@@ -1,5 +1,6 @@
 (ns metadactyl.service.apps.jobs
-  (:require [kameleon.db :as db]
+  (:require [clojure.tools.logging :as log]
+            [kameleon.db :as db]
             [metadactyl.clients.notifications :as cn]
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.service.apps.job-listings :as listings]
@@ -96,3 +97,18 @@
   (if-let [step (first (find-incomplete-job-steps id))]
     (sync-incomplete-job-status apps-client job step)
     (sync-complete-job-status job)))
+
+(defn- validate-job-for-user
+  [username job-id]
+  (let [job (jp/get-job-by-id job-id)]
+    (when-not job
+      (service/not-found "job" job-id))
+    (when-not (= username (:username job))
+      (service/not-owner "job" job-id))))
+
+(defn update-job
+  [{:keys [username]} job-id body]
+  (validate-job-for-user username job-id)
+  (->> (jp/update-job job-id body)
+       ((juxt :id :job_name :job_description))
+       (zipmap [:id :name :description])))

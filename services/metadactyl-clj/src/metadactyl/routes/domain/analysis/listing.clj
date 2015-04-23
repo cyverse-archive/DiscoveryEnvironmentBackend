@@ -68,3 +68,9 @@
   {:analyses  (describe [Analysis] "The list of analyses.")
    :timestamp (describe Timestamp "The time the analysis list was retrieved.")
    :total     ResultsTotalParam})
+
+(defschema AnalysisUpdate
+  (select-keys Analysis (map optional-key [:description :name])))
+
+(defschema AnalysisUpdateResponse
+  (select-keys Analysis (cons :id (map optional-key [:description :name]))))
