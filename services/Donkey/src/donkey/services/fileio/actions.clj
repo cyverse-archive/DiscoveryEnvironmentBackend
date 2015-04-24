@@ -62,7 +62,7 @@
      dest-path - the absolute path to the data object after it has been uploaded
      istream   - an input stream containing the contents of the data object."
   [^IPersistentMap irods-cfg ^String user ^String dest-path ^InputStream istream]
-  (with-jargon irods-cfg [cm]
+  (with-jargon irods-cfg :client-user user [cm]
     (let [dest-dir (ft/dirname dest-path)]
       (when-not (info/exists? cm dest-dir)
         (throw+ {:error_code ERR_DOES_NOT_EXIST :path dest-dir}))
