@@ -14,7 +14,7 @@
                  [org.iplantc.core.jargon/jargon-data-utils "4.0.2.1.1"
                   :exclusions [[org.slf4j/slf4j-api]
                                [org.slf4j/slf4j-log4j12]]]
-                 [org.iplantc.core.jargon/jargon-ticket "4.2.5"
+                 [org.iplantc.core.jargon/jargon-ticket "4.0.2.1.1"
                   :exclusions [[org.slf4j/slf4j-api]
                                [org.slf4j/slf4j-log4j12]]]
                  [slingshot "0.12.2"]]
