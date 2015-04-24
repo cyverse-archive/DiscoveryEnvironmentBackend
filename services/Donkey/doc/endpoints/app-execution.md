@@ -479,12 +479,8 @@ documentation for more details.
 
 *Secured Endpoint:* DELETE /analyses/{analysis-id}
 
-This endpoint marks a job as deleted in the DE database. After the job is
-deleted, it will no longer be displayed in the _Analyses_ window. Attempts to
-delete non-existent jobs and jobs that are already marked as deleted are no-ops,
-but warning messages will appear in the log files. An attempt to delete a job
-that was launched by another user will result in an error. Upon success, the
-the response body for this endpoint is an empty JSON object.
+This service forwards all requests to metadactyl. Please see the metadactyl
+documentation for more details.
 
 ## Deleting Multiple Jobs
 
