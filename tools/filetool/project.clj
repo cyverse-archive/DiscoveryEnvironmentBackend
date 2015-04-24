@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/porklock "4.2.4"
+(defproject org.iplantc/porklock "4.2.5"
   :description "A command-line tool for interacting with iRODS."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -24,9 +24,9 @@
                  [com.novemberain/welle "3.0.0"]
                  [commons-io/commons-io "2.4"]
                  [slingshot "0.12.2"]
-                 [org.iplantc/clj-jargon "4.2.4"]
-                 [org.iplantc/clojure-commons "4.2.4"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "4.2.4"]]
+                 [org.iplantc/clj-jargon "4.2.5"]
+                 [org.iplantc/clojure-commons "4.2.5"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "4.2.5"]]
   :iplant-rpm {:summary "Porklock"
                :type :command
                :exe-files ["curl_wrapper.pl"]}
