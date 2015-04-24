@@ -37,6 +37,11 @@
    failed-status    4
    canceled-status  4})
 
+(defn valid-status?
+  "Determines whether or not the given status is a valid status code in the DE."
+  [status]
+  (contains? job-status-order status))
+
 (defn status-follows?
   "Determines whether or not the new job status follows the old job status."
   [new-status old-status]
@@ -85,7 +90,7 @@
   "Filters results returned by the given job query by adding a (where (or ...)) clause based on the
    given filter map."
   [query filter]
-  (if (nil? filter)
+  (if (empty? filter)
     query
     (where query (apply or (map filter-map->where-clause filter)))))
 

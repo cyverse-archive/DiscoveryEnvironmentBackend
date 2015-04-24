@@ -16,6 +16,10 @@
   [prop]
   (get-in prop [:file_parameters :is_implicit] false))
 
+(defn- data-source
+  [prop]
+  (get-in prop [:file_parameters :data_source]))
+
 (defn- default-prop-translation
   ([prop]
      (default-prop-translation prop default-prop-value-fn))
@@ -64,10 +68,15 @@
   (mapcat #(input-prop-translation prop (constantly %))
           (:value prop)))
 
+(defn- output-prop-default-value
+  [prop]
+  (let [default-value (:value prop)]
+    (if (string/blank? default-value) "file" default-value)))
+
 (defn- output-prop-translation
   [prop]
-  (when (and (not (implicit? prop)) (= (:data_source prop) "file"))
-    (default-prop-translation prop)))
+  (when (and (not (implicit? prop)) (= (data-source prop) "file"))
+    (default-prop-translation prop output-prop-default-value)))
 
 (def ^:private prop-translation-fns
   [[#(= "Flag" %)                flag-prop-translation]

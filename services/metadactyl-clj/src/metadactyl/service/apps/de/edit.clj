@@ -352,13 +352,13 @@
           app-task (->> (get-app-details app-id) :tasks first)
           task-id (:id app-task)
           current-param-ids (map :id (mapcat :parameters (:parameter_groups app-task)))]
+      ;; Copy the App's current name, description, and tool ID to its task
+      (persistence/update-task (assoc app :id task-id :tool_id tool-id))
       ;; CORE-6266 prevent duplicate key errors from reused param value IDs
       (when-not (empty? current-param-ids)
         (persistence/remove-parameter-values current-param-ids))
       (when-not (empty? references)
         (persistence/set-app-references app-id references))
-      (when-not (nil? tool-id)
-        (persistence/set-task-tool task-id tool-id))
       (assoc app :groups (update-app-groups task-id groups)))))
 
 (defn add-app-to-user-dev-category
@@ -381,14 +381,12 @@
   (transaction
     (let [app-id  (:id (persistence/add-app app))
           tool-id (->> app :tools first :id)
-          task-id (-> (assoc app :id app-id)
+          task-id (-> (assoc app :id app-id :tool_id tool-id)
                       (add-single-step-task)
                       (:id))]
       (add-app-to-user-dev-category user app-id)
       (when-not (empty? references)
         (persistence/set-app-references app-id references))
-      (when-not (nil? tool-id)
-        (persistence/set-task-tool task-id tool-id))
       (dorun (map-indexed (partial update-app-group task-id) groups))
       (get-app-ui user app-id))))
 

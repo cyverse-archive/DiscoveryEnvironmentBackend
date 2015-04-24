@@ -1,27 +1,26 @@
 (ns donkey.services.fileio.controllers
   (:use [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-info]
-        [clj-jargon.permissions]
         [clj-jargon.users :only [user-exists?]]
         [clojure-commons.error-codes]
-        [clojure-commons.validators]
         [donkey.util.service :only [success-response]]
-        [donkey.util.validators]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [donkey.services.fileio.actions :as actions]
             [cheshire.core :as json]
-            [clj-jargon.item-ops :as jargon-ops]
             [clojure-commons.file-utils :as ft]
             [clojure.string :as string]
             [donkey.util.ssl :as ssl]
             [clojure.tools.logging :as log]
-            [ring.util.response :as rsp-utils]
             [cemerick.url :as url-parser]
+            [ring.middleware.multipart-params :as multipart]
+            [clj-jargon.item-info :as info]
+            [clj-jargon.permissions :as perm]
+            [clojure-commons.validators :as ccv]
             [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
             [donkey.util.validators :as valid]
-            [donkey.services.fileio.config :as jargon]))
+            [donkey.services.fileio.config :as jargon])
+  (:import [clojure.lang IPersistentMap]))
 
 
 (defn- in-stream
@@ -38,42 +37,65 @@
   (str (java.util.UUID/randomUUID)))
 
 
-(defn- store
-  [cm istream filename user dest-dir]
-  (actions/store cm istream user (ft/path-join dest-dir filename)))
-
 (defn store-irods
+  ^:deprecated
   [{stream :stream orig-filename :filename}]
   (let [uuid     (gen-uuid)
         filename (str orig-filename "." uuid)
         user     (cfg/irods-user)
-        home     (cfg/irods-home)
         temp-dir (cfg/fileio-temp-dir)]
     (if-not (valid/good-string? orig-filename)
       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
                :path orig-filename}))
     (with-jargon (jargon/jargon-cfg) [cm]
-      (store cm stream filename user temp-dir))))
+      (actions/store cm stream user (ft/path-join temp-dir filename)))))
+
 
 (defn download
   [req-params]
   (let [params (add-current-user-to-map req-params)]
-    (validate-map params {:user string? :path string?})
+    (ccv/validate-map params {:user string? :path string?})
     (actions/download (:user params) (:path params))))
 
+
+(defn- store-from-form
+  [user dest-dir {istream :stream filename :filename}]
+  (when-not (valid/good-string? filename)
+    (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD :path filename}))
+  (let [dest-path (ft/path-join dest-dir filename)]
+    (actions/upload (jargon/jargon-cfg) user dest-path istream)
+    dest-path))
+
+
 (defn upload
+  "This is the business logic of behind the POST /secured/fileio/upload endpoint.
+
+   Params:
+     user - the who will own the data object being uploaded
+     dest - the value of the dest query parameter
+     req  - the ring request map"
+  [^String user ^String dest ^IPersistentMap req]
+  (ccv/validate-field "dest" dest)
+  (let [store                   (partial store-from-form user dest)
+        {{file "file"} :params} (multipart/multipart-params-request req {:store store})]
+    (when-not file
+      (throw+ {:error_code ERR_MISSING_FORM_FIELD :field "file"}))
+    (success-response {:file (data/path-stat user file)})))
+
+
+(defn unsecured-upload
+  ^:deprecated
   [req-params req-multipart]
   (log/info "Detected params: " req-params)
-  (validate-map req-params {"file" string? "user" string? "dest" string?})
+  (ccv/validate-map req-params {"file" string? "user" string? "dest" string?})
   (let [user    (get req-params "user")
         dest    (get req-params "dest")
         up-path (get req-multipart "file")]
     (if-not (valid/good-string? up-path)
       {:status 500
-       :body   (json/generate-string
-                 {:error_code ERR_BAD_OR_MISSING_FIELD
-                  :path       up-path})}
-      (actions/upload user up-path dest))))
+       :body   (json/generate-string {:error_code ERR_BAD_OR_MISSING_FIELD :path up-path})}
+      (actions/upload-and-move user up-path dest))))
+
 
 (defn url-filename
   [address]
@@ -93,9 +115,9 @@
 (defn urlupload
   [req-params req-body]
   (let [params (add-current-user-to-map req-params)
-        body   (parse-body (slurp req-body))]
-    (validate-map params {:user string?})
-    (validate-map body {:dest string? :address string?})
+        body   (valid/parse-body (slurp req-body))]
+    (ccv/validate-map params {:user string?})
+    (ccv/validate-map body {:dest string? :address string?})
     (let [user    (:user params)
           dest    (string/trim (:dest body))
           addr    (string/trim (:address body))
@@ -104,7 +126,7 @@
       (log/warn (str "Dest: " dest))
       (log/warn (str "Fname: " fname))
       (log/warn (str "Addr: " addr))
-      (with-open [istream (in-stream addr)]
+      (with-open [_ (in-stream addr)]
         (log/warn "connection to" addr "successfully established"))
       (actions/urlimport user addr fname dest))))
 
@@ -112,75 +134,45 @@
   [req-params req-body]
   (log/info "Detected params: " req-params)
   (let [params (add-current-user-to-map req-params)
-        body   (parse-body (slurp req-body))]
-    (validate-map params {:user string?})
-    (validate-map body {:dest string? :content string?})
+        body   (valid/parse-body (slurp req-body))]
+    (ccv/validate-map params {:user string?})
+    (ccv/validate-map body {:dest string? :content string?})
     (let [user      (:user params)
           dest      (string/trim (:dest body))
-          tmp-file  (str dest "." (gen-uuid))
           content   (:content body)
           file-size (count (.getBytes content "UTF-8"))]
-      (with-jargon (jargon/jargon-cfg) [cm]
-        (when-not (user-exists? cm user)
-          (throw+ {:user       user
-                   :error_code ERR_NOT_A_USER}))
-
-        (when-not (exists? cm dest)
-          (throw+ {:error_code ERR_DOES_NOT_EXIST
-                   :path       dest}))
-
-        (when-not (is-writeable? cm user dest)
-          (throw+ {:error_code ERR_NOT_WRITEABLE
-                   :path       dest}))
-
+      (with-jargon (jargon/jargon-cfg) :client-user user [cm]
+        (when-not (info/exists? cm dest)
+          (throw+ {:error_code ERR_DOES_NOT_EXIST :path dest}))
+        (when-not (perm/is-writeable? cm user dest)
+          (throw+ {:error_code ERR_NOT_WRITEABLE :path dest}))
         (when (> file-size (cfg/fileio-max-edit-file-size))
           (throw+ {:error_code "ERR_FILE_SIZE_TOO_LARGE"
                    :path       dest
                    :size       file-size}))
-
-        ;; Jargon will delete dest before writing its new contents, which will cause the old version
-        ;; of the file to be put into the Trash. So rename dest to tmp-file, then force-delete
-        ;; tmp-file after a successful save of the new contents.
-        (jargon-ops/move cm dest tmp-file :user user :admin-users (cfg/irods-admins))
         (try+
           (with-in-str content
             (actions/save cm *in* user dest))
-          (actions/copy-metadata cm tmp-file dest)
-          (jargon-ops/delete cm tmp-file true)
           (catch Object e
             (log/warn e)
-            (jargon-ops/move cm tmp-file dest :user user :admin-users (cfg/irods-admins))
-            (throw+)))
+            (throw+))))
+      (success-response {:file (data/path-stat user dest)}))))
 
-        (success-response {:file (data/path-stat user dest)})))))
 
 (defn saveas
   [req-params req-body]
   (let [params (add-current-user-to-map req-params)
-        body   (parse-body (slurp req-body))]
-    (validate-map params {:user string?})
-    (validate-map body {:dest string? :content string?})
+        body   (valid/parse-body (slurp req-body))]
+    (ccv/validate-map params {:user string?})
+    (ccv/validate-map body {:dest string? :content string?})
     (let [user (:user params)
           dest (string/trim (:dest body))
           cont (:content body)]
-      (with-jargon (jargon/jargon-cfg) [cm]
-        (when-not (user-exists? cm user)
-          (throw+ {:user       user
-                   :error_code ERR_NOT_A_USER}))
-
-        (when-not (exists? cm (ft/dirname dest))
-          (throw+ {:error_code ERR_DOES_NOT_EXIST
-                   :path       (ft/dirname dest)}))
-
-        (when-not (is-writeable? cm user (ft/dirname dest))
-          (throw+ {:error_code ERR_NOT_WRITEABLE
-                   :path       (ft/dirname dest)}))
-
-        (when (exists? cm dest)
-          (throw+ {:error_code ERR_EXISTS
-                   :path       dest}))
-
+      (with-jargon (jargon/jargon-cfg) :client-user user [cm]
+        (when-not (info/exists? cm (ft/dirname dest))
+          (throw+ {:error_code ERR_DOES_NOT_EXIST :path (ft/dirname dest)}))
+        (when (info/exists? cm dest)
+          (throw+ {:error_code ERR_EXISTS :path dest}))
         (with-in-str cont
-          (actions/store cm *in* user dest))
-
-        (success-response {:file (data/path-stat user dest)})))))
+          (actions/store cm *in* user dest)))
+      (success-response {:file (data/path-stat user dest)}))))

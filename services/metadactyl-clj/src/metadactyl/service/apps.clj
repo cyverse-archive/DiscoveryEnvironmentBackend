@@ -209,6 +209,12 @@
     (cn/send-job-status-update username email job-info)
     (format-job-submission-response job-info)))
 
+(defn check-next-step-submission
+  [job-id external-id]
+  (let [job-step (jobs/lock-job-step job-id external-id)
+        job      (jobs/lock-job job-id)]
+    (.buildNextStepSubmission (get-apps-client-for-username (:username job)) job-step job)))
+
 (defn update-job-status
   ([external-id status end-date]
      (let [{:keys [job-id]} (jobs/get-unique-job-step external-id)]
@@ -238,3 +244,12 @@
      (log/error (:throwable &throw-context)
                 "error while obtaining the list of jobs to synchronize.")))
   (log/info "done syncrhonizing job statuses"))
+
+(defn update-job
+  [user job-id body]
+  (jobs/update-job user job-id body))
+
+(defn delete-job
+  [user job-id]
+  (jobs/delete-job user job-id)
+  nil)

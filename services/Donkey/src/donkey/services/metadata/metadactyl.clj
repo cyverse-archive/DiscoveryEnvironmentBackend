@@ -5,7 +5,6 @@
         [donkey.auth.user-attributes]
         [donkey.clients.user-info :only [get-user-details]]
         [donkey.persistence.workspaces :only [get-or-create-workspace]]
-        [donkey.services.fileio.actions :only [upload]]
         [donkey.services.user-prefs :only [user-prefs]]
         [donkey.util.email]
         [donkey.util.service]
@@ -20,7 +19,8 @@
             [donkey.clients.data-info :as di]
             [donkey.clients.metadactyl :as dm]
             [donkey.clients.notifications :as dn]
-            [donkey.util.db :as db]))
+            [donkey.util.db :as db]
+            [donkey.services.fileio.actions :as io]))
 
 (defn- secured-notification-url
   [req & components]
@@ -388,7 +388,8 @@
       params
       (assoc params
              file-key
-             (extract-uploaded-path (upload user tmp-path final-path))))))
+             (extract-uploaded-path (io/upload user tmp-path final-path))))))
+
 
 (defn- postprocess-tool-request
   "Postprocesses a tool request update or submission. The postprocessing function

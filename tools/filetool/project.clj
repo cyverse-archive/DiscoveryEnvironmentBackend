@@ -16,16 +16,16 @@
   :main ^:skip-aot porklock.core
   :profiles {:uberjar {:aot :all}}
   :uberjar-name "porklock-standalone.jar"
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/tools.logging "0.2.6"]
-                 [org.iplantc/clojure-commons "4.2.5"]
-                 [org.clojure/tools.cli "0.2.1"]
-                 [commons-io/commons-io "2.2"]
-                 [slingshot "0.10.3"]
-                 [com.cemerick/url "0.0.7"]
-                 [com.novemberain/welle "1.4.0"]
-                 [cheshire "5.1.1"]
-                 [org.iplantc/clj-jargon "4.2.5"]]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [org.clojure/tools.cli "0.3.1"]
+                 [org.clojure/tools.logging "0.3.1"]
+                 [cheshire "5.4.0"]
+                 [com.cemerick/url "0.1.1"]
+                 [com.novemberain/welle "3.0.0"]
+                 [commons-io/commons-io "2.4"]
+                 [slingshot "0.12.2"]
+                 [org.iplantc/clj-jargon "4.2.5"]
+                 [org.iplantc/clojure-commons "4.2.5"]]
   :plugins [[org.iplantc/lein-iplant-rpm "4.2.5"]]
   :iplant-rpm {:summary "Porklock"
                :type :command

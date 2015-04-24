@@ -50,6 +50,7 @@
 
   :plugins [[lein-ring "0.7.5"]
             [org.iplantc/lein-iplant-rpm "4.2.5"]]
+
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]
 

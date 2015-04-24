@@ -1,5 +1,6 @@
 (ns metadactyl.service.apps.jobs
-  (:require [kameleon.db :as db]
+  (:require [clojure.tools.logging :as log]
+            [kameleon.db :as db]
             [metadactyl.clients.notifications :as cn]
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.service.apps.job-listings :as listings]
@@ -7,7 +8,7 @@
 
 (defn get-unique-job-step
   "Gets a unique job step for an external ID. An exception is thrown if no job step
-   is found or if multiple job steps are found."
+  is found or if multiple job steps are found."
   [external-id]
   (let [job-steps (jp/get-job-steps-by-external-id external-id)]
     (when (empty? job-steps)
@@ -50,10 +51,11 @@
 (defn update-job-status
   [apps-client job-step {:keys [id] :as job} batch status end-date]
   (when (jp/completed? (:status job))
-    (service/bad-request "received a job status update for completed or canceled job, " id))
-  (.updateJobStatus apps-client job-step job status (db/timestamp-from-str end-date))
-  (when batch (update-batch-status batch end-date))
-  (send-job-status-update apps-client (or batch job)))
+    (service/bad-request (str "received a job status update for completed or canceled job, " id)))
+  (let [end-date (db/timestamp-from-str end-date)]
+    (.updateJobStatus apps-client job-step job status end-date)
+    (when batch (update-batch-status batch end-date))
+    (send-job-status-update apps-client (or batch job))))
 
 (defn- find-incomplete-job-steps
   [job-id]
@@ -66,7 +68,7 @@
           job      (lock-job id)
           batch    (when-let [parent-id (:parent-id job)] (lock-job parent-id))
           status   (:status step-status)
-          end-date (db/timestamp-from-str (:enddate step-status))]
+          end-date (:enddate step-status)]
       (update-job-status apps-client step job batch status end-date))
     (let [step  (lock-job-step id (:external-id step))
           job   (lock-job id)
@@ -95,3 +97,23 @@
   (if-let [step (first (find-incomplete-job-steps id))]
     (sync-incomplete-job-status apps-client job step)
     (sync-complete-job-status job)))
+
+(defn- validate-job-for-user
+  [username job-id]
+  (let [job (jp/get-job-by-id job-id)]
+    (when-not job
+      (service/not-found "job" job-id))
+    (when-not (= username (:username job))
+      (service/not-owner "job" job-id))))
+
+(defn update-job
+  [{:keys [username]} job-id body]
+  (validate-job-for-user username job-id)
+  (->> (jp/update-job job-id body)
+       ((juxt :id :job_name :job_description))
+       (zipmap [:id :name :description])))
+
+(defn delete-job
+  [{:keys [username]} job-id]
+  (validate-job-for-user username job-id)
+  (jp/delete-jobs [job-id]))

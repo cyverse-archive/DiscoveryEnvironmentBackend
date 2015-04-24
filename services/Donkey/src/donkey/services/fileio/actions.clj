@@ -1,32 +1,26 @@
 (ns donkey.services.fileio.actions
   (:use [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-info]
-        [clj-jargon.item-ops]
         [clj-jargon.metadata]
         [clj-jargon.users :only [user-exists?]]
-        [clj-jargon.permissions]
         [clojure-commons.error-codes]
         [donkey.util.service :only [success-response]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cemerick.url :as url]
-            [cheshire.core :as json]
             [clojure-commons.file-utils :as ft]
-            [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [clojure.string :as string]
-            [clj-http.client :as client]
             [ring.util.response :as rsp-utils]
+            [clj-jargon.item-info :as info]
+            [clj-jargon.item-ops :as ops]
+            [clj-jargon.permissions :as perm]
             [donkey.clients.data-info :as data]
             [donkey.util.config :as cfg]
             [donkey.services.fileio.config :as jargon]
             [donkey.services.filesystem.validators :as validators]
-            [donkey.services.metadata.apps :as apps]))
+            [donkey.services.metadata.apps :as apps])
+  (:import [java.io InputStream]
+           [clojure.lang IPersistentMap]))
 
-
-(defn set-meta
-  [path attr value unit]
-  (with-jargon (jargon/jargon-cfg) [cm]
-    (set-metadata cm path attr value unit)))
 
 (defn copy-metadata
   "Copies AVUs from src and applies them to dest."
@@ -38,10 +32,9 @@
   [cm istream user dest-path]
   (log/info "In save function for " user dest-path)
   (let [ddir (ft/dirname dest-path)]
-    (when-not (exists? cm ddir)
-      (mkdirs cm ddir))
-
-    (copy-stream cm istream user dest-path)
+    (when-not (info/exists? cm ddir)
+      (ops/mkdirs cm ddir))
+    (ops/copy-stream cm istream user dest-path)
     (log/info "save function after copy.")
     dest-path))
 
@@ -49,7 +42,7 @@
   [cm istream user dest-path]
   (log/info "In store function for " user dest-path)
   (let [ddir (ft/dirname dest-path)]
-    (when-not (is-writeable? cm user ddir)
+    (when-not (perm/is-writeable? cm user ddir)
       (log/error (str "Directory " ddir " is not writeable by " user))
       (throw+ {:error_code ERR_NOT_WRITEABLE
                :path ddir} )))
@@ -58,55 +51,66 @@
   dest-path)
 
 
+(defn upload
+  "This function uploads the contents of a stream to a data object in iRODS. If the data object
+   exists, it will first be moved to the trash. The parent collection must exist and must be
+   writeable by the user.
+
+   Params:
+     irods-cfg - the irods configuration parameter map
+     user      - the who will own the data object being uploaded
+     dest-path - the absolute path to the data object after it has been uploaded
+     istream   - an input stream containing the contents of the data object."
+  [^IPersistentMap irods-cfg ^String user ^String dest-path ^InputStream istream]
+  (with-jargon irods-cfg :client-user user [cm]
+    (let [dest-dir (ft/dirname dest-path)]
+      (when-not (info/exists? cm dest-dir)
+        (throw+ {:error_code ERR_DOES_NOT_EXIST :path dest-dir}))
+      (if (info/exists? cm dest-path)
+        (ops/delete cm dest-path))
+      (store cm istream user dest-path)
+      nil)))
+
+
 (defn- get-istream
   [user file-path]
-  (with-jargon (jargon/jargon-cfg) [cm]
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER
-               :user       user}))
-
-    (when-not (exists? cm file-path)
-      (throw+ {:error_code ERR_DOES_NOT_EXIST
-               :path       file-path}))
-
-    (when-not (is-readable? cm user file-path)
+  (with-jargon (jargon/jargon-cfg) :client-user user [cm]
+    (when-not (info/exists? cm file-path)
+      (throw+ {:error_code ERR_DOES_NOT_EXIST :path file-path}))
+    (when-not (perm/is-readable? cm user file-path)
       (throw+ {:error_code ERR_NOT_READABLE
                :user       user
                :path       file-path}))
-
-    (if (= (file-size cm file-path) 0)
+    (if (= (info/file-size cm file-path) 0)
       ""
-      (input-stream cm file-path))))
+      (ops/input-stream cm file-path))))
 
 (defn- new-filename
   [tmp-path]
   (string/join "." (drop-last (string/split (ft/basename tmp-path) #"\."))))
 
-(defn upload
+
+(defn upload-and-move
+  ^:deprecated
   [user tmp-path fpath]
   (log/info "In upload for " user tmp-path fpath)
   (let [final-path (ft/rm-last-slash fpath)]
     (with-jargon (jargon/jargon-cfg) [cm]
       (when-not (user-exists? cm user)
-        (throw+ {:error_code ERR_NOT_A_USER
-                 :user user}))
-
-      (when-not (exists? cm final-path)
-        (throw+ {:error_code ERR_DOES_NOT_EXIST
-                 :id final-path}))
-
-      (when-not (is-writeable? cm user final-path)
-        (throw+ {:error_code ERR_NOT_WRITEABLE
-                 :id final-path}))
-
+        (throw+ {:error_code ERR_NOT_A_USER :user user}))
+      (when-not (info/exists? cm final-path)
+        (throw+ {:error_code ERR_DOES_NOT_EXIST :id final-path}))
+      (when-not (perm/is-writeable? cm user final-path)
+        (throw+ {:error_code ERR_NOT_WRITEABLE :id final-path}))
       (let [new-fname (new-filename tmp-path)
             new-path  (ft/path-join final-path new-fname)]
-        (if (exists? cm new-path) (delete cm new-path))
-        (move cm tmp-path new-path
+        (if (info/exists? cm new-path)
+          (ops/delete cm new-path))
+        (ops/move cm tmp-path new-path
           :user               user
           :admin-users        (cfg/irods-admins)
           :skip-source-perms? true)
-        (set-owner cm new-path user)
+        (perm/set-owner cm new-path user)
         (success-response {:file (data/path-stat user new-path)})))))
 
 

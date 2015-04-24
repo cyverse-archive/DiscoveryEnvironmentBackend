@@ -6,7 +6,7 @@ the request, the `/tempZone/home/rods/test1` directory does not exist, and the r
 write permissions on the `/tempZone/home/rods` folder, then all 3 `test*` folders will be created
 for the requesting user.
 
-__URL Path__: /data/directory/create
+__URL Path__: /data/directories
 
 __HTTP Method__: POST
 
@@ -15,30 +15,25 @@ __Error Codes__: ERR_BAD_OR_MISSING_FIELD, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_DO
 __Request Body__:
 
 ```json
-{"path" : "/tempZone/home/rods/test1/test2/test3"}
+{"paths": ["/tempZone/home/rods/test1/test2/test3"]}
 ```
 
 __Response Body__:
 
-This endpoint uses a similar response as the [/stat-gatherer](stat-gatherer.md#file-and-folder-status-information) endpoint.
+This endpoint returns a list of all new paths created by this request.
 For example:
 
 ```json
 {
     "success": true,
-    "id": "a1212364-e3c3-11e4-8920-6abdce5a08d5",
-    "path": "/tempZone/home/rods/test1/test2/test3",
-    "label": "test3",
-    "type": "dir",
-    "date-modified": 1397063483000,
-    "date-created": 1397063483000,
-    "permission": "own",
-    "share-count": 0,
-    "dir-count": 0,
-    "file-count": 0
+    "paths": [
+        "/tempZone/home/rods/test1",
+        "/tempZone/home/rods/test1/test2",
+        "/tempZone/home/rods/test1/test2/test3"
+    ]
 }
 ```
 
 __Curl Command__:
 
-    curl -H "Content-Type:application/json" -d '{"path" : "/tempZone/home/rods/test1/test2/test3"}' "http://127.0.0.1:3000/data/directory/create?proxyToken=notReal"
+    curl -H "Content-Type:application/json" -d '{"paths": ["/tempZone/home/rods/test1/test2/test3"]}' "http://127.0.0.1:3000/data/directory/create?proxyToken=notReal"

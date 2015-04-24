@@ -98,4 +98,7 @@
     (agave-jobs/get-default-output-name agave io-map source-step))
 
   (getJobStepStatus [_ job-step]
-    (agave-jobs/get-job-step-status agave job-step)))
+    (agave-jobs/get-job-step-status agave job-step))
+
+  (prepareStepSubmission [_ job-id submission]
+    (agave-jobs/prepare-step-submission agave job-id submission)))

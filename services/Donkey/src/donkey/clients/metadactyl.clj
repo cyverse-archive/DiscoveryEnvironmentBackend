@@ -10,7 +10,7 @@
             [donkey.util.transformers :as xforms]))
 
 (def metadactyl-sort-params [:limit :offset :sort-field :sort-dir])
-(def metadactyl-include-hidden-sort-params (conj metadactyl-sort-params :include-hidden))
+(def metadactyl-analysis-listing-params (conj metadactyl-sort-params :include-hidden :filter))
 (def metadactyl-search-params (conj metadactyl-sort-params :search))
 
 (defn- secured-params
@@ -227,7 +227,7 @@
 (defn list-jobs
   [params]
   (client/get (metadactyl-url "analyses")
-              {:query-params     (secured-params params metadactyl-include-hidden-sort-params)
+              {:query-params     (secured-params params metadactyl-analysis-listing-params)
                :as               :stream
                :follow-redirects false}))
 
@@ -239,6 +239,22 @@
                 :body             submission
                 :as               :stream
                 :follow-redirects false}))
+
+(defn update-job
+  [analysis-id body]
+  (client/patch (metadactyl-url "analyses" analysis-id)
+                {:query-params     (secured-params)
+                 :content-type     :json
+                 :body             body
+                 :as               :stream
+                 :follow-redirects false}))
+
+(defn delete-job
+  [analysis-id]
+  (client/delete (metadactyl-url "analyses" analysis-id)
+                 {:query-params     (secured-params)
+                  :as               :stream
+                  :follow-redirects false}))
 
 (defn admin-list-tool-requests
   [params]

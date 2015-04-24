@@ -1,10 +1,14 @@
 (ns clj-jargon.init
   (:require [clojure.tools.logging :as log]
-            [slingshot.slingshot :as ss]
-            [clojure-commons.file-utils :as ft])
-  (:import [org.irods.jargon.core.connection IRODSAccount]
-           [org.irods.jargon.core.pub.io IRODSFileInputStream]
-           [org.irods.jargon.core.pub IRODSFileSystem]))
+            [slingshot.slingshot :refer [try+ throw+]]
+            [clojure-commons.error-codes :refer [ERR_NOT_A_USER]])
+  (:import [java.io InputStream]
+           [java.net ConnectException]
+           [org.irods.jargon.core.connection IRODSAccount]
+           [org.irods.jargon.core.exception InvalidClientUserException]
+           [org.irods.jargon.core.pub IRODSAccessObjectFactory  ; Hint for Cursive inspection
+                                      IRODSFileSystem]))
+
 
 ; Debuging code.
 (def with-jargon-index (ref 0))
@@ -17,14 +21,14 @@
   retval)
 
 (defn dirty-return
-  [cm retval]
+  [retval]
   (log/debug curr-with-jargon-index "- returning without cleaning up...")
   retval)
 
 (defn proxy-input-stream
   [cm istream]
   (let [with-jargon-index curr-with-jargon-index]
-    (proxy [java.io.InputStream] []
+    (proxy [InputStream] []
       (available [] (.available istream))
       (mark [readlimit] (.mark istream readlimit))
       (markSupported [] (.markSupported istream))
@@ -60,22 +64,26 @@
 
 (defn- context-map
   "Throws:
-     org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to iRODS"
+     org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to iRODS
+     ERR_NOT_A_USER                                  - If the client-user isn't a known iRODS user"
   [cfg client-user]
-  (let [acnt (account cfg client-user)
-        aof  (.getIRODSAccessObjectFactory (:proxy cfg))]
-    (assoc cfg
-      :irodsAccount        acnt
-      :accessObjectFactory aof
-      :collectionAO        (.getCollectionAO aof acnt)
-      :dataObjectAO        (.getDataObjectAO aof acnt)
-      :userAO              (.getUserAO aof acnt)
-      :userGroupAO         (.getUserGroupAO aof acnt)
-      :fileFactory         (.getIRODSFileFactory (:proxy cfg) acnt)
-      :fileSystemAO        (.getIRODSFileSystemAO aof acnt)
-      :lister              (.getCollectionAndDataObjectListAndSearchAO aof acnt)
-      :quotaAO             (.getQuotaAO aof acnt)
-      :executor            (.getIRODSGenQueryExecutor aof acnt))))
+  (try+
+    (let [acnt (account cfg client-user)
+          aof  (.getIRODSAccessObjectFactory (:proxy cfg))]
+      (assoc cfg
+        :irodsAccount        acnt
+        :accessObjectFactory aof
+        :collectionAO        (.getCollectionAO aof acnt)
+        :dataObjectAO        (.getDataObjectAO aof acnt)
+        :userAO              (.getUserAO aof acnt)
+        :userGroupAO         (.getUserGroupAO aof acnt)
+        :fileFactory         (.getIRODSFileFactory (:proxy cfg) acnt)
+        :fileSystemAO        (.getIRODSFileSystemAO aof acnt)
+        :lister              (.getCollectionAndDataObjectListAndSearchAO aof acnt)
+        :quotaAO             (.getQuotaAO aof acnt)
+        :executor            (.getIRODSGenQueryExecutor aof acnt)))
+    (catch InvalidClientUserException _
+      (throw+ {:error_code ERR_NOT_A_USER :user client-user}))))
 
 
 (defn- log-value
@@ -91,11 +99,11 @@
   (let [retval {:succeeded true :retval nil :exception nil :retry false}]
     (try
       (log-value "retval:" (assoc retval :retval (context-map cfg client-user)))
-      (catch java.net.ConnectException e
+      (catch ConnectException e
         (log/debug curr-with-jargon-index "- caught a ConnectException:" e)
         (log/debug curr-with-jargon-index "- need to retry...")
         (assoc retval :exception e :succeeded false :retry true))
-      (catch java.lang.Exception e
+      (catch Exception e
         (log/debug curr-with-jargon-index "- got an Exception:" e)
         (log/debug curr-with-jargon-index "- shouldn't retry...")
         (assoc retval :exception e :succeeded false :retry false)))))
@@ -167,17 +175,17 @@
        (binding [curr-with-jargon-index (dosync (alter with-jargon-index inc))]
          (log/debug "curr-with-jargon-index:" curr-with-jargon-index)
          (when-let [~cm-sym (create-jargon-context-map ~cfg client-user#)]
-           (ss/try+
+           (try+
              (let [retval# (do ~@body)]
                (cond
-                 (instance? java.io.InputStream retval#) (proxy-input-stream-return ~cm-sym retval#)
-                 auto-close#                             (clean-return ~cm-sym retval#)
-                 :else                                   (dirty-return ~cm-sym retval#)))
+                 (instance? InputStream retval#) (proxy-input-stream-return ~cm-sym retval#)
+                 auto-close#                     (clean-return ~cm-sym retval#)
+                 :else                           (dirty-return retval#)))
              (catch Object o1#
-               (ss/try+
+               (try+
                  (.close (:proxy ~cm-sym))
                  (catch Object o2#))
-               (ss/throw+))))))))
+               (throw+))))))))
 
 
 (defmacro log-stack-trace

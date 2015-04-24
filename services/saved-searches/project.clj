@@ -19,6 +19,7 @@
                  [org.iplantc/common-cli "4.2.5"]
                  [org.iplantc/common-cfg "4.2.5"]
                  [org.iplantc/kameleon "4.2.5"]
+                 [me.raynes/fs "1.4.4"]
                  [cheshire "5.3.1"]
                  [compojure "1.1.6"]
                  [midje "1.6.3"]

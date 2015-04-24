@@ -6,23 +6,51 @@
         [metadactyl.user :only [current-user]]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
+            [metadactyl.json :as json]
             [metadactyl.service.apps :as apps]
+            [metadactyl.util.coercions :as coercions]
             [metadactyl.util.service :as service]))
 
 (defroutes* analyses
   (GET* "/" [:as {:keys [uri]}]
-        :query   [params SecuredIncludeHiddenPagingParams]
+        :query   [{:keys [filter] :as params} SecuredAnalysisListingParams]
         :return  AnalysisList
+        :summary "List Analyses"
         :notes "This service allows users to list analyses that they've previously submitted
         for execution."
-        (service/coerced-trap uri AnalysisList apps/list-jobs current-user params))
+        ;; JSON query params are not currently supported by compojure-api,
+        ;; so we have to decode the String filter param and validate it here.
+        (service/coerced-trap uri AnalysisList
+          apps/list-jobs
+          current-user
+          (coercions/coerce!
+            (assoc SecuredAnalysisListingParams OptionalKeyFilter [FilterParams])
+            (assoc params :filter (json/from-json filter)))))
 
   (POST* "/" [:as {:keys [uri]}]
-         :query  [params SecuredQueryParamsEmailRequired]
-         :body   [body AnalysisSubmission]
-         :return AnalysisResponse
-         :notes  "This service allows users to submit analyses for execution. The `config`
+         :query   [params SecuredQueryParamsEmailRequired]
+         :body    [body AnalysisSubmission]
+         :return  AnalysisResponse
+         :summary "Submit an Analysis"
+         :notes   "This service allows users to submit analyses for execution. The `config`
          element in the analysis submission is a map from parameter IDs as they appear in
          the response from the `/apps/:app-id` endpoint to the desired values for those
          parameters."
-         (service/coerced-trap uri AnalysisResponse apps/submit-job current-user body)))
+         (service/coerced-trap uri AnalysisResponse apps/submit-job current-user body))
+
+  (PATCH* "/:analysis-id" [:as {:keys [uri]}]
+          :path-params [analysis-id :- AnalysisIdPathParam]
+          :query       [params SecuredQueryParams]
+          :body        [body AnalysisUpdate]
+          :return      AnalysisUpdateResponse
+          :summary     "Update an Analysis"
+          :notes       "This service allows an analysis name or description to be updated."
+          (service/coerced-trap uri AnalysisUpdateResponse
+                                apps/update-job current-user analysis-id body))
+
+  (DELETE* "/:analysis-id" [:as {:keys [uri]}]
+           :path-params [analysis-id :- AnalysisIdPathParam]
+           :query       [params SecuredQueryParams]
+           :summary     "Delete an Analysis"
+           :notes       "This service marks an analysis as deleted in the DE database."
+           (service/trap uri apps/delete-job current-user analysis-id)))

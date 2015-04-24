@@ -5,6 +5,7 @@
         [clojure-commons.middleware :only [wrap-log-requests]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core]
+        [ring.middleware.keyword-params]
         [donkey.routes.admin]
         [donkey.routes.callbacks]
         [donkey.routes.data]
@@ -25,21 +26,19 @@
         [donkey.routes.tags]
         [donkey.routes.comments]
         [donkey.auth.user-attributes]
-        [donkey.util]
         [donkey.util.service]
-        [ring.middleware keyword-params multipart-params]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [compojure.route :as route]
-            [clojure.tools.logging :as log]
             [ring.adapter.jetty :as jetty]
             [donkey.util.config :as config]
             [donkey.util.db :as db]
-            [donkey.services.fileio.controllers :as fileio]
-            [donkey.tasks :as tasks]
             [clojure.tools.nrepl.server :as nrepl]
             [me.raynes.fs :as fs]
             [common-cli.core :as ccli]
-            [donkey.services.filesystem.icat :as icat]))
+            [donkey.services.filesystem.icat :as icat]
+            [donkey.util :as util]
+            [donkey.util.transformers :as transform]))
+
 
 (defn delayed-handler
   [routes-fn]
@@ -49,7 +48,7 @@
 
 (defn secured-routes-no-context
   []
-  (flagged-routes
+  (util/flagged-routes
     (app-category-routes)
     (apps-routes)
     (app-comment-routes)
@@ -59,29 +58,30 @@
 
 (defn secured-routes
   []
-  (flagged-routes
-   (secured-notification-routes)
-   (secured-metadata-routes)
-   (secured-pref-routes)
-   (secured-collaborator-routes)
-   (secured-user-info-routes)
-   (secured-tree-viewer-routes)
-   (secured-data-routes)
-   (secured-session-routes)
-   (secured-fileio-routes)
-   (secured-filesystem-routes)
-   (secured-filesystem-metadata-routes)
-   (secured-coge-routes)
-   (secured-search-routes)
-   (secured-oauth-routes)
-   (secured-favorites-routes)
-   (secured-tag-routes)
-   (data-comment-routes)
-   (route/not-found (unrecognized-path-response))))
+  (util/flagged-routes
+    (secured-notification-routes)
+    (secured-metadata-routes)
+    (secured-pref-routes)
+    (secured-collaborator-routes)
+    (secured-user-info-routes)
+    (secured-tree-viewer-routes)
+    (secured-data-routes)
+    (secured-session-routes)
+    (secured-fileio-routes)
+    (secured-filesystem-routes)
+    (secured-filesystem-metadata-routes)
+    (secured-coge-routes)
+    (secured-search-routes)
+    (secured-oauth-routes)
+    (secured-favorites-routes)
+    (secured-tag-routes)
+    (data-comment-routes)
+    (route/not-found (unrecognized-path-response))))
+
 
 (defn admin-routes
   []
-  (flagged-routes
+  (util/flagged-routes
     (secured-admin-routes)
     (admin-data-comment-routes)
     (admin-category-routes)
@@ -113,32 +113,46 @@
       config/pgt-callback-base
       config/pgt-callback-path)))
 
+
+(defn- wrap-user-info
+  [handler]
+  (fn [request]
+    (handler (assoc request :user-info (transform/add-current-user-to-map {})))))
+
+
 (def secured-handler-no-context
   (-> (delayed-handler secured-routes-no-context)
-      (cas-store-user)))
+    wrap-user-info
+    (cas-store-user)))
+
 
 (def secured-handler
   (-> (delayed-handler secured-routes)
-      (cas-store-user)))
+    wrap-user-info
+    (cas-store-user)))
+
 
 (def admin-handler
   (-> (delayed-handler admin-routes)
-      (cas-store-admin-user)))
+    wrap-user-info
+    (cas-store-admin-user)))
+
 
 (defn donkey-routes
   []
-  (flagged-routes
-   (unsecured-misc-routes)
-   (unsecured-notification-routes)
-   (unsecured-tree-viewer-routes)
-   (unsecured-fileio-routes)
-   (unsecured-callback-routes)
-   (context "/admin" [] admin-handler)
-   (context "/secured" [] secured-handler)
-   secured-handler-no-context
-   (route/not-found (unrecognized-path-response))))
+  (util/flagged-routes
+    (unsecured-misc-routes)
+    (unsecured-notification-routes)
+    (unsecured-tree-viewer-routes)
+    (unsecured-fileio-routes)
+    (unsecured-callback-routes)
+    (context "/admin" [] admin-handler)
+    (context "/secured" [] secured-handler)
+    secured-handler-no-context
+    (route/not-found (unrecognized-path-response))))
 
-(defn start-nrepl
+
+(defn- start-nrepl
   []
   (nrepl/start-server :port 7888))
 
@@ -182,13 +196,14 @@
      (db/define-database)))
 
 (defn lein-ring-init
+  "This function is used by leiningen ring plugin to initialize donkey."
   []
   (load-configuration-from-file)
   (icat/configure-icat)
-  (start-nrepl)
-  (tasks/schedule-tasks))
+  (start-nrepl))
 
 (defn repl-init
+  "This function is used to manually initialize donkey from the leiningen REPL."
   []
   (load-configuration-from-file)
   (icat/configure-icat))
@@ -196,13 +211,13 @@
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler routes-fn)
-      (wrap-multipart-params {:store fileio/store-irods})
-      trap-handler
-      req-logger
-      wrap-keyword-params
-      wrap-lcase-params
-      wrap-query-params
-      wrap-log-requests))
+    util/trap-handler
+    util/req-logger
+    wrap-keyword-params
+    wrap-lcase-params
+    wrap-query-params
+    wrap-log-requests))
+
 
 (def app
   (site-handler donkey-routes))
@@ -222,7 +237,7 @@
 
 (defn -main
   [& args]
-  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+  (let [{:keys [options]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The config file does not exist.")))
     (when-not (fs/readable? (:config options))
@@ -230,5 +245,4 @@
     (config/load-config-from-file (:config options))
     (db/define-database)
     (icat/configure-icat)
-    (tasks/schedule-tasks)
     (jetty/run-jetty app {:port (config/listen-port)})))
