@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/tree-urls "5.0.0"
+(defproject org.iplantc/tree-urls "4.2.5"
   :description "DE API for managing tree urls."
   :url "https://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend"
   :license {:name "BSD"}
@@ -16,9 +16,9 @@
   :main tree-urls.core
   :uberjar-name "tree-urls-standalone.jar"
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.iplantc/common-cli "5.0.0"]
-                 [org.iplantc/common-cfg "5.0.0"]
-                 [org.iplantc/kameleon "5.0.0"]
+                 [org.iplantc/common-cli "4.2.5"]
+                 [org.iplantc/common-cfg "4.2.5"]
+                 [org.iplantc/kameleon "4.2.5"]
                  [cheshire "5.3.1"]
                  [compojure "1.1.6"]
                  [midje "1.6.3"]
@@ -29,4 +29,4 @@
                :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]}
   :plugins [[lein-ring "0.8.10"]
             [lein-midje "3.1.1"]
-            [org.iplantc/lein-iplant-rpm "5.0.0"]])
+            [org.iplantc/lein-iplant-rpm "4.2.5"]])
