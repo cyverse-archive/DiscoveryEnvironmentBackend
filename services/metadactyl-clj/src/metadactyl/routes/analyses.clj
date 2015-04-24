@@ -46,4 +46,11 @@
           :summary     "Update an Analysis"
           :notes       "This service allows an analysis name or description to be updated."
           (service/coerced-trap uri AnalysisUpdateResponse
-                                apps/update-job current-user analysis-id body)))
+                                apps/update-job current-user analysis-id body))
+
+  (DELETE* "/:analysis-id" [:as {:keys [uri]}]
+           :path-params [analysis-id :- AnalysisIdPathParam]
+           :query       [params SecuredQueryParams]
+           :summary     "Delete an Analysis"
+           :notes       "This service marks an analysis as deleted in the DE database."
+           (service/trap uri apps/delete-job current-user analysis-id)))

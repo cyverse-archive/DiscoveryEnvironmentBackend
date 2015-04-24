@@ -112,3 +112,8 @@
   (->> (jp/update-job job-id body)
        ((juxt :id :job_name :job_description))
        (zipmap [:id :name :description])))
+
+(defn delete-job
+  [{:keys [username]} job-id]
+  (validate-job-for-user username job-id)
+  (jp/delete-jobs [job-id]))

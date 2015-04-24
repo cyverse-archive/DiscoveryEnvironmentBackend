@@ -248,3 +248,8 @@
 (defn update-job
   [user job-id body]
   (jobs/update-job user job-id body))
+
+(defn delete-job
+  [user job-id]
+  (jobs/delete-job user job-id)
+  nil)
