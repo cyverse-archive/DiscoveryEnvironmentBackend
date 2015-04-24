@@ -1,11 +1,14 @@
 (ns clj-jargon.init
   (:require [clojure.tools.logging :as log]
-            [slingshot.slingshot :as ss])
+            [slingshot.slingshot :refer [try+ throw+]]
+            [clojure-commons.error-codes :refer [ERR_NOT_A_USER]])
   (:import [java.io InputStream]
            [java.net ConnectException]
            [org.irods.jargon.core.connection IRODSAccount]
+           [org.irods.jargon.core.exception InvalidClientUserException]
            [org.irods.jargon.core.pub IRODSAccessObjectFactory  ; Hint for Cursive inspection
                                       IRODSFileSystem]))
+
 
 ; Debuging code.
 (def with-jargon-index (ref 0))
@@ -61,22 +64,26 @@
 
 (defn- context-map
   "Throws:
-     org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to iRODS"
+     org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to iRODS
+     ERR_NOT_A_USER                                  - If the client-user isn't a known iRODS user"
   [cfg client-user]
-  (let [acnt (account cfg client-user)
-        aof  (.getIRODSAccessObjectFactory (:proxy cfg))]
-    (assoc cfg
-      :irodsAccount        acnt
-      :accessObjectFactory aof
-      :collectionAO        (.getCollectionAO aof acnt)
-      :dataObjectAO        (.getDataObjectAO aof acnt)
-      :userAO              (.getUserAO aof acnt)
-      :userGroupAO         (.getUserGroupAO aof acnt)
-      :fileFactory         (.getIRODSFileFactory (:proxy cfg) acnt)
-      :fileSystemAO        (.getIRODSFileSystemAO aof acnt)
-      :lister              (.getCollectionAndDataObjectListAndSearchAO aof acnt)
-      :quotaAO             (.getQuotaAO aof acnt)
-      :executor            (.getIRODSGenQueryExecutor aof acnt))))
+  (try+
+    (let [acnt (account cfg client-user)
+          aof  (.getIRODSAccessObjectFactory (:proxy cfg))]
+      (assoc cfg
+        :irodsAccount        acnt
+        :accessObjectFactory aof
+        :collectionAO        (.getCollectionAO aof acnt)
+        :dataObjectAO        (.getDataObjectAO aof acnt)
+        :userAO              (.getUserAO aof acnt)
+        :userGroupAO         (.getUserGroupAO aof acnt)
+        :fileFactory         (.getIRODSFileFactory (:proxy cfg) acnt)
+        :fileSystemAO        (.getIRODSFileSystemAO aof acnt)
+        :lister              (.getCollectionAndDataObjectListAndSearchAO aof acnt)
+        :quotaAO             (.getQuotaAO aof acnt)
+        :executor            (.getIRODSGenQueryExecutor aof acnt)))
+    (catch InvalidClientUserException _
+      (throw+ {:error_code ERR_NOT_A_USER :user client-user}))))
 
 
 (defn- log-value
@@ -168,17 +175,17 @@
        (binding [curr-with-jargon-index (dosync (alter with-jargon-index inc))]
          (log/debug "curr-with-jargon-index:" curr-with-jargon-index)
          (when-let [~cm-sym (create-jargon-context-map ~cfg client-user#)]
-           (ss/try+
+           (try+
              (let [retval# (do ~@body)]
                (cond
                  (instance? InputStream retval#) (proxy-input-stream-return ~cm-sym retval#)
                  auto-close#                     (clean-return ~cm-sym retval#)
                  :else                           (dirty-return retval#)))
              (catch Object o1#
-               (ss/try+
+               (try+
                  (.close (:proxy ~cm-sym))
                  (catch Object o2#))
-               (ss/throw+))))))))
+               (throw+))))))))
 
 
 (defmacro log-stack-trace
