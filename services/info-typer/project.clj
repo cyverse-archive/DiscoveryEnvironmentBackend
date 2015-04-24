@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject org.iplantc/info-typer "4.2.5"
+(defproject org.iplantc/info-typer "5.0.0"
   :description "An AMQP based info type detection service for iRODS"
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -18,11 +18,11 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [com.novemberain/langohr "3.1.0"]
                  [me.raynes/fs "1.4.6"]
-                 [org.iplantc/clj-jargon "4.2.5"]
-                 [org.iplantc/clojure-commons "4.2.5" :exclusions [commons-logging]]
-                 [org.iplantc/common-cli "4.2.5"]
-                 [org.iplantc/heuristomancer "4.2.5"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "4.2.5"]]
+                 [org.iplantc/clj-jargon "5.0.0"]
+                 [org.iplantc/clojure-commons "5.0.0" :exclusions [commons-logging]]
+                 [org.iplantc/common-cli "5.0.0"]
+                 [org.iplantc/heuristomancer "5.0.0"]]
+  :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]]
   :main ^:skip-aot info-typer.core
   :profiles {:dev     {:resource-paths ["conf/test"]}
              :uberjar {:aot :all}}
