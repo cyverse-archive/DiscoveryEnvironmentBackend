@@ -249,6 +249,13 @@
                  :as               :stream
                  :follow-redirects false}))
 
+(defn delete-job
+  [analysis-id]
+  (client/delete (metadactyl-url "analyses" analysis-id)
+                 {:query-params     (secured-params)
+                  :as               :stream
+                  :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")

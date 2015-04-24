@@ -312,10 +312,6 @@
     (validate-map request {:analyses vector?})
     (delete-selected-jobs (map uuidify (:analyses request)))))
 
-(defn delete-job
-  [job-id]
-  (delete-selected-jobs [(uuidify job-id)]))
-
 (defn stop-job
   [id]
   (with-db db/de

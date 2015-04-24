@@ -172,7 +172,7 @@
           (service/success-response (metadactyl/update-job analysis-id body)))
 
    (DELETE "/analyses/:analysis-id" [analysis-id]
-           (apps/delete-job analysis-id))
+           (service/success-response (metadactyl/delete-job analysis-id)))
 
    (POST "/analyses/shredder" [:as {:keys [body]}]
          (apps/delete-jobs body))
