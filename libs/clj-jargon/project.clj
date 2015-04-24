@@ -1,4 +1,4 @@
-(defproject org.iplantc/clj-jargon "4.2.4"
+(defproject org.iplantc/clj-jargon "4.2.5"
   :description "Clojure API on top of iRODS's jargon-core."
   :url "http://www.iplantcollaborative.org"
   :license {:name "BSD"
@@ -7,7 +7,7 @@
                 ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [org.iplantc/clojure-commons "4.2.4"]
+                 [org.iplantc/clojure-commons "4.2.5"]
                  [org.slf4j/slf4j-api "1.7.12"]
                  [org.slf4j/slf4j-log4j12 "1.7.12"]
                  [org.iplantc.core.jargon/jargon-core "4.0.2.1.3"]
