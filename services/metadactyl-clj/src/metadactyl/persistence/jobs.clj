@@ -7,6 +7,7 @@
         [korma.core]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
+            [clojure.set :as set]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
@@ -497,3 +498,20 @@
   (update :jobs
           (set-fields {:deleted true})
           (where {:id [in ids]})))
+
+(defn get-jobs
+  [ids]
+  (select (job-base-query)
+          (where {:j.id [in ids]})))
+
+(defn list-non-existent-job-ids
+  [job-id-set]
+  (->> (get-jobs job-id-set)
+       (map :id)
+       (set)
+       (set/difference job-id-set)))
+
+(defn list-unowned-jobs
+  [username job-ids]
+  (select (job-base-query)
+          (where {:j.username [not= username]})))

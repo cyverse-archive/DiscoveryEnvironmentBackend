@@ -4,6 +4,9 @@
         [metadactyl.schema.containers :only [ToolContainer]])
   (:import [java.util UUID]))
 
+(defschema AnalysisShredderRequest
+  {:analyses (describe [UUID] "The identifiers of the analyses to be deleted.")})
+
 (defschema FileMetadata
   {:attr  (describe String "The attribute name.")
    :value (describe String "The attribute value.")
@@ -70,7 +73,7 @@
 
    (optional-key :container)
    ToolContainer
-   
+
    :location
    (describe String "The path to the directory containing the component.")
 

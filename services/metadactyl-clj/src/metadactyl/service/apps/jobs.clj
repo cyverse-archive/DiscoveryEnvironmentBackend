@@ -98,22 +98,36 @@
     (sync-incomplete-job-status apps-client job step)
     (sync-complete-job-status job)))
 
-(defn- validate-job-for-user
-  [username job-id]
-  (let [job (jp/get-job-by-id job-id)]
-    (when-not job
-      (service/not-found "job" job-id))
-    (when-not (= username (:username job))
-      (service/not-owner "job" job-id))))
+(defn- validate-job-existence
+  [job-ids]
+  (let [missing-ids (jp/list-non-existent-job-ids (set job-ids))]
+    (when-not (empty? missing-ids)
+      (service/not-found "jobs" job-ids))))
+
+(defn- validate-job-ownership
+  [username job-ids]
+  (let [unowned-ids (map :id (jp/list-unowned-jobs username job-ids))]
+    (when-not (empty? unowned-ids)
+      (service/not-owner "jobs" job-ids))))
+
+(defn- validate-jobs-for-user
+  [username job-ids]
+  (validate-job-existence job-ids)
+  (validate-job-ownership username job-ids))
 
 (defn update-job
   [{:keys [username]} job-id body]
-  (validate-job-for-user username job-id)
+  (validate-jobs-for-user username [job-id])
   (->> (jp/update-job job-id body)
        ((juxt :id :job_name :job_description))
        (zipmap [:id :name :description])))
 
 (defn delete-job
   [{:keys [username]} job-id]
-  (validate-job-for-user username job-id)
+  (validate-jobs-for-user username [job-id])
   (jp/delete-jobs [job-id]))
+
+(defn delete-jobs
+  [{:keys [username]} job-ids]
+  (validate-jobs-for-user username job-ids)
+  (jp/delete-jobs job-ids))

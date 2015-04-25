@@ -253,3 +253,8 @@
   [user job-id]
   (jobs/delete-job user job-id)
   nil)
+
+(defn delete-jobs
+  [user body]
+  (jobs/delete-jobs user (:analyses body))
+  nil)

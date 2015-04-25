@@ -53,4 +53,12 @@
            :query       [params SecuredQueryParams]
            :summary     "Delete an Analysis"
            :notes       "This service marks an analysis as deleted in the DE database."
-           (service/trap uri apps/delete-job current-user analysis-id)))
+           (service/trap uri apps/delete-job current-user analysis-id))
+
+  (POST* "/shredder" [:as {:keys [uri]}]
+         :query   [params SecuredQueryParams]
+         :body    [body AnalysisShredderRequest]
+         :summary "Delete Multiple Analyses"
+         :notes   "This service allows the caller to mark one or more analyses as deleted
+         in the apps database."
+         (service/trap uri apps/delete-jobs current-user body)))
