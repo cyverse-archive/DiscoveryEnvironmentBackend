@@ -218,20 +218,32 @@ __Curl Command__:
 
 Listing Metadata Templates
 --------------------------
+The `secured` and `admin` endpoints return the same listing, except the `admin` endpoint also
+includes Metadata Templates that have been marked as deleted.
+
 __URL Path__: /secured/filesystem/metadata/templates
+
+__URL Path__: /admin/filesystem/metadata/templates
 
 __HTTP Method__: GET
 
 __Response__:
 
-    {
-        "metadata_templates": [
-            {
-                "id": "59bd3d26-34d5-4e75-99f5-840a20089caf",
-                "name": "iDS Genome Sequences"
-            }
-        ]
-    }
+```json
+{
+    "metadata_templates": [
+        {
+            "id": "59bd3d26-34d5-4e75-99f5-840a20089caf",
+            "name": "iDS Genome Sequences",
+            "deleted": false,
+            "created_by": "<public>",
+            "created_on": "2015-04-24T19:23:47Z",
+            "modified_by": "<public>",
+            "modified_on": "2015-04-24T19:23:47Z"
+        }
+    ]
+}
+```
 
 __Curl Command__:
 

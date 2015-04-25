@@ -33,19 +33,29 @@
     (throw+ {:error_code error-codes/ERR_DOES_NOT_EXIST
              :metadata_template id})))
 
+(defn- add-deleted-where-clause
+  [query hide-deleted?]
+  (if hide-deleted?
+    (where query {:deleted false})
+    query))
+
 (defn- list-metadata-templates
-  []
-  (with-db db/de
-    (select :metadata_templates
-            (join [:users :created_by] {:metadata_templates.created_by :created_by.id})
-            (join [:users :modified_by] {:metadata_templates.modified_by :modified_by.id})
-            (fields :id
-                    :name
-                    [:created_by.username :created_by]
-                    :created_on
-                    [:modified_by.username :modified_by]
-                    :modified_on)
-            (where {:deleted false}))))
+  ([]
+    (list-metadata-templates true))
+  ([hide-deleted?]
+    (with-db db/de
+      (select :metadata_templates
+              (join [:users :created_by] {:metadata_templates.created_by :created_by.id})
+              (join [:users :modified_by] {:metadata_templates.modified_by :modified_by.id})
+              (fields :id
+                      :name
+                      :deleted
+                      [:created_by.username :created_by]
+                      :created_on
+                      [:modified_by.username :modified_by]
+                      :modified_on)
+              (add-deleted-where-clause hide-deleted?)
+              (order :name)))))
 
 (defn- get-valid-metadata-template
   [id]
@@ -276,6 +286,16 @@
     (log-call "do-metadata-attribute-view" id)))
 
 (with-post-hook! #'do-metadata-attribute-view (log-func "do-metadata-attribute-view"))
+
+(defn do-metadata-template-admin-list
+  []
+  {:metadata_templates (list-metadata-templates false)})
+
+(with-pre-hook! #'do-metadata-template-admin-list
+  (fn []
+    (log-call "do-metadata-template-admin-list")))
+
+(with-post-hook! #'do-metadata-template-admin-list (log-func "do-metadata-template-admin-list"))
 
 (defn- validate-metadata-template
   [{:keys [id attributes] :as template}]

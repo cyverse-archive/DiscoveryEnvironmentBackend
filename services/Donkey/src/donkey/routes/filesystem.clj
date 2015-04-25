@@ -220,6 +220,9 @@
            (config/filesystem-routes-enabled)
            (config/metadata-routes-enabled))]
 
+    (GET "/filesystem/metadata/templates" [:as req]
+      (controller req mt/do-metadata-template-admin-list))
+
     (POST "/filesystem/metadata/templates" [:as req]
       (controller req mt/do-metadata-template-add :body))
 
