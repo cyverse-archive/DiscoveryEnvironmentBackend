@@ -1,7 +1,7 @@
 (use '[leiningen.exec :only (deps)]
      '[leiningen.core.project :only (defproject)])
 (deps '[[cheshire "5.3.1"]
-        [me.raynes/fs "1.4.4"]
+        [me.raynes/fs "1.4.6"]
         [org.clojure/tools.cli "0.3.1"]
         [org.clojure/clojure "1.5.1"]
         [medley "0.1.5"]

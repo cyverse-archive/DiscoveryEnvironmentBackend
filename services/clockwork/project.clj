@@ -28,7 +28,7 @@
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/kameleon "5.0.0"]
-                 [me.raynes/fs "1.4.4"]
+                 [me.raynes/fs "1.4.6"]
                  [org.slf4j/slf4j-api "1.7.2"]
                  [org.slf4j/slf4j-log4j12 "1.6.6"]
                  [slingshot "0.10.3"]]

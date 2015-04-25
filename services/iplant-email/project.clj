@@ -24,7 +24,7 @@
                  [ring/ring-jetty-adapter "1.0.1"]
                  [log4j/log4j "1.2.16"]
                  [org.iplantc/common-cli "5.0.0"]
-                 [me.raynes/fs "1.4.4"]]
+                 [me.raynes/fs "1.4.6"]]
   :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]]
   :iplant-rpm {:summary "iplant-email"
                :dependencies ["iplant-service-config >= 0.1.0-5"

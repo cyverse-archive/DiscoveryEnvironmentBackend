@@ -2,7 +2,7 @@
      '[clojure.pprint :only [pprint]]
      '[leiningen.exec :only [deps]])
 
-(deps '[[me.raynes/fs "1.4.4"]])
+(deps '[[me.raynes/fs "1.4.6"]])
 
 (require '[clojure.string :as string]
          '[clojure.xml :as xml]
