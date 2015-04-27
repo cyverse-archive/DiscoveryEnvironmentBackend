@@ -377,25 +377,40 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 				log.Print(string(body[:]))
 				continue
 			}
+
+			// parse the body of the event that came from the amqp broker.
 			event.Parse()
 			log.Println(event.String())
+
+			// adds the job to the database, but only if it doesn't already exist.
 			job, err := d.AddJob(event.CondorID)
 			if err != nil {
 				log.Printf("Error adding job: %s", err)
 				continue
 			}
+
+			// make sure the exit code is set so that it gets updated in upcoming steps.
 			job.ExitCode = event.ExitCode
+
+			// we're expecting an exit code of 0 for successful runs. HT jobs may have
+			// more than one failure.
 			if job.ExitCode != 0 {
 				job.FailureCount = job.FailureCount + 1
 			}
+
+			// update the job with any additional information
 			job, err = d.UpdateJob(job) // Need to make sure the exit code gets stored.
 			if err != nil {
 				log.Printf("Error updating job")
 			}
+
+			// update the parsed event object with info returned from the database.
 			event.CondorID = job.CondorID
 			event.InvocationID = job.InvocationID
 			event.AppID = job.AppID
 			event.User = job.Submitter
+
+			// don't add the event to the database if it's already there.
 			exists, err := d.DoesCondorJobEventExist(event.Hash)
 			if err != nil {
 				log.Printf("Error checking for job event existence by checksum: %s", event.Hash)
@@ -405,10 +420,14 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 				log.Printf("An event with a hash of %s already exists in the database, skipping", event.Hash)
 				continue
 			}
+
+			// send event updates upstream to Donkey
 			err = eventHandler.Route(&event)
 			if err != nil {
 				log.Printf("Error sending event upstream: %s", err)
 			}
+
+			// store the unparsed (raw), event information in the database.
 			rawEventID, err := d.AddCondorRawEvent(event.Event, job.ID)
 			if err != nil {
 				log.Printf("Error adding raw event: %s", err)
