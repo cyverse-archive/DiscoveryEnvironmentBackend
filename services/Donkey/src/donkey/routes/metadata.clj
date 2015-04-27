@@ -175,7 +175,7 @@
            (service/success-response (metadactyl/delete-job analysis-id)))
 
    (POST "/analyses/shredder" [:as {:keys [body]}]
-         (apps/delete-jobs body))
+         (service/success-response (metadactyl/delete-jobs body)))
 
    (GET "/analyses/:analysis-id/parameters" [analysis-id]
         (apps/get-parameter-values analysis-id))

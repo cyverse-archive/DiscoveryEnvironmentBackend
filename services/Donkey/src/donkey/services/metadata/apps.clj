@@ -275,43 +275,6 @@
   (service/success-response
     (.adminEditAppDocs (get-app-lister) app-id (service/decode-json body))))
 
-(defn- validate-job-ownership
-  [{:keys [id user]}]
-  (let [authenticated-user (:username current-user)]
-    (when-not (= user authenticated-user)
-      (throw+ {:error_code ce/ERR_NOT_OWNER
-               :reason     (str authenticated-user " does not own job " id)}))))
-
-(defn- log-missing-job
-  [extant-ids id]
-  (when-not (extant-ids id)
-    (log/warn "attempt to delete missing job" id "ignored")))
-
-(defn- log-already-deleted-job
-  [{:keys [id deleted]}]
-  (when deleted (log/warn "attempt to delete deleted job" id "ignored")))
-
-(defn- validate-job-deletion-request
-  [ids]
-  (let [jobs (jp/list-jobs-to-delete ids)]
-    (dorun (map validate-job-ownership jobs))
-    (dorun (map (partial log-missing-job (set (map :id jobs))) ids))
-    (dorun (log-already-deleted-job jobs))))
-
-(defn- delete-selected-jobs
-  [ids]
-  (with-db db/de
-    (transaction
-     (validate-job-deletion-request ids)
-     (jp/delete-jobs ids)
-     (service/success-response))))
-
-(defn delete-jobs
-  [body]
-  (let  [request (service/decode-json body)]
-    (validate-map request {:analyses vector?})
-    (delete-selected-jobs (map uuidify (:analyses request)))))
-
 (defn stop-job
   [id]
   (with-db db/de
