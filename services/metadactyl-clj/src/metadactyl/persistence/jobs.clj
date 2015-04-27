@@ -474,8 +474,9 @@
 (defn list-incomplete-jobs
   []
   (select (job-base-query)
-          (where {:j.deleted false
-                  :j.status  [not-in completed-status-codes]})))
+          (where {:j.is_batch false
+                  :j.deleted  false
+                  :j.status   [not-in completed-status-codes]})))
 
 (defn list-job-steps
   [job-id]

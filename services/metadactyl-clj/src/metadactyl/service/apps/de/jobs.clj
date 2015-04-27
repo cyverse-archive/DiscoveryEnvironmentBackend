@@ -360,11 +360,9 @@
 
 (defn get-job-step-status
   [{:keys [external-id]}]
-  (try+
-   (when-let [step (jex-events/get-job-state external-id)]
-     {:status  (:status step)
-      :enddate (:completion_date step)})
-   (catch [:status 404] _ nil)))
+  (when-let [step (jex-events/get-job-state external-id)]
+    {:status  (:status step)
+     :enddate (:completion_date step)}))
 
 (defn prepare-step
   [user submission]
