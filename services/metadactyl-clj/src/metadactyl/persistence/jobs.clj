@@ -514,4 +514,5 @@
 (defn list-unowned-jobs
   [username job-ids]
   (select (job-base-query)
-          (where {:j.username [not= username]})))
+          (where {:j.id       [in (map uuidify job-ids)]
+                  :j.username [not= username]})))

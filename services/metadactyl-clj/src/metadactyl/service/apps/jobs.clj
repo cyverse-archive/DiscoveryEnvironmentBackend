@@ -104,11 +104,11 @@
     (when-not (empty? missing-ids)
       (service/not-found "jobs" job-ids))))
 
-(defn- validate-job-ownership
+(defn validate-job-ownership
   [username job-ids]
   (let [unowned-ids (map :id (jp/list-unowned-jobs username job-ids))]
     (when-not (empty? unowned-ids)
-      (service/not-owner "jobs" job-ids))))
+      (service/not-owner "jobs" unowned-ids))))
 
 (defn- validate-jobs-for-user
   [username job-ids]
