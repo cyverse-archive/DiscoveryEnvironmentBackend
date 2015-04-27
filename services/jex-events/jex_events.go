@@ -19,6 +19,10 @@ import (
 
 var (
 	cfgPath = flag.String("config", "", "Path to the config value")
+	version = flag.Bool("version", false, "Print the version information")
+	gitref  string
+	appver  string
+	builtby string
 )
 
 func init() {
@@ -437,7 +441,25 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 	}
 }
 
+// AppVersion prints version information to stdout
+func AppVersion() {
+	if appver != "" {
+		fmt.Printf("App-Version: %s\n", appver)
+	}
+	if gitref != "" {
+		fmt.Printf("Git-Ref: %s\n", gitref)
+	}
+
+	if builtby != "" {
+		fmt.Printf("Built-By: %s\n", builtby)
+	}
+}
+
 func main() {
+	if *version {
+		AppVersion()
+		os.Exit(0)
+	}
 	log.Println("Starting jex-events")
 	if *cfgPath == "" {
 		fmt.Println("--config must be set.")
