@@ -293,12 +293,14 @@ func (h *HTTPAPI) JobHTTPPost(writer http.ResponseWriter, request *http.Request)
 		WriteRequestError(writer, errMsg)
 		return
 	}
-	if parsed.InvocationID == "" {
-		errMsg := "The InvocationID field is required in the POST JSON"
-		LogAPIMsg(request, errMsg)
-		WriteRequestError(writer, errMsg)
-		return
-	}
+	// if parsed.InvocationID == "" {
+	// 	errMsg := "The InvocationID field is required in the POST JSON"
+	// 	LogAPIMsg(request, errMsg)
+	// 	WriteRequestError(writer, errMsg)
+	// 	return
+	// }
+	parsed.InvocationID = ""
+
 	if parsed.DateSubmitted.IsZero() {
 		parsed.DateSubmitted = time.Now()
 	}
@@ -330,7 +332,7 @@ func SetupHTTP(config *Configuration, d *Databaser) {
 		http.HandleFunc("/jobs/", api.RouteJobRequests)
 		http.HandleFunc("/jobs", api.RouteJobRequests)
 		http.HandleFunc("/invocations/", api.RouteInvocationRequests)
-		http.HandleFunc("/invocation", api.RouteInvocationRequests)
+		http.HandleFunc("/invocations", api.RouteInvocationRequests)
 		http.HandleFunc("/last-events/", api.RouteLastEventRequests)
 		http.HandleFunc("/last-events", api.RouteLastEventRequests)
 		log.Printf("Listening for HTTP requests on %s", config.HTTPListenPort)

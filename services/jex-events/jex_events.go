@@ -315,7 +315,7 @@ func (e *Event) setExitCode() {
 	e.ExitCode = code
 }
 
-// ExtractCondorID will return the condor ID in the string that's passed in.
+// setCondorID will return the condor ID in the string that's passed in.
 func (e *Event) setCondorID() {
 	r := regexp.MustCompile(`\(([0-9]+)\.[0-9]+\.[0-9]+\)`)
 	matches := r.FindStringSubmatch(e.ID)
@@ -328,6 +328,18 @@ func (e *Event) setCondorID() {
 	} else {
 		e.CondorID = matches[1]
 	}
+}
+
+// setInvocationID will make sure the Invocation ID gets set when appropriate.
+func (e *Event) setInvocationID() {
+	r := regexp.MustCompile(`IpcUuid = \"(.*)\"`)
+	matches := r.FindStringSubmatch(e.Event)
+	if len(matches) < 2 {
+		e.InvocationID = ""
+	} else {
+		e.InvocationID = matches[1]
+	}
+	log.Printf("Parsed out %s as the invocation ID", e.InvocationID)
 }
 
 // Parse extracts info from an event string.
@@ -355,6 +367,9 @@ func (e *Event) Parse() {
 	}
 	if e.EventNumber == "005" { //This means that the job is in the Completed state.
 		e.setExitCode()
+	}
+	if e.EventNumber == "028" { //parse out execution id from the body of the event.
+		e.setInvocationID()
 	}
 }
 
@@ -391,6 +406,15 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 
 			// make sure the exit code is set so that it gets updated in upcoming steps.
 			job.ExitCode = event.ExitCode
+
+			// set the invocation id, but only if it's not set and the event actually
+			// has a value to update it with.
+			if job.InvocationID == "" && event.InvocationID != "" {
+				job.InvocationID = event.InvocationID
+				log.Printf("Setting InvocationID to %s", job.InvocationID)
+			} else {
+				log.Printf("Setting the InvocationID was not necessary")
+			}
 
 			// we're expecting an exit code of 0 for successful runs. HT jobs may have
 			// more than one failure.
