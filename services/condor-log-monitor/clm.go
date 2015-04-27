@@ -56,6 +56,13 @@ import (
 var (
 	cfgPath = flag.String("config", "", "Path to the config file.")
 	logPath = flag.String("event-log", "", "Path to the log file.")
+	version = flag.Bool("version", false, "Print version information.")
+)
+
+var (
+	gitref  string
+	appver  string
+	builtby string
 )
 
 // TombstonePath is the path to the tombstone file.
@@ -721,6 +728,20 @@ func (l LogfileList) PathFromInode(inode uint64) string {
 	return path.Join(fileInstance.BaseDir, fileInstance.Info.Name())
 }
 
+// Version prints version information to stdout
+func Version() {
+	if appver != "" {
+		fmt.Printf("App-Version: %s\n", appver)
+	}
+	if gitref != "" {
+		fmt.Printf("Git-Ref: %s\n", gitref)
+	}
+
+	if builtby != "" {
+		fmt.Printf("Built-By: %s\n", builtby)
+	}
+}
+
 /*
 On start up, look for tombstone and read it if it's present.
 List the log files.
@@ -732,6 +753,10 @@ and send all of the files.
 After all of the files are parsed, record a new tombstone and tail the latest log file, looking for updates.
 */
 func main() {
+	if *version {
+		Version()
+		os.Exit(0)
+	}
 	if *cfgPath == "" {
 		fmt.Printf("--config must be set.")
 		os.Exit(-1)
