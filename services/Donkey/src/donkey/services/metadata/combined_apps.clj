@@ -19,70 +19,9 @@
             [kameleon.db :as db]
             [kameleon.uuids :as uuids]))
 
-(defn- remove-mapped-inputs
-  [mapped-props group]
-  (assoc group :parameters (remove (comp mapped-props :id) (:parameters group))))
-
-(defn- reformat-group
-  [app-name step-id group]
-  (assoc group
-    :name       (str app-name " - " (:name group))
-    :label      (str app-name " - " (:label group))
-    :parameters (mapv (fn [prop] (assoc prop :id (str step-id "_" (:id prop))))
-                      (:parameters group))))
-
-
-(defn- get-mapped-props
-  [step-id]
-  (->> (ap/load-target-step-mappings step-id)
-       (map (fn [{ext-id :external_input_id id :input_id}]
-              (str (first (remove nil? [ext-id id])))))
-       (set)))
-
-(defn- get-agave-groups
-  [agave step external-app-id]
-  (mu/assert-agave-enabled agave)
-  (let [app          (.getApp agave external-app-id)
-        mapped-props (get-mapped-props (:step_id step))]
-    (->> (:groups app)
-         (map (partial remove-mapped-inputs mapped-props))
-         (remove (comp empty? :parameters))
-         (map (partial reformat-group (:name app) (:step_id step)))
-         (doall))))
-
-(defn- get-combined-groups
-  [agave app-id metadactyl-groups]
-  (loop [acc               []
-         metadactyl-groups metadactyl-groups
-         [step & steps]    (ap/load-app-steps app-id)
-         step-number       1]
-    (let [before-current-step #(<= (:step_number %) step-number)
-          external-app-id     (:external_app_id step)]
-      (cond
-       ;; We're out of steps.
-       (nil? step)
-       acc
-
-       ;; The current step is an Agave step.
-       external-app-id
-       (recur (concat acc (get-agave-groups agave step external-app-id))
-              metadactyl-groups
-              steps
-              (inc step-number))
-
-       ;; The current step is a DE step.
-       :else
-       (recur (concat acc (take-while before-current-step metadactyl-groups))
-              (drop-while before-current-step metadactyl-groups)
-              steps
-              (inc step-number))))))
-
 (defn- get-combined-app
   [agave app-id]
-  (let [metadactyl-app (service/decode-json (:body (metadactyl/get-app app-id)))]
-    (->> (:groups metadactyl-app)
-         (get-combined-groups agave app-id)
-         (assoc metadactyl-app :groups))))
+  (service/decode-json (:body (metadactyl/get-app app-id))))
 
 (defn get-app
   [agave app-id]
