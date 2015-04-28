@@ -16,7 +16,8 @@
   [cm dir-path]
   (validate-full-dirpath dir-path)
   (validate-path-lengths dir-path)
-  (.mkdir (:fileSystemAO cm) (file cm dir-path) true))
+  (.mkdir (:fileSystemAO cm) (file cm dir-path) false))
+
 
 (defn mkdirs
   [cm dir-path]
