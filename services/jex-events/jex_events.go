@@ -467,10 +467,12 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 				log.Printf("Error adding job event: %s", err)
 				continue
 			}
-			_, err = d.UpsertLastCondorJobEvent(jobEventID, job.ID)
-			if err != nil {
-				log.Printf("Error upserting last condor job event: %s", err)
-				continue
+			if eventHandler.ShouldUpdateLastEvents(&event) {
+				_, err = d.UpsertLastCondorJobEvent(jobEventID, job.ID)
+				if err != nil {
+					log.Printf("Error upserting last condor job event: %s", err)
+					continue
+				}
 			}
 		case <-quit:
 			break
