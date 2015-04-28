@@ -5,6 +5,7 @@
   (:require [clojure-commons.file-utils :as ft]
             [clojure.java.io :as io])
   (:import [org.irods.jargon.core.packinstr DataObjInp$OpenFlags]
+           [org.irods.jargon.core.pub IRODSFileSystemAO]  ; needed for cursive type navigation
            [org.irods.jargon.core.pub.io IRODSFileReader]
            [org.irods.jargon.core.transfer TransferStatusCallbackListener
               TransferStatusCallbackListener$FileStatusCallbackResponse
@@ -21,7 +22,8 @@
   [cm dir-path]
   (validate-full-dirpath dir-path)
   (validate-path-lengths dir-path)
-  (.mkdirs (file cm dir-path)))
+  (.mkdir (:fileSystemAO cm) (file cm dir-path) true))
+
 
 (defn delete
   ([cm a-path]
