@@ -34,6 +34,8 @@ type PostEventHandler struct {
 	DB      *Databaser
 }
 
+// Returns the routing function
+
 // Route decides which handling function an event should be passed along to and
 // then invokes that function.
 func (p *PostEventHandler) Route(event *Event) error {
@@ -56,6 +58,31 @@ func (p *PostEventHandler) Route(event *Event) error {
 		return p.Held(event)
 	default:
 		return p.Unrouted(event)
+	}
+}
+
+// Indicates whether or not an event should cause last_condor_job_events to be
+// updated.
+func (p *PostEventHandler) ShouldUpdateLastEvents(event *Event) bool {
+	switch event.EventNumber {
+	case "000": //Job Submitted
+		return true
+	case "001": //Job running
+		return true
+	case "002": // error in executable
+		return true
+	case "004": // job evicted
+		return true
+	case "005": // job terminated
+		return true
+	case "009": // job aborted
+		return true
+	case "010": // job suspended
+		return true
+	case "012": // job held
+		return true
+	default:
+		return false
 	}
 }
 
