@@ -28,11 +28,11 @@
   (log/trace "mkdirs-unvalidated dir-path =" dir-path)
   (let [parent (ft/rm-last-slash (ft/dirname dir-path))]
     (if (info/exists? cm parent)
-      (if (or (info/is-file? cm parent)
-              (= "/" (ft/dirname parent)))
-        (throw+ {:error_code ERR_NOT_A_FOLDER :path parent})
-        (.mkdir (:fileSystemAO cm) (info/file cm dir-path) false))
-      (mkdirs-unvalidated cm parent))))
+      (when (or (info/is-file? cm parent)
+                (= "/" (ft/dirname parent)))
+        (throw+ {:error_code ERR_NOT_A_FOLDER :path parent}))
+      (mkdirs-unvalidated cm parent))
+    (.mkdir (:fileSystemAO cm) (info/file cm dir-path) false)))
 
 
 (defn mkdirs
