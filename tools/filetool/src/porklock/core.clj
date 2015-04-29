@@ -4,10 +4,8 @@
         [porklock.validation]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]])
-  (:require [porklock.config :as cfg]
-            [clojure.tools.cli :as cli]
-            [clojure.string :as string]
-            [clojure-commons.file-utils :as ft])
+  (:require [clojure.tools.cli :as cli]
+            [clojure.string :as string])
   (:import [org.apache.log4j Logger]))
 
 (defn- fmeta-split
