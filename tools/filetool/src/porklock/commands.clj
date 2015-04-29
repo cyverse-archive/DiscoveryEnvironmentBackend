@@ -142,7 +142,7 @@
         (System/exit 1))
       (when-not (info/exists? cm dest-dir)
         (porkprint "Path " dest-dir " does not exist. Creating it.")
-        (ops/mkdirs cm dest-dir))
+        (ops/mkdir cm dest-dir))
       (doseq [[src dest] (seq dest-files)]
         (let [dir-dest (ft/dirname dest)]
           (if-not (or (.isFile (io/file src))
