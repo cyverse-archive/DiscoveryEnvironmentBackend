@@ -4,7 +4,8 @@
         [clj-jargon.permissions])
   (:require [clojure-commons.file-utils :as ft]
             [clojure.java.io :as io])
-  (:import [org.irods.jargon.core.pub.io IRODSFileReader]
+  (:import [org.irods.jargon.core.packinstr DataObjInp$OpenFlags]
+           [org.irods.jargon.core.pub.io IRODSFileReader]
            [org.irods.jargon.core.transfer TransferStatusCallbackListener
               TransferStatusCallbackListener$FileStatusCallbackResponse
               TransferStatusCallbackListener$CallbackResponse
@@ -72,11 +73,15 @@
     #(move cm %1 (ft/path-join dest (ft/basename %1)) :user user :admin-users admin-users)
     sources)))
 
-(defn output-stream
-  "Returns an FileOutputStream for a file in iRODS pointed to by 'output-path'."
+
+(defn- output-stream
+  "Returns an FileOutputStream for a file in iRODS pointed to by 'output-path'. If the file exists,
+   it will be truncated."
   [cm output-path]
-  (validate-path-lengths output-path)
-  (.instanceIRODSFileOutputStream (:fileFactory cm) (file cm output-path)))
+  (.instanceIRODSFileOutputStream (:fileFactory cm)
+                                  (file cm output-path)
+                                  DataObjInp$OpenFlags/WRITE_TRUNCATE))
+
 
 (defn input-stream
   "Returns a FileInputStream for a file in iRODS pointed to by 'input-path'"
