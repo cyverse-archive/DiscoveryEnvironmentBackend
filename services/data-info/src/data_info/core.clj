@@ -2,10 +2,11 @@
   (:gen-class)
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
-        [compojure.core]
-        [data-info.util.service])
-  (:require [compojure.handler :as handler]
-            [clojure.java.io :as io]
+        [compojure.api.sweet]
+        [compojure.api.legacy]
+        [data-info.util.service]
+        [ring.util.response :only [redirect]])
+  (:require [clojure.java.io :as io]
             [ring.adapter.jetty :as jetty]
             [data-info.util.config :as config]
             [clojure.tools.nrepl.server :as nrepl]
@@ -15,6 +16,7 @@
             [common-cli.core :as ccli]
             [data-info.util.db :as db]
             [data-info.routes :as routes]
+            [data-info.routes.data :as data-routes]
             [data-info.services.icat :as icat]
             [data-info.util :as util]))
 
@@ -83,14 +85,28 @@
   (icat/configure-icat))
 
 
-(def app
-  (-> routes/all-routes
-      util/req-logger
-      util/trap-handler
-      #_(liberator/wrap-trace :header :ui)
-      params/wrap-keyword-params
-      wrap-lcase-params
-      wrap-query-params))
+(defapi app
+  (swagger-ui "/api")
+  (swagger-docs
+    {:info {:title "Discovery Environment Data Info API"
+            :description "Documentation for the Discovery Environment Data Info REST API"
+            :version "2.0.0"}})
+  (GET "/" [] (redirect "/api"))
+  (GET "/favicon.ico" [] {:status 404})
+  (middlewares
+    [wrap-query-params
+     wrap-lcase-params
+     params/wrap-keyword-params
+     util/req-logger]
+    data-routes/data-operations)
+  (middlewares
+    [wrap-query-params
+     wrap-lcase-params
+     params/wrap-keyword-params
+     util/req-logger
+     #_(liberator/wrap-trace :header :ui)
+     util/trap-handler]
+    routes/all-routes))
 
 
 (defn- cli-options

@@ -67,8 +67,6 @@
 (with-pre-hook! #'do-create
   (fn [params body]
     (dul/log-call "do-create" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})
     (log/info "Body: " body)
     (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED :user (:user params)}))))

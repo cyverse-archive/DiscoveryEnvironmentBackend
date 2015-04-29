@@ -321,11 +321,3 @@
   "Entrypoint for the API. Calls (metadata-save)."
   [data-id {:keys [user]} {:keys [dest recursive]}]
   (metadata-save user (uuidify data-id) (ft/rm-last-slash dest) (boolean recursive)))
-
-(with-pre-hook! #'do-metadata-save
-  (fn [data-id params body]
-    (dul/log-call "do-metadata-save" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:dest string?})))
-
-(with-post-hook! #'do-metadata-save (dul/log-func "do-metadata-save"))

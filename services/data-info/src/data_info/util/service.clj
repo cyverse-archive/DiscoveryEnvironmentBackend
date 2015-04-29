@@ -315,3 +315,14 @@
   [& msgs]
   (throw+ {:error_code ce/ERR_REQUEST_FAILED
            :message    (string/join " " msgs)}))
+
+(defn- success-response*
+  [body]
+  {:status  200
+   :body    body
+   :headers {"Content-Type" default-content-type}})
+
+(defn trap
+  "Traps a service call, automatically calling success-response on the result."
+  [action func & args]
+  (ce/trap action #(success-response* (apply func args))))

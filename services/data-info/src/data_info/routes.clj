@@ -1,6 +1,7 @@
 (ns data-info.routes
-  (:require [compojure.core :refer :all]
-            [compojure.route :as route]
+  (:use [compojure.api.sweet]
+        [compojure.api.legacy])
+  (:require [compojure.route :as route]
             [data-info.services.cart :as cart]
             [data-info.services.create :as create]
             [data-info.services.directory :as dir]
@@ -24,9 +25,8 @@
             [data-info.util :as util]
             [data-info.util.service :as svc]))
 
-
-(defroutes all-routes
-  (GET "/" [] (info/service-info))
+(defroutes* all-routes
+  (GET "/status" [] (info/service-info))
 
   (POST "/cart" [user folder] (cart/cart user folder))
 
@@ -45,12 +45,6 @@
 
   (POST "/stat-gatherer" [:as req]
     (util/controller req stat/do-stat :params :body))
-
-  (POST "/data/directories" [:as req]
-    (util/controller req create/do-create :params :body))
-
-  (POST "/data/:data-id/metadata/save" [data-id :as req]
-    (util/controller req meta/do-metadata-save data-id :params :body))
 
   #_(;; These routes have not been migrated yet
        (POST "/data/rename" [:as req]

@@ -24,6 +24,7 @@
                  [liberator "0.12.2"]
                  [me.raynes/fs "1.4.6"]
                  [medley "0.5.5"]
+                 [metosin/compojure-api "0.20.0"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [net.sf.opencsv/opencsv "2.3"]
                  [org.apache.tika/tika-core "1.7"]
@@ -38,7 +39,7 @@
                  [org.iplantc/heuristomancer "5.0.0"]
                  [org.iplantc/kameleon "5.0.0"]]
   :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]
-            [lein-ring "0.8.8"]
+            [lein-ring "0.9.2"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev     {:resource-paths ["conf/test"]}
              :uberjar {:aot :all}}
