@@ -5,8 +5,8 @@
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.cli :as cli]
-            [clojure.string :as string])
-  (:import [org.apache.log4j Logger]))
+            [clojure.string :as string]))
+
 
 (defn- fmeta-split
   [arg]
@@ -166,7 +166,6 @@
 (defn -main
   [& args]
   (try+
-    (.removeAllAppenders (Logger/getRootLogger))
     (println "[porklock] [arguments] " args)
 
     (let [cmd      (command args)
