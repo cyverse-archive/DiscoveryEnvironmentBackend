@@ -63,6 +63,7 @@
   [["-c" "--config PATH" "sets the local configuration file to be read."
     :default "/etc/iplant/de/infosquito.properties"]
    ["-r" "--reindex" "reindex the iPlant Data Store and exit"]
+   ["-v" "--version" "print the version and exit"]
    ["-h" "--help" "show help and exit"]])
 
 
