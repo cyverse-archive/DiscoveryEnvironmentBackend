@@ -8,7 +8,7 @@
             [clojure-commons.error-codes :refer [ERR_NOT_A_FOLDER]]
             [clj-jargon.item-info :as info])
   (:import [org.irods.jargon.core.packinstr DataObjInp$OpenFlags]
-           [org.irods.jargon.core.pub IRODSFileSystemAO]  ; needed for cursive type navigation
+           [org.irods.jargon.core.pub DataTransferOperations IRODSFileSystemAO]  ; needed for cursive type navigation
            [org.irods.jargon.core.pub.io IRODSFileReader]
            [org.irods.jargon.core.transfer TransferStatusCallbackListener
               TransferStatusCallbackListener$FileStatusCallbackResponse

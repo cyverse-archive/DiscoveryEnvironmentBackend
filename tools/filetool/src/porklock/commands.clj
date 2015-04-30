@@ -3,15 +3,19 @@
         [porklock.system]
         [porklock.config]
         [porklock.fileops :only [absify]]
-        [clojure.pprint :only [pprint]]
-        [slingshot.slingshot :only [try+]])
+        [clojure.pprint :only [pprint]])
   (:require [clj-jargon.init :as jg]
             [clj-jargon.item-info :as info]
             [clj-jargon.item-ops :as ops]
             [clj-jargon.metadata :as meta]
             [clj-jargon.permissions :as perms]
             [clojure.java.io :as io]
-            [clojure-commons.file-utils :as ft]))
+            [slingshot.slingshot :refer [throw+ try+]]
+            [clojure-commons.error-codes :refer [ERR_NOT_WRITEABLE]]
+            [clojure-commons.file-utils :as ft])
+  (:import [org.irods.jargon.core.exception CatNoAccessException]
+           [org.irods.jargon.core.transfer TransferStatus]))  ; needed for cursive type navigation
+
 
 (def porkprint (partial println "[porklock] "))
 
@@ -86,6 +90,14 @@
       (throw (Exception. (str exc)))))
   nil)
 
+
+(defn- map-exn
+  [exn dest-path]
+  (condp = (class exn)
+    CatNoAccessException {:error_code ERR_NOT_WRITEABLE :path dest-path}
+                         exn))
+
+
 (defn iput-status-cb
   "Callback function for the statusCallback function of a TransferCallbackListener."
   [transfer-status]
@@ -104,8 +116,9 @@
   (porkprint "\ttransfer zone: " (.getTransferZone transfer-status))
   (porkprint "\ttransfer resource: " (.getTargetResource transfer-status))
   (porkprint "-------")
-  (let [exc (.getTransferException transfer-status)]
-    (if-not (nil? exc)
+  (if (.getTransferException transfer-status)
+    (let [exc (map-exn (.getTransferException transfer-status)
+                       (.getTargetFileAbsolutePath transfer-status))]
       (do (porkprint "got an exception in iput: " exc)
         ops/skip
       ops/continue))))

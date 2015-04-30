@@ -2,10 +2,12 @@
   (:gen-class)
   (:use [porklock.commands]
         [porklock.validation]
-        [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.cli :as cli]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clojure-commons.error-codes
+             :as error
+             :refer [ERR_DOES_NOT_EXIST ERR_NOT_A_FILE ERR_NOT_A_FOLDER ERR_NOT_WRITEABLE]]))
 
 
 (defn- fmeta-split
@@ -132,7 +134,7 @@
       (do
         (println usage)
         (System/exit 1)))
-    (catch java.lang.Exception e
+    (catch Exception e
       (println (.getMessage e))
       (System/exit 1))))
 
@@ -140,28 +142,16 @@
   [err]
   (let [err-code (:error_code err)]
     (cond
-      (= err-code ERR_DOES_NOT_EXIST)
-      (str "Path does not exist: " (:path err))
+      (= err-code ERR_DOES_NOT_EXIST)      (str "Path does not exist: " (:path err))
+      (= err-code ERR_NOT_A_FOLDER)        (str "Path is not a folder: " (:path err))
+      (= err-code ERR_NOT_A_FILE)          (str "Path is not a file: " (:path err))
+      (= err-code ERR_NOT_WRITEABLE)       (str "Client needs write permission on: " (:path err))
+      (= err-code "ERR_PATH_NOT_ABSOLUTE") (str "Path is not absolute: " (:path err))
+      (= err-code "ERR_BAD_EXIT_CODE")     (str "Command exited with status: " (:exit-code err))
+      (= err-code "ERR_ACCESS_DENIED")     "You can't run this."
+      (= err-code "ERR_MISSING_OPTION")    (str "Missing required option: " (:option err))
+      :else                                (str "Error: " err))))
 
-      (= err-code ERR_NOT_A_FOLDER)
-      (str "Path is not a folder: " (:path err))
-
-      (= err-code ERR_NOT_A_FILE)
-      (str "Path is not a file: " (:path err))
-
-      (= err-code "ERR_PATH_NOT_ABSOLUTE")
-      (str "Path is not absolute: " (:path err))
-
-      (= err-code "ERR_BAD_EXIT_CODE")
-      (str "Command exited with status: " (:exit-code err))
-
-      (= err-code "ERR_ACCESS_DENIED")
-      "You can't run this."
-
-      (= err-code "ERR_MISSING_OPTION")
-      (str "Missing required option: " (:option err))
-
-      :else (str "Error: " err))))
 
 (defn -main
   [& args]
@@ -195,9 +185,9 @@
         (do
           (println banner)
           (System/exit 1))))
-    (catch error? err
+    (catch error/error? err
       (println (err-msg err))
       (System/exit 1))
-    (catch java.lang.Exception e
-      (println (format-exception e))
+    (catch Exception e
+      (println (error/format-exception e))
       (System/exit 2))))
