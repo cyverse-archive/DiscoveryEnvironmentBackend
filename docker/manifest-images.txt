@@ -3,6 +3,7 @@ clockwork
 condor-log-monitor
 data-info
 de
+dewey
 donkey
 info-typer
 infosquito
