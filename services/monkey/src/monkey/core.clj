@@ -23,6 +23,7 @@
   [["-c" "--config PATH" "sets the local configuration file to be read."
       :default "/etc/iplant/de/monkey.properties"]
    ["-r" "--reindex" "reindex the metadata database and exit"]
+   ["-v" "--version" "print the version and exit"]
    ["-h" "--help" "show help and exit"]])
 
 
