@@ -5,10 +5,11 @@
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [slingshot.slingshot :refer [throw+]]
-            [clojure-commons.error-codes :refer [ERR_NOT_A_FOLDER]]
+            [clojure-commons.error-codes :refer [ERR_NOT_A_FOLDER ERR_NOT_WRITEABLE]]
             [clj-jargon.item-info :as info])
-  (:import [org.irods.jargon.core.packinstr DataObjInp$OpenFlags]
-           [org.irods.jargon.core.pub DataTransferOperations IRODSFileSystemAO]  ; needed for cursive type navigation
+  (:import [org.irods.jargon.core.exception CatNoAccessException]
+           [org.irods.jargon.core.packinstr DataObjInp$OpenFlags]
+           [org.irods.jargon.core.pub DataTransferOperations IRODSFileSystemAO] ; needed for cursive type navigation
            [org.irods.jargon.core.pub.io IRODSFileReader]
            [org.irods.jargon.core.transfer TransferStatusCallbackListener
               TransferStatusCallbackListener$FileStatusCallbackResponse
@@ -169,8 +170,12 @@
   "Transfers local-path to remote-path, using tcl as the TransferStatusCallbackListener.
    tcl can also be set to nil."
   [cm local-path remote-path tcl]
-  (let [dto (data-transfer-obj cm)]
-    (.putOperation dto local-path remote-path "" tcl nil)))
+  (try
+    (let [dto (data-transfer-obj cm)]
+      (.putOperation dto local-path remote-path "" tcl nil))
+    (catch CatNoAccessException _
+      (throw+ {:error_code ERR_NOT_WRITEABLE :path remote-path}))))
+
 
 (defn iget
   "Transfers remote-path to local-path, using tcl as the TransferStatusCallbackListener"

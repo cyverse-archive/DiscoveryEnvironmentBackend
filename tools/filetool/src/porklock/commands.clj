@@ -11,10 +11,8 @@
             [clj-jargon.permissions :as perms]
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [throw+ try+]]
-            [clojure-commons.error-codes :refer [ERR_NOT_WRITEABLE]]
             [clojure-commons.file-utils :as ft])
-  (:import [org.irods.jargon.core.exception CatNoAccessException]
-           [org.irods.jargon.core.transfer TransferStatus]))  ; needed for cursive type navigation
+  (:import [org.irods.jargon.core.transfer TransferStatus]))  ; needed for cursive type navigation
 
 
 (def porkprint (partial println "[porklock] "))
@@ -34,16 +32,17 @@
   "Attempt calling (func) with args a maximum of 'times' times if an error occurs.
    Adapted from a stackoverflow solution: http://stackoverflow.com/a/12068946"
   [max-attempts func & args]
-  (let [result (try
-                  {:value (apply func args)}
-                  (catch Exception e
-                    (porkprint "Error calling a function. " max-attempts " attempts remaining: " e)
-                    (if-not (pos? max-attempts)
-                      (throw e)
-                      {:exception e})))]
-    (if (:exception result)
-      (recur (dec max-attempts) func args)
-      (:value result))))
+  (let [result (try+
+                 {:value (apply func args)}
+                 (catch Object e
+                   (porkprint "Error calling a function." max-attempts "attempts remaining:" e)
+                   (if-not (pos? max-attempts)
+                     (throw+ e)
+                     {:exception e})))]
+    (if-not (:exception result)
+      (:value result)
+      (recur (dec max-attempts) func args))))
+
 
 (defn fix-meta
   [m]
@@ -87,15 +86,7 @@
   [transfer-status]
   (let [exc (.getTransferException transfer-status)]
     (if-not (nil? exc)
-      (throw (Exception. (str exc)))))
-  nil)
-
-
-(defn- map-exn
-  [exn dest-path]
-  (condp = (class exn)
-    CatNoAccessException {:error_code ERR_NOT_WRITEABLE :path dest-path}
-                         exn))
+      (throw exc))))
 
 
 (defn iput-status-cb
@@ -116,14 +107,12 @@
   (porkprint "\ttransfer zone: " (.getTransferZone transfer-status))
   (porkprint "\ttransfer resource: " (.getTargetResource transfer-status))
   (porkprint "-------")
-  (if (.getTransferException transfer-status)
-    (let [exc (map-exn (.getTransferException transfer-status)
-                       (.getTargetFileAbsolutePath transfer-status))]
-      (do (porkprint "got an exception in iput: " exc)
-        ops/skip
-      ops/continue))))
+  (when-let [exc (.getTransferException transfer-status)]
+    (throw exc))
+  ops/continue)
 
-(defn iput-force-cb
+
+(defn- iput-force-cb
   "Callback function for the transferAsksWhetherToForceOperation function of a
    TransferCallbackListener."
    [abs-path collection?]
@@ -173,17 +162,15 @@
               (porkprint "Applying metadata to" dir-dest)
               (apply-metadata cm dir-dest metadata)
 
-              (try
+              (try+
                 (retry 10 ops/iput cm src dest tcl)
-                (catch Exception err
+
+                ;;; Apply the App and Execution metadata to the newly uploaded file/directory.
+                (porkprint "Applying metadata to " dest)
+                (apply-metadata cm dest metadata)
+                (catch Object err
                   (porkprint "iput failed: " err)
-                  (reset! error? true)))
-
-              ;;; Apply the App and Execution metadata to the newly uploaded
-              ;;; file/directory.
-              (porkprint "Applying metadata to " dest)
-              (apply-metadata cm dest metadata)))))
-
+                  (reset! error? true)))))))
       (when-not skip-parent?
         (porkprint "Applying metadata to " dest-dir)
         (apply-metadata cm dest-dir metadata)
