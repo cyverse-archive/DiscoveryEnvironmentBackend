@@ -10,6 +10,7 @@ RUN touch /etc/iplant/de/crypto/random_seed
 RUN touch /etc/iplant/de/crypto/secring.gpg
 RUN touch /etc/iplant/de/crypto/trustdb.gpg
 RUN chown -R iplant:iplant /etc/iplant/de/crypto
+VOLUME /etc/iplant/de
 USER iplant
 ENTRYPOINT ["java", "-cp", ".:donkey-standalone.jar", "donkey.core"]
 CMD ["--help"]
