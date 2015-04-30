@@ -13,7 +13,6 @@ jex-events
 kifshare
 metadactyl
 monkey
-nginx-ssl
 notificationagent
 saved-searches
 tree-urls
