@@ -440,7 +440,7 @@ RUN tar -xzf /R-library.tar.gz && tar -xzf /python24-libs.tar.gz && tar -xzf /py
 
 # Parts of this are borrowed from https://registry.hub.docker.com/u/genomicpariscentre/bioperl/dockerfile/
 RUN bash -c "curl -L http://cpanmin.us | perl - --self-upgrade"
-RUN cpanm CPAN::Meta Convert::Binary::C && cpanm -n readline GD GD::Graph GD::Graph::smoothlines && cpanm Term::ReadKey \
+RUN cpanm CPAN::Meta Convert::Binary::C && cpanm -n readline GD GD::Graph GD::Graph::smoothlines GraphViz && cpanm Term::ReadKey \
         YAML \
         Digest::SHA \
         Module::Build \
