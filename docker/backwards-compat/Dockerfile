@@ -23,7 +23,9 @@ ADD http://de.iplantcollaborative.org/dl/d/6C4FAA1C-FE02-4EEC-99FB-7B37049CD657/
 ADD http://de.iplantcollaborative.org/dl/d/A967C202-D23F-4369-9766-3448336A19F8/R-devel-2.15.2-1.el5.x86_64.rpm /rpms/
 ADD http://de.iplantcollaborative.org/dl/d/D172302A-8988-468C-B162-0B3F2E158657/libRmath-2.15.2-1.el5.x86_64.rpm /rpms/
 ADD http://de.iplantcollaborative.org/dl/d/4A092F95-39AC-4C68-B3DA-916E7228CF78/R-library.tar.gz /R-library.tar.gz
-
+ADD http://de.iplantcollaborative.org/dl/d/7DFDA524-3073-4A4C-9D2E-A705EFF62802/python24-libs.tar.gz /
+ADD http://de.iplantcollaborative.org/dl/d/D69F7547-BD83-4FBB-A84B-C2769B0205C8/python26-libs.tar.gz /
+ADD http://de.iplantcollaborative.org/dl/d/88EFCA72-091C-4DD8-8FF9-C2588CBDA1F4/BioPerl-1.6.1.tar.gz /
 
 RUN yum update -y && yum install -y \
     curl \
@@ -433,7 +435,39 @@ RUN yum update -y && yum install -y \
     zip-2.31-2.el5
 
 RUN yum install --nogpgcheck -y rpms/*.rpm
-RUN tar -xzf /R-library.tar.gz
+RUN yum install -y gd gd-devel
+RUN tar -xzf /R-library.tar.gz && tar -xzf /python24-libs.tar.gz && tar -xzf /python26-libs.tar.gz
+
+# Parts of this are borrowed from https://registry.hub.docker.com/u/genomicpariscentre/bioperl/dockerfile/
+RUN bash -c "curl -L http://cpanmin.us | perl - --self-upgrade"
+RUN cpanm CPAN::Meta Convert::Binary::C && cpanm -n readline GD GD::Graph GD::Graph::smoothlines && cpanm Term::ReadKey \
+        YAML \
+        Digest::SHA \
+        Module::Build \
+        ExtUtils::MakeMaker \
+        Test::More \
+        Data::Stag \
+        Config::Simple \
+        Statistics::Lite \
+        Statistics::Descriptive \
+        Test::Most \
+        Algorithm::Munkres \
+        Array::Compare Clone \
+        PostScript::TextBlock \
+        SVG \
+        SVG::Graph \
+        Set::Scalar \
+        Sort::Naturally \
+        Graph \
+        GraphViz \
+        HTML::TableExtract \
+        Convert::Binary::C \
+        Math::Random \
+        Error \
+        Spreadsheet::ParseExcel && \
+    cpanm -n XML::Parser::PerlSAX XML::SAX::Writer XML::Twig XML::Writer
+RUN cpanm -v -n /BioPerl-1.6.1.tar.gz
+
 
 ENV PATH /usr/kerberos/bin:/usr/local2/icommands:/usr/local2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/bin:/usr/bin
 VOLUME ["/usr/local2/", "/usr/local3/", "/data2/", "/condor01/"]
