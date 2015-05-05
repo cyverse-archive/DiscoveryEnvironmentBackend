@@ -1,8 +1,11 @@
 (ns clj-jargon.metadata
   (:use [clj-jargon.validations]
         [clj-jargon.item-info :only [is-dir?]])
-  (:require [clojure.string :as string])
-  (:import [org.irods.jargon.core.pub.domain AvuData]
+  (:require [clojure.string :as string]
+            [slingshot.slingshot :refer [throw+ try+]]
+            [clojure-commons.error-codes :refer [ERR_NOT_WRITEABLE]])
+  (:import [org.irods.jargon.core.exception CatNoAccessException]
+           [org.irods.jargon.core.pub.domain AvuData]
            [org.irods.jargon.core.query IRODSGenQueryBuilder]
            [org.irods.jargon.core.query QueryConditionOperators]
            [org.irods.jargon.core.query RodsGenQueryEnum]
@@ -73,10 +76,14 @@
 (defn add-metadata
   [cm dir-path attr value unit]
   (validate-path-lengths dir-path)
-  (let [ao-obj (if (is-dir? cm dir-path)
-                 (:collectionAO cm)
-                 (:dataObjectAO cm))]
-    (.addAVUMetadata ao-obj dir-path (AvuData/instance attr value unit))))
+  (try+
+    (let [ao-obj (if (is-dir? cm dir-path)
+                   (:collectionAO cm)
+                   (:dataObjectAO cm))]
+      (.addAVUMetadata ao-obj dir-path (AvuData/instance attr value unit)))
+    (catch CatNoAccessException _
+      (throw+ {:error_code ERR_NOT_WRITEABLE :path dir-path}))))
+
 
 (defn set-metadata
   [cm dir-path attr value unit]
@@ -158,20 +165,6 @@
                                     QueryConditionOperators/EQUAL name)
       (.exportIRODSQueryFromBuilder 50000)))
 
-(defn build-query-for-avu-by-obj
-  [file-path attr op value]
-  (-> (IRODSGenQueryBuilder. true nil)
-      (.addSelectAsGenQueryValue RodsGenQueryEnum/COL_META_DATA_ATTR_NAME)
-      (.addSelectAsGenQueryValue RodsGenQueryEnum/COL_META_DATA_ATTR_VALUE)
-      (.addSelectAsGenQueryValue RodsGenQueryEnum/COL_META_DATA_ATTR_UNITS)
-      #_(.addSelectAsGenQueryValue RodsGenQueryEnum/COL_COLL_NAME)
-      #_(.addSelectAsGenQueryValue RodsGenQueryEnum/COL_DATA_NAME)
-      (.addConditionAsGenQueryField RodsGenQueryEnum/COL_META_DATA_ATTR_NAME
-                                    QueryConditionOperators/EQUAL attr)
-      (.addConditionAsGenQueryField RodsGenQueryEnum/COL_META_DATA_ATTR_VALUE
-                                    (op->constant op)
-                                    (str value))
-      (.exportIRODSQueryFromBuilder 50000)))
 
 (defn list-files-with-attr
   [cm attr]

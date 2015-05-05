@@ -1,10 +1,16 @@
 (ns clj-jargon.item-ops
   (:use [clj-jargon.validations]
-        [clj-jargon.item-info]
         [clj-jargon.permissions])
   (:require [clojure-commons.file-utils :as ft]
-            [clojure.java.io :as io])
-  (:import [org.irods.jargon.core.pub.io IRODSFileReader]
+            [clojure.java.io :as io]
+            [clojure.tools.logging :as log]
+            [slingshot.slingshot :refer [throw+]]
+            [clojure-commons.error-codes :refer [ERR_NOT_A_FOLDER ERR_NOT_WRITEABLE]]
+            [clj-jargon.item-info :as info])
+  (:import [org.irods.jargon.core.exception CatNoAccessException]
+           [org.irods.jargon.core.packinstr DataObjInp$OpenFlags]
+           [org.irods.jargon.core.pub DataTransferOperations IRODSFileSystemAO] ; needed for cursive type navigation
+           [org.irods.jargon.core.pub.io IRODSFileReader]
            [org.irods.jargon.core.transfer TransferStatusCallbackListener
               TransferStatusCallbackListener$FileStatusCallbackResponse
               TransferStatusCallbackListener$CallbackResponse
@@ -14,13 +20,33 @@
   [cm dir-path]
   (validate-full-dirpath dir-path)
   (validate-path-lengths dir-path)
-  (.mkdir (:fileSystemAO cm) (file cm dir-path) true))
+  (.mkdir (:fileSystemAO cm) (info/file cm dir-path) false))
+
+
+;; bad Exit conditions:  parent Is file, or reaches zone level
+(defn- mkdirs-unvalidated
+  [cm dir-path]
+  (log/trace "mkdirs-unvalidated dir-path =" dir-path)
+  (let [parent (ft/rm-last-slash (ft/dirname dir-path))]
+    (if (info/exists? cm parent)
+      (when (or (info/is-file? cm parent)
+                (= "/" (ft/dirname parent)))
+        (throw+ {:error_code ERR_NOT_A_FOLDER :path parent}))
+      (mkdirs-unvalidated cm parent))
+    (.mkdir (:fileSystemAO cm) (info/file cm dir-path) false)))
+
 
 (defn mkdirs
   [cm dir-path]
   (validate-full-dirpath dir-path)
   (validate-path-lengths dir-path)
-  (.mkdirs (file cm dir-path)))
+
+  ; iRODS always returns success even when it fails to create a directory recursively.
+  #_(.mkdir (:fileSystemAO cm) (file cm dir-path) true)
+
+  ; Here is a work around until this bug is fixed in iRODS.
+  (mkdirs-unvalidated cm dir-path))
+
 
 (defn delete
   ([cm a-path]
@@ -28,12 +54,12 @@
   ([cm a-path force?]
    (validate-path-lengths a-path)
    (let [fileSystemAO (:fileSystemAO cm)
-         resource     (file cm a-path)]
+         resource     (info/file cm a-path)]
      (if (and (:use-trash cm) (false? force?))
-       (if (is-dir? cm a-path)
+       (if (info/is-dir? cm a-path)
          (.directoryDeleteNoForce fileSystemAO resource)
          (.fileDeleteNoForce fileSystemAO resource))
-       (if (is-dir? cm a-path)
+       (if (info/is-dir? cm a-path)
          (.directoryDeleteForce fileSystemAO resource)
          (.fileDeleteForce fileSystemAO resource))))))
 
@@ -52,15 +78,12 @@
                             skip-source-perms? false}}]
   (validate-path-lengths source)
   (validate-path-lengths dest)
-
   (let [fileSystemAO (:fileSystemAO cm)
-        src          (file cm source)
-        dst          (file cm dest)]
-
-    (if (is-file? cm source)
+        src          (info/file cm source)
+        dst          (info/file cm dest)]
+    (if (info/is-file? cm source)
       (.renameFile fileSystemAO src dst)
       (.renameDirectory fileSystemAO src dst))
-
     (fix-perms cm src dst user admin-users skip-source-perms?)))
 
 (defn move-all
@@ -72,22 +95,28 @@
     #(move cm %1 (ft/path-join dest (ft/basename %1)) :user user :admin-users admin-users)
     sources)))
 
-(defn output-stream
-  "Returns an FileOutputStream for a file in iRODS pointed to by 'output-path'."
+
+(defn- output-stream
+  "Returns an FileOutputStream for a file in iRODS pointed to by 'output-path'. If the file exists,
+   it will be truncated."
   [cm output-path]
-  (validate-path-lengths output-path)
-  (.instanceIRODSFileOutputStream (:fileFactory cm) (file cm output-path)))
+  (.instanceIRODSFileOutputStream (:fileFactory cm)
+                                  (info/file cm output-path)
+                                  DataObjInp$OpenFlags/WRITE_TRUNCATE))
+
 
 (defn input-stream
   "Returns a FileInputStream for a file in iRODS pointed to by 'input-path'"
   [cm input-path]
   (validate-path-lengths input-path)
-  (.instanceIRODSFileInputStream (:fileFactory cm) (file cm input-path)))
+  (.instanceIRODSFileInputStream (:fileFactory cm) (info/file cm input-path)))
+
 
 (defn read-file
   [cm fpath buffer]
   (validate-path-lengths fpath)
-  (.read (IRODSFileReader. (file cm fpath) (:fileFactory cm)) buffer))
+  (.read (IRODSFileReader. (info/file cm fpath) (:fileFactory cm)) buffer))
+
 
 (defn data-transfer-obj
   [cm]
@@ -112,7 +141,8 @@
         (.close istream)
         (.close ostream)
         (set-owner cm dest-path user)))
-    (stat cm dest-path)))
+    (info/stat cm dest-path)))
+
 
 (def continue TransferStatusCallbackListener$FileStatusCallbackResponse/CONTINUE)
 (def skip TransferStatusCallbackListener$FileStatusCallbackResponse/SKIP)
@@ -129,19 +159,23 @@
    functions passed in."
   [overall-status-callback-fn status-callback-fn transfer-asks-fn]
   (reify TransferStatusCallbackListener
-    (overallStatusCallback [this transfer-status]
+    (overallStatusCallback [_ transfer-status]
       (overall-status-callback-fn transfer-status))
-    (statusCallback [this transfer-status]
+    (statusCallback [_ transfer-status]
       (status-callback-fn transfer-status))
-    (transferAsksWhetherToForceOperation [this abs-path collection?]
+    (transferAsksWhetherToForceOperation [_ abs-path collection?]
       (transfer-asks-fn abs-path collection?))))
 
 (defn iput
   "Transfers local-path to remote-path, using tcl as the TransferStatusCallbackListener.
    tcl can also be set to nil."
   [cm local-path remote-path tcl]
-  (let [dto (data-transfer-obj cm)]
-    (.putOperation dto local-path remote-path "" tcl nil)))
+  (try
+    (let [dto (data-transfer-obj cm)]
+      (.putOperation dto local-path remote-path "" tcl nil))
+    (catch CatNoAccessException _
+      (throw+ {:error_code ERR_NOT_WRITEABLE :path remote-path}))))
+
 
 (defn iget
   "Transfers remote-path to local-path, using tcl as the TransferStatusCallbackListener"

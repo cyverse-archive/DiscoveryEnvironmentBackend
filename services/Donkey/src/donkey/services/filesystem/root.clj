@@ -2,12 +2,12 @@
   (:use [clojure-commons.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
-        [clj-jargon.item-ops :only [mkdir]]
         [clj-jargon.permissions :only [set-permission owns?]]
         [clj-jargon.listings :only [list-dir]])
   (:require [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [clj-jargon.item-ops :as ops]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as icat]
@@ -30,7 +30,7 @@
 
         (when (create-trash-folder? cm user root-path)
           (log/warn "[root-listing] Creating" root-path "for" user)
-          (mkdir cm root-path)
+          (ops/mkdirs cm root-path)
           (log/warn "[root-listing] Setting own perms on" root-path "for" user)
           (set-permission cm user root-path :own))
 
