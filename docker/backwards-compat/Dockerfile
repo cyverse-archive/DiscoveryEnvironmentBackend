@@ -254,9 +254,10 @@ RUN yum update -y && yum install -y \
     newt-perl-1.08-9.2.2 \
     notification-daemon-0.3.5-9.el5 \
     nrpe-2.14-5.el5 \
-    nss-tools-3.16.2.3-1.el5_11 \
-    nss_db-2.2-38.el5_11 \
-    nss_ldap-253-51.el5_9.1 \
+    nss \
+    nss-tools \
+    nss_db \
+    nss_ldap \
     ntsysv-1.3.30.2-2.el5 \
     numactl-0.9.8-12.el5_6 \
     numpy-1.2.1-2.el5 \
