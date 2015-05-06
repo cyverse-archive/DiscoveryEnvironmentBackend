@@ -6,12 +6,10 @@
             [clj-jargon.item-info :as info]
             [clj-jargon.permissions :as perms]
             [clj-jargon.paging :as paging]
-            [taoensso.timbre :as timbre]
+            [clojure.tools.logging :as log]
             [common-cfg.cfg :as cfg]
             [clojure.string :as string]
             [anon-files.inputs :as inputs]))
-
-(timbre/refer-timbre)
 
 (defn jargon-cfg
   []
@@ -131,15 +129,15 @@
   [cm filepath]
   (cond
    (not (info/exists? cm filepath))
-   (do (warn "[anon-files]" filepath "does not exist.")
+   (do (log/warn "[anon-files]" filepath "does not exist.")
        false)
 
    (not (info/is-file? cm filepath))
-   (do (warn "[anon-files]" filepath "is not a file.")
+   (do (log/warn "[anon-files]" filepath "is not a file.")
        false)
 
    (not (perms/is-readable? cm (:anon-user @cfg/cfg) filepath))
-   (do (warn "[anon-files]" filepath "is not readable.")
+   (do (log/warn "[anon-files]" filepath "is not readable.")
        false)
 
    :else true))
@@ -148,15 +146,15 @@
   [cm filepath & body]
   `(cond
      (not (info/exists? ~cm ~filepath))
-     (do (warn "[anon-files]" ~filepath "does not exist.")
+     (do (log/warn "[anon-files]" ~filepath "does not exist.")
        (not-found "Not found."))
 
      (not (info/is-file? ~cm ~filepath))
-     (do (warn "[anon-files]" ~filepath "is not a file.")
+     (do (log/warn "[anon-files]" ~filepath "is not a file.")
        (-> (response "Not a file.") (status 403)))
 
      (not (perms/is-readable? ~cm (:anon-user @cfg/cfg) ~filepath))
-     (do (warn "[anon-files]" ~filepath "is not readable.")
+     (do (log/warn "[anon-files]" ~filepath "is not readable.")
        (-> (response "Not allowed.") (status 403)))
 
      :else
@@ -206,7 +204,7 @@
 
 (defn- handle-range-request
   [cm filepath file-size lower upper num-bytes]
-  (warn
+  (log/warn
      "File information:\n"
      "File Path:" filepath "\n"
      "File Size:" file-size "\n"
@@ -324,7 +322,7 @@
 
 (defn log-headers
   [response]
-  (warn "Response map:\n" (dissoc response :body))
+  (log/warn "Response map:\n" (dissoc response :body))
   response)
 
 (defn anon-input-stream
@@ -344,8 +342,8 @@
 
 (defn handle-request
   [req]
-  (info "Handling GET request for" (:uri req))
-  (info "\n" (cfg/pprint-to-string req))
+  (log/info "Handling GET request for" (:uri req))
+  (log/info "\n" (cfg/pprint-to-string req))
   (try
     (if (range-request? req)
       (log-headers
@@ -360,12 +358,12 @@
       (init/with-jargon (jargon-cfg) [cm]
         (serve cm (:uri req))))
     (catch Exception e
-      (warn e))))
+      (log/warn e))))
 
 (defn handle-head-request
   [req]
-  (info "Handling head request for" (:uri req))
-  (info "\n" (cfg/pprint-to-string req))
+  (log/info "Handling head request for" (:uri req))
+  (log/info "\n" (cfg/pprint-to-string req))
   (init/with-jargon (jargon-cfg) [cm]
     (log-headers
      (validated cm (:uri req)
@@ -392,7 +390,7 @@
 
 (defn handle-options-request
   [req]
-  (info "Handling options request for" (:uri req))
-  (info "\n" (cfg/pprint-to-string req))
+  (log/info "Handling options request for" (:uri req))
+  (log/info "\n" (cfg/pprint-to-string req))
   (init/with-jargon (jargon-cfg) [cm]
     (log-headers (validated cm (:uri req) (build-options-response cm req)))))

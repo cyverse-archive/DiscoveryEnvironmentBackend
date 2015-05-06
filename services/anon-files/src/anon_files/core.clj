@@ -29,26 +29,6 @@
 
    ["-v" "--version" "Print out the version number."]
 
-   ["-d" "--disable-log4j" "Disables log4j logging. Timbre logging still enabled."]
-
-   ["-f" "--log-file PATH" "Path to the log file."
-    :validate [#(fs/exists? (fs/parent %1))
-               "Directory containing the log file must exist."
-
-               #(fs/readable? (fs/parent %1))
-               "Directory containing the log file must be readable."]]
-
-   ["-s" "--log-size SIZE" "Max Size of the logs in MB."
-    :parse-fn #(* (Integer/parseInt %) 1024)]
-
-   ["-b" "--log-backlog MAX" "Max number of rotated logs to retain."
-    :parse-fn #(Integer/parseInt %)]
-
-   ["-l" "--log-level LEVEL" (str "One of: " (string/join " " log-levels))
-    :parse-fn #(keyword (string/lower-case %))
-    :validate [#(contains? (set timbre/levels-ordered) %)
-               (str "Log level must be one of: " (string/join " " log-levels))]]
-
    ["-h" "--help"]])
 
 (defroutes app
