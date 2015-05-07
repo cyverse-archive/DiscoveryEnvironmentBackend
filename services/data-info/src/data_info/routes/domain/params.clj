@@ -7,23 +7,18 @@
 (def DataTypeEnum (s/enum :file :dir))
 (def PermissionEnum (s/enum :read :write :own))
 
-(def NonBlankString
-  (describe
-    (s/both String (s/pred (complement clojure.string/blank?) 'non-blank?))
-    "A non-blank string."))
-
 (s/defschema SecuredQueryParamsRequired
-  {:user (describe NonBlankString "The IRODS username of the requesting user")})
+  {:user (describe String "The IRODS username of the requesting user")})
 
 (s/defschema Paths
-  {:paths (describe [NonBlankString] "A list of IRODS paths")})
+  {:paths (describe [String] "A list of IRODS paths")})
 
 (s/defschema DataStatInfo
   {:id
    (describe UUID "The UUID of this data item")
 
    :path
-   (describe NonBlankString "The IRODS paths to this data item")
+   (describe String "The IRODS paths to this data item")
 
    :type
    (describe DataTypeEnum "The data item's type")
@@ -53,13 +48,13 @@
      (describe Long "The size in bytes of this file")
 
      :content-type
-     (describe NonBlankString "The detected media type of the data contained in this file")
+     (describe String "The detected media type of the data contained in this file")
 
      :infoType
-     (describe NonBlankString "The type of contents in this file")
+     (describe String "The type of contents in this file")
 
      :md5
-     (describe NonBlankString
+     (describe String
        "The md5 hash of this file's contents, as calculated and saved by IRODS")}))
 
 (s/defschema FileStat
@@ -67,7 +62,7 @@
 
 (s/defschema MetadataSaveRequest
   {:dest
-   (describe NonBlankString "An IRODS path to a destination file where the metadata will be saved")
+   (describe String "An IRODS path to a destination file where the metadata will be saved")
 
    :recursive
    (describe Boolean
