@@ -18,6 +18,7 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/common-cfg "5.0.0"]
+                 [org.clojure/tools.logging "0.3.0"]
                  [org.iplantc/kameleon "5.0.0"]
                  [me.raynes/fs "1.4.6"]
                  [cheshire "5.3.1"]
