@@ -441,7 +441,14 @@ RUN tar -xzf /R-library.tar.gz && tar -xzf /python24-libs.tar.gz && tar -xzf /py
 
 # Parts of this are borrowed from https://registry.hub.docker.com/u/genomicpariscentre/bioperl/dockerfile/
 RUN bash -c "curl -L http://cpanmin.us | perl - --self-upgrade"
-RUN cpanm CPAN::Meta Convert::Binary::C && cpanm -n readline GD GD::Graph GD::Graph::smoothlines GraphViz && cpanm Term::ReadKey \
+RUN cpanm -n CPAN::Meta \
+        Convert::Binary::C \
+        readline \
+        GD \
+        GD::Graph \
+        GD::Graph::smoothlines \
+        GraphViz \
+        Term::ReadKey \
         YAML \
         Digest::SHA \
         Module::Build \
@@ -465,8 +472,10 @@ RUN cpanm CPAN::Meta Convert::Binary::C && cpanm -n readline GD GD::Graph GD::Gr
         Convert::Binary::C \
         Math::Random \
         Error \
-        Spreadsheet::ParseExcel && \
-    cpanm -n XML::Parser::PerlSAX XML::SAX::Writer XML::Twig XML::Writer
+        Spreadsheet::ParseExcel \
+        XML::Parser::PerlSAX \
+        XML::SAX::Writer \
+        XML::Twig XML::Writer
 RUN cpanm -v -n /BioPerl-1.6.1.tar.gz
 
 
