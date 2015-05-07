@@ -11,12 +11,8 @@
             [common-cli.core :as ccli]
             [ring.adapter.jetty :as jetty]
             [common-cfg.cfg :as cfg]
-            [taoensso.timbre :as timbre]
+            [clojure.tools.logging :as log]
             [me.raynes.fs :as fs]))
-
-(timbre/refer-timbre)
-
-(def log-levels (mapv name timbre/levels-ordered))
 
 (defn cli-options
   []
@@ -31,29 +27,11 @@
 
    ["-v" "--version" "Print out the version number."]
 
-   ["-f" "--log-file PATH" "Path to the log file."
-    :validate [#(fs/exists? (fs/parent %1))
-               "Directory containing the log file must exist."
-
-               #(fs/readable? (fs/parent %1))
-               "Directory containing the log file must be readable."]]
-
-   ["-s" "--log-size SIZE" "Max Size of the logs in MB."
-    :parse-fn #(* (Integer/parseInt %) 1024)]
-
-   ["-b" "--log-backlog MAX" "Max number of rotated logs to retain."
-    :parse-fn #(Integer/parseInt %)]
-
-   ["-l" "--log-level LEVEL" (str "One of: " (string/join " " log-levels))
-    :parse-fn #(keyword (string/lower-case %))
-    :validate [#(contains? (set timbre/levels-ordered) %)
-               (str "Log level must be one of: " (string/join " " log-levels))]]
-
    ["-h" "--help"]])
 
 (defroutes session-routes
   (GET "/" [] "Hello from session-routes.")
-  
+
   (GET "/:username" [username :as req]
        (get-req username req))
 
@@ -68,9 +46,9 @@
 
 (defn wrap-logging [handler]
   (fn [request]
-    (info (cfg/pprint-to-string request))
+    (log/info (cfg/pprint-to-string request))
     (let [resp (handler request)]
-      (info (cfg/pprint-to-string (dissoc resp :body)))
+      (log/info (cfg/pprint-to-string (dissoc resp :body)))
       resp)))
 
 (defn wrap-exception [handler]
@@ -79,7 +57,7 @@
       (handler request)
       (catch Exception e
         (let [formatted-exception (format-exception e)]
-          (error (cfg/pprint-to-string request) "\n" formatted-exception)
+          (log/error (cfg/pprint-to-string request) "\n" formatted-exception)
           (-> (response formatted-exception) (status 500)))))))
 
 (def app
@@ -102,5 +80,5 @@
       (ccli/exit 1 (str "The default --config file " (:config options) " does not exist.")))
     (cfg/load-config options)
     (connect-db)
-    (info "Started listening on" (:port @cfg/cfg))
+    (log/info "Started listening on" (:port @cfg/cfg))
     (jetty/run-jetty app {:port (Integer/parseInt (:port @cfg/cfg))})))

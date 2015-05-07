@@ -1,8 +1,9 @@
 FROM discoenv/javabase
 
-ADD target/user-preferences-standalone.jar /home/iplant/
+COPY target/user-preferences-standalone.jar /home/iplant/
+COPY conf/main/log4j.properties /home/iplant/
 USER root
 RUN chown -R iplant:iplant /home/iplant/
 USER iplant
-ENTRYPOINT ["java", "-jar", "user-preferences-standalone.jar"]
+ENTRYPOINT ["java", "-cp", ".:user-preferences-standalone.jar", "user_preferences.core"]
 CMD ["--help"]
