@@ -1,8 +1,9 @@
 FROM discoenv/javabase
 
-ADD target/clockwork-standalone.jar /home/iplant/
+COPY target/clockwork-standalone.jar /home/iplant/
+COPY resources/main/log4j.properties /home/iplant/
 USER root
 RUN chown -R iplant:iplant /home/iplant/
 USER iplant
-ENTRYPOINT ["java", "-jar", "clockwork-standalone.jar"]
+ENTRYPOINT ["java", "-cp", ".:clockwork-standalone.jar", "clockwork.core"]
 CMD ["--help"]
