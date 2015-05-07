@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"path"
 	"strings"
@@ -29,7 +28,7 @@ func WriteRequestError(writer http.ResponseWriter, msg string) {
 
 // LogAPIMsg prints a message to the log with associated request info.
 func LogAPIMsg(request *http.Request, msg string) {
-	log.Printf(
+	logger.Printf(
 		"Method: %s\tFrom: %s\tTo: %s\t Log: %s",
 		request.Method,
 		request.RemoteAddr,
@@ -107,13 +106,13 @@ func (h *HTTPAPI) RouteLastEventRequests(writer http.ResponseWriter, request *ht
 // 'completion_date' will be a timestamp that looks like
 // '2006-01-02T15:04:05Z07:00'.
 func (h *HTTPAPI) LastEventHTTP(writer http.ResponseWriter, request *http.Request) {
-	log.Printf("Handling GET request for %s", request.URL.Path)
+	logger.Printf("Handling GET request for %s", request.URL.Path)
 	baseName := path.Base(request.URL.Path)
 	if baseName == "" {
 		WriteRequestError(writer, "The path must contain an invocation UUID")
 		return
 	}
-	log.Printf("Requested job UUID: %s", baseName)
+	logger.Printf("Requested job UUID: %s", baseName)
 	if uuid.Parse(baseName) == nil {
 		WriteRequestError(writer, fmt.Sprintf("The base of the path must be a UUID: %s", baseName))
 		return
@@ -162,7 +161,7 @@ func (h *HTTPAPI) LastEventHTTP(writer http.ResponseWriter, request *http.Reques
 		writer.Write([]byte(err.Error()))
 		return
 	}
-	log.Printf("Response for last event lookup by invocation %s:\n%s", baseName, string(marshalled[:]))
+	logger.Printf("Response for last event lookup by invocation %s:\n%s", baseName, string(marshalled[:]))
 	writer.Write(marshalled)
 
 }
@@ -172,13 +171,13 @@ func (h *HTTPAPI) LastEventHTTP(writer http.ResponseWriter, request *http.Reques
 // The Invocation UUID is extracted from the basename of the URL path and must
 // be a valid UUID.
 func (h *HTTPAPI) InvocationHTTPGet(writer http.ResponseWriter, request *http.Request) {
-	log.Printf("Handling GET request for %s", request.URL.Path)
+	logger.Printf("Handling GET request for %s", request.URL.Path)
 	baseName := path.Base(request.URL.Path)
 	if baseName == "" {
 		WriteRequestError(writer, "The path must contain an invocation UUID")
 		return
 	}
-	log.Printf("Requested job UUID: %s", baseName)
+	logger.Printf("Requested job UUID: %s", baseName)
 	if uuid.Parse(baseName) == nil {
 		WriteRequestError(writer, fmt.Sprintf("The base of the path must be a UUID: %s", baseName))
 		return
@@ -199,7 +198,7 @@ func (h *HTTPAPI) InvocationHTTPGet(writer http.ResponseWriter, request *http.Re
 		writer.Write([]byte(err.Error()))
 		return
 	}
-	log.Printf("Response for job lookup by invocation ID %s:\n%s", baseName, string(marshalled[:]))
+	logger.Printf("Response for job lookup by invocation ID %s:\n%s", baseName, string(marshalled[:]))
 	writer.Write(marshalled)
 }
 
@@ -207,13 +206,13 @@ func (h *HTTPAPI) InvocationHTTPGet(writer http.ResponseWriter, request *http.Re
 // its record as a JSON object. The UUID for the job is extracted from the basename
 // of the URL path and must be a valid UUID.
 func (h *HTTPAPI) JobHTTPGet(writer http.ResponseWriter, request *http.Request) {
-	log.Printf("Handling GET request for %s", request.URL.Path)
+	logger.Printf("Handling GET request for %s", request.URL.Path)
 	baseName := path.Base(request.URL.Path)
 	if baseName == "" {
 		WriteRequestError(writer, "The path must contain a job UUID")
 		return
 	}
-	log.Printf("Requested job UUID: %s", baseName)
+	logger.Printf("Requested job UUID: %s", baseName)
 	if uuid.Parse(baseName) == nil {
 		WriteRequestError(writer, fmt.Sprintf("The base of the path must be a UUID: %s", baseName))
 		return
@@ -234,7 +233,7 @@ func (h *HTTPAPI) JobHTTPGet(writer http.ResponseWriter, request *http.Request) 
 		writer.Write([]byte(err.Error()))
 		return
 	}
-	log.Printf("Response for job lookup by UUID %s:\n%s", baseName, string(marshalled[:]))
+	logger.Printf("Response for job lookup by UUID %s:\n%s", baseName, string(marshalled[:]))
 	writer.Write(marshalled)
 }
 
@@ -343,7 +342,7 @@ func SetupHTTP(config *Configuration, d *Databaser) {
 		http.HandleFunc("/invocations", api.RouteInvocationRequests)
 		http.HandleFunc("/last-events/", api.RouteLastEventRequests)
 		http.HandleFunc("/last-events", api.RouteLastEventRequests)
-		log.Printf("Listening for HTTP requests on %s", config.HTTPListenPort)
-		log.Fatal(http.ListenAndServe(formatPort(config.HTTPListenPort), nil))
+		logger.Printf("Listening for HTTP requests on %s", config.HTTPListenPort)
+		logger.Fatal(http.ListenAndServe(formatPort(config.HTTPListenPort), nil))
 	}()
 }

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -94,9 +93,9 @@ func LogResponse(resp *http.Response) {
 	headersString := headers.String()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf(fmtString, resp.Status, resp.Proto, resp.ContentLength, headersString, err.Error())
+		logger.Printf(fmtString, resp.Status, resp.Proto, resp.ContentLength, headersString, err.Error())
 	} else {
-		log.Printf(fmtString, resp.Status, resp.Proto, resp.ContentLength, headersString, string(body[:]))
+		logger.Printf(fmtString, resp.Status, resp.Proto, resp.ContentLength, headersString, string(body[:]))
 	}
 }
 
@@ -154,7 +153,7 @@ func (p *PostEventHandler) Submitted(event *Event) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Sending 'Submitted' event to %s: %s", p.PostURL, string(json))
+	logger.Printf("Sending 'Submitted' event to %s: %s", p.PostURL, string(json))
 	resp, err := http.Post(p.PostURL, "application/json", bytes.NewBuffer(json))
 	if err != nil {
 		return err
@@ -172,7 +171,7 @@ func (p *PostEventHandler) Running(event *Event) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Sending 'Running' event to %s: %s", p.PostURL, string(json))
+	logger.Printf("Sending 'Running' event to %s: %s", p.PostURL, string(json))
 	resp, err := http.Post(p.PostURL, "application/json", bytes.NewBuffer(json))
 	if err != nil {
 		return err
@@ -189,7 +188,7 @@ func (p *PostEventHandler) Failed(event *Event) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Sending 'Failed' event to %s: %s", p.PostURL, string(json))
+	logger.Printf("Sending 'Failed' event to %s: %s", p.PostURL, string(json))
 	resp, err := http.Post(p.PostURL, "application/json", bytes.NewBuffer(json))
 	if err != nil {
 		return err
@@ -212,7 +211,7 @@ func (p *PostEventHandler) Completed(event *Event) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Sending Completed' event to %s: %s", p.PostURL, string(json))
+	logger.Printf("Sending Completed' event to %s: %s", p.PostURL, string(json))
 	resp, err := http.Post(p.PostURL, "application/json", bytes.NewBuffer(json))
 	if err != nil {
 		return err
@@ -227,14 +226,14 @@ func (p *PostEventHandler) Completed(event *Event) error {
 // JEX. We don't have to send a status notification to Donkey here, since the
 // job will come through as failed.
 func (p *PostEventHandler) Held(event *Event) error {
-	log.Printf("Job %s is in the held state", event.ID)
+	logger.Printf("Job %s is in the held state", event.ID)
 	stopPath := path.Join("/stop", event.InvocationID)
 	stopURL, err := url.Parse(p.JEXURL)
 	if err != nil {
 		return err
 	}
 	stopURL.Path = stopPath
-	log.Printf("Posting a request to stop job %s to %s", event.ID, stopURL.String())
+	logger.Printf("Posting a request to stop job %s to %s", event.ID, stopURL.String())
 	req, err := http.NewRequest("DELETE", stopURL.String(), nil)
 	if err != nil {
 		return nil
@@ -250,6 +249,6 @@ func (p *PostEventHandler) Held(event *Event) error {
 // Unrouted handles events that don't get forwarded to the users. Right now we
 // just log them.
 func (p *PostEventHandler) Unrouted(event *Event) error {
-	log.Printf("Event %s is not being forwarded to the user: %s", event.EventNumber, event.Event)
+	logger.Printf("Event %s is not being forwarded to the user: %s", event.EventNumber, event.Event)
 	return nil
 }

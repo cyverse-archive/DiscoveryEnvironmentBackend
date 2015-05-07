@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/streadway/amqp"
-	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
@@ -23,20 +22,40 @@ var (
 	gitref  string
 	appver  string
 	builtby string
+	logger  *log.Logger
 )
 
+// LoggerFunc adapts a function so it can be used as an io.Writer.
+type LoggerFunc func([]byte) (int, error)
+
+func (l LoggerFunc) Write(logbuf []byte) (n int, err error) {
+	return l(logbuf)
+}
+
+// LogWriter writes to stdout with a custom timestamp.
+func LogWriter(logbuf []byte) (n int, err error) {
+	const layout = "2006-01-02@15:04:05.000"
+	t := time.Now().Format(layout)
+	return os.Stdout.Write(
+		append(
+			[]byte(fmt.Sprintf("%s de.jex-events.general ", t)),
+			logbuf...,
+		),
+	)
+}
+
 func init() {
+	logger = log.New(LoggerFunc(LogWriter), "", 0)
 	flag.Parse()
 }
 
 // Configuration instance contain config values for jex-events.
 type Configuration struct {
 	AMQPURI, DBURI, EventURL, JEXURL                                      string
-	ConsumerTag, HTTPListenPort, LogPath                                  string
+	ConsumerTag, HTTPListenPort                                           string
 	ExchangeName, ExchangeType, RoutingKey, QueueName, QueueBindingKey    string
 	ExchangeDurable, ExchangeAutodelete, ExchangeInternal, ExchangeNoWait bool
 	QueueDurable, QueueAutodelete, QueueExclusive, QueueNoWait            bool
-	LogMaxSize, LogMaxBackups, LogMaxAge                                  int
 }
 
 // ReadConfig reads JSON from 'path' and returns a pointer to a Configuration
@@ -69,31 +88,31 @@ func ReadConfig(path string) (*Configuration, error) {
 func (c *Configuration) Valid() bool {
 	retval := true
 	if c.AMQPURI == "" {
-		log.Println("AMQPURI must be set in the configuration file.")
+		logger.Println("AMQPURI must be set in the configuration file.")
 		retval = false
 	}
 	if c.ConsumerTag == "" {
-		log.Println("ConsumerTag must be set in the configuration file.")
+		logger.Println("ConsumerTag must be set in the configuration file.")
 		retval = false
 	}
 	if c.ExchangeName == "" {
-		log.Println("ExchangeName must be set in the configuration file.")
+		logger.Println("ExchangeName must be set in the configuration file.")
 		retval = false
 	}
 	if c.ExchangeType == "" {
-		log.Println("ExchangeType must be set in the configuration file.")
+		logger.Println("ExchangeType must be set in the configuration file.")
 		retval = false
 	}
 	if c.RoutingKey == "" {
-		log.Println("RoutingKey must be set in the configuration file.")
+		logger.Println("RoutingKey must be set in the configuration file.")
 		retval = false
 	}
 	if c.QueueName == "" {
-		log.Println("QueueName must be set in the configuration file.")
+		logger.Println("QueueName must be set in the configuration file.")
 		retval = false
 	}
 	if c.QueueBindingKey == "" {
-		log.Println("QueueBindingKey must be set in the configuration file.")
+		logger.Println("QueueBindingKey must be set in the configuration file.")
 		retval = false
 	}
 	return retval
@@ -155,18 +174,18 @@ type MsgHandler func(<-chan amqp.Delivery, <-chan int, *Databaser, string, strin
 // Connect sets up a connection to an AMQP exchange
 func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan amqp.Delivery, error) {
 	var err error
-	log.Printf("Connecting to %s", c.URI)
+	logger.Printf("Connecting to %s", c.URI)
 	c.connection, err = amqp.Dial(c.URI)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Connected to the broker. Setting up channel...")
+	logger.Printf("Connected to the broker. Setting up channel...")
 	c.channel, err = c.connection.Channel()
 	if err != nil {
-		log.Printf("Error getting channel")
+		logger.Printf("Error getting channel")
 		return nil, err
 	}
-	log.Printf("Initialized channel. Setting up the %s exchange...", c.ExchangeName)
+	logger.Printf("Initialized channel. Setting up the %s exchange...", c.ExchangeName)
 	if err = c.channel.ExchangeDeclare(
 		c.ExchangeName,
 		c.ExchangeType,
@@ -176,10 +195,10 @@ func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan
 		c.ExchangeNoWait,
 		nil,
 	); err != nil {
-		log.Printf("Error setting up exchange")
+		logger.Printf("Error setting up exchange")
 		return nil, err
 	}
-	log.Printf("Done setting up exchange. Setting up the %s queue...", c.QueueName)
+	logger.Printf("Done setting up exchange. Setting up the %s queue...", c.QueueName)
 	queue, err := c.channel.QueueDeclare(
 		c.QueueName,
 		c.QueueDurable,
@@ -189,10 +208,10 @@ func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan
 		nil,
 	)
 	if err != nil {
-		log.Printf("Error setting up queue")
+		logger.Printf("Error setting up queue")
 		return nil, err
 	}
-	log.Printf("Done setting up queue %s. Binding queue to the %s exchange.", c.QueueName, c.ExchangeName)
+	logger.Printf("Done setting up queue %s. Binding queue to the %s exchange.", c.QueueName, c.ExchangeName)
 	if err = c.channel.QueueBind(
 		queue.Name,
 		c.QueueBindingKey,
@@ -200,10 +219,10 @@ func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan
 		c.QueueNoWait,
 		nil,
 	); err != nil {
-		log.Printf("Error binding the %s queue to the %s exchange", c.QueueName, c.ExchangeName)
+		logger.Printf("Error binding the %s queue to the %s exchange", c.QueueName, c.ExchangeName)
 		return nil, err
 	}
-	log.Printf("Done binding the %s queue to the %s exchange", c.QueueName, c.ExchangeName)
+	logger.Printf("Done binding the %s queue to the %s exchange", c.QueueName, c.ExchangeName)
 	deliveries, err := c.channel.Consume(
 		queue.Name,
 		c.ConsumerTag,
@@ -214,7 +233,7 @@ func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan
 		nil,   //arguments
 	)
 	if err != nil {
-		log.Printf("Error binding the %s queue to the %s exchange", c.QueueName, c.ExchangeName)
+		logger.Printf("Error binding the %s queue to the %s exchange", c.QueueName, c.ExchangeName)
 		return nil, err
 	}
 	errors := c.connection.NotifyClose(make(chan *amqp.Error))
@@ -239,10 +258,10 @@ func (c *AMQPConsumer) SetupReconnection(
 			select {
 			case exitError, ok := <-exitChan:
 				if !ok {
-					log.Println("Exit channel closed.")
+					logger.Println("Exit channel closed.")
 				}
-				log.Println(exitError)
-				log.Println("An error was detected with the AMQP connection. Exiting with a -1000 exit code.")
+				logger.Println(exitError)
+				logger.Println("An error was detected with the AMQP connection. Exiting with a -1000 exit code.")
 				os.Exit(-1000)
 			}
 		}
@@ -315,7 +334,7 @@ func (e *Event) setExitCode() {
 	}
 	code, err := strconv.Atoi(matches[1])
 	if err != nil {
-		log.Printf("Error converting exit code to an integer: %s", matches[1])
+		logger.Printf("Error converting exit code to an integer: %s", matches[1])
 		e.ExitCode = EventCodeNotSet
 	}
 	e.ExitCode = code
@@ -345,7 +364,7 @@ func (e *Event) setInvocationID() {
 	} else {
 		e.InvocationID = matches[1]
 	}
-	log.Printf("Parsed out %s as the invocation ID", e.InvocationID)
+	logger.Printf("Parsed out %s as the invocation ID", e.InvocationID)
 }
 
 // Parse extracts info from an event string.
@@ -394,19 +413,19 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 			var event Event
 			err := json.Unmarshal(body, &event)
 			if err != nil {
-				log.Print(err)
-				log.Print(string(body[:]))
+				logger.Print(err)
+				logger.Print(string(body[:]))
 				continue
 			}
 
 			// parse the body of the event that came from the amqp broker.
 			event.Parse()
-			log.Println(event.String())
+			logger.Println(event.String())
 
 			// adds the job to the database, but only if it doesn't already exist.
 			job, err := d.AddJob(event.CondorID)
 			if err != nil {
-				log.Printf("Error adding job: %s", err)
+				logger.Printf("Error adding job: %s", err)
 				continue
 			}
 
@@ -417,9 +436,9 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 			// has a value to update it with.
 			if job.InvocationID == "" && event.InvocationID != "" {
 				job.InvocationID = event.InvocationID
-				log.Printf("Setting InvocationID to %s", job.InvocationID)
+				logger.Printf("Setting InvocationID to %s", job.InvocationID)
 			} else {
-				log.Printf("Setting the InvocationID was not necessary")
+				logger.Printf("Setting the InvocationID was not necessary")
 			}
 
 			// we're expecting an exit code of 0 for successful runs. HT jobs may have
@@ -431,7 +450,7 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 			// update the job with any additional information
 			job, err = d.UpdateJob(job) // Need to make sure the exit code gets stored.
 			if err != nil {
-				log.Printf("Error updating job")
+				logger.Printf("Error updating job")
 			}
 
 			// update the parsed event object with info returned from the database.
@@ -443,40 +462,40 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 			// don't add the event to the database if it's already there.
 			exists, err := d.DoesCondorJobEventExist(event.Hash)
 			if err != nil {
-				log.Printf("Error checking for job event existence by checksum: %s", event.Hash)
+				logger.Printf("Error checking for job event existence by checksum: %s", event.Hash)
 				continue
 			}
 			if exists {
-				log.Printf("An event with a hash of %s already exists in the database, skipping", event.Hash)
+				logger.Printf("An event with a hash of %s already exists in the database, skipping", event.Hash)
 				continue
 			}
 
 			// send event updates upstream to Donkey
 			err = eventHandler.Route(&event)
 			if err != nil {
-				log.Printf("Error sending event upstream: %s", err)
+				logger.Printf("Error sending event upstream: %s", err)
 			}
 
 			// store the unparsed (raw), event information in the database.
 			rawEventID, err := d.AddCondorRawEvent(event.Event, job.ID)
 			if err != nil {
-				log.Printf("Error adding raw event: %s", err)
+				logger.Printf("Error adding raw event: %s", err)
 				continue
 			}
 			ce, err := d.GetCondorEventByNumber(event.EventNumber)
 			if err != nil {
-				log.Printf("Error getting condor event: %s", err)
+				logger.Printf("Error getting condor event: %s", err)
 				continue
 			}
 			jobEventID, err := d.AddCondorJobEvent(job.ID, ce.ID, rawEventID, event.Hash)
 			if err != nil {
-				log.Printf("Error adding job event: %s", err)
+				logger.Printf("Error adding job event: %s", err)
 				continue
 			}
 			if eventHandler.ShouldUpdateLastEvents(&event) {
 				_, err = d.UpsertLastCondorJobEvent(jobEventID, job.ID)
 				if err != nil {
-					log.Printf("Error upserting last condor job event: %s", err)
+					logger.Printf("Error upserting last condor job event: %s", err)
 					continue
 				}
 			}
@@ -505,37 +524,28 @@ func main() {
 		AppVersion()
 		os.Exit(0)
 	}
-	log.Println("Starting jex-events")
+	logger.Println("Starting jex-events")
 	if *cfgPath == "" {
 		fmt.Println("--config must be set.")
 		os.Exit(-1)
 	}
 	config, err := ReadConfig(*cfgPath)
 	if err != nil {
-		log.Print(err)
+		logger.Print(err)
 		os.Exit(-1)
 	}
-	//Set up log rotation
-	if config.LogPath != "" {
-		log.SetOutput(&lumberjack.Logger{
-			Filename:   config.LogPath,
-			MaxSize:    config.LogMaxSize,
-			MaxBackups: config.LogMaxBackups,
-			MaxAge:     config.LogMaxAge,
-		})
-	}
-	log.Println("Done reading config.")
+	logger.Println("Done reading config.")
 	if !config.Valid() {
-		log.Println("Something is wrong with the jex-events config file.")
+		logger.Println("Something is wrong with the jex-events config file.")
 		os.Exit(-1)
 	}
-	log.Println("Configuring database connection...")
+	logger.Println("Configuring database connection...")
 	databaser, err := NewDatabaser(config.DBURI)
 	if err != nil {
-		log.Print(err)
+		logger.Print(err)
 		os.Exit(-1)
 	}
-	log.Println("Done configuring database connection.")
+	logger.Println("Done configuring database connection.")
 
 	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
 	connErrChan := make(chan ConnectionErrorChannel)
@@ -543,21 +553,21 @@ func main() {
 	consumer := NewAMQPConsumer(config)
 	consumer.SetupReconnection(connErrChan)
 
-	log.Print("Setting up HTTP")
+	logger.Print("Setting up HTTP")
 	SetupHTTP(config, databaser)
-	log.Print("Done setting up HTTP")
+	logger.Print("Done setting up HTTP")
 
 	var deliveries <-chan amqp.Delivery
 	for {
-		log.Println("Attempting AMQP connection...")
+		logger.Println("Attempting AMQP connection...")
 		deliveries, err = consumer.Connect(connErrChan)
 		if err != nil {
-			log.Print(err)
+			logger.Print(err)
 			waitFor := randomizer.Intn(10)
-			log.Printf("Re-attempting connection in %d seconds", waitFor)
+			logger.Printf("Re-attempting connection in %d seconds", waitFor)
 			time.Sleep(time.Duration(waitFor) * time.Second)
 		} else {
-			log.Println("Successfully connected to the AMQP broker")
+			logger.Println("Successfully connected to the AMQP broker")
 			break
 		}
 	}

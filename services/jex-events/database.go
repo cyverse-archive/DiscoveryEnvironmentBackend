@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"log"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -126,14 +125,14 @@ func (d *Databaser) AddJob(condorID string) (*JobRecord, error) {
 		}
 		id, err := d.InsertJob(jr)
 		if err != nil {
-			log.Printf("Error inserting job: %s", err)
+			logger.Printf("Error inserting job: %s", err)
 			return nil, err
 		}
 		jr.ID = id
 		return jr, nil
 	}
 	if err != nil {
-		log.Printf("Error getting job by condor id: %s", err)
+		logger.Printf("Error getting job by condor id: %s", err)
 		return nil, err
 	}
 	return job, nil
@@ -146,7 +145,7 @@ func (d *Databaser) UpsertJob(jr *JobRecord) (*JobRecord, error) {
 	if err == sql.ErrNoRows {
 		id, err := d.InsertJob(jr)
 		if err != nil {
-			log.Println("Error inserting job")
+			logger.Println("Error inserting job")
 			return nil, err
 		}
 		newJob, err := d.GetJob(id)
@@ -161,7 +160,7 @@ func (d *Databaser) UpsertJob(jr *JobRecord) (*JobRecord, error) {
 	jr.ID = job.ID
 	updated, err := d.UpdateJob(jr)
 	if err != nil {
-		log.Println("Error updating job")
+		logger.Println("Error updating job")
 		return nil, err
 	}
 	return updated, nil
@@ -969,7 +968,7 @@ func (d *Databaser) UpsertLastCondorJobEvent(jobEventID, jobID string) (string, 
 		}
 		leID, err := d.InsertLastCondorJobEvent(le)
 		if err != nil {
-			log.Printf("Error inserting last condor job event: %s", err)
+			logger.Printf("Error inserting last condor job event: %s", err)
 			return "", err
 		}
 		return leID, err
@@ -977,7 +976,7 @@ func (d *Databaser) UpsertLastCondorJobEvent(jobEventID, jobID string) (string, 
 	je.CondorJobEventID = jobEventID
 	updated, err := d.UpdateLastCondorJobEvent(je)
 	if err != nil {
-		log.Printf("Error updating the last condor job event: %s", err)
+		logger.Printf("Error updating the last condor job event: %s", err)
 		return "", err
 	}
 	return updated.JobID, nil
