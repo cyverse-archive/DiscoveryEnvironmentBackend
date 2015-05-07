@@ -11,17 +11,7 @@
     :db-port     [v/required cfg/stringv]
     :db-user     [v/required cfg/stringv]
     :db-name     [v/required cfg/stringv]
-    :db-password [v/required cfg/stringv]
-    :log-file    cfg/stringv
-    :log-size    v/number
-    :log-backlog v/number
-    :log-level   cfg/keywordv})
-
- (ref-set
-  cfg/defaults
-  {:log-level   :warn
-   :log-size    (* 100 1024 1024)
-   :log-backlog 10})
+    :db-password [v/required cfg/stringv]})
 
  (ref-set
   cfg/filters

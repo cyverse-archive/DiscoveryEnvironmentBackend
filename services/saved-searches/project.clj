@@ -16,6 +16,7 @@
   :main saved-searches.core
   :uberjar-name "saved-searches-standalone.jar"
   :dependencies [[org.clojure/clojure "1.5.1"]
+                 [org.clojure/tools.logging "0.3.0"]
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/common-cfg "5.0.0"]
                  [org.iplantc/kameleon "5.0.0"]

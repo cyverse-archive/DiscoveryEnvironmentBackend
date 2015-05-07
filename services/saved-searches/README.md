@@ -28,10 +28,6 @@ Here are the command-line options:
       -p, --port PORT                                          Port number
       -c, --config PATH      /etc/iplant/de/saved-searches.edn  Path to the config file
       -v, --version                                            Print out the version number.
-      -f, --log-file PATH                                      Path to the log file.
-      -s, --log-size SIZE                                      Max Size of the logs in MB.
-      -b, --log-backlog MAX                                    Max number of rotated logs to retain.
-      -l, --log-level LEVEL                                    One of: trace debug info warn error fatal report
       -h, --help
 
 Here is a config file with all of the available settings:
@@ -41,17 +37,7 @@ Here is a config file with all of the available settings:
  :db-password "testpassword"
  :db-host "databasehost"
  :db-port "5432"
- :port 31306
- :log-file "/var/log/saved-searches/saved-searches.log"
-
- ;one of :trace :debug :info :warn :error :fatal :report
- :log-level :info
-
- ;Max number of rotated logs to retain
- :log-backlog 5
-
- ;Max size of an individual log
- :log-size 1024}
+ :port 31306}
 ```
 
 saved-searches listens on port 31306 by default.
@@ -131,4 +117,3 @@ If a server-side error occurs while handling a request, the request will fail wi
 # LICENSE
 
 See [LICENSE](LICENSE)
-

@@ -4,10 +4,7 @@
         [compojure.response]
         [ring.util.response]
         [medley.core])
-  (:require [cheshire.core :as json]
-            [taoensso.timbre :as timbre]))
-
-(timbre/refer-timbre)
+  (:require [cheshire.core :as json]))
 
 (defn parse-saved-searches
   [saved-searches]
