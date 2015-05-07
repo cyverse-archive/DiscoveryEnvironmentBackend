@@ -4,6 +4,42 @@
         [metadactyl.schema.containers :only [ToolContainer]])
   (:import [java.util UUID]))
 
+(defschema ParameterValue
+  {:value
+   (describe Any "The value of the parameter.")})
+
+(defschema AnalysisParameter
+  {:full_param_id
+   (describe String "The fully qualified parameter ID.")
+
+   :param_id
+   (describe String "The unqualified parameter ID.")
+
+   (optional-key :param_name)
+   (describe String "The name of the parameter.")
+
+   (optional-key :param_value)
+   (describe ParameterValue "The value of the parameter.")
+
+   :param_type
+   (describe String "The type of the parameter.")
+
+   (optional-key :info_type)
+   (describe String "The type of information associated with an input or output parameter.")
+
+   (optional-key :data_format)
+   (describe String "The data format associated with an input or output parameter.")
+
+   (optional-key :is_default_value)
+   (describe Bool "Indicates whether the default parameter value was used.")
+
+   (optional-key :is_visible)
+   (describe Bool "Indicates whether the parameter is visible in the app UI.")})
+
+(defschema AnalysisParameters
+  {:app_id     (describe String "The ID of the app used to perform the analysis.")
+   :parameters (describe [AnalysisParameter] "The list of parameters.")})
+
 (defschema AnalysisShredderRequest
   {:analyses (describe [UUID] "The identifiers of the analyses to be deleted.")})
 

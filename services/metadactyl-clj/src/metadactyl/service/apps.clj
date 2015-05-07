@@ -258,3 +258,8 @@
   [user body]
   (jobs/delete-jobs user (:analyses body))
   nil)
+
+(defn get-parameter-values
+  [user job-id]
+  (-> (get-apps-client-for-username (:username user))
+      (jobs/get-parameter-values user job-id)))

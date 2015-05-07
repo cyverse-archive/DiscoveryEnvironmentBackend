@@ -131,3 +131,10 @@
   [{:keys [username]} job-ids]
   (validate-jobs-for-user username job-ids)
   (jp/delete-jobs job-ids))
+
+;; TODO: finish implementing me!
+(defn get-parameter-values
+  [apps-client {:keys [username]} job-id]
+  (validate-jobs-for-user username [job-id])
+  (let [job (jp/get-job-by-id job-id)]
+    (->> (.getJobParamDefinitions apps-client job))))

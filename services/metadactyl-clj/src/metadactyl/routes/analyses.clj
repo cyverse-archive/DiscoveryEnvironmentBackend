@@ -61,4 +61,14 @@
          :summary "Delete Multiple Analyses"
          :notes   "This service allows the caller to mark one or more analyses as deleted
          in the apps database."
-         (service/trap uri apps/delete-jobs current-user body)))
+         (service/trap uri apps/delete-jobs current-user body))
+
+  (GET* "/:analysis-id/parameters" [:as {:keys [uri]}]
+        :path-params [analysis-id :- AnalysisIdPathParam]
+        :query       [params SecuredQueryParams]
+        :return      AnalysisParameters
+        :summary     "Display the parameters used in an analysis."
+        :notes       "This service returns a list of parameter values used in a previously
+        executed analysis."
+        (service/coerced-trap uri AnalysisParameters
+                              apps/get-parameter-values current-user analysis-id)))

@@ -300,7 +300,7 @@
   [id]
   (first (select (job-base-query)
                  (fields :submission)
-                 (where {:j.id id}))))
+                 (where {:j.id (uuidify id)}))))
 
 (defn- lock-job*
   "Retrieves a job by its internal identifier, placing a lock on the row."
