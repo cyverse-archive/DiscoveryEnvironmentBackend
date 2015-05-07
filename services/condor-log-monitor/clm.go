@@ -50,7 +50,6 @@ import (
 	"time"
 
 	"github.com/streadway/amqp"
-	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
@@ -63,22 +62,42 @@ var (
 	gitref  string
 	appver  string
 	builtby string
+	logger  *log.Logger
 )
 
 // TombstonePath is the path to the tombstone file.
 const TombstonePath = "/tmp/condor-log-monitor.tombstone"
 
+// LoggerFunc adapts a function so it can be used as an io.Writer.
+type LoggerFunc func([]byte) (int, error)
+
+func (l LoggerFunc) Write(logbuf []byte) (n int, err error) {
+	return l(logbuf)
+}
+
+// LogWriter writes to stdout with a custom timestamp.
+func LogWriter(logbuf []byte) (n int, err error) {
+	const layout = "2006-01-02@15:04:05.000"
+	t := time.Now().Format(layout)
+	return os.Stdout.Write(
+		append(
+			[]byte(fmt.Sprintf("%s de.condor-log-monitor.general ", t)),
+			logbuf...,
+		),
+	)
+}
+
 func init() {
+	logger = log.New(LoggerFunc(LogWriter), "", 0)
 	flag.Parse()
 }
 
 // Configuration contains the setting read from a config file.
 type Configuration struct {
 	EventLog                               string
-	AMQPURI, LogPath                       string
+	AMQPURI                                string
 	ExchangeName, ExchangeType, RoutingKey string
 	Durable, Autodelete, Internal, NoWait  bool
-	LogMaxSize, LogMaxBackups, LogMaxAge   int
 }
 
 // ReadConfig reads JSON from 'path' and returns a pointer to a Configuration
@@ -146,21 +165,21 @@ type ConnectionErrorChan struct {
 // exchange, and create a new channel. Make sure you call the Close method when
 // you are done, most likely with a defer statement.
 func (p *AMQPPublisher) Connect(errorChan chan ConnectionErrorChan) error {
-	log.Printf("Dialing %s", p.URI)
+	logger.Printf("Dialing %s", p.URI)
 	connection, err := amqp.Dial(p.URI)
 	if err != nil {
 		return err
 	}
 	p.connection = connection
 
-	log.Println("Creating channel on the connection.")
+	logger.Println("Creating channel on the connection.")
 	channel, err := p.connection.Channel()
 	if err != nil {
 		return err
 	}
-	log.Printf("Done creating channel on the connection.")
+	logger.Printf("Done creating channel on the connection.")
 
-	log.Printf("Declaring exchange %s with a type of %s", p.ExchangeName, p.ExchangeType)
+	logger.Printf("Declaring exchange %s with a type of %s", p.ExchangeName, p.ExchangeType)
 	err = channel.ExchangeDeclare(
 		p.ExchangeName,
 		p.ExchangeType,
@@ -173,7 +192,7 @@ func (p *AMQPPublisher) Connect(errorChan chan ConnectionErrorChan) error {
 	if err != nil {
 		return err
 	}
-	log.Println("Done declaring exchange.")
+	logger.Println("Done declaring exchange.")
 	p.channel = channel
 	errors := p.connection.NotifyClose(make(chan *amqp.Error))
 	msg := ConnectionErrorChan{
@@ -194,25 +213,25 @@ func (p *AMQPPublisher) SetupReconnection(errorChan chan ConnectionErrorChan) {
 			select {
 			case exitError, ok := <-exitChan:
 				if !ok {
-					log.Println("Exit channel closed.")
+					logger.Println("Exit channel closed.")
 				}
-				log.Println(exitError)
-				log.Println("An error was detected with the AMQP connection.")
-				log.Println("condor-log-monitor could be in an inconsistent state.")
-				log.Println("Removing /tmp/condor-log-monitor.tombstone...")
+				logger.Println(exitError)
+				logger.Println("An error was detected with the AMQP connection.")
+				logger.Println("condor-log-monitor could be in an inconsistent state.")
+				logger.Println("Removing /tmp/condor-log-monitor.tombstone...")
 				_, err := os.Stat(TombstonePath)
 				if err != nil {
-					log.Printf("Failed to stat %s, could not remove it.", TombstonePath)
+					logger.Printf("Failed to stat %s, could not remove it.", TombstonePath)
 				} else {
 					err = os.Remove(TombstonePath)
 					if err != nil {
-						log.Printf("Error removing %s: \n %s", TombstonePath, err)
+						logger.Printf("Error removing %s: \n %s", TombstonePath, err)
 					} else {
-						log.Printf("Done removing %s", TombstonePath)
-						log.Println("condor-log-monitor will process the entire log when it restarts")
+						logger.Printf("Done removing %s", TombstonePath)
+						logger.Println("condor-log-monitor will process the entire log when it restarts")
 					}
 				}
-				log.Println("Exiting with a -1000 exit code")
+				logger.Println("Exiting with a -1000 exit code")
 				os.Exit(-1000)
 			}
 		}
@@ -243,7 +262,7 @@ func (p *AMQPPublisher) PublishBytes(body []byte) error {
 	); err != nil {
 		return err
 	}
-	log.Printf("Done publishing message.")
+	logger.Printf("Done publishing message.")
 	return nil
 }
 
@@ -354,14 +373,14 @@ func ParseEventFile(
 			}
 			eventlines = eventlines + text + "\n"
 			if matchedEnd {
-				log.Println(eventlines)
+				logger.Println(eventlines)
 				pubEvent := NewPublishableEvent(eventlines)
 				pubJSON, err := json.Marshal(pubEvent)
 				if err != nil {
 					return -1, err
 				}
 				if err = pub.PublishBytes(pubJSON); err != nil {
-					log.Println(err)
+					logger.Println(err)
 				}
 				eventlines = ""
 				foundStart = false
@@ -369,19 +388,19 @@ func ParseEventFile(
 		}
 
 		if setTombstone {
-			log.Printf("Generating tombstone for %s\n", filepath)
+			logger.Printf("Generating tombstone for %s\n", filepath)
 			// we only want to record the tombstone when we're done parsing the file.
 			newTombstone, err := NewTombstoneFromFile(openFile)
 			if err != nil {
 				return -1, err
 			}
-			log.Printf("Attempting to write tombstone for %s\n", filepath)
+			logger.Printf("Attempting to write tombstone for %s\n", filepath)
 			err = newTombstone.WriteToFile()
 			if err != nil {
-				log.Printf("Failed to write tombstone to %s\n", TombstonePath)
-				log.Println(err)
+				logger.Printf("Failed to write tombstone to %s\n", TombstonePath)
+				logger.Println(err)
 			}
-			log.Printf("Done attempting to write tombstone for %s\n", filepath)
+			logger.Printf("Done attempting to write tombstone for %s\n", filepath)
 		}
 	}
 	currentPos, err := openFile.Seek(0, os.SEEK_CUR)
@@ -391,7 +410,7 @@ func ParseEventFile(
 // MonitorPath spawns a gorouting that will check the last modified date on the
 // file specified by path and attempt to parse it when the date changes.
 func MonitorPath(path string, sleepyTime time.Duration, changeDetected chan<- int) error {
-	log.Printf("Monitoring path %s every %s\n", path, sleepyTime.String())
+	logger.Printf("Monitoring path %s every %s\n", path, sleepyTime.String())
 
 	openFile, err := os.Open(path)
 	if err != nil {
@@ -413,25 +432,25 @@ func MonitorPath(path string, sleepyTime time.Duration, changeDetected chan<- in
 		time.Sleep(sleepyTime)
 		openFile, err = os.Open(path)
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 			continue
 		}
 
 		latestInfo, err := openFile.Stat()
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 			continue
 		}
 
 		latestLastMod := latestInfo.ModTime()
 		err = openFile.Close()
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 			continue
 		}
 
 		if !latestLastMod.Equal(lastmod) {
-			log.Printf("Change detected in %s\n", path)
+			logger.Printf("Change detected in %s\n", path)
 			changeDetected <- 1
 			lastmod = latestLastMod
 		}
@@ -765,15 +784,6 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	//Set up log rotation
-	if cfg.LogPath != "" {
-		log.SetOutput(&lumberjack.Logger{
-			Filename:   cfg.LogPath,
-			MaxSize:    cfg.LogMaxSize,
-			MaxBackups: cfg.LogMaxBackups,
-			MaxAge:     cfg.LogMaxAge,
-		})
-	}
 	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
 	errChan := make(chan ConnectionErrorChan)
 	pub := NewAMQPPublisher(cfg)
@@ -781,15 +791,15 @@ func main() {
 
 	// Handle badness with AMQP at startup.
 	for {
-		log.Println("Attempting AMQP connection...")
+		logger.Println("Attempting AMQP connection...")
 		err = pub.Connect(errChan)
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 			waitFor := randomizer.Intn(10)
-			log.Printf("Re-attempting connection in %d seconds", waitFor)
+			logger.Printf("Re-attempting connection in %d seconds", waitFor)
 			time.Sleep(time.Duration(waitFor) * time.Second)
 		} else {
-			log.Println("Successfully connected to the AMQP broker.")
+			logger.Println("Successfully connected to the AMQP broker.")
 			break
 		}
 	}
@@ -797,28 +807,28 @@ func main() {
 	// First, we need to read the tombstone file if it exists.
 	var tombstone *Tombstone
 	if TombstoneExists() {
-		log.Printf("Attempting to read tombstone from %s\n", TombstonePath)
+		logger.Printf("Attempting to read tombstone from %s\n", TombstonePath)
 		tombstone, err = ReadTombstone()
 		if err != nil {
-			log.Println("Couldn't read Tombstone file.")
-			log.Println(err)
+			logger.Println("Couldn't read Tombstone file.")
+			logger.Println(err)
 			tombstone = nil
 		}
-		log.Printf("Done reading tombstone file from %s\n", TombstonePath)
+		logger.Printf("Done reading tombstone file from %s\n", TombstonePath)
 	} else {
 		tombstone = nil
 	}
 
 	logDir := filepath.Dir(cfg.EventLog)
-	log.Printf("Log directory: %s\n", logDir)
+	logger.Printf("Log directory: %s\n", logDir)
 	logFilename := filepath.Base(cfg.EventLog)
-	log.Printf("Log filename: %s\n", logFilename)
+	logger.Printf("Log filename: %s\n", logFilename)
 
 	// Now we need to find all of the rotated out log files and parse them for
 	// potentially missed updates.
 	logList, err := NewLogfileList(logDir, logFilename)
 	if err != nil {
-		log.Println("Couldn't get list of log files.")
+		logger.Println("Couldn't get list of log files.")
 		logList = LogfileList{}
 	}
 
@@ -830,7 +840,7 @@ func main() {
 	// trim the list of log files to prevent reprocessing, which could save us
 	// a significant amount of time at start up.
 	if len(logList) > 0 && tombstone != nil {
-		log.Printf("Slicing log list by inode number %d\n", tombstone.Inode)
+		logger.Printf("Slicing log list by inode number %d\n", tombstone.Inode)
 		logList = logList.SliceByInode(tombstone.Inode)
 	}
 
@@ -842,25 +852,25 @@ func main() {
 			continue
 		}
 		logfilePath := path.Join(logFile.BaseDir, logFile.Info.Name())
-		log.Printf("Parsing %s\n", logfilePath)
+		logger.Printf("Parsing %s\n", logfilePath)
 
 		if tombstone != nil {
 			logfileInode := InodeFromFileInfo(&logFile.Info)
 
 			// Inodes need to match and the current position needs to be less than the file size.
 			if logfileInode == tombstone.Inode && tombstone.CurrentPos < logFile.Info.Size() {
-				log.Printf("Tombstoned inode matches %s, starting parse at %d\n", logfilePath, tombstone.CurrentPos)
+				logger.Printf("Tombstoned inode matches %s, starting parse at %d\n", logfilePath, tombstone.CurrentPos)
 				_, err = ParseEventFile(logfilePath, tombstone.CurrentPos, pub, false)
 			} else {
-				log.Printf("Tombstoned inode does not match %s, starting parse at position 0\n", logfilePath)
+				logger.Printf("Tombstoned inode does not match %s, starting parse at position 0\n", logfilePath)
 				_, err = ParseEventFile(logfilePath, 0, pub, false)
 			}
 		} else {
-			log.Printf("No tombstone found, starting parse at position 0 for %s\n", logfilePath)
+			logger.Printf("No tombstone found, starting parse at position 0 for %s\n", logfilePath)
 			_, err = ParseEventFile(logfilePath, 0, pub, false)
 		}
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 		}
 	}
 
@@ -869,15 +879,15 @@ func main() {
 
 	d, err := time.ParseDuration("0.5s")
 	if err != nil {
-		log.Println(err)
+		logger.Println(err)
 	}
 	go func() {
-		log.Println("Beginning event log monitor goroutine.")
+		logger.Println("Beginning event log monitor goroutine.")
 		// get the ball rolling...
 		changeDetected <- 1
 		err = MonitorPath(cfg.EventLog, d, changeDetected)
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 		}
 	}()
 
@@ -888,14 +898,14 @@ func main() {
 			if TombstoneExists() {
 				tombstone, err = ReadTombstone()
 				if err != nil {
-					log.Println(err)
+					logger.Println(err)
 				}
 				startPos = tombstone.CurrentPos
 
 				// Get the path to the file that the Tombstone was indicating
 				oldLogs, err := NewLogfileList(logDir, logFilename)
 				if err != nil {
-					log.Println(err)
+					logger.Println(err)
 				}
 
 				// If the path to the file is different from the configured file the the
@@ -904,7 +914,7 @@ func main() {
 				if pathFromTombstone != "" && pathFromTombstone != cfg.EventLog {
 					oldInfo, err := os.Stat(pathFromTombstone)
 					if err != nil {
-						log.Println(err)
+						logger.Println(err)
 					}
 					// Compare the start position to the size of the
 					// file. If it's less than the size of the file, more of the old file
@@ -912,7 +922,7 @@ func main() {
 					if startPos < oldInfo.Size() {
 						_, err = ParseEventFile(pathFromTombstone, startPos, pub, true)
 						if err != nil {
-							log.Println(err)
+							logger.Println(err)
 						}
 						// Afterwards set the startPos to 0 if it isn't
 						// already, but ONLY if an old file was parsed first.
@@ -924,10 +934,10 @@ func main() {
 				startPos = 0
 			}
 
-			log.Printf("Parsing %s starting at position %d\n", cfg.EventLog, startPos)
+			logger.Printf("Parsing %s starting at position %d\n", cfg.EventLog, startPos)
 			startPos, err = ParseEventFile(cfg.EventLog, startPos, pub, true)
 			if err != nil {
-				log.Println(err)
+				logger.Println(err)
 			}
 		}
 	}
