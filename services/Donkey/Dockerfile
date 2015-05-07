@@ -1,7 +1,7 @@
 FROM discoenv/javabase
 
-ADD target/donkey-standalone.jar /home/iplant/
-ADD conf/main/log4j.properties /home/iplant/
+COPY target/donkey-standalone.jar /home/iplant/
+COPY conf/main/log4j.properties /home/iplant/
 USER root
 RUN chown -R iplant:iplant /home/iplant/
 RUN mkdir -p /etc/iplant/de/crypto
