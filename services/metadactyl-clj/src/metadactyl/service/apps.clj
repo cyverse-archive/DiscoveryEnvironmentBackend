@@ -261,5 +261,5 @@
 
 (defn get-parameter-values
   [user job-id]
-  (-> (get-apps-client-for-username (:username user))
+  (-> (get-apps-client user)
       (jobs/get-parameter-values user job-id)))

@@ -354,8 +354,6 @@
 
 (defn get-default-output-name
   [{output-id :output_id :as io-map} {task-id :task_id :as source-step}]
-  (log/spy :warn io-map)
-  (log/spy :warn source-step)
   (ap/get-default-output-name task-id output-id))
 
 (defn get-job-step-status

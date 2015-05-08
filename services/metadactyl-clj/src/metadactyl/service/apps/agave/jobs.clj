@@ -162,8 +162,7 @@
 
 (defn get-default-output-name
   [agave {external-output-id :external_output_id} {external-app-id :external_app_id}]
-  (log/warnf "external-output-id = '%s'; external-app-id = '%s'" external-output-id external-app-id)
-  (log/spy :warn (.getDefaultOutputName agave external-app-id external-output-id)))
+  (.getDefaultOutputName agave external-app-id external-output-id))
 
 (defn get-job-step-status
   [agave {:keys [external-id]}]

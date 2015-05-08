@@ -3,6 +3,7 @@
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [metadactyl.persistence.app-metadata :as ap]
             [metadactyl.service.util :as util]))
@@ -19,8 +20,8 @@
   [app-id]
   (if (util/uuid? app-id)
     (let [format-id     (partial string/join "_")
-          get-source-id (comp format-id (juxt :source_name :output_id))
-          get-target-id (comp format-id (juxt :target_name :input_id))
+          get-source-id (comp format-id (juxt :source_id (some-fn :output_id :external_output_id)))
+          get-target-id (comp format-id (juxt :target_id (some-fn :input_id :external_output_id)))
           get-ids       (juxt get-source-id get-target-id)]
       (set (mapcat get-ids (ap/load-app-mappings app-id))))
     #{}))
@@ -59,7 +60,7 @@
 
 (defn- format-scalar-value
   [value]
-  {:value (str value)})
+  {:value (blank->empty-str (str value))})
 
 (defn- format-config-values
   [config-values]
@@ -90,7 +91,7 @@
   [config param]
   (let [full-param-id (get-full-param-id param)
         config-key    (keyword full-param-id)
-        default-value (blank->empty-str (:default_value param))
+        default-value (first (format-config-values (:default_value param)))
         values        (format-job-param-values config config-key default-value)]
     (map (partial format-job-param-for-value full-param-id default-value param) values)))
 
