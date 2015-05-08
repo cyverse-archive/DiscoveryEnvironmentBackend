@@ -33,10 +33,6 @@
   [agave {:keys [external-id]}]
   (service/assert-found (.getAppRerunInfo agave external-id) "HPC job" external-id))
 
-(defn get-agave-job-params
-  [agave {:keys [external-id]}]
-  (service/assert-found (.getJobParams agave external-id) "HPC job" external-id))
-
 (defn- get-agave-task
   [agave external-app-id]
   ((comp first :tasks)

@@ -178,7 +178,7 @@
          (service/success-response (metadactyl/delete-jobs body)))
 
    (GET "/analyses/:analysis-id/parameters" [analysis-id]
-        (apps/get-parameter-values analysis-id))
+        (service/success-response (metadactyl/get-job-params analysis-id)))
 
    (GET "/analyses/:analysis-id/relaunch-info" [analysis-id]
         (apps/get-app-rerun-info analysis-id))

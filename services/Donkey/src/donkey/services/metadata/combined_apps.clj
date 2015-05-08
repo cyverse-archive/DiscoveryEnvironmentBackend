@@ -14,7 +14,6 @@
             [donkey.services.metadata.agave-apps :as aa]
             [donkey.services.metadata.de-apps :as da]
             [donkey.services.metadata.util :as mu]
-            [donkey.services.metadata.property-values :as property-values]
             [donkey.util.service :as service]
             [kameleon.db :as db]
             [kameleon.uuids :as uuids]))
@@ -51,13 +50,6 @@
       (throw+ {:error_code ce/ERR_NOT_FOUND
                :reason     "Job submission values could not be found."}))
     (:config (service/decode-json (.getValue submission)))))
-
-(defn get-job-params
-  [agave-client job]
-  (property-values/format-job-params agave-client
-                                     (:app-id job)
-                                     (:id job)
-                                     (get-job-submission-config job)))
 
 (defn get-app-rerun-info
   "Updates an app with the parameter values from a previous experiment plugged into the appropriate

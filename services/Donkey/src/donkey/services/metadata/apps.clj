@@ -145,9 +145,6 @@
   (stopJob [_ job]
     (ca/stop-job job))
 
-  (getJobParams [_ job-id]
-    (ca/get-job-params nil (jp/get-job-by-id (UUID/fromString job-id))))
-
   (getAppRerunInfo [_ job-id]
     (ca/get-app-rerun-info nil (jp/get-job-by-id (UUID/fromString job-id))))
 
@@ -200,11 +197,6 @@
 
   (stopJob [_ job]
     (ca/stop-job agave-client job))
-
-  (getJobParams [_ job-id]
-    (process-job agave-client job-id
-                 {:process-de-job    (partial ca/get-job-params agave-client)
-                  :process-agave-job aa/get-agave-job-params}))
 
   (getAppRerunInfo [_ job-id]
     (process-job agave-client job-id
@@ -289,11 +281,6 @@
          (service/bad-request (str "job, " id ", is already completed or canceled")))
        (.stopJob (get-app-lister) job)
        (service/success-response {:id (str id)})))))
-
-(defn get-parameter-values
-  [job-id]
-  (with-db db/de
-    (service/success-response (.getJobParams (get-app-lister) job-id))))
 
 (defn get-app-rerun-info
   [job-id]

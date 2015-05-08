@@ -9,7 +9,6 @@
             [donkey.clients.notifications :as dn]
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
-            [donkey.services.metadata.property-values :as property-values]
             [donkey.services.metadata.util :as mu]
             [donkey.util.config :as config]
             [donkey.util.service :as service]
