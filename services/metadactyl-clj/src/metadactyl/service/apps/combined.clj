@@ -20,10 +20,10 @@
     jp/combined-client-name)
 
   (getJobTypes [_]
-    (apply concat (map #(.getJobTypes %) clients)))
+    (mapcat #(.getJobTypes %) clients))
 
   (listAppCategories [_ params]
-    (apply concat (map #(.listAppCategories % params) clients)))
+    (mapcat #(.listAppCategories % params) clients))
 
   (hasCategory [_ category-id]
     (some #(.hasCategory % category-id) clients))
@@ -129,7 +129,7 @@
     (job-listings/list-jobs self user params))
 
   (loadAppTables [_ app-ids]
-    (apply concat (map  #(.loadAppTables % app-ids) clients)))
+    (mapcat  #(.loadAppTables % app-ids) clients))
 
   (submitJob [self submission]
     (if-let [apps-client (util/apps-client-for-job submission clients)]
@@ -151,4 +151,7 @@
     (.getJobStepStatus (util/apps-client-for-job-step clients job-step) job-step))
 
   (buildNextStepSubmission [self job-step job]
-    (combined-jobs/build-next-step-submission self clients job-step job)))
+    (combined-jobs/build-next-step-submission self clients job-step job))
+
+  (getParamDefinitions [_ app-id]
+    (mapcat #(.getParamDefinitions % app-id) clients)))

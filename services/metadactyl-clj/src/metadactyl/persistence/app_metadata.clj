@@ -28,7 +28,7 @@
 
 (defn- filter-valid-app-values
   "Filters valid keys from the given App for inserting or updating in the database, setting the
-   current date as the edited date."
+  current date as the edited date."
   [app]
   (-> app
       (select-keys [:name :description])
@@ -60,7 +60,7 @@
 
 (defn- filter-valid-app-parameter-values
   "Filters and renames valid keys from the given App parameter for inserting or updating in the
-   database."
+  database."
   [parameter]
   (-> parameter
       (set/rename-keys {:isVisible :is_visible
@@ -90,7 +90,7 @@
 
 (defn- filter-valid-parameter-value-values
   "Filters and renames valid keys from the given parameter-value for inserting or updating in the
-   database."
+  database."
   [parameter-value]
   (-> parameter-value
       (set/rename-keys {:display :label
@@ -113,13 +113,13 @@
 (defn get-integration-data
   "Retrieves integrator info from the database, adding it first if not already there."
   ([{:keys [email first-name last-name]}]
-   (get-integration-data email (str first-name " " last-name)))
+     (get-integration-data email (str first-name " " last-name)))
   ([integrator-email integrator-name]
-   (if-let [integration-data (first (select integration_data
-                                      (where {:integrator_email integrator-email})))]
-     integration-data
-     (insert integration_data (values {:integrator_email integrator-email
-                                       :integrator_name  integrator-name})))))
+     (if-let [integration-data (first (select integration_data
+                                              (where {:integrator_email integrator-email})))]
+       integration-data
+       (insert integration_data (values {:integrator_email integrator-email
+                                         :integrator_name  integrator-name})))))
 
 (defn get-app-tools
   "Loads information about the tools associated with an app."
@@ -150,15 +150,15 @@
   "Adds a new tool and its test data files to the database"
   [{type :type {:keys [implementor_email implementor test]} :implementation :as tool}]
   (transaction
-    (let [integration-data-id (:id (get-integration-data implementor_email implementor))
-          tool (-> tool
-                   (assoc :integration_data_id integration-data-id
-                          :tool_type_id (get-tool-type-id type))
-                   (filter-valid-tool-values))
-          tool-id (:id (insert tools (values tool)))]
-      (dorun (map (partial add-tool-data-file tool-id true) (:input_files test)))
-      (dorun (map (partial add-tool-data-file tool-id false) (:output_files test)))
-      tool-id)))
+   (let [integration-data-id (:id (get-integration-data implementor_email implementor))
+         tool (-> tool
+                  (assoc :integration_data_id integration-data-id
+                         :tool_type_id (get-tool-type-id type))
+                  (filter-valid-tool-values))
+         tool-id (:id (insert tools (values tool)))]
+     (dorun (map (partial add-tool-data-file tool-id true) (:input_files test)))
+     (dorun (map (partial add-tool-data-file tool-id false) (:output_files test)))
+     tool-id)))
 
 (defn update-tool
   "Updates a tool and its test data files in the database"
@@ -167,21 +167,21 @@
     {:keys [implementor_email implementor test] :as implementation} :implementation
     :as tool}]
   (transaction
-    (let [integration-data-id (when implementation
-                                (:id (get-integration-data implementor_email implementor)))
-          type-id (when type (get-tool-type-id type))
-          tool (-> tool
-                   (assoc :integration_data_id integration-data-id
-                          :tool_type_id        type-id)
-                   (dissoc :id)
-                   filter-valid-tool-values
-                   remove-nil-vals)]
-      (when-not (empty? tool)
-        (update tools (set-fields tool) (where {:id tool-id})))
-      (when-not (empty? test)
-        (delete tool_test_data_files (where {:tool_id tool-id}))
-        (dorun (map (partial add-tool-data-file tool-id true) (:input_files test)))
-        (dorun (map (partial add-tool-data-file tool-id false) (:output_files test)))))))
+   (let [integration-data-id (when implementation
+                               (:id (get-integration-data implementor_email implementor)))
+         type-id (when type (get-tool-type-id type))
+         tool (-> tool
+                  (assoc :integration_data_id integration-data-id
+                         :tool_type_id        type-id)
+                  (dissoc :id)
+                  filter-valid-tool-values
+                  remove-nil-vals)]
+     (when-not (empty? tool)
+       (update tools (set-fields tool) (where {:id tool-id})))
+     (when-not (empty? test)
+       (delete tool_test_data_files (where {:tool_id tool-id}))
+       (dorun (map (partial add-tool-data-file tool-id true) (:input_files test)))
+       (dorun (map (partial add-tool-data-file tool-id false) (:output_files test)))))))
 
 (defn- prep-app
   "Prepares an app for insertion into the database."
@@ -240,15 +240,15 @@
 (defn update-app
   "Updates top-level app info in the database."
   ([app]
-   (update-app app false))
+     (update-app app false))
   ([app publish?]
-   (let [app-id (:id app)
-         app (-> app
-                 (select-keys [:name :description :wiki_url :deleted :disabled])
-                 (assoc :edited_date (sqlfn now)
-                        :integration_date (when publish? (sqlfn now)))
-                 (remove-nil-vals))]
-     (update apps (set-fields app) (where {:id app-id})))))
+     (let [app-id (:id app)
+           app (-> app
+                   (select-keys [:name :description :wiki_url :deleted :disabled])
+                   (assoc :edited_date (sqlfn now)
+                          :integration_date (when publish? (sqlfn now)))
+                   (remove-nil-vals))]
+       (update apps (set-fields app) (where {:id app-id})))))
 
 (defn add-app-reference
   "Adds an App's reference to the database."
@@ -259,8 +259,8 @@
   "Resets the given App's references with the given list."
   [app-id references]
   (transaction
-    (delete app_references (where {:app_id app-id}))
-    (dorun (map (partial add-app-reference app-id) references))))
+   (delete app_references (where {:app_id app-id}))
+   (dorun (map (partial add-app-reference app-id) references))))
 
 (defn add-app-suggested-category
   "Adds an App's suggested category to the database."
@@ -271,8 +271,8 @@
   "Resets the given App's suggested categories with the given category ID list."
   [app-id category-ids]
   (transaction
-    (delete :suggested_groups (where {:app_id app-id}))
-    (dorun (map (partial add-app-suggested-category app-id) category-ids))))
+   (delete :suggested_groups (where {:app_id app-id}))
+   (dorun (map (partial add-app-suggested-category app-id) category-ids))))
 
 (defn add-task
   "Adds a task to the database."
@@ -286,7 +286,7 @@
 
 (defn remove-app-steps
   "Removes all steps from an App. This delete will cascade to workflow_io_maps and
-   input_output_mapping entries."
+  input_output_mapping entries."
   [app-id]
   (delete app_steps (where {:app_id app-id})))
 
@@ -294,17 +294,17 @@
   "Removes any orphaned workflow_io_maps table entries."
   []
   (delete :workflow_io_maps
-    (where (not (exists (subselect [:input_output_mapping :iom]
-                          (where {:iom.mapping_id :workflow_io_maps.id})))))))
+          (where (not (exists (subselect [:input_output_mapping :iom]
+                                         (where {:iom.mapping_id :workflow_io_maps.id})))))))
 
 (defn remove-parameter-mappings
   "Removes all input-output mappings associated with the given parameter ID, then removes any
-   orphaned workflow_io_maps table entries."
+  orphaned workflow_io_maps table entries."
   [parameter-id]
   (transaction
-    (delete :input_output_mapping (where (or {:input parameter-id}
-                                             {:output parameter-id})))
-    (remove-workflow-map-orphans)))
+   (delete :input_output_mapping (where (or {:input parameter-id}
+                                            {:output parameter-id})))
+   (remove-workflow-map-orphans)))
 
 (defn update-app-labels
   "Updates the labels in an app."
@@ -314,9 +314,9 @@
 (defn get-app-group
   "Fetches an App group."
   ([group-id]
-   (first (select parameter_groups (where {:id group-id}))))
+     (first (select parameter_groups (where {:id group-id}))))
   ([group-id task-id]
-   (first (select parameter_groups (where {:id group-id, :task_id task-id})))))
+     (first (select parameter_groups (where {:id group-id, :task_id task-id})))))
 
 (defn add-app-group
   "Adds an App group to the database."
@@ -327,8 +327,8 @@
   "Updates an App group in the database."
   [{group-id :id :as group}]
   (update parameter_groups
-    (set-fields (filter-valid-app-group-values group))
-    (where {:id group-id})))
+          (set-fields (filter-valid-app-group-values group))
+          (where {:id group-id})))
 
 (defn remove-app-group-orphans
   "Removes groups associated with the given task ID, but not in the given group-ids list."
@@ -340,55 +340,55 @@
   "Gets the ID of the given parameter type name."
   [parameter-type]
   (:id (first
-         (select parameter_types
-           (fields :id)
-           (where {:name parameter-type :deprecated false})))))
+        (select parameter_types
+                (fields :id)
+                (where {:name parameter-type :deprecated false})))))
 
 (defn get-info-type-id
   "Gets the ID of the given info type name."
   [info-type]
   (:id (first
-         (select info_type
-           (fields :id)
-           (where {:name info-type :deprecated false})))))
+        (select info_type
+                (fields :id)
+                (where {:name info-type :deprecated false})))))
 
 (defn get-data-format-id
   "Gets the ID of the data format with the given name."
   [data-format]
   (:id (first
-         (select data_formats
-           (fields :id)
-           (where {:name data-format})))))
+        (select data_formats
+                (fields :id)
+                (where {:name data-format})))))
 
 (defn get-data-source-id
   "Gets the ID of the data source with the given name."
   [data-source]
   (:id (first
-         (select data_source
-           (fields :id)
-           (where {:name data-source})))))
+        (select data_source
+                (fields :id)
+                (where {:name data-source})))))
 
 (defn get-app-parameter
   "Fetches an App parameter."
   ([parameter-id]
-   (first (select parameters (where {:id parameter-id}))))
+     (first (select parameters (where {:id parameter-id}))))
   ([parameter-id task-id]
-   (first (select :task_param_listing (where {:id parameter-id, :task_id task-id})))))
+     (first (select :task_param_listing (where {:id parameter-id, :task_id task-id})))))
 
 (defn add-app-parameter
   "Adds an App parameter to the parameters table."
   [{param-type :type :as parameter}]
   (insert parameters
-    (values (filter-valid-app-parameter-values
-              (assoc parameter :parameter_type (get-parameter-type-id param-type))))))
+          (values (filter-valid-app-parameter-values
+                   (assoc parameter :parameter_type (get-parameter-type-id param-type))))))
 
 (defn update-app-parameter
   "Updates a parameter in the parameters table."
   [{parameter-id :id param-type :type :as parameter}]
   (update parameters
-    (set-fields (filter-valid-app-parameter-values
-                  (assoc parameter :parameter_type (get-parameter-type-id param-type))))
-    (where {:id parameter-id})))
+          (set-fields (filter-valid-app-parameter-values
+                       (assoc parameter :parameter_type (get-parameter-type-id param-type))))
+          (where {:id parameter-id})))
 
 (defn remove-parameter-orphans
   "Removes parameters associated with the given group ID, but not in the given parameter-ids list."
@@ -405,11 +405,11 @@
   "Adds file parameter fields to the database."
   [{info-type :file_info_type data-format :format data-source :data_source :as file-parameter}]
   (insert file_parameters
-    (values (filter-valid-file-parameter-values
-              (assoc file-parameter
-                :info_type (get-info-type-id info-type)
-                :data_format (get-data-format-id data-format)
-                :data_source_id (get-data-source-id data-source))))))
+          (values (filter-valid-file-parameter-values
+                   (assoc file-parameter
+                     :info_type (get-info-type-id info-type)
+                     :data_format (get-data-format-id data-format)
+                     :data_source_id (get-data-source-id data-source))))))
 
 (defn remove-file-parameter
   "Removes all file parameters associated with the given parameter ID."
@@ -420,11 +420,11 @@
   "Adds a validation rule to the database."
   [parameter-id rule-type]
   (insert validation_rules
-    (values {:parameter_id parameter-id
-             :rule_type    (subselect rule_type
-                             (fields :id)
-                             (where {:name rule-type
-                                     :deprecated false}))})))
+          (values {:parameter_id parameter-id
+                   :rule_type    (subselect rule_type
+                                            (fields :id)
+                                            (where {:name rule-type
+                                                    :deprecated false}))})))
 
 (defn remove-parameter-validation-rules
   "Removes all validation rules and rule arguments associated with the given parameter ID."
@@ -476,10 +476,10 @@
   [app-id]
   ((comp :count first)
    (select [:app_steps :s]
-     (aggregate (count :external_app_id) :count)
-     (join [:tasks :t] {:s.task_id :t.id})
-     (where {:s.app_id (uuidify app-id)})
-     (where (raw "t.external_app_id IS NOT NULL")))))
+           (aggregate (count :external_app_id) :count)
+           (join [:tasks :t] {:s.task_id :t.id})
+           (where {:s.app_id (uuidify app-id)})
+           (where (raw "t.external_app_id IS NOT NULL")))))
 
 (defn permanently-delete-app
   "Permanently removes an app from the metadata database."
@@ -489,16 +489,16 @@
 (defn delete-app
   "Marks or unmarks an app as deleted in the metadata database."
   ([app-id]
-   (delete-app true app-id))
+     (delete-app true app-id))
   ([deleted? app-id]
-   (update :apps (set-fields {:deleted deleted?}) (where {:id app-id}))))
+     (update :apps (set-fields {:deleted deleted?}) (where {:id app-id}))))
 
 (defn disable-app
   "Marks or unmarks an app as disabled in the metadata database."
   ([app-id]
-   (disable-app true app-id))
+     (disable-app true app-id))
   ([disabled? app-id]
-   (update :apps (set-fields {:disabled disabled?}) (where {:id app-id}))))
+     (update :apps (set-fields {:disabled disabled?}) (where {:id app-id}))))
 
 (defn rate-app
   "Adds or updates a user's rating and comment ID for the given app."
@@ -516,17 +516,17 @@
   "Removes a user's rating and comment ID for the given app."
   [app-id user-id]
   (delete ratings
-    (where {:app_id app-id
-            :user_id user-id})))
+          (where {:app_id app-id
+                  :user_id user-id})))
 
 (defn get-app-avg-rating
   "Gets the average and total number of user ratings for the given app ID."
   [app-id]
   (first
-    (select ratings
-            (fields (raw "CAST(COALESCE(AVG(rating), 0.0) AS DOUBLE PRECISION) AS average"))
-            (aggregate (count :rating) :total)
-            (where {:app_id app-id}))))
+   (select ratings
+           (fields (raw "CAST(COALESCE(AVG(rating), 0.0) AS DOUBLE PRECISION) AS average"))
+           (aggregate (count :rating) :total)
+           (where {:app_id app-id}))))
 
 (defn load-app-info
   [app-id]
@@ -583,3 +583,48 @@
                (select))
            (first)
            (:default_value)))
+
+(defn- default-value-subselect
+  []
+  (subselect [:parameter_values :pv]
+             (fields [:pv.value :default_value])
+             (where {:pv.parameter_id :p.id
+                     :pv.is_default   true})))
+
+(defn get-app-parameters
+  [app-id]
+  (select [:apps :app]
+          (fields :p.id
+                  :p.name
+                  :p.description
+                  :p.label
+                  [(default-value-subselect) :default_value]
+                  :p.is_visible
+                  :p.ordering
+                  :p.omit_if_blank
+                  [:pt.name :type]
+                  [:vt.name :value_type]
+                  :fp.is_implicit
+                  [:info_type.name :info_type]
+                  [:df.name :data_format]
+                  [:s.id :step_id]
+                  [:t.external_app_id :external_app_id])
+          (join [:app_steps :s]
+                {:app.id :s.app_id})
+          (join [:tasks :t]
+                {:s.task_id :t.id})
+          (join [:parameter_groups :pg]
+                {:pg.task_id :t.id})
+          (join [:parameters :p]
+                {:p.parameter_group_id :pg.id})
+          (join [:parameter_types :pt]
+                {:p.parameter_type :pt.id})
+          (join [:value_type :vt]
+                {:pt.value_type_id :vt.id})
+          (join [:file_parameters :fp]
+                {:fp.parameter_id :p.id})
+          (join [:data_formats :df]
+                {:df.id :fp.data_format})
+          (join :info_type
+                {:info_type.id :fp.info_type})
+          (where {:app.id (uuidify app-id)})))

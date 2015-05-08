@@ -158,3 +158,7 @@
   [app-id]
   (->> (amp/get-app app-id)
        (success-response)))
+
+(defn get-param-definitions
+  [app-id]
+  (filter (comp nil? :external_app_id) (amp/get-app-parameters app-id)))

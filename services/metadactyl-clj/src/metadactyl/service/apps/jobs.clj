@@ -4,6 +4,7 @@
             [metadactyl.clients.notifications :as cn]
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.service.apps.job-listings :as listings]
+            [metadactyl.service.apps.jobs.params :as job-params]
             [metadactyl.util.service :as service]))
 
 (defn get-unique-job-step
@@ -132,9 +133,9 @@
   (validate-jobs-for-user username job-ids)
   (jp/delete-jobs job-ids))
 
-;; TODO: finish implementing me!
 (defn get-parameter-values
   [apps-client {:keys [username]} job-id]
   (validate-jobs-for-user username [job-id])
   (let [job (jp/get-job-by-id job-id)]
-    (->> (.getJobParamDefinitions apps-client job))))
+    {:app_id     (:app-id job)
+     :parameters (job-params/get-parameter-values apps-client job)}))

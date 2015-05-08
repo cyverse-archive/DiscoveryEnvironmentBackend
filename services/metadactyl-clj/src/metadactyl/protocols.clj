@@ -44,4 +44,5 @@
   (getDefaultOutputName [_ io-map source-step])
   (getJobStepStatus [_ job-step])
   (buildNextStepSubmission [_ job-step job])
-  (prepareStepSubmission [_ job-id submission]))
+  (prepareStepSubmission [_ job-id submission])
+  (getParamDefinitions [_ app-id]))

@@ -162,4 +162,8 @@
     (de-jobs/get-job-step-status job-step))
 
   (prepareStepSubmission [_ _ submission]
-    (de-jobs/prepare-step user (update-in submission [:app_id] uuidify))))
+    (de-jobs/prepare-step user (update-in submission [:app_id] uuidify)))
+
+  (getParamDefinitions [_ app-id]
+    (when (util/uuid? app-id)
+      (app-metadata/get-param-definitions app-id))))

@@ -101,4 +101,7 @@
     (agave-jobs/get-job-step-status agave job-step))
 
   (prepareStepSubmission [_ job-id submission]
-    (agave-jobs/prepare-step-submission agave job-id submission)))
+    (agave-jobs/prepare-step-submission agave job-id submission))
+
+  (getParamDefinitions [_ app-id]
+    (listings/get-param-definitions agave app-id)))
