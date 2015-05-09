@@ -272,6 +272,13 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn get-job-relaunch-info
+  [analysis-id]
+  (client/get (metadactyl-url "analyses" analysis-id "relaunch-info")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")

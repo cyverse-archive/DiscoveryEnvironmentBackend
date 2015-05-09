@@ -11,9 +11,7 @@
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.persistence.jobs :as jp]
             [donkey.persistence.oauth :as op]
-            [donkey.services.metadata.agave-apps :as aa]
             [donkey.services.metadata.combined-apps :as ca]
-            [donkey.services.metadata.de-apps :as da]
             [donkey.services.metadata.internal-jobs :as internal-jobs]
             [donkey.services.metadata.util :as mu]
             [donkey.util :as util]
@@ -136,17 +134,11 @@
   (adminEditAppDocs [_ app-id docs]
     (metadactyl/admin-edit-app-docs app-id docs))
 
-  (updatePipeline [_ app-id pipeline]
-    (metadactyl/update-pipeline app-id pipeline))
-
   (submitJob [_ job]
     (metadactyl/submit-job job))
 
   (stopJob [_ job]
     (ca/stop-job job))
-
-  (getAppRerunInfo [_ job-id]
-    (ca/get-app-rerun-info nil (jp/get-job-by-id (UUID/fromString job-id))))
 
   (urlImport [this address filename dest-path]
     (internal-jobs/submit :url-import this [address filename dest-path])))
@@ -189,19 +181,11 @@
       (throw+ {:error_code ce/ERR_BAD_REQUEST
                :reason     "Cannot edit documentation for HPC apps with this service"})))
 
-  (updatePipeline [_ app-id pipeline]
-    (ca/update-pipeline agave-client app-id pipeline))
-
   (submitJob [_ job]
     (metadactyl/submit-job job))
 
   (stopJob [_ job]
     (ca/stop-job agave-client job))
-
-  (getAppRerunInfo [_ job-id]
-    (process-job agave-client job-id
-                 {:process-de-job    (partial ca/get-app-rerun-info agave-client)
-                  :process-agave-job aa/get-agave-app-rerun-info}))
 
   (urlImport [this address filename dest-path]
     (internal-jobs/submit :url-import this [address filename dest-path])))
@@ -281,11 +265,6 @@
          (service/bad-request (str "job, " id ", is already completed or canceled")))
        (.stopJob (get-app-lister) job)
        (service/success-response {:id (str id)})))))
-
-(defn get-app-rerun-info
-  [job-id]
-  (with-db db/de
-    (service/success-response (.getAppRerunInfo (get-app-lister) job-id))))
 
 (defn url-import
   [address filename dest-path]

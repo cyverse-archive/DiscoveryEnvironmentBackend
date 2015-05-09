@@ -181,7 +181,7 @@
         (service/success-response (metadactyl/get-job-params analysis-id)))
 
    (GET "/analyses/:analysis-id/relaunch-info" [analysis-id]
-        (apps/get-app-rerun-info analysis-id))
+        (service/success-response (metadactyl/get-job-relaunch-info analysis-id)))
 
    (POST "/analyses/:uuid/stop" [uuid]
          (apps/stop-job uuid))))

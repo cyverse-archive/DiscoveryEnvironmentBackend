@@ -11,62 +11,10 @@
             [donkey.persistence.apps :as ap]
             [donkey.persistence.jobs :as jp]
             [donkey.persistence.workspaces :as wp]
-            [donkey.services.metadata.agave-apps :as aa]
-            [donkey.services.metadata.de-apps :as da]
             [donkey.services.metadata.util :as mu]
             [donkey.util.service :as service]
             [kameleon.db :as db]
             [kameleon.uuids :as uuids]))
-
-(defn- get-combined-app
-  [agave app-id]
-  (service/decode-json (:body (metadactyl/get-app app-id))))
-
-(defn get-app
-  [agave app-id]
-  (if (uuids/is-uuid? app-id)
-    (get-combined-app agave app-id)
-    (do (mu/assert-agave-enabled agave)
-        (.getApp agave app-id))))
-
-(defn- prepare-pipeline-step
-  "Prepares a single step in a pipeline for submission to metadactyl. DE steps can be left as-is.
-   External steps need to have the task_id field moved to the external_app_id field."
-  [{app-type :app_type :as step}]
-  (if (= app-type "External")
-    (assoc (dissoc step :task_id) :external_app_id (:task_id step))
-    (update-in )))
-
-(defn update-pipeline
-  [agave app-id pipeline]
-  (->> (update-in pipeline [:steps] (partial map prepare-pipeline-step))
-       (metadactyl/update-pipeline app-id)
-       (aa/format-pipeline-tasks agave)))
-
-(defn- get-job-submission-config
-  [job]
-  (let [submission (:submission job)]
-    (when-not submission
-      (throw+ {:error_code ce/ERR_NOT_FOUND
-               :reason     "Job submission values could not be found."}))
-    (:config (service/decode-json (.getValue submission)))))
-
-(defn get-app-rerun-info
-  "Updates an app with the parameter values from a previous experiment plugged into the appropriate
-   parameters."
-  [agave-client job]
-  (let [app           (get-app agave-client (:app-id job))
-        values        (get-job-submission-config job)
-        update-prop   #(let [id (keyword (:id %))]
-                         (if (contains? values id)
-                           (assoc %
-                             :value        (values id)
-                             :defaultValue (values id))
-                           %))
-        update-props  #(map update-prop %)
-        update-group  #(update-in % [:parameters] update-props)
-        update-groups #(map update-group %)]
-    (update-in app [:groups] update-groups)))
 
 (defn- find-incomplete-job-steps
   "Finds the list of incomplete job steps associated with a job. An empty list is returned if the
