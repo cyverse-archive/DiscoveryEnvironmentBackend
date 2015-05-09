@@ -102,3 +102,30 @@
          (remove-mapped-params app-id)
          (remove omit-param?)
          (mapcat (partial format-job-param config)))))
+
+(defn- update-prop
+  [config prop]
+  (let [id (keyword (:id prop))]
+    (if (contains? config id)
+      (assoc prop
+        :value        (config id)
+        :defaultValue (config id))
+      prop)))
+
+(defn- update-app-props
+  [config props]
+  (map (partial update-prop config) props))
+
+(defn- update-app-group
+  [config group]
+  (update-in group [:parameters] (partial update-app-props config)))
+
+(defn- update-app-groups
+  [config groups]
+  (map (partial update-app-group config) groups))
+
+(defn get-job-relaunch-info
+  [apps-client job]
+  (update-in (.getAppJobView apps-client (:app-id job))
+             [:groups]
+             (partial update-app-groups (get-job-submission-config job))))

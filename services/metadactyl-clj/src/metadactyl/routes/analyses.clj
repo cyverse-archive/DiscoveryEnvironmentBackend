@@ -1,6 +1,7 @@
 (ns metadactyl.routes.analyses
   (:use [metadactyl.routes.domain.analysis]
         [metadactyl.routes.domain.analysis.listing]
+        [metadactyl.routes.domain.app]
         [metadactyl.routes.params]
         [compojure.api.sweet]
         [metadactyl.user :only [current-user]]
@@ -71,4 +72,15 @@
         :notes       "This service returns a list of parameter values used in a previously
         executed analysis."
         (service/coerced-trap uri AnalysisParameters
-                              apps/get-parameter-values current-user analysis-id)))
+                              apps/get-parameter-values current-user analysis-id))
+
+  (GET* "/:analysis-id/relaunch-info" [:as {:keys [uri]}]
+        :path-params [analysis-id :- AnalysisIdPathParam]
+        :query       [params SecuredQueryParams]
+        :return      AppJobView
+        :summary     "Obtain information to relaunch analysis."
+        :notes       "This service allows the Discovery Environment user interface to obtain an
+        app description that can be used to relaunch a previously submitted job, possibly with
+        modified parameter values."
+        (service/coerced-trap uri AppJobView
+                              apps/get-job-relaunch-info current-user analysis-id)))

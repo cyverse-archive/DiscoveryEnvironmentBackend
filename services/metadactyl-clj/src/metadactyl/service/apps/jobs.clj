@@ -139,3 +139,8 @@
   (let [job (jp/get-job-by-id job-id)]
     {:app_id     (:app-id job)
      :parameters (job-params/get-parameter-values apps-client job)}))
+
+(defn get-job-relaunch-info
+  [apps-client {:keys [username]} job-id]
+  (validate-jobs-for-user username [job-id])
+  (job-params/get-job-relaunch-info apps-client (jp/get-job-by-id job-id)))
