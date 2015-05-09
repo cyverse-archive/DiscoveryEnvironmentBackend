@@ -21,7 +21,7 @@
   (if (util/uuid? app-id)
     (let [format-id     (partial string/join "_")
           get-source-id (comp format-id (juxt :source_id (some-fn :output_id :external_output_id)))
-          get-target-id (comp format-id (juxt :target_id (some-fn :input_id :external_output_id)))
+          get-target-id (comp format-id (juxt :target_id (some-fn :input_id :external_input_id)))
           get-ids       (juxt get-source-id get-target-id)]
       (set (mapcat get-ids (ap/load-app-mappings app-id))))
     #{}))
