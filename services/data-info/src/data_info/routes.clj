@@ -17,7 +17,6 @@
             [data-info.services.service-info :as info]
             [data-info.services.sharing :as sharing]
             [data-info.services.space-handling :as sh]
-            [data-info.services.stat :as stat]
             [data-info.services.trash :as trash]
             [data-info.services.type-detect.controllers :as detect]
             [data-info.services.users :as user]
@@ -42,9 +41,6 @@
 
   (GET "/home" [:as req]
     (util/controller req home/do-homedir :params))
-
-  (POST "/stat-gatherer" [:as req]
-    (util/controller req stat/do-stat :params :body))
 
   #_(;; These routes have not been migrated yet
        (POST "/data/rename" [:as req]

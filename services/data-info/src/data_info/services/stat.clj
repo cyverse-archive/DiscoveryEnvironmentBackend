@@ -77,10 +77,9 @@
 (with-pre-hook! #'do-stat
   (fn [params body]
     (dul/log-call "do-stat" params body)
-    (cv/validate-map params {:user string?})
     (cv/validate-map body {:paths vector?})
-    (cv/validate-map body {:paths #(not (empty? %))})
-    (cv/validate-map body {:paths #(every? (comp not string/blank?) %)})
+    (cv/validate-map body {:paths (complement empty?)})
+    (cv/validate-map body {:paths (partial every? (comp not string/blank?))})
     (validators/validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-stat (dul/log-func "do-stat"))

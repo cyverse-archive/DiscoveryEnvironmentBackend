@@ -17,6 +17,7 @@
             [data-info.util.db :as db]
             [data-info.routes :as routes]
             [data-info.routes.data :as data-routes]
+            [data-info.routes.stats :as stat-routes]
             [data-info.services.icat :as icat]
             [data-info.util :as util]))
 
@@ -98,7 +99,8 @@
      wrap-lcase-params
      params/wrap-keyword-params
      util/req-logger]
-    data-routes/data-operations)
+    data-routes/data-operations
+    stat-routes/stat-gatherer)
   (middlewares
     [wrap-query-params
      wrap-lcase-params

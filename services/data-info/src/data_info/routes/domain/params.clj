@@ -60,6 +60,13 @@
 (s/defschema FileStat
   {:file (describe FileStatInfo "File info")})
 
+(s/defschema PathsMap
+  {(describe s/Keyword "The IRDOS data item's path")
+   (describe (s/either FileStatInfo DirStatInfo) "The data item's info")})
+
+(s/defschema StatusInfo
+  {:paths (describe PathsMap "Paths info")})
+
 (s/defschema MetadataSaveRequest
   {:dest
    (describe String "An IRODS path to a destination file where the metadata will be saved")
