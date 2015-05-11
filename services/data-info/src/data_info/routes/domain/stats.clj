@@ -5,13 +5,19 @@
 
 (def DataTypeEnum (s/enum :file :dir))
 (def PermissionEnum (s/enum :read :write :own))
+(def DataItemIdParam (describe UUID "The UUID of this data item"))
+(def DataItemPathParam (describe String "The IRODS paths to this data item"))
+
+(s/defschema PathIdInfo
+  {:id   DataItemIdParam
+   :path DataItemPathParam})
 
 (s/defschema DataStatInfo
   {:id
-   (describe UUID "The UUID of this data item")
+   DataItemIdParam
 
    :path
-   (describe String "The IRODS paths to this data item")
+   DataItemPathParam
 
    :type
    (describe DataTypeEnum "The data item's type")

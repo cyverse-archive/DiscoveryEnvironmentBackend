@@ -1,0 +1,24 @@
+(ns data-info.routes.home
+  (:use [compojure.api.sweet]
+        [data-info.routes.domain.common]
+        [data-info.routes.domain.stats])
+  (:require [data-info.services.home :as home]
+            [data-info.util.service :as svc]))
+
+(defroutes* home
+
+  (context* "/home" []
+    :tags ["User Home Dirs"]
+
+    (GET* "/" [:as {uri :uri}]
+      :query [params SecuredQueryParamsRequired]
+      :return PathIdInfo
+      :summary "Get User's Home Dir"
+      :description
+"This endpoint returns the ID and path of a user's home directory, creating it if it does not
+ already exist.
+
+#### Error codes:
+
+      ERR_NOT_A_USER"
+      (svc/trap uri home/do-homedir params))))

@@ -28,7 +28,6 @@
 
 (with-pre-hook! #'do-homedir
   (fn [params]
-    (log/log-call "do-homedir" params)
-    (cv/validate-map params {:user string?})))
+    (log/log-call "do-homedir" params)))
 
 (with-post-hook! #'do-homedir (log/log-func "do-homedir"))

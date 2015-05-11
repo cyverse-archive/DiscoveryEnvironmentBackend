@@ -7,7 +7,6 @@
             [data-info.services.directory :as dir]
             [data-info.services.entry :as entry]
             [data-info.services.exists :as exists]
-            [data-info.services.home :as home]
             [data-info.services.metadata :as meta]
             [data-info.services.move :as move]
             [data-info.services.page-csv :as csv]
@@ -38,9 +37,6 @@
 
   (GET "/navigation/path/:zone/*" [:as req]
     (util/controller req (partial dir/do-directory (:* (:params req))) :params))
-
-  (GET "/home" [:as req]
-    (util/controller req home/do-homedir :params))
 
   #_(;; These routes have not been migrated yet
        (POST "/data/rename" [:as req]
