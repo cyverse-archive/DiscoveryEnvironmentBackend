@@ -266,3 +266,8 @@
 (defn get-job-relaunch-info
   [user job-id]
   (jobs/get-job-relaunch-info (get-apps-client user) user job-id))
+
+(defn stop-job
+  [user job-id]
+  (jobs/stop-job (get-apps-client user) user job-id)
+  {:id job-id})

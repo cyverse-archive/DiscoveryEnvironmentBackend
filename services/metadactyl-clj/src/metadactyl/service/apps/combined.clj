@@ -154,4 +154,7 @@
     (combined-jobs/build-next-step-submission self clients job-step job))
 
   (getParamDefinitions [_ app-id]
-    (mapcat #(.getParamDefinitions % app-id) clients)))
+    (mapcat #(.getParamDefinitions % app-id) clients))
+
+  (stopJobStep [_ job-step]
+    (dorun (map #(.stopJobStep % job-step) clients))))

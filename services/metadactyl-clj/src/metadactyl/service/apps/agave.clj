@@ -1,10 +1,12 @@
 (ns metadactyl.service.apps.agave
   (:use [kameleon.uuids :only [uuidify]])
-  (:require [metadactyl.persistence.jobs :as jp]
+  (:require [clojure.string :as string]
+            [metadactyl.persistence.jobs :as jp]
             [metadactyl.service.apps.agave.listings :as listings]
             [metadactyl.service.apps.agave.pipelines :as pipelines]
             [metadactyl.service.apps.agave.jobs :as agave-jobs]
             [metadactyl.service.apps.job-listings :as job-listings]
+            [metadactyl.service.apps.util :as apps-util]
             [metadactyl.service.util :as util]))
 
 (deftype AgaveApps [agave user-has-access-token? user]
@@ -87,11 +89,11 @@
     (agave-jobs/submit-step agave job-id submission))
 
   (translateJobStatus [self job-type status]
-    (when (contains? (set (.getJobTypes self)) job-type)
+    (when (apps-util/supports-job-type? self job-type)
       (or (.translateJobStatus agave status) status)))
 
   (updateJobStatus [self job-step job status end-date]
-    (when (contains? (set (.getJobTypes self)) (:job-type job-step))
+    (when (apps-util/supports-job-type? self (:job-type job-step))
       (agave-jobs/update-job-status agave job-step job status end-date)))
 
   (getDefaultOutputName [_ io-map source-step]
@@ -104,4 +106,9 @@
     (agave-jobs/prepare-step-submission agave job-id submission))
 
   (getParamDefinitions [_ app-id]
-    (listings/get-param-definitions agave app-id)))
+    (listings/get-param-definitions agave app-id))
+
+  (stopJobStep [self {:keys [job-type external-id]}]
+    (when (and (apps-util/supports-job-type? self job-type)
+               (not (string/blank? external-id)))
+      (.stopJob agave external-id))))

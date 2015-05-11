@@ -83,4 +83,12 @@
         app description that can be used to relaunch a previously submitted job, possibly with
         modified parameter values."
         (service/coerced-trap uri AppJobView
-                              apps/get-job-relaunch-info current-user analysis-id)))
+                              apps/get-job-relaunch-info current-user analysis-id))
+
+  (POST* "/:analysis-id/stop" [:as {:keys [uri]}]
+         :path-params [analysis-id :- AnalysisIdPathParam]
+         :query       [params SecuredQueryParams]
+         :return      StopAnalysisResponse
+         :summary     "Stop a running analysis."
+         :notes       "This service allows DE users to stop running analyses."
+         (service/coerced-trap uri StopAnalysisResponse apps/stop-job current-user analysis-id)))

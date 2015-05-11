@@ -45,4 +45,5 @@
   (getJobStepStatus [_ job-step])
   (buildNextStepSubmission [_ job-step job])
   (prepareStepSubmission [_ job-id submission])
-  (getParamDefinitions [_ app-id]))
+  (getParamDefinitions [_ app-id])
+  (stopJobStep [_ job-step]))

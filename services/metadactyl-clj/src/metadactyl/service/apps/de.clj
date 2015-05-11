@@ -1,6 +1,8 @@
 (ns metadactyl.service.apps.de
   (:use [kameleon.uuids :only [uuidify]])
-  (:require [metadactyl.persistence.app-metadata :as ap]
+  (:require [clojure.string :as string]
+            [metadactyl.clients.jex :as jex]
+            [metadactyl.persistence.app-metadata :as ap]
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.service.apps.de.jobs :as de-jobs]
             [metadactyl.service.apps.de.edit :as edit]
@@ -10,6 +12,7 @@
             [metadactyl.service.apps.de.pipeline-edit :as pipeline-edit]
             [metadactyl.service.apps.de.validation :as app-validation]
             [metadactyl.service.apps.job-listings :as job-listings]
+            [metadactyl.service.apps.util :as apps-util]
             [metadactyl.service.util :as util]))
 
 (deftype DeApps [user]
@@ -148,11 +151,11 @@
     (de-jobs/submit-step user (update-in submission [:app_id] uuidify)))
 
   (translateJobStatus [self job-type status]
-    (when (contains? (set (.getJobTypes self)) job-type)
+    (when (apps-util/supports-job-type? self job-type)
       status))
 
   (updateJobStatus [self job-step job status end-date]
-    (when (contains? (set (.getJobTypes self)) (:job-type job-step))
+    (when (apps-util/supports-job-type? self (:job-type job-step))
       (de-jobs/update-job-status job-step job status end-date)))
 
   (getDefaultOutputName [_ io-map source-step]
@@ -166,4 +169,9 @@
 
   (getParamDefinitions [_ app-id]
     (when (util/uuid? app-id)
-      (app-metadata/get-param-definitions app-id))))
+      (app-metadata/get-param-definitions app-id)))
+
+  (stopJobStep [self {:keys [job-type external-id]}]
+    (when (and (apps-util/supports-job-type? self job-type)
+               (not (string/blank? external-id)))
+      (jex/stop-job external-id))))

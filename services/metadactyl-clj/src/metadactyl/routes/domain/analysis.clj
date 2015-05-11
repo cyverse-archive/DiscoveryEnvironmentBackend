@@ -43,6 +43,9 @@
 (defschema AnalysisShredderRequest
   {:analyses (describe [UUID] "The identifiers of the analyses to be deleted.")})
 
+(defschema StopAnalysisResponse
+  {:id (describe UUID "the ID of the stopped analysis.")})
+
 (defschema FileMetadata
   {:attr  (describe String "The attribute name.")
    :value (describe String "The attribute value.")

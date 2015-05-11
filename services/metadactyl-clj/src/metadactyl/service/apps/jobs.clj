@@ -1,4 +1,5 @@
 (ns metadactyl.service.apps.jobs
+  (:use [slingshot.slingshot :only [try+]])
   (:require [clojure.tools.logging :as log]
             [kameleon.db :as db]
             [metadactyl.clients.notifications :as cn]
@@ -6,6 +7,10 @@
             [metadactyl.service.apps.job-listings :as listings]
             [metadactyl.service.apps.jobs.params :as job-params]
             [metadactyl.util.service :as service]))
+
+(defn supports-job-type
+  [apps-client job-type]
+  (contains? (set (.getJobTypes apps-client)) job-type))
 
 (defn get-unique-job-step
   "Gets a unique job step for an external ID. An exception is thrown if no job step
@@ -144,3 +149,24 @@
   [apps-client {:keys [username]} job-id]
   (validate-jobs-for-user username [job-id])
   (job-params/get-job-relaunch-info apps-client (jp/get-job-by-id job-id)))
+
+(defn- stop-job-steps
+  "Stops an individual step in a job."
+  [apps-client {:keys [id] :as job} steps]
+  (.stopJobStep apps-client (first steps))
+  (jp/cancel-job-step-numbers id (mapv :step-number steps))
+  (send-job-status-update apps-client job))
+
+(defn  stop-job
+  [apps-client {:keys [username] :as user} job-id]
+  (validate-jobs-for-user username [job-id])
+  (let [{:keys [status] :as job} (jp/get-job-by-id job-id)]
+    (when (listings/is-completed? status)
+      (service/bad-request (str "job, " job-id ", is already completed or canceled")))
+    (jp/update-job job-id jp/canceled-status (db/now))
+    (try+
+     (stop-job-steps apps-client job (find-incomplete-job-steps job-id))
+     (catch Throwable t
+       (log/warn t "unable to cancel the most recent step of job, " job-id))
+     (catch Object _
+       (log/warn "unable to cancel the most recent step of job, " job-id)))))
