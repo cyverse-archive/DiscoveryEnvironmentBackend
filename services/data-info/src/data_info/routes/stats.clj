@@ -1,18 +1,11 @@
 (ns data-info.routes.stats
   (:use [compojure.api.sweet]
-        [data-info.routes.domain.common])
+        [data-info.routes.domain.common]
+        [data-info.routes.domain.stats])
   (:require [data-info.services.stat :as stat]
             [data-info.util.service :as svc]
             [schema.core :as s]))
 
-;; Used only for display as documentation in Swagger UI
-(s/defschema StatResponsePathsMap
-  {:/path/from/request/to/a/folder (describe DirStatInfo "The folder's info")
-   :/path/from/request/to/a/file   (describe FileStatInfo "The file's info")})
-
-;; Used only for display as documentation in Swagger UI
-(s/defschema StatResponse
-  {:paths (describe StatResponsePathsMap "Paths info")})
 
 (defroutes* stat-gatherer
 
