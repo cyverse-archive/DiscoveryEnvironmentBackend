@@ -1,4 +1,4 @@
-(ns data-info.routes.domain.params
+(ns data-info.routes.domain.common
   (:use [compojure.api.sweet :only [describe]])
   (:require [schema.core :as s])
   (:import [java.util UUID]))

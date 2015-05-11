@@ -1,6 +1,6 @@
 (ns data-info.routes.data
   (:use [compojure.api.sweet]
-        [data-info.routes.domain.params])
+        [data-info.routes.domain.common])
   (:require [data-info.services.create :as create]
             [data-info.services.metadata :as meta]
             [data-info.util.service :as svc]))
