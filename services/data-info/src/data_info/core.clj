@@ -17,6 +17,7 @@
             [data-info.util.db :as db]
             [data-info.routes :as routes]
             [data-info.routes.data :as data-routes]
+            [data-info.routes.exists :as exists-routes]
             [data-info.routes.home :as home-routes]
             [data-info.routes.stats :as stat-routes]
             [data-info.services.icat :as icat]
@@ -101,6 +102,7 @@
      params/wrap-keyword-params
      util/req-logger]
     data-routes/data-operations
+    exists-routes/existence-marker
     home-routes/home
     stat-routes/stat-gatherer)
   (middlewares

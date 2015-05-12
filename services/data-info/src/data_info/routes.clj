@@ -6,7 +6,6 @@
             [data-info.services.create :as create]
             [data-info.services.directory :as dir]
             [data-info.services.entry :as entry]
-            [data-info.services.exists :as exists]
             [data-info.services.metadata :as meta]
             [data-info.services.move :as move]
             [data-info.services.page-csv :as csv]
@@ -31,9 +30,6 @@
   (HEAD "/entries/id/:entry-id" [entry-id user] (entry/id-entry entry-id user))
 
   (GET "/entries/path/:zone/*" [zone & {path :*}] (entry/dispatch-path-to-resource zone path))
-
-  (POST "/existence-marker" [:as req]
-    (util/controller req exists/do-exists :params :body))
 
   (GET "/navigation/path/:zone/*" [:as req]
     (util/controller req (partial dir/do-directory (:* (:params req))) :params))

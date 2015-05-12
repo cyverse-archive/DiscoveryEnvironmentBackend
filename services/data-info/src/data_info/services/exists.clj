@@ -40,8 +40,6 @@
 (with-pre-hook! #'do-exists
   (fn [params body]
     (log/log-call "do-exists" params)
-    (cv/validate-map params {:user string?})
-    (cv/validate-map body {:paths vector?})
     (duv/validate-num-paths (:paths body))))
 
 (with-post-hook! #'do-exists (log/log-func "do-exists"))
