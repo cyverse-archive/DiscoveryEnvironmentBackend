@@ -3,7 +3,7 @@
   :url "http://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend/"
   :license {:name "BSD"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [com.taoensso/timbre "3.4.0"]
+                 [org.clojure/tools.logging "0.3.1"]
                  [filevents "0.1.0"]
                  [bouncer "0.3.2"]
                  [medley "0.5.5"]

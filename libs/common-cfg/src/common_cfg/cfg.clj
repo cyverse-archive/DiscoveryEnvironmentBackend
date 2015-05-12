@@ -2,15 +2,12 @@
   (:use [medley.core])
   (:require [clojure.edn :as edn]
             [bouncer [core :as b] [validators :as v]]
-            [taoensso.timbre :as timbre]
-            [taoensso.timbre.appenders.rotor :as rotor]
             [filevents.core :refer [watch]]
             [clojure.java.io :refer [reader]]
             [me.raynes.fs :as fs]
+            [clojure.tools.logging :as log]
             [uri.core :as uri])
   (:import [java.util Properties]))
-
-(timbre/refer-timbre)
 
 (def cfg
   "A ref for storing the combined configuration properties."
@@ -34,21 +31,6 @@
    file."
   (ref {}))
 
-(defn configure-logging
-  []
-  (when (:log-level @cfg)
-    (timbre/set-level! (keyword (:log-level @cfg))))
-  (when (:log-file @cfg)
-    (timbre/set-config! [:appenders :rotor]
-                        {:enabled? true
-                         :async? false
-                         :max-messages-per-msecs nil
-                         :fn rotor/appender-fn})
-    (timbre/set-config! [:shared-appender-config :rotor]
-                        {:path     (:log-file @cfg)
-                         :max-size (:log-size @cfg)
-                         :backlog  (:log-backlog @cfg)})))
-
 (defn env-setting
   [env]
   (-> (System/getenv env)
@@ -69,7 +51,7 @@
   [cfg]
   (let [errs (first (b/validate cfg @validators))]
     (when errs
-      (error (pprint-to-string errs)))
+      (log/error (pprint-to-string errs)))
     (not errs)))
 
 (v/defvalidator stringv
@@ -102,7 +84,7 @@
   (let [p (Properties.)]
     (with-open [r (reader (fs/normalized (fs/expand-home cfg-path)))]
       (.load p r)
-      (into {} (map #(vector (keyword (first %1)) (second %1)) 
+      (into {} (map #(vector (keyword (first %1)) (second %1))
                     (into {} (seq p)))))))
 
 (defn load-edn
@@ -126,13 +108,12 @@
   []
   (let [cfgfile (load-cfg-file (:config @cmd-line))]
     (when-not (valid-config? cfgfile)
-      (error "Config file has errors, exiting.")
+      (log/error "Config file has errors, exiting.")
       (System/exit 1))
     (dosync (ref-set cfg (merge @defaults cfgfile @cmd-line)))
-    (configure-logging)
-    (info "Config file settings:\n" (loggable-config cfgfile @filters))
-    (info "Command-line settings:\n" (loggable-config @cmd-line @filters))
-    (info "Combined settings:\n" (loggable-config @cfg @filters))))
+    (log/info "Config file settings:\n" (loggable-config cfgfile @filters))
+    (log/info "Command-line settings:\n" (loggable-config @cmd-line @filters))
+    (log/info "Combined settings:\n" (loggable-config @cfg @filters))))
 
 (defn load-config
   [options]

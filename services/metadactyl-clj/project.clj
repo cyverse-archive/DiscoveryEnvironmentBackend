@@ -15,7 +15,6 @@
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "metadactyl-standalone.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/tools.logging "0.2.6"]
                  [cheshire "5.3.1"]
                  [clj-http "1.0.0"]
                  [clj-time "0.7.0"]
