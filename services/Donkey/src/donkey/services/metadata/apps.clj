@@ -11,7 +11,6 @@
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.persistence.jobs :as jp]
             [donkey.persistence.oauth :as op]
-            [donkey.services.metadata.combined-apps :as ca]
             [donkey.services.metadata.internal-jobs :as internal-jobs]
             [donkey.services.metadata.util :as mu]
             [donkey.util :as util]
@@ -137,9 +136,6 @@
   (submitJob [_ job]
     (metadactyl/submit-job job))
 
-  (stopJob [_ job]
-    (ca/stop-job job))
-
   (urlImport [this address filename dest-path]
     (internal-jobs/submit :url-import this [address filename dest-path])))
 ;; DeOnlyAppLister
@@ -183,9 +179,6 @@
 
   (submitJob [_ job]
     (metadactyl/submit-job job))
-
-  (stopJob [_ job]
-    (ca/stop-job agave-client job))
 
   (urlImport [this address filename dest-path]
     (internal-jobs/submit :url-import this [address filename dest-path])))
@@ -250,21 +243,6 @@
   [app-id body]
   (service/success-response
     (.adminEditAppDocs (get-app-lister) app-id (service/decode-json body))))
-
-(defn stop-job
-  [id]
-  (with-db db/de
-    (transaction
-     (let [id  (UUID/fromString id)
-           job (jp/get-job-by-id id)]
-       (when-not job
-         (service/not-found "job" id))
-       (when-not (= (:username job) (:username current-user))
-         (service/not-owner "job" id))
-       (when (mu/is-completed? (:status job))
-         (service/bad-request (str "job, " id ", is already completed or canceled")))
-       (.stopJob (get-app-lister) job)
-       (service/success-response {:id (str id)})))))
 
 (defn url-import
   [address filename dest-path]

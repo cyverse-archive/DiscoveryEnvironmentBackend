@@ -183,8 +183,8 @@
    (GET "/analyses/:analysis-id/relaunch-info" [analysis-id]
         (service/success-response (metadactyl/get-job-relaunch-info analysis-id)))
 
-   (POST "/analyses/:uuid/stop" [uuid]
-         (apps/stop-job uuid))))
+   (POST "/analyses/:analysis-id/stop" [analysis-id]
+         (service/success-response (metadactyl/stop-job analysis-id)))))
 
 (defn admin-reference-genomes-routes
   []

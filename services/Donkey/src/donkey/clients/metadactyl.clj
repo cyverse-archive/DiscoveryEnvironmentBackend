@@ -279,6 +279,13 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn stop-job
+  [analysis-id]
+  (client/post (metadactyl-url "analyses" analysis-id "stop")
+               {:query-params     (secured-params)
+                :as               :stream
+                :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
