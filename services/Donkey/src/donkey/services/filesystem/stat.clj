@@ -122,7 +122,7 @@
 (defn do-stat
   [{user :user :as params} body]
   (let [url     (url/url (cfg/data-info-base) "stat-gatherer")
-        req-map {:query-params params
+        req-map {:query-params (select-keys params [:user])
                  :content-type :json
                  :body         (json/encode body)}]
     (->> (http/post (str url) req-map)

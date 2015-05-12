@@ -355,7 +355,7 @@
   "Forwards request to data-info service."
   [data-id params body]
   (let [url (url/url (cfg/data-info-base-url) "data" data-id "metadata" "save")
-        req-map {:query-params params
+        req-map {:query-params (select-keys params [:user])
                  :content-type :json
                  :body         (json/encode body)}]
     (http/post (str url) req-map)))

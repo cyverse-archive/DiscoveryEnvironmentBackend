@@ -73,19 +73,16 @@
 (defn create-dirs
   [params body]
   (let [url     (url/url (cfg/data-info-base-url) "data" "directories")
-        req-map {:query-params params
+        req-map {:query-params (select-keys params [:user])
                  :content-type :json
                  :body         (json/encode body)}]
     (http/post (str url) req-map)))
 
 (defn create-dir
   [params {:keys [path]}]
-  (let [url     (url/url (cfg/data-info-base-url) "data" "directories")
-        req-map {:query-params params
-                 :content-type :json
-                 :body         (json/encode {:paths [path]})}]
-    (http/post (str url) req-map)
-    (-> (st/do-stat params {:paths [path]})
+  (let [paths-request {:paths [path]}]
+    (create-dirs params paths-request)
+    (-> (st/do-stat params paths-request)
         :paths
         (get path))))
 
