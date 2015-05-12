@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="error" monitorInterval="15">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <JSONLayout eventEol="true" compact="true" properties="true" />
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="warn">
+            <AppenderRef ref="Console" />
+        </Root>
+
+        <!-- Configuration Logging -->
+        <Logger name="clojure-commons.config" level="info">
+            <AppenderRef ref="Console" />
+        </Logger>
+
+        <!-- Jargon Logging -->
+        <Logger name="org.irods.jargon" level="debug">
+            <AppenderRef ref="Console" />
+        </Logger>
+
+        <Logger name="metadactyl.util.json" level="debug">
+          <AppenderRef ref="Console" />
+        </Logger>
+
+        <Logger name="metadactyl.service.callbacks" level="info">
+          <AppenderRef ref="Console" />
+        </Logger>
+
+        <!-- Service Call Trace Message Logging -->
+        <Logger name="trace" level="trace">
+            <AppenderRef ref="Console" />
+        </Logger>
+    </Loggers>
+</Configuration>
