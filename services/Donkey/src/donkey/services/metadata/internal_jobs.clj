@@ -1,17 +1,22 @@
 (ns donkey.services.metadata.internal-jobs
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as ce]
-            [donkey.util.config :as config]))
+  (:require [cheshire.core :as cheshire]
+            [clojure-commons.error-codes :as ce]
+            [donkey.clients.metadactyl :as metadactyl]
+            [donkey.util.config :as config]
+            [donkey.util.service :as service]))
 
 (defn- load-param-map
-  [app-lister app-id]
-  (->> (.getApp app-lister app-id)
+  [app-id]
+  (->> (metadactyl/get-app app-id)
+       (:body)
+       (service/decode-json)
        (:groups)
        (mapcat :parameters)
        (map (juxt :label :id))
        (into {})))
 
-;; TODO: find a better way to associate parameter values with parameters.
+;; TODO: find a better way to associate values with parameters.
 (defn- build-config
   "Builds the configuration for an internal job submission. The first argument, param-map, is
    the parameter map returned by load-param-map above. It maps the parameter label to the
@@ -22,8 +27,8 @@
   (into {} (map (juxt (comp param-map label-map key) val) params)))
 
 (defn- build-app-config
-  [app-lister app-id label-map params]
-  (build-config (load-param-map app-lister app-id) label-map params))
+  [app-id label-map params]
+  (build-config (load-param-map app-id) label-map params))
 
 (def ^:private url-import-label-map
   {:address  "Source URL"
@@ -34,13 +39,13 @@
   {:attr attr :value value :unit unit})
 
 (defn- build-url-import-config
-  [app-lister address filename]
+  [address filename]
   (->> {:address address :filename filename}
-       (build-app-config app-lister (config/fileio-url-import-app) url-import-label-map)))
+       (build-app-config (config/fileio-url-import-app) url-import-label-map)))
 
 (defn- build-url-import-job-submission
-  [app-lister address filename dest-path]
-  {:config               (build-url-import-config app-lister address filename)
+  [address filename dest-path]
+  {:config               (build-url-import-config address filename)
    :description          (str "URL Import of " filename " from " address)
    :name                 (str "url_import_" filename)
    :app_id               (str (config/fileio-url-import-app))
@@ -53,9 +58,10 @@
    :archive_logs         false})
 
 (defn- launch-url-import-job
-  [app-lister address filename dest-path]
-  (->> (build-url-import-job-submission app-lister address filename dest-path)
-       (.submitJob app-lister)))
+  [address filename dest-path]
+  (->> (build-url-import-job-submission address filename dest-path)
+       (cheshire/encode)
+       (metadactyl/submit-job)))
 
 (defn- unknown-job-type
   [job-type]
@@ -68,5 +74,5 @@
         :else                    (unknown-job-type job-type)))
 
 (defn submit
-  [job-type agave params]
-  (apply (get-submitter job-type) agave params))
+  [job-type params]
+  (apply (get-submitter job-type) params))

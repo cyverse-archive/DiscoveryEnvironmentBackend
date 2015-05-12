@@ -166,7 +166,7 @@
         (service/success-response (metadactyl/list-jobs params)))
 
    (POST "/analyses" [:as {:keys [body]}]
-         (service/success-response (metadactyl/send-job-submission body)))
+         (service/success-response (metadactyl/submit-job body)))
 
    (PATCH "/analyses/:analysis-id" [analysis-id :as {body :body}]
           (service/success-response (metadactyl/update-job analysis-id body)))

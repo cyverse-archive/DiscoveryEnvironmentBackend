@@ -21,40 +21,9 @@
             [mescal.de :as agave])
   (:import [java.util UUID]))
 
-(defn- retrieve-app
-  [app-id]
-  ((comp service/decode-json :body)
-   (metadactyl/get-app app-id)))
-
 (defn- get-first-job-step
   [{:keys [id]}]
   (service/assert-found (jp/get-job-step-number id 1) "first step in job" id))
-
-(defn- process-job
-  ([agave-client job-id processing-fns]
-     (process-job agave-client job-id (jp/get-job-by-id (UUID/fromString job-id)) processing-fns))
-  ([agave-client job-id job {:keys [process-agave-job process-de-job]}]
-     (when-not job
-       (service/not-found "job" job-id))
-     (if (= jp/de-job-type (:job-type job))
-       (process-de-job job)
-       (process-agave-job agave-client (get-first-job-step job)))))
-
-(defn- determine-batch-status
-  [{:keys [id]}]
-  (let [children (jp/list-child-jobs id)]
-    (cond (every? (comp mu/is-completed? :status) children) jp/completed-status
-          (some (comp mu/is-running? :status) children)     jp/running-status
-          :else                                             jp/submitted-status)))
-
-(defn- update-batch-status
-  [batch completion-date]
-  (when batch
-    (let [new-status (determine-batch-status batch)]
-      (when-not (= (:status batch) new-status)
-        (jp/update-job (:id batch) {:status new-status :end-date completion-date})
-        (jp/update-job-steps (:id batch) new-status completion-date)
-        (mu/send-job-status-notification batch new-status completion-date)))))
 
 (defn- agave-authorization-uri
   [state-info]
@@ -115,9 +84,6 @@
 (deftype DeOnlyAppLister []
   AppLister
 
-  (getApp [_ app-id]
-    (retrieve-app app-id))
-
   (getAppDocs [_ app-id]
     (metadactyl/get-app-docs app-id))
 
@@ -131,20 +97,11 @@
     (metadactyl/admin-add-app-docs app-id docs))
 
   (adminEditAppDocs [_ app-id docs]
-    (metadactyl/admin-edit-app-docs app-id docs))
-
-  (submitJob [_ job]
-    (metadactyl/submit-job job))
-
-  (urlImport [this address filename dest-path]
-    (internal-jobs/submit :url-import this [address filename dest-path])))
+    (metadactyl/admin-edit-app-docs app-id docs)))
 ;; DeOnlyAppLister
 
 (deftype DeHpcAppLister [agave-client user-has-access-token?]
   AppLister
-
-  (getApp [_ app-id]
-    (retrieve-app app-id))
 
   (getAppDocs [_ app-id]
     (if (is-uuid? app-id)
@@ -175,13 +132,7 @@
     (if (is-uuid? app-id)
       (metadactyl/admin-edit-app-docs app-id docs)
       (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     "Cannot edit documentation for HPC apps with this service"})))
-
-  (submitJob [_ job]
-    (metadactyl/submit-job job))
-
-  (urlImport [this address filename dest-path]
-    (internal-jobs/submit :url-import this [address filename dest-path])))
+               :reason     "Cannot edit documentation for HPC apps with this service"}))))
 ;; DeHpcAppLister
 
 (defn- has-access-token
@@ -243,8 +194,3 @@
   [app-id body]
   (service/success-response
     (.adminEditAppDocs (get-app-lister) app-id (service/decode-json body))))
-
-(defn url-import
-  [address filename dest-path]
-  (with-db db/de
-    (.urlImport (get-app-lister) address filename dest-path)))

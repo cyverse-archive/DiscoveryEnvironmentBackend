@@ -231,7 +231,7 @@
                :as               :stream
                :follow-redirects false}))
 
-(defn send-job-submission
+(defn submit-job
   [submission]
   (client/post (metadactyl-url "analyses")
                {:query-params     (secured-params)
@@ -355,16 +355,6 @@
                      :content-type :json
                      :body         (cheshire/encode docs)
                      :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn submit-job
-  [submission]
-  (-> (client/post (metadactyl-url "analyses")
-                   {:query-params (secured-params)
-                    :content-type :json
-                    :body         (cheshire/encode submission)
-                    :as           :stream})
       (:body)
       (service/decode-json)))
 

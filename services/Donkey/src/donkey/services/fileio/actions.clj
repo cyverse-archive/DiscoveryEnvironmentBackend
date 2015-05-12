@@ -17,7 +17,7 @@
             [donkey.util.config :as cfg]
             [donkey.services.fileio.config :as jargon]
             [donkey.services.filesystem.validators :as validators]
-            [donkey.services.metadata.apps :as apps])
+            [donkey.services.metadata.internal-jobs :as internal-jobs])
   (:import [java.io InputStream]
            [clojure.lang IPersistentMap]))
 
@@ -147,7 +147,7 @@
       (validators/user-exists cm user)
       (validators/path-writeable cm user dest-path)
       (validators/path-not-exists cm (ft/path-join dest-path filename)))
-    (apps/url-import address filename dest-path)
+    (internal-jobs/submit :url-import [address filename dest-path])
     (success-response
      {:msg   "Upload scheduled."
       :url   address
