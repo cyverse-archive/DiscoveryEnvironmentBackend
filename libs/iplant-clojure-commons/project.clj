@@ -19,6 +19,8 @@
                  [com.fasterxml.jackson.core/jackson-core "2.5.1"]
                  [com.fasterxml.jackson.core/jackson-databind "2.5.1"]
                  [com.fasterxml.jackson.core/jackson-annotations "2.5.1"]
+                 [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.5.1"]
+                 [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.5.1"]
                  [me.raynes/fs "1.4.6"]
                  [medley "0.5.5"]
                  [slingshot "0.10.3"]
