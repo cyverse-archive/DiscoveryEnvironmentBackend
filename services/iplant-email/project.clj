@@ -16,22 +16,19 @@
   :uberjar-name "iplant-email-standalone.jar"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.iplantc/clojure-commons "5.0.0"]
-                 [org.clojure/tools.logging "0.2.3"]
-                 [cheshire "5.0.1"]
+                 [cheshire "5.0.1"
+                   :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
+                                [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
+                                [com.fasterxml.jackson.core/jackson-annotations]
+                                [com.fasterxml.jackson.core/jackson-databind]
+                                [com.fasterxml.jackson.core/jackson-core]]]
                  [javax.mail/mail "1.4"]
                  [org.bituf/clj-stringtemplate "0.2"]
                  [compojure "1.0.1"]
                  [ring/ring-jetty-adapter "1.0.1"]
-                 [log4j/log4j "1.2.16"]
                  [org.iplantc/common-cli "5.0.0"]
                  [me.raynes/fs "1.4.6"]]
   :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]]
-  :iplant-rpm {:summary "iplant-email"
-               :dependencies ["iplant-service-config >= 0.1.0-5"
-                              "java-1.7.0-openjdk"]
-               :config-files ["log4j.properties"]
-               :config-path "conf"
-               :resources ["*.st"]}
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
   :deploy-repositories [["sonatype-nexus-staging"
