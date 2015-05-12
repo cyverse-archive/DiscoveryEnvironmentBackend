@@ -1,6 +1,6 @@
 # Service Information
 
-    /
+    /status
 
 This resource provides the name of the service and its version.
 

@@ -14,7 +14,7 @@
 
     (POST* "/" [:as {uri :uri}]
       :query [params SecuredQueryParamsRequired]
-      :body [body (describe Paths "The paths to create.")]
+      :body [body (describe Paths "The paths to gather status information on.")]
       :return (s/either StatResponse StatusInfo)
       :summary "File and Folder Status Information"
       :description
