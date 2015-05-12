@@ -15,8 +15,12 @@
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "notificationagent-standalone.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/tools.logging "0.3.1"]
-                 [cheshire "5.4.0"]
+                 [cheshire "5.4.0"
+                  :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
+                               [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
+                               [com.fasterxml.jackson.core/jackson-annotations]
+                               [com.fasterxml.jackson.core/jackson-databind]
+                               [com.fasterxml.jackson.core/jackson-core]]]
                  [compojure "1.3.1"]
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/kameleon "5.0.0"]
@@ -35,11 +39,6 @@
          :port 31320}
   :profiles {:dev {:resource-paths ["conf/test"]}}
   :extra-classpath-dirs ["conf/test"]
-  :iplant-rpm {:summary "iPlant Notification Agent"
-               :provides "notificationagent"
-               :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
-               :config-files ["log4j.properties"]
-               :config-path "conf/main"}
   :aot [notification-agent.core]
   :main notification-agent.core
   :uberjar-exclusions [#"(?i)[.]sf"]
