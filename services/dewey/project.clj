@@ -18,8 +18,12 @@
   :main ^:skip-aot dewey.core
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.cli "0.3.1"]
-                 [org.clojure/tools.logging "0.3.0"]
-                 [cheshire "5.3.1"]
+                 [cheshire "5.3.1"
+                   :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
+                                [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
+                                [com.fasterxml.jackson.core/jackson-annotations]
+                                [com.fasterxml.jackson.core/jackson-databind]
+                                [com.fasterxml.jackson.core/jackson-core]]]
                  [clojurewerkz/elastisch "2.0.0"]
                  [com.novemberain/langohr "2.11.0"]
                  [liberator "0.11.1"]
@@ -27,7 +31,10 @@
                  [ring/ring-core "1.3.0"]
                  [ring/ring-jetty-adapter "1.3.0"]
                  [slingshot "0.10.3"]
-                 [org.iplantc/clj-jargon "5.0.0"]
+                 [org.iplantc/clj-jargon "5.0.0"
+                   :exclusions [[org.slf4j/slf4j-api]
+                                [org.slf4j/slf4j-log4j12]
+                                [log4j]]]
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/common-cli "5.0.0"]
                  [me.raynes/fs "1.4.6"]]
@@ -36,10 +43,6 @@
                        :resource-paths ["dev-resource"]}
              :uberjar {:aot :all}}
   :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]]
-  :iplant-rpm {:summary      "dewey"
-               :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
-               :config-files ["log4j.properties"]
-               :config-path  "resources"}
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
   :deploy-repositories [["sonatype-nexus-staging"
