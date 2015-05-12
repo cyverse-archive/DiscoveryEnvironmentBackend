@@ -18,7 +18,6 @@
 * [POST /secured/filesystem/delete](endpoints/filesystem/delete.md#deleting-files-andor-directories-)
 * [POST /secured/filesystem/delete-contents](endpoints/filesystem/delete.md#deleting-all-items-in-a-directory-)
 * [POST /secured/filesystem/delete-tickets](endpoints/filesystem/tickets.md#deleting-tickets-)
-* [GET /secured/filesystem/directory](endpoints/filesystem/directory-listing.md#directory-list-non-recursive-)
 * [GET /secured/filesystem/file/manifest](endpoints/filesystem/manifest.md#file-manifest-)
 * [GET /secured/filesystem/file/preview](endpoints/filesystem/preview.md#file-preview-)
 * [GET /secured/filesystem/groups](endpoints/filesystem/groups.md#listing-a-users-group-memberships-)

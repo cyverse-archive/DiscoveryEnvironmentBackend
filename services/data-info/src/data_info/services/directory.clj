@@ -44,8 +44,8 @@
   {:id           uuid
    :path         full_path
    :permission   (perm/fmt-perm access_type_id)
-   :dateCreated  (* (Integer/parseInt create_ts) 1000)
-   :dateModified (* (Integer/parseInt modify_ts) 1000)})
+   :date-created  (* (Integer/parseInt create_ts) 1000)
+   :date-modified (* (Integer/parseInt modify_ts) 1000)})
 
 
 (defn- list-directories
@@ -57,21 +57,19 @@
     (validators/path-readable cm user path)
     (validators/path-is-dir cm path)
     (let [stat (item/stat cm path)]
-      {:id           (irods/lookup-uuid cm path)
-       :path         path
-       :permission   (perm/permission-for cm user path)
-       :dateCreated  (:date-created stat)
-       :dateModified (:date-modified stat)
-       :folders      (map fmt-folder (icat/list-folders-in-folder user (cfg/irods-zone) path))})))
+      (-> stat
+        (select-keys [:path :date-created :date-modified])
+        (assoc :id         (irods/lookup-uuid cm path)
+               :permission (perm/permission-for cm user path)
+               :folders    (map fmt-folder (icat/list-folders-in-folder user (cfg/irods-zone) path)))))))
 
 
 (defn do-directory
-  [path-in-zone {user :user zone :zone}]
+  [zone path-in-zone {user :user}]
   {:folder (list-directories user (irods/abs-path zone path-in-zone))})
 
 (with-pre-hook! #'do-directory
-  (fn [path params]
-    (dul/log-call "do-directory" path params)
-    (cv/validate-map params {:user string?})))
+  (fn [zone path params]
+    (dul/log-call "do-directory" zone path params)))
 
 (with-post-hook! #'do-directory (dul/log-func "do-directory"))
