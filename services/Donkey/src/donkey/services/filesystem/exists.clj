@@ -35,7 +35,7 @@
 (defn do-exists
   [params body]
   (let [url     (url/url (cfg/data-info-base) "existence-marker")
-        req-map {:query-params params
+        req-map {:query-params (select-keys params [:user])
                  :content-type :json
                  :body         (json/encode body)}]
     (-> (http/post (str url) req-map)
