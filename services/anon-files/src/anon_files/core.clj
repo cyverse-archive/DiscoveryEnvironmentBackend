@@ -8,13 +8,9 @@
             [common-cli.core :as ccli]
             [ring.adapter.jetty :as jetty]
             [common-cfg.cfg :as cfg]
-            [taoensso.timbre :as timbre]
+            [clojure.tools.logging :as log]
             [me.raynes.fs :as fs])
   (:import [org.apache.log4j Logger]))
-
-(timbre/refer-timbre)
-
-(def log-levels (mapv name timbre/levels-ordered))
 
 (defn cli-options
   []
@@ -32,9 +28,9 @@
    ["-h" "--help"]])
 
 (defroutes app
-  (HEAD "/*" [:as req] (spy (handle-head-request req)))
-  (GET "/*" [:as req] (spy (handle-request req)))
-  (OPTIONS "/*" [:as req] (spy (handle-options-request req))))
+  (HEAD "/*" [:as req] (log/spy (handle-head-request req)))
+  (GET "/*" [:as req] (log/spy (handle-request req)))
+  (OPTIONS "/*" [:as req] (log/spy (handle-options-request req))))
 
 (def svc-info
   {:desc "A service that serves up files shared with the iRODS anonymous user."
@@ -50,5 +46,5 @@
     (when (:disable-log4j options)
       (.removeAllAppenders (Logger/getRootLogger)))
     (cfg/load-config options)
-    (info "Started listening on" (:port @cfg/cfg))
+    (log/info "Started listening on" (:port @cfg/cfg))
     (jetty/run-jetty app {:port (Integer/parseInt (:port @cfg/cfg))})))
