@@ -1,7 +1,7 @@
 FROM discoenv/javabase
 
 COPY target/dewey-standalone.jar /home/iplant/
-COPY resources/log4j.properties /home/iplant/
+COPY resources/log4j2.xml /home/iplant/
 USER root
 RUN chown -R iplant:iplant /home/iplant/
 USER iplant
