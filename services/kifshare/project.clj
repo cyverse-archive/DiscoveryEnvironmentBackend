@@ -18,13 +18,20 @@
   :uberjar-name "kifshare-standalone.jar"
 
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/tools.logging "0.3.1"]
                  [org.clojure/core.memoize "0.5.7"]
-                 [org.iplantc/clj-jargon "5.0.0"]
+                 [org.iplantc/clj-jargon "5.0.0"
+                   :exclusions [[org.slf4j/slf4j-api]
+                                [org.slf4j/slf4j-log4j12]
+                                [log4j]]]
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/common-cli "5.0.0"]
                  [me.raynes/fs "1.4.6"]
-                 [cheshire "5.4.0"]
+                 [cheshire "5.4.0"
+                   :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
+                                [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
+                                [com.fasterxml.jackson.core/jackson-annotations]
+                                [com.fasterxml.jackson.core/jackson-databind]
+                                [com.fasterxml.jackson.core/jackson-core]]]
                  [slingshot "0.12.2"]
                  [compojure "1.3.3"]
                  [ring/ring-jetty-adapter "1.3.2"]
