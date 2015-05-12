@@ -9,8 +9,7 @@
             [ring.adapter.jetty :as jetty]
             [common-cfg.cfg :as cfg]
             [clojure.tools.logging :as log]
-            [me.raynes.fs :as fs])
-  (:import [org.apache.log4j Logger]))
+            [me.raynes.fs :as fs]))
 
 (defn cli-options
   []
@@ -43,8 +42,6 @@
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The default --config file " (:config options) " does not exist.")))
-    (when (:disable-log4j options)
-      (.removeAllAppenders (Logger/getRootLogger)))
     (cfg/load-config options)
     (log/info "Started listening on" (:port @cfg/cfg))
     (jetty/run-jetty app {:port (Integer/parseInt (:port @cfg/cfg))})))
