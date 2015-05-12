@@ -22,7 +22,11 @@
                  [org.apache.tika/tika-core "1.8"]
                  [org.iplantc/authy "5.0.0"]
                  [org.iplantc/clj-cas "5.0.0"]
-                 [org.iplantc/clj-jargon "5.0.0" :exclusions [[xerces/xmlParserAPIs]]]
+                 [org.iplantc/clj-jargon "5.0.0"
+                  :exclusions [[xerces/xmlParserAPIs]
+                               [org.slf4j/slf4j-api]
+                               [org.slf4j/slf4j-log4j12]
+                               [log4j]]]
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/mescal "5.0.0"]
                  [org.iplantc/kameleon "5.0.0"]
@@ -40,6 +44,9 @@
                  [ring "1.3.2"]
                  [compojure "1.3.3"]
                  [clojurewerkz/elastisch "2.1.0"]
+                 [com.fasterxml.jackson.core/jackson-core "2.5.1"]
+                 [com.fasterxml.jackson.core/jackson-databind "2.5.1"]
+                 [com.fasterxml.jackson.core/jackson-annotations "2.5.1"]
                  [com.novemberain/validateur "2.4.2"]
                  [com.novemberain/welle "3.0.0"]
                  [xerces/xercesImpl "2.11.0"]
@@ -67,7 +74,7 @@
                :provides "donkey"
                :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
                :exe-files ["resources/scripts/filetypes/guess-2.pl"]
-               :config-files ["log4j.properties"]
+               :config-files ["log4j2.xml"]
                :config-path "conf/main"}
   :uberjar-exclusions [#".*[.]SF" #"LICENSE" #"NOTICE"]
   :repositories [["sonatype-nexus-snapshots"
