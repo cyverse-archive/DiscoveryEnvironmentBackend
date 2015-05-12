@@ -15,7 +15,12 @@
                  [org.clojure/core.memoize "0.5.7"]
                  [org.clojure/data.codec "0.1.0"]
                  [org.clojure/tools.nrepl "0.2.10"]
-                 [cheshire "5.4.0"]
+                 [cheshire "5.4.0"
+                   :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
+                                [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
+                                [com.fasterxml.jackson.core/jackson-annotations]
+                                [com.fasterxml.jackson.core/jackson-databind]
+                                [com.fasterxml.jackson.core/jackson-core]]]
                  [clj-time "0.9.0"]
                  [com.cemerick/url "0.1.1"]
                  [compojure "1.3.3"]
@@ -30,15 +35,20 @@
                  [ring "1.3.2"]
                  [slingshot "0.12.2"]
                  [trptcolin/versioneer "0.2.0"]
-                 [org.iplantc/clj-icat-direct "5.0.0"]
-                 [org.iplantc/clj-jargon "5.0.0"]
+                 [org.iplantc/clj-icat-direct "5.0.0"
+                   :exclusions [[org.slf4j/slf4j-api]
+                                [org.slf4j/slf4j-log4j12]
+                                [log4j]]]
+                 [org.iplantc/clj-jargon "5.0.0"
+                   :exclusions [[org.slf4j/slf4j-api]
+                                [org.slf4j/slf4j-log4j12]
+                                [log4j]]]
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/common-cfg "5.0.0"]
                  [org.iplantc/heuristomancer "5.0.0"]
                  [org.iplantc/kameleon "5.0.0"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]
-            [lein-ring "0.9.2"]
+  :plugins [[lein-ring "0.9.2"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev     {:resource-paths ["conf/test"]}
              :uberjar {:aot :all}}
@@ -47,10 +57,4 @@
          :init data-info.core/lein-ring-init
          :port 31325
          :auto-reload? false}
-  :iplant-rpm {:summary "iPlant Discovery Environment Data Information Services"
-               :provides "data-info"
-               :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
-               :exe-files ["resources/scripts/filetypes/guess-2.pl"]
-               :config-files ["log4j.properties"]
-               :config-path "conf/main"}
   :uberjar-exclusions [#".*[.]SF" #"LICENSE" #"NOTICE"])
