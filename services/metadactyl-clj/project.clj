@@ -15,7 +15,12 @@
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "metadactyl-standalone.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [cheshire "5.3.1"]
+                 [cheshire "5.3.1"
+                   :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
+                                [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
+                                [com.fasterxml.jackson.core/jackson-annotations]
+                                [com.fasterxml.jackson.core/jackson-databind]
+                                [com.fasterxml.jackson.core/jackson-core]]]
                  [clj-http "1.0.0"]
                  [clj-time "0.7.0"]
                  [com.cemerick/url "0.1.1"]
@@ -52,11 +57,6 @@
   :ring {:handler metadactyl.routes.api/app
          :init metadactyl.core/load-config-from-file
          :port 31323}
-  :iplant-rpm {:summary "iPlant Discovery Environment Metadata Services"
-               :provides "metadactyl"
-               :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
-               :config-files ["log4j.properties"]
-               :config-path "conf/main"}
   :uberjar-exclusions [#"(?i)META-INF/[^/]*[.](SF|DSA|RSA)"]
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
