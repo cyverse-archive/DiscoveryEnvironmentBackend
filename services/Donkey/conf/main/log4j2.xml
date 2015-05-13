@@ -22,7 +22,7 @@
         </Logger>
 
         <!-- Jargon Logging -->
-        <Logger name="org.irods.jargon" level="debug">
+        <Logger name="org.irods.jargon" level="error">
             <AppenderRef ref="Console" />
         </Logger>
 
