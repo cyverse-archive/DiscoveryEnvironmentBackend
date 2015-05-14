@@ -1,9 +1,8 @@
-(ns metadactyl.app-categorization
+(ns metadactyl.service.apps.de.categorization
   (:use [korma.core]
         [korma.db :only [transaction]]
         [kameleon.app-groups]
         [kameleon.entities]
-        [metadactyl.util.service :only [success-response]]
         [metadactyl.validation]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as error-codes]))
@@ -62,5 +61,4 @@
   "A service that categorizes one or more apps in the database."
   [{:keys [categories] :as body}]
   (validate-request-body body)
-  (transaction (dorun (map categorize-app categories)))
-  (success-response))
+  (transaction (dorun (map categorize-app categories))))

@@ -47,8 +47,8 @@
     [#(and (config/admin-routes-enabled)
            (config/app-routes-enabled))]
 
-    (POST "/apps" [:as req]
-          (categorize-apps req))
+    (POST "/apps" [:as {:keys [body]}]
+          (service/success-response (metadactyl/categorize-apps body)))
 
     (POST "/apps/shredder" [:as req]
           (permanently-delete-apps req))

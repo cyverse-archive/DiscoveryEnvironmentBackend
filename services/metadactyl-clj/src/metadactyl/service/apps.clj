@@ -271,3 +271,7 @@
   [user job-id]
   (jobs/stop-job (get-apps-client user) user job-id)
   {:id job-id})
+
+(defn categorize-apps
+  [user body]
+  (.categorizeApps (get-apps-client user) body))

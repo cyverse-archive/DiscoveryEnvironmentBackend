@@ -4,8 +4,9 @@
             [metadactyl.clients.jex :as jex]
             [metadactyl.persistence.app-metadata :as ap]
             [metadactyl.persistence.jobs :as jp]
-            [metadactyl.service.apps.de.jobs :as de-jobs]
+            [metadactyl.service.apps.de.categorization :as app-categorization]
             [metadactyl.service.apps.de.edit :as edit]
+            [metadactyl.service.apps.de.jobs :as de-jobs]
             [metadactyl.service.apps.de.job-view :as job-view]
             [metadactyl.service.apps.de.listings :as listings]
             [metadactyl.service.apps.de.metadata :as app-metadata]
@@ -174,4 +175,7 @@
   (stopJobStep [self {:keys [job-type external-id]}]
     (when (and (apps-util/supports-job-type? self job-type)
                (not (string/blank? external-id)))
-      (jex/stop-job external-id))))
+      (jex/stop-job external-id)))
+
+  (categorizeApps [_ body]
+    (app-categorization/categorize-apps body)))

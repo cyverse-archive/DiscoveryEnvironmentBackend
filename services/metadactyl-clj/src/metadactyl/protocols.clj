@@ -46,4 +46,5 @@
   (buildNextStepSubmission [_ job-step job])
   (prepareStepSubmission [_ job-id submission])
   (getParamDefinitions [_ app-id])
-  (stopJobStep [_ job-step]))
+  (stopJobStep [_ job-step])
+  (categorizeApps [_ body]))

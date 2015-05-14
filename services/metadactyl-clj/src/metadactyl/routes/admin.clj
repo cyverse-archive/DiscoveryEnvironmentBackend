@@ -1,6 +1,5 @@
 (ns metadactyl.routes.admin
-  (:use [metadactyl.app-categorization :only [categorize-apps]]
-        [metadactyl.conrad.admin-apps :only [delete-app
+  (:use [metadactyl.conrad.admin-apps :only [delete-app
                                              update-app]]
         [metadactyl.conrad.admin-categories :only [add-category
                                                    delete-categories
@@ -23,6 +22,7 @@
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
+            [metadactyl.service.apps :as apps]
             [metadactyl.util.config :as config]
             [metadactyl.util.service :as service]
             [compojure.route :as route])
@@ -64,7 +64,7 @@
          :summary "Categorize Apps"
          :notes "This endpoint is used by the Admin interface to add or move Apps to into multiple
          Categories."
-         (ce/trap uri #(categorize-apps body)))
+         (service/trap uri apps/categorize-apps current-user body))
 
   (POST* "/shredder" [:as {uri :uri}]
          :query [params SecuredQueryParams]

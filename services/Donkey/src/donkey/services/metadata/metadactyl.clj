@@ -101,13 +101,6 @@
         req (metadactyl-request req)]
     (forward-patch url req)))
 
-(defn categorize-apps
-  "A service used to recategorize apps."
-  [req]
-  (let [url (metadactyl-url {} "admin" "apps")
-        req (metadactyl-request req)]
-    (forward-post url req)))
-
 (defn get-tool
   "This service will get a tool by ID."
   [req tool-id]

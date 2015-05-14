@@ -157,4 +157,7 @@
     (mapcat #(.getParamDefinitions % app-id) clients))
 
   (stopJobStep [_ job-step]
-    (dorun (map #(.stopJobStep % job-step) clients))))
+    (dorun (map #(.stopJobStep % job-step) clients)))
+
+  (categorizeApps [_ body]
+    (.categorizeApps (util/get-apps-client clients) body)))
