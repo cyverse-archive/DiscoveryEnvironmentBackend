@@ -4,7 +4,7 @@
         [metadactyl.schema.containers]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
-        [metadactyl.tools :only [get-tool search-tools]]
+        [metadactyl.tools :only [add-tools get-tool search-tools update-tool]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]]
@@ -49,27 +49,6 @@
         returns a 404 if the tool is not run inside a container."
         (ce/trap uri (requester tool-id (tool-container-info tool-id))))
 
-  (POST* "/tools/:tool-id/container" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam]
-         :query [params SecuredQueryParams]
-         :body [body NewToolContainer]
-         :return ToolContainer
-         :summary "Adds Container To Tool"
-         :notes "Adds a container to a tool. This endpoint does NOT perform modifications. If you
-         attempt to POST twice you'll get an error. This is technically not correct RESTful behavior,
-         but this was done to prevent users from getting fooled into thinking that this endpoint can
-         be used for modifications."
-         (ce/trap uri (requester tool-id (add-tool-container tool-id body))))
-
-  (DELETE* "/tools/:tool-id/container" [:as {uri :uri}]
-           :path-params [tool-id :- ToolIdParam]
-           :query [params SecuredQueryParams]
-           :return nil
-           :summary "Deletes a container from a tool."
-           :notes "Delete a container from a tool. The tool will be assumed to be running in 'compatibility'
-           mode."
-           (ce/trap uri #(delete-tool-container tool-id)))
-
   (GET* "/tools/:tool-id/container/devices" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
         :query [params SecuredQueryParams]
@@ -77,15 +56,6 @@
         :summary "Tool Container Device Information"
         :notes "Returns device information for the container associated with a tool."
         (ce/trap uri (requester tool-id (tool-device-info tool-id))))
-
-  (POST* "/tools/:tool-id/container/devices" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam]
-         :query [params SecuredQueryParams]
-         :body [body NewDevice]
-         :return Device
-         :summary "Adds Device To Tool Container"
-         :notes "Adds a new device to a tool container."
-         (ce/trap uri (requester tool-id (add-tool-device tool-id body))))
 
   (GET* "/tools/:tool-id/container/devices/:device-id" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam,
@@ -96,14 +66,6 @@
         :notes "Returns device information for the container associated with a tool."
         (ce/trap uri (requester tool-id (tool-device tool-id device-id))))
 
-  (DELETE* "/tools/:tool-id/container/devices/:device-id" [:as {uri :uri}]
-           :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
-           :query [params SecuredQueryParams]
-           :return nil
-           :summary "Delete a container device"
-           :notes "Deletes a device from the tool's container"
-           (ce/trap uri #(delete-tool-device tool-id device-id)))
-  
   (GET* "/tools/:tool-id/container/devices/:device-id/host-path" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
         :query [params SecuredQueryParams]
@@ -112,15 +74,6 @@
         :notes "Returns a device's host path."
         (ce/trap uri (requester tool-id (device-field tool-id device-id :host_path))))
 
-  (POST* "/tools/:tool-id/container/devices/:device-id/host-path" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
-         :query [params SecuredQueryParams]
-         :body [body DeviceHostPath]
-         :return DeviceHostPath
-         :summary "Update Tool Container Device Host Path"
-         :notes "This endpoint updates a device's host path for the tool's container."
-         (ce/trap uri (requester tool-id (update-device-field tool-id device-id :host_path (:host_path body)))))
-
   (GET* "/tools/:tool-id/container/devices/:device-id/container-path" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
         :query [params SecuredQueryParams]
@@ -128,16 +81,7 @@
         :summary "Tool Device Container Path"
         :notes "Returns a device's host path."
         (ce/trap uri (requester tool-id (device-field tool-id device-id :container_path))))
-  
-  (POST* "/tools/:tool-id/container/devices/:device-id/container-path" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
-         :query [params SecuredQueryParams]
-         :body [body DeviceContainerPath]
-         :return DeviceContainerPath
-         :summary "Update Tool Device Container Path"
-         :notes "This endpoint updates a device's host path for the tool's container."
-         (ce/trap uri (requester tool-id (update-device-field tool-id device-id :container_path (:container_path body)))))
-  
+
   (GET* "/tools/:tool-id/container/cpu-shares" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
         :query [params SecuredQueryParams]
@@ -145,15 +89,6 @@
         :summary "Tool Container CPU Shares"
         :notes "Returns the number of shares of the CPU that the tool container will receive."
         (ce/trap uri (requester tool-id (get-settings-field tool-id :cpu_shares))))
-
-  (POST* "/tools/:tool-id/container/cpu-shares" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam]
-         :query [params SecuredQueryParams]
-         :body [body CPUShares]
-         :return CPUShares
-         :summary "Update Tool Container CPU Shares"
-         :notes "This endpoint updates a the CPU shares for the tool's container."
-         (ce/trap uri (requester tool-id (update-settings-field tool-id :cpu_shares (:cpu_shares body)))))
 
   (GET* "/tools/:tool-id/container/memory-limit" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -163,15 +98,6 @@
         :notes "Returns the maximum amount of RAM that can be allocated to the tool container (in bytes)."
         (ce/trap uri (requester tool-id (get-settings-field tool-id :memory_limit))))
 
-  (POST* "/tools/:tool-id/container/memory-limit" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam]
-         :query [params SecuredQueryParams]
-         :body [body MemoryLimit]
-         :return MemoryLimit
-         :summary "Update Tool Container Memory Limit"
-         :notes "This endpoint updates a the memory limit for the tool's container."
-         (ce/trap uri (requester tool-id (update-settings-field tool-id :memory_limit (:memory_limit body)))))
-  
   (GET* "/tools/:tool-id/container/network-mode" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
         :query [params SecuredQueryParams]
@@ -180,15 +106,6 @@
         :notes "Returns the network mode the tool container will operate in. Usually 'bridge' or 'none'."
         (ce/trap uri (requester tool-id (get-settings-field tool-id :network_mode))))
 
-  (POST* "/tools/:tool-id/container/network-mode" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam]
-         :query [params SecuredQueryParams]
-         :body [body NetworkMode]
-         :return NetworkMode
-         :summary "Update Tool Container Network Mode"
-         :notes "This endpoint updates a the network mode for the tool's container."
-         (ce/trap uri (requester tool-id (update-settings-field tool-id :network_mode (:network_mode body)))))
-  
   (GET* "/tools/:tool-id/container/working-directory" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
         :query [params SecuredQueryParams]
@@ -197,15 +114,6 @@
         :notes "Sets the initial working directory for the tool container."
         (ce/trap uri (requester tool-id (get-settings-field tool-id :working_directory))))
 
-  (POST* "/tools/:tool-id/container/working-directory" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam]
-         :query [params SecuredQueryParams]
-         :body [body WorkingDirectory]
-         :return WorkingDirectory
-         :summary "Update Tool Container Working Directory"
-         :notes "This endpoint updates the working directory for the tool's container."
-         (ce/trap uri (requester tool-id (update-settings-field tool-id :working_directory (:working_directory body)))))
-  
   (GET* "/tools/:tool-id/container/name" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
         :query [params SecuredQueryParams]
@@ -213,15 +121,6 @@
         :summary "Tool Container Name"
         :notes "The user supplied name that the container will be assigned when it runs."
         (ce/trap uri (requester tool-id (get-settings-field tool-id :name))))
-  
-  (POST* "/tools/:tool-id/container/name" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam]
-         :query [params SecuredQueryParams]
-         :body [body ContainerName]
-         :return ContainerName
-         :summary "Update Tool Container Name"
-         :notes "This endpoint updates the container name for the tool's container."
-         (ce/trap uri (requester tool-id (update-settings-field tool-id :name (:name body)))))
 
   (GET* "/tools/:tool-id/container/volumes" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -231,15 +130,6 @@
         :notes "Returns volume information for the container associated with a tool."
         (ce/trap uri (requester tool-id (tool-volume-info tool-id))))
 
-  (POST* "/tools/:tool-id/container/volumes" [:as {uri :uri}]
-        :path-params [tool-id :- ToolIdParam]
-        :query [params SecuredQueryParams]
-        :body [body NewVolume]
-        :return Volume
-        :summary "Tool Container Volume Information"
-        :notes "Returns volume information for the container associated with a tool."
-        (ce/trap uri (requester tool-id (add-tool-volume tool-id body))))
-
   (GET* "/tools/:tool-id/container/volumes/:volume-id" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
         :query [params SecuredQueryParams]
@@ -247,14 +137,6 @@
         :summary "Tool Container Volume Information"
         :notes "Returns volume information for the container associated with a tool."
         (ce/trap uri (requester tool-id (tool-volume tool-id volume-id))))
-
-  (DELETE* "/tools/:tool-id/container/volumes/:volume-id" [:as {uri :uri}]
-           :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
-           :query [params SecuredQueryParams]
-           :return nil
-           :summary "Delete Tool Container Volume"
-           :notes "Deletes a volume from a tool container."
-           (ce/trap uri #(delete-tool-volume tool-id volume-id)))
 
   (GET* "/tools/:tool-id/container/volumes/:volume-id/host-path" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
@@ -264,15 +146,6 @@
         :notes "Returns volume host path for the container associated with a tool."
         (ce/trap uri (requester tool-id (volume-field tool-id volume-id :host_path))))
 
-  (POST* "/tools/:tool-id/container/volumes/:volume-id/host-path" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
-         :query [params SecuredQueryParams]
-         :body [body VolumeHostPath]
-         :return VolumeHostPath
-         :summary "Update Tool Container Volume Host Path"
-         :notes "This endpoint updates a volume host path for the tool's container."
-         (ce/trap uri (requester tool-id (update-volume-field tool-id volume-id :host_path (:host_path body)))))
-
   (GET* "/tools/:tool-id/container/volumes/:volume-id/container-path" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
         :query [params SecuredQueryParams]
@@ -280,15 +153,6 @@
         :summary "Tool Container Volume Container Path"
         :notes "Returns volume container path for the container associated with a tool."
         (ce/trap uri (requester tool-id (volume-field tool-id volume-id :container_path))))
-
-  (POST* "/tools/:tool-id/container/volumes/:volume-id/container-path" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
-         :query [params SecuredQueryParams]
-         :body [body VolumeContainerPath]
-         :return VolumeContainerPath
-         :summary "Update Tool Container Volume Container Path"
-         :notes "This endpoint updates a volume container path for the tool's container."
-         (ce/trap uri (requester tool-id (update-volume-field tool-id volume-id :container_path (:container_path body)))))
 
   (GET* "/tools/:tool-id/container/volumes-from" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
@@ -298,15 +162,6 @@
         :notes "Returns a list of container names that the container associated with the tool should import volumes from."
         (ce/trap uri (requester tool-id (tool-volumes-from-info tool-id))))
 
-  (POST* "/tools/:tool-id/container/volumes-from" [:as {uri :uri}]
-        :path-params [tool-id :- ToolIdParam]
-        :query [params SecuredQueryParams]
-        :body [body NewVolumesFrom]
-        :return VolumesFrom
-        :summary "Adds A Volume Host Container"
-        :notes "Adds a new container from which the tool container will bind mount volumes."
-        (ce/trap uri (requester tool-id (add-tool-volumes-from tool-id body))))
-
   (GET* "/tools/:tool-id/container/volumes-from/:volumes-from-id" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
         :query [params SecuredQueryParams]
@@ -315,32 +170,16 @@
         :notes "Returns a list of container names that the container associated with the tool should import volumes from."
         (ce/trap uri (requester tool-id (tool-volumes-from tool-id volumes-from-id))))
 
-  (DELETE* "/tools/:tool-id/container/volumes-from/:volumes-from-id" [:as {uri :uri}]
-           :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
-           :query [params SecuredQueryParams]
-           :return nil
-           :summary "Delete Tool Container Volumes From Information"
-           :notes "Deletes a container name that the tool container should import volumes from."
-           (ce/trap uri #(delete-tool-volumes-from tool-id volumes-from-id)))
-
   (GET* "/tools/:tool-id/container/volumes-from/:volumes-from-id/name" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
         :query [params SecuredQueryParams]
         :return VolumesFromName
         :summary "Name Of Volume Host Container"
         :notes "Returns the name of the container from which the tool container will bind mount volumes."
-        (ce/trap uri (requester tool-id (volumes-from-field tool-id volumes-from-id :name))))
+        (ce/trap uri (requester tool-id (volumes-from-field tool-id volumes-from-id :name)))))
 
-  (POST* "/tools/:tool-id/container/volumes-from/:volumes-from-id/name" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
-         :query [params SecuredQueryParams]
-         :body [body VolumesFromName]
-         :return VolumesFromName
-         :summary "Update Name Of Volume Host Container"
-         :notes "Updates the name of a container from which the tool container will bind mount volumes."
-         (ce/trap uri (requester tool-id (update-volumes-from-field tool-id volumes-from-id :name (:name body)))))
-
-  (GET* "/tool-requests" [:as {uri :uri}]
+(defroutes* tool-requests
+  (GET* "/" [:as {uri :uri}]
         :query [params ToolRequestListingParams]
         :return ToolRequestListing
         :summary "List Tool Requests"
@@ -348,7 +187,7 @@
         A user may track their own tool requests with this endpoint."
         (ce/trap uri #(list-tool-requests (assoc params :username (:username current-user)))))
 
-  (POST* "/tool-requests" [:as {uri :uri}]
+  (POST* "/" [:as {uri :uri}]
          :query [params SecuredQueryParams]
          :body [body (describe ToolRequest
                        "A tool installation request. One of `source_url` or `source_upload_file`
@@ -360,7 +199,7 @@
          related to the tool request will be tracked in the Discovery Environment database."
          (ce/trap uri #(submit-tool-request (:username current-user) body)))
 
-  (GET* "/tool-requests/status-codes" [:as {uri :uri}]
+  (GET* "/status-codes" [:as {uri :uri}]
         :query [params StatusCodeListingParams]
         :summary "List Tool Request Status Codes"
         :return StatusCodeListing
@@ -368,3 +207,182 @@
         they're stored in the database so that they can be reused easily. This endpoint allows the
         caller to list the known status codes."
         (ce/trap uri #(list-tool-request-status-codes params))))
+
+(defroutes* admin-tools
+  (POST* "/" [:as {uri :uri}]
+         :query [params SecuredQueryParams]
+         :body [body (describe ToolsImportRequest "The Tools to import.")]
+         :summary "Add new Tools."
+         :notes "This service adds new Tools to the DE."
+         (ce/trap uri #(add-tools body)))
+
+  (PATCH* "/:tool-id" [:as {uri :uri}]
+          :path-params [tool-id :- ToolIdParam]
+          :query [params SecuredQueryParams]
+          :body [body (describe ToolUpdateRequest "The Tool to update.")]
+          :return Tool
+          :summary "Update a Tool"
+          :notes "This service updates a Tool definition in the DE."
+          (ce/trap uri #(update-tool (assoc body :id tool-id))))
+
+  (POST* "/:tool-id/container" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam]
+         :query [params SecuredQueryParams]
+         :body [body NewToolContainer]
+         :return ToolContainer
+         :summary "Adds Container To Tool"
+         :notes "Adds a container to a tool. This endpoint does NOT perform modifications. If you
+         attempt to POST twice you'll get an error. This is technically not correct RESTful behavior,
+         but this was done to prevent users from getting fooled into thinking that this endpoint can
+         be used for modifications."
+         (ce/trap uri (requester tool-id (add-tool-container tool-id body))))
+
+  (DELETE* "/:tool-id/container" [:as {uri :uri}]
+           :path-params [tool-id :- ToolIdParam]
+           :query [params SecuredQueryParams]
+           :return nil
+           :summary "Deletes a container from a tool."
+           :notes "Delete a container from a tool. The tool will be assumed to be running in 'compatibility'
+           mode."
+           (ce/trap uri #(delete-tool-container tool-id)))
+
+  (POST* "/:tool-id/container/devices" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam]
+         :query [params SecuredQueryParams]
+         :body [body NewDevice]
+         :return Device
+         :summary "Adds Device To Tool Container"
+         :notes "Adds a new device to a tool container."
+         (ce/trap uri (requester tool-id (add-tool-device tool-id body))))
+
+  (DELETE* "/:tool-id/container/devices/:device-id" [:as {uri :uri}]
+           :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
+           :query [params SecuredQueryParams]
+           :return nil
+           :summary "Delete a container device"
+           :notes "Deletes a device from the tool's container"
+           (ce/trap uri #(delete-tool-device tool-id device-id)))
+
+  (POST* "/:tool-id/container/devices/:device-id/host-path" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
+         :query [params SecuredQueryParams]
+         :body [body DeviceHostPath]
+         :return DeviceHostPath
+         :summary "Update Tool Container Device Host Path"
+         :notes "This endpoint updates a device's host path for the tool's container."
+         (ce/trap uri (requester tool-id (update-device-field tool-id device-id :host_path (:host_path body)))))
+
+  (POST* "/:tool-id/container/devices/:device-id/container-path" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
+         :query [params SecuredQueryParams]
+         :body [body DeviceContainerPath]
+         :return DeviceContainerPath
+         :summary "Update Tool Device Container Path"
+         :notes "This endpoint updates a device's host path for the tool's container."
+         (ce/trap uri (requester tool-id (update-device-field tool-id device-id :container_path (:container_path body)))))
+
+  (POST* "/:tool-id/container/cpu-shares" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam]
+         :query [params SecuredQueryParams]
+         :body [body CPUShares]
+         :return CPUShares
+         :summary "Update Tool Container CPU Shares"
+         :notes "This endpoint updates a the CPU shares for the tool's container."
+         (ce/trap uri (requester tool-id (update-settings-field tool-id :cpu_shares (:cpu_shares body)))))
+
+  (POST* "/:tool-id/container/memory-limit" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam]
+         :query [params SecuredQueryParams]
+         :body [body MemoryLimit]
+         :return MemoryLimit
+         :summary "Update Tool Container Memory Limit"
+         :notes "This endpoint updates a the memory limit for the tool's container."
+         (ce/trap uri (requester tool-id (update-settings-field tool-id :memory_limit (:memory_limit body)))))
+
+  (POST* "/:tool-id/container/network-mode" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam]
+         :query [params SecuredQueryParams]
+         :body [body NetworkMode]
+         :return NetworkMode
+         :summary "Update Tool Container Network Mode"
+         :notes "This endpoint updates a the network mode for the tool's container."
+         (ce/trap uri (requester tool-id (update-settings-field tool-id :network_mode (:network_mode body)))))
+
+  (POST* "/:tool-id/container/working-directory" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam]
+         :query [params SecuredQueryParams]
+         :body [body WorkingDirectory]
+         :return WorkingDirectory
+         :summary "Update Tool Container Working Directory"
+         :notes "This endpoint updates the working directory for the tool's container."
+         (ce/trap uri (requester tool-id (update-settings-field tool-id :working_directory (:working_directory body)))))
+
+  (POST* "/:tool-id/container/name" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam]
+         :query [params SecuredQueryParams]
+         :body [body ContainerName]
+         :return ContainerName
+         :summary "Update Tool Container Name"
+         :notes "This endpoint updates the container name for the tool's container."
+         (ce/trap uri (requester tool-id (update-settings-field tool-id :name (:name body)))))
+
+  (POST* "/:tool-id/container/volumes" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam]
+         :query [params SecuredQueryParams]
+         :body [body NewVolume]
+         :return Volume
+         :summary "Tool Container Volume Information"
+         :notes "Returns volume information for the container associated with a tool."
+         (ce/trap uri (requester tool-id (add-tool-volume tool-id body))))
+
+  (DELETE* "/:tool-id/container/volumes/:volume-id" [:as {uri :uri}]
+           :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
+           :query [params SecuredQueryParams]
+           :return nil
+           :summary "Delete Tool Container Volume"
+           :notes "Deletes a volume from a tool container."
+           (ce/trap uri #(delete-tool-volume tool-id volume-id)))
+
+  (POST* "/:tool-id/container/volumes/:volume-id/host-path" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
+         :query [params SecuredQueryParams]
+         :body [body VolumeHostPath]
+         :return VolumeHostPath
+         :summary "Update Tool Container Volume Host Path"
+         :notes "This endpoint updates a volume host path for the tool's container."
+         (ce/trap uri (requester tool-id (update-volume-field tool-id volume-id :host_path (:host_path body)))))
+
+  (POST* "/:tool-id/container/volumes/:volume-id/container-path" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam volume-id :- VolumeIdParam]
+         :query [params SecuredQueryParams]
+         :body [body VolumeContainerPath]
+         :return VolumeContainerPath
+         :summary "Update Tool Container Volume Container Path"
+         :notes "This endpoint updates a volume container path for the tool's container."
+         (ce/trap uri (requester tool-id (update-volume-field tool-id volume-id :container_path (:container_path body)))))
+
+  (POST* "/:tool-id/container/volumes-from" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam]
+         :query [params SecuredQueryParams]
+         :body [body NewVolumesFrom]
+         :return VolumesFrom
+         :summary "Adds A Volume Host Container"
+         :notes "Adds a new container from which the tool container will bind mount volumes."
+         (ce/trap uri (requester tool-id (add-tool-volumes-from tool-id body))))
+
+  (DELETE* "/:tool-id/container/volumes-from/:volumes-from-id" [:as {uri :uri}]
+           :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
+           :query [params SecuredQueryParams]
+           :return nil
+           :summary "Delete Tool Container Volumes From Information"
+           :notes "Deletes a container name that the tool container should import volumes from."
+           (ce/trap uri #(delete-tool-volumes-from tool-id volumes-from-id)))
+
+  (POST* "/:tool-id/container/volumes-from/:volumes-from-id/name" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
+         :query [params SecuredQueryParams]
+         :body [body VolumesFromName]
+         :return VolumesFromName
+         :summary "Update Name Of Volume Host Container"
+         :notes "Updates the name of a container from which the tool container will bind mount volumes."
+         (ce/trap uri (requester tool-id (update-volumes-from-field tool-id volumes-from-id :name (:name body))))))

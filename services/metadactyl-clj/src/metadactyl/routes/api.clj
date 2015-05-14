@@ -69,6 +69,9 @@
     (swaggered "tools"
       :description "Tool endpoints."
       tool-routes/tools)
+    (swaggered "tool-requests"
+      :description "Tool Request endpoints."
+      (context "/tool-requests" [] tool-routes/tool-requests))
     (swaggered "reference-genomes"
       :description "Reference Genome endpoints."
       (context "/reference-genomes" [] reference-genome-routes/reference-genomes))
@@ -81,9 +84,12 @@
     (swaggered "admin-categories"
       :description "Admin App Category endpoints."
       (context "/admin/apps/categories" [] admin-routes/admin-categories))
-    (swaggered "admin-tools"
-      :description "Admin Tool endpoints."
-      (context "/admin" [] admin-routes/tools))
     (swaggered "admin-reference-genomes"
       :description "Admin Reference Genome endpoints."
-      (context "/admin/reference-genomes" [] admin-routes/reference-genomes))))
+      (context "/admin/reference-genomes" [] admin-routes/reference-genomes))
+    (swaggered "admin-tools"
+      :description "Admin Tool endpoints."
+      (context "/admin/tools" [] tool-routes/admin-tools))
+    (swaggered "admin-tool-requests"
+      :description "Admin Tool Request endpoints."
+      (context "/admin/tool-requests" [] admin-routes/admin-tool-requests))))
