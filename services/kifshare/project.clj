@@ -33,13 +33,13 @@
                                 [com.fasterxml.jackson.core/jackson-databind]
                                 [com.fasterxml.jackson.core/jackson-core]]]
                  [slingshot "0.12.2"]
-                 [compojure "1.3.3"]
+                 [compojure "1.3.4"]
                  [ring/ring-jetty-adapter "1.3.2"]
                  [ring/ring-devel "1.3.2"]
                  [de.ubercode.clostache/clostache "1.4.0"]
                  [com.cemerick/url "0.1.1"]
                  [lamina "0.5.6"]
-                 [clj-http "1.1.0"]]
+                 [clj-http "1.1.2"]]
 
   :ring {:init kifshare.config/init
          :handler kifshare.core/app}
@@ -52,7 +52,7 @@
   :iplant-rpm {:summary "kifshare",
                :dependencies ["iplant-service-config >= 0.1.0-5"
                               "java-1.7.0-openjdk"],
-               :config-files ["log4j.properties"],
+               :config-files ["log4j2.xml"],
                :config-path "conf"}
 
   :plugins [[lein-ring "0.7.5"]
