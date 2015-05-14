@@ -29,12 +29,6 @@
    :log-level       cfg/stringv})
 
  (ref-set
-  cfg/defaults
-  {:log-level   :info
-   :log-size    (* 100 1024  1024)
-   :log-backlog 10})
-
- (ref-set
   cfg/filters
   #{:irods-password}))
 

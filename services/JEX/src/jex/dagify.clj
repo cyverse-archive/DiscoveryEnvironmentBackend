@@ -2,11 +2,9 @@
   (:use [clojure-commons.file-utils :as ut]
         [clojure.string :only (join split trim blank?)])
   (:require [jex.config :as cfg]
-            [taoensso.timbre :as log]
+            [clojure.tools.logging :as log]
             [me.raynes.fs :as fs])
   (:import [java.io File]))
-
-(log/refer-timbre)
 
 (defn irods-config
   []
@@ -60,7 +58,7 @@
    "arguments = \"iplant.sh\"\n"
    "output = script-output.log\n"
    "error = script-error.log\n"
-   "log = condor.log\n" 
+   "log = condor.log\n"
    "request_disk = " (cfg/request-disk) "\n"
    "+IpcUuid = \"" uuid "\"\n"
    "+IpcJobId = \"generated_script\"\n"

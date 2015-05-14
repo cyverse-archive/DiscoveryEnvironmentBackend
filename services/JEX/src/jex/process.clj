@@ -5,7 +5,7 @@
             [jex.outgoing-xforms :as ox]
             [jex.dagify :as dagify]
             [jex.config :as cfg]
-            [taoensso.timbre :as log]
+            [clojure.tools.logging :as log]
             [clojure.java.shell :as sh]
             [clj-http.client :as http]
             [cemerick.url :refer (url url-encode)]
@@ -13,8 +13,6 @@
             [clojure.string :as string]
             [me.raynes.fs :as fs]
             [clojure.java.io :as io]))
-
-(log/refer-timbre)
 
 (defn failure [reason]
   {:status "failure" :reason reason})

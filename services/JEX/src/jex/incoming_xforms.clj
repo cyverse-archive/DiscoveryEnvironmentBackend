@@ -1,10 +1,8 @@
 (ns jex.incoming-xforms
   (:require [clojure.string :as string]
-            [taoensso.timbre :as log]
+            [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ut]
             [jex.config :as cfg]))
-
-(log/refer-timbre)
 
 (def replacer
   "Params: [regex replace-str str-to-modify]."

@@ -15,9 +15,13 @@
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "jex-standalone.jar"
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [com.taoensso/timbre "3.4.0"]
                  [org.clojure/java.classpath "0.2.2"]
-                 [cheshire "5.4.0"]
+                 [cheshire "5.4.0"
+                   :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
+                                [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
+                                [com.fasterxml.jackson.core/jackson-annotations]
+                                [com.fasterxml.jackson.core/jackson-databind]
+                                [com.fasterxml.jackson.core/jackson-core]]]
                  [com.cemerick/url "0.1.1"]
                  [compojure "1.3.2"]
                  [ring/ring-jetty-adapter "1.3.2"]
@@ -28,13 +32,6 @@
                  [me.raynes/fs "1.4.6"]]
   :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]
             [lein-midje "3.1.1"]]
-  :iplant-rpm {:summary "jex",
-               :runuser "condor"
-               :dependencies ["iplant-service-config >= 0.1.0-5"
-                              "java-1.7.0-openjdk"],
-               :config-files ["log4j.properties"],
-               :config-path "conf"
-               :working-dir "pushd /var/lib/condor > /dev/null"}
   :profiles {:dev {:dependencies [[midje "1.6.3"]]}}
   :aot [jex.core]
   :main jex.core

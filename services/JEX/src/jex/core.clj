@@ -22,10 +22,8 @@
             [cheshire.core :as cheshire]
             [me.raynes.fs :as fs]
             [common-cli.core :as ccli]
-            [taoensso.timbre :as log]
+            [clojure.tools.logging :as log]
             [common-cfg.cfg :as cfg]))
-
-(log/refer-timbre)
 
 (defn do-submission
   "Handles a request on /. "
@@ -92,6 +90,6 @@
       (ccli/exit 1 (str "The config file does not exist.")))
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
-    (println (:config options))
+    (log/warn (:config options))
     (cfg/load-config options)
     (jetty/run-jetty (site-handler jex-routes) {:port (listen-port)})))
