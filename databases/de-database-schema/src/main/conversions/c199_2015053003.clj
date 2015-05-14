@@ -16,8 +16,8 @@
        'latest',
        'https://registry.hub.docker.com/u/discoenv/curl-wrapper/');")
   (exec-sql-statement
-    "INSERT INTO container_settings (tools_id) VALUES
-      ('681251EF-EE59-4FE9-9436-DC8A23FEB11A');")
+    "INSERT INTO container_settings (tools_id, network_mode) VALUES
+      ('681251EF-EE59-4FE9-9436-DC8A23FEB11A', 'bridge');")
   (exec-sql-statement
     "UPDATE ONLY tools
         SET container_images_id = '15959300-b972-4571-ace2-081af0909599'
