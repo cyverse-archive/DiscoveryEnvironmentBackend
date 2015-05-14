@@ -101,12 +101,12 @@
   (log/debug "entered page kifshare.controllers/download-file")
 
   (try+
-    (jinit/with-jargon (jargon-config) :auto-close false [cm]
-      (let [ticket-info (tickets/ticket-info cm ticket-id)]
-        (log/warn "Downloading " ticket-id " as " filename)
-        (if (and (range-request? ring-request) (valid-range? ring-request))
-          (download-range cm ticket-id ring-request)
-          (tickets/download cm ticket-id))))
+    (log/info "Downloading " ticket-id " as " filename)
+    (if (and (range-request? ring-request) (valid-range? ring-request))
+      (jinit/with-jargon (jargon-config) [cm]
+        (download-range cm ticket-id ring-request))
+      (jinit/with-jargon (jargon-config) :auto-close false [cm]
+        (tickets/download cm ticket-id)))
 
     (catch error? err
       (log/error (format-exception (:throwable &throw-context)))
