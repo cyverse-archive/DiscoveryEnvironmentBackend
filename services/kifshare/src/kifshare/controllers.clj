@@ -125,7 +125,7 @@
 
 (defn file-info
   ([ticket-id ring-request]
-   (jinit/with-jargon (jargon-config) :auto-close false [cm]
+   (jinit/with-jargon (jargon-config) [cm]
      (let [ticket-info (tickets/ticket-info cm ticket-id)]
        {:status  200
         :headers {"Content-Length"      (str (:filesize ticket-info))
