@@ -12,17 +12,17 @@
         </Root>
 
         <!-- Configuration Logging -->
-        <Logger name="clojure-commons.config" level="info">
+        <Logger name="clojure-commons.config" level="info" additivity="false">
             <AppenderRef ref="Console" />
         </Logger>
 
         <!-- Jargon Logging -->
-        <Logger name="org.irods.jargon" level="debug">
+        <Logger name="org.irods.jargon" level="debug" additivity="false">
             <AppenderRef ref="Console" />
         </Logger>
 
         <!-- Service Call Trace Message Logging -->
-        <Logger name="trace" level="trace">
+        <Logger name="trace" level="trace" additivity="false">
             <AppenderRef ref="Console" />
         </Logger>
     </Loggers>
