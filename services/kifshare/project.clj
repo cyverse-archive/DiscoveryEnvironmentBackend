@@ -37,9 +37,7 @@
                  [ring/ring-jetty-adapter "1.3.2"]
                  [ring/ring-devel "1.3.2"]
                  [de.ubercode.clostache/clostache "1.4.0"]
-                 [com.cemerick/url "0.1.1"]
-                 [lamina "0.5.6"]
-                 [clj-http "1.1.2"]]
+                 [com.cemerick/url "0.1.1"]]
 
   :ring {:init kifshare.config/init
          :handler kifshare.core/app}

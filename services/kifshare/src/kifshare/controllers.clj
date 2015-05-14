@@ -1,21 +1,16 @@
 (ns kifshare.controllers
-  (:use [ring.util.response :only [redirect status]]
+  (:use [ring.util.response :only [redirect]]
         [kifshare.config :only [jargon-config]]
         [kifshare.ui-template :only [landing-page]]
         [slingshot.slingshot :only [try+]]
-        [clojure-commons.error-codes]
-        [lamina.core :only [channel read-channel enqueue]])
+        [clojure-commons.error-codes])
   (:require [kifshare.tickets :as tickets]
-            [compojure.response :as resp]
             [kifshare.common :as common]
             [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
             [clj-jargon.metadata :as jmeta]
             [clj-jargon.init :as jinit]
-            [kifshare.errors :as errors]
-            [kifshare.config :as cfg]
-            [clj-http.client :as http]
-            [clojure.string :as string]))
+            [kifshare.errors :as errors]))
 
 (defn object-metadata
   [cm abspath]
@@ -34,13 +29,6 @@
    ticket-id
    (object-metadata cm (tickets/ticket-abs-path cm ticket-id))
    ticket-info))
-
-(defn decide-on-page
-  [cm ring-request ticket-id ticket-info]
-  (log/debug "entered kifshare.controllers/decide-on-page")
-  (if (common/show-html? ring-request)
-    {:status 200 :body (show-landing-page cm ticket-id ticket-info)}
-    (redirect (str "d/" ticket-id "/" (:filename ticket-info)))))
 
 (defn error-map-response
   [request err-map]
@@ -65,7 +53,7 @@
        (log/error (format-exception (:throwable &throw-context)))
        (error-map-response ring-request err))
 
-     (catch Exception e
+     (catch Exception _
        (log/error (format-exception (:throwable &throw-context)))
        (errors/error-response (unchecked &throw-context))))))
 
@@ -112,7 +100,7 @@
       (log/error (format-exception (:throwable &throw-context)))
       (error-map-response ring-request err))
 
-    (catch Exception e
+    (catch Exception _
       (log/error (format-exception (:throwable &throw-context)))
       {:status 500 :body (cheshire/encode (unchecked &throw-context))})))
 
@@ -131,7 +119,7 @@
      (log/error (format-exception (:throwable &throw-context)))
      (error-map-response ring-request err))
 
-   (catch Exception e
+   (catch Exception _
      (log/error (format-exception (:throwable &throw-context)))
      {:status 500 :body (cheshire/encode (unchecked &throw-context))})))
 
