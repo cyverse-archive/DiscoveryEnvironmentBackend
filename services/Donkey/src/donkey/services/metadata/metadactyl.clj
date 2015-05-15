@@ -134,12 +134,6 @@
         req (metadactyl-request req)]
     (forward-patch url req)))
 
-(defn admin-delete-app
-  "This service will logically remove an app from the DE."
-  [app-id]
-  (client/delete (metadactyl-url {} "admin" "apps" app-id)
-                 {:as :stream}))
-
 (defn bootstrap
   "This service obtains information about and initializes the workspace for the authenticated user.
    It also records the fact that the user logged in."

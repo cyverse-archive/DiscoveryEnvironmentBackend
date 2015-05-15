@@ -279,3 +279,7 @@
 (defn permanently-delete-apps
   [user body]
   (.permanentlyDeleteApps (get-apps-client user) body))
+
+(defn admin-delete-app
+  [user app-id]
+  (.adminDeleteApp (get-apps-client user) app-id))

@@ -304,6 +304,13 @@
                 :as               :stream
                 :follow-redirects false}))
 
+(defn admin-delete-app
+  [app-id]
+  (client/delete (metadactyl-url "admin" "apps" app-id)
+                 {:query-params     (secured-params)
+                  :as               :stream
+                  :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")

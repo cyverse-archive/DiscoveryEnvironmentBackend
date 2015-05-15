@@ -4,6 +4,7 @@
             [metadactyl.clients.jex :as jex]
             [metadactyl.persistence.app-metadata :as ap]
             [metadactyl.persistence.jobs :as jp]
+            [metadactyl.service.apps.de.admin :as app-admin]
             [metadactyl.service.apps.de.categorization :as app-categorization]
             [metadactyl.service.apps.de.edit :as edit]
             [metadactyl.service.apps.de.jobs :as de-jobs]
@@ -181,4 +182,7 @@
     (app-categorization/categorize-apps body))
 
   (permanentlyDeleteApps [_ body]
-    (app-metadata/permanently-delete-apps user body)))
+    (app-metadata/permanently-delete-apps user body))
+
+  (adminDeleteApp [_ app-id]
+    (app-admin/delete-app app-id)))

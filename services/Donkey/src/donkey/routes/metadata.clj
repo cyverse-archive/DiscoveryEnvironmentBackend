@@ -54,7 +54,7 @@
           (service/success-response (metadactyl/permanently-delete-apps body)))
 
     (DELETE "/apps/:app-id" [app-id]
-            (admin-delete-app app-id))
+            (service/success-response (metadactyl/admin-delete-app app-id)))
 
     (PATCH "/apps/:app-id" [app-id :as req]
            (admin-update-app req app-id))

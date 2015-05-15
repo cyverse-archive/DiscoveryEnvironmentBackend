@@ -48,4 +48,5 @@
   (getParamDefinitions [_ app-id])
   (stopJobStep [_ job-step])
   (categorizeApps [_ body])
-  (permanentlyDeleteApps [_ body]))
+  (permanentlyDeleteApps [_ body])
+  (adminDeleteApp [_ app-id]))

@@ -1,15 +1,19 @@
-(ns metadactyl.conrad.admin-apps
+(ns metadactyl.service.apps.de.admin
   (:use [metadactyl.persistence.app-metadata.relabel :only [update-app-labels]]
-        [metadactyl.user :only [current-user]]
-        [metadactyl.util.service :only [success-response]]
         [korma.db :only [transaction]])
-  (:require [metadactyl.persistence.app-metadata :as persistence]
-            [metadactyl.service.apps :as apps]))
+  (:require [metadactyl.persistence.app-metadata :as persistence]))
 
 (defn- validate-app-existence
   "Verifies that apps exist."
   [app-id]
   (persistence/get-app app-id))
+
+(defn delete-app
+  "This service marks an existing app as deleted in the database."
+  [app-id]
+  (validate-app-existence app-id)
+  (persistence/delete-app true app-id)
+  nil)
 
 (defn- update-app-deleted-disabled
   "Updates only an App's deleted or disabled flags in the database."
@@ -37,5 +41,4 @@
   (transaction
     (if (empty? (select-keys app [:name :description :wiki_url :references :groups]))
       (update-app-deleted-disabled app)
-      (update-app-details app))
-    (apps/get-app-details current-user app-id)))
+      (update-app-details app))))

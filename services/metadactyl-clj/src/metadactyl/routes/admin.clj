@@ -1,6 +1,5 @@
 (ns metadactyl.routes.admin
-  (:use [metadactyl.conrad.admin-apps :only [delete-app
-                                             update-app]]
+  (:use [metadactyl.conrad.admin-apps :only [update-app]]
         [metadactyl.conrad.admin-categories :only [add-category
                                                    delete-categories
                                                    delete-category
@@ -80,7 +79,7 @@
            :notes "An app can be marked as deleted in the DE without being completely removed from
            the database using this service. This endpoint is the same as the non-admin endpoint,
            except an error is not returned if the user does not own the App."
-           (ce/trap uri #(delete-app app-id)))
+           (service/trap uri apps/admin-delete-app current-user app-id))
 
   (PATCH* "/:app-id" [:as {uri :uri}]
           :path-params [app-id :- AppIdPathParam]

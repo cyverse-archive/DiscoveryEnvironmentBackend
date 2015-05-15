@@ -163,4 +163,7 @@
     (.categorizeApps (util/get-apps-client clients) body))
 
   (permanentlyDeleteApps [_ body]
-    (.permanentlyDeleteApps (util/get-apps-client clients) body)))
+    (.permanentlyDeleteApps (util/get-apps-client clients) body))
+
+  (adminDeleteApp [_ app-id]
+    (.adminDeleteApp (util/get-apps-client clients) app-id)))
