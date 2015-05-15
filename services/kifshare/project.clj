@@ -41,7 +41,7 @@
   :ring {:init kifshare.config/init
          :handler kifshare.core/app}
 
-  :profiles {:dev     {:resource-paths ["build"]
+  :profiles {:dev     {:resource-paths ["build" "conf"]
                        :dependencies [[midje "1.6.3"]]
                        :plugins [[lein-midje "2.0.1"]]}
              :uberjar {:aot :all}}
