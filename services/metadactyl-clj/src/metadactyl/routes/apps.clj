@@ -10,7 +10,6 @@
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
   (:require [clojure-commons.error-codes :as ce]
-            [metadactyl.service.app-metadata :as app-metadata]
             [metadactyl.service.apps :as apps]
             [metadactyl.util.service :as service]
             [compojure.route :as route]

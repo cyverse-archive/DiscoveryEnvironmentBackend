@@ -17,7 +17,6 @@
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
         [metadactyl.service.app-documentation :only [add-app-docs edit-app-docs get-app-docs]]
-        [metadactyl.service.app-metadata :only [permanently-delete-apps]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
@@ -72,7 +71,7 @@
          :summary "Permanently Deleting Apps"
          :notes "This service physically removes an App from the database, which allows
          administrators to completely remove Apps that are causing problems."
-         (ce/trap uri #(permanently-delete-apps body)))
+         (service/trap uri apps/permanently-delete-apps current-user body))
 
   (DELETE* "/:app-id" [:as {uri :uri}]
            :path-params [app-id :- AppIdPathParam]

@@ -47,4 +47,5 @@
   (prepareStepSubmission [_ job-id submission])
   (getParamDefinitions [_ app-id])
   (stopJobStep [_ job-step])
-  (categorizeApps [_ body]))
+  (categorizeApps [_ body])
+  (permanentlyDeleteApps [_ body]))

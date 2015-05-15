@@ -178,4 +178,7 @@
       (jex/stop-job external-id)))
 
   (categorizeApps [_ body]
-    (app-categorization/categorize-apps body)))
+    (app-categorization/categorize-apps body))
+
+  (permanentlyDeleteApps [_ body]
+    (app-metadata/permanently-delete-apps user body)))

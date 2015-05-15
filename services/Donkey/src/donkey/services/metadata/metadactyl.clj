@@ -134,13 +134,6 @@
         req (metadactyl-request req)]
     (forward-patch url req)))
 
-(defn permanently-delete-apps
-  "This service will permanently remove a list of apps from the DE."
-  [req]
-  (let [url (metadactyl-url {} "admin" "apps" "shredder")
-        req (metadactyl-request req)]
-    (forward-post url req)))
-
 (defn admin-delete-app
   "This service will logically remove an app from the DE."
   [app-id]

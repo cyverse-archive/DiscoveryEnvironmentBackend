@@ -275,3 +275,7 @@
 (defn categorize-apps
   [user body]
   (.categorizeApps (get-apps-client user) body))
+
+(defn permanently-delete-apps
+  [user body]
+  (.permanentlyDeleteApps (get-apps-client user) body))

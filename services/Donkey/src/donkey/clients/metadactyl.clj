@@ -295,6 +295,15 @@
                 :as               :stream
                 :follow-redirects false}))
 
+(defn permanently-delete-apps
+  [body]
+  (client/post (metadactyl-url "admin" "apps" "shredder")
+               {:query-params     (secured-params)
+                :content-type     :json
+                :body             body
+                :as               :stream
+                :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")

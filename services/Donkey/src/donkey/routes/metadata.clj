@@ -50,8 +50,8 @@
     (POST "/apps" [:as {:keys [body]}]
           (service/success-response (metadactyl/categorize-apps body)))
 
-    (POST "/apps/shredder" [:as req]
-          (permanently-delete-apps req))
+    (POST "/apps/shredder" [:as {:keys [body]}]
+          (service/success-response (metadactyl/permanently-delete-apps body)))
 
     (DELETE "/apps/:app-id" [app-id]
             (admin-delete-app app-id))

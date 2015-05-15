@@ -160,4 +160,7 @@
     (dorun (map #(.stopJobStep % job-step) clients)))
 
   (categorizeApps [_ body]
-    (.categorizeApps (util/get-apps-client clients) body)))
+    (.categorizeApps (util/get-apps-client clients) body))
+
+  (permanentlyDeleteApps [_ body]
+    (.permanentlyDeleteApps (util/get-apps-client clients) body)))
