@@ -56,8 +56,8 @@
     (DELETE "/apps/:app-id" [app-id]
             (service/success-response (metadactyl/admin-delete-app app-id)))
 
-    (PATCH "/apps/:app-id" [app-id :as req]
-           (admin-update-app req app-id))
+    (PATCH "/apps/:app-id" [app-id :as {:keys [body]}]
+           (service/success-response (metadactyl/admin-update-app app-id body)))
 
     (POST "/apps/:app-id/documentation" [app-id :as {:keys [body]}]
           (apps/admin-add-app-docs app-id body))

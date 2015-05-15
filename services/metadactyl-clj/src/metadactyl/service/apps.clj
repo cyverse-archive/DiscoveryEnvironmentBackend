@@ -283,3 +283,9 @@
 (defn admin-delete-app
   [user app-id]
   (.adminDeleteApp (get-apps-client user) app-id))
+
+(defn admin-update-app
+  [user body]
+  (let [apps-client (get-apps-client user)]
+    (.adminUpdateApp apps-client body)
+    (.getAppDetails apps-client (:id body))))

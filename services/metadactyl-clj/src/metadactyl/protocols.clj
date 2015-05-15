@@ -49,4 +49,5 @@
   (stopJobStep [_ job-step])
   (categorizeApps [_ body])
   (permanentlyDeleteApps [_ body])
-  (adminDeleteApp [_ app-id]))
+  (adminDeleteApp [_ app-id])
+  (adminUpdateApp [_ body]))

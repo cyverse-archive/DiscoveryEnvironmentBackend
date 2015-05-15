@@ -166,4 +166,7 @@
     (.permanentlyDeleteApps (util/get-apps-client clients) body))
 
   (adminDeleteApp [_ app-id]
-    (.adminDeleteApp (util/get-apps-client clients) app-id)))
+    (.adminDeleteApp (util/get-apps-client clients) app-id))
+
+  (adminUpdateApp [_ body]
+    (.adminUpdateApp (util/get-apps-client clients) body)))

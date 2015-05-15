@@ -185,4 +185,7 @@
     (app-metadata/permanently-delete-apps user body))
 
   (adminDeleteApp [_ app-id]
-    (app-admin/delete-app app-id)))
+    (app-admin/delete-app app-id))
+
+  (adminUpdateApp [_ body]
+    (app-admin/update-app body)))

@@ -1,6 +1,5 @@
 (ns metadactyl.routes.admin
-  (:use [metadactyl.conrad.admin-apps :only [update-app]]
-        [metadactyl.conrad.admin-categories :only [add-category
+  (:use [metadactyl.conrad.admin-categories :only [add-category
                                                    delete-categories
                                                    delete-category
                                                    get-admin-app-categories
@@ -93,7 +92,8 @@
           <b>Note</b>: Although this endpoint accepts all App Group and Parameter fields within the
           'groups' array, only their 'description', 'label', and 'display' (only in parameter
           arguments) fields will be processed and updated by this endpoint."
-          (service/coerced-trap uri AppDetails update-app (assoc body :id app-id)))
+          (service/coerced-trap uri AppDetails
+                                apps/admin-update-app current-user (assoc body :id app-id)))
 
   (PATCH* "/:app-id/documentation" [:as {uri :uri body :body}]
           :path-params [app-id :- AppIdPathParam]
