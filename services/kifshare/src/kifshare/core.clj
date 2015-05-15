@@ -1,32 +1,22 @@
 (ns kifshare.core
   (:gen-class)
   (:use compojure.core
-        kifshare.config
         [ring.middleware
          params
          keyword-params
          nested-params
          multipart-params
-         cookies
-         session
-         stacktrace]
-        [clojure.core.memoize]
-        [slingshot.slingshot :only [try+ throw+]])
-  (:require [clojure.tools.cli :as cli]
-            [clojure.java.io :as io]
-            [clojure-commons.props :as prps]
-            [clojure-commons.file-utils :as ft]
+         stacktrace])
+  (:require [clojure-commons.file-utils :as ft]
             [clojure.tools.logging :as log]
             [compojure.route :as route]
-            [compojure.handler :as handler]
             [ring.adapter.jetty :as jetty]
             [ring.util.response :as resp]
             [kifshare.config :as cfg]
             [kifshare.controllers :as controllers]
             [clojure.string :as string]
             [common-cli.core :as ccli]
-            [me.raynes.fs :as fs])
-  (:use [clojure-commons.error-codes]))
+            [me.raynes.fs :as fs]))
 
 (defn keep-alive
   [resp]
@@ -44,46 +34,44 @@
       keep-alive))
 
 (defroutes kifshare-routes
-  (GET "/favicon.ico"
-       req
+  (GET "/favicon.ico" []
        (static-resp (cfg/favicon-path)))
 
   (GET "/resources/:rsc-name"
-       [rsc-name :as req]
+       [rsc-name]
        (static-resp rsc-name))
 
   (GET "/resources/css/:rsc-name"
-       [rsc-name :as req]
+       [rsc-name]
        (let [resource-root (ft/path-join (cfg/resources-root) (cfg/css-dir))]
          (static-resp rsc-name :root resource-root)))
 
   (GET "/resources/js/:rsc-name"
-       [rsc-name :as req]
+       [rsc-name]
        (let [resource-root (ft/path-join (cfg/resources-root) (cfg/js-dir))]
          (static-resp rsc-name :root resource-root)))
 
   (GET "/resources/flash/:rsc-name"
-       [rsc-name :as req]
+       [rsc-name]
        (let [resource-root (ft/path-join (cfg/resources-root) (cfg/flash-dir))]
          (static-resp rsc-name :root resource-root)))
 
   (GET "/resources/img/:rsc-name"
-       [rsc-name :as req]
+       [rsc-name]
        (let [resource-root (ft/path-join (cfg/resources-root) (cfg/img-dir))]
          (static-resp rsc-name :root resource-root)))
 
-  (GET "/robots.txt"
-       req
+  (GET "/robots.txt" []
        (static-resp (cfg/robots-txt-path)))
 
-  (HEAD "/d/:ticket-id/:filename" [ticket-id filename as request]
-        (controllers/file-info ticket-id filename request))
+  (HEAD "/d/:ticket-id/:filename" [ticket-id]
+        (controllers/file-info ticket-id))
 
   (GET "/d/:ticket-id/:filename" [ticket-id filename :as request]
        (controllers/download-file ticket-id filename request))
 
-  (HEAD "/d/:ticket-id" [ticket-id :as request]
-        (controllers/file-info ticket-id request))
+  (HEAD "/d/:ticket-id" [ticket-id]
+        (controllers/file-info ticket-id))
 
   (GET "/d/:ticket-id" [ticket-id :as request]
        (controllers/download-ticket ticket-id request))
@@ -126,7 +114,7 @@
 
 (defn -main
   [& args]
-  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+  (let [{:keys [options]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The config file does not exist.")))
     (when-not (fs/readable? (:config options))

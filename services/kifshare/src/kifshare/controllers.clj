@@ -124,12 +124,10 @@
      {:status 500 :body (cheshire/encode (unchecked &throw-context))})))
 
 (defn file-info
-  ([ticket-id ring-request]
-   (jinit/with-jargon (jargon-config) [cm]
-     (let [ticket-info (tickets/ticket-info cm ticket-id)]
-       {:status  200
-        :headers {"Content-Length"      (str (:filesize ticket-info))
-                  "Content-Disposition" (str "filename=\"" (:filename ticket-info) "\"")
-                  "Accept-Ranges"       "bytes"}})))
-  ([ticket-id filename ring-request]
-   (file-info ticket-id ring-request)))
+  [ticket-id]
+  (jinit/with-jargon (jargon-config) [cm]
+    (let [ticket-info (tickets/ticket-info cm ticket-id)]
+      {:status  200
+       :headers {"Content-Length"      (str (:filesize ticket-info))
+                 "Content-Disposition" (str "filename=\"" (:filename ticket-info) "\"")
+                 "Accept-Ranges"       "bytes"}})))
