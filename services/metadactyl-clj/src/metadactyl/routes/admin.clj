@@ -1,9 +1,8 @@
 (ns metadactyl.routes.admin
-  (:use [metadactyl.conrad.admin-categories :only [add-category
+  (:use [metadactyl.conrad.admin-categories :onlyf [add-category
                                                    delete-categories
                                                    delete-category
-                                                   get-admin-app-categories
-                                                   update-category]]
+                                                    update-category]]
         [metadactyl.metadata.reference-genomes :only [add-reference-genome
                                                       delete-reference-genome
                                                       replace-reference-genomes
@@ -120,7 +119,7 @@
         :summary "List App Categories"
         :notes "This service is used by DE admins to obtain a list of public app categories along
         with the 'Trash' virtual category."
-        (ce/trap uri #(get-admin-app-categories params)))
+        (service/trap uri apps/get-admin-app-categories current-user params))
 
   (POST* "/" [:as {uri :uri}]
          :query [params SecuredQueryParams]

@@ -169,4 +169,7 @@
     (.adminDeleteApp (util/get-apps-client clients) app-id))
 
   (adminUpdateApp [_ body]
-    (.adminUpdateApp (util/get-apps-client clients) body)))
+    (.adminUpdateApp (util/get-apps-client clients) body))
+
+  (getAdminAppCategories [_ params]
+    (.getAdminAppCategories (util/get-apps-client clients) params)))

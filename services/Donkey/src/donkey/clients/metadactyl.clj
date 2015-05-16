@@ -320,6 +320,13 @@
                  :as               :stream
                  :follow-redirects false}))
 
+(defn get-admin-app-categories
+  [params]
+  (client/get (metadactyl-url "admin" "apps" "categories")
+              {:query-params     (secured-params params metadactyl-sort-params)
+               :as               :stream
+               :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")

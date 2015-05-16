@@ -188,4 +188,7 @@
     (app-admin/delete-app app-id))
 
   (adminUpdateApp [_ body]
-    (app-admin/update-app body)))
+    (app-admin/update-app body))
+
+  (getAdminAppCategories [_ params]
+    (listings/get-admin-app-groups params)))

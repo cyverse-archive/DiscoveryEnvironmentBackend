@@ -69,12 +69,6 @@
         req    (metadactyl-request req)]
     (forward-get url req)))
 
-(defn get-admin-app-categories
-  [params]
-  (client/get (metadactyl-url (select-keys params dm/metadactyl-sort-params)
-                              "admin" "apps" "categories")
-              {:as :stream}))
-
 (defn add-category
   [req]
   (let [url (metadactyl-url {} "admin" "apps" "categories")

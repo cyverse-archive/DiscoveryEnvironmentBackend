@@ -130,10 +130,3 @@
         (validate-category-not-ancestor-of-parent category-id parent_id)
         (add-subgroup parent_id category-id))
       (apps/list-apps-in-category nil category-id {}))))
-
-(defn get-admin-app-categories
-  "Lists public App Categories with the Trash Category"
-  [params]
-  (-> (apps/get-app-categories nil params)
-      (update-in [:categories] concat [(format-trash-category nil params)])
-      success-response))

@@ -289,3 +289,7 @@
   (let [apps-client (get-apps-client user)]
     (.adminUpdateApp apps-client body)
     (.getAppDetails apps-client (:id body))))
+
+(defn get-admin-app-categories
+  [user params]
+  {:categories (.getAdminAppCategories (get-apps-client user) params)})

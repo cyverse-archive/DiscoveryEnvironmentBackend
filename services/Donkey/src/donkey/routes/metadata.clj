@@ -27,7 +27,7 @@
            (config/app-routes-enabled))]
 
     (GET "/apps/categories" [:as {params :params}]
-         (get-admin-app-categories params))
+         (service/success-response (metadactyl/get-admin-app-categories params)))
 
     (POST "/apps/categories" [:as req]
           (add-category req))
