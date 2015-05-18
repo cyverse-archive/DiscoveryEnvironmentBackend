@@ -12,7 +12,8 @@
             [ring.adapter.jetty :as jetty]
             [common-cfg.cfg :as cfg]
             [clojure.tools.logging :as log]
-            [me.raynes.fs :as fs]))
+            [me.raynes.fs :as fs]
+            [service-logging.thread-context :as tc]))
 
 (defn cli-options
   []
@@ -60,21 +61,24 @@
           (log/error (cfg/pprint-to-string request) "\n" formatted-exception)
           (-> (response formatted-exception) (status 500)))))))
 
+(def svc-info
+  {:desc "DE API for managing saved-searches."
+   :app-name "saved-searches"
+   :group-id "org.iplantc"
+   :art-id "saved-searches"
+   :service "saved-searches"})
+
 (def app
   (-> app-routes
       (wrap-logging)
       (wrap-json-body)
       (wrap-json-response)
-      (wrap-exception)))
-
-(def svc-info
-  {:desc "DE API for managing saved-searches."
-   :app-name "saved-searches"
-   :group-id "org.iplantc"
-   :art-id "saved-searches"})
+      (wrap-exception)
+      (tc/wrap-thread-context svc-info)))
 
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The default --config file " (:config options) " does not exist.")))
