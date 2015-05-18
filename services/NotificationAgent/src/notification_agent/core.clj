@@ -18,7 +18,8 @@
             [notification-agent.db :as db]
             [ring.adapter.jetty :as jetty]
             [common-cli.core :as ccli]
-            [me.raynes.fs :as fs]))
+            [me.raynes.fs :as fs]
+            [service-logging.thread-context :as tc]))
 
 (defn- trap
   [ctx f]
@@ -104,16 +105,6 @@
 
   (route/not-found "Unrecognized service path.\n"))
 
-(defn site-handler [routes]
-  (-> routes
-      wrap-keyword-params
-      wrap-lcase-params
-      wrap-nested-params
-      wrap-query-params))
-
-(def app
-  (site-handler notificationagent-routes))
-
 (defn- init-service
   []
   (db/define-database))
@@ -160,7 +151,19 @@
   {:desc "A web service for storing and forwarding notifications."
    :app-name "notificationagent"
    :group-id "org.iplantc"
-   :art-id "notificationagent"})
+   :art-id "notificationagent"
+   :service "notificationagent"})
+
+(defn site-handler [routes]
+  (-> routes
+      wrap-keyword-params
+      wrap-lcase-params
+      wrap-nested-params
+      wrap-query-params
+      (tc/wrap-thread-context svc-info)))
+
+(def app
+  (site-handler notificationagent-routes))
 
 (defn cli-options
   []
@@ -171,6 +174,7 @@
 
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 "The config file does not exist."))

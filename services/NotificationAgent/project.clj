@@ -25,6 +25,7 @@
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/kameleon "5.0.0"]
                  [org.iplantc/common-cli "5.0.0"]
+                 [org.iplantc/service-logging "5.0.0"]
                  [me.raynes/fs "1.4.6"]
                  [clj-http "1.0.1"]
                  [clj-time "0.8.0"]
