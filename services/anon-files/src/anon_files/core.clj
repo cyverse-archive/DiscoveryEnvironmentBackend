@@ -9,7 +9,8 @@
             [ring.adapter.jetty :as jetty]
             [common-cfg.cfg :as cfg]
             [clojure.tools.logging :as log]
-            [me.raynes.fs :as fs]))
+            [me.raynes.fs :as fs]
+            [service-logging.thread-context :as tc]))
 
 (defn cli-options
   []
@@ -35,10 +36,12 @@
   {:desc "A service that serves up files shared with the iRODS anonymous user."
    :app-name "anon-files"
    :group-id "org.iplantc"
-   :art-id "anon-files"})
+   :art-id "anon-files"
+   :service "anon-files"})
 
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The default --config file " (:config options) " does not exist.")))
