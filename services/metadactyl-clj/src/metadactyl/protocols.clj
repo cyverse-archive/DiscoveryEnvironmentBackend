@@ -51,4 +51,5 @@
   (permanentlyDeleteApps [_ body])
   (adminDeleteApp [_ app-id])
   (adminUpdateApp [_ body])
-  (getAdminAppCategories [_ params]))
+  (getAdminAppCategories [_ params])
+  (adminAddCategory [_ body]))

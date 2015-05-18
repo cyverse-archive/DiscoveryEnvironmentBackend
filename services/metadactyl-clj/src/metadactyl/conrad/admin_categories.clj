@@ -91,18 +91,6 @@
     (let [failed-ids (remove nil? (map delete-valid-app-category (:category_ids body)))]
       (success-response {:category_ids failed-ids}))))
 
-(defn add-category
-  "Adds an App Category to a parent Category, as long as that parent does not contain any Apps."
-  [{:keys [name parent_id] :as category}]
-  (validate-app-category-existence parent_id)
-  (validate-app-category-name name)
-  (validate-subcategory-name parent_id name)
-  (validate-category-empty parent_id)
-  (transaction
-    (let [category-id (:id (create-app-group (uuidify (workspace-public-id)) category))]
-      (add-subgroup parent_id category-id)
-      (apps/list-apps-in-category nil category-id {}))))
-
 (defn delete-category
   "Deletes an App Category and all of its children, as long as they do not contain any Apps."
   [category-id]

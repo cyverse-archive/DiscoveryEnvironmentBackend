@@ -1,6 +1,5 @@
 (ns metadactyl.routes.admin
-  (:use [metadactyl.conrad.admin-categories :onlyf [add-category
-                                                   delete-categories
+  (:use [metadactyl.conrad.admin-categories :only [delete-categories
                                                    delete-category
                                                     update-category]]
         [metadactyl.metadata.reference-genomes :only [add-reference-genome
@@ -129,7 +128,7 @@
          :notes "This endpoint adds an App Category under the given parent App Category, as long as
          that parent Category doesn't already have a subcategory with the given name and it doesn't
          directly contain its own Apps."
-         (service/trap uri add-category body))
+         (service/trap uri apps/admin-add-category current-user body))
 
   (POST* "/shredder" [:as {uri :uri}]
          :query [params SecuredQueryParams]

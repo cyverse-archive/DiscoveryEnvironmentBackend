@@ -29,8 +29,8 @@
     (GET "/apps/categories" [:as {params :params}]
          (service/success-response (metadactyl/get-admin-app-categories params)))
 
-    (POST "/apps/categories" [:as req]
-          (add-category req))
+    (POST "/apps/categories" [:as {:keys [body]}]
+          (service/success-response (metadactyl/add-category body)))
 
     (POST "/apps/categories/shredder" [:as req]
           (delete-categories req))

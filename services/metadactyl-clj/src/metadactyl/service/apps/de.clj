@@ -191,4 +191,7 @@
     (app-admin/update-app body))
 
   (getAdminAppCategories [_ params]
-    (listings/get-admin-app-groups params)))
+    (listings/get-admin-app-groups params))
+
+  (adminAddCategory [_ body]
+    (app-admin/add-category body)))

@@ -293,3 +293,8 @@
 (defn get-admin-app-categories
   [user params]
   {:categories (.getAdminAppCategories (get-apps-client user) params)})
+
+(defn admin-add-category
+  [user body]
+  (let [apps-client (get-apps-client user)]
+    (.listAppsInCategory apps-client (.adminAddCategory apps-client body) {})))

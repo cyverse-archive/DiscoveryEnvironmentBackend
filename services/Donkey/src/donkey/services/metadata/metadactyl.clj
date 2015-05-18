@@ -69,12 +69,6 @@
         req    (metadactyl-request req)]
     (forward-get url req)))
 
-(defn add-category
-  [req]
-  (let [url (metadactyl-url {} "admin" "apps" "categories")
-        req (metadactyl-request req)]
-    (forward-post url req)))
-
 (defn delete-categories
   "A service used to delete app categories."
   [req]
