@@ -12,7 +12,8 @@
             [iplant-email.json-validator :as jv]
             [iplant-email.templatize :as tmpl]
             [common-cli.core :as ccli]
-            [me.raynes.fs :as fs]))
+            [me.raynes.fs :as fs]
+            [service-logging.thread-context :as tc]))
 
 (defn format-exception
   "Formats a raised exception as a JSON object. Returns a response map."
@@ -33,10 +34,6 @@
 
   (POST "/" {body :body} (sm/do-send-email body)))
 
-(defn site-handler [routes]
-  (-> routes
-    jb/parse-json-body))
-
 (defn cli-options
   []
   [["-c" "--config PATH" "Path to the config file"
@@ -48,10 +45,17 @@
   {:desc "Sends out emails for the DE."
    :app-name "iplant-email"
    :group-id "org.iplantc"
-   :art-id "iplant-email"})
+   :art-id "iplant-email"
+   :service "iplant-email"})
+
+(defn site-handler [routes]
+  (-> routes
+    jb/parse-json-body
+    (tc/wrap-thread-context svc-info)))
 
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The config file does not exist.")))

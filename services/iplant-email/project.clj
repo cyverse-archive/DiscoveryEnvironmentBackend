@@ -16,6 +16,7 @@
   :uberjar-name "iplant-email-standalone.jar"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.iplantc/clojure-commons "5.0.0"]
+                 [org.iplantc/service-logging "5.0.0"]
                  [cheshire "5.0.1"
                    :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
                                 [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
