@@ -10,7 +10,8 @@
             [dewey.curation :as curation]
             [dewey.status :as status]
             [common-cli.core :as ccli]
-            [me.raynes.fs :as fs])
+            [me.raynes.fs :as fs]
+            [service-logging.thread-context :as tc])
   (:import [java.net URL]
            [java.util Properties]))
 
@@ -101,7 +102,8 @@
   {:desc "Service that keeps an elasticsearch index synchronized with an iRODS repository."
    :app-name "dewey"
    :group-id "org.iplantc"
-   :art-id "dewey"})
+   :art-id "dewey"
+   :service "dewey"})
 
 
 (defn cli-options
@@ -114,6 +116,7 @@
 
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (try+
    (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
      (when-not (fs/exists? (:config options))

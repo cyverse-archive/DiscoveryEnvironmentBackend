@@ -37,6 +37,7 @@
                                 [log4j]]]
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/common-cli "5.0.0"]
+                 [org.iplantc/service-logging "5.0.0"]
                  [me.raynes/fs "1.4.6"]]
   :resource-paths []
   :profiles {:dev     {:dependencies   [[midje "1.6.3"]]
