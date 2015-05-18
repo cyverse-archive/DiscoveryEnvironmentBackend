@@ -16,7 +16,8 @@
             [kifshare.controllers :as controllers]
             [clojure.string :as string]
             [common-cli.core :as ccli]
-            [me.raynes.fs :as fs]))
+            [me.raynes.fs :as fs]
+            [service-logging.thread-context :as tc]))
 
 (defn keep-alive
   [resp]
@@ -83,22 +84,24 @@
 
   (route/not-found "Not found!"))
 
+(def svc-info
+  {:desc "Service that serves up public files from iRODS."
+   :app-name "kifshare"
+   :group-id "org.iplantc"
+   :art-id "kifshare"
+   :service "kifshare"})
+
 (defn site-handler [routes]
   (-> routes
       wrap-multipart-params
       wrap-keyword-params
       wrap-nested-params
       wrap-params
-      wrap-stacktrace))
+      wrap-stacktrace
+      (tc/wrap-thread-context svc-info)))
 
 (def app
   (site-handler kifshare-routes))
-
-(def svc-info
-  {:desc "Service that serves up public files from iRODS."
-   :app-name "kifshare"
-   :group-id "org.iplantc"
-   :art-id "kifshare"})
 
 (defn cli-options
   []
@@ -114,6 +117,7 @@
 
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (let [{:keys [options]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The config file does not exist.")))
@@ -125,4 +129,3 @@
       (let [port (Integer/parseInt (string/trim (get @cfg/props "kifshare.app.port")))]
         (log/warn "Configured listen port is: " port)
         (jetty/run-jetty app {:port port})))))
-
