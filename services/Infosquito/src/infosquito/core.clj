@@ -10,7 +10,8 @@
             [infosquito.messages :as messages]
             [infosquito.props :as props]
             [common-cli.core :as ccli]
-            [me.raynes.fs :as fs])
+            [me.raynes.fs :as fs]
+            [service-logging.thread-context :as tc])
   (:import [java.util Properties]))
 
 
@@ -71,10 +72,12 @@
   {:desc "An ICAT database crawler used to index the contents of iRODS."
    :app-name "infosquito"
    :group-id "org.iplantc"
-   :art-id "infosquito"})
+   :art-id "infosquito"
+   :service "infosquito"})
 
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 "The config file does not exist."))
