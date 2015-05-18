@@ -37,7 +37,8 @@
             [common-cli.core :as ccli]
             [donkey.services.filesystem.icat :as icat]
             [donkey.util :as util]
-            [donkey.util.transformers :as transform]))
+            [donkey.util.transformers :as transform]
+            [service-logging.thread-context :as tc]))
 
 
 (defn delayed-handler
@@ -208,20 +209,6 @@
   (load-configuration-from-file)
   (icat/configure-icat))
 
-(defn site-handler
-  [routes-fn]
-  (-> (delayed-handler routes-fn)
-    util/trap-handler
-    util/req-logger
-    wrap-keyword-params
-    wrap-lcase-params
-    wrap-query-params
-    wrap-log-requests))
-
-
-(def app
-  (site-handler donkey-routes))
-
 (defn cli-options
   []
   [["-c" "--config PATH" "Path to the config file"
@@ -233,10 +220,26 @@
   {:desc "DE service for business logic"
    :app-name "donkey"
    :group-id "org.iplantc"
-   :art-id "donkey"})
+   :art-id "donkey"
+   :service "donkey"})
+
+(defn site-handler
+  [routes-fn]
+  (-> (delayed-handler routes-fn)
+    util/trap-handler
+    util/req-logger
+    wrap-keyword-params
+    wrap-lcase-params
+    wrap-query-params
+    wrap-log-requests
+    (tc/wrap-thread-context svc-info)))
+
+(def app
+  (site-handler donkey-routes))
 
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (let [{:keys [options]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The config file does not exist.")))

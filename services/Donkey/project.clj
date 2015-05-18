@@ -27,6 +27,7 @@
                                [org.slf4j/slf4j-api]
                                [org.slf4j/slf4j-log4j12]
                                [log4j]]]
+                 [org.iplantc/service-logging "5.0.0"]
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/mescal "5.0.0"]
                  [org.iplantc/kameleon "5.0.0"]
