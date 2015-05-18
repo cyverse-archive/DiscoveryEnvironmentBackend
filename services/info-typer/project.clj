@@ -23,7 +23,8 @@
                                 [log4j]]]
                  [org.iplantc/clojure-commons "5.0.0" :exclusions [commons-logging]]
                  [org.iplantc/common-cli "5.0.0"]
-                 [org.iplantc/heuristomancer "5.0.0"]]
+                 [org.iplantc/heuristomancer "5.0.0"]
+                 [org.iplantc/service-logging "5.0.0"]]
   :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]]
   :main ^:skip-aot info-typer.core
   :profiles {:dev     {:resource-paths ["conf/test"]}

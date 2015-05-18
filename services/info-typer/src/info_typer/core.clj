@@ -4,14 +4,16 @@
             [clj-jargon.init :as init]
             [common-cli.core :as ccli]
             [info-typer.config :as cfg]
-            [info-typer.messaging :as messages]))
+            [info-typer.messaging :as messages]
+            [service-logging.thread-context :as tc]))
 
 
 (def ^:private svc-info
   {:desc     "DE message handling service for file info type detection"
    :app-name "info-typer"
    :group-id "org.iplantc"
-   :art-id   "info-typer"})
+   :art-id   "info-typer"
+   :service  "info-typer"})
 
 
 (defn- cli-options
@@ -38,6 +40,7 @@
 
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 "The config file does not exist."))
