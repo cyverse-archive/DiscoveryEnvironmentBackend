@@ -16,7 +16,12 @@
   :uberjar-name "clockwork-standalone.jar"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/java.jdbc "0.2.3"]
-                 [cheshire "5.0.2"]
+                 [cheshire "5.0.2"
+                   :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
+                                [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
+                                [com.fasterxml.jackson.core/jackson-annotations]
+                                [com.fasterxml.jackson.core/jackson-databind]
+                                [com.fasterxml.jackson.core/jackson-core]]]
                  [clj-http "0.6.5"]
                  [clj-time "0.4.5"]
                  [clojurewerkz/quartzite "1.0.1"]
@@ -29,6 +34,7 @@
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/kameleon "5.0.0"]
+                 [org.iplantc/service-logging "5.0.0"]
                  [me.raynes/fs "1.4.6"]
                  [slingshot "0.10.3"]]
   :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]]

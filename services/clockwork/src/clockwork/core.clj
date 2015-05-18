@@ -13,7 +13,8 @@
             [clojurewerkz.quartzite.scheduler :as qs]
             [clojurewerkz.quartzite.triggers :as qt]
             [common-cli.core :as ccli]
-            [me.raynes.fs :as fs]))
+            [me.raynes.fs :as fs]
+            [service-logging.thread-context :as tc]))
 
 (defn- split-timestamp
   "Splits a timestamp into its components.  The timestamp should be in the format, HH:MM.  If
@@ -75,7 +76,8 @@
   {:desc "Scheduled jobs for the iPlant Discovery Environment"
    :app-name "clockwork"
    :group-id "org.iplantc"
-   :art-id "clockwork"})
+   :art-id "clockwork"
+   :service "clockwork"})
 
 (defn cli-options
   []
@@ -86,6 +88,7 @@
 
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The config file does not exist.")))
