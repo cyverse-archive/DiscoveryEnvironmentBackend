@@ -9,14 +9,16 @@
             [monkey.index :as index]
             [monkey.messenger :as msg]
             [monkey.props :as props]
-            [monkey.tags :as tags]))
+            [monkey.tags :as tags]
+            [service-logging.thread-context :as tc]))
 
 
 (def ^{:private true :const true} svc-info
   {:desc "🐒 -- a metadata database crawler"
    :app-name "monkey"
    :group-id "org.iplantc"
-   :art-id "monkey"})
+   :art-id "monkey"
+   :service "monkey"})
 
 
 (def ^{:private true :const true} cli-options
@@ -50,6 +52,7 @@
 
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (try+
     (let [{:keys [options _ _ _]} (cli/handle-args svc-info args (fn [] cli-options))]
       (when-not (fs/exists? (:config options))

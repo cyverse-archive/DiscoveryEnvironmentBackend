@@ -15,6 +15,7 @@
                  [me.raynes/fs "1.4.6"]
                  [slingshot "0.10.3"]
                  [org.iplantc/clojure-commons "5.0.0"]
-                 [org.iplantc/common-cli "5.0.0"]]
+                 [org.iplantc/common-cli "5.0.0"]
+                 [org.iplantc/service-logging "5.0.0"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
   :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]])
