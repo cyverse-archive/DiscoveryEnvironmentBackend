@@ -19,6 +19,7 @@
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/common-cfg "5.0.0"]
                  [org.iplantc/kameleon "5.0.0"]
+                 [org.iplantc/service-logging "5.0.0"]
                  [io.aviso/pretty "0.1.17"]
                  [me.raynes/fs "1.4.6"]
                  [cheshire "5.3.1"
