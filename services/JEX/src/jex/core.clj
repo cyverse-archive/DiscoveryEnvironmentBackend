@@ -23,7 +23,8 @@
             [me.raynes.fs :as fs]
             [common-cli.core :as ccli]
             [clojure.tools.logging :as log]
-            [common-cfg.cfg :as cfg]))
+            [common-cfg.cfg :as cfg]
+            [service-logging.thread-context :as tc]))
 
 (defn do-submission
   "Handles a request on /. "
@@ -64,17 +65,19 @@
     (log/info "request received:" req)
     (handler req)))
 
-(defn site-handler [routes]
-  (-> routes
-      req-logger
-      jb/parse-json-body
-      wrap-errors))
-
 (def svc-info
   {:desc "Submits jobs to a Condor cluster for the DE."
    :app-name "jex"
    :group-id "org.iplantc"
-   :art-id "jex"})
+   :art-id "jex"
+   :service "jex"})
+
+(defn site-handler [routes]
+  (-> routes
+      req-logger
+      jb/parse-json-body
+      wrap-errors
+      (tc/wrap-thread-context svc-info)))
 
 (defn cli-options
   []
@@ -85,6 +88,7 @@
 
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The config file does not exist.")))
