@@ -118,23 +118,32 @@
 (defn- wrap-user-info
   [handler]
   (fn [request]
-    (handler (assoc request :user-info (transform/add-current-user-to-map {})))))
+    (let [user-info (transform/add-current-user-to-map {})
+          request   (assoc request :user-info user-info)]
+      (tc/set-context! user-info)
+      (handler request))))
 
 
 (def secured-handler-no-context
   (-> (delayed-handler secured-routes-no-context)
+    util/trap-handler
+    wrap-log-requests
     wrap-user-info
     (cas-store-user)))
 
 
 (def secured-handler
   (-> (delayed-handler secured-routes)
+    util/trap-handler
+    wrap-log-requests
     wrap-user-info
     (cas-store-user)))
 
 
 (def admin-handler
   (-> (delayed-handler admin-routes)
+    util/trap-handler
+    wrap-log-requests
     wrap-user-info
     (cas-store-admin-user)))
 
@@ -226,12 +235,9 @@
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler routes-fn)
-    util/trap-handler
-    util/req-logger
     wrap-keyword-params
     wrap-lcase-params
     wrap-query-params
-    wrap-log-requests
     (tc/wrap-thread-context svc-info)))
 
 (def app
