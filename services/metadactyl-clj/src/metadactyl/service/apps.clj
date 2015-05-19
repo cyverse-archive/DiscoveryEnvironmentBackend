@@ -302,3 +302,7 @@
 (defn admin-delete-categories
   [user body]
   {:category_ids (.adminDeleteCategories (get-apps-client user) body)})
+
+(defn admin-delete-category
+  [user category-id]
+  (.adminDeleteCategory (get-apps-client user) category-id))

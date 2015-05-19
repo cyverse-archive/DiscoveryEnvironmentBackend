@@ -69,12 +69,6 @@
         req    (metadactyl-request req)]
     (forward-get url req)))
 
-(defn delete-category
-  "A service used to delete an app category by ID."
-  [category-id]
-  (client/delete (metadactyl-url {} "admin" "apps" "categories" category-id)
-                 {:as :stream}))
-
 (defn update-category
   "A service used to update an app category by ID."
   [req category-id]

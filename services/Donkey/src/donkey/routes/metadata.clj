@@ -36,7 +36,7 @@
           (service/success-response (metadactyl/delete-categories body)))
 
     (DELETE "/apps/categories/:category-id" [category-id]
-            (delete-category category-id))
+            (service/success-response (metadactyl/delete-category category-id)))
 
     (PATCH "/apps/categories/:category-id" [category-id :as req]
            (update-category req category-id))))

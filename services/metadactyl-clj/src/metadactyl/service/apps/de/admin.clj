@@ -47,6 +47,15 @@
              :reason     "Parent App Category already contains Apps"
              :parent_id  parent-id})))
 
+(defn- validate-category-hierarchy-empty
+  "Validates that the given App Category and its subcategories contain no Apps."
+  [category-id requestor]
+  (when (app-groups/category-hierarchy-contains-apps? category-id)
+    (throw+ {:error_code   ce/ERR_ILLEGAL_ARGUMENT
+             :reason       "App Category, or one of its subcategories, still contain Apps"
+             :category_id  category-id
+             :requested_by requestor})))
+
 (defn delete-app
   "This service marks an existing app as deleted in the database."
   [app-id]
@@ -94,10 +103,10 @@
      (app-groups/add-subgroup parent_id category-id)
      category-id)))
 
-(defn- delete-category
+(defn- delete-category*
   "Deletes a category."
   [{:keys [username]} {:keys [id name]}]
-  (log/warn username "deleting category" name "(" (str id) ") and all of its subcategories")
+  (log/warnf "%s deleting category \"%s\" (%s) and all of its subcategories" username name id)
   (app-groups/delete-app-category id))
 
 (defn- attempt-deletion
@@ -106,7 +115,7 @@
   [user category-id]
   (let [category (app-groups/get-app-category category-id)]
     (if (and category (not (app-groups/category-hierarchy-contains-apps? category-id)))
-      (do (delete-category user category) true)
+      (do (delete-category* user category) true)
       false)))
 
 (defn delete-categories
@@ -115,3 +124,11 @@
    deleted earlier in the list."
   [user {category-ids :category_ids}]
   (transaction (remove (partial attempt-deletion user) category-ids)))
+
+(defn delete-category
+  "Deletes a single app category."
+  [user category-id]
+  (let [category (validate-app-category-existence category-id)]
+    (validate-category-hierarchy-empty category-id (:username user))
+    (delete-category* user category)
+    nil))

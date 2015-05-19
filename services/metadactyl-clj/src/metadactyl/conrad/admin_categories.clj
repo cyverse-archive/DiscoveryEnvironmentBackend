@@ -61,27 +61,6 @@
              :category_id  category-id
              :parent_id    parent-id})))
 
-(defn- validate-category-hierarchy-empty
-  "Validates that the given App Category and its subcategories contain no Apps."
-  [category-id requestor]
-  (when (category-hierarchy-contains-apps? category-id)
-    (throw+ {:error_code   ce/ERR_ILLEGAL_ARGUMENT
-             :reason       "App Category, or one of its subcategories, still contain Apps"
-             :category_id  category-id
-             :requested_by requestor})))
-
-(defn delete-category
-  "Deletes an App Category and all of its children, as long as they do not contain any Apps."
-  [category-id]
-  (let [requesting-user (:username current-user)
-        category (validate-app-category-existence category-id)]
-    (validate-category-hierarchy-empty category-id requesting-user)
-    (log/warn requesting-user "deleting category"
-                              (:name category) "(" category-id ")"
-                              "and all of its subcategoires")
-    (delete-app-category category-id)
-    (success-response)))
-
 (defn update-category
   "Updates an App Category's name or parent Category."
   [{category-id :id :keys [name parent_id] :as category}]

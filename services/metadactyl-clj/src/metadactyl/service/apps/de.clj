@@ -197,4 +197,7 @@
     (app-admin/add-category body))
 
   (adminDeleteCategories [_ body]
-    (app-admin/delete-categories user body)))
+    (app-admin/delete-categories user body))
+
+  (adminDeleteCategory [_ category-id]
+    (app-admin/delete-category user category-id)))

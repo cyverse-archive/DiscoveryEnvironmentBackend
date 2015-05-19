@@ -1,6 +1,5 @@
 (ns metadactyl.routes.admin
-  (:use [metadactyl.conrad.admin-categories :only [delete-category
-                                                    update-category]]
+  (:use [metadactyl.conrad.admin-categories :only [update-category]]
         [metadactyl.metadata.reference-genomes :only [add-reference-genome
                                                       delete-reference-genome
                                                       replace-reference-genomes
@@ -146,7 +145,7 @@
            :summary "Delete an App Category"
            :notes "This service physically removes an App Category from the database, along with all
            of its child Categories, as long as none of them contain any Apps."
-           (ce/trap uri #(delete-category category-id)))
+           (service/trap uri apps/admin-delete-category current-user category-id))
 
   (PATCH* "/:category-id" [:as {uri :uri}]
           :path-params [category-id :- AppCategoryIdPathParam]

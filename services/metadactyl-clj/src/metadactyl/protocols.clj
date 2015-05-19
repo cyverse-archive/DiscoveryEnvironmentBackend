@@ -53,4 +53,5 @@
   (adminUpdateApp [_ body])
   (getAdminAppCategories [_ params])
   (adminAddCategory [_ body])
-  (adminDeleteCategories [_ body]))
+  (adminDeleteCategories [_ body])
+  (adminDeleteCategory [_ category-id]))
