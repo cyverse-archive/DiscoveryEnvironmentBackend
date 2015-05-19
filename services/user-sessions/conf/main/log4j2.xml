@@ -17,16 +17,8 @@
         </Logger>
 
         <!-- Jargon Logging -->
-        <Logger name="org.irods.jargon" level="debug" additivity="false">
+        <Logger name="org.irods.jargon" level="error" additivity="false">
             <AppenderRef ref="Console" />
-        </Logger>
-
-        <Logger name="metadactyl.util.json" level="debug" additivity="false">
-          <AppenderRef ref="Console" />
-        </Logger>
-
-        <Logger name="metadactyl.service.callbacks" level="info" additivity="false">
-          <AppenderRef ref="Console" />
         </Logger>
 
         <!-- Service Call Trace Message Logging -->

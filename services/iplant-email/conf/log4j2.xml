@@ -17,7 +17,7 @@
         </Logger>
 
         <!-- Jargon Logging -->
-        <Logger name="org.irods.jargon" level="debug" additivity="false">
+        <Logger name="org.irods.jargon" level="error" additivity="false">
             <AppenderRef ref="Console" />
         </Logger>
 
