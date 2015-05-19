@@ -1,6 +1,5 @@
 (ns metadactyl.routes.admin
-  (:use [metadactyl.conrad.admin-categories :only [delete-categories
-                                                   delete-category
+  (:use [metadactyl.conrad.admin-categories :only [delete-category
                                                     update-category]]
         [metadactyl.metadata.reference-genomes :only [add-reference-genome
                                                       delete-reference-genome
@@ -139,7 +138,7 @@
          subcategories will be deleted by this service, but no Apps will be removed. The response
          contains a list of Category IDs for which the deletion failed (including any subcategories
          of a Category already included in the request)."
-         (ce/trap uri #(delete-categories body)))
+         (service/trap uri apps/admin-delete-categories current-user body))
 
   (DELETE* "/:category-id" [:as {uri :uri}]
            :path-params [category-id :- AppCategoryIdPathParam]

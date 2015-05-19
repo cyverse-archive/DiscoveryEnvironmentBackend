@@ -5,7 +5,8 @@
         [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.config :only [workspace-public-id]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as ce]
+  (:require [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as ce]
             [kameleon.app-groups :as app-groups]
             [metadactyl.persistence.app-metadata :as persistence]))
 
@@ -77,9 +78,9 @@
   [{app-id :id :as app}]
   (validate-app-existence app-id)
   (transaction
-    (if (empty? (select-keys app [:name :description :wiki_url :references :groups]))
-      (update-app-deleted-disabled app)
-      (update-app-details app))))
+   (if (empty? (select-keys app [:name :description :wiki_url :references :groups]))
+     (update-app-deleted-disabled app)
+     (update-app-details app))))
 
 (defn add-category
   "Adds an App Category to a parent Category, as long as that parent does not contain any Apps."
@@ -92,3 +93,25 @@
    (let [category-id (:id (app-groups/create-app-group (uuidify (workspace-public-id)) category))]
      (app-groups/add-subgroup parent_id category-id)
      category-id)))
+
+(defn- delete-category
+  "Deletes a category."
+  [{:keys [username]} {:keys [id name]}]
+  (log/warn username "deleting category" name "(" (str id) ") and all of its subcategories")
+  (app-groups/delete-app-category id))
+
+(defn- attempt-deletion
+  "Attempts to delete the category with the given ID. Returns a Boolean value indicating whether
+   or not the deletion was successful."
+  [user category-id]
+  (let [category (app-groups/get-app-category category-id)]
+    (if (and category (not (app-groups/category-hierarchy-contains-apps? category-id)))
+      (do (delete-category user category) true)
+      false)))
+
+(defn delete-categories
+  "Deletes App Categories and all of their subcategories. Returns a list of category IDs that could
+   not (or no longer) be found in the database, including subcategories of a category already
+   deleted earlier in the list."
+  [user {category-ids :category_ids}]
+  (transaction (remove (partial attempt-deletion user) category-ids)))

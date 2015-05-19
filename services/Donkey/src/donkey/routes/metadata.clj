@@ -32,8 +32,8 @@
     (POST "/apps/categories" [:as {:keys [body]}]
           (service/success-response (metadactyl/add-category body)))
 
-    (POST "/apps/categories/shredder" [:as req]
-          (delete-categories req))
+    (POST "/apps/categories/shredder" [:as {:keys [body]}]
+          (service/success-response (metadactyl/delete-categories body)))
 
     (DELETE "/apps/categories/:category-id" [category-id]
             (delete-category category-id))

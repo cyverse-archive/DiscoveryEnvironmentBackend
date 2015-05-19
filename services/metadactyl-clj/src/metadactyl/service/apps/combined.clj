@@ -175,4 +175,7 @@
     (.getAdminAppCategories (util/get-apps-client clients) params))
 
   (adminAddCategory [_ body]
-    (.adminAddCategory (util/get-apps-client clients) body)))
+    (.adminAddCategory (util/get-apps-client clients) body))
+
+  (adminDeleteCategories [_ body]
+    (.adminDeleteCategories (util/get-apps-client clients) body)))

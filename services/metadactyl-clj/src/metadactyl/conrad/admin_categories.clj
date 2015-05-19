@@ -70,27 +70,6 @@
              :category_id  category-id
              :requested_by requestor})))
 
-(defn- delete-valid-app-category
-  [category-id]
-  (let [category (get-app-category category-id)
-        has-apps? (category-hierarchy-contains-apps? category-id)]
-    (if (and category (not has-apps?))
-      (do
-        (delete-app-category category-id)
-        (log/warn (:username current-user) "deleting category"
-                  (:name category) "(" category-id ")"
-                  "and all of its subcategoires"))
-      category-id)))
-
-(defn delete-categories
-  "Deletes App Categories and all of their subcategories. Returns a list of category IDs that could
-  not (or no longer) be found in the database, including subcategories of a category already deleted
-  earlier in the list."
-  [body]
-  (transaction
-    (let [failed-ids (remove nil? (map delete-valid-app-category (:category_ids body)))]
-      (success-response {:category_ids failed-ids}))))
-
 (defn delete-category
   "Deletes an App Category and all of its children, as long as they do not contain any Apps."
   [category-id]

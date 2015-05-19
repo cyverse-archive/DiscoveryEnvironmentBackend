@@ -194,4 +194,7 @@
     (listings/get-admin-app-groups params))
 
   (adminAddCategory [_ body]
-    (app-admin/add-category body)))
+    (app-admin/add-category body))
+
+  (adminDeleteCategories [_ body]
+    (app-admin/delete-categories user body)))

@@ -298,3 +298,7 @@
   [user body]
   (let [apps-client (get-apps-client user)]
     (.listAppsInCategory apps-client (.adminAddCategory apps-client body) {})))
+
+(defn admin-delete-categories
+  [user body]
+  {:category_ids (.adminDeleteCategories (get-apps-client user) body)})
