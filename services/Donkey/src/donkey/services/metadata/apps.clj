@@ -84,9 +84,6 @@
 (deftype DeOnlyAppLister []
   AppLister
 
-  (getAppDocs [_ app-id]
-    (metadactyl/get-app-docs app-id))
-
   (addAppDocs [_ app-id docs]
     (metadactyl/add-app-docs app-id docs))
 
@@ -102,13 +99,6 @@
 
 (deftype DeHpcAppLister [agave-client user-has-access-token?]
   AppLister
-
-  (getAppDocs [_ app-id]
-    (if (is-uuid? app-id)
-      (metadactyl/get-app-docs app-id)
-      {:app_id        app-id
-       :documentation ""
-       :references    []}))
 
   (addAppDocs [_ app-id docs]
     (if (is-uuid? app-id)
@@ -169,11 +159,6 @@
      (if (config/agave-enabled)
        (get-de-hpc-app-lister state-info username)
        (DeOnlyAppLister.))))
-
-(defn get-app-docs
-  [app-id]
-  (service/success-response
-    (.getAppDocs (get-app-lister) app-id)))
 
 (defn add-app-docs
   [app-id body]

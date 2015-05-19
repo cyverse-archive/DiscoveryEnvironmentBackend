@@ -184,4 +184,9 @@
     (.adminDeleteCategory (util/get-apps-client clients) category-id))
 
   (adminUpdateCategory [_ body]
-    (.adminUpdateCategory (util/get-apps-client clients) body)))
+    (.adminUpdateCategory (util/get-apps-client clients) body))
+
+  (getAppDocs [_ app-id]
+    (->> (map #(.getAppDocs % app-id) clients)
+         (remove nil?)
+         (first))))

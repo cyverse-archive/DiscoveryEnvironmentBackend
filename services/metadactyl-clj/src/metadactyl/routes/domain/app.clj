@@ -7,6 +7,7 @@
   (:import [java.util UUID Date]))
 
 (def AppIdParam (describe UUID "A UUID that is used to identify the App"))
+(def StringAppIdParam (describe String "The App identifier."))
 (def OptionalIdParam (describe UUID "An optional UUID identifier"))
 (def AppDocParam (describe String "The App's documentation"))
 (def AppDocUrlParam (describe String "The App's documentation URL"))
@@ -286,13 +287,26 @@
             "The list of Categories the integrator wishes to associate with the App")}))
 
 (defschema AppDocumentation
-  {(optional-key :app_id)      AppIdParam
-   :documentation              AppDocParam
-   :references                 AppReferencesParam
-   (optional-key :created_on)  (describe Date "The Date the App's documentation was created")
-   (optional-key :modified_on) (describe Date "The Date the App's documentation was last modified")
-   (optional-key :created_by)  (describe String "The user that created the App's documentation")
-   (optional-key :modified_by) (describe String "The user that last modified the App's documentation")})
+  {(optional-key :app_id)
+   StringAppIdParam
+
+   :documentation
+   AppDocParam
+
+   :references
+   AppReferencesParam
+
+   (optional-key :created_on)
+   (describe Date "The Date the App's documentation was created")
+
+   (optional-key :modified_on)
+   (describe Date "The Date the App's documentation was last modified")
+
+   (optional-key :created_by)
+   (describe String "The user that created the App's documentation")
+
+   (optional-key :modified_by)
+   (describe String "The user that last modified the App's documentation")})
 
 (defschema AppDocumentationRequest
   (dissoc AppDocumentation :references))

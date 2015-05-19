@@ -111,4 +111,10 @@
   (stopJobStep [self {:keys [job-type external-id]}]
     (when (and (apps-util/supports-job-type? self job-type)
                (not (string/blank? external-id)))
-      (.stopJob agave external-id))))
+      (.stopJob agave external-id)))
+
+  (getAppDocs [_ app-id]
+    (when-not (util/uuid? app-id)
+      {:app_id        app-id
+       :documentation ""
+       :references    []})))

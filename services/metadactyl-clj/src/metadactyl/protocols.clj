@@ -55,4 +55,5 @@
   (adminAddCategory [_ body])
   (adminDeleteCategories [_ body])
   (adminDeleteCategory [_ category-id])
-  (adminUpdateCategory [_ body]))
+  (adminUpdateCategory [_ body])
+  (getAppDocs [_ app-id]))

@@ -3,8 +3,7 @@
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.tool :only [NewToolListing]]
         [metadactyl.routes.params]
-        [metadactyl.service.app-documentation :only [get-app-docs
-                                                     owner-add-app-docs
+        [metadactyl.service.app-documentation :only [owner-add-app-docs
                                                      owner-edit-app-docs]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
@@ -127,7 +126,7 @@
         notifications. There is no request body and the response body contains only the App
         description, with no special formatting. Note: this uses ce/trap because it returns
         plain text."
-        (ce/trap uri apps/get-app-description current-user app-id))
+        (service/trap uri apps/get-app-description current-user app-id))
 
   (GET* "/:app-id/details" [:as {uri :uri}]
         :path-params [app-id :- AppIdJobViewPathParam]
@@ -138,12 +137,12 @@
         (service/coerced-trap uri AppDetails apps/get-app-details current-user app-id))
 
   (GET* "/:app-id/documentation" [:as {uri :uri}]
-        :path-params [app-id :- AppIdPathParam]
+        :path-params [app-id :- AppIdJobViewPathParam]
         :query [params SecuredQueryParams]
         :return AppDocumentation
         :summary "Get App Documentation"
         :notes "This service is used by the DE to obtain documentation for a single App"
-        (ce/trap uri #(get-app-docs app-id)))
+        (service/coerced-trap uri AppDocumentation apps/get-app-docs current-user app-id))
 
   (PATCH* "/:app-id/documentation" [:as {uri :uri body :body}]
           :path-params [app-id :- AppIdPathParam]

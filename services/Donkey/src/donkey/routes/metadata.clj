@@ -122,7 +122,7 @@
          (service/success-response (metadactyl/get-app-details app-id)))
 
     (GET "/apps/:app-id/documentation" [app-id]
-         (apps/get-app-docs app-id))
+         (service/success-response (metadactyl/get-app-docs app-id)))
 
     (POST "/apps/:app-id/documentation" [app-id :as {:keys [body]}]
           (apps/add-app-docs app-id body))

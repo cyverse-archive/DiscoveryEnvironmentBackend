@@ -6,6 +6,7 @@
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.service.apps.de.admin :as app-admin]
             [metadactyl.service.apps.de.categorization :as app-categorization]
+            [metadactyl.service.apps.de.docs :as docs]
             [metadactyl.service.apps.de.edit :as edit]
             [metadactyl.service.apps.de.jobs :as de-jobs]
             [metadactyl.service.apps.de.job-view :as job-view]
@@ -203,4 +204,8 @@
     (app-admin/delete-category user category-id))
 
   (adminUpdateCategory [_ body]
-    (app-admin/update-category body)))
+    (app-admin/update-category body))
+
+  (getAppDocs [_ app-id]
+    (when (util/uuid? app-id)
+      (docs/get-app-docs (uuidify app-id)))))

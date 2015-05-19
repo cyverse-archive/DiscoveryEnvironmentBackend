@@ -312,3 +312,7 @@
   (let [apps-client (get-apps-client user)]
     (.adminUpdateCategory apps-client body)
     (.listAppsInCategory apps-client id {})))
+
+(defn get-app-docs
+  [user app-id]
+  (.getAppDocs (get-apps-client user) app-id))
