@@ -3,6 +3,7 @@
   (:use [clojure.java.io :only [file]]
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
+        [clojure-commons.middleware :only [wrap-log-requests]]
         [compojure.core]
         [korma.db :only [transaction]]
         [ring.middleware keyword-params nested-params]
@@ -156,6 +157,8 @@
 
 (defn site-handler [routes]
   (-> routes
+      wrap-log-requests
+      tc/add-user-to-context
       wrap-keyword-params
       wrap-lcase-params
       wrap-nested-params
