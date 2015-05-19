@@ -19,7 +19,6 @@
   (relabelApp [_ app])
   (updateApp [_ app])
   (copyApp [_ app-id])
-  (getAppDescription [_ app-id])
   (getAppDetails [_ app-id])
   (removeAppFavorite [_ app-id])
   (addAppFavorite [_ app-id])

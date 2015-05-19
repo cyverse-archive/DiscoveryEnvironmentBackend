@@ -69,11 +69,6 @@
   (copyApp [_ app-id]
     (.copyApp (util/get-apps-client clients) app-id))
 
-  (getAppDescription [_ app-id]
-    (->> (map #(.getAppDescription % app-id) clients)
-         (remove nil?)
-         (first)))
-
   (getAppDetails [_ app-id]
     (->> (map #(.getAppDetails % app-id) clients)
          (remove nil?)
