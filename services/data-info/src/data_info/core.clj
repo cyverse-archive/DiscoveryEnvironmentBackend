@@ -14,6 +14,7 @@
             [me.raynes.fs :as fs]
             [ring.middleware.keyword-params :as params]
             [common-cli.core :as ccli]
+            [service-logging.thread-context :as tc]
             [data-info.util.db :as db]
             [data-info.routes :as routes]
             [data-info.routes.data :as data-routes]
@@ -88,6 +89,20 @@
   (load-configuration-from-file)
   (icat/configure-icat))
 
+(def svc-info
+  {:desc "Service to provide an API for iRODS interactions."
+   :app-name "data-info"
+   :group-id "org.iplantc"
+   :art-id "data-info"
+   :service "data-info"})
+
+(defn context-middleware
+  [handler]
+  (fn [request]
+    (tc/set-context! svc-info)
+    (let [resp (handler request)]
+      (tc/clear-context!)
+      resp)))
 
 (defapi app
   (swagger-ui "/api")
@@ -101,7 +116,8 @@
     [wrap-query-params
      wrap-lcase-params
      params/wrap-keyword-params
-     util/req-logger]
+     util/req-logger
+     context-middleware]
     data-routes/data-operations
     exists-routes/existence-marker
     home-routes/home
@@ -113,7 +129,8 @@
      params/wrap-keyword-params
      util/req-logger
      #_(liberator/wrap-trace :header :ui)
-     util/trap-handler]
+     util/trap-handler
+     context-middleware]
     routes/all-routes))
 
 
@@ -124,9 +141,9 @@
    ["-v" "--version" "Print out the version number."]
    ["-h" "--help"]])
 
-
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (let [{:keys [options arguments errors summary]} (ccli/handle-args config/svc-info
                                                                      args
                                                                      cli-options)]

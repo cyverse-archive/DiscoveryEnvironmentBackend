@@ -47,7 +47,8 @@
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/common-cfg "5.0.0"]
                  [org.iplantc/heuristomancer "5.0.0"]
-                 [org.iplantc/kameleon "5.0.0"]]
+                 [org.iplantc/kameleon "5.0.0"]
+                 [org.iplantc/service-logging "5.0.0"]]
   :plugins [[lein-ring "0.9.2"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev     {:resource-paths ["conf/test"]}
