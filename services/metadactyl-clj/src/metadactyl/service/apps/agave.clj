@@ -7,7 +7,12 @@
             [metadactyl.service.apps.agave.jobs :as agave-jobs]
             [metadactyl.service.apps.job-listings :as job-listings]
             [metadactyl.service.apps.util :as apps-util]
-            [metadactyl.service.util :as util]))
+            [metadactyl.service.util :as util]
+            [metadactyl.util.service :as service]))
+
+(defn- app-documentation-edit-request
+  []
+  (service/bad-request "Cannot edit documentation for HPC apps with this service"))
 
 (deftype AgaveApps [agave user-has-access-token? user]
   metadactyl.protocols.Apps
@@ -113,4 +118,8 @@
     (when-not (util/uuid? app-id)
       {:app_id        app-id
        :documentation ""
-       :references    []})))
+       :references    []}))
+
+  (ownerEditAppDocs [_ app-id body]
+    (when-not (util/uuid? app-id)
+      (app-documentation-edit-request))))

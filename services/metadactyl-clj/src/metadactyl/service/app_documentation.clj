@@ -52,9 +52,3 @@
   [app-id docs]
   (verify-app-ownership (get-app app-id))
   (add-app-docs app-id docs))
-
-(defn owner-edit-app-docs
-  "Updates an App's documentation in the database if the App is owned by the current user."
-  [app-id docs]
-  (verify-app-ownership (get-app app-id))
-  (edit-app-docs app-id docs))

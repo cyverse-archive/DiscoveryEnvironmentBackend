@@ -3,8 +3,7 @@
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.tool :only [NewToolListing]]
         [metadactyl.routes.params]
-        [metadactyl.service.app-documentation :only [owner-add-app-docs
-                                                     owner-edit-app-docs]]
+        [metadactyl.service.app-documentation :only [owner-add-app-docs]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
@@ -141,7 +140,8 @@
           :return AppDocumentation
           :summary "Update App Documentation"
           :notes "This service is used by the DE to update documentation for a single App"
-          (ce/trap uri #(owner-edit-app-docs app-id body)))
+          (service/coerced-trap uri AppDocumentation
+                                apps/owner-edit-app-docs current-user app-id body))
 
   (POST* "/:app-id/documentation" [:as {uri :uri body :body}]
          :path-params [app-id :- AppIdPathParam]

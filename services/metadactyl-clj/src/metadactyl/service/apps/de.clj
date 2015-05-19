@@ -204,4 +204,8 @@
 
   (getAppDocs [_ app-id]
     (when (util/uuid? app-id)
-      (docs/get-app-docs (uuidify app-id)))))
+      (docs/get-app-docs (uuidify app-id))))
+
+  (ownerEditAppDocs [_ app-id body]
+    (when (util/uuid? app-id)
+      (docs/owner-edit-app-docs user (uuidify app-id) body))))

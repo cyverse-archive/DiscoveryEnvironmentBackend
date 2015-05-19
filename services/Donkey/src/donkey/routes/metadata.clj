@@ -128,7 +128,7 @@
           (apps/add-app-docs app-id body))
 
     (PATCH "/apps/:app-id/documentation" [app-id :as {:keys [body]}]
-           (apps/edit-app-docs app-id body))
+           (service/success-response (metadactyl/edit-app-docs app-id body)))
 
     (DELETE "/apps/:app-id/favorite" [app-id]
             (service/success-response (metadactyl/remove-favorite-app app-id)))

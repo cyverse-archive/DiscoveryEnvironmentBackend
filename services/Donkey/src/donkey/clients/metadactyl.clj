@@ -368,10 +368,19 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn edit-app-docs
+  [app-id docs]
+  (client/patch (metadactyl-url "apps" app-id "documentation")
+                {:query-params     (secured-params)
+                 :content-type     :json
+                 :body             docs
+                 :as               :stream
+                 :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
-                  {:query-params (secured-params (select-keys params (conj metadactyl-sort-params :status)))
+                  {:query-params (secured-params params (conj metadactyl-sort-params :status))
                    :as           :stream})
       (:body)
       (service/decode-json)))
@@ -379,7 +388,7 @@
 (defn list-tool-request-status-codes
   [params]
   (-> (client/get (metadactyl-url "tool-requests" "status-codes")
-                  {:query-params (secured-params (select-keys params [:filter]))
+                  {:query-params (secured-params params [:filter])
                    :as           :stream})
       (:body)
       (service/decode-json)))
@@ -399,16 +408,6 @@
                     :content-type :json
                     :body         (cheshire/encode docs)
                     :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn edit-app-docs
-  [app-id docs]
-  (-> (client/patch (metadactyl-url "apps" app-id "documentation")
-                    {:query-params (secured-params)
-                     :content-type :json
-                     :body         (cheshire/encode docs)
-                     :as           :stream})
       (:body)
       (service/decode-json)))
 

@@ -1,7 +1,9 @@
 (ns metadactyl.service.apps.de.docs
   (:use [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as ce]
-            [metadactyl.persistence.app-documentation :as dp]))
+            [metadactyl.persistence.app-documentation :as dp]
+            [metadactyl.persistence.app-metadata :as ap]
+            [metadactyl.validation :as v]))
 
 (defn- get-references
   "Returns a list of references from the database for the given app ID."
@@ -16,3 +18,16 @@
     (throw+ {:error_code ce/ERR_NOT_FOUND
              :reason "App documentation not found"
              :app_id app-id})))
+
+(defn edit-app-docs
+  "Updates an App's documentation and modified details in the database."
+  [{:keys [username]} app-id {docs :documentation}]
+  (when (get-app-docs app-id)
+    (dp/edit-documentation (v/get-valid-user-id username) docs app-id))
+  (get-app-docs app-id))
+
+(defn owner-edit-app-docs
+  "Updates an App's documentation in the database if the App is owned by the current user."
+  [user app-id docs]
+  (v/verify-app-ownership user (ap/get-app app-id))
+  (edit-app-docs user app-id docs))
