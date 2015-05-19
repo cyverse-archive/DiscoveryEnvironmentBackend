@@ -24,3 +24,14 @@
     (let [resp (handler request)]
       (clear-context!)
       resp)))
+
+(defn add-user-to-context
+  "add-user-to-context is a ring handler that adds the user value from the query
+  string into the ThreadContext with a key of 'username'. The query params
+  need to be parsed first."
+  [handler]
+  (fn [request]
+    (let [q-params (:query-params request)]
+      (if (contains? q-params "user")
+        (set-context! {:user (get (:query-params request) "user")}))
+      (handler request))))
