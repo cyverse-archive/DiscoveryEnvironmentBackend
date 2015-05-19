@@ -61,6 +61,14 @@
           (log/error (cfg/pprint-to-string request) "\n" formatted-exception)
           (-> (response formatted-exception) (status 500)))))))
 
+(defn wrap-user
+  [handler]
+  (fn [request]
+    (let [username (last (string/split (:uri request) #"\/"))]
+      (if-not (or (nil? username) (string/blank? username))
+        (tc/set-context! {:user username}))
+      (handler request))))
+
 (def svc-info
   {:desc "DE API for managing user sessions."
    :app-name "user-sessions"
@@ -74,6 +82,7 @@
       (wrap-json-body)
       (wrap-json-response)
       (wrap-exception)
+      (wrap-user)
       (tc/wrap-thread-context svc-info)))
 
 (defn -main
