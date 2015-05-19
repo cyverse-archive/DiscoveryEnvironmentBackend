@@ -77,10 +77,6 @@
     (when (util/uuid? app-id)
       (edit/copy-app user app-id)))
 
-  (getAppDescription [_ app-id]
-    (when (util/uuid? app-id)
-      (listings/get-app-description (uuidify app-id))))
-
   (getAppDetails [_ app-id]
     (when (util/uuid? app-id)
       (listings/get-app-details (uuidify app-id))))
