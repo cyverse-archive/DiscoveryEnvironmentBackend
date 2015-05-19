@@ -69,13 +69,6 @@
         req    (metadactyl-request req)]
     (forward-get url req)))
 
-(defn update-category
-  "A service used to update an app category by ID."
-  [req category-id]
-  (let [url (metadactyl-url {} "admin" "apps" "categories" category-id)
-        req (metadactyl-request req)]
-    (forward-patch url req)))
-
 (defn get-tool
   "This service will get a tool by ID."
   [req tool-id]

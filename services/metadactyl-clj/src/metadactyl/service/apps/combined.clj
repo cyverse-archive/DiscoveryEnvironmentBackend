@@ -181,4 +181,7 @@
     (.adminDeleteCategories (util/get-apps-client clients) body))
 
   (adminDeleteCategory [_ category-id]
-    (.adminDeleteCategory (util/get-apps-client clients) category-id)))
+    (.adminDeleteCategory (util/get-apps-client clients) category-id))
+
+  (adminUpdateCategory [_ body]
+    (.adminUpdateCategory (util/get-apps-client clients) body)))

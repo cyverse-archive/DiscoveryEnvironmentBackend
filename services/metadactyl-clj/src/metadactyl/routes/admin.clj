@@ -1,6 +1,5 @@
 (ns metadactyl.routes.admin
-  (:use [metadactyl.conrad.admin-categories :only [update-category]]
-        [metadactyl.metadata.reference-genomes :only [add-reference-genome
+  (:use [metadactyl.metadata.reference-genomes :only [add-reference-genome
                                                       delete-reference-genome
                                                       replace-reference-genomes
                                                       update-reference-genome]]
@@ -150,11 +149,11 @@
   (PATCH* "/:category-id" [:as {uri :uri}]
           :path-params [category-id :- AppCategoryIdPathParam]
           :query [params SecuredQueryParams]
-          :body [body (describe AppCategoryPatchRequest "The details of the App Category to update.")]
+          :body [body (describe AppCategoryPatchRequest "Details of the App Category to update.")]
           :summary "Update an App Category"
           :notes "This service renames or moves an App Category to a new parent Category, depending
           on the fields included in the request."
-          (ce/trap uri #(update-category (assoc body :id category-id)))))
+          (service/trap uri apps/admin-update-category current-user (assoc body :id category-id))))
 
 (defroutes* reference-genomes
   (POST* "/" [:as {uri :uri}]

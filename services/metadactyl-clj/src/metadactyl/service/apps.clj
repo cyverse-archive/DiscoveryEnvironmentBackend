@@ -306,3 +306,9 @@
 (defn admin-delete-category
   [user category-id]
   (.adminDeleteCategory (get-apps-client user) category-id))
+
+(defn admin-update-category
+  [user {:keys [id] :as body}]
+  (let [apps-client (get-apps-client user)]
+    (.adminUpdateCategory apps-client body)
+    (.listAppsInCategory apps-client id {})))

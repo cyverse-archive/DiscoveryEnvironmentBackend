@@ -56,6 +56,14 @@
              :category_id  category-id
              :requested_by requestor})))
 
+(defn- validate-category-not-ancestor-of-parent
+  [category-id parent-id]
+  (when (app-groups/category-ancestor-of-subcategory? category-id parent-id)
+    (throw+ {:error_code   ce/ERR_ILLEGAL_ARGUMENT
+             :reason       "App Category is an ancestor of the destination Category"
+             :category_id  category-id
+             :parent_id    parent-id})))
+
 (defn delete-app
   "This service marks an existing app as deleted in the database."
   [app-id]
@@ -132,3 +140,18 @@
     (validate-category-hierarchy-empty category-id (:username user))
     (delete-category* user category)
     nil))
+
+(defn update-category
+  "Updates an App Category's name or parent Category."
+  [{category-id :id :keys [name parent_id] :as category}]
+  (transaction
+   (let [category (validate-app-category-existence category-id)]
+     (when name
+       (validate-app-category-name name)
+       (app-groups/update-app-category category-id name))
+     (when parent_id
+       (validate-subcategory-name parent_id (or name (:name category)))
+       (validate-category-empty parent_id)
+       (app-groups/decategorize-category category-id)
+       (validate-category-not-ancestor-of-parent category-id parent_id)
+       (app-groups/add-subgroup parent_id category-id)))))

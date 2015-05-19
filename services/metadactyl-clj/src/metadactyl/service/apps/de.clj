@@ -200,4 +200,7 @@
     (app-admin/delete-categories user body))
 
   (adminDeleteCategory [_ category-id]
-    (app-admin/delete-category user category-id)))
+    (app-admin/delete-category user category-id))
+
+  (adminUpdateCategory [_ body]
+    (app-admin/update-category body)))
