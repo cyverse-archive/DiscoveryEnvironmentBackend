@@ -239,7 +239,7 @@
    (catch Object _
      (log/error (:throwable &throw-context)
                 "error while obtaining the list of jobs to synchronize.")))
-  (log/info "done syncrhonizing job statuses"))
+  (log/info "done synchronizing job statuses"))
 
 (defn update-job
   [user job-id body]
