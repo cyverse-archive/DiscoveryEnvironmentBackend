@@ -38,6 +38,7 @@
   "Filters valid keys from the given Tool for inserting or updating in the database."
   [tool]
   (select-keys tool [:id
+                     :container_images_id
                      :name
                      :description
                      :attribution

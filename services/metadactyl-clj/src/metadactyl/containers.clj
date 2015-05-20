@@ -9,6 +9,7 @@
         [kameleon.uuids :only [uuidify]]
         [korma.core]
         [korma.db :only [transaction]]
+        [metadactyl.persistence.app-metadata :only [update-tool]]
         [metadactyl.util.conversions :only [remove-nil-vals remove-empty-vals]])
   (:require [clojure.tools.logging :as log]))
 
@@ -532,8 +533,10 @@
         info-map (assoc info-map :tools_id (uuidify tool-uuid))]
     (log/warn "adding container information for tool" tool-uuid ":" info-map)
     (transaction
-     (let [settings-map  (add-settings info-map)
+     (let [image-id      (:id (add-image-info (:image info-map)))
+           settings-map  (add-settings info-map)
            settings-uuid (:id settings-map)]
+       (update-tool {:id tool-uuid :container_images_id image-id})
        (doseq [d devices]
          (add-device settings-uuid d))
        (doseq [v volumes]
