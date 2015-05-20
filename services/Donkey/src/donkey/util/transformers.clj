@@ -3,20 +3,9 @@
         [donkey.util.service :only [decode-stream]]
         [donkey.auth.user-attributes]
         [medley.core :only [remove-vals]])
-  (:require [cheshire.core :as cheshire])
-  (:import [net.sf.json JSONObject]))
+  (:require [cheshire.core :as cheshire]))
 
 (def remove-nil-vals (partial remove-vals nil?))
-
-(defn object->json-str
-  "Converts a Java object to a JSON string."
-  [obj]
-  (str (JSONObject/fromObject obj)))
-
-(defn object->json-obj
-  "Converts a Java object to a JSON object."
-  [obj]
-  (JSONObject/fromObject obj))
 
 (defn add-username-to-json
   "Adds the name of the currently authenticated user to a JSON object in the
