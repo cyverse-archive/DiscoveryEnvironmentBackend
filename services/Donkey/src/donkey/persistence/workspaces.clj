@@ -6,16 +6,6 @@
         [donkey.util.config :only [get-default-app-categories workspace-root-app-category]])
   (:require [donkey.util.db :as db]))
 
-(defn workspace-for-user
-  "Loads the workspace for a user."
-  [username]
-  (first
-   (with-db db/de
-     (select [:workspace :w]
-             (join [:users :u] {:w.user_id :u.id})
-             (fields :w.id :w.is_public)
-             (where {:u.username username})))))
-
 (defn- create-default-workspace-subcategories
   "Adds the default app subcategories for the root category of the given workspace."
   [workspace]
