@@ -61,7 +61,7 @@
               :details    details}
              exception-info-map)))))
 
-(defn millis-since-epoch [] (str (time/in-msecs (time/interval (time/epoch) (time/now)))))
+(defn millis-since-epoch [] (str (time/in-millis (time/interval (time/epoch) (time/now)))))
 
 (defn parse-uuid
   "Parses a UUID in the standard format."
