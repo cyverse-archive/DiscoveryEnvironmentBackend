@@ -7,7 +7,8 @@
             [me.raynes.fs :as fs]
             [metadactyl.tasks :as tasks]
             [metadactyl.util.config :as config]
-            [ring.adapter.jetty :as jetty]))
+            [ring.adapter.jetty :as jetty]
+            [service-logging.thread-context :as tc]))
 
 (defn- init-service
   "Initializes the service."
@@ -57,7 +58,8 @@
   {:desc "Framework for hosting DiscoveryEnvironment metadata services."
    :app-name "metadactyl"
    :group-id "org.iplantc"
-   :art-id "metadactyl"})
+   :art-id "metadactyl"
+   :service "metadactyl"})
 
 (defn cli-options
   []
@@ -68,7 +70,9 @@
 
 (defn -main
   [& args]
+  (tc/set-context! svc-info)
   (require 'metadactyl.routes.api)
+  (eval "(metadactyl.routes.api/set-context-map! svc-info)")
   (let [app (eval 'metadactyl.routes.api/app)
         {:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
@@ -76,6 +80,7 @@
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
     (load-config-from-file (:config options))
+    (tasks/set-logging-context! svc-info)
     (tasks/schedule-tasks)
     (log/warn "Listening on" (config/listen-port))
     (jetty/run-jetty app {:port (config/listen-port)})))

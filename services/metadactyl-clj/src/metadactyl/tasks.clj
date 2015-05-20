@@ -6,6 +6,11 @@
 (def ^:private thread-pool-size 10)
 (def ^:private executor (ScheduledThreadPoolExecutor. thread-pool-size))
 
+(defn set-logging-context!
+  "Sets the logging ThreadContext for the threads in the task thread pool."
+  [cm]
+  (apps/set-logging-context! cm))
+
 (defn- schedule-task
   "Schedules a single periodic task."
   [f delay interval]

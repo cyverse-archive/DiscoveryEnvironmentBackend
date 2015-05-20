@@ -35,6 +35,7 @@
                  [org.iplantc/mescal "5.0.0"]
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/common-cfg "5.0.0"]
+                 [org.iplantc/service-logging "5.0.0"]
                  [me.raynes/fs "1.4.6"]
                  [mvxcvi/clj-pgp "0.8.0"]
                  [korma "0.3.2"]

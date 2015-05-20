@@ -29,9 +29,26 @@
             [metadactyl.routes.callbacks :as callback-routes]
             [metadactyl.routes.oauth :as oauth-routes]
             [metadactyl.routes.reference-genomes :as reference-genome-routes]
-            [metadactyl.routes.tools :as tool-routes]))
+            [metadactyl.routes.tools :as tool-routes]
+            [service-logging.thread-context :as tc]))
 
 (defmethod json-type schema.core.AnythingSchema [_] {:type "any"})
+
+(def context-map (ref {}))
+
+(defn set-context-map!
+  "Sets the map that will be used to create the ThreadContext by wrap-context-map."
+  [cm]
+  (dosync (ref-set context-map cm)))
+
+(defn wrap-context-map
+  "Sets the ThreadContext for each request."
+  [handler]
+  (fn [request]
+    (tc/set-context! @context-map)
+    (let [resp (handler request)]
+      (tc/clear-context!)
+      resp)))
 
 (defapi app
   (swagger-ui "/api")
@@ -43,13 +60,16 @@
   (GET "/favicon.ico" [] {:status 404})
   (middlewares
     [wrap-keyword-params
-     wrap-query-params]
+     wrap-query-params
+     wrap-context-map]
     (swaggered "callbacks"
       :description "General callback functions."
       (context "/callbacks" [] callback-routes/callbacks)))
   (middlewares
     [wrap-keyword-params
      wrap-query-params
+     tc/add-user-to-context
+     wrap-context-map
      store-current-user]
     (swaggered "app-categories"
       :description "App Category endpoints."

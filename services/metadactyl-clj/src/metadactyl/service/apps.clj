@@ -17,7 +17,8 @@
             [metadactyl.user :as user]
             [metadactyl.util.config :as config]
             [metadactyl.util.json :as json-util]
-            [metadactyl.util.service :as service]))
+            [metadactyl.util.service :as service]
+            [service-logging.thread-context :as tc]))
 
 (defn- authorization-uri
   [server-info username state-info]
@@ -223,6 +224,14 @@
         (-> (get-apps-client-for-username (:username job))
             (jobs/update-job-status job-step job batch status end-date))))))
 
+(def logging-context-map (ref {}))
+
+(defn set-logging-context!
+  "Sets the logging ThreadContext for the sync-job-statuses function, which is
+  run in a new thread as a task."
+  [cm]
+  (dosync (ref-set logging-context-map cm)))
+
 (defn- sync-job-status
   [{:keys [username id] :as job}]
   (try+
@@ -233,13 +242,16 @@
 
 (defn sync-job-statuses
   []
-  (log/info "synchronizing job statuses")
   (try+
+   (tc/set-context! @logging-context-map)
+   (log/info "synchronizing job statuses")
    (dorun (map sync-job-status (jp/list-incomplete-jobs)))
    (catch Object _
      (log/error (:throwable &throw-context)
-                "error while obtaining the list of jobs to synchronize.")))
-  (log/info "done synchronizing job statuses"))
+                "error while obtaining the list of jobs to synchronize."))
+   (finally
+     (log/info "done synchronizing job statuses")
+     (tc/clear-context!))))
 
 (defn update-job
   [user job-id body]
