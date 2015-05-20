@@ -113,7 +113,8 @@
   (GET "/" [] (redirect "/api"))
   (GET "/favicon.ico" [] {:status 404})
   (middlewares
-    [wrap-query-params
+    [tc/add-user-to-context
+     wrap-query-params
      wrap-lcase-params
      params/wrap-keyword-params
      util/req-logger
@@ -124,7 +125,8 @@
     navigation-routes/navigation
     stat-routes/stat-gatherer)
   (middlewares
-    [wrap-query-params
+    [tc/add-user-to-context
+     wrap-query-params
      wrap-lcase-params
      params/wrap-keyword-params
      util/req-logger
