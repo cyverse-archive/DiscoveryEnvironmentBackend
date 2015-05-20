@@ -19,7 +19,7 @@
             [clj-http.client :as client]
             [clojure-commons.error-codes :as ce]
             [metadactyl.persistence.app-metadata :as amp]
-            [metadactyl.service.app-documentation :as app-docs]
+            [metadactyl.service.apps.de.docs :as app-docs]
             [metadactyl.translations.app-metadata :as atx]
             [metadactyl.util.config :as config]))
 
@@ -133,10 +133,10 @@
   nil)
 
 (defn- publish-app
-  [{app-id :id :keys [references categories] :as app}]
+  [user {app-id :id :keys [references categories] :as app}]
   (transaction
     (amp/update-app app true)
-    (app-docs/add-app-docs app-id app)
+    (app-docs/add-app-docs user app-id app)
     (amp/set-app-references app-id references)
     (amp/set-app-suggested-categories app-id categories)
     (decategorize-app app-id)
@@ -148,7 +148,7 @@
   (verify-app-ownership user (validate-app-existence app-id))
   (let [[publishable? reason] (app-publishable? app-id)]
     (if publishable?
-      (publish-app app)
+      (publish-app user app)
       (throw+ {:error_code ce/ERR_BAD_REQUEST
                :reason     reason}))))
 

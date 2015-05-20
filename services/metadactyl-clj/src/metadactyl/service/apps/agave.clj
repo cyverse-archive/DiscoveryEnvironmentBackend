@@ -130,4 +130,8 @@
 
   (adminEditAppDocs [_ app-id _]
     (when-not (util/uuid? app-id)
+      (reject-app-documentation-edit-request)))
+
+  (adminAddAppDocs [_ app-id _]
+    (when-not (util/uuid? app-id)
       (reject-app-documentation-edit-request))))

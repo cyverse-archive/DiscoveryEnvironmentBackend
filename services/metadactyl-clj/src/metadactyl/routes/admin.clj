@@ -9,7 +9,6 @@
         [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
-        [metadactyl.service.app-documentation :only [add-app-docs]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
@@ -108,7 +107,8 @@
          :return AppDocumentation
          :summary "Add App Documentation"
          :notes "This service is used by DE administrators to add documentation for a single App"
-         (ce/trap uri #(add-app-docs app-id body))))
+         (service/coerced-trap uri AppDocumentation
+                               apps/admin-add-app-docs current-user app-id body)))
 
 (defroutes* admin-categories
   (GET* "/" [:as {uri :uri}]

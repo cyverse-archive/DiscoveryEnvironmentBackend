@@ -395,6 +395,15 @@
                  :as               :stream
                  :follow-redirects false}))
 
+(defn admin-add-app-docs
+  [app-id docs]
+  (client/post (metadactyl-url "admin" "apps" app-id "documentation")
+               {:query-params     (secured-params)
+                :content-type     :json
+                :body             docs
+                :as               :stream
+                :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
@@ -416,16 +425,6 @@
   (-> (client/get (metadactyl-url "apps" app-id "tools")
                   {:query-params (secured-params)
                    :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn admin-add-app-docs
-  [app-id docs]
-  (-> (client/post (metadactyl-url "admin" "apps" app-id "documentation")
-                   {:query-params (secured-params)
-                    :content-type :json
-                    :body         (cheshire/encode docs)
-                    :as           :stream})
       (:body)
       (service/decode-json)))
 

@@ -29,7 +29,6 @@
                                [log4j]]]
                  [org.iplantc/service-logging "5.0.0"]
                  [org.iplantc/clojure-commons "5.0.0"]
-                 [org.iplantc/mescal "5.0.0"]
                  [org.iplantc/kameleon "5.0.0"]
                  [org.iplantc/heuristomancer "5.0.0"]
                  [org.iplantc/clj-icat-direct "5.0.0"]
