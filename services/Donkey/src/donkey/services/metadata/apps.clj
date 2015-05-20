@@ -85,10 +85,7 @@
   AppLister
 
   (adminAddAppDocs [_ app-id docs]
-    (metadactyl/admin-add-app-docs app-id docs))
-
-  (adminEditAppDocs [_ app-id docs]
-    (metadactyl/admin-edit-app-docs app-id docs)))
+    (metadactyl/admin-add-app-docs app-id docs)))
 ;; DeOnlyAppLister
 
 (deftype DeHpcAppLister [agave-client user-has-access-token?]
@@ -97,12 +94,6 @@
   (adminAddAppDocs [_ app-id docs]
     (if (is-uuid? app-id)
       (metadactyl/admin-add-app-docs app-id docs)
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     "Cannot edit documentation for HPC apps with this service"})))
-
-  (adminEditAppDocs [_ app-id docs]
-    (if (is-uuid? app-id)
-      (metadactyl/admin-edit-app-docs app-id docs)
       (throw+ {:error_code ce/ERR_BAD_REQUEST
                :reason     "Cannot edit documentation for HPC apps with this service"}))))
 ;; DeHpcAppLister
@@ -146,8 +137,3 @@
   [app-id body]
   (service/success-response
     (.adminAddAppDocs (get-app-lister) app-id (service/decode-json body))))
-
-(defn admin-edit-app-docs
-  [app-id body]
-  (service/success-response
-    (.adminEditAppDocs (get-app-lister) app-id (service/decode-json body))))

@@ -9,7 +9,7 @@
         [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
-        [metadactyl.service.app-documentation :only [add-app-docs edit-app-docs get-app-docs]]
+        [metadactyl.service.app-documentation :only [add-app-docs]]
         [metadactyl.user :only [current-user]]
         [compojure.api.sweet]
         [ring.swagger.schema :only [describe]])
@@ -96,8 +96,10 @@
           :body [body (describe AppDocumentationRequest "The App Documentation Request.")]
           :return AppDocumentation
           :summary "Update App Documentation"
-          :notes "This service is used by DE administrators to update documentation for a single App"
-          (ce/trap uri #(edit-app-docs app-id body)))
+          :notes "This service is used by DE administrators to update documentation for a single
+          App"
+          (service/coerced-trap uri AppDocumentation
+                                apps/admin-edit-app-docs current-user app-id body))
 
   (POST* "/:app-id/documentation" [:as {uri :uri body :body}]
          :path-params [app-id :- AppIdPathParam]

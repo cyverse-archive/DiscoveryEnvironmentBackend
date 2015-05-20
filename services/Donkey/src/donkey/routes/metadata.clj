@@ -63,7 +63,7 @@
           (apps/admin-add-app-docs app-id body))
 
     (PATCH "/apps/:app-id/documentation" [app-id :as {:keys [body]}]
-           (apps/admin-edit-app-docs app-id body))))
+           (service/success-response (metadactyl/admin-edit-app-docs app-id body)))))
 
 (defn apps-routes
   []

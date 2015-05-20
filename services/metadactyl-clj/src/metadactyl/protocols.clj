@@ -57,4 +57,5 @@
   (adminUpdateCategory [_ body])
   (getAppDocs [_ app-id])
   (ownerEditAppDocs [_ app-id body])
-  (ownerAddAppDocs [_ app-id body]))
+  (ownerAddAppDocs [_ app-id body])
+  (adminEditAppDocs [_ app-id body]))

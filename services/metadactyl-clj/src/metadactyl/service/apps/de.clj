@@ -212,4 +212,8 @@
 
   (ownerAddAppDocs [_ app-id body]
     (when (util/uuid? app-id)
-      (docs/owner-add-app-docs user (uuidify app-id) body))))
+      (docs/owner-add-app-docs user (uuidify app-id) body)))
+
+  (adminEditAppDocs [_ app-id body]
+    (when (util/uuid? app-id)
+      (docs/edit-app-docs user (uuidify app-id) body))))

@@ -36,13 +36,3 @@
     docs
     app-id)
   (get-app-docs app-id))
-
-(defn edit-app-docs
-  "Updates an App's documentation and modified details in the database."
-  [app-id {docs :documentation}]
-  (if (get-app-docs app-id)
-    (edit-documentation
-      (get-valid-user-id (:username current-user))
-      docs
-      app-id))
-  (get-app-docs app-id))

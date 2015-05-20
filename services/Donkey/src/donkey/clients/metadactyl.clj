@@ -386,6 +386,15 @@
                 :as               :stream
                 :follow-redirects false}))
 
+(defn admin-edit-app-docs
+  [app-id docs]
+  (client/patch (metadactyl-url "admin" "apps" app-id "documentation")
+                {:query-params     (secured-params)
+                 :content-type     :json
+                 :body             docs
+                 :as               :stream
+                 :follow-redirects false}))
+
 (defn admin-list-tool-requests
   [params]
   (-> (client/get (metadactyl-url "admin" "tool-requests")
@@ -417,16 +426,6 @@
                     :content-type :json
                     :body         (cheshire/encode docs)
                     :as           :stream})
-      (:body)
-      (service/decode-json)))
-
-(defn admin-edit-app-docs
-  [app-id docs]
-  (-> (client/patch (metadactyl-url "admin" "apps" app-id "documentation")
-                    {:query-params (secured-params)
-                     :content-type :json
-                     :body         (cheshire/encode docs)
-                     :as           :stream})
       (:body)
       (service/decode-json)))
 

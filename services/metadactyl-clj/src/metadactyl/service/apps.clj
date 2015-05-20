@@ -320,3 +320,7 @@
 (defn owner-add-app-docs
   [user app-id body]
   (.ownerAddAppDocs (get-apps-client user) app-id body))
+
+(defn admin-edit-app-docs
+  [user app-id body]
+  (.adminEditAppDocs (get-apps-client user) app-id body))
