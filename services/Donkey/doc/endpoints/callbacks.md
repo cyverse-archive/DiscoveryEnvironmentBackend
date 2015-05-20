@@ -2,8 +2,6 @@
 
 * [Callback Endpoints](#callback-endpoints)
     * [Receiving DE Notifications](#receiving-de-notifications)
-    * [Receiving DE Job Status Updates](#receiving-de-job-status-updates)
-    * [Receiving Agave Job Status Updates](#receiving-agave-job-status-updates)
     * [Obtaining OAuth Authorization Codes](#obtaining-oauth-authorization-codes)
 
 # Callback Endpoints
@@ -54,93 +52,11 @@ This service currently ignores any notifications that are not job status update
 notifications. When it receives a job status update notification, it stores
 updated information about the job status in the database.
 
-## Receiving DE Job Status Updates
-
-Unsecured Endpoint: POST /callbacks/de-job
-
-This endpoint was introduced to provide cleaner support for pipelines that
-contain both Agave and DE job steps. Allowing the job status update to go
-through the notification agent could potentially have caused a nasty
-notification cycle, which would cause spurious errors to be logged. The request
-body for this endpoint is the job state information stored in the OSM. This
-service retrieves three fields from the state information:
-
-<table border="1">
-    <thead>
-        <tr><th>Field</th><th>Description</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>uuid</td>
-            <td>The identifier assigned to the job step.</td>
-        </tr>
-        <tr>
-            <td>status</td>
-            <td>The current job status.</td>
-        </tr>
-        <tr>
-            <td>completion_date</td>
-            <td>The time that the job finished or failed.</td>
-        </tr>
-    </tbody>
-</table>
-
-This service works by performing the following steps:
-
-1. Looking up the job step in the database. Note that the job step ID should be
-   unique.
-2. Looking up the job in the database using foreign key in the job step.
-3. Checking the job step status to see if it changed.
-4. Assuming the status changed, updating the job step in the database.
-5. If the status of the entire pipeline changed, updating the job itself and
-   sending a notification.
-
-## Receiving Agave Job Status Updates
-
-Unsecured Endpoint: POST /callbacks/agave-job/{job-uuid}
-
-This endpoint receives job status update notifications from Agave. Agave can
-provide more information in its callback requests than the foundation API could,
-so there is no longer a need to query the remote system for the current job
-status. Instead the job status information is passed in query parameters:
-
-<table border="1">
-    <thead>
-        <tr><th>Parameter</th><th>Description</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>external-id</td>
-            <td>The identifier assigned to the job by Agave.</td>
-        </tr>
-        <tr>
-            <td>status</td>
-            <td>The current job status.</td>
-        </tr>
-        <tr>
-            <td>end-time</td>
-            <td>The time that the job finished or failed.</td>
-        </tr>
-    </tbody>
-</table>
-
-With the introduction of support for pipelines containing both DE and Agave job
-steps, each job that is submitted to either Agave or the JEX is now treated as a
-step on a (possibly single-step) pipeline. Because of that, the external ID is
-now associated with a job step rather than the job as a whole. This service
-works by performing the following steps:
-
-1. Looking up the job in the database using the job UUID in the URL path.
-2. Looking up the job step in the database using the external ID in the query
-   string.
-3. Checking the status to see if it changed.
-4. Assuming the status changed, updating the job step in the database.
-5. If the status of the entire pipeline changed, updating the job itself and
-   sending a notification.
-
 ## Obtaining OAuth Authorization Codes
 
 Secured Endpoint: GET /secured/oauth/access-code/{api-name}
+
+Delegates to metadactyl: GET /secured/oauth/access-code/{api-name}
 
 The only API name that is currently supported is `agave`.
 

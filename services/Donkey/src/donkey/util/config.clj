@@ -24,7 +24,7 @@
 (defn masked-config
   "Returns a masked version of the Donkey config as a map."
   []
-  (cc/mask-config props :filters [#"(?:irods|agave)[-.](?:user|pass|key|secret)"]))
+  (cc/mask-config props :filters [#"(?:irods)[-.](?:user|pass|key|secret)"]))
 
 (cc/defprop-int listen-port
   "The port that donkey listens to."
@@ -141,26 +141,6 @@
   "Enables or disables COGE endpoints."
   [props config-valid configs]
   "donkey.routes.coge" true)
-
-(cc/defprop-optboolean agave-enabled
-  "Enables or disables all features that require connections to Agave."
-  [props config-valid configs]
-  "donkey.features.agave" true)
-
-(cc/defprop-optboolean agave-jobs-enabled
-  "Enables or disables Agave job submission."
-  [props config-valid configs]
-  "donkey.features.agave.jobs" false)
-
-(cc/defprop-optboolean log-runtimes
-  "Enables or disables the logging of runtimes for endpoints that support it."
-  [props config-valid configs]
-  "donkey.debug.log-runtimes" false)
-
-(cc/defprop-optboolean debug-ownership
-  "Enables or disables the ownership check for folders in the home directory."
-  [props config-valid configs]
-  "donkey.debug.ownership" false)
 
 (cc/defprop-str iplant-email-base-url
   "The base URL to use when connnecting to the iPlant email service."
@@ -362,21 +342,6 @@
   "donkey.metadata.password")
 ;;;End Metadata database connection information
 
-;;; JEX Events connection information
-(cc/defprop-str jex-events-base-url
-  "The base URL to use when connecting to the JEX Events service."
-  [props config-valid configs]
-  "donkey.jex-events.base-url")
-
-(def jex-events-base
-  (memoize
-   (fn []
-     (if (System/getenv "JEX_EVENTS_PORT")
-       (cfg/env-setting "JEX_EVENTS_PORT")
-       (jex-events-base-url)))))
-
-;;; End JEX Events connection information
-
 ;;; ICAT connection information
 (cc/defprop-str icat-host
   "The hostname for the server running the ICAT database."
@@ -529,47 +494,6 @@
   [props config-valid configs data-routes-enabled]
   "donkey.infosquito.es-url")
 
-(cc/defprop-str agave-base-url
-  "The base URL to use when connecting to Agave."
-  [props config-valid configs agave-enabled]
-  "donkey.agave.base-url")
-
-(cc/defprop-str agave-key
-  "The API key to use when authenticating to Agave."
-  [props config-valid configs agave-enabled]
-  "donkey.agave.key")
-
-(cc/defprop-str agave-secret
-  "The API secret to use when authenticating to Agave."
-  [props config-valid configs agave-enabled]
-  "donkey.agave.secret")
-
-(cc/defprop-str agave-oauth-base
-  "The base URL for the Agave OAuth 2.0 endpoints."
-  [props config-valid configs agave-enabled]
-  "donkey.agave.oauth-base")
-
-(cc/defprop-int agave-oauth-refresh-window
-  "The number of minutes before a token expires to refresh it."
-  [props config-valid configs agave-enabled]
-  "donkey.agave.oauth-refresh-window")
-
-(cc/defprop-str agave-redirect-uri
-  "The redirect URI used after Agave authorization."
-  [props config-valid configs agave-enabled]
-  "donkey.agave.redirect-uri")
-
-(cc/defprop-str agave-callback-base
-  "The base URL for receiving job status update callbacks from Agave."
-  [props config-valid configs #(and (agave-enabled) (agave-jobs-enabled))]
-  "donkey.agave.callback-base")
-
-(cc/defprop-optstr agave-storage-system
-  "The storage system that Agave should use when interacting with the DE."
-  [props config-valid configs agave-enabled]
-  "donkey.agave.storage-system"
-  "data.iplantcollaborative.org")
-
 (cc/defprop-str coge-genome-load-url
   "The COGE service URL for loading genomes and creating viewer URLs."
   [props config-valid configs coge-enabled]
@@ -643,26 +567,10 @@
        (cfg/env-setting "TREE_URLS_PORT")
        (tree-urls-base-url)))))
 
-(cc/defprop-optstr keyring-path
-  "The path to the secure PGP keyring."
-  [props config-valid configs]
-  "donkey.pgp.keyring-path"
-  "/etc/iplant/de/crypto/secring.gpg")
-
-(cc/defprop-str key-password
-  "The password needed to unlock the PGP password."
-  [props config-valid configs]
-  "donkey.pgp.key-password")
-
 (cc/defprop-str donkey-base-url
   "The Donkey base URL, which is used to build callback URLs for other DE components."
   [props config-valid configs]
   "donkey.base-url")
-
-(cc/defprop-int donkey-job-status-poll-interval
-  "The job status polling interval in minutes."
-  [props config-valid configs]
-  "donkey.jobs.poll-interval")
 
 (cc/defprop-str workspace-root-app-category
   "The name of the root app category in a user's workspace."
@@ -693,7 +601,7 @@
 (defn- exception-filters
   []
   (filter #(not (nil? %))
-          [(icat-password) (icat-user) (irods-pass) (irods-user) (agave-key) (agave-secret)]))
+          [(icat-password) (icat-user) (irods-pass) (irods-user)]))
 
 (defn- oauth-settings
   [api-name api-key api-secret token-uri redirect-uri refresh-window]
@@ -704,22 +612,11 @@
    :redirect-uri   redirect-uri
    :refresh-window (* refresh-window 60 1000)})
 
-(def agave-oauth-settings
-  (memoize
-   #(oauth-settings
-     "agave"
-     (agave-key)
-     (agave-secret)
-     (str (curl/url (agave-oauth-base) "token"))
-     (agave-redirect-uri)
-     (agave-oauth-refresh-window))))
-
 (defn log-environment
   []
   (log/warn "ENV? donkey.data-info.base-url -" (data-info-base))
   (log/warn "ENV? donkey.metadactyl.base-url =" (metadactyl-base))
   (log/warn "ENV? donkey.notificationagent.base-url =" (notificationagent-base))
-  (log/warn "ENV? donkey.jex-events.base-url =" (jex-events-base))
   (log/warn "ENV? donkey.anon-files.base-url =" (anon-files-base))
   (log/warn "ENV? donkey.sessions.host =" (sessions-base))
   (log/warn "ENV? donkey.saved-searches.host =" (saved-searches-base))

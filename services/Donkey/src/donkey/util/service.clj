@@ -252,15 +252,6 @@
           (when (map? params) params)))
       {}))
 
-(defmacro log-runtime
-  [[msg] & body]
-  `(let [start#  (System/currentTimeMillis)
-         result# (do ~@body)
-         finish# (System/currentTimeMillis)]
-     (when (config/log-runtimes)
-       (log/warn ~msg "-" (- finish# start#) "milliseconds"))
-     result#))
-
 (defn not-found
   "Throws an exception indicating that an object wasn't found."
   [desc id]

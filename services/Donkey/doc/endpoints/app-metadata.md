@@ -285,53 +285,8 @@ Secured Endpoint: POST /admin/tools
 
 Delegates to metadactyl: POST /admin/tools
 
-This service imports the given list of tools into the database and also sends a notification for
-every tool that is imported, provided that a username and e-mail address is provided for the
-notification. The request body should be in the following format:
-
-```json
-{
-    "tools": [
-        {
-            "name": "component-name",
-            "location": "component-location",
-            "implementation": {
-                "implementor_email": "e-mail-address-of-implementor",
-                "implementor": "name-of-implementor",
-                "test": {
-                    "params": [
-                        "param-1",
-                        "param-2",
-                        "param-n"
-                    ],
-                    "input_files": [
-                        "input-file-1",
-                        "input-file-2",
-                        "input-file-n"
-                    ],
-                    "output_files": [
-                        "output-file-1",
-                        "output-file-2",
-                        "output-file-n"
-                    ]
-                }
-            },
-            "type": "deployed-component-type",
-            "description": "deployed-component-description",
-            "version": "deployed-component-version",
-            "attribution": "deployed-component-attribution",
-            "user": "username-for-notification",
-            "email": "e-mail-address-for-notification"
-        }
-    ]
-}
-```
-
-If either the `user` or `email` fields is missing or empty, a notification will not be sent even if
-the tool is imported successfully.
-
-The response body for this service contains a brief description of the reason for the failure if the
-tools can't be imported.
+This endpoint is a passthrough to the metadactyl endpoint using the same path.
+Please see the metadactyl documentation for more information.
 
 ## Updating Tools
 

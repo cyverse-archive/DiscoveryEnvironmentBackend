@@ -25,12 +25,6 @@
   [& components]
   (str (apply curl/url (config/metadactyl-base) components)))
 
-(defn- add-agave-enabled-flag
-  ([]
-     (add-agave-enabled-flag {}))
-  ([params]
-     (assoc params :agave-enabled (str (config/agave-enabled)))))
-
 (defn get-app-categories
   [params]
   (client/get (metadactyl-url "apps" "categories")
