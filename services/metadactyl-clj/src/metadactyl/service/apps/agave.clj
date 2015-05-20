@@ -10,7 +10,7 @@
             [metadactyl.service.util :as util]
             [metadactyl.util.service :as service]))
 
-(defn- app-documentation-edit-request
+(defn- reject-app-documentation-edit-request
   []
   (service/bad-request "Cannot edit documentation for HPC apps with this service"))
 
@@ -120,6 +120,10 @@
        :documentation ""
        :references    []}))
 
-  (ownerEditAppDocs [_ app-id body]
+  (ownerEditAppDocs [_ app-id _]
     (when-not (util/uuid? app-id)
-      (app-documentation-edit-request))))
+      (reject-app-documentation-edit-request)))
+
+  (ownerAddAppDocs [_ app-id _]
+    (when-not (util/uuid? app-id)
+      (reject-app-documentation-edit-request))))

@@ -31,3 +31,19 @@
   [user app-id docs]
   (v/verify-app-ownership user (ap/get-app app-id))
   (edit-app-docs user app-id docs))
+
+(defn add-app-docs
+  "Adds an App's documentation to the database."
+  [{:keys [username]} app-id {docs :documentation}]
+  (when-let [current-docs (dp/get-documentation app-id)]
+    (throw+ {:error_code ce/ERR_EXISTS
+             :reason "App already has documentation"
+             :app_id app-id}))
+  (dp/add-documentation (v/get-valid-user-id username) docs app-id)
+  (get-app-docs app-id))
+
+(defn owner-add-app-docs
+  "Adds an App's documentation to the database if the App is owned by the current user."
+  [user app-id docs]
+  (v/verify-app-ownership user (ap/get-app app-id))
+  (add-app-docs user app-id docs))

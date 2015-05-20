@@ -46,9 +46,3 @@
       docs
       app-id))
   (get-app-docs app-id))
-
-(defn owner-add-app-docs
-  "Adds an App's documentation to the database if the App is owned by the current user."
-  [app-id docs]
-  (verify-app-ownership (get-app app-id))
-  (add-app-docs app-id docs))

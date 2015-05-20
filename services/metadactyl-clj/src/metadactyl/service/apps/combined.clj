@@ -189,4 +189,9 @@
   (ownerEditAppDocs [_ app-id body]
     (->> (map #(.ownerEditAppDocs % app-id body) clients)
          (remove nil?)
+         (first)))
+
+  (ownerAddAppDocs [_ app-id body]
+    (->> (map #(.ownerAddAppDocs % app-id body) clients)
+         (remove nil?)
          (first))))

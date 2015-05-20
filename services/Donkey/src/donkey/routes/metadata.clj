@@ -125,7 +125,7 @@
          (service/success-response (metadactyl/get-app-docs app-id)))
 
     (POST "/apps/:app-id/documentation" [app-id :as {:keys [body]}]
-          (apps/add-app-docs app-id body))
+          (service/success-response (metadactyl/add-app-docs app-id body)))
 
     (PATCH "/apps/:app-id/documentation" [app-id :as {:keys [body]}]
            (service/success-response (metadactyl/edit-app-docs app-id body)))
