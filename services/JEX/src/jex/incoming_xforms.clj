@@ -563,7 +563,7 @@
   [step-map user source dest]
   (let [arg-prefix (if-not (containerized? step-map)
                      (str "-jar " (cfg/jar-path))
-                     (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock"))]
+                     (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:" (cfg/porklock-tag)))]
     (str arg-prefix
          " put --user " user
          " --source " (quote-value source)
@@ -750,7 +750,7 @@
     :as condor-map}]
   (let [arg-prefix (if-not (containerized? (first (:steps condor-map)))
                      (str "-jar " (cfg/jar-path))
-                     (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock"))]
+                     (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:" (cfg/porklock-tag)))]
     (str arg-prefix
          " put --user " username
          " --config irods-config"
