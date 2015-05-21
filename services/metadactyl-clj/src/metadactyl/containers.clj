@@ -548,7 +548,9 @@
   (when (tool-has-settings? tool-uuid)
     (let [settings-id (tool-settings-uuid tool-uuid)]
       (log/warn "deleting container settings for tool" tool-uuid)
-      (delete-settings settings-id)
+      (transaction
+        (update tools (set-fields {:container_images_id nil}) (where {:id tool-uuid}))
+        (delete-settings settings-id))
       nil)))
 
 (defn delete-tool-device
