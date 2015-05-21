@@ -61,13 +61,10 @@
 (defn image-id
   "Returns the UUID used as the primary key in the container_images table."
   [image-map]
-  (let [tag  (get-tag image-map)
-        name (:name image-map)]
-    (if-not (image? image-map)
-      (throw (Exception. (str "image does not exist: " image-map)))
-      (:id (first (select container-images
-                          (where (and (= :name name)
-                                      (= :tag tag)))))))))
+  (let [image-values (-> image-map
+                         (select-keys [:name])
+                         (assoc :tag (get-tag image-map)))]
+    (:id (first (select container-images (where image-values))))))
 
 (defn add-image-info
   [image-map]
@@ -533,10 +530,11 @@
         info-map (assoc info-map :tools_id (uuidify tool-uuid))]
     (log/warn "adding container information for tool" tool-uuid ":" info-map)
     (transaction
-     (let [image-id      (:id (add-image-info (:image info-map)))
+     (let [img-id        (or (image-id (:image info-map))
+                             (:id (add-image-info (:image info-map))))
            settings-map  (add-settings info-map)
            settings-uuid (:id settings-map)]
-       (update-tool {:id tool-uuid :container_images_id image-id})
+       (update-tool {:id tool-uuid :container_images_id img-id})
        (doseq [d devices]
          (add-device settings-uuid d))
        (doseq [v volumes]
