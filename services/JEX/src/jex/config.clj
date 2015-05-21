@@ -6,6 +6,7 @@
  (ref-set
   cfg/validators
   {:jar-path        [v/required cfg/stringv]
+   :porklock-tag    [v/required cfg/stringv]
    :nfs-base        [v/required cfg/stringv]
    :irods-base      [v/required cfg/stringv]
    :irods-user      [v/required cfg/stringv]
@@ -36,6 +37,11 @@
   "Returns the path to porklock on the filesystem out on the Condor cluster."
   []
   (:jar-path @cfg/cfg))
+
+(defn porklock-tag
+  "Returns the docker tag that should be used when invoking the porklock container."
+  []
+  (:porklock-tag @cfg/cfg))
 
 (defn nfs-base
   "Returns the path to the NFS directory on the submission host."

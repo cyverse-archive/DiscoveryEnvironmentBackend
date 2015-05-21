@@ -497,7 +497,7 @@
   (let [file-metadata (or (:file-metadata condor-map) [])
         arg-prefix    (if-not (containerized? step-map)
                         (str "-jar " (cfg/jar-path))
-                        (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock"))]
+                        (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:" (cfg/porklock-tag)))]
     (str arg-prefix
          " get --user " (:username condor-map)
          " --source " (quote-value
