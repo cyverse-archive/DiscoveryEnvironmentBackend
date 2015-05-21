@@ -303,25 +303,21 @@
   [settings-uuid]
   (pos? (count (select container-settings (where {:id (uuidify settings-uuid)})))))
 
-(defn- filter-params
+(defn- filter-container-settings
   [settings-map]
-  (into {} (filter
-            (fn [[k v]]
-              (contains?
-               #{:cpu_shares
-                 :memory_limit
-                 :network_mode
-                 :working_directory
-                 :name
-                 :tools_id}
-               k))
-            settings-map)))
+  (select-keys settings-map
+    [:cpu_shares
+     :memory_limit
+     :network_mode
+     :working_directory
+     :name
+     :tools_id]))
 
 (defn add-settings
   "Adds a new settings record to the database based on the parameter map."
   [settings-map]
   (insert container-settings
-          (values (filter-params settings-map))))
+          (values (filter-container-settings settings-map))))
 
 (defn tool-has-settings?
   "Returns true if the given tool UUID has some container settings associated with it."
@@ -339,7 +335,7 @@
   [settings-uuid settings-map]
   (if-not (settings? settings-uuid)
     (throw (Exception. (str "Container settings do not exist for UUID: " settings-uuid))))
-  (let [values (filter-params settings-map)]
+  (let [values (filter-container-settings settings-map)]
     (update container-settings
             (set-fields values)
             (where {:id (uuidify settings-uuid)}))))
