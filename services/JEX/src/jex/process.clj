@@ -156,7 +156,7 @@
   "Submits a job to Condor. sub-path should be the path to a Condor submission
    file."
   [work-dir sub-path]
-  (let [result (sh/with-sh-env (condor-env) (sh/sh "submitnerator.sh" work-dir sub-path))]
+  (let [result (sh/with-sh-env (condor-env) (sh/sh "/usr/local/bin/submitnerator.sh" work-dir sub-path))]
     (handle-submit-results result)
     result))
 
