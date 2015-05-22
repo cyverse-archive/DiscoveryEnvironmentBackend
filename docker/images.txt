@@ -2,6 +2,7 @@ anon-files
 backwards-compat
 clockwork
 condor-log-monitor
+curl-wrapper
 data-info
 de
 de-db
