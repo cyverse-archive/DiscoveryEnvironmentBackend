@@ -8,6 +8,7 @@ de-db
 de-db-loader
 dewey
 donkey
+facepalm
 info-typer
 infosquito
 iplant-email
