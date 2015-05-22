@@ -1,8 +1,8 @@
 {
-  "metadata-db.tar.gz" : "databases-docker",
-  "notification-db.tar.gz" : "databases-docker",
-  "database.tar.gz" : "databases-docker",
-  "scm.tar.gz" : "scm-beta",
-  "jex-db.tar.gz" : "databases-docker",
-  "facepalm-standalone.jar" : "facepalm-docker"
+  "metadata-db.tar.gz" : "databases-dev",
+  "notification-db.tar.gz" : "databases-dev",
+  "database.tar.gz" : "databases-dev",
+  "scm.tar.gz" : "scm-dev",
+  "jex-db.tar.gz" : "databases-dev",
+  "facepalm-standalone.jar" : "facepalm-dev"
 }
