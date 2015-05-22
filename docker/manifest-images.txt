@@ -14,6 +14,7 @@ kifshare
 metadactyl
 monkey
 notificationagent
+porklock
 saved-searches
 tree-urls
 user-preferences

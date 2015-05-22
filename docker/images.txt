@@ -19,6 +19,7 @@ metadactyl
 monkey
 nginx-ssl
 notificationagent
+porklock
 saved-searches
 tree-urls
 user-preferences
