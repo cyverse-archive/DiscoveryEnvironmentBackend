@@ -314,13 +314,13 @@
          (or (re-find #"^\/usr\/local2" loc)
              (re-find #"^\/usr\/local3" loc)))))
 
-(defn container-tool-executable
+(defn backwards-compatible-executable
   [step-map]
   (if (backwards-compatible? step-map)
     (ut/path-join
      (get-in step-map [:component :location])
      (get-in step-map [:component :name]))
-    (get-in step-map [:component :name])))
+    ""))
 
 (defn backwards-compatible-args
   [step-map]
@@ -348,7 +348,7 @@
        (container-env-args step-map)
        (container-entrypoint-arg container-map)
        (container-image-arg container-map)
-       (container-tool-executable step-map)]))))
+       (backwards-compatible-executable step-map)]))))
 
 (defn executable
   "Takes in a step map and returns the executable path. This will be the full
