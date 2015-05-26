@@ -77,82 +77,6 @@
     (System/exit 1)))
 
 
-(defn project-deps
-  "Returns a vector containing a projects dependencies"
-  [path-to-project-file]
-  (:dependencies (apply hash-map (drop 3 (read-string (slurp path-to-project-file))))))
-
-
-(defn iplant-deps
-  "Returns the iplant dependencies from a list of dependencies"
-  [dep-list]
-  (filter #(.startsWith (str (first %1)) "org.iplantc") dep-list))
-
-
-(defn- extract-project-name
-  "Given a dependency tuple, returns the name of the project."
-  [tuple]
-  (let [prj-name (name (first tuple))]
-    (if (= prj-name "clojure-commons")
-      "iplant-clojure-commons"
-      prj-name)))
-
-
-(defn project-dirs-from-dep
-  "Returns the project directory associated with the provided dep"
-  [dep-list]
-  (map #(:path (get projects (extract-project-name %))) dep-list))
-
-
-(def checkout-dir "checkouts")
-
-(defn- find-folders
-  "Returns the folder the given filename resides in, ignoring any
-   results from the checkouts directories."
-  [filename]
-  (map #(str (.getParentFile %1))
-       (filter #(not (.contains (str %1) "checkouts/"))
-               (filter #(.endsWith (str %1) filename)
-                       (file-seq (io/file "."))))))
-
-
-(defn delete-checkout-dirs
-  "Deletes the checkouts directory from the given directory paths."
-  [paths]
-  (doseq [pdir paths]
-    (fs/with-cwd pdir
-      (when (and (fs/exists? checkout-dir)
-                 (fs/directory? checkout-dir))
-        (fs/delete-dir checkout-dir)))))
-
-
-(defn create-checkout-dirs
-  "Creates the checkouts directory in the given directory paths."
-  [paths]
-  (doseq [pdir paths]
-    (fs/with-cwd pdir
-      (when-not (fs/exists? checkout-dir)
-        (fs/mkdir checkout-dir)))))
-
-
-(defn create-checkout-symlinks
-  "Creates the checkouts directory for the given project and
-   populates it with the appropriate links."
-  [project-map]
-  (let [project-path (:path project-map)]
-    (fs/with-cwd project-path
-      (let [project-clj (path-join project-path "project.clj")
-            symlinks    (-> project-clj project-deps iplant-deps project-dirs-from-dep)]
-        (if-not (fs/exists? checkout-dir)
-          (fs/mkdir checkout-dir))
-        (doseq [symlink symlinks]
-          (let [target-path (str "../../../" symlink)
-                link-path   (fs/base-name target-path)]
-            (println ">> Setting symlink" (path-join checkout-dir link-path) "to" target-path)
-            (sh/with-sh-dir (path-join project-path checkout-dir)
-              (print-shell-result (sh/sh "ln" "-sf" target-path link-path)))))))))
-
-
 ;;; Multi-methods for installations
 ;;; The dispatch function extracts the :install field from the
 ;;; project map.
@@ -421,15 +345,6 @@
   (print-shell-result (sh/sh "mkdir" "builds")))
 
 
-(defn do-symlinks
-  [opts]
-  (println "> Creating the checkouts symlinks for Clojure projects...")
-  (doseq [[proj-name proj] clojure-projects]
-    (println ">> Handling" (:path proj))
-    (create-checkout-symlinks proj)
-    (println "")))
-
-
 (defn do-libs
   [opts]
   (install-libs)
@@ -473,7 +388,6 @@
 
 (defn do-everything
   [opts]
-  (do-symlinks opts)
   (do-lein-plugins opts)
   (do-libs opts)
   (do-services opts)
@@ -499,7 +413,6 @@
 
 (def valid-cmds
   #{"help"
-    "symlinks"
     "lein-plugins"
     "libs"
     "services"
@@ -531,7 +444,6 @@
           "help"         (do (println help-str)
                            (println "Commands are:" (string/join " " (seq valid-cmds)))
                            (System/exit 0))
-          "symlinks"     (do-symlinks opts)
           "lein-plugins" (do-lein-plugins opts)
           "libs"         (do-libs opts)
           "services"     (do-services opts)
