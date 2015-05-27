@@ -22,4 +22,4 @@
   :repositories [["dice.repository"
                   {:url "https://raw.github.com/DICE-UNC/DICE-Maven/master/releases"}]
                  ["iplant.repository"
-                  {:url "http://katic.iplantcollaborative.org/archiva/repository/internal/"}]])
+                  {:url "https://everdene.iplantcollaborative.org/archiva/repository/internal/"}]])
