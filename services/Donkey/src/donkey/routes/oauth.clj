@@ -1,6 +1,6 @@
 (ns donkey.routes.oauth
   (:use [compojure.core])
-  (:require [donkey.clients.metadactyl :as metadactyl]
+  (:require [donkey.clients.metadactyl.raw :as metadactyl]
             [donkey.util.service :as service]))
 
 (defn secured-oauth-routes

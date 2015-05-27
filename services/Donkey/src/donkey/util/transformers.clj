@@ -25,6 +25,16 @@
     :first-name (:firstName current-user)
     :last-name  (:lastName current-user)))
 
+(defn secured-params
+  "Generates a set of query parameters to pass to a remote service that requires
+   information about the authenticated user."
+  ([]
+     (secured-params {}))
+  ([existing-params]
+     (add-current-user-to-map existing-params))
+  ([existing-params param-keys]
+     (secured-params (select-keys existing-params param-keys))))
+
 (defn add-current-user-to-url
   "Adds the name of the currently authenticated user to the query string of a
    URL."

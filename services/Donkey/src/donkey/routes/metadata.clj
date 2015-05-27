@@ -4,7 +4,7 @@
         [donkey.services.metadata.metadactyl]
         [donkey.util])
   (:require [clojure.tools.logging :as log]
-            [donkey.clients.metadactyl :as metadactyl]
+            [donkey.clients.metadactyl.raw :as metadactyl]
             [donkey.util.config :as config]
             [donkey.util.service :as service]))
 
@@ -82,10 +82,10 @@
          (service/success-response (metadactyl/list-app-ids)))
 
     (GET "/apps/elements" [:as {:keys [params]}]
-         (get-all-workflow-elements params))
+         (service/success-response (metadactyl/get-all-workflow-elements params)))
 
     (GET "/apps/elements/:element-type" [element-type :as {:keys [params]}]
-         (get-workflow-elements element-type params))
+         (service/success-response (metadactyl/get-workflow-elements element-type params)))
 
     (POST "/apps/pipelines" [:as {:keys [body]}]
           (service/success-response (metadactyl/add-pipeline body)))
@@ -209,10 +209,10 @@
     [config/app-routes-enabled]
 
     (GET "/reference-genomes" [:as {params :params}]
-         (list-reference-genomes params))
+         (service/success-response (metadactyl/list-reference-genomes params)))
 
     (GET "/reference-genomes/:reference-genome-id" [reference-genome-id]
-         (get-reference-genome reference-genome-id))))
+         (service/success-response (metasdactyl/get-reference-genome reference-genome-id)))))
 
 (defn admin-tool-routes
   []
@@ -240,11 +240,11 @@
   (optional-routes
     [config/app-routes-enabled]
 
-    (GET "/tools" [:as req]
-         (search-tools req))
+    (GET "/tools" [:as {:keys [params]}]
+         (service/success-response (metadactyl/search-tools req)))
 
-    (GET "/tools/:tool-id" [tool-id :as req]
-         (get-tool req tool-id))
+    (GET "/tools/:tool-id" [tool-id]
+         (service/success-response (metadactyl/get-tool tool-id)))
 
     (GET "/tool-requests" []
          (list-tool-requests))

@@ -1,16 +1,12 @@
 (ns donkey.services.metadata.internal-jobs
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [cheshire.core :as cheshire]
-            [clojure-commons.error-codes :as ce]
+  (:require [clojure-commons.error-codes :as ce]
             [donkey.clients.metadactyl :as metadactyl]
-            [donkey.util.config :as config]
-            [donkey.util.service :as service]))
+            [donkey.util.config :as config]))
 
 (defn- load-param-map
   [app-id]
   (->> (metadactyl/get-app app-id)
-       (:body)
-       (service/decode-json)
        (:groups)
        (mapcat :parameters)
        (map (juxt :label :id))
@@ -60,7 +56,6 @@
 (defn- launch-url-import-job
   [address filename dest-path]
   (->> (build-url-import-job-submission address filename dest-path)
-       (cheshire/encode)
        (metadactyl/submit-job)))
 
 (defn- unknown-job-type
