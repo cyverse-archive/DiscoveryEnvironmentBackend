@@ -22,4 +22,4 @@
                :config-files ["log4j.properties"]
                :config-path "resources/conf/main"}
   :repositories {"iplantCollaborative"
-                 "http://katic.iplantcollaborative.org/archiva/repository/internal/"})
+                 "https://everdene.iplantcollaborative.org/archiva/repository/internal/"})

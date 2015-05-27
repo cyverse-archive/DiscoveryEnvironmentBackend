@@ -9,6 +9,6 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [fleet "0.10.2"]]
   :repositories {"iplantCollaborative"
-                 "http://katic.iplantcollaborative.org/archiva/repository/internal/"}
+                 "https://everdene.iplantcollaborative.org/archiva/repository/internal/"}
   :deploy-repositories [["sonatype-nexus-staging"
                          {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]])
