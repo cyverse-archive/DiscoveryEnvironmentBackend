@@ -10,6 +10,8 @@
             [clojure.string :as string]
             [clojure-commons.error-codes :as error-codes]
             [kameleon.queries :as queries]
+            [metadactyl.clients.notifications :as cn]
+            [metadactyl.clients.trellis :as trellis]
             [metadactyl.util.params :as params])
   (:import [java.util UUID]))
 
@@ -130,7 +132,7 @@
 
 (defn- handle-tool-request-update
   "Updates a tool request."
-  [uuid uid-domain update]
+  [update uuid uid-domain]
   (transaction
    (let [prev-status (get-most-recent-status uuid)
          status      (:status update prev-status)
@@ -179,20 +181,36 @@
 (defn get-tool-request
   "Lists the details of a single tool request."
   [uuid]
-  (success-response (remove-nil-vals (get-tool-request-details uuid))))
+  (remove-nil-vals (get-tool-request-details uuid)))
+
+(defn- send-tool-request-notification
+  [tool-request user]
+  (cn/send-tool-request-notification tool-request user)
+  tool-request)
 
 (defn submit-tool-request
   "Submits a tool request on behalf of a user."
-  [username request]
+  [{:keys [username] :as user} request]
   (-> (handle-new-tool-request username request)
-    (get-tool-request)))
+      (get-tool-request)
+      (send-tool-request-notification user)
+      (success-response)))
+
+(defn- send-tool-request-update-notification
+  [tool-request]
+  (->> (string/replace (:submitted_by tool-request) #"@.*" "")
+       (trellis/get-user-details)
+       (cn/send-tool-request-update-notification tool-request))
+  tool-request)
 
 (defn update-tool-request
   "Updates the status of a tool request."
-  [uuid uid-domain username body]
-  (->> (assoc body :username username)
-    (handle-tool-request-update uuid uid-domain)
-    (get-tool-request)))
+  [uuid uid-domain {:keys [username] :as user} body]
+  (-> (assoc body :username username)
+      (handle-tool-request-update uuid uid-domain)
+      (get-tool-request)
+      (send-tool-request-update-notification)
+      (success-response)))
 
 (defn list-tool-requests
   "Lists tool requests."

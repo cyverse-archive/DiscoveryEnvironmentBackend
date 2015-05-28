@@ -6,6 +6,7 @@
             [clj-time.format :as tf]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [metadactyl.persistence.tool-requests :as tp]
             [metadactyl.util.config :as config]))
 
 (defn notificationagent-url
@@ -59,3 +60,46 @@
          (log/warn e "unable to send job status update notification for" (:id job-info)))))
   ([{username :shortUsername email-address :email} job-info]
      (send-job-status-update username email-address job-info)))
+
+(defn- format-tool-request-notification
+  [tool-req user-details]
+  (let [{:keys [comments]} (last (:history tool-req))]
+    {:type           "tool_request"
+     :user           (:shortUsername user-details)
+     :subject        (str "Tool Request " (:name tool-req) " Submitted")
+     :email          true
+     :email_template "tool_request_submitted"
+     :payload        (assoc tool-req
+                       :email_address (:email user-details)
+                       :toolname      (:name tool-req)
+                       :comments      comments)}))
+
+(defn send-tool-request-notification
+  "Sends notification of a successful tool request submission to the user."
+  [tool-req user-details]
+  (try
+    (send-notification (format-tool-request-notification tool-req user-details))
+    (catch Exception e
+      (log/warn e "unable to send tool request submission notification for" tool-req))))
+
+(defn- format-tool-request-update-notification
+  [tool-req user-details]
+  (let [{:keys [status comments]} (last (:history tool-req))]
+    {:type           "tool_request"
+     :user           (:shortUsername user-details)
+     :subject        (str "Tool Request " (:name tool-req) " Status Changed to " status)
+     :email          true
+     :email_template (tp/email-template-for status)
+     :payload        (assoc tool-req
+                       :email_address (:email user-details)
+                       :toolname      (:name tool-req)
+                       :comments      comments
+                       :status        status)}))
+
+(defn send-tool-request-update-notification
+  "Sends notification of a tool request status change to the user."
+  [tool-req user-details]
+  (try
+    (send-notification (format-tool-request-update-notification tool-req user-details))
+    (catch Exception e
+      (log/warn e "unable to send tool request update notification for" tool-req))))

@@ -152,7 +152,6 @@
       (forward-post tool-request-url req)
       (fn [tool-req user-details]
         (send-tool-request-email tool-req user-details)
-        (dn/send-tool-request-notification tool-req user-details)
         (success-response tool-req)))))
 
 (defn list-tool-requests
@@ -179,7 +178,6 @@
     (postprocess-tool-request
       (forward-post url req)
       (fn [tool-req user-details]
-        (dn/send-tool-request-update-notification tool-req user-details)
         (success-response tool-req)))))
 
 (defn get-tool-request
