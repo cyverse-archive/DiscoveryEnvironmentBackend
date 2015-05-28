@@ -55,7 +55,7 @@
   [user workspace params]
   (list-public-apps-by-user
    workspace
-   (workspace-favorites-app-group-index)
+   (workspace-favorites-app-category-index)
    (:email user)
    params))
 
@@ -211,7 +211,7 @@
 (defn- get-apps-in-group
   "Gets the apps in an app group, including virtual app groups that may be included."
   [user {root-group-id :root_category_id :as workspace} {:keys [id]} params]
-  (let [faves-index (workspace-favorites-app-group-index)]
+  (let [faves-index (workspace-favorites-app-category-index)]
     (if (= root-group-id id)
       (get-apps-in-group-for-user id workspace faves-index params (:email user))
       (get-apps-in-group-for-user id workspace faves-index params))))
@@ -253,7 +253,7 @@
         search_results (search-apps-for-user
                         search_term
                         workspace
-                        (workspace-favorites-app-group-index)
+                        (workspace-favorites-app-category-index)
                         params)
         search_results (map format-app-listing search_results)]
     {:app_count total

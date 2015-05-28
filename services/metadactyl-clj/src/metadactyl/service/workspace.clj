@@ -5,10 +5,6 @@
 
 (defn get-workspace
   [{:keys [username]}]
-  (transaction (service/assert-found (wp/get-workspace username) "workspace for" username)))
-
-(defn create-workspace
-  [{:keys [username]}]
-  (transaction
-   (service/assert-not-found (wp/get-workspace username) "workspace for" username)
-   (wp/create-workspace username)))
+  (if-let [workspace (wp/get-workspace username)]
+    (assoc workspace :new_workspace false)
+    (assoc (wp/create-workspace username) :new_workspace true)))

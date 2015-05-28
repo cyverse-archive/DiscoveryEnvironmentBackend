@@ -212,7 +212,7 @@
          (service/success-response (metadactyl/list-reference-genomes params)))
 
     (GET "/reference-genomes/:reference-genome-id" [reference-genome-id]
-         (service/success-response (metasdactyl/get-reference-genome reference-genome-id)))))
+         (service/success-response (metadactyl/get-reference-genome reference-genome-id)))))
 
 (defn admin-tool-routes
   []
@@ -241,7 +241,7 @@
     [config/app-routes-enabled]
 
     (GET "/tools" [:as {:keys [params]}]
-         (service/success-response (metadactyl/search-tools req)))
+         (service/success-response (metadactyl/search-tools params)))
 
     (GET "/tools/:tool-id" [tool-id]
          (service/success-response (metadactyl/get-tool tool-id)))

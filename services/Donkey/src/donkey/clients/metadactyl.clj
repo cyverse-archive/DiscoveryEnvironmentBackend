@@ -34,3 +34,9 @@
 (defn submit-job
   [submission]
   (raw/submit-job (cheshire/encode submission)))
+
+(defn get-workspace
+  []
+  (-> (raw/get-workspace)
+      (:body)
+      (service/decode-json)))

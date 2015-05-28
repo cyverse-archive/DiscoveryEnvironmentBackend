@@ -1,10 +1,11 @@
 (ns donkey.clients.notifications.raw
   (:use [donkey.util.transformers :only [secured-params]])
-  (:require [clj-http.client :as client]
+  (:require [cemerick.url :as curl]
+            [clj-http.client :as client]
             [donkey.util.config :as config]))
 
 (def na-sort-params [:limit :offset :sortfield :sortdir])
-(def na-filter-parasms [:seen :filter])
+(def na-filter-params [:seen :filter])
 (def na-message-params (concat na-sort-params na-filter-params))
 (def na-system-message-params [:active-only :type :limit :offset])
 

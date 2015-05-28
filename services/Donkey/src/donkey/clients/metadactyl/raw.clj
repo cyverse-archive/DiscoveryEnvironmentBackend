@@ -21,7 +21,7 @@
 
 (defn get-workflow-elements
   [element-type params]
-  (client-get (metadactyl-url "apps" "elements" element-type)
+  (client/get (metadactyl-url "apps" "elements" element-type)
               {:query-params     (secured-params params [:include-hidden])
                :as               :stream
                :follow-redirects false}))
@@ -446,6 +446,13 @@
                  :content-type     :json
                  :follow-redirects false}))
 
+(defn search-tools
+  [params]
+  (client/get (metadactyl-url "tools")
+              {:query-params     (secured-params params [:search :include-hidden])
+               :as               :stream
+               :follow-redirects :false}))
+
 (defn get-tool
   [tool-id]
   (client/get (metadactyl-url "tools" tool-id)
@@ -457,5 +464,19 @@
   [params]
   (client/get (metadactyl-url "reference-genomes")
               {:query-params     (secured-params params [:deleted])
+               :as               :stream
+               :follow-redirects false}))
+
+(defn get-reference-genome
+  [reference-genome-id]
+  (client/get (metadactyl-url "reference-genomes" reference-genome-id)
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
+(defn get-workspace
+  []
+  (client/get (metadactyl-url "workspaces")
+              {:query-params     (secured-params)
                :as               :stream
                :follow-redirects false}))

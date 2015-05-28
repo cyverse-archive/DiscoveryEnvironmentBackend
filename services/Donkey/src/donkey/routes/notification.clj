@@ -23,7 +23,7 @@
    (GET "/notifications/count-messages" [:as {:keys [params]}]
         (service/success-response (rn/count-messages params)))
 
-   (POST "/notifications/delete" [:as {:as {:keys body}}]
+   (POST "/notifications/delete" [:as {:keys [body]}]
          (service/success-response (rn/delete-notifications body)))
 
    (DELETE "/notifications/delete-all" [:as {:keys [params]}]

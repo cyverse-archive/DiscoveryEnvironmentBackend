@@ -1,10 +1,9 @@
 (ns donkey.services.metadata.metadactyl
   (:use [clojure.java.io :only [reader]]
         [donkey.util.config]
-        [donkey.util.transformers]
+        [donkey.util.transformers :only [secured-params add-current-user-to-map]]
         [donkey.auth.user-attributes]
         [donkey.clients.user-info :only [get-user-details]]
-        [donkey.persistence.workspaces :only [get-or-create-workspace]]
         [donkey.services.user-prefs :only [user-prefs]]
         [donkey.util.email]
         [donkey.util.service]
@@ -26,12 +25,6 @@
   [req & components]
   (apply build-url-with-query (notificationagent-base)
          (add-current-user-to-map (:params req)) components))
-
-(defn- secured-params
-  ([]
-   (secured-params {}))
-  ([existing-params]
-   (add-current-user-to-map existing-params)))
 
 (defn- metadactyl-request
   "Prepares a metadactyl request by extracting only the body of the client request and sets the
@@ -65,13 +58,13 @@
   (assert-valid user-agent "Missing or empty request parameter: user-agent")
   (let [username    (:username current-user)
         user        (:shortUsername current-user)
-        workspace   (get-or-create-workspace username)
+        workspace   (dm/get-workspace)
         preferences (user-prefs (:username current-user))
         login-time  (with-db db/de
                       (record-login username ip-address user-agent))]
     (success-response
       {:workspaceId   (:id workspace)
-       :newWorkspace  (:newWorkspace workspace)
+       :newWorkspace  (:new_workspace workspace)
        :loginTime     (str login-time)
        :username      user
        :full_username username
@@ -93,12 +86,6 @@
                    ip-address
                    (string->long login-time "Long integer expected: login-time")))
   (success-response))
-
-(defn get-reference-genome
-  "Gets a reference genome by its UUID."
-  [reference-genome-id]
-  (client/get (metadactyl-url {} "reference-genomes" reference-genome-id)
-              {:as :stream}))
 
 (defn add-reference-genome
   "Adds a reference genome via metadactyl."
