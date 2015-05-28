@@ -4,7 +4,8 @@
         [donkey.util.transformers :only [add-current-user-to-map]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [donkey.clients.notifications.raw :as raw]))
 
 (defn notificationagent-url
   "Builds a URL that can be used to connect to the notification agent."
@@ -42,3 +43,7 @@
                                       :toolversion (:version m)}})
         (catch Exception e
           (log/warn e "unable to send tool deployment notification for" m))))))
+
+(defn mark-all-notifications-seen
+  []
+  (raw/mark-all-notifications-seen (cheshire/encode (add-current-user-to-map {}))))

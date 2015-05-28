@@ -3,6 +3,7 @@
         [donkey.util])
   (:require [clojure.tools.logging :as log]
             [donkey.clients.notifications.raw :as rn]
+            [donkey.clients.notifications :as cn]
             [donkey.util.config :as config]
             [donkey.util.service :as service]))
 
@@ -32,8 +33,8 @@
    (POST "/notifications/seen" [:as {:keys [body]}]
          (service/success-response (rn/mark-notifications-seen body)))
 
-   (POST "/notifications/mark-all-seen" [:as {:keys [body]}]
-         (service/success-response (rn/mark-all-notifications-seen body)))
+   (POST "/notifications/mark-all-seen" []
+         (service/success-response (cn/mark-all-notifications-seen)))
 
    (GET "/notifications/system/messages" []
         (service/success-response (rn/get-system-messages)))
