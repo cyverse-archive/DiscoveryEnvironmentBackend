@@ -13,25 +13,6 @@
   [username]
   (str username "@" (uid-domain)))
 
-(defn- remove-domain
-  "Removes the username domain from a username."
-  [username]
-  (string/replace username #"@.*" ""))
-
-(defn- add-user-details
-  "Adds user details to the results from a request to obtain a list of collaborators."
-  [users]
-  (map user-info/get-user-details (filter #(not (string/blank? %)) users)))
-
-(defn get-collaborators
-  "Gets the list of collaborators for the current user and retrieves detailed information from
-   Trellis."
-  [req]
-  (let [collaborators (with-db db/de
-                        (queries/get-collaborators (:username current-user)))
-        collaborators (map remove-domain collaborators)]
-    (success-response {:users (add-user-details collaborators)})))
-
 (defn- extract-usernames
   "Extracts the usernames from the request body for the services to add and
    remove collaborators."

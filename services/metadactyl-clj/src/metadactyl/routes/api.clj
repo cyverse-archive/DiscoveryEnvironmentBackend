@@ -9,6 +9,7 @@
         [metadactyl.routes.domain.app.element]
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.callback]
+        [metadactyl.routes.domain.collaborator]
         [metadactyl.routes.domain.oauth]
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.domain.reference-genome]
@@ -28,6 +29,7 @@
             [metadactyl.routes.apps.elements :as app-element-routes]
             [metadactyl.routes.apps.pipelines :as pipeline-routes]
             [metadactyl.routes.callbacks :as callback-routes]
+            [metadactyl.routes.collaborators :as collaborator-routes]
             [metadactyl.routes.oauth :as oauth-routes]
             [metadactyl.routes.reference-genomes :as reference-genome-routes]
             [metadactyl.routes.tools :as tool-routes]
@@ -103,6 +105,9 @@
     (swaggered "oauth-routes"
       :description "OAuth callback routes."
       (context "/oauth" [] oauth-routes/oauth))
+    (swaggered "collaborator-routes"
+      :description "Collaborator Information Routes"
+      (context "/collaborators" [] collaborator-routes/collaborators))
     (swaggered "admin-apps"
       :description "Admin App endpoints."
       (context "/admin/apps" [] admin-routes/admin-apps))

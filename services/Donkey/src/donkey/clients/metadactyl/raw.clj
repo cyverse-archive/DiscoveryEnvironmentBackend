@@ -480,3 +480,10 @@
               {:query-params     (secured-params)
                :as               :stream
                :follow-redirects false}))
+
+(defn get-collaborators
+  []
+  (client/get (metadactyl-url "collaborators")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
