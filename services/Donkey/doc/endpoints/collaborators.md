@@ -17,46 +17,8 @@ information.
 
 Secured Endpoint: GET /secured/collaborators
 
-This service can be used to retrieve the list of collaborators for the
-authenticated user. The response body is in the following format:
-
-```json
-{
-    "users": [
-        {
-            "email": "email-1",
-            "firstname": "firstname-1",
-            "id": "id-1",
-            "lastname": "lastname-1",
-            "useranme": "username-1"
-        }
-    ]
-}
-```
-
-Here's an example:
-
-```
-$ curl -s "http://by-tor:8888/secured/collaborators?proxyToken=$(cas-ticket)" | python -mjson.tool
-{
-    "users": [
-        {
-            "email": "foo@iplantcollaborative.org",
-            "firstname": "The",
-            "id": 123,
-            "lastname": "Foo",
-            "username": "foo"
-        },
-        {
-            "email": "bar@iplantcollaborative.org",
-            "firstname": "The",
-            "id": 456,
-            "lastname": "Bar",
-            "username": "bar"
-        }
-    ]
-}
-```
+This service delegates all of its calls to metadactyl's GET /collaborators
+endpoint. Please refer to metadactyl's documentation for more information.
 
 ## Adding Collaborators
 
