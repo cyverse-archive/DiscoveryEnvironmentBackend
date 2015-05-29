@@ -9,7 +9,7 @@
         [kameleon.uuids :only [uuidify]]
         [metadactyl.service.apps.de.validation :only [app-publishable?]]
         [metadactyl.util.config :only [workspace-beta-app-category-id
-                                       workspace-favorites-app-group-index]]
+                                       workspace-favorites-app-category-index]]
         [metadactyl.util.service :only [build-url success-response]]
         [metadactyl.validation :only [get-valid-user-id verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
@@ -114,7 +114,7 @@
   [user]
   (get-app-subcategory-id
     (:root_category_id (get-workspace (:username user)))
-    (workspace-favorites-app-group-index)))
+    (workspace-favorites-app-category-index)))
 
 (defn add-app-favorite
   "Adds the given app to the current user's favorites list."

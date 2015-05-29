@@ -82,27 +82,26 @@
   [props config-valid configs]
   "metadactyl.data-info.base-url")
 
-(cc/defprop-str workspace-root-app-group
-  "The name of the root app group in each user's workspace."
+(cc/defprop-str workspace-root-app-category
+  "The name of the root app category in a user's workspace."
   [props config-valid configs]
-  "metadactyl.workspace.root-app-group")
+  "metadactyl.workspace.root-app-category")
 
-(cc/defprop-str workspace-default-app-groups
-  "The names of the app groups that appear immediately beneath the root app
-   group in each user's workspace."
+(cc/defprop-str workspace-default-app-categories
+  "The names of the app categories immediately under the root app category in a user's workspace."
   [props config-valid configs]
-  "metadactyl.workspace.default-app-groups")
+  "metadactyl.workspace.default-app-categories")
 
-(cc/defprop-int workspace-dev-app-group-index
+(cc/defprop-int workspace-dev-app-category-index
   "The index of the category within a user's workspace for apps under
    development."
   [props config-valid configs]
-  "metadactyl.workspace.dev-app-group-index")
+  "metadactyl.workspace.dev-app-category-index")
 
-(cc/defprop-int workspace-favorites-app-group-index
+(cc/defprop-int workspace-favorites-app-category-index
   "The index of the category within a user's workspace for favorite apps."
   [props config-valid configs]
-  "metadactyl.workspace.favorites-app-group-index")
+  "metadactyl.workspace.favorites-app-category-index")
 
 (cc/defprop-str workspace-beta-app-category-id
   "The UUID of the default Beta app category."
@@ -233,6 +232,11 @@
   [props config-valid configs]
   "metadactyl.jobs.poll-interval")
 
+(def get-default-app-categories
+  (memoize
+   (fn []
+     (cheshire/decode (workspace-default-app-categories) true))))
+
 (defn- oauth-settings
   [api-name api-key api-secret auth-uri token-uri redirect-uri refresh-window]
   {:api-name       api-name
@@ -271,8 +275,3 @@
   (cc/log-config props)
   (log-environment)
   (validate-config))
-
-(def get-default-app-groups
-  (memoize
-  (fn []
-    (cheshire/decode (str/replace (workspace-default-app-groups) #"\\," ",") true))))

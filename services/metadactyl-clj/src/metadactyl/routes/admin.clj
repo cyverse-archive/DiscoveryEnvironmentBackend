@@ -46,7 +46,7 @@
          :notes "This endpoint is used by Discovery Environment administrators to update the status
          of a tool request."
          (ce/trap uri
-           #(update-tool-request request-id (config/uid-domain) (:username current-user) body))))
+           #(update-tool-request request-id (config/uid-domain) current-user body))))
 
 (defroutes* admin-apps
   (POST* "/" [:as {uri :uri}]

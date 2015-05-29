@@ -572,21 +572,6 @@
   [props config-valid configs]
   "donkey.base-url")
 
-(cc/defprop-str workspace-root-app-category
-  "The name of the root app category in a user's workspace."
-  [props config-valid configs]
-  "donkey.workspace.root-app-category")
-
-(cc/defprop-str workspace-default-app-categories
-  "The names of the app categories immediately under the root app category in a user's workspace."
-  [props config-valid configs]
-  "donkey.workspace.default-app-categories")
-
-(def get-default-app-categories
-  (memoize
-    (fn []
-      (cheshire/decode (workspace-default-app-categories) true))))
-
 (def get-allowed-groups
   (memoize
     (fn []

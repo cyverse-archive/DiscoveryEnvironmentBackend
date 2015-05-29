@@ -13,6 +13,7 @@
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.domain.tool]
+        [metadactyl.routes.domain.workspace]
         [metadactyl.routes.params]
         [metadactyl.schema.containers]
         [metadactyl.user :only [store-current-user]]
@@ -30,6 +31,7 @@
             [metadactyl.routes.oauth :as oauth-routes]
             [metadactyl.routes.reference-genomes :as reference-genome-routes]
             [metadactyl.routes.tools :as tool-routes]
+            [metadactyl.routes.workspaces :as workspace-routes]
             [service-logging.thread-context :as tc]))
 
 (defmethod json-type schema.core.AnythingSchema [_] {:type "any"})
@@ -89,6 +91,9 @@
     (swaggered "tools"
       :description "Tool endpoints."
       tool-routes/tools)
+    (swaggered "workspaces"
+      :description "Workspace endpoints."
+      (context "/workspaces" [] workspace-routes/workspaces))
     (swaggered "tool-requests"
       :description "Tool Request endpoints."
       (context "/tool-requests" [] tool-routes/tool-requests))

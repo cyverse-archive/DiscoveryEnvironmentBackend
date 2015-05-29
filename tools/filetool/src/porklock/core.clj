@@ -5,6 +5,7 @@
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.cli :as cli]
             [clojure.string :as string]
+            [common-cli.version :as version]
             [clojure-commons.error-codes
              :as error
              :refer [ERR_DOES_NOT_EXIST ERR_NOT_A_FILE ERR_NOT_A_FOLDER ERR_NOT_WRITEABLE]]))
@@ -119,11 +120,11 @@
     (println usage)
     (System/exit 1))
 
-  (when-not (contains? #{"put" "get"} (first all-args))
+  (when-not (contains? #{"put" "get" "--version"} (first all-args))
     (println usage)
     (System/exit 1))
 
-  (first all-args))
+  (string/trim (first all-args)))
 
 (defn settings
   [cmd cmd-args]
@@ -131,6 +132,7 @@
     (case cmd
       "get"   (get-settings cmd-args)
       "put"   (put-settings cmd-args)
+      "--version" []
       (do
         (println usage)
         (System/exit 1)))
@@ -158,11 +160,18 @@
   (try+
     (println "[porklock] [arguments] " args)
 
-    (let [cmd      (command args)
-          cmd-args (rest args)
+    (let [cmd          (command args)
+          version-info (version/version-info "org.iplantc" "porklock")
+          cmd-args     (rest args)
           [options remnants banner] (settings cmd cmd-args)]
+      (println (str "[porklock] [command] '" cmd "'"))
       (println "[porklock] [options] " options)
       (println "[porklock] [remnants] " remnants)
+
+      (when (= cmd "--version")
+        (println version-info)
+        (System/exit 0))
+
       (when-not (> (count cmd-args) 0)
         (println banner)
         (System/exit 1))

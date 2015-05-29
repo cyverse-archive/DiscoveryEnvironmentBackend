@@ -7,7 +7,7 @@
         [kameleon.entities]
         [kameleon.uuids :only [uuidify]]
         [metadactyl.metadata.params :only [format-reference-genome-value]]
-        [metadactyl.util.config :only [workspace-dev-app-group-index]]
+        [metadactyl.util.config :only [workspace-dev-app-category-index]]
         [metadactyl.util.conversions :only [remove-nil-vals convert-rule-argument]]
         [metadactyl.validation :only [validate-parameter verify-app-editable verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
@@ -361,12 +361,16 @@
         (persistence/set-app-references app-id references))
       (assoc app :groups (update-app-groups task-id groups)))))
 
+(defn get-user-subcategory
+  [username index]
+  (-> (get-workspace username)
+      (:root_category_id)
+      (get-app-subcategory-id index)))
+
 (defn add-app-to-user-dev-category
   "Adds an app with the given ID to the current user's apps-under-development category."
   [{:keys [username]} app-id]
-  (let [workspace-category-id (:root_category_id (get-workspace username))
-        dev-group-id (get-app-subcategory-id workspace-category-id (workspace-dev-app-group-index))]
-    (add-app-to-category app-id dev-group-id)))
+  (add-app-to-category app-id (get-user-subcategory username (workspace-dev-app-category-index))))
 
 (defn- add-single-step-task
   "Adds a task as a single step to the given app, using the app's name, description, and label."

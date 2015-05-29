@@ -99,6 +99,12 @@
     (not-found desc id)
     obj))
 
+(defn assert-not-found
+  "Asserts that an object that is being created is not a duplicate."
+  [obj desc id]
+  (when-not (nil? obj)
+    (not-unique desc id)))
+
 (defn assert-valid
   "Throws an exception if an arbitrary expression is false."
   [valid? & msgs]

@@ -197,7 +197,7 @@
          :notes "This service submits a request for a tool to be installed so that it can be used
          from within the Discovery Environment. The installation request and all status updates
          related to the tool request will be tracked in the Discovery Environment database."
-         (ce/trap uri #(submit-tool-request (:username current-user) body)))
+         (ce/trap uri #(submit-tool-request current-user body)))
 
   (GET* "/status-codes" [:as {uri :uri}]
         :query [params StatusCodeListingParams]

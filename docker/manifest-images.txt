@@ -1,7 +1,6 @@
 anon-files
 clockwork
 condor-log-monitor
-curl-wrapper
 data-info
 de
 dewey

@@ -25,7 +25,8 @@
                  [commons-io/commons-io "2.4"]
                  [slingshot "0.12.2"]
                  [org.iplantc/clj-jargon "5.0.0"]
-                 [org.iplantc/clojure-commons "5.0.0"]]
+                 [org.iplantc/clojure-commons "5.0.0"]
+                 [org.iplantc/common-cli "5.0.0"]]
   :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]]
   :iplant-rpm {:summary "Porklock"
                :type :command
