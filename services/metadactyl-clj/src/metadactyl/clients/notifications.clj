@@ -23,7 +23,6 @@
 (defn- send-notification
   "Sends a notification to a user."
   [m]
-  (log/spy :warn m)
   (http/post (notificationagent-url "notification")
              {:content-type :json
               :body (cheshire/encode m)}))

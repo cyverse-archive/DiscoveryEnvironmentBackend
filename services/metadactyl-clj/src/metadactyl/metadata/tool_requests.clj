@@ -3,6 +3,7 @@
         [kameleon.entities]
         [korma.core]
         [korma.db]
+        [metadactyl.user :only [load-user]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
         [metadactyl.util.service :only [success-response]]
         [slingshot.slingshot :only [throw+]])
@@ -11,7 +12,6 @@
             [clojure-commons.error-codes :as error-codes]
             [kameleon.queries :as queries]
             [metadactyl.clients.notifications :as cn]
-            [metadactyl.clients.trellis :as trellis]
             [metadactyl.util.params :as params])
   (:import [java.util UUID]))
 
@@ -198,8 +198,7 @@
 
 (defn- send-tool-request-update-notification
   [tool-request]
-  (->> (string/replace (:submitted_by tool-request) #"@.*" "")
-       (trellis/get-user-details)
+  (->> (load-user (:submitted_by tool-request))
        (cn/send-tool-request-update-notification tool-request))
   tool-request)
 
