@@ -26,7 +26,7 @@
         :summary "List Tool Requests"
         :notes "This endpoint lists high level details about tool requests that have been submitted.
         Administrators may use this endpoint to track tool requests for all users."
-        (ce/trap uri #(list-tool-requests params)))
+        (service/trap uri list-tool-requests params))
 
   (GET* "/:request-id" [:as {uri :uri}]
         :path-params [request-id :- ToolRequestIdParam]
@@ -35,7 +35,7 @@
         :summary "Obtain Tool Request Details"
         :notes "This service obtains detailed information about a tool request. This is the service
         that the DE support team uses to obtain the request details."
-        (ce/trap uri #(get-tool-request request-id)))
+        (service/trap uri get-tool-request request-id))
 
   (POST* "/:request-id/status" [:as {uri :uri}]
          :path-params [request-id :- ToolRequestIdParam]
@@ -45,8 +45,7 @@
          :summary "Update the Status of a Tool Request"
          :notes "This endpoint is used by Discovery Environment administrators to update the status
          of a tool request."
-         (ce/trap uri
-           #(update-tool-request request-id (config/uid-domain) current-user body))))
+         (service/trap uri update-tool-request request-id (config/uid-domain) current-user body)))
 
 (defroutes* admin-apps
   (POST* "/" [:as {uri :uri}]

@@ -5,7 +5,6 @@
         [korma.db]
         [metadactyl.user :only [load-user]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
-        [metadactyl.util.service :only [success-response]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
@@ -193,8 +192,7 @@
   [{:keys [username] :as user} request]
   (-> (handle-new-tool-request username request)
       (get-tool-request)
-      (send-tool-request-notification user)
-      (success-response)))
+      (send-tool-request-notification user)))
 
 (defn- send-tool-request-update-notification
   [tool-request]
@@ -208,18 +206,16 @@
   (-> (assoc body :username username)
       (handle-tool-request-update uuid uid-domain)
       (get-tool-request)
-      (send-tool-request-update-notification)
-      (success-response)))
+      (send-tool-request-update-notification)))
 
 (defn list-tool-requests
   "Lists tool requests."
   [params]
-  (success-response
-   {:tool_requests
-    (map #(assoc %
-            :date_submitted (.getTime (:date_submitted %))
-            :date_updated   (.getTime (:date_updated %)))
-         (get-tool-request-list params))}))
+  {:tool_requests
+   (map #(assoc %
+           :date_submitted (.getTime (:date_submitted %))
+           :date_updated   (.getTime (:date_updated %)))
+        (get-tool-request-list params))})
 
 (defn- add-filter
   [query field filter]
@@ -230,10 +226,9 @@
 (defn list-tool-request-status-codes
   "Lists the known tool request status codes."
   [{:keys [filter]}]
-  (success-response
-   {:status_codes
-    (-> (select* tool_request_status_codes)
-        (fields :id :name :description)
-        (order :name :ASC)
-        (add-filter :name filter)
-        (select))}))
+  {:status_codes
+   (-> (select* tool_request_status_codes)
+       (fields :id :name :description)
+       (order :name :ASC)
+       (add-filter :name filter)
+       (select))})
