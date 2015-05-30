@@ -14,8 +14,8 @@
    (GET "/collaborators" []
         (service/success-response (metadactyl/get-collaborators)))
 
-   (POST "/collaborators" [:as req]
-         (add-collaborators req))
+   (POST "/collaborators" [:as {:keys [body]}]
+         (service/success-response (metadactyl/add-collaborators body)))
 
    (POST "/remove-collaborators" [:as req]
          (remove-collaborators req))))

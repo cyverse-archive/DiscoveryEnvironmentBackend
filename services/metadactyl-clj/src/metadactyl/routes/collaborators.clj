@@ -13,4 +13,11 @@
         :summary "List Collaborators"
         :return Collaborators
         :notes "This service allows users to retrieve a list of their collaborators."
-        (service/trap uri collaborators/get-collaborators current-user)))
+        (service/trap uri collaborators/get-collaborators current-user))
+
+  (POST* "/" [:as {:keys [uri]}]
+         :query [params SecuredQueryParams]
+         :summary "Add Collaborators"
+         :body [body (describe Collaborators "The users to add.")]
+         :notes "This service allows users to add other users to their list of collaborators."
+         (service/trap uri collaborators/add-collaborators current-user body)))

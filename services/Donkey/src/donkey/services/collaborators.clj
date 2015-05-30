@@ -19,14 +19,6 @@
   [{:keys [users]}]
   (map :username users))
 
-(defn add-collaborators
-  "Adds collaborators for the current user."
-  [req]
-  (let [collaborators (extract-usernames (decode-stream (:body req)))]
-    (with-db db/de
-      (queries/add-collaborators (:username current-user) (map add-domain collaborators)))
-    (success-response)))
-
 (defn remove-collaborators
   "Removes collaborators for the current user."
   [req]

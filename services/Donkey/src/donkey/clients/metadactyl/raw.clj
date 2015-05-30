@@ -487,3 +487,12 @@
               {:query-params     (secured-params)
                :as               :stream
                :follow-redirects false}))
+
+(defn add-collaborators
+  [body]
+  (client/post (metadactyl-url "collaborators")
+               {:query-params     (secured-params)
+                :as               :stream
+                :body             body
+                :content-type     :json
+                :follow-redirects false}))
