@@ -27,7 +27,13 @@
        (hash-map :users)))
 
 (defn add-collaborators
-  "Adds collaborators to a user's list of collaborators."
+  "Adds users to the authenticated user's list of collaborators."
   [{:keys [username]} {:keys [users]}]
   (queries/add-collaborators username (map (comp add-domain :username) users))
+  nil)
+
+(defn remove-collaborators
+  "Removes users from the authenticated user's list of collaborators."
+  [{:keys [username]} {:keys [users]}]
+  (queries/remove-collaborators username (map (comp add-domain :username) users))
   nil)

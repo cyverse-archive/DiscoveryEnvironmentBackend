@@ -24,87 +24,16 @@ endpoint. Please refer to metadactyl's documentation for more information.
 
 Secured Endpoint: POST /secured/collaborators
 
-This service can be used to add users to the list of collaborators for the
-current user. The request body is in the following format:
-
-```json
-{
-    "users": [
-        {
-            "email": "email-1",
-            "firstname": "firstname-1",
-            "id": "id-1",
-            "lastname": "lastname-1",
-            "username": "username-1"
-        }
-    ]
-}
-```
-
-Note that the only field that is actually required for each user is the
-`username` field. The rest of the fields may be included if desired,
-however. This feature is provided as a convenience to the caller, who may be
-forwarding results from the user search service to this service.
-
-An attempt to add a user that is already listed as a collaborator to the list of
-collaborators will be silently ignored.
-
-Here's an example:
-
-```
-$ curl -sd '
-{
-    "users": [
-        {
-            "username": "baz"
-        }
-    ]
-}
-' "http://by-tor:8888/secured/collaborators?proxyToken=$(cas-ticket)" | python -mjson.tool
-```
+This service delegates all of its calls to metadactyl's POST /collaborators
+endpoint. Please refer to metadactyl's documentation for more information.
 
 ## Removing Collaborators
 
 Secured Endpoint: POST /secured/remove-collaborators
 
-This service can be used to remove users from the list of collaborators for the
-current user. The request body is in the following format:
-
-```json
-{
-    "users": [
-        {
-            "email": "email-1",
-            "firstname": "firstname-1",
-            "id": "id-1",
-            "lastname": "lastname-1",
-            "username": "username-1"
-        }
-    ]
-}
-```
-
-Note that the only field that is actually required for each user is the
-`username` field. The rest of the fields may be included if desired,
-however. This feature is provided as a convenience to the caller, who may be
-forwarding results from the user search service to this service.
-
-An attempt to remove a user who is not listed as a collaborator from the list of
-collaborators will be silently ignored.
-
-Here's an example:
-
-```
-$ curl -sd '
-{
-    "users": [
-        {
-            "username": "baz"
-        }
-    ]
-}
-' "http://by-tor:8888/secured/remove-collaborators?proxyToken=$(cas-ticket)" | python -mjson.tool
-```
+This service delegates all of its calls to metadactyl's POST
+/collaborators/shredder endpoint. Please refer to metadactyl's documentation
+for more information.
 
 ## Searching for Users
 

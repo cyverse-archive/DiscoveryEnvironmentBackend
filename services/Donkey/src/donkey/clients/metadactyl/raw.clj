@@ -496,3 +496,12 @@
                 :body             body
                 :content-type     :json
                 :follow-redirects false}))
+
+(defn remove-collaborators
+  [body]
+  (client/post (metadactyl-url "collaborators" "shredder")
+               {:query-params     (secured-params)
+                :as               :stream
+                :body             body
+                :content-type     :json
+                :follow-redirects false}))

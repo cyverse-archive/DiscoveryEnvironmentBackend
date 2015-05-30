@@ -1,6 +1,5 @@
 (ns donkey.routes.collaborator
   (:use [compojure.core]
-        [donkey.services.collaborators]
         [donkey.util :only [optional-routes]])
   (:require [donkey.clients.metadactyl.raw :as metadactyl]
             [donkey.util.config :as config]
@@ -17,5 +16,5 @@
    (POST "/collaborators" [:as {:keys [body]}]
          (service/success-response (metadactyl/add-collaborators body)))
 
-   (POST "/remove-collaborators" [:as req]
-         (remove-collaborators req))))
+   (POST "/remove-collaborators" [:as {:keys [body]}]
+         (service/success-response (metadactyl/remove-collaborators body)))))

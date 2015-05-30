@@ -18,6 +18,14 @@
   (POST* "/" [:as {:keys [uri]}]
          :query [params SecuredQueryParams]
          :summary "Add Collaborators"
-         :body [body (describe Collaborators "The users to add.")]
+         :body [body (describe Collaborators "The collaborators to add.")]
          :notes "This service allows users to add other users to their list of collaborators."
-         (service/trap uri collaborators/add-collaborators current-user body)))
+         (service/trap uri collaborators/add-collaborators current-user body))
+
+  (POST* "/shredder" [:as {:keys [uri]}]
+         :query [params SecuredQueryParams]
+         :summary "Remove Collaborators"
+         :body [body (describe Collaborators "The collaborators to remove.")]
+         :notes "This service allows users to remove other users from their list of
+         collaborators."
+         (service/trap uri collaborators/remove-collaborators current-user body)))
