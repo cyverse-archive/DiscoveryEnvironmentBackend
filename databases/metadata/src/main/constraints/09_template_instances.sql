@@ -15,3 +15,10 @@ ALTER TABLE template_instances
     FOREIGN KEY (avu_id)
     REFERENCES avus(id);
 
+--
+-- template_instances table foreign key to the templates table.
+--
+ALTER TABLE template_instances
+    ADD CONSTRAINT template_instances_template_id_fkey
+    FOREIGN KEY (template_id)
+    REFERENCES templates(id);

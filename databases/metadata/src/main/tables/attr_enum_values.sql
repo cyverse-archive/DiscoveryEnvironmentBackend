@@ -3,7 +3,7 @@ SET search_path = public, pg_catalog;
 --
 -- The join table for metadata templates and attributes.
 --
-CREATE TABLE metadata_attr_enum_values (
+CREATE TABLE attr_enum_values (
     id uuid NOT NULL DEFAULT (uuid_generate_v1()),
     attribute_id uuid NOT NULL,
     value text NOT NULL,
@@ -14,5 +14,5 @@ CREATE TABLE metadata_attr_enum_values (
 --
 -- Creates an index on the attribute_id column.
 --
-CREATE INDEX metadata_attr_enum_values_attribute_id
-ON metadata_attr_enum_values(attribute_id);
+CREATE INDEX attr_enum_values_attribute_id
+ON attr_enum_values(attribute_id);
