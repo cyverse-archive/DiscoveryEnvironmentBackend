@@ -410,19 +410,17 @@ func ParseEventFile(
 		}
 
 		if setTombstone {
-			logger.Printf("Generating tombstone for %s\n", filepath)
 			// we only want to record the tombstone when we're done parsing the file.
 			newTombstone, err := NewTombstoneFromFile(openFile)
 			if err != nil {
+				logger.Printf("Error creating new tombstone: %s\n", err)
 				return -1, err
 			}
-			logger.Printf("Attempting to write tombstone for %s\n", filepath)
 			err = newTombstone.WriteToFile()
 			if err != nil {
 				logger.Printf("Failed to write tombstone to %s\n", TombstonePath)
 				logger.Println(err)
 			}
-			logger.Printf("Done attempting to write tombstone for %s\n", filepath)
 		}
 	}
 	currentPos, err := openFile.Seek(0, os.SEEK_CUR)
