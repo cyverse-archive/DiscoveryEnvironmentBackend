@@ -80,14 +80,12 @@
   (let [parent (ft/dirname full-path)]
     (= parent (ft/path-join "/" zone "home"))))
 
-
 (defn iput-status
   "Callback function for the overallStatus function for a TransferCallbackListener."
   [transfer-status]
   (let [exc (.getTransferException transfer-status)]
     (if-not (nil? exc)
       (throw exc))))
-
 
 (defn iput-status-cb
   "Callback function for the statusCallback function of a TransferCallbackListener."
@@ -111,7 +109,6 @@
     (throw exc))
   ops/continue)
 
-
 (defn- iput-force-cb
   "Callback function for the transferAsksWhetherToForceOperation function of a
    TransferCallbackListener."
@@ -120,6 +117,20 @@
    ops/yes-for-all)
 
 (def tcl (ops/transfer-callback-listener iput-status iput-status-cb iput-force-cb))
+
+(defn- parent-exists?
+  "Returns true if the parent directory exists or is /iplant/home"
+  [cm dest-dir]
+  (if (home-folder? cm dest-dir)
+    true
+    (info/exists? cm (ft/dirname dest-dir))))
+
+(defn- parent-writeable?
+  "Returns true if the parent directorty is writeable or is /iplant/home."
+  [cm user dest-dir]
+  (if (home-folder? cm dest-dir)
+    true
+    (perms/is-writeable? cm user (ft/dirname dest-dir))))
 
 (defn iput-command
   "Runs the iput icommand, tranferring files from the --source
@@ -135,16 +146,25 @@
         error?         (atom false)
         user           (:user options)]
     (jg/with-jargon irods-cfg :client-user user [cm]
-      (when-not (info/exists? cm (ft/dirname dest-dir))
+      ;;; The parent directory needs to actually exist, otherwise the dest-dir
+      ;;; doesn't exist and we can't safely recurse up the tree to create the
+      ;;; missing directories. Can't even check the perms safely if it doesn't
+      ;;; exist.
+      (when-not (parent-exists? cm dest-dir)
         (porkprint (ft/dirname dest-dir) "does not exist.")
         (System/exit 1))
-      (when (and (not (perms/is-writeable? cm user (ft/dirname dest-dir)))
-                 (not= (user-home-dir cm user) (ft/rm-last-slash dest-dir)))
+
+      ;;; Need to make sure the parent directory is writable just in
+      ;;; case we end up having to create the destination directory under it.
+      (when-not (parent-writeable? cm user dest-dir)
         (porkprint (ft/dirname dest-dir) "is not writeable.")
         (System/exit 1))
+
+      ;;; Now we can make sure the actual dest-dir is set up correctly.
       (when-not (info/exists? cm dest-dir)
         (porkprint "Path " dest-dir " does not exist. Creating it.")
         (ops/mkdir cm dest-dir))
+
       (doseq [[src dest] (seq dest-files)]
         (let [dir-dest (ft/dirname dest)]
           (if-not (or (.isFile (io/file src))
