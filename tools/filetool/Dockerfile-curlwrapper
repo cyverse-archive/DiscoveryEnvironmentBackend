@@ -4,4 +4,6 @@ ADD curl_wrapper.pl /bin/curl_wrapper.pl
 
 RUN apt-get update && apt-get install -y perl5 curl
 
-CMD ["curl_wrapper.pl", "-h"]
+ENTRYPOINT ["curl_wrapper.pl"]
+
+CMD ["-h"]

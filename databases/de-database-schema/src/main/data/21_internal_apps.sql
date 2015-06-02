@@ -219,7 +219,8 @@ INSERT INTO container_images (id, "name", tag, url) VALUES
 INSERT INTO container_settings (tools_id, network_mode)
   VALUES ('681251EF-EE59-4FE9-9436-DC8A23FEB11A', 'bridge');
 
-INSERT INTO container_settings (tools_id) VALUES ('85cf7a33-386b-46fe-87c7-8c9d59972624');
+INSERT INTO container_settings (tools_id, network_mode, entrypoint)
+  VALUES ('85cf7a33-386b-46fe-87c7-8c9d59972624', 'none', 'wc');
 
 -- Insert default container settings for tools that don't already have them.
 INSERT INTO container_settings (tools_id)
