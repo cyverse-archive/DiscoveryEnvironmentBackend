@@ -323,7 +323,7 @@
   (let [loc (get-in step-map [:component :location])
         img (container-image-arg (container-info step-map))]
 
-    (and (= img "discoenv/backwards-compat:latest")
+    (and (.startsWith img "discoenv/backwards-compat")
          (or (re-find #"^\/usr\/local2" loc)
              (re-find #"^\/usr\/local3" loc)))))
 
