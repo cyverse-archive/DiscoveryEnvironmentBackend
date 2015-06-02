@@ -282,10 +282,23 @@
   (if (contains? container-map :memory_limit)
     (str "--memory=" (:memory_limit container-map) "b")))
 
+(defn- de-image?
+  [container-map]
+  (contains?
+    #{"discoenv/porklock" "discoenv/curl-wrapper" "discoenv/backwards-compat"}
+    (:name (:image container-map))))
+
+(defn container-image-tag
+  [container-map]
+  (cond
+    (de-image? container-map)               (str ":" (cfg/porklock-tag))
+    (contains? (:image container-map) :tag) (str ":" (:tag (:image container-map)))
+    :else                                   ""))
+
 (defn container-image-arg
   [container-map]
   (let [image (:image container-map)
-        tag   (if (contains? image :tag) (str ":" (:tag image)) "")]
+        tag   (container-image-tag container-map)]
     (str (:name image) tag)))
 
 (defn container-entrypoint-arg
