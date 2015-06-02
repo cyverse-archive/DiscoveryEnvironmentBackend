@@ -10,7 +10,7 @@
   (println "\t* Adding network mode and entrypoint to the DE WC container")
   (exec-raw
     "UPDATE ONLY container_settings
-        SET network_mode = 'bridge',
+        SET network_mode = 'none',
             entrypoint = 'wc'
       WHERE tools_id = '85cf7a33-386b-46fe-87c7-8c9d59972624';"))
 
