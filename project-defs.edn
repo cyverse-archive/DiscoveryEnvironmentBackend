@@ -461,4 +461,15 @@
    :uberjar? true
    :install? false
    :language :clojure
+   :archive? true}
+
+  "metadata"
+  {:type     :service
+   :path     "services/metadata"
+   :build    :lein
+   :rpm?     true
+   :tarball? false
+   :uberjar? true
+   :install? false
+   :language :clojure
    :archive? true}}
