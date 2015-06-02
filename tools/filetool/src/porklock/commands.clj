@@ -121,14 +121,14 @@
 (defn- parent-exists?
   "Returns true if the parent directory exists or is /iplant/home"
   [cm dest-dir]
-  (if (home-folder? cm dest-dir)
+  (if (home-folder? (:zone cm) dest-dir)
     true
     (info/exists? cm (ft/dirname dest-dir))))
 
 (defn- parent-writeable?
   "Returns true if the parent directorty is writeable or is /iplant/home."
   [cm user dest-dir]
-  (if (home-folder? cm dest-dir)
+  (if (home-folder? (:zone cm) dest-dir)
     true
     (perms/is-writeable? cm user (ft/dirname dest-dir))))
 
