@@ -3,6 +3,7 @@
   (:require [clojure.tools.logging :as log]
             [common-cli.core :as ccli]
             [me.raynes.fs :as fs]
+            [metadata.util.db :as db]
             [metadata.util.config :as config]
             [ring.adapter.jetty :as jetty]
             [service-logging.thread-context :as tc]))
@@ -11,7 +12,8 @@
   ([]
     (init-service config/default-config-file))
   ([cfg-path]
-    (config/load-config-from-file cfg-path)))
+    (config/load-config-from-file cfg-path)
+    (db/define-database)))
 
 (defn cli-options
   []
