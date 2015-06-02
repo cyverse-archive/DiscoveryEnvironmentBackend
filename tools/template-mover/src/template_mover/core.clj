@@ -1,4 +1,5 @@
 (ns template-mover.core
+  (:gen-class)
   (:require [clojure.pprint :refer [pprint]]
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as string]
