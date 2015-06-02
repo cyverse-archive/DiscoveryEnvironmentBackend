@@ -3,6 +3,7 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as string]
             [clojure.tools.cli :as cli]
+            [clojure.tools.logging :as log]
             [honeysql.core :as sql]
             [honeysql.helpers :refer :all]
             [kameleon.pgpass :as pgpass]))
@@ -60,29 +61,113 @@
         (prompt-for-password user))
       password)))
 
-(defn- dbconnect
+(defn- build-spec
   [host port db user password]
-  (->> {:classname   "org.postgresql.Driver"
-        :subprotocol "postgresql"
-        :subname     (str "//" host ":" port "/" db)
-        :user        user
-        :password    password}
-       (jdbc/get-connection)))
+  {:subprotocol "postgresql"
+   :subname     (str "//" host ":" port "/" db)
+   :user        user
+   :password    password})
 
-(defn- run-query
-  [db sql-map]
-  (jdbc/query db (sql/format sql-map)))
+(defn- get-value-types
+  []
+  (-> (select :id :name)
+      (from :metadata_value_types)))
+
+(defn- store-value-types
+  [value-types]
+  (-> (insert-into :value_types)
+      (values value-types)))
+
+(defn- get-attributes
+  []
+  (-> (select :name :description :required :value_type_id :id :created_by :modified_by
+              :created_on :modified_on)
+      (from :metadata_attributes)))
+
+(defn- store-attributes
+  [attributes]
+  (-> (insert-into :attributes)
+      (values attributes)))
+
+(defn- get-attr-synonyms
+  []
+  (-> (select :attribute_id :synonym_id)
+      (from :metadata_attr_synonyms)))
+
+(defn- store-attr-synonyms
+  [attr-synonyms]
+  (-> (insert-into :attr_synonyms)
+      (values attr-synonyms)))
+
+(defn- get-attr-enum-values
+  []
+  (-> (select :id :attribute_id :value :is_default :display_order)
+      (from :metadata_attr_enum_values)))
+
+(defn- store-attr-enum-values
+  [attr-enum-values]
+  (-> (insert-into :attr_enum_values)
+      (values attr-enum-values)))
+
+(defn- get-templates
+  []
+  (-> (select :id :name :deleted :created_by :modified_by :created_on :modified_on)
+      (from :metadata_templates)))
+
+(defn- store-templates
+  [templates]
+  (-> (insert-into :templates)
+      (values templates)))
+
+(defn- get-template-attrs
+  []
+  (-> (select :template_id :attribute_id :display_order)
+      (from :metadata_template_attrs)))
+
+(defn- store-template-attrs
+  [template-attrs]
+  (-> (insert-into :template_attrs)
+      (values template-attrs)))
+
+(defn- migrate-table
+  [source-db dest-db query-fn storage-statement-fn]
+  (let [source-items (jdbc/query source-db (sql/format (query-fn)))]
+    (when (seq source-items)
+      (jdbc/execute! dest-db (sql/format (storage-statement-fn source-items))))))
+
+(defn- template-instances-fk-constraint-statement
+  []
+  "ALTER TABLE template_instances
+      ADD CONSTRAINT template_instances_template_id_fkey
+      FOREIGN KEY (template_id)
+      REFERENCES templates(id);")
+
+(defn- add-template-instances-fk-constraint
+  [metadata-db]
+  (jdbc/execute! metadata-db [(template-instances-fk-constraint-statement)]))
 
 (defn- migrate-metadata-template-tables
   [de-db metadata-db]
-  (pprint (run-query de-db (-> (select :id :name) (from :metadata_templates)))))
+  (->> [[get-value-types      store-value-types]
+        [get-attributes       store-attributes]
+        [get-attr-synonyms    store-attr-synonyms]
+        [get-attr-enum-values store-attr-enum-values]
+        [get-templates        store-templates]
+        [get-template-attrs   store-template-attrs]]
+       (map (partial apply migrate-table de-db metadata-db))
+       (dorun))
+  (add-template-instances-fk-constraint metadata-db))
 
 (defn- run-migration
   [{:keys [host port user de-database metadata-database]}]
-  (let [password (get-password host port de-database user)]
-    (migrate-metadata-template-tables
-     (dbconnect host port de-database user password)
-     (dbconnect host port metadata-database user password))))
+  (let [password (get-password host port de-database user)
+        de-spec  (build-spec host port de-database user password)
+        md-spec  (build-spec host port metadata-database user password)]
+    (with-open [de-conn (jdbc/get-connection de-spec)
+                md-conn (jdbc/get-connection md-spec)]
+      (migrate-metadata-template-tables
+       (jdbc/add-connection de-spec de-conn)
+       (jdbc/add-connection md-spec md-conn)))))
 
 (defn -main
   [& args]

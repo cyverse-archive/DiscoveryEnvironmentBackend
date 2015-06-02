@@ -18,6 +18,7 @@
                  [org.clojure/clojure "1.6.0"]
                  [org.clojure/java.jdbc "0.3.7"]
                  [org.clojure/tools.cli "0.3.1"]
+                 [org.clojure/tools.logging "0.3.1"]
                  [org.iplantc/kameleon "5.0.0"]
                  [postgresql "9.1-901-1.jdbc4"]]
   :aot :all
