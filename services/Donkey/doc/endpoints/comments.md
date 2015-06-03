@@ -2,42 +2,31 @@ This document describes the comments resource.
 
 A _comment_ is something that a user records about a given app, file, or folder.
 
-# Resources
-
-## Comment
-
-A comment is modeled as a JSON document (media type `application/json`) with the fields described in
-the following table.
-
-| Field     | Type    | Description |
-| --------- | ------- | ----------- |
-| id        | string  | the service-provided UUID associated with the comment |
-| commenter | string  | the authenticated username of the person who made the comment |
-| post_time | number  | the time when the comment was posted in ms since the POSIX epoch |
-| retracted | boolean | a flag indicating whether or not the comment is currently retracted |
-| comment   | string  | the text of the comment |
-
-# Endpoints
+# Comment Endpoints
 
 ## Creating a comment
 
 `POST /apps/{app-id}/comments`
 
+Delegates to metadata: `POST /apps/{app-id}/comments`
+
 `POST /secured/filesystem/entry/{entry-id}/comments`
+
+Delegates to metadata: `POST /filesystem/entry/{entry-id}/comments`
 
 This endpoint allows an authenticated user to post a comment on any app, accessible file, or
 accessible folder.
 `{app-id}` is the UUID of the app being commented on.
 `{entry-id}` is the UUID of the file or folder being commented on.
 
+These endpoints forward requests to their corresponding metadata service endpoints.
+Please see the metadata documentation for more information.
+
 ### Request
 
 A request to this endpoint requires no parameters beyond the `proxyToken` authentication parameter.
 The user that owns the comment is determined from the authentication.  Any additional parameters
 will be ignored.
-
-The request body will be a JSON document (media type `application/json`) containing a `comment`
-field. The user's comment should be the value of this field.
 
 ### Response
 
@@ -48,9 +37,6 @@ field. The user's comment should be the value of this field.
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 | 404         | From the `/apps/{app-id}/comments` endpoint, the `app-id` didn't correspond to an existing app. From the `/secured/filesystem/entry/{entry-id}/comments` endpoint, `entry-id` didn't correspond to an existing file or folder, or is not accessible by the user |
 | 413         | The request body is too large |
-
-Upon success, the response body will be a JSON document (media type `application/json`) with a
-`comment` field that contains the corresponding [comment](#comment) object.
 
 Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
 
@@ -75,12 +61,19 @@ Error responses may include a `reason` field, providing a short, human readable 
 
 `GET /apps/{app-id}/comments`
 
+Delegates to metadata: `GET /apps/{app-id}/comments`
+
 `GET /secured/filesystem/entry/{entry-id}/comments`
+
+Delegates to metadata: `GET /filesystem/entry/{entry-id}/comments`
 
 This endpoint allows an authenticated user to retrieve all of the comments made on an accessible
 file or folder, or any app.
 `{app-id}` is the UUID associated with the app.
 `entry-id` is the UUID associated with the file or folder.
+
+These endpoints forward requests to their corresponding metadata service endpoints.
+Please see the metadata documentation for more information.
 
 ### Request
 
@@ -97,9 +90,6 @@ Any attached request body will be ignored.
 | 200         | The list of comments will be in the response body |
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 | 404         | From the `/apps/{app-id}/comments` endpoint, the `app-id` didn't correspond to an existing app. From the `/secured/filesystem/entry/{entry-id}/comments` endpoint, `entry-id` didn't correspond to an existing file or folder, or is not accessible by the user |
-
-Upon success, the response body will be a JSON document (media type `application/json`) with a
-`comments` field containing an array of [comment](#comment) objects.
 
 Upon failure, a JSON document with a `reason` field will the returned. The `reason` field will
 provide a short, human readable explanation of the failure.
@@ -136,20 +126,31 @@ provide a short, human readable explanation of the failure.
 
 `PATCH /secured/filesystem/entry/{entry-id}/comments/{comment-id}`
 
-This endpoint allows an authenticated user to retract a given comment on a given app, file, or folder.
+Delegates to metadata:
+
+`PATCH /apps/{app-id}/comments/{comment-id}`
+
+`PATCH /admin/apps/{app-id}/comments/{comment-id}`
+
+`PATCH /filesystem/entry/{entry-id}/comments/{comment-id}`
+
+`PATCH /admin/filesystem/entry/{entry-id}/comments/{comment-id}`
+
+These endpoints allow an authenticated user to retract a given comment or to readmit a retracted
+comment on a given app, file, or folder.
 `app-id` is the UUID of the app.
 `entry-id` is the UUID of the file or folder.
 `comment-id` is the UUID of the comment.
-The user must either be an owner of the app, file, or folder, or the user must be the commenter.
 
-This endpoint also allows an authenticated user to readmit a retracted comment. In this case, the
-user must be the same user who retracted the comment.
+These endpoints forward requests to their corresponding metadata service endpoints.
+In the case that the user is the owner of the app, file, or folder, then the request is forwarded to
+the corresponding metadata service `/admin` endpoint.
+Please see the metadata documentation for more information.
 
 ### Request
 
 In addition to the `proxyToken` authentication parameter, this endpoint requires a boolean
-`retracted` parameter. A value of `true` indicates that the comment is being retracted, while a
-value of `false` indicates the comment is being readmitted.
+`retracted` parameter.
 
 Any body attached to the request will be ignored.
 
@@ -183,13 +184,20 @@ curl -X PATCH "localhost/secured/filesystem/f86700ac-df88-11e3-bf3b-6abdce5a08d5
 
 `DELETE /admin/apps/{app-id}/comments/{comment-id}`
 
+Delegates to metadata: `DELETE /admin/apps/{app-id}/comments/{comment-id}`
+
 `DELETE /admin/filesystem/entry/{entry-id}/comments/{comment-id}`
+
+Delegates to metadata: `DELETE /admin/filesystem/entry/{entry-id}/comments/{comment-id}`
 
 This endpoint allows an administrative user to delete a given comment on a given app, file, or
 folder.
 `comment-id` is the UUID of the comment.
 `app-id` is the UUID of the app.
 `entry-id` is the UUID of the file or folder.
+
+These endpoints forward requests to their corresponding metadata service endpoints.
+Please see the metadata documentation for more information.
 
 ### Request
 
@@ -201,7 +209,7 @@ Any body attached to the request will be ignored.
 
 | Status Code | Cause |
 | ----------- | ----- |
-| 204         | The comment corresponding to the `comment-id` UUID has been deleted. |
+| 200         | The comment corresponding to the `comment-id` UUID has been deleted. |
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 | 404         | Either the app corresponding to `app-id` doesn't exist, the file or folder corresponding to `entry-id` doesn't exist, or the comment corresponding to `comment-id` doesn't. |
 

@@ -4,12 +4,18 @@
   (:require [schema.core :as s])
   (:import [java.util UUID]))
 
+(def TargetIdPathParam (describe UUID "The target item's UUID"))
+
 (def NonBlankString
   (describe (s/both String (s/pred (complement blank?) 'non-blank-string?)) "A non-blank string."))
 
 (s/defschema StandardQueryParams
-  {:user (describe String "The username of the authenticated user")})
+  {:user (describe NonBlankString "The username of the authenticated user")})
 
 (s/defschema UserIdParams
   (assoc StandardQueryParams
     :user-id (describe UUID "The user ID from the app database")))
+
+(s/defschema StandardDataItemQueryParams
+  (assoc StandardQueryParams
+    :data-type (describe (s/enum "file" "folder") "The type of the requested data item.")))

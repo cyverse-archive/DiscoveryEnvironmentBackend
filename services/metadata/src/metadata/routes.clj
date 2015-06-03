@@ -2,7 +2,8 @@
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.api.sweet])
-  (:require [metadata.routes.status :as status-routes]
+  (:require [metadata.routes.comments :as comment-routes]
+            [metadata.routes.status :as status-routes]
             [metadata.routes.templates :as template-routes]
             [metadata.util.config :as config]
             [metadata.util.service :as service]
@@ -30,4 +31,8 @@
      service/req-logger
      context-middleware]
     status-routes/status
+    comment-routes/data-comment-routes
+    comment-routes/app-comment-routes
+    comment-routes/admin-data-comment-routes
+    comment-routes/admin-app-comment-routes
     template-routes/templates))
