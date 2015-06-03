@@ -505,3 +505,12 @@
                 :body             body
                 :content-type     :json
                 :follow-redirects false}))
+
+(defn get-users-by-id
+  [body]
+  (client/post (metadactyl-url "users" "by-id")
+               {:query-params     (secured-params)
+                :as               :stream
+                :body             body
+                :content-type     :json
+                :follow-redirects false}))

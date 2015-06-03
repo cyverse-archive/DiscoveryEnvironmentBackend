@@ -40,3 +40,9 @@
   (-> (raw/get-workspace)
       (:body)
       (service/decode-json)))
+
+(defn get-users-by-id
+  [ids]
+  (-> (raw/get-users-by-id (cheshire/encode {:ids ids}))
+      (:body)
+      (service/decode-json)))

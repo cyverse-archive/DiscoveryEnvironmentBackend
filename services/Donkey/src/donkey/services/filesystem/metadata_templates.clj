@@ -7,9 +7,12 @@
         [korma.core]
         [korma.db :only [transaction with-db]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as error-codes]
+  (:require [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as error-codes]
             [clojure-commons.validators :as common-validators]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.clients.metadactyl :as metadactyl]
+            [donkey.clients.metadata :as metadata]
             [donkey.util.db :as db]
             [donkey.util.service :as service]))
 
@@ -39,9 +42,24 @@
     (where query {:deleted false})
     query))
 
+(defn- load-user-id-map
+  [ids]
+  (->> (metadactyl/get-users-by-id ids)
+       (:users)
+       (map (juxt :id :username))
+       (into {})))
+
+(defn- user-ids-to-usernames
+  [ms ks]
+  (let [user-id-map      (load-user-id-map (set (remove nil? (mapcat (apply juxt ks) ms))))
+        replace-user-id  (fn [m k] (assoc m k (user-id-map (m k))))
+        replace-user-ids (fn [m] (reduce replace-user-id m ks))]
+    (mapv replace-user-ids ms)))
+
 (defn- list-metadata-templates
   ([]
-    (list-metadata-templates true))
+    (update-in (metadata/list-templates) [:metadata_templates]
+               user-ids-to-usernames [:created_by :modified_by]))
   ([hide-deleted?]
     (with-db db/de
       (select :metadata_templates

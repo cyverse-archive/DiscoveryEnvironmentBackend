@@ -35,6 +35,16 @@
   ([existing-params param-keys]
      (secured-params (select-keys existing-params param-keys))))
 
+(defn user-params
+  "Generates a set of query parameters to pass to a remote service that requires
+   the username of the authenticated user."
+  ([]
+     (user-params {}))
+  ([existing-params]
+     (assoc existing-params :user (:shortUsername current-user)))
+  ([existing-params param-keys]
+     (user-params (select-keys existing-params param-keys))))
+
 (defn add-current-user-to-url
   "Adds the name of the currently authenticated user to the query string of a
    URL."

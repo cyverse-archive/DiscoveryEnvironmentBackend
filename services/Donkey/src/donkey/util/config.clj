@@ -174,6 +174,18 @@
        (cfg/env-setting "METADACTYL_PORT")
        (metadactyl-base-url)))))
 
+(cc/defprop-str metadata-base-url
+  "The base URL to use when connecting to the metadata services."
+  [props config-valid configs metadata-routes-enabled]
+  "donkey.metadata.base-url")
+
+(def metadata-base
+  (memoize
+   (fn []
+     (if (System/getenv "METADATA_PORT")
+       (cfg/env-setting "METADATA_PORT")
+       (metadata-base-url)))))
+
 (cc/defprop-str notificationagent-base-url
   "The base URL to use when connecting to the notification agent."
   [props config-valid configs notification-routes-enabled]
