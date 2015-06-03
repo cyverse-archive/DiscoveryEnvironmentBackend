@@ -3,6 +3,7 @@
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.api.sweet])
   (:require [metadata.routes.status :as status-routes]
+            [metadata.routes.templates :as template-routes]
             [metadata.util.config :as config]
             [metadata.util.service :as service]
             [ring.middleware.keyword-params :as params]
@@ -19,7 +20,8 @@
     {:info {:title "Discovery Environment Metadata API"
             :description "Documentation for the Discovery Environment Metadata REST API"
             :version "2.0.0"}
-     :tags [{:name "service-info", :description "Service Information"}]})
+     :tags [{:name "service-info", :description "Service Information"}
+            {:name ""}]})
   (middlewares
     [tc/add-user-to-context
      wrap-query-params
@@ -27,4 +29,5 @@
      params/wrap-keyword-params
      service/req-logger
      context-middleware]
-    status-routes/status))
+    status-routes/status
+    template-routes/templates))
