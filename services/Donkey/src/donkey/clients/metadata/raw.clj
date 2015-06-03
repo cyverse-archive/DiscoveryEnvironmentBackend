@@ -90,3 +90,19 @@
     {:query-params     (user-params)
      :as               :stream
      :follow_redirects false}))
+
+(defn get-options
+  ([]
+     (get-options (user-params)))
+  ([params]
+     {:query-params     params
+      :as               :stream
+      :follow-redirects false}))
+
+(defn list-templates
+  []
+  (http/get (metadata-url "templates") (get-options)))
+
+(defn get-template
+  [template-id]
+  (http/get (metadata-url "templates" template-id) (get-options)))

@@ -16,6 +16,8 @@
             [donkey.util.db :as db]
             [donkey.util.service :as service]))
 
+(def user-id-ks [:created_by :modified_by])
+
 (defn- get-metadata-template
   [id]
   (with-db db/de
@@ -49,17 +51,23 @@
        (map (juxt :id :username))
        (into {})))
 
+(defn- extract-user-ids
+  ([ms ks]
+     (extract-user-ids ms ks []))
+  ([ms ks ids]
+     (set (remove nil? (concat ids (mapcat (apply juxt ks) ms))))))
+
 (defn- user-ids-to-usernames
-  [ms ks]
-  (let [user-id-map      (load-user-id-map (set (remove nil? (mapcat (apply juxt ks) ms))))
-        replace-user-id  (fn [m k] (assoc m k (user-id-map (m k))))
-        replace-user-ids (fn [m] (reduce replace-user-id m ks))]
-    (mapv replace-user-ids ms)))
+  ([ms ks]
+     (user-ids-to-usernames ms ks (extract-user-ids ms ks)))
+  ([ms ks user-id-map]
+     (let [replace-user-id  (fn [m k] (assoc m k (user-id-map (m k))))
+           replace-user-ids (fn [m] (reduce replace-user-id m ks))]
+       (mapv replace-user-ids ms))))
 
 (defn- list-metadata-templates
   ([]
-    (update-in (metadata/list-templates) [:metadata_templates]
-               user-ids-to-usernames [:created_by :modified_by]))
+    (update-in (metadata/list-templates) [:metadata_templates] user-ids-to-usernames user-id-ks))
   ([hide-deleted?]
     (with-db db/de
       (select :metadata_templates
@@ -75,12 +83,6 @@
               (add-deleted-where-clause hide-deleted?)
               (order :name)))))
 
-(defn- get-valid-metadata-template
-  [id]
-  (if-let [template (get-metadata-template id)]
-    template
-    (service/not-found "metadata template" id)))
-
 (defn- attr-fields
   [query]
   (fields query
@@ -93,17 +95,6 @@
           :created_on
           [:modified_by.username :modified_by]
           :modified_on))
-
-(defn- list-metadata-template-attributes
-  [id]
-  (select [:metadata_template_attrs :mta]
-          (join [:metadata_attributes :attr] {:mta.attribute_id :attr.id})
-          (join [:metadata_value_types :value_type] {:attr.value_type_id :value_type.id})
-          (join [:users :created_by] {:attr.created_by :created_by.id})
-          (join [:users :modified_by] {:attr.modified_by :modified_by.id})
-          (attr-fields)
-          (where {:mta.template_id id})
-          (order [:mta.display_order])))
 
 (defn- add-attr-synonyms
   [attr]
@@ -129,12 +120,23 @@
     add-attr-synonyms
     add-attr-enum-values))
 
+(defn- load-template-user-id-map
+  [{attrs :attributes :as template}]
+  (->> ((apply juxt user-id-ks) template)
+       (extract-user-ids attrs user-id-ks)
+       (load-user-id-map)))
+
+(defn- replace-template-user-ids
+  [template]
+  (let [user-id-map (load-template-user-id-map template)]
+    (assoc template
+      :attributes  (user-ids-to-usernames (:attributes template) user-id-ks user-id-map)
+      :created_by  (user-id-map (:created_by template))
+      :modified_by (user-id-map (:modified_by template)))))
+
 (defn- view-metadata-template
   [id]
-  (with-db db/de
-    (let [template (get-valid-metadata-template id)]
-      (assoc template
-        :attributes (doall (map format-attribute (list-metadata-template-attributes id)))))))
+  (replace-template-user-ids (metadata/get-template id)))
 
 (defn- get-metadata-attribute
   [id]
