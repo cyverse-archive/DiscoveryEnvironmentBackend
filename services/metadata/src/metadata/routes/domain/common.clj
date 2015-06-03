@@ -7,5 +7,9 @@
 (def NonBlankString
   (describe (s/both String (s/pred (complement blank?) 'non-blank-string?)) "A non-blank string."))
 
+(s/defschema StandardQueryParams
+  {:user (describe String "The username of the authenticated user")})
+
 (s/defschema UserIdParams
-  {:user-id (describe UUID "The user ID from the app database.")})
+  (assoc StandardQueryParams
+    :user-id (describe UUID "The user ID from the app database")))
