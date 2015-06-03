@@ -11,7 +11,7 @@
 
     (GET* "/" [:as {uri :uri}]
       :query [params StandardQueryParams]
-      :return MetadataTemplates
+      :return MetadataTemplateList
       :summary "List Metadata Templates"
       :description "This endpoint lists all metadata templates."
       (service/trap uri templates/list-templates))))

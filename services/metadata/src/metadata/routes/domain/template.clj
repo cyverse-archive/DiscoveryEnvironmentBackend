@@ -3,7 +3,7 @@
   (:require [schema.core :as s])
   (:import [java.util Date UUID]))
 
-(s/defschema MetadataTemplate
+(s/defschema MetadataTemplateListEntry
   {:created_by  (describe UUID "The ID of the user who created the template")
    :created_on  (describe Date "The date and time of template creation")
    :deleted     (describe Boolean "True if the template has been marked as deleted")
@@ -12,5 +12,5 @@
    :modified_on (describe Date "The date and time of the most recent template modification")
    :name        (describe String "The template name")})
 
-(s/defschema MetadataTemplates
-  {:metadata_templates (describe [MetadataTemplate] "The list of metadata templates")})
+(s/defschema MetadataTemplateList
+  {:metadata_templates (describe [MetadataTemplateListEntry] "The list of metadata templates")})
