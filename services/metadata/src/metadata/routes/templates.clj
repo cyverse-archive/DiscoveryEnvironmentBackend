@@ -9,9 +9,17 @@
   (context* "/templates" []
     :tags ["template-info"]
 
-    (GET* "/" [:as {uri :uri}]
+    (GET* "/" [:as {:keys [uri]}]
       :query [params StandardQueryParams]
       :return MetadataTemplateList
       :summary "List Metadata Templates"
       :description "This endpoint lists all metadata templates."
-      (service/trap uri templates/list-templates))))
+      (service/trap uri templates/list-templates))
+
+    (GET* "/:template-id" [:as {:keys [uri]}]
+      :path-params [template-id :- TemplateIdPathParam]
+      :query [params StandardQueryParams]
+      :return MetadataTemplate
+      :summary "View a Metadata Template"
+      :description "This endpoint returns the details of a single metadata template."
+      (service/trap uri templates/view-template template-id))))
