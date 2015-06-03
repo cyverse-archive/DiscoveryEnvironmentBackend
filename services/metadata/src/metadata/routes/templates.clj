@@ -6,7 +6,7 @@
 
 (defroutes* templates
   (context* "/templates" []
-    :tags ["metadata-template-info"]
+    :tags ["template-info"]
 
     (GET* "/" [:as {uri :uri}]
       :return MetadataTemplates

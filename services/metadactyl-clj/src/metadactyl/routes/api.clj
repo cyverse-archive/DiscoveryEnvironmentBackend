@@ -14,6 +14,7 @@
         [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.domain.tool]
+        [metadactyl.routes.domain.user]
         [metadactyl.routes.domain.workspace]
         [metadactyl.routes.params]
         [metadactyl.schema.containers]
@@ -33,6 +34,7 @@
             [metadactyl.routes.oauth :as oauth-routes]
             [metadactyl.routes.reference-genomes :as reference-genome-routes]
             [metadactyl.routes.tools :as tool-routes]
+            [metadactyl.routes.users :as user-routes]
             [metadactyl.routes.workspaces :as workspace-routes]
             [service-logging.thread-context :as tc]))
 
@@ -96,6 +98,9 @@
     (swaggered "workspaces"
       :description "Workspace endpoints."
       (context "/workspaces" [] workspace-routes/workspaces))
+    (swaggered "users"
+      :description "User endpoints."
+      (context "/users" [] user-routes/users))
     (swaggered "tool-requests"
       :description "Tool Request endpoints."
       (context "/tool-requests" [] tool-routes/tool-requests))

@@ -21,7 +21,7 @@
             :description "Documentation for the Discovery Environment Metadata REST API"
             :version "2.0.0"}
      :tags [{:name "service-info", :description "Service Information"}
-            {:name ""}]})
+            {:name "template-info", :description "Template Information"}]})
   (middlewares
     [tc/add-user-to-context
      wrap-query-params
