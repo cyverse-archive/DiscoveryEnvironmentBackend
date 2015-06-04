@@ -16,6 +16,14 @@
       :description "This endpoint lists all metadata templates."
       (service/trap uri templates/list-templates))
 
+    (GET* "/attr/:attr-id" [:as {:keys [uri]}]
+      :path-params [attr-id :- AttrIdPathParam]
+      :query [params StandardQueryParams]
+      :return MetadataTemplateAttr
+      :summary "View a Metadata Attribute"
+      :description "This endpoint returns the details of a single metadata attribute."
+      (service/trap uri templates/view-attribute attr-id))
+
     (GET* "/:template-id" [:as {:keys [uri]}]
       :path-params [template-id :- TemplateIdPathParam]
       :query [params StandardQueryParams]

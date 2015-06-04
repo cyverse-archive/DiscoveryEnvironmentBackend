@@ -4,6 +4,7 @@
   (:import [java.util Date UUID]))
 
 (def TemplateIdPathParam (describe UUID "The metadata template ID"))
+(def AttrIdPathParam (describe UUID "The metadata attribute ID"))
 
 (s/defschema MetadataTemplateListEntry
   {:created_by  (describe UUID "The ID of the user who created the template")

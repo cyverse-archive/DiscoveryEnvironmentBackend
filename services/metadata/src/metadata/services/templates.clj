@@ -12,3 +12,9 @@
   (-> (tp/view-template template-id)
       (ca/assert-found "metadata template" template-id)
       (remove-nil-values)))
+
+(defn view-attribute
+  [attr-id]
+  (-> (tp/view-attribute attr-id)
+      (ca/assert-found "metadata attribute" attr-id)
+      (remove-nil-values)))

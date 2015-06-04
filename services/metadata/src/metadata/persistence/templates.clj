@@ -84,3 +84,15 @@
     (->> (list-metadata-template-attributes id)
          (map format-attribute)
          (assoc template :attributes))))
+
+(defn- get-metadata-attribute
+  [id]
+  (first  (select [:attributes :attr]
+                  (join [:value_types :value_type] {:attr.value_type_id :value_type.id})
+                  (attr-fields)
+                  (where {:attr.id id}))))
+
+(defn view-attribute
+  [id]
+  (when-let [attr (get-metadata-attribute id)]
+    (format-attribute attr)))
