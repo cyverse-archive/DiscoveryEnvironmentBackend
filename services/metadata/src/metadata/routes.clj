@@ -22,6 +22,10 @@
             :description "Documentation for the Discovery Environment Metadata REST API"
             :version "2.0.0"}
      :tags [{:name "service-info", :description "Service Information"}
+            {:name "data-comments", :description "Comments on Data Items"}
+            {:name "app-comments", :description "Comments on Apps"}
+            {:name "admin-data-comments", :description "Admin Data Item Comment Management"}
+            {:name "admin-app-comments", :description "Admin App Comment Management"}
             {:name "template-info", :description "Template Information"}]})
   (middlewares
     [tc/add-user-to-context
