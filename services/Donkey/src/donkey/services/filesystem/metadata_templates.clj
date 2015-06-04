@@ -83,19 +83,6 @@
               (add-deleted-where-clause hide-deleted?)
               (order :name)))))
 
-(defn- attr-fields
-  [query]
-  (fields query
-          [:attr.id          :id]
-          [:attr.name        :name]
-          [:attr.description :description]
-          [:attr.required    :required]
-          [:value_type.name  :type]
-          [:created_by.username :created_by]
-          :created_on
-          [:modified_by.username :modified_by]
-          :modified_on))
-
 (defn- add-attr-synonyms
   [attr]
   (let [{:keys [id]} attr]
@@ -138,22 +125,16 @@
   [id]
   (replace-template-user-ids (metadata/get-template id)))
 
-(defn- get-metadata-attribute
-  [id]
-  (first
-   (select [:metadata_attributes :attr]
-           (join [:metadata_value_types :value_type] {:attr.value_type_id :value_type.id})
-           (join [:users :created_by] {:attr.created_by :created_by.id})
-           (join [:users :modified_by] {:attr.modified_by :modified_by.id})
-           (attr-fields)
-           (where {:attr.id id}))))
+(defn- replace-attr-user-ids
+  [attr]
+  (let [user-id-map (load-user-id-map ((apply juxt user-id-ks) attr))]
+    (assoc attr
+      :created_by  (user-id-map (:created_by attr))
+      :modified_by (user-id-map (:modified_by attr)))))
 
 (defn- view-metadata-attribute
   [id]
-  (with-db db/de
-    (if-let [attr (get-metadata-attribute id)]
-      (format-attribute attr)
-      (service/not-found "metadata attribute" id))))
+  (replace-attr-user-ids (metadata/get-attribute id)))
 
 (defn- add-metadata-attribute-enum-value
   "Adds a Metadata Template Attribute Enum value to the database."
@@ -234,7 +215,7 @@
 (defn- edit-metadata-template-attribute
   "Updates a Metadata Template Attribute, or adds it if it does not already exist in the database."
   [user-id template-id order {:keys [id] :as attribute}]
-  (let [attr-exists? (and id (get-metadata-attribute (uuidify id)))]
+  (let [attr-exists? (and id (metadata/get-attribute (uuidify id)))]
     (if attr-exists?
       (update-metadata-template-attribute user-id template-id order attribute)
       (add-metadata-template-attribute user-id template-id order attribute))))

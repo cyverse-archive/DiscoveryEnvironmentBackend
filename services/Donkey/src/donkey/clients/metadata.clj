@@ -13,3 +13,7 @@
 (defn get-template
   [template-id]
   (parse-body (raw/get-template template-id)))
+
+(defn get-attribute
+  [attr-id]
+  (parse-body (raw/get-attribute attr-id)))

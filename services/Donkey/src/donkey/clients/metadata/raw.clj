@@ -8,6 +8,14 @@
   [& components]
   (str (apply curl/url (config/metadata-base) components)))
 
+(defn get-options
+  ([]
+     (get-options (user-params)))
+  ([params]
+     {:query-params     params
+      :as               :stream
+      :follow-redirects false}))
+
 (defn list-data-comments
   [target-id]
   (http/get (metadata-url "filesystem" "entry" target-id "comments")
@@ -91,14 +99,6 @@
      :as               :stream
      :follow_redirects false}))
 
-(defn get-options
-  ([]
-     (get-options (user-params)))
-  ([params]
-     {:query-params     params
-      :as               :stream
-      :follow-redirects false}))
-
 (defn list-templates
   []
   (http/get (metadata-url "templates") (get-options)))
@@ -106,3 +106,7 @@
 (defn get-template
   [template-id]
   (http/get (metadata-url "templates" template-id) (get-options)))
+
+(defn get-attribute
+  [attr-id]
+  (http/get (metadata-url "templates" "attr" attr-id) (get-options)))
