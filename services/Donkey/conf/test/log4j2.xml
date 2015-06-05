@@ -7,9 +7,13 @@
     </Appenders>
 
     <Loggers>
-        <Root level="debug">
+        <Root level="warn">
             <AppenderRef ref="Console" />
         </Root>
+
+        <Logger name="donkey" level="debug" additivity="false">
+            <AppenderRef ref="Console" />
+        </Logger>
 
         <!-- Configuration Logging -->
         <Logger name="clojure-commons.config" level="info" additivity="false">
