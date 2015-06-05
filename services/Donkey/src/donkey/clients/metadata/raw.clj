@@ -93,13 +93,6 @@
      :as               :stream
      :follow_redirects false}))
 
-(defn list-templates
-  []
-  (http/get (metadata-url "templates")
-            {:query-params     (user-params)
-             :as               :stream
-             :follow_redirects false}))
-
 (defn admin-update-data-retract-status
   [target-id comment-id retracted]
   (http/patch (metadata-url "admin" "filesystem" "entry" target-id "comments" comment-id)
@@ -141,3 +134,7 @@
 (defn get-attribute
   [attr-id]
   (http/get (metadata-url "templates" "attr" attr-id) (get-options)))
+
+(defn admin-list-templates
+  []
+  (http/get (metadata-url "admin" "templates") (get-options)))

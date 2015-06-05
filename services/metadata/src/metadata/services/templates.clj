@@ -18,3 +18,7 @@
   (-> (tp/view-attribute attr-id)
       (ca/assert-found "metadata attribute" attr-id)
       (remove-nil-values)))
+
+(defn admin-list-templates
+  []
+  {:metadata_templates (mapv remove-nil-values (tp/list-templates false))})

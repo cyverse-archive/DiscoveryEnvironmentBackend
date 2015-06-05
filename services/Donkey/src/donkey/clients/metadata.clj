@@ -17,3 +17,7 @@
 (defn get-attribute
   [attr-id]
   (parse-body (raw/get-attribute attr-id)))
+
+(defn admin-list-templates
+  []
+  (parse-body (raw/admin-list-templates)))

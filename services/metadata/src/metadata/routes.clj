@@ -28,7 +28,8 @@
             {:name "favorites", :description "Favorite Resources"}
             {:name "admin-data-comments", :description "Admin Data Item Comment Management"}
             {:name "admin-app-comments", :description "Admin App Comment Management"}
-            {:name "template-info", :description "Template Information"}]})
+            {:name "template-info", :description "Template Information"}
+            {:name "template-administration", :description "Template Administration"}]})
   (middlewares
     [tc/add-user-to-context
      wrap-query-params
@@ -42,4 +43,5 @@
     comment-routes/admin-data-comment-routes
     comment-routes/admin-app-comment-routes
     favorites-routes/favorites
-    template-routes/templates))
+    template-routes/templates
+    template-routes/admin-templates))

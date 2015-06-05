@@ -66,22 +66,14 @@
        (mapv replace-user-ids ms))))
 
 (defn- list-metadata-templates
-  ([]
-    (update-in (metadata/list-templates) [:metadata_templates] user-ids-to-usernames user-id-ks))
-  ([hide-deleted?]
-    (with-db db/de
-      (select :metadata_templates
-              (join [:users :created_by] {:metadata_templates.created_by :created_by.id})
-              (join [:users :modified_by] {:metadata_templates.modified_by :modified_by.id})
-              (fields :id
-                      :name
-                      :deleted
-                      [:created_by.username :created_by]
-                      :created_on
-                      [:modified_by.username :modified_by]
-                      :modified_on)
-              (add-deleted-where-clause hide-deleted?)
-              (order :name)))))
+  []
+  (update-in (metadata/list-templates) [:metadata_templates]
+             user-ids-to-usernames user-id-ks))
+
+(defn- admin-list-metadata-templates
+  []
+  (update-in (metadata/admin-list-templates) [:metadata_templates]
+             user-ids-to-usernames user-id-ks))
 
 (defn- add-attr-synonyms
   [attr]
@@ -290,7 +282,7 @@
 
 (defn do-metadata-template-admin-list
   []
-  {:metadata_templates (list-metadata-templates false)})
+  {:metadata_templates (admin-list-metadata-templates)})
 
 (with-pre-hook! #'do-metadata-template-admin-list
   (fn []
