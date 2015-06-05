@@ -12,6 +12,7 @@ jex
 jex-events
 kifshare
 metadactyl
+metadata
 monkey
 notificationagent
 porklock

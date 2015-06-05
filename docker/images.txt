@@ -17,6 +17,7 @@ jex
 jex-events
 kifshare
 metadactyl
+metadata
 monkey
 nginx-ssl
 notificationagent
