@@ -26,7 +26,7 @@
 (defn req-logger
   [handler]
   (fn [req]
-    (log/info "REQUEST:" (dissoc req :body))
+    (log/info "REQUEST:" (dissoc req :body :ring.swagger.middleware/data))
     (let [resp (handler req)]
       (log/info "RESPONSE:" (dissoc resp :body))
       resp)))
