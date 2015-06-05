@@ -3,7 +3,7 @@
             [cheshire.core :as json]
             [donkey.auth.user-attributes :as user]
             [donkey.clients.data-info :as data]
-            [donkey.persistence.metadata :as db]
+            [donkey.clients.metadata.raw :as metadata]
             [donkey.util.service :as svc]
             [donkey.util.validators :as valid])
   (:import [java.util UUID]))
@@ -50,9 +50,7 @@
   (let [user     (:shortUsername user/current-user)
         entry-id (UUID/fromString entry-id)]
     (data/validate-uuid-accessible user entry-id)
-    (when-not (db/is-favorite? user entry-id)
-      (db/insert-favorite user entry-id (data/resolve-data-type entry-id)))
-    (svc/success-response)))
+    (metadata/add-favorite entry-id (data/resolve-data-type entry-id))))
 
 
 (defn remove-favorite
@@ -62,21 +60,20 @@
      entry-id - This is the `entry-id` from the request.  It should be the UUID of the entry being
                 unmarked."
   [entry-id]
-  (let [user     (:shortUsername user/current-user)
-        entry-id (UUID/fromString entry-id)]
-  (if (db/is-favorite? user entry-id)
-    (do
-      (db/delete-favorite user entry-id)
-      (svc/success-response))
-    (svc/donkey-response {} 404))))
+  (metadata/remove-favorite entry-id))
 
 
-(defn- select-favorites
-  [user entity-type]
-  (let [entity-types (if (= :any entity-type)
-                       ["file" "folder"]
-                       [(name entity-type)])]
-    (db/select-favorites-of-type user entity-types)))
+(defn- ids-txt->uuids-set
+  [ids-txt]
+  (->> ids-txt (map #(UUID/fromString %)) set))
+
+(defn- parse-filesystem-ids
+  [json-txt]
+  (-> json-txt (json/parse-string true) :filesystem))
+
+(defn- extract-favorite-uuids-set
+  [response]
+  (-> response :body slurp parse-filesystem-ids ids-txt->uuids-set))
 
 
 (defn list-favorite-data-with-stat
@@ -106,7 +103,7 @@
         limit       (Long/valueOf limit)
         offset      (Long/valueOf offset)
         entity-type (valid/resolve-entity-type entity-type)
-        uuids       (select-favorites user entity-type)]
+        uuids       (extract-favorite-uuids-set (metadata/list-favorites (name entity-type)))]
     (->> (data/stats-by-uuids-paged user col ord limit offset uuids info-types)
       format-favorites
       (hash-map :filesystem)
@@ -122,9 +119,10 @@
             `filesystem` containing an array of UUIDs."
   [body]
   (let [user    (:shortUsername user/current-user)
-        ids-txt (-> body slurp (json/parse-string true) :filesystem)
-        entries (->> ids-txt (map #(UUID/fromString %)) set)]
-    (->> (db/select-favorites-of-type user ["file" "folder"])
+        request (-> body slurp)
+        entries (->> request parse-filesystem-ids ids-txt->uuids-set)]
+    (->> (metadata/filter-favorites request)
+      extract-favorite-uuids-set
       (filter (partial data/uuid-accessible? user))
       set
       (set/intersection entries)

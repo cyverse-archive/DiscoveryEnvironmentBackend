@@ -3,6 +3,7 @@
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.api.sweet])
   (:require [metadata.routes.comments :as comment-routes]
+            [metadata.routes.favorites :as favorites-routes]
             [metadata.routes.status :as status-routes]
             [metadata.routes.templates :as template-routes]
             [metadata.util.config :as config]
@@ -24,6 +25,7 @@
      :tags [{:name "service-info", :description "Service Information"}
             {:name "data-comments", :description "Comments on Data Items"}
             {:name "app-comments", :description "Comments on Apps"}
+            {:name "favorites", :description "Favorite Resources"}
             {:name "admin-data-comments", :description "Admin Data Item Comment Management"}
             {:name "admin-app-comments", :description "Admin App Comment Management"}
             {:name "template-info", :description "Template Information"}]})
@@ -39,4 +41,5 @@
     comment-routes/app-comment-routes
     comment-routes/admin-data-comment-routes
     comment-routes/admin-app-comment-routes
+    favorites-routes/favorites
     template-routes/templates))

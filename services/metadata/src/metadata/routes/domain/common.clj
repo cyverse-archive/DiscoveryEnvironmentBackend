@@ -19,3 +19,6 @@
 (s/defschema StandardDataItemQueryParams
   (assoc StandardQueryParams
     :data-type (describe (s/enum "file" "folder") "The type of the requested data item.")))
+
+(s/defschema DataIdList
+  {:filesystem (describe [UUID] "A list of UUIDs, each for a file or folder")})

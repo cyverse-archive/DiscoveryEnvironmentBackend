@@ -88,8 +88,13 @@ A favorite folder object has the following fields.
 
 `PUT /secured/favorites/filesystem/{favorite}`
 
+Delegates to metadata: `PUT /favorites/filesystem/{favorite}`
+
 This endpoint marks a given file or folder a favorite of the authenticated user. `{favorite}` is the
 UUID of the file or folder being marked.
+
+This endpoint forwards requests to the corresponding metadata service endpoint.
+Please see the metadata documentation for more information.
 
 ### Request
 
@@ -119,8 +124,13 @@ Error responses may contain a `"reason"` field, providing a short, human readabl
 
 `DELETE /secured/favorites/filesystem/{favorite}`
 
+Delegates to metadata: `DELETE /favorites/filesystem/{favorite}`
+
 This endpoint removes a given file or folder from the authenticated user's favorites. `<favorite>`
 is the UUID of the file or folder.
+
+This endpoint forwards requests to the corresponding metadata service endpoint.
+Please see the metadata documentation for more information.
 
 ### Request
 
@@ -150,8 +160,14 @@ Error responses may include a `reason` field, providing a short, human readable 
 
 `GET /secured/favorites/filesystem`
 
+Requires metadata endpoint: `GET /favorites/filesystem`
+
 This endpoint lists stat information for the authenticated user's favorite files and folders. Only
 files and folders accessible to the user will be listed. The result set is paged.
+
+This endpoint fetches favorite information from the corresponding metadata service endpoint before
+applying filters, sorting, and additional stat information.
+Please see the metadata documentation for more information.
 
 ### Request
 
@@ -218,17 +234,19 @@ Error responses may include a `reason` field, providing a short, human readable 
 
 `POST /secured/favorites/filter`
 
-This endpoint is used to indicate which resources in a provided set of resources are favorites of
-the authenticated user. Only UUIDs for files and folders accessible to the user will be listed.
+Delegates to metadata: `POST /favorites/filter`
+
+This endpoint forwards requests to the corresponding metadata service endpoint.
+Please see the metadata documentation for more information.
+
+This endpoint fetches the filtered favorite IDs from the corresponding metadata service endpoint
+before further filtering only UUIDs for files and folders accessible to the user.
 
 ### Request
 
 A request to this endpoint requires no parameters beyond the `proxyToken` authentication parameter.
 The user that owns the favorite is determined from the authentication. Any additional parameters
 will be ignored.
-
-The request body should be a [data id collection](#data-id-collection) JSON document containing the
-UUIDs for the files and folders to be filtered.
 
 ### Response
 

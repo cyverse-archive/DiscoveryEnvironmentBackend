@@ -25,52 +25,6 @@
           (where {:target_id target-id :owner_id user})))
     first :cnt pos?))
 
-(defn select-favorites-of-type
-  "Selects all targets of a given type that have are favorites of a given authenticated user.
-
-   Parameters:
-     user         - the authenticated user name
-     target-types - the set of types of target may belong to
-                    (`analysis`|`app`|`file`|`folder`|`user`)
-
-   Returns:
-     It returns a lazy sequence of favorite target UUIDs. If the user doesn't exist, the sequence
-     will be empty."
-  [user target-types]
-  (map :target_id
-       (korma/with-db db/metadata
-         (select :favorites
-           (fields :target_id)
-           (where {:target_type [in (map db/->enum-val target-types)]
-                   :owner_id    user})))))
-
-(defn insert-favorite
-  "Marks a given target as a favorite of the given authenticated user. It assumes the authenticated
-   user exists and the target is of the indicated type.
-
-   Parameters:
-     user        - the authenticated user name
-     target-id   - the UUID of the target
-     target-type - the type of target (`analysis`|`app`|`data`|`user`)"
-  [user target-id target-type]
-  (korma/with-db db/metadata
-    (insert :favorites
-      (values {:target_id   target-id
-               :target_type (db/->enum-val target-type)
-               :owner_id    user})))
-  nil)
-
-(defn delete-favorite
-  [user target-id]
-  "Unmarks a given target as a favorite of the given authenticated user.
-
-   Parameters:
-     user      - the authenticated user name
-     target-id - the UUID of the target"
-  (korma/with-db db/metadata
-    (delete :favorites (where {:target_id target-id :owner_id user})))
-  nil)
-
 
 ;; TAGS
 

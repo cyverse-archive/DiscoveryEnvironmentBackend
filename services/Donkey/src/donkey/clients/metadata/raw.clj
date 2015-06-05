@@ -62,6 +62,37 @@
      :as               :stream
      :follow_redirects false}))
 
+(defn list-favorites
+  [entity-type]
+  (http/get (metadata-url "favorites" "filesystem")
+    {:query-params     (user-params {:entity-type entity-type})
+     :as               :stream
+     :follow_redirects false}))
+
+(defn remove-favorite
+  [target-id]
+  (http/delete (metadata-url "favorites" "filesystem" target-id)
+    {:query-params     (user-params)
+     :as               :stream
+     :follow_redirects false}))
+
+(defn add-favorite
+  [target-id data-type]
+  (http/put (metadata-url "favorites" "filesystem" target-id)
+    {:query-params     (user-params {:data-type data-type})
+     :content-type     :json
+     :as               :stream
+     :follow_redirects false}))
+
+(defn filter-favorites
+  [body]
+  (http/post (metadata-url "favorites" "filter")
+    {:query-params     (user-params)
+     :body             body
+     :content-type     :json
+     :as               :stream
+     :follow_redirects false}))
+
 (defn list-templates
   []
   (http/get (metadata-url "templates")
