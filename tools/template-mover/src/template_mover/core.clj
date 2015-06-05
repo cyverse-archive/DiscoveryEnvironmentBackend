@@ -136,12 +136,21 @@
     (when (seq source-items)
       (jdbc/execute! dest-db (sql/format (storage-statement-fn source-items))))))
 
+(defn- template-instances-fk-constraint-removal-statement
+  []
+  "ALTER TABLE template_instances
+       DROP CONSTRAINT IF EXISTS template_instances_template_id_fkey")
+
+(defn- remove-template-instances-fk-constraint
+  [metadata-db]
+  (jdbc/execute! metadata-db [(template-instances-fk-constraint-removal-statement)]))
+
 (defn- template-instances-fk-constraint-statement
   []
   "ALTER TABLE template_instances
       ADD CONSTRAINT template_instances_template_id_fkey
       FOREIGN KEY (template_id)
-      REFERENCES templates(id);")
+      REFERENCES templates(id)")
 
 (defn- add-template-instances-fk-constraint
   [metadata-db]
@@ -149,15 +158,22 @@
 
 (defn- migrate-metadata-template-tables
   [de-db metadata-db]
-  (->> [[get-value-types      store-value-types]
-        [get-attributes       store-attributes]
-        [get-attr-synonyms    store-attr-synonyms]
-        [get-attr-enum-values store-attr-enum-values]
-        [get-templates        store-templates]
-        [get-template-attrs   store-template-attrs]]
-       (map (partial apply migrate-table de-db metadata-db))
-       (dorun))
-  (add-template-instances-fk-constraint metadata-db))
+  (try
+    (->> [[get-value-types      store-value-types]
+          [get-attributes       store-attributes]
+          [get-attr-synonyms    store-attr-synonyms]
+          [get-attr-enum-values store-attr-enum-values]
+          [get-templates        store-templates]
+          [get-template-attrs   store-template-attrs]]
+         (map (partial apply migrate-table de-db metadata-db))
+         (dorun))
+    (remove-template-instances-fk-constraint metadata-db)
+    (add-template-instances-fk-constraint metadata-db)
+    (catch java.sql.SQLException e
+      (log/error e)
+      (when (.getNextException e)
+        (log/error (.getNextException e)))
+      (throw e))))
 
 (defn- run-migration
   [{:keys [host port user de-database metadata-database]}]
