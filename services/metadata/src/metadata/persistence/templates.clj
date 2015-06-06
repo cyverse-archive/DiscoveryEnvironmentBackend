@@ -1,5 +1,7 @@
 (ns metadata.persistence.templates
-  (:use [korma.core]))
+  (:use [clojure-commons.core :only [remove-nil-values]]
+        [clojure-commons.assertions :only [assert-found]]
+        [korma.core]))
 
 (defn- add-deleted-where-clause
   [query hide-deleted?]
@@ -96,3 +98,60 @@
   [id]
   (when-let [attr (get-metadata-attribute id)]
     (format-attribute attr)))
+
+(defn- prepare-attr-enum-value-insertion
+  [attr-id order enum-value]
+  (->> (assoc (select-keys enum-value [:id :value :is_default])
+         :attribute_id  attr-id
+         :display_order order)
+       (remove-nil-values)))
+
+(defn- add-attr-enum-value
+  [attr-id order enum-value]
+  (insert :attr_enum_values
+          (values (prepare-attr-enum-value-insertion attr-id order enum-value))))
+
+(defn- insert-template-attr
+  [template-id order attr-id]
+  (insert :template_attrs (values {:template_id   template-id
+                                   :attribute_id  attr-id
+                                   :display_order order})))
+
+(defn- get-value-type-id
+  [type-name]
+  (:id (first (select :value_types (where {:name type-name})))))
+
+(defn- prepare-attr-insertion
+  [user-id {:keys [type] :as attribute}]
+  (->> (assoc (select-keys attribute [:id :name :description :required])
+         :created_by    user-id
+         :modified_by   user-id
+         :value_type_id (assert-found (get-value-type-id type) "value type" type))
+       (remove-nil-values)))
+
+(defn- insert-attribute
+  [user-id attribute]
+  (:id (insert :attributes (values (prepare-attr-insertion user-id attribute)))))
+
+(defn- add-template-attribute
+  [user-id template-id order {enum-values :values :as attribute}]
+  (let [attr-id (insert-attribute user-id attribute)]
+    (insert-template-attr template-id order attr-id)
+    (dorun (map-indexed (partial add-attr-enum-value attr-id) enum-values))))
+
+(defn- prepare-template-insertion
+  [user-id template]
+  (->> (assoc (select-keys template [:id :name])
+         :created_by  user-id
+         :modified_by user-id)
+       (remove-nil-values)))
+
+(defn- insert-template
+  [user-id template]
+  (:id (insert :templates (values (prepare-template-insertion user-id template)))))
+
+(defn add-template
+  [user-id {:keys [attributes] :as template}]
+  (let [template-id (insert-template user-id template)]
+    (dorun (map-indexed (partial add-template-attribute user-id template-id) attributes))
+    template-id))

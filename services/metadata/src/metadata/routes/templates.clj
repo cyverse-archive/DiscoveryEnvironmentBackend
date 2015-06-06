@@ -41,4 +41,12 @@
       :return MetadataTemplateList
       :summary "List Metadata Templates for Administrators"
       :description "This endpoint lists all metadata templates."
-      (service/trap uri templates/admin-list-templates))))
+      (service/trap uri templates/admin-list-templates))
+
+    (POST* "/" [:as {:keys [uri]}]
+      :query [params UserIdParams]
+      :body [body (describe MetadataTemplateUpdate "The template to add.")]
+      :return MetadataTemplate
+      :summary "Add a Metadata Template"
+      :description "This endpoint allows administrators to add new metadata templates."
+      (service/trap uri templates/add-template params body))))

@@ -1,5 +1,6 @@
 (ns metadata.services.templates
-  (:use [clojure-commons.core :only [remove-nil-values]])
+  (:use [clojure-commons.core :only [remove-nil-values]]
+        [korma.db :only [transaction]])
   (:require [clojure-commons.assertions :as ca]
             [metadata.persistence.templates :as tp]))
 
@@ -22,3 +23,7 @@
 (defn admin-list-templates
   []
   {:metadata_templates (mapv remove-nil-values (tp/list-templates false))})
+
+(defn add-template
+  [{:keys [user-id]} template]
+  (transaction (view-template (tp/add-template user-id template))))

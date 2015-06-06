@@ -61,3 +61,45 @@
   (assoc MetadataTemplateListEntry
     :attributes
     (describe [MetadataTemplateAttr] "The list of metadata attributes in the template")))
+
+(s/defschema TemplateAttrEnumValueUpdate
+  {(s/optional-key :id)
+   (describe UUID "The attribute enumeration value ID")
+
+   :is_default
+   (describe Boolean "True if this value is the default for its enumeration type")
+
+   :value
+   (describe String "The name of the enumeration value")})
+
+(s/defschema MetadataTemplateAttrUpdate
+  {:description
+   (describe String "A brief description of the attribute")
+
+   (s/optional-key :id)
+   (describe UUID "The attribute ID")
+
+   :name
+   (describe String "The attribute name")
+
+   :required
+   (describe Boolean "True if the attribute must have a value")
+
+   :type
+   (describe String "The attribute data type")
+
+   (s/optional-key :values)
+   (describe [TemplateAttrEnumValueUpdate] "The list of possible values for enumeration types")})
+
+(s/defschema MetadataTemplateUpdate
+  {:attributes
+   (describe [MetadataTemplateAttrUpdate] "The list of metadata attributes in the template")
+
+   (s/optional-key :deleted)
+   (describe Boolean "True if the template is being marked as deleted.")
+
+   (s/optional-key :id)
+   (describe UUID "The attribute ID")
+
+   :name
+   (describe String "The metadata template name")})
