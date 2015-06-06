@@ -5,3 +5,7 @@
 (defn by-id
   [{:keys [ids]}]
   {:users (mapv remove-nil-vals (up/by-id ids))})
+
+(defn authenticated
+  [{:keys [username]}]
+  (remove-nil-vals (up/for-username username)))

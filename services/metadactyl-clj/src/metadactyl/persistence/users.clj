@@ -12,3 +12,10 @@
   (-> (user-base-query)
       (where {:id [in (mapv uuidify ids)]})
       (select)))
+
+(defn for-username
+  [username]
+  (-> (user-base-query)
+      (where {:username username})
+      (select)
+      (first)))
