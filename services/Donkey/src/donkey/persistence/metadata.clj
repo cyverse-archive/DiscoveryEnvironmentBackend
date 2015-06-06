@@ -6,26 +6,6 @@
            [clojure.lang IPersistentMap ISeq]))
 
 
-;; FAVORITES
-
-(defn is-favorite?
-  "Indicates whether or not given target is a favorite of the given authenticated user.
-
-   Parameters:
-     user      - the authenticated user name
-     target-id - the UUID of the thing being marked as a user favorite
-
-   Returns:
-     It returns true if the give target has been marked as a favorite, otherwise it returns false.
-     It also returns false if the user or target doesn't exist."
-  [user ^UUID target-id]
-  (-> (korma/with-db db/metadata
-        (select :favorites
-          (aggregate (count :*) :cnt)
-          (where {:target_id target-id :owner_id user})))
-    first :cnt pos?))
-
-
 ;; TAGS
 
 (defn filter-tags-owned-by-user

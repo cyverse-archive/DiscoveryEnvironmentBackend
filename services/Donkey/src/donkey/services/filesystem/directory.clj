@@ -3,6 +3,7 @@
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info]
         [clj-jargon.permissions]
+        [kameleon.uuids :only [uuidify]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
@@ -13,18 +14,17 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [me.raynes.fs :as fs]
             [clojure-commons.error-codes :as error]
-            [donkey.services.filesystem.validators :as validators]
-            [donkey.services.filesystem.uuids :as uuids]
-            [donkey.persistence.metadata :as meta]
             [clj-icat-direct.icat :as icat]
             [donkey.clients.data-info :as data]
+            [donkey.clients.metadata.raw :as meta]
+            [donkey.services.metadata.favorites :as favorites]
             [donkey.util.config :as cfg]
             [donkey.util.validators :as duv]
-            [donkey.services.filesystem.common-paths :as paths]
-            [donkey.services.filesystem.icat :as jargon])
-  (:import [java.util UUID]
-           [java.util.logging Filter]))
+            [donkey.services.filesystem.common-paths :as paths]))
 
+(defn- is-favorite?
+  [favorite-ids id]
+  (contains? favorite-ids (uuidify id)))
 
 (defn get-paths-in-folder
   ([user folder]
@@ -58,45 +58,15 @@
     (or  (contains? fpaths path-to-check)
          (not (paths/valid-path? path-to-check)))))
 
-(defn- page-entry->map
-  "Turns a entry in a paged listing result into a map containing file/directory
-   information that can be consumed by the front-end."
-  [user {:keys [type full_path base_name data_size modify_ts create_ts access_type_id uuid]}]
-  (let [base-map {:id            uuid
-                  :path          full_path
-                  :label         base_name
-                  :isFavorite    (meta/is-favorite? user (UUID/fromString uuid))
-                  :badName       (or (is-bad? user full_path)
-                                     (is-bad? user base_name))
-                  :file-size     data_size
-                  :date-created  (* (Integer/parseInt create_ts) 1000)
-                  :date-modified (* (Integer/parseInt modify_ts) 1000)
-                  :permission    (fmt-perm access_type_id)}]
-    (if (= type "dataobject")
-      base-map
-      (merge base-map {:hasSubDirs true
-                       :file-size  0}))))
-
-(defn- page->map
-  "Transforms an entire page of results for a paged listing in a map that
-   can be returned to the client."
-  [user page]
-  (let [entry-types (group-by :type page)
-        do          (get entry-types "dataobject")
-        collections (get entry-types "collection")
-        xformer     (partial page-entry->map user)]
-    {:files   (mapv xformer do)
-     :folders (mapv xformer collections)}))
-
 
 (defn- fmt-folder
-  [user entry]
+  [user favorite-ids entry]
   (let [id   (:id entry)
         path (:path entry)]
     {:id            id
      :path          path
      :label         (paths/id->label user path)
-     :isFavorite    (meta/is-favorite? user (UUID/fromString id))
+     :isFavorite    (is-favorite? favorite-ids id)
      :badName       (or (is-bad? user path)
                         (is-bad? user (fs/base-name path)))
      :permission    (:permission entry)
@@ -107,8 +77,13 @@
 
 
 (defn- fmt-dir-resp
-  [data-resp user]
-  (assoc (fmt-folder user data-resp) :folders (map #(fmt-folder user %) (:folders data-resp))))
+  [{:keys [id folders] :as data-resp} user]
+  (let [favorite-ids (->> folders
+                          (map :id)
+                          (concat [id])
+                          favorites/filter-favorites)]
+    (assoc (fmt-folder user favorite-ids data-resp)
+      :folders (map (partial fmt-folder user favorite-ids) folders))))
 
 
 (defn- mk-nav-url
@@ -162,14 +137,14 @@
 
 
 (defn- format-entry
-  [user entry]
+  [user favorite-ids entry]
   (let [id   (:id entry)
         path (:path entry)]
     {:id            id
      :path          path
      :label         (paths/id->label user path)
      :infoType      (:infoType entry)
-     :isFavorite    (meta/is-favorite? user (UUID/fromString id))
+     :isFavorite    (is-favorite? favorite-ids id)
      :badName       (:badName entry)
      :permission    (:permission entry)
      :date-created  (:dateCreated entry)
@@ -178,13 +153,16 @@
 
 
 (defn- format-page
-  [user page]
-  (assoc (format-entry user page)
-    :hasSubDirs true
-    :files      (map #(format-entry user %) (:files page))
-    :folders    (map #(format-entry user %) (:folders page))
-    :total      (:total page)
-    :totalBad   (:totalBad page)))
+  [user {:keys [id files folders total totalBad] :as page}]
+  (let [file-ids (map :id files)
+        folder-ids (map :id folders)
+        favorite-ids (favorites/filter-favorites (concat file-ids folder-ids [id]))]
+    (assoc (format-entry user favorite-ids page)
+      :hasSubDirs true
+      :files      (map (partial format-entry user favorite-ids) files)
+      :folders    (map (partial format-entry user favorite-ids) folders)
+      :total      total
+      :totalBad   totalBad)))
 
 
 (defn- handle-not-processable

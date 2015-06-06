@@ -20,4 +20,4 @@
         (fave/list-favorite-data-with-stat sort-col sort-order limit offset entity-type info-type))
 
    (POST "/favorites/filter" [:as {body :body}]
-         (fave/filter-favorites body))))
+         (fave/filter-accessible-favorites body))))

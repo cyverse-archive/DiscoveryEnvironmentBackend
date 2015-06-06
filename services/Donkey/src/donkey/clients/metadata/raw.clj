@@ -1,6 +1,7 @@
 (ns donkey.clients.metadata.raw
   (:use [donkey.util.transformers :only [user-params]])
   (:require [cemerick.url :as curl]
+            [cheshire.core :as json]
             [clj-http.client :as http]
             [donkey.util.config :as config]))
 
@@ -85,10 +86,10 @@
      :follow_redirects false}))
 
 (defn filter-favorites
-  [body]
+  [uuids]
   (http/post (metadata-url "favorites" "filter")
     {:query-params     (user-params)
-     :body             body
+     :body             (json/encode {:filesystem uuids})
      :content-type     :json
      :as               :stream
      :follow_redirects false}))

@@ -111,20 +111,25 @@
 
 
 (defn filter-favorites
+  "Forwards a list of UUIDs for filesystem entries to the metadata service favorites filter
+   endpoint, parsing its response and returning a set of the returned UUIDs.
+
+   Parameters:
+     entries - A list of UUIDs to filter."
+  [entries]
+  (extract-favorite-uuids-set (metadata/filter-favorites entries)))
+
+(defn filter-accessible-favorites
   "Given a list of UUIDs for filesystem entries, it filters the list, returning only the UUIDS that
-   are marked as favorite by the authenticated user.
+   are accessible and marked as favorite by the authenticated user.
 
    Parameters:
      body - This is the request body. It should contain a JSON document containing a field
             `filesystem` containing an array of UUIDs."
   [body]
   (let [user    (:shortUsername user/current-user)
-        request (-> body slurp)
-        entries (->> request parse-filesystem-ids ids-txt->uuids-set)]
-    (->> (metadata/filter-favorites request)
-      extract-favorite-uuids-set
+        entries (->> body slurp parse-filesystem-ids ids-txt->uuids-set)]
+    (->> (filter-favorites entries)
       (filter (partial data/uuid-accessible? user))
-      set
-      (set/intersection entries)
       (hash-map :filesystem)
       svc/success-response)))
