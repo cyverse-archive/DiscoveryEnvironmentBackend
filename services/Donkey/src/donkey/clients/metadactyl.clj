@@ -46,3 +46,9 @@
   (-> (raw/get-users-by-id (cheshire/encode {:ids ids}))
       (:body)
       (service/decode-json)))
+
+(defn get-authenticated-user
+  []
+  (-> (raw/get-authenticated-user)
+      (:body)
+      (service/decode-json)))

@@ -1,5 +1,6 @@
 (ns donkey.clients.metadata
-  (:require [donkey.clients.metadata.raw :as raw]
+  (:require [cheshire.core :as cheshire]
+            [donkey.clients.metadata.raw :as raw]
             [donkey.util.service :as service]))
 
 (defn- parse-body
@@ -21,3 +22,7 @@
 (defn admin-list-templates
   []
   (parse-body (raw/admin-list-templates)))
+
+(defn admin-add-template
+  [user-id template]
+  (parse-body (raw/admin-add-template user-id (cheshire/encode template))))

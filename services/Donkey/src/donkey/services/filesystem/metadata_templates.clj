@@ -38,12 +38,6 @@
     (throw+ {:error_code error-codes/ERR_DOES_NOT_EXIST
              :metadata_template id})))
 
-(defn- add-deleted-where-clause
-  [query hide-deleted?]
-  (if hide-deleted?
-    (where query {:deleted false})
-    query))
-
 (defn- load-user-id-map
   [ids]
   (->> (metadactyl/get-users-by-id ids)
@@ -106,12 +100,13 @@
        (load-user-id-map)))
 
 (defn- replace-template-user-ids
-  [template]
-  (let [user-id-map (load-template-user-id-map template)]
-    (assoc template
-      :attributes  (user-ids-to-usernames (:attributes template) user-id-ks user-id-map)
-      :created_by  (user-id-map (:created_by template))
-      :modified_by (user-id-map (:modified_by template)))))
+  ([template]
+     (replace-template-user-ids template (load-template-user-id-map template)))
+  ([template user-id-map]
+     (assoc template
+       :attributes  (user-ids-to-usernames (:attributes template) user-id-ks user-id-map)
+       :created_by  (user-id-map (:created_by template))
+       :modified_by (user-id-map (:modified_by template)))))
 
 (defn- view-metadata-template
   [id]
@@ -169,23 +164,6 @@
     (dorun
       (map-indexed (partial add-metadata-attribute-enum-value attr-id) enum-values))))
 
-(defn- add-metadata-template
-  "Adds a Metadata Template and its associated Attributes to the database."
-  [{:keys [username]} {:keys [attributes] :as template}]
-  (with-db db/de
-    (transaction
-      (let [user-id (get-user-id username)
-            template (-> template
-                         (select-keys [:id :name])
-                         (update-in [:id] uuidify)
-                         (assoc :created_by  user-id
-                                :modified_by user-id)
-                         remove-nil-values)
-            template-id (:id (insert :metadata_templates (values template)))]
-        (dorun
-          (map-indexed (partial add-metadata-template-attribute user-id template-id) attributes))
-        template-id))))
-
 (defn- update-metadata-template-attribute
   "Updates a Metadata Template Attribute and deletes then re-adds any associated Enum values."
   [user-id template-id order {enum-values :values :as attribute}]
@@ -203,6 +181,13 @@
     (delete :metadata_attr_enum_values (where {:attribute_id attr-id}))
     (dorun
       (map-indexed (partial add-metadata-attribute-enum-value attr-id) enum-values))))
+
+(defn- add-metadata-template
+  "Adds a new metadata template."
+  [template]
+  (-> (:id (metadactyl/get-authenticated-user))
+      (metadata/admin-add-template template)
+      (replace-template-user-ids)))
 
 (defn- edit-metadata-template-attribute
   "Updates a Metadata Template Attribute, or adds it if it does not already exist in the database."
@@ -308,9 +293,7 @@
 
 (defn do-metadata-template-add
   [template]
-  (->> template
-       (add-metadata-template current-user)
-       view-metadata-template))
+  (add-metadata-template template))
 
 (with-pre-hook! #'do-metadata-template-add
   (fn [body]

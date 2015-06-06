@@ -514,3 +514,10 @@
                 :body             body
                 :content-type     :json
                 :follow-redirects false}))
+
+(defn get-authenticated-user
+  []
+  (client/get (metadactyl-url "users" "authenticated")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))

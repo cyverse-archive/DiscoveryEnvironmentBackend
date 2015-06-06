@@ -11,9 +11,19 @@
 
 (defn get-options
   ([]
-     (get-options (user-params)))
+     (get-options {}))
   ([params]
-     {:query-params     params
+     {:query-params     (user-params params)
+      :as               :stream
+      :follow-redirects false}))
+
+(defn post-options
+  ([body]
+     (post-options body {}))
+  ([body params]
+     {:query-params     (user-params params)
+      :body             body
+      :content-type     :json
       :as               :stream
       :follow-redirects false}))
 
@@ -139,3 +149,7 @@
 (defn admin-list-templates
   []
   (http/get (metadata-url "admin" "templates") (get-options)))
+
+(defn admin-add-template
+  [user-id template]
+  (http/post (metadata-url "admin" "templates") (post-options template {:user-id user-id})))
