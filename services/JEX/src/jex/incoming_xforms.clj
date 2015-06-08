@@ -692,18 +692,26 @@
     (make-abs-output (ut/add-trailing-slash (:source jdef)))
     (:source jdef)))
 
+(defn- all-paths
+  [inputs outputs archive-logs?]
+  (let [paths (conj inputs outputs (cfg/filter-files))]
+    (flatten
+      (if archive-logs?
+        paths
+        (conj paths ["logs"])))))
+
 (defn exclude-arg
   "Formats the -exclude option for the filetool jobs based on the input and
    output job definitions."
-  [inputs outputs]
+  [{inputs :all-input-jobs outputs :all-output-jobs :as condor-map}]
   (log/info "exclude-arg")
   (log/info (str "COUNT INPUTS: " (count inputs)))
   (log/info (str "COUNT OUTPUTS: " (count outputs)))
-  (let [not-retain   (comp not :retain)
-        input-paths  (map input-coll (filter not-retain inputs))
-        output-paths (map output-coll (filter not-retain outputs))
-        all-paths    (flatten
-                      (conj input-paths output-paths (cfg/filter-files)))]
+  (let [archive-logs? (:archive_logs condor-map true)
+        not-retain    (comp not :retain)
+        input-paths   (map input-coll (filter not-retain inputs))
+        output-paths  (map output-coll (filter not-retain outputs))
+        all-paths     (all-paths input-paths output-paths archive-logs?)]
     (if (pos? (count all-paths))
       (str "--exclude " (string/join "," all-paths))
       "")))
@@ -771,7 +779,7 @@
          (if (:skip-parent-meta condor-map) " --skip-parent-meta" "")
          (file-metadata-arg file-metadata)
          " "
-         (exclude-arg cinput-jobs coutput-jobs))))
+         (exclude-arg condor-map))))
 
 (defn shotgun-job-map
   "Formats a job definition for the output job that transfers
