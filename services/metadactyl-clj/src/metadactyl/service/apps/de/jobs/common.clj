@@ -112,6 +112,7 @@
   {:app_description      (:description app)
    :app_id               (:id app)
    :app_name             (:name app)
+   :archive_logs         (:archive_logs submission)
    :callback             (:callback submission)
    :create_output_subdir (:create_output_subdir submission true)
    :description          (:description submission "")
