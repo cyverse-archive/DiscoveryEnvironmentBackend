@@ -2,6 +2,9 @@ Directory List (Non-Recursive)
 ------------------------------
 
 Only lists subdirectories of the directory path passed into it.
+Delegates to the `POST /favorites/filter` metadata endpoint in order to set the `isFavorite` flags
+in the response. If the metadata service is not available, then these flags will be set to `false`
+by default.
 
 __URL Path__: /secured/filesystem/directory
 
@@ -77,6 +80,9 @@ Paged Directory Listing
 -----------------------
 
 Provides a paged directory listing for large directories. Always includes files (unless the directory doesn't contain any).
+Delegates to the `POST /favorites/filter` metadata endpoint in order to set the `isFavorite` flags
+in the response. If the metadata service is not available, then these flags will be set to `false`
+by default.
 
 __URL Path__: /secured/filesystem/paged-directory
 
