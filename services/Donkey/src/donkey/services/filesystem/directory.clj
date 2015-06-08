@@ -4,7 +4,7 @@
         [clj-jargon.item-info]
         [clj-jargon.permissions]
         [kameleon.uuids :only [uuidify]]
-        [slingshot.slingshot :only [throw+]])
+        [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
             [cemerick.url :as url]
@@ -16,7 +16,6 @@
             [clojure-commons.error-codes :as error]
             [clj-icat-direct.icat :as icat]
             [donkey.clients.data-info :as data]
-            [donkey.clients.metadata.raw :as meta]
             [donkey.services.metadata.favorites :as favorites]
             [donkey.util.config :as cfg]
             [donkey.util.validators :as duv]
@@ -25,6 +24,17 @@
 (defn- is-favorite?
   [favorite-ids id]
   (contains? favorite-ids (uuidify id)))
+
+(defn- lookup-favorite-ids
+  "Filters the list of given data IDs, returning those marked as favorites by the user according to
+  the metadata filter-favorites service. If the filtered list of favorite IDs cannot be retrieved,
+  an empty list is returned instead."
+  [data-ids]
+  (try+
+    (favorites/filter-favorites data-ids)
+    (catch Object e
+      (log/error e "Could not lookup favorites in directory listing")
+      [])))
 
 (defn get-paths-in-folder
   ([user folder]
@@ -81,7 +91,7 @@
   (let [favorite-ids (->> folders
                           (map :id)
                           (concat [id])
-                          favorites/filter-favorites)]
+                          lookup-favorite-ids)]
     (assoc (fmt-folder user favorite-ids data-resp)
       :folders (map (partial fmt-folder user favorite-ids) folders))))
 
@@ -156,7 +166,7 @@
   [user {:keys [id files folders total totalBad] :as page}]
   (let [file-ids (map :id files)
         folder-ids (map :id folders)
-        favorite-ids (favorites/filter-favorites (concat file-ids folder-ids [id]))]
+        favorite-ids (lookup-favorite-ids (concat file-ids folder-ids [id]))]
     (assoc (format-entry user favorite-ids page)
       :hasSubDirs true
       :files      (map (partial format-entry user favorite-ids) files)
