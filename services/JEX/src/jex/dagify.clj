@@ -70,7 +70,7 @@
    (ipc-exe analysis-map)
    (ipc-exe-path analysis-map)
    "should_transfer_files = YES\n"
-   "transfer_input_files = iplant.sh,irods-config\n"
+   "transfer_input_files = iplant.sh,irods-config,iplant.cmd\n"
    "transfer_output_files = logs/de-transfer-trigger.log\n"
    "when_to_transfer_output = ON_EXIT_OR_EVICT\n"
    "notification = NEVER\n"
@@ -106,6 +106,14 @@
            "\texit $EXITSTATUS\n"
        "fi\n"))
 
+(def rearrange-working-dir
+  (str "if [ -e \"iplant.sh\" ]; then\n"
+           "\tmv iplant.sh logs/\n"
+       "fi\n"
+       "if [ -e \"iplant.cmd\" ]; then\n"
+           "\tmv iplant.cmd logs/\n"
+       "fi\n"))
+
 (defn script
   "Takes in an analysis map that has been processed by
    (jex.incoming-xforms/transform) and turns it into a shell script
@@ -127,6 +135,7 @@
      fail-script
      "ls -al > logs/de-transfer-trigger.log\n"
      fail-script
+     rearrange-working-dir
      (join "\n" (map script-line (jobs-in-order analysis-map)))
      "hostname\n"
      "ps aux\n"
