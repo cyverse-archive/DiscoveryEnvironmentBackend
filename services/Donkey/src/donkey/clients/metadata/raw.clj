@@ -17,6 +17,8 @@
       :as               :stream
       :follow-redirects false}))
 
+(def delete-options get-options)
+
 (defn post-options
   ([body]
      (post-options body {}))
@@ -42,97 +44,57 @@
 (defn add-data-comment
   [target-id data-type body]
   (http/post (metadata-url "filesystem" "entry" target-id "comments")
-             {:query-params     (user-params {:data-type data-type})
-              :body             body
-              :content-type     :json
-              :as               :stream
-              :follow_redirects false}))
+             (post-options body {:data-type data-type})))
 
 (defn add-app-comment
   [target-id body]
-  (http/post (metadata-url "apps" target-id "comments")
-             {:query-params     (user-params)
-              :body             body
-              :content-type     :json
-              :as               :stream
-              :follow_redirects false}))
+  (http/post (metadata-url "apps" target-id "comments") (post-options body)))
 
 (defn update-data-retract-status
   [target-id comment-id retracted]
   (http/patch (metadata-url "filesystem" "entry" target-id "comments" comment-id)
-    {:query-params     (user-params {:retracted retracted})
-     :content-type     :json
-     :as               :stream
-     :follow_redirects false}))
+              (post-options nil {:retracted retracted})))
 
 (defn update-app-retract-status
   [target-id comment-id retracted]
   (http/patch (metadata-url "apps" target-id "comments" comment-id)
-    {:query-params     (user-params {:retracted retracted})
-     :content-type     :json
-     :as               :stream
-     :follow_redirects false}))
+              (post-options nil {:retracted retracted})))
 
 (defn list-favorites
   [entity-type]
-  (http/get (metadata-url "favorites" "filesystem")
-    {:query-params     (user-params {:entity-type entity-type})
-     :as               :stream
-     :follow_redirects false}))
+  (http/get (metadata-url "favorites" "filesystem") (get-options {:entity-type entity-type})))
 
 (defn remove-favorite
   [target-id]
-  (http/delete (metadata-url "favorites" "filesystem" target-id)
-    {:query-params     (user-params)
-     :as               :stream
-     :follow_redirects false}))
+  (http/delete (metadata-url "favorites" "filesystem" target-id) (delete-options)))
 
 (defn add-favorite
   [target-id data-type]
   (http/put (metadata-url "favorites" "filesystem" target-id)
-    {:query-params     (user-params {:data-type data-type})
-     :content-type     :json
-     :as               :stream
-     :follow_redirects false}))
+            (post-options nil {:data-type data-type})))
 
 (defn filter-favorites
   [uuids]
-  (http/post (metadata-url "favorites" "filter")
-    {:query-params     (user-params)
-     :body             (json/encode {:filesystem uuids})
-     :content-type     :json
-     :as               :stream
-     :follow_redirects false}))
+  (http/post (metadata-url "favorites" "filter") (post-options (json/encode {:filesystem uuids}))))
 
 (defn admin-update-data-retract-status
   [target-id comment-id retracted]
   (http/patch (metadata-url "admin" "filesystem" "entry" target-id "comments" comment-id)
-    {:query-params     (user-params {:retracted retracted})
-     :content-type     :json
-     :as               :stream
-     :follow_redirects false}))
+              (post-options nil {:retracted retracted})))
 
 (defn admin-update-app-retract-status
   [target-id comment-id retracted]
   (http/patch (metadata-url "admin" "apps" target-id "comments" comment-id)
-    {:query-params     (user-params {:retracted retracted})
-     :content-type     :json
-     :as               :stream
-     :follow_redirects false}))
+              (post-options nil {:retracted retracted})))
 
 (defn delete-data-comment
   [target-id comment-id]
   (http/delete (metadata-url "admin" "filesystem" "entry" target-id "comments" comment-id)
-    {:query-params     (user-params)
-     :as               :stream
-     :follow_redirects false}))
+               (delete-options)))
 
 (defn delete-app-comment
   [target-id comment-id]
-  (http/delete (metadata-url "admin" "apps" target-id "comments" comment-id)
-    {:query-params     (user-params)
-     :as               :stream
-     :follow_redirects false}))
+  (http/delete (metadata-url "admin" "apps" target-id "comments" comment-id) (delete-options)))
 
 (defn list-templates
   []
