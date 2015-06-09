@@ -1,19 +1,8 @@
 (ns donkey.services.filesystem.metadata-templates
-  (:use [clojure-commons.core :only [remove-nil-values]]
-        [donkey.auth.user-attributes :only [current-user]]
-        [donkey.services.filesystem.common-paths]
-        [kameleon.queries :only [get-user-id]]
-        [kameleon.uuids :only [is-uuid?]]
-        [korma.core]
-        [korma.db :only [transaction with-db]]
-        [slingshot.slingshot :only [throw+]])
-  (:require [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as error-codes]
-            [dire.core :refer [with-pre-hook! with-post-hook!]]
+  (:use [donkey.services.filesystem.common-paths])
+  (:require [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.clients.metadactyl :as metadactyl]
-            [donkey.clients.metadata :as metadata]
-            [donkey.util.db :as db]
-            [donkey.util.service :as service]))
+            [donkey.clients.metadata :as metadata]))
 
 (def user-id-ks [:created_by :modified_by])
 
