@@ -58,4 +58,12 @@
       :return MetadataTemplate
       :summary "Update a Metadata Template"
       :description "This endpoint allows administrators to update existing metadata templates."
-      (service/trap uri templates/update-template params template-id body))))
+      (service/trap uri templates/update-template params template-id body))
+
+    (DELETE* "/:template-id" [:as {:keys [uri]}]
+      :path-params [template-id :- TemplateIdPathParam]
+      :query [params UserIdParams]
+      :summary "Mark a Metadata Template as Deleted"
+      :description "This endpoint allows administrators to mark existing metadata templates as
+      deleted."
+      (service/trap uri templates/delete-template params template-id))))

@@ -31,3 +31,7 @@
 (defn update-template
   [{:keys [user-id]} template-id template]
   (transaction (view-template (tp/update-template user-id template-id template))))
+
+(defn delete-template
+  [{:keys [user-id]} template-id]
+  (transaction (tp/delete-template user-id template-id)))

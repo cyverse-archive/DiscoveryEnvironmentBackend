@@ -122,3 +122,7 @@
   [user-id template-id template]
   (http/put (metadata-url "admin" "templates" template-id)
             (put-options template {:user-id user-id})))
+
+(defn admin-delete-template
+  [user-id template-id]
+  (http/delete (metadata-url "admin" "templates" template-id) (delete-options {:user-id user-id})))

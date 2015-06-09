@@ -34,3 +34,7 @@
 ;; This function alias relies on get-template's error checking to throw an exception if a template
 ;; with the given ID doesn't exist.
 (def validate-template-exists get-template)
+
+(defn admin-delete-template
+  [user-id template-id]
+  (raw/admin-delete-template user-id template-id))

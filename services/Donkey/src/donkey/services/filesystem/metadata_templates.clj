@@ -3,13 +3,12 @@
         [donkey.auth.user-attributes :only [current-user]]
         [donkey.services.filesystem.common-paths]
         [kameleon.queries :only [get-user-id]]
-        [kameleon.uuids :only [is-uuid? uuidify]]
+        [kameleon.uuids :only [is-uuid?]]
         [korma.core]
         [korma.db :only [transaction with-db]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as error-codes]
-            [clojure-commons.validators :as common-validators]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.metadata :as metadata]
@@ -17,20 +16,6 @@
             [donkey.util.service :as service]))
 
 (def user-id-ks [:created_by :modified_by])
-
-(defn- get-metadata-template
-  [id]
-  (with-db db/de
-    (first (select [:metadata_templates :template]
-             (join [:users :created_by] {:template.created_by :created_by.id})
-             (join [:users :modified_by] {:template.modified_by :modified_by.id})
-             (fields :template.id
-                     :template.name
-                     [:created_by.username :created_by]
-                     :created_on
-                     [:modified_by.username :modified_by]
-                     :modified_on)
-             (where {:template.id id})))))
 
 (defn- load-user-id-map
   [ids]
@@ -62,30 +47,6 @@
   []
   (update-in (metadata/admin-list-templates) [:metadata_templates]
              user-ids-to-usernames user-id-ks))
-
-(defn- add-attr-synonyms
-  [attr]
-  (let [{:keys [id]} attr]
-    (->> (doall (map :id (select (sqlfn :metadata_attribute_synonyms id))))
-         (assoc attr :synonyms))))
-
-(defn- add-attr-enum-values
-  [{:keys [id type] :as attr}]
-  (if (= "Enum" type)
-    (->> (select :metadata_attr_enum_values
-           (fields :id
-                   :value
-                   :is_default)
-           (where {:attribute_id id})
-           (order :display_order))
-         (assoc attr :values))
-    attr))
-
-(defn- format-attribute
-  [attr]
-  (->> attr
-    add-attr-synonyms
-    add-attr-enum-values))
 
 (defn- load-template-user-id-map
   [{attrs :attributes :as template}]
@@ -140,13 +101,9 @@
 
 (defn- delete-metadata-template
   "Sets a Metadata Template's deleted flag to 'true'."
-  [{:keys [username]} template-id]
-  (with-db db/de
-    (update :metadata_templates
-      (set-fields {:deleted true
-                   :modified_by (get-user-id username)
-                   :modified_on (sqlfn now)})
-      (where {:id template-id}))))
+  [template-id]
+  (-> (:id (metadactyl/get-authenticated-user))
+      (metadata/admin-delete-template template-id)))
 
 (defn do-metadata-template-list
   []
@@ -160,7 +117,7 @@
 
 (defn do-metadata-template-view
   [id]
-  (view-metadata-template (uuidify id)))
+  (view-metadata-template id))
 
 (with-pre-hook! #'do-metadata-template-view
   (fn [id]
@@ -170,7 +127,7 @@
 
 (defn do-metadata-attribute-view
   [id]
-  (view-metadata-attribute (uuidify id)))
+  (view-metadata-attribute id))
 
 (with-pre-hook! #'do-metadata-attribute-view
   (fn [id]
@@ -188,30 +145,13 @@
 
 (with-post-hook! #'do-metadata-template-admin-list (log-func "do-metadata-template-admin-list"))
 
-(defn- validate-metadata-template
-  [{:keys [id attributes] :as template}]
-  (common-validators/validate-map template {:name string? :attributes sequential?})
-  (when (not (nil? id)) (common-validators/validate-field :id id is-uuid?))
-  (common-validators/validate-field :attributes attributes (complement empty?))
-  (doseq [{:keys [id type values] :as attr} attributes]
-    (common-validators/validate-map attr {:name string?
-                                          :description string?
-                                          :type string?})
-    (when (not (nil? id)) (common-validators/validate-field :id id is-uuid?))
-    (when (= "Enum" type)
-      (common-validators/validate-map attr {:values sequential?})
-      (common-validators/validate-field :values values (complement empty?))
-      (doseq [val values]
-        (common-validators/validate-map val {:value string?})))))
-
 (defn do-metadata-template-add
   [template]
   (add-metadata-template template))
 
 (with-pre-hook! #'do-metadata-template-add
   (fn [body]
-    (log-call "do-metadata-template-add")
-    (validate-metadata-template body)))
+    (log-call "do-metadata-template-add")))
 
 (with-post-hook! #'do-metadata-template-add (log-func "do-metadata-template-add"))
 
@@ -221,20 +161,17 @@
 
 (with-pre-hook! #'do-metadata-template-edit
   (fn [template-id template]
-    (log-call "do-metadata-template-edit")
-    (common-validators/validate-field :template-id template-id is-uuid?)
-    (validate-metadata-template template)))
+    (log-call "do-metadata-template-edit")))
 
 (with-post-hook! #'do-metadata-template-edit (log-func "do-metadata-template-edit"))
 
 (defn do-metadata-template-delete
   [template-id]
-  (delete-metadata-template current-user (uuidify template-id))
+  (delete-metadata-template template-id)
   nil)
 
 (with-pre-hook! #'do-metadata-template-delete
   (fn [template-id]
-    (log-call "do-metadata-template-delete")
-    (common-validators/validate-field :template-id template-id is-uuid?)))
+    (log-call "do-metadata-template-delete")))
 
 (with-post-hook! #'do-metadata-template-delete (log-func "do-metadata-template-delete"))

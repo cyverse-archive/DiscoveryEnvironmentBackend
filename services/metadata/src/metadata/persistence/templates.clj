@@ -221,3 +221,17 @@
   (dorun (map-indexed (partial update-template-attribute user-id template-id) attributes))
   (delete-orphan-attributes)
   template-id)
+
+(defn- prepare-template-deletion
+  [user-id]
+  {:deleted     true
+   :modified_by user-id
+   :modified_on (sqlfn now)})
+
+(defn delete-template
+  [user-id template-id]
+  (assert-found (get-metadata-template template-id) "metadata template" template-id)
+  (update :templates
+          (set-fields (prepare-template-deletion user-id))
+          (where {:id template-id}))
+  nil)
