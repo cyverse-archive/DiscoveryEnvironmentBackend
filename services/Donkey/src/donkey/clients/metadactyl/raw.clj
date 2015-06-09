@@ -529,3 +529,11 @@
                  {:query-params     (secured-params params)
                   :as               :stream
                   :follow-redirects false})))
+
+(defn record-logout
+  [ip-address login-time]
+  (let [params {:ip-address ip-address :login-time login-time}]
+    (client/post (metadactyl-url "users" "logout")
+                 {:query-params     (secured-params params)
+                  :as               :stream
+                  :follow-redirects false})))

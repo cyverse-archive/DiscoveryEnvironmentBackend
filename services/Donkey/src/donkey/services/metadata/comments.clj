@@ -6,12 +6,11 @@
             [clojure-commons.validators :as validators]
             [donkey.auth.user-attributes :as user]
             [donkey.clients.data-info :as data]
+            [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.metadata.raw :as metadata]
             [donkey.services.filesystem.uuids :as data-uuids]
-            [donkey.util.db :as db-util]
             [donkey.util.service :as svc]
-            [donkey.util.validators :as valid]
-            [kameleon.app-listing :as app-listing]))
+            [donkey.util.validators :as valid]))
 
 (defn- extract-accessible-entry-id
   [user entry-id-txt]
@@ -31,8 +30,7 @@
 (defn- extract-app-id
   [app-id]
   (let [app-uuid (valid/extract-uri-uuid app-id)]
-    (with-db db-util/de
-      (svc/assert-found (app-listing/get-app-listing app-uuid) "App" app-uuid))
+    (metadactyl/get-app-details app-uuid)
     app-uuid))
 
 (defn- read-body
@@ -114,8 +112,7 @@
      retracted - the `retracted` query parameter. This should be either `true` or `false`."
   (let [app-id     (valid/extract-uri-uuid app-id)
         comment-id (valid/extract-uri-uuid comment-id)
-        app        (with-db db-util/de
-                     (svc/assert-found (app-listing/get-app-listing app-id) "App" app-id))
+        app        (metadactyl/get-app-details app-id)
         owns-app?  (validators/user-owns-app? user/current-user app)]
     (if owns-app?
       (metadata/admin-update-app-retract-status app-id comment-id retracted)

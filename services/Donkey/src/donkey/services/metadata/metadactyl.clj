@@ -6,11 +6,7 @@
         [donkey.clients.user-info :only [get-user-details]]
         [donkey.services.user-prefs :only [user-prefs]]
         [donkey.util.email]
-        [donkey.util.service]
-        [kameleon.queries :only [record-logout]]
-        [korma.db :only [with-db]]
-        [medley.core :only [dissoc-in]]
-        [ring.util.codec :only [url-encode]])
+        [donkey.util.service])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
             [clojure.string :as string]
@@ -18,7 +14,6 @@
             [donkey.clients.data-info :as di]
             [donkey.clients.metadactyl :as dm]
             [donkey.clients.notifications :as dn]
-            [donkey.util.db :as db]
             [donkey.services.fileio.actions :as io]))
 
 (defn- secured-notification-url
@@ -80,10 +75,7 @@
   [{:keys [ip-address login-time]}]
   (assert-valid ip-address "Missing or empty query string parameter: ip-address")
   (assert-valid login-time "Missing or empty query string parameter: login-time")
-  (with-db db/de
-    (record-logout (:username current-user)
-                   ip-address
-                   (string->long login-time "Long integer expected: login-time")))
+  (dm/record-logout ip-address login-time)
   (success-response))
 
 (defn add-reference-genome

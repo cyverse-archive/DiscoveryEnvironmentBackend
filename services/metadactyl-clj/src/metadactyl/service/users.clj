@@ -14,3 +14,8 @@
 (defn login
   [{:keys [username]} {:keys [ip-address user-agent]}]
   {:login_time (kq/record-login username ip-address user-agent)})
+
+(defn logout
+  [{:keys [username]} {:keys [ip-address login-time]}]
+  (kq/record-logout username ip-address login-time)
+  nil)

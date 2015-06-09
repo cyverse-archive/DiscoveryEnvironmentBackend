@@ -276,45 +276,6 @@
   "donkey.irods.admin-users")
 ;;;End iRODS connection information
 
-;;;Database connection information
-(cc/defprop-str db-driver-class
-  "The name of the JDBC driver to use."
-  [props config-valid configs]
-  "donkey.db.driver" )
-
-(cc/defprop-str db-subprotocol
-  "The subprotocol to use when connecting to the database (e.g.
-   postgresql)."
-  [props config-valid configs]
-  "donkey.db.subprotocol")
-
-(cc/defprop-str db-host
-  "The host name or IP address to use when
-   connecting to the database."
-  [props config-valid configs]
-  "donkey.db.host")
-
-(cc/defprop-str db-port
-  "The port number to use when connecting to the database."
-  [props config-valid configs]
-  "donkey.db.port")
-
-(cc/defprop-str db-name
-  "The name of the database to connect to."
-  [props config-valid configs]
-  "donkey.db.name")
-
-(cc/defprop-str db-user
-  "The username to use when authenticating to the database."
-  [props config-valid configs]
-  "donkey.db.user")
-
-(cc/defprop-str db-password
-  "The password to use when authenticating to the database."
-  [props config-valid configs]
-  "donkey.db.password")
-;;;End database connection information
-
 ;;;Metadata database connection information
 (cc/defprop-str metadata-db-driver-class
   "The name of the JDBC driver to use."

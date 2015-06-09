@@ -28,4 +28,10 @@
          :return LoginResponse
          :summary "Record a User Login"
          :notes "Donkey calls this service to record when a user logs in."
-         (service/trap uri users/login current-user params)))
+         (service/trap uri users/login current-user params))
+
+  (POST* "/logout" [:as {:keys [uri]}]
+         :query [params LogoutParams]
+         :summary "Record a User Logout"
+         :notes "Donkey calls this service to record when a user logs out."
+         (service/trap uri users/logout current-user params)))

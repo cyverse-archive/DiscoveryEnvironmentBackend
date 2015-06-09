@@ -9,6 +9,12 @@
        (:body)
        (service/decode-json)))
 
+(defn get-app-details
+  [app-id]
+  (->> (raw/get-app-details app-id)
+       (:body)
+       (service/decode-json)))
+
 (defn admin-list-tool-requests
   [params]
   (->> (raw/admin-list-tool-requests params)
@@ -58,3 +64,8 @@
   (-> (raw/record-login ip-address user-agent)
       (:body)
       (service/decode-json)))
+
+(defn record-logout
+  [ip-address login-time]
+  (raw/record-logout ip-address login-time)
+  nil)

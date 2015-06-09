@@ -21,3 +21,8 @@
 
 (defschema LoginResponse
   {:login_time (describe Long "Login time as milliseconds since the epoch.")})
+
+(defschema LogoutParams
+  (assoc SecuredQueryParams
+    :ip-address (describe String "The IP address obtained from the original request.")
+    :login-time (describe Long "The login time returned by POST /users/login.")))
