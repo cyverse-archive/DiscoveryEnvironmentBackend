@@ -521,3 +521,11 @@
               {:query-params     (secured-params)
                :as               :stream
                :follow-redirects false}))
+
+(defn record-login
+  [ip-address user-agent]
+  (let [params {:ip-address ip-address :user-agent user-agent}]
+    (client/post (metadactyl-url "users" "login")
+                 {:query-params     (secured-params params)
+                  :as               :stream
+                  :follow-redirects false})))

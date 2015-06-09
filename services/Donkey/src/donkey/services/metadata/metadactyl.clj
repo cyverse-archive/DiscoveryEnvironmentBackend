@@ -7,7 +7,7 @@
         [donkey.services.user-prefs :only [user-prefs]]
         [donkey.util.email]
         [donkey.util.service]
-        [kameleon.queries :only [record-login record-logout]]
+        [kameleon.queries :only [record-logout]]
         [korma.db :only [with-db]]
         [medley.core :only [dissoc-in]]
         [ring.util.codec :only [url-encode]])
@@ -60,8 +60,7 @@
         user        (:shortUsername current-user)
         workspace   (dm/get-workspace)
         preferences (user-prefs (:username current-user))
-        login-time  (with-db db/de
-                      (record-login username ip-address user-agent))]
+        login-time  (:login_time (dm/record-login ip-address user-agent))]
     (success-response
       {:workspaceId   (:id workspace)
        :newWorkspace  (:new_workspace workspace)

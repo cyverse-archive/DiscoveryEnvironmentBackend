@@ -21,4 +21,11 @@
         :return User
         :summary "Get the Authenticated User"
         :notes "This endpoint returns information about the authenticated user."
-        (service/trap uri users/authenticated current-user)))
+        (service/trap uri users/authenticated current-user))
+
+  (POST* "/login" [:as {:keys [uri]}]
+         :query [params LoginParams]
+         :return LoginResponse
+         :summary "Record a User Login"
+         :notes "Donkey calls this service to record when a user logs in."
+         (service/trap uri users/login current-user params)))

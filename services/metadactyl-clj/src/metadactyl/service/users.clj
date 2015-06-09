@@ -1,6 +1,7 @@
 (ns metadactyl.service.users
   (:use [metadactyl.util.conversions :only [remove-nil-vals]])
-  (:require [metadactyl.persistence.users :as up]))
+  (:require [kameleon.queries :as kq]
+            [metadactyl.persistence.users :as up]))
 
 (defn by-id
   [{:keys [ids]}]
@@ -9,3 +10,7 @@
 (defn authenticated
   [{:keys [username]}]
   (remove-nil-vals (up/for-username username)))
+
+(defn login
+  [{:keys [username]} {:keys [ip-address user-agent]}]
+  {:login_time (kq/record-login username ip-address user-agent)})

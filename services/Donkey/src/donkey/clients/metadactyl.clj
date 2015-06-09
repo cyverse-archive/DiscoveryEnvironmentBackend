@@ -52,3 +52,9 @@
   (-> (raw/get-authenticated-user)
       (:body)
       (service/decode-json)))
+
+(defn record-login
+  [ip-address user-agent]
+  (-> (raw/record-login ip-address user-agent)
+      (:body)
+      (service/decode-json)))

@@ -331,4 +331,3 @@
     (if-not agave-enabled?
       (where query {:step_count :task_count})
       query)))
-
