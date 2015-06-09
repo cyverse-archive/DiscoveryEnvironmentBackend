@@ -270,7 +270,7 @@
   [container-map]
   (if (contains? container-map :network_mode)
     (str "--net=" (:network_mode container-map))
-    "--net=none"))
+    "--net=bridge"))
 
 (defn container-cpu-shares-arg
   [container-map]
