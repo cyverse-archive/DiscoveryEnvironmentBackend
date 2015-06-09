@@ -1,6 +1,6 @@
 FROM discoenv/javabase
 
-ADD build/* /iplant/home/resources/
+ADD build/* /home/iplant/resources/
 ADD target/kifshare-standalone.jar /home/iplant/
 ADD conf/log4j2.xml /home/iplant/
 USER root
