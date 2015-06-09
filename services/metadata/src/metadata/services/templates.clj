@@ -27,3 +27,7 @@
 (defn add-template
   [{:keys [user-id]} template]
   (transaction (view-template (tp/add-template user-id template))))
+
+(defn update-template
+  [{:keys [user-id]} template-id template]
+  (transaction (view-template (tp/update-template user-id template-id template))))

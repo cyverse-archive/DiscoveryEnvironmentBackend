@@ -49,4 +49,13 @@
       :return MetadataTemplate
       :summary "Add a Metadata Template"
       :description "This endpoint allows administrators to add new metadata templates."
-      (service/trap uri templates/add-template params body))))
+      (service/trap uri templates/add-template params body))
+
+    (PUT* "/:template-id" [:as {:keys [uri]}]
+      :path-params [template-id :- TemplateIdPathParam]
+      :body [body (describe MetadataTemplateUpdate "The template to update.")]
+      :query [params UserIdParams]
+      :return MetadataTemplate
+      :summary "Update a Metadata Template"
+      :description "This endpoint allows administrators to update existing metadata templates."
+      (service/trap uri templates/update-template params template-id body))))

@@ -26,3 +26,11 @@
 (defn admin-add-template
   [user-id template]
   (parse-body (raw/admin-add-template user-id (cheshire/encode template))))
+
+(defn admin-update-template
+  [user-id template-id template]
+  (parse-body (raw/admin-update-template user-id template-id (cheshire/encode template))))
+
+;; This function alias relies on get-template's error checking to throw an exception if a template
+;; with the given ID doesn't exist.
+(def validate-template-exists get-template)

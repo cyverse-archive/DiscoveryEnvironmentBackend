@@ -9,7 +9,7 @@
             [clojure-commons.validators :as common-validators]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [kameleon.metadata.avu :as persistence]
-            [donkey.services.filesystem.metadata-templates :as templates]
+            [donkey.clients.metadata :as metadata]
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as validators]
             [donkey.util.db :as db]
@@ -160,7 +160,7 @@
 (with-pre-hook! #'do-metadata-template-avu-list
   (fn [params data-id & [template-id]]
     (log-call "do-metadata-template-avu-list" params data-id template-id)
-    (when template-id (templates/validate-metadata-template-exists template-id))
+    (when template-id (metadata/validate-template-exists template-id))
     (with-jargon (icat/jargon-cfg) [cm]
       (common-validators/validate-map params {:user string?})
       (validators/user-exists cm (:user params))
@@ -185,7 +185,7 @@
 (with-pre-hook! #'do-set-metadata-template-avus
   (fn [params data-id template-id body]
     (log-call "do-set-metadata-template-avus" params data-id template-id body)
-    (templates/validate-metadata-template-exists template-id)
+    (metadata/validate-template-exists template-id)
     (common-validators/validate-map body {:avus sequential?})
     (common-validators/validate-map params {:user string?})))
 
@@ -207,7 +207,7 @@
 (with-pre-hook! #'do-remove-metadata-template-avus
   (fn [params data-id template-id & [avu-id]]
     (log-call "do-remove-metadata-template-avus" params data-id template-id avu-id)
-    (templates/validate-metadata-template-exists template-id)
+    (metadata/validate-template-exists template-id)
     (common-validators/validate-map params {:user string?})
     (with-jargon (icat/jargon-cfg) [cm]
       (validators/user-exists cm (:user params))

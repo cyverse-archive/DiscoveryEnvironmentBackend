@@ -155,3 +155,69 @@
   (let [template-id (insert-template user-id template)]
     (dorun (map-indexed (partial add-template-attribute user-id template-id) attributes))
     template-id))
+
+(defn- prepare-template-update
+  [user-id template-id template]
+  (->> (assoc (select-keys template [:name :deleted])
+         :modified_by user-id
+         :modified_on (sqlfn now))
+       (remove-nil-values)))
+
+(defn- prepare-attr-update
+  [user-id {:keys [type] :as attr}]
+  (->> (assoc (select-keys attr [:id :name :description :required])
+         :modified_by   user-id
+         :modified_on   (sqlfn now)
+         :value_type_id (assert-found (get-value-type-id type) "value type" type))
+       (remove-nil-values)))
+
+(defn- update-attribute
+  [user-id attr-id attr]
+  (:id (update :attributes
+               (set-fields (prepare-attr-update user-id attr))
+               (where {:id attr-id}))))
+
+(defn- attr-exists?
+  [attr-id]
+  (and (not (nil? attr-id))
+       (not (nil? (get-metadata-attribute attr-id)))))
+
+(defn- insert-or-update-attribute
+  [user-id {:keys [id] :as attr}]
+  (if (attr-exists? id)
+    (update-attribute user-id id attr)
+    (insert-attribute user-id attr)))
+
+(defn- update-template-attribute
+  [user-id template-id order {enum-values :values id :id :as attr}]
+  (let [attr-id (insert-or-update-attribute user-id attr)]
+    (insert-template-attr template-id order attr-id)
+    (delete :attr_enum_values (where {:attribute_id attr-id}))
+    (dorun (map-indexed (partial add-attr-enum-value attr-id) enum-values))))
+
+(defn- template-attr-subselect
+  []
+  (subselect [:template_attrs :ta]
+             (where {:attributes.id :ta.attribute_id})))
+
+(defn- attr-synonym-subselect
+  []
+  (subselect [:attr_synonyms :s]
+             (where {:attributes.id :s.synonym_id})))
+
+(defn- delete-orphan-attributes
+  []
+  (delete :attributes
+          (where (and (not (exists (template-attr-subselect)))
+                      (not (exists (attr-synonym-subselect)))))))
+
+(defn update-template
+  [user-id template-id {:keys [attributes] :as template}]
+  (assert-found (get-metadata-template template-id) "metadata template" template-id)
+  (update :templates
+          (set-fields (prepare-template-update user-id template-id template))
+          (where {:id template-id}))
+  (delete :template_attrs (where {:template_id template-id}))
+  (dorun (map-indexed (partial update-template-attribute user-id template-id) attributes))
+  (delete-orphan-attributes)
+  template-id)

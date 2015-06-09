@@ -29,6 +29,8 @@
       :as               :stream
       :follow-redirects false}))
 
+(def put-options post-options)
+
 (defn list-data-comments
   [target-id]
   (http/get (metadata-url "filesystem" "entry" target-id "comments")
@@ -115,3 +117,8 @@
 (defn admin-add-template
   [user-id template]
   (http/post (metadata-url "admin" "templates") (post-options template {:user-id user-id})))
+
+(defn admin-update-template
+  [user-id template-id template]
+  (http/put (metadata-url "admin" "templates" template-id)
+            (put-options template {:user-id user-id})))
