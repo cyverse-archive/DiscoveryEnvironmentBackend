@@ -60,6 +60,25 @@
   (http/patch (metadata-url "apps" target-id "comments" comment-id)
               (post-options nil {:retracted retracted})))
 
+(defn admin-update-data-retract-status
+  [target-id comment-id retracted]
+  (http/patch (metadata-url "admin" "filesystem" "entry" target-id "comments" comment-id)
+    (post-options nil {:retracted retracted})))
+
+(defn admin-update-app-retract-status
+  [target-id comment-id retracted]
+  (http/patch (metadata-url "admin" "apps" target-id "comments" comment-id)
+    (post-options nil {:retracted retracted})))
+
+(defn delete-data-comment
+  [target-id comment-id]
+  (http/delete (metadata-url "admin" "filesystem" "entry" target-id "comments" comment-id)
+    (delete-options)))
+
+(defn delete-app-comment
+  [target-id comment-id]
+  (http/delete (metadata-url "admin" "apps" target-id "comments" comment-id) (delete-options)))
+
 (defn list-favorites
   [entity-type]
   (http/get (metadata-url "favorites" "filesystem") (get-options {:entity-type entity-type})))
@@ -76,25 +95,6 @@
 (defn filter-favorites
   [uuids]
   (http/post (metadata-url "favorites" "filter") (post-options (json/encode {:filesystem uuids}))))
-
-(defn admin-update-data-retract-status
-  [target-id comment-id retracted]
-  (http/patch (metadata-url "admin" "filesystem" "entry" target-id "comments" comment-id)
-              (post-options nil {:retracted retracted})))
-
-(defn admin-update-app-retract-status
-  [target-id comment-id retracted]
-  (http/patch (metadata-url "admin" "apps" target-id "comments" comment-id)
-              (post-options nil {:retracted retracted})))
-
-(defn delete-data-comment
-  [target-id comment-id]
-  (http/delete (metadata-url "admin" "filesystem" "entry" target-id "comments" comment-id)
-               (delete-options)))
-
-(defn delete-app-comment
-  [target-id comment-id]
-  (http/delete (metadata-url "admin" "apps" target-id "comments" comment-id) (delete-options)))
 
 (defn list-templates
   []
