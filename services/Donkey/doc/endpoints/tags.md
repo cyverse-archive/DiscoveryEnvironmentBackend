@@ -3,26 +3,13 @@ This document describes the tags resource.
 A _tag_ is a user-defined label that can be attached to files and folders to relate them to each
 other.
 
-# Resources
-
-## Tag
-
-A tag is modeled as a JSON document (media type `application/json`) with the fields described in the
-following table.
-
-| Field       | Type   | Description |
-| ----------- | ------ | ----------- |
-| id          | string | the service-provided UUID associated with the tag |
-| value       | string | the value used to identify the tag, at most 255 characters in length |
-| description | string | a description of the purpose of the tag |
-
 # Endpoints
 
 ## Creating a tag
 
 `POST /secured/tags/user`
 
-This endpoint creates a tag for use by the authenticated user.
+Delegates to metadata: `POST /tags/user`
 
 ### Request
 
@@ -30,28 +17,20 @@ A request to this endpoint requires no parameters beyond the `proxyToken` authen
 The user that owns the tag is determined from the authentication. Any additional parameters will be
 ignored.
 
-The request body should be a JSON document (media type `application/json`) with the fields
-described in the following table.
-
-| Field       | Type   | Description |
-| ----------- | ------ | ----------- |
-| value       | string | the value used to identify the tag, at most 255 characters in length |
-| description | string | (optional) a description of the purpose of the tag |
-
-These are just the `value` and `description` fields of the tag being created.
+This endpoint forwards requests to the corresponding metadata service endpoint.
+Please see the metadata documentation for more information.
 
 ### Response
 
 | Status Code | Cause |
 | ----------- | ----- |
-| 201         | The tag was successfully created |
+| 200         | The tag was successfully created |
 | 400         | The request body wasn't syntactically correct |
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 | 413         | The `value` was too long or the request body was too large. |
 
-Upon success, the response body will be a JSON document with `"id"` and `"success"` fields. The
-`"id"` field will contain the UUID the service assigned to the newly created tag. The `"success"`
-field will have the value `true`.
+Upon success, the response body will be a JSON document with an `"id"` field. The
+`"id"` field will contain the UUID the service assigned to the newly created tag.
 
 Upon failure, a JSON document with a `"reason"` field will the returned. The `"reason"` field will
 provide a short, human readable explanation of the failure.
@@ -71,6 +50,8 @@ provide a short, human readable explanation of the failure.
 
 `PATCH /secured/tags/user/{tag-id}`
 
+Delegates to metadata: `PATCH /tags/user/{tag-id}`
+
 This endpoint allows a tag's label and description to be modified by the owning user.
 
 ### Request
@@ -79,13 +60,8 @@ A request to this endpoint requires no parameters beyond the `proxyToken` authen
 The user that owns the tag is determined from the authentication. Any additional parameters will be
 ignored.
 
-The request body should be a JSON document (media type `application/json`) with the fields
-described in the following table.
-
-| Field       | Type   | Description |
-| ----------- | ------ | ----------- |
-| value       | string | (optional) a new value for the tag at most 255 characters in length |
-| description | string | (optional) a new description of the purpose of the tag |
+This endpoint forwards requests to the corresponding metadata service endpoint.
+Please see the metadata documentation for more information.
 
 ### Response
 
@@ -108,8 +84,12 @@ Error responses may include a `reason` field, providing a short, human readable 
 
 `DELETE /secured/tags/user/{tag-id}`
 
-This endpoint allows a user tag to be deleted, detaching it from all metadata.  `tag-id` is the UUID
-of the tag to delete.
+Delegates to metadata: `DELETE /tags/user/{tag-id}`
+
+This endpoint allows a user tag to be deleted, detaching it from all metadata.
+
+This endpoint forwards requests to the corresponding metadata service endpoint.
+Please see the metadata documentation for more information.
 
 ### Request
 
@@ -136,6 +116,8 @@ Error responses may include a `reason` field, providing a short, human readable 
 
 `GET /secured/tags/suggestions`
 
+Delegates to metadata: `GET /tags/suggestions`
+
 Given a textual fragment of a tag's value, this endpoint will list up to a given number of the
 authenticated user's tags that contain the fragment.
 
@@ -161,8 +143,8 @@ Any body attached to the request will be ignored.
 | 400         | the `contains` parameter was missing or the `limit` parameter was set to a something other than a non-negative number. |
 | 401         | Either the `proxyToken` was not provided, or the value wasn't correct. |
 
-Upon success, the response body will be a JSON document with a `"tags"` field which will contain an
-array of the [tag](#tag) objects whose values contain the fragment from the request.
+This endpoint forwards requests to the corresponding metadata service endpoint.
+Please see the metadata documentation for more information.
 
 Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
 
@@ -192,21 +174,15 @@ curl "localhost/secured/tags/suggestions?proxyToken=fake&contains=a"
 
 `PATCH /secured/filesystem/entry/{entry-id}/tags`
 
-Depending on the `type` parameter, this endpoint either attaches a set of the authenticated user's
-tags to the indicated file or folder, or it detaches the set. `{entry-id}` is the UUID associated
-with the file or folder receiving the tags.
+Delegates to metadata: `PATCH /filesystem/entry/{entry-id}/tags`
 
 ### Request
 
-Other than the `proxyToken` authentication parameter, this endpoint requires a `type` parameter. If
-the `type` parameter's value is `attach`, the provided set of tags will be attached to the file or
-folder. If the value is `detach`, the set will be detached.
-
+Other than the `proxyToken` authentication parameter, this endpoint requires a `type` parameter.
 Any additional parameters will be ignored.
 
-The request body needs to be a JSON document (media type `application/json`) containing a single
-field `tags` contain and array of UUIDs.  These are the UUIDs of the tags to be attached or
-detached.
+This endpoint forwards requests to the corresponding metadata service endpoint.
+Please see the metadata documentation for more information.
 
 ### Response
 
@@ -236,9 +212,10 @@ Error responses may include a `reason` field, providing a short, human readable 
 
 `GET /secured/filesystem/entry/{entry-id}/tags`
 
+Delegates to metadata: `GET /filesystem/entry/{entry-id}/tags`
+
 This endpoint lists the tags of the calling authenticated user that are attached to the indicated
-file or folder. `{entry-id}` is the UUID of the file or folder the caller is inspecting. The file or
-folder must be readable by the authenticated user.
+file or folder. The file or folder must be readable by the authenticated user.
 
 ### Request
 
@@ -255,9 +232,8 @@ Any body attached to the request will be ignored.
 | 200         | The tags are listed in the response |
 | 404         | The `{entry-id}` UUID doesn't belong to a known file or folder or the file or folder isn't readable by the authenticated user. |
 
-Upon success, the response body will be a JSON document (media type `application/json`) that
-contains a `tags` field holding an array of [tag](#tag) objects. These are the tags that are
-attached to the file or folder with id `{entry-id}`.
+This endpoint forwards requests to the corresponding metadata service endpoint.
+Please see the metadata documentation for more information.
 
 Error responses may include a `reason` field, providing a short, human readable explanation of the failure.
 

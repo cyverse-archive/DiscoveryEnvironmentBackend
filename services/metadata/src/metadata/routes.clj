@@ -5,6 +5,7 @@
   (:require [metadata.routes.comments :as comment-routes]
             [metadata.routes.favorites :as favorites-routes]
             [metadata.routes.status :as status-routes]
+            [metadata.routes.tags :as tag-routes]
             [metadata.routes.templates :as template-routes]
             [metadata.util.config :as config]
             [metadata.util.service :as service]
@@ -28,6 +29,7 @@
             {:name "favorites", :description "Favorite Resources"}
             {:name "admin-data-comments", :description "Admin Data Item Comment Management"}
             {:name "admin-app-comments", :description "Admin App Comment Management"}
+            {:name "tags", :description "Tags Management"}
             {:name "template-info", :description "Template Information"}
             {:name "template-administration", :description "Template Administration"}]})
   (middlewares
@@ -43,5 +45,7 @@
     comment-routes/admin-data-comment-routes
     comment-routes/admin-app-comment-routes
     favorites-routes/favorites
+    tag-routes/filesystem-tags
+    tag-routes/tags
     template-routes/templates
     template-routes/admin-templates))

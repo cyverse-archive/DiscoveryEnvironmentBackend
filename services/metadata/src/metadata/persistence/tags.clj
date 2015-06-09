@@ -1,12 +1,19 @@
-(ns donkey.persistence.metadata
+(ns metadata.persistence.tags
   (:use korma.core)
-  (:require [korma.db :as korma]
-            [kameleon.db :as db])
+  (:require [kameleon.db :as db])
   (:import [java.util UUID]
            [clojure.lang IPersistentMap ISeq]))
 
+(defn get-tag
+  "Retrieves the tag with the given ID.
 
-;; TAGS
+   Parameters:
+     tag-id - The UUID of tag.
+
+   Returns:
+     The tag with the given ID, or nil if the tag doesn't exist."
+  [tag-id]
+  (first (select :tags (where {:id tag-id}))))
 
 (defn filter-tags-owned-by-user
   [owner tag-ids]
@@ -19,10 +26,9 @@
    Returns:
      It returns a lazy sequence of tag UUIDs owned by the given user."
   (map :id
-       (korma/with-db db/metadata
-         (select :tags
-           (fields :id)
-           (where {:owner_id owner :id [in tag-ids]})))))
+    (select :tags
+      (fields :id)
+      (where {:owner_id owner :id [in tag-ids]}))))
 
 (defn get-tags-by-value
   "Retrieves up to a certain number of the tags owned by a given user that have a value matching a
@@ -39,13 +45,13 @@
      A lazy sequence of tags."
   [owner value-glob & [max-results]]
   (let [query  (-> (select* :tags)
-                 (fields :id :value :description)
-                 (where (and {:owner_id owner}
-                             (raw (str "lower(value) like lower('" value-glob "')")))))
+                   (fields :id :value :description)
+                   (where (and {:owner_id owner}
+                               (raw (str "lower(value) like lower('" value-glob "')")))))
         query' (if max-results
                  (-> query (limit max-results))
                  query)]
-    (korma/with-db db/metadata (select query'))))
+    (select query')))
 
 (defn get-tag-owner
   "Retrieves the user name of the owner of the given tag.
@@ -56,11 +62,7 @@
    Returns:
      The user name or nil if the tag doesn't exist."
   [tag-id]
-  (-> (korma/with-db db/metadata
-        (select :tags
-          (fields :owner_id)
-          (where {:id tag-id})))
-    first :owner_id))
+  (:owner_id (get-tag tag-id)))
 
 (defn ^IPersistentMap insert-user-tag
   "Inserts a user tag.
@@ -74,11 +76,10 @@
      It returns the new database tag entry."
   [^String owner ^String value ^String description]
   (let [description (if description description "")]
-    (korma/with-db db/metadata
-      (insert :tags
-        (values {:value       value
-                 :description description
-                 :owner_id    owner})))))
+    (insert :tags
+      (values {:value       value
+               :description description
+               :owner_id    owner}))))
 
 
 (defn ^IPersistentMap update-user-tag
@@ -97,10 +98,9 @@
   (let [updates (if (get updates :description :not-found)
                   updates
                   (assoc updates :description ""))]
-    (korma/with-db db/metadata
-      (update :tags
-        (set-fields updates)
-        (where {:id tag-id})))))
+    (update :tags
+      (set-fields updates)
+      (where {:id tag-id}))))
 
 
 (defn delete-user-tag
@@ -109,9 +109,8 @@
    Parameters:
      tag-id - The UUID of the tag to delete."
   [tag-id]
-  (korma/with-db db/metadata
-    (delete :attached_tags (where {:tag_id tag-id}))
-    (delete :tags (where {:id tag-id})))
+  (delete :attached_tags (where {:tag_id tag-id}))
+  (delete :tags (where {:id tag-id}))
   nil)
 
 (defn select-attached-tags
@@ -124,13 +123,12 @@
    Returns:
      It returns a lazy sequence of tag resources."
   [user target-id]
-  (korma/with-db db/metadata
-    (select :tags
-      (fields :id :value :description)
-      (where {:owner_id user
-              :id       [in (subselect :attached_tags
-                              (fields :tag_id)
-                              (where {:target_id target-id :detached_on nil}))]}))))
+  (select :tags
+    (fields :id :value :description)
+    (where {:owner_id user
+            :id       [in (subselect :attached_tags
+                            (fields :tag_id)
+                            (where {:target_id target-id :detached_on nil}))]})))
 
 (defn filter-attached-tags
   "Filter a set of tags for those attached to a given target.
@@ -143,12 +141,11 @@
      It returns a lazy sequence of tag UUIDs that have been filtered."
   [target-id tag-ids]
   (map :tag_id
-       (korma/with-db db/metadata
-         (select :attached_tags
-           (fields :tag_id)
-           (where {:target_id   target-id
-                   :detached_on nil
-                   :tag_id      [in tag-ids]})))))
+    (select :attached_tags
+      (fields :tag_id)
+      (where {:target_id   target-id
+              :detached_on nil
+              :tag_id      [in tag-ids]}))))
 
 (defn insert-attached-tags
   "Attach a set of user tags to a target.
@@ -166,8 +163,7 @@
                                       :target_type target-type
                                       :attacher_id attacher)
                            tag-ids)]
-      (korma/with-db db/metadata
-        (insert :attached_tags (values new-values)))
+      (insert :attached_tags (values new-values))
       nil)))
 
 (defn mark-tags-detached
@@ -178,25 +174,23 @@
      target-id - The UUID of the target having some of its tags removed.
      tag-ids   - the collection tags to detach"
   [detacher target-id tag-ids]
-  (korma/with-db db/metadata
-    (update :attached_tags
-      (set-fields {:detacher_id detacher
-                   :detached_on (sqlfn now)})
-      (where {:target_id   target-id
-              :detached_on nil
-              :tag_id      [in tag-ids]})))
+  (update :attached_tags
+    (set-fields {:detacher_id detacher
+                 :detached_on (sqlfn now)})
+    (where {:target_id   target-id
+            :detached_on nil
+            :tag_id      [in tag-ids]}))
   nil)
 
 
 (defn ^ISeq select-tag-targets
-  "Retrieve all of the objects that have a given tag attached.
+  "Retrieve all of the objects that have the given tags attached.
 
    Parameters:
-     tag-id - The id of the tag
+     tag-ids - The ids of the tags
 
    Returns:
-     It returns the attachment records for this tag."
-  [^UUID tag-id]
-  (korma/with-db db/metadata
-    (select :attached_tags
-      (where {:tag_id tag-id :detached_on nil}))))
+     It returns the attachment records for the tags."
+  [^ISeq tag-id]
+  (select :attached_tags
+    (where {:tag_id tag-id :detached_on nil})))

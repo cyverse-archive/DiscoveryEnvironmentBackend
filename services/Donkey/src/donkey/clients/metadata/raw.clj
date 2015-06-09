@@ -1,5 +1,6 @@
 (ns donkey.clients.metadata.raw
-  (:use [donkey.util.transformers :only [user-params]])
+  (:use [clojure-commons.core :only [remove-nil-values]]
+        [donkey.util.transformers :only [user-params]])
   (:require [cemerick.url :as curl]
             [cheshire.core :as json]
             [clj-http.client :as http]
@@ -97,6 +98,33 @@
 (defn filter-favorites
   [uuids]
   (http/post (metadata-url "favorites" "filter") (post-options (json/encode {:filesystem uuids}))))
+
+(defn list-attached-tags
+  [target-id]
+  (http/get (metadata-url "filesystem" "entry" target-id "tags") (get-options)))
+
+(defn update-attached-tags
+  [target-id data-type type body]
+  (http/patch (metadata-url "filesystem" "entry" target-id "tags")
+              (post-options body {:data-type data-type
+                                  :type type})))
+
+(defn get-tags-by-value
+  [contains limit]
+  (http/get (metadata-url "tags" "suggestions") (get-options (remove-nil-values {:contains contains
+                                                                                 :limit limit}))))
+
+(defn create-user-tag
+  [body]
+  (http/post (metadata-url "tags" "user") (post-options body)))
+
+(defn update-user-tag
+  [tag-id body]
+  (http/patch (metadata-url "tags" "user" tag-id) (post-options body)))
+
+(defn delete-user-tag
+  [tag-id]
+  (http/delete (metadata-url "tags" "user" tag-id) (delete-options)))
 
 (defn list-templates
   []
