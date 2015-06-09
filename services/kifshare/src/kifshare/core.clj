@@ -91,8 +91,15 @@
    :art-id "kifshare"
    :service "kifshare"})
 
+(defn wrap-log-request
+  [handler]
+  (fn [request]
+    (log/info request)
+    (handler request)))
+
 (defn site-handler [routes]
   (-> routes
+      wrap-log-request
       wrap-multipart-params
       wrap-keyword-params
       wrap-nested-params
@@ -125,6 +132,7 @@
       (ccli/exit 1 "The config file is not readable."))
     (cfg/local-init (:config options))
     (cfg/jargon-init)
+    (cfg/log-config)
     (with-redefs [clojure.java.io/buffer-size override-buffer-size]
       (let [port (Integer/parseInt (string/trim (get @cfg/props "kifshare.app.port")))]
         (log/warn "Configured listen port is: " port)
