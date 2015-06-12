@@ -1,18 +1,29 @@
 (ns metadata.services.tags
-  (:use [slingshot.slingshot :only [throw+]])
+  (:use [kameleon.db :only [millis-from-timestamp]]
+        [slingshot.slingshot :only [throw+]])
   (:require [clojure.set :as set]
             [clojure-commons.error-codes :as error]
+            [medley.core :as medley]
             [metadata.persistence.tags :as db])
   (:import [java.util UUID]
            [clojure.lang IPersistentMap]))
 
+(defn- format-tag
+  [tag]
+  (-> tag
+      (medley/update :created_on millis-from-timestamp)
+      (medley/update :modified_on millis-from-timestamp)))
+
+(defn- get-tag-details
+  [id]
+  (format-tag (db/get-tag id)))
 
 (defn- get-tag-target-details
   [tag-ids]
   (letfn [(fmt-tgt ([{id :target_id type :target_type}]
                      {:id id :type (str type)}))
           (get-tag-detail ([id]
-                            (assoc (db/get-tag id)
+                            (assoc (get-tag-details id)
                               :targets (map fmt-tgt (db/select-tag-targets id)))))]
     {:tags (map get-tag-detail tag-ids)}))
 
@@ -49,7 +60,7 @@
      The new tag."
   [^String owner ^IPersistentMap {:keys [value description]}]
   (if (empty? (db/get-tags-by-value owner value))
-    (db/insert-user-tag owner value description)
+    (format-tag (db/insert-user-tag owner value description))
     (throw+ {:error_code error/ERR_NOT_UNIQUE
              :user owner
              :value value})))
@@ -143,7 +154,7 @@
                     (let [update (prepare-tag-update tag)]
                       (when-not (empty? update)
                         (db/update-user-tag tag-id update)))
-                    (db/get-tag tag-id))]
+                    (get-tag-details tag-id))]
     (cond
       (nil? tag-owner)       (throw+ {:error_code error/ERR_NOT_FOUND
                                       :tag-id     tag-id})

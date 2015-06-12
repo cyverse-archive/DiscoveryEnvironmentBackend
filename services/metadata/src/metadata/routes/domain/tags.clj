@@ -53,8 +53,8 @@
   (merge Tag
     {:owner_id    (describe String "The owner of the tag")
      :public      (describe Boolean "Whether the tag is publicly accessible")
-     :created_on  (describe Date "The date the tag was created")
-     :modified_on (describe Date "The date the tag was last modified")}))
+     :created_on  (describe Long "The date the tag was created in ms since the POSIX epoch")
+     :modified_on (describe Long "The date the tag was last modified in ms since the POSIX epoch")}))
 
 (s/defschema AttachedTagDetails
   (merge TagDetails

@@ -15,6 +15,7 @@
   :manifest {"Git-Ref" ~(git-ref)}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [clj-time "0.9.0"] ; required due to bug in lein-ring
+                 [medley "0.6.0"]
                  [metosin/compojure-api "0.21.0"]
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/common-cfg "5.0.0"]
