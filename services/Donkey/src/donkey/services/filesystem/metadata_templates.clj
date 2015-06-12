@@ -96,7 +96,7 @@
 
 (defn do-metadata-template-list
   []
-  {:metadata_templates (list-metadata-templates)})
+  (list-metadata-templates))
 
 (with-pre-hook! #'do-metadata-template-list
   (fn []
@@ -126,7 +126,7 @@
 
 (defn do-metadata-template-admin-list
   []
-  {:metadata_templates (admin-list-metadata-templates)})
+  (admin-list-metadata-templates))
 
 (with-pre-hook! #'do-metadata-template-admin-list
   (fn []
