@@ -287,17 +287,6 @@
   :language :clojure
   :archive? true}
 
- "OSM"
- {:type     :service
-  :path     "services/OSM"
-  :build    :lein
-  :rpm?     true
-  :tarball? false
-  :uberjar? true
-  :install? false
-  :language :clojure
-  :archive? true}
-
  "anon-files"
  {:type     :service
   :path     "services/anon-files"
@@ -345,17 +334,6 @@
  "tree-urls"
  {:type     :service
   :path     "services/tree-urls"
-  :build    :lein
-  :rpm?     true
-  :tarball? false
-  :uberjar? true
-  :install? false
-  :language :clojure
-  :archive? true}
-
- "Panopticon"
- {:type     :service
-  :path     "services/Panopticon"
   :build    :lein
   :rpm?     true
   :tarball? false
