@@ -36,12 +36,6 @@
   [props config-valid configs]
   "metadata.app.environment-name")
 
-(cc/defprop-str uid-domain
-  "The domain name to append to the user identifier to get the fully qualified
-   user identifier."
-  [props config-valid configs]
-  "metadata.uid.domain")
-
 ;;;Database connection information
 (cc/defprop-str db-driver-class
   "The name of the JDBC driver to use."
