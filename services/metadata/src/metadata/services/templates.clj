@@ -14,6 +14,10 @@
       (ca/assert-found "metadata template" template-id)
       (remove-nil-values)))
 
+;; This function alias relies on view-template's error checking to throw an exception if a template
+;; with the given ID doesn't exist.
+(def validate-template-exists view-template)
+
 (defn view-attribute
   [attr-id]
   (-> (tp/view-attribute attr-id)

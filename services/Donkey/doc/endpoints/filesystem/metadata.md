@@ -561,63 +561,18 @@ __Curl Command__:
 
 Viewing all Metadata Template AVUs on a File/Folder
 -----------------------------------------------------
-__URL Path__: /secured/filesystem/:data-id/template-avus
+__URL Path__: /secured/filesystem/{data-id}/template-avus
 
 __HTTP Method__: GET
+
+__Delegates to metadata__: `GET /filesystem/entry/{data-id}/avus`
 
 __Error Codes__: ERR_NOT_READABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER
 
 __Response__:
 
-```json
-{
-    "data_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
-    "templates": [
-        {
-            "template_id": "40ac191f-bb36-4f4e-85fb-8b50abec8e10",
-            "avus": [
-                {
-                    "id": "59e55613-fc65-4714-b40e-6d4068b63b82",
-                    "attr": "submitted to insdc",
-                    "value": "true",
-                    "unit": "",
-                    "target_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
-                    "created_by": "ipctest",
-                    "modified_by": "ipctest",
-                    "created_on": 1402967025701,
-                    "modified_on": 1402968064927
-                },
-                {
-                    "id": "45dba651-b477-4900-bcd7-b1d88995840d",
-                    "attr": "project name",
-                    "value": "CORE-5602",
-                    "unit": "",
-                    "target_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
-                    "created_by": "ipctest",
-                    "modified_by": "ipctest",
-                    "created_on": 1402967025701,
-                    "modified_on": 1402968064980
-                },
-                {
-                    "id": "74719265-0728-4ec7-81aa-7df77ffbc936",
-                    "attr": "Metadata complete",
-                    "value": "false",
-                    "unit": "",
-                    "target_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
-                    "created_by": "ipctest",
-                    "modified_by": "ipctest",
-                    "created_on": 1402967025701,
-                    "modified_on": 1402968065030
-                }
-            ]
-        },
-        {
-            "template_id": "...",
-            "avus": [ ... ]
-        }
-    ]
-}
-```
+This endpoint forwards requests to the corresponding metadata service endpoint.
+Please see the metadata documentation for more information.
 
 __Curl Command__:
 
@@ -625,56 +580,18 @@ __Curl Command__:
 
 Viewing a Metadata Template's AVUs on a File/Folder
 ---------------------------------------------------------
-__URL Path__: /secured/filesystem/:data-id/template-avus/:template-id
+__URL Path__: /secured/filesystem/{data-id}/template-avus/{template-id}
 
 __HTTP Method__: GET
+
+__Delegates to metadata__: `GET /filesystem/entry/{data-id}/avus/{template-id}`
 
 __Error Codes__: ERR_NOT_READABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER
 
 __Response__:
 
-```json
-{
-    "data_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
-    "user": "ipctest",
-    "template_id": "40ac191f-bb36-4f4e-85fb-8b50abec8e10",
-    "avus": [
-        {
-            "id": "59e55613-fc65-4714-b40e-6d4068b63b82",
-            "attr": "submitted to insdc",
-            "value": "true",
-            "unit": "",
-            "target_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
-            "created_by": "ipctest",
-            "modified_by": "ipctest",
-            "created_on": 1402967025701,
-            "modified_on": 1402968064927
-        },
-        {
-            "id": "45dba651-b477-4900-bcd7-b1d88995840d",
-            "attr": "project name",
-            "value": "CORE-5602",
-            "unit": "",
-            "target_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
-            "created_by": "ipctest",
-            "modified_by": "ipctest",
-            "created_on": 1402967025701,
-            "modified_on": 1402968064980
-        },
-        {
-            "id": "74719265-0728-4ec7-81aa-7df77ffbc936",
-            "attr": "Metadata complete",
-            "value": "false",
-            "unit": "",
-            "target_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
-            "created_by": "ipctest",
-            "modified_by": "ipctest",
-            "created_on": 1402967025701,
-            "modified_on": 1402968065030
-        }
-    ]
-}
-```
+This endpoint forwards requests to the corresponding metadata service endpoint.
+Please see the metadata documentation for more information.
 
 __Curl Command__:
 
@@ -685,19 +602,19 @@ Copying all Metadata Template AVUs from a File/Folder
 Copies all Metadata Template AVUs from the data item with the ID given in the URL to other data
 items with the IDs sent in the request body.
 
-__URL Path__: /secured/filesystem/:data-id/template-avus/copy
+__URL Path__: /secured/filesystem/{data-id}/template-avus/copy
 
 __HTTP Method__: POST
+
+__Delegates to metadata__: `POST /filesystem/entry/{data-id}/avus/copy`
 
 __Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER, ERR_BAD_OR_MISSING_FIELD, ERR_NOT_UNIQUE
 
 __Request Query Parameters__:
 
 * proxyToken - A valid CAS ticket.
-* force - Omitting this parameter, or setting its value to anything other than "true", will cause
-this endpoint to validate that none of the given "destination_ids" already have Metadata Template
-AVUs set with any of the attributes found in any of the Metadata Template AVUs associated with the
-source "data-id", otherwise an ERR_NOT_UNIQUE error is returned.
+* force - This endpoint forwards requests to the corresponding metadata service endpoint.
+          Please see the metadata documentation for more information.
 
 __Request Body__:
 
@@ -729,72 +646,25 @@ __Curl Command__:
 
 Adding and Updating Metadata Template AVUs on a File/Folder
 -----------------------------------------------------------------
-Including an existing AVU’s ID in its JSON in the POST body will update its values and modified_on
-timestamp, and also ensure that the AVU is associated with the metadata template. AVUs included
-without an ID will be added to the data item if the AVU does not already exist, otherwise the AVU
-with matching attr, owner, and target is updated as previously described.
+Saves Metadata AVUs on the given data item, associating them with the given Metadata Template.
 
-AVUs can only be associated with one metadata template per data item, per user. All AVUs on the given data item will be disaccociated with all other Metadata Templates.
-
-__URL Path__: /secured/filesystem/:data-id/template-avus/:template-id
+__URL Path__: /secured/filesystem/{data-id}/template-avus/{template-id}
 
 __HTTP Method__: POST
+
+__Delegates to metadata__: `POST /filesystem/entry/{data-id}/avus/{template-id}`
 
 __Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER, ERR_BAD_OR_MISSING_FIELD
 
 __Request Body__:
 
-```json
-{
-    "avus": [
-        {
-            "id": "avu-uuid",
-            "attr": "attr-1",
-            "value": "value-1",
-            "unit": "unit-1"
-        },
-        {
-            "attr": "attr-2",
-            "value": "value-2",
-            "unit": "unit-2"
-        },
-        {
-            "attr": "...",
-            "value": "...",
-            "unit": "..."
-        }
-    ]
-}
-```
+This endpoint forwards requests to the corresponding metadata service endpoint.
+Please see the metadata documentation for more information.
 
 __Response__:
 
-```json
-{
-    "data_id": "cc20cbf8-df89-11e3-bf8b-6abdce5a08d5",
-    "template_id": "40ac191f-bb36-4f4e-85fb-8b50abec8e10",
-    "avus": [
-        {
-            "id": "59e55613-fc65-4714-b40e-6d4068b63b82",
-            "attr": "submitted to insdc",
-            "value": "true",
-            "unit": ""
-        },
-        {
-            "id": "45dba651-b477-4900-bcd7-b1d88995840d",
-            "attr": "project name",
-            "value": "CORE-5602",
-            "unit": ""
-        },
-        {
-            "id": "74719265-0728-4ec7-81aa-7df77ffbc936",
-            "attr": "Metadata complete",
-            "value": "false",
-            "unit": ""
-        }
-    ]
-}
-```
+This endpoint forwards requests to the corresponding metadata service endpoint.
+Please see the metadata documentation for more information.
 
 __Curl Command__:
 
@@ -825,9 +695,11 @@ curl -sd '
 
 Removing all Metadata Template AVUs on a File/Folder
 ----------------------------------------------------------
-__URL Path__: /secured/filesystem/:data-id/template-avus/:template-id
+__URL Path__: /secured/filesystem/{data-id}/template-avus/{template-id}
 
 __HTTP Method__: DELETE
+
+__Delegates to metadata__: `DELETE /filesystem/entry/{data-id}/avus/{template-id}`
 
 __Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER
 
@@ -837,9 +709,11 @@ __Curl Command__:
 
 Removing a Metadata Template AVU from a File/Folder
 ---------------------------------------------------------
-__URL Path__: /secured/filesystem/:data-id/template-avus/:template-id/:avu-id
+__URL Path__: /secured/filesystem/{data-id}/template-avus/{template-id}/{avu-id}
 
 __HTTP Method__: DELETE
+
+__Delegates to metadata__: `DELETE /filesystem/entry/{data-id}/avus/{template-id}/{avu-id}`
 
 __Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER
 
@@ -852,7 +726,7 @@ Copying all Metadata from a File/Folder
 Copies all IRODS AVUs visible to the client and Metadata Template AVUs from the data item with the
 ID given in the URL to other data items with the IDs sent in the request body.
 
-__URL Path__: /secured/filesystem/:data-id/metadata/copy
+__URL Path__: /secured/filesystem/{data-id}/metadata/copy
 
 __HTTP Method__: POST
 

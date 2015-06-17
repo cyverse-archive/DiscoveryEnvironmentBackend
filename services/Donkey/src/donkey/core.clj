@@ -31,7 +31,6 @@
   (:require [compojure.route :as route]
             [ring.adapter.jetty :as jetty]
             [donkey.util.config :as config]
-            [donkey.util.db :as db]
             [clojure.tools.nrepl.server :as nrepl]
             [me.raynes.fs :as fs]
             [common-cli.core :as ccli]
@@ -202,8 +201,7 @@
   ([]
      (load-configuration-from-file (find-configuration-file)))
   ([path]
-     (config/load-config-from-file path)
-     (db/define-database)))
+     (config/load-config-from-file path)))
 
 (defn lein-ring-init
   "This function is used by leiningen ring plugin to initialize donkey."
@@ -252,6 +250,5 @@
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
     (config/load-config-from-file (:config options))
-    (db/define-database)
     (icat/configure-icat)
     (jetty/run-jetty app {:port (config/listen-port)})))

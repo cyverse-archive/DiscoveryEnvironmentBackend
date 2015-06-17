@@ -2,7 +2,8 @@
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.api.sweet])
-  (:require [metadata.routes.comments :as comment-routes]
+  (:require [metadata.routes.avus :as avu-routes]
+            [metadata.routes.comments :as comment-routes]
             [metadata.routes.favorites :as favorites-routes]
             [metadata.routes.status :as status-routes]
             [metadata.routes.tags :as tag-routes]
@@ -24,6 +25,7 @@
             :description "Documentation for the Discovery Environment Metadata REST API"
             :version "2.0.0"}
      :tags [{:name "service-info", :description "Service Information"}
+            {:name "avus", :description "Attribute/Value/Unit Management"}
             {:name "data-comments", :description "Comments on Data Items"}
             {:name "app-comments", :description "Comments on Apps"}
             {:name "favorites", :description "Favorite Resources"}
@@ -40,6 +42,7 @@
      service/req-logger
      context-middleware]
     status-routes/status
+    avu-routes/avus
     comment-routes/data-comment-routes
     comment-routes/app-comment-routes
     comment-routes/admin-data-comment-routes

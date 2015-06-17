@@ -17,9 +17,11 @@
 
 (defn not-unique
   "Throws an exception indicating that multiple objects were found when only one was expected."
-  [desc id]
-  (throw+ {:error_code ce/ERR_NOT_UNIQUE
-           :reason     (string/join " " [desc id "not unique"])}))
+  [desc id & [extra-fields]]
+  (throw+ (merge
+            {:error_code ce/ERR_NOT_UNIQUE
+             :reason     (string/join " " [desc id "not unique"])}
+            extra-fields)))
 
 (defn bad-request
   "Throws an exception indicating that the incoming request is invalid."
