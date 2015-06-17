@@ -2,7 +2,7 @@
   (:use [compojure.api.sweet :only [describe]]
         [metadata.routes.domain.common])
   (:require [schema.core :as s])
-  (:import [java.util UUID Date]))
+  (:import [java.util UUID]))
 
 (def TagIdPathParam (describe UUID "The tag's UUID"))
 (def TagValueString (s/both NonBlankString (s/pred #(<= (count %) 255) 'valid-tag-value-size?)))
