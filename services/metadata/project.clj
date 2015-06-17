@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject metadata "5.0.0-SNAPSHOT"
+(defproject org.iplantc/metadata "5.0.0"
   :description "The REST API for the Discovery Environment Metadata services."
   :url "https://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend"
   :license {:name "BSD Standard License"
