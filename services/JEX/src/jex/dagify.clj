@@ -114,6 +114,10 @@
            "\tmv iplant.cmd logs/\n"
        "fi\n"))
 
+(defn docker-pull
+  [image-name]
+  (str "docker pull " image-name "\n" fail-script))
+
 (defn script
   "Takes in an analysis map that has been processed by
    (jex.incoming-xforms/transform) and turns it into a shell script
@@ -136,6 +140,7 @@
      "ls -al > logs/de-transfer-trigger.log\n"
      fail-script
      rearrange-working-dir
+     (join "" (map docker-pull (seq (:container-images analysis-map))))
      (join "\n" (map script-line (jobs-in-order analysis-map)))
      "hostname\n"
      "ps aux\n"

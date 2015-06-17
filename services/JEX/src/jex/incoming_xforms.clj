@@ -363,6 +363,12 @@
        (container-image-arg container-map)
        (backwards-compatible-executable step-map)]))))
 
+(defn container-image-string
+  "Returns the string that can be passed to docker pull for the given step."
+  [step-map]
+  (let [container-map (container-info step-map)]
+    (container-image-arg container-map)))
+
 (defn executable
   "Takes in a step map and returns the executable path. This will be the full
    path to the executable since they're the same across all of the Condor
@@ -454,6 +460,15 @@
       :stdout          (stdout step step-idx)
       :stderr          (stderr step step-idx)
       :log-file        (log-file step step-idx (:condor-log-dir condor-map)))))
+
+(defn set-container-images
+  "Adds a top-level :container-images key to the condor-map with a set of
+   image names associated with it."
+   [condor-map]
+   (assoc condor-map :container-images
+     (into []
+       (for [[_ step] (step-iterator-vec condor-map)]
+         (container-image-string step)))))
 
 (defn steps
   "Processes the steps in a map into a saner format. Returns a new version
@@ -842,6 +857,7 @@
          (analysis-attrs date-func)
          context-dirs
          add-analysis-metadata
+         set-container-images
          steps
          input-jobs
          output-jobs
