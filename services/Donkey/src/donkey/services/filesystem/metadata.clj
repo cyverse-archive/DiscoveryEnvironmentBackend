@@ -306,7 +306,7 @@
 (defn do-metadata-batch-add
   "Entrypoint for the API that calls (metadata-batch-add). Body is a map with :avus and :paths keys."
   [{:keys [user force]} body]
-  (metadata-batch-add user force body))
+  (metadata-batch-add user (Boolean/parseBoolean force) body))
 
 (with-pre-hook! #'do-metadata-batch-add
   (fn [params {:keys [paths avus] :as body}]
