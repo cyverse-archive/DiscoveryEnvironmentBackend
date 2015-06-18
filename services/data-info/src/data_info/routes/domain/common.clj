@@ -3,10 +3,15 @@
   (:require [schema.core :as s])
   (:import [java.util UUID]))
 
+(def NonBlankString
+  (describe
+    (s/both String (s/pred (complement clojure.string/blank?) 'non-blank?))
+    "A non-blank string."))
+
 (def DataIdPathParam (describe UUID "The data items's UUID"))
 
 (s/defschema SecuredQueryParamsRequired
-  {:user (describe String "The IRODS username of the requesting user")})
+  {:user (describe NonBlankString "The IRODS username of the requesting user")})
 
 (s/defschema Paths
-  {:paths (describe [String] "A list of IRODS paths")})
+  {:paths (describe [NonBlankString] "A list of IRODS paths")})

@@ -1,10 +1,11 @@
 (ns data-info.routes.domain.data
-  (:use [compojure.api.sweet :only [describe]])
+  (:use [compojure.api.sweet :only [describe]]
+        [data-info.routes.domain.common])
   (:require [schema.core :as s]))
 
 (s/defschema MetadataSaveRequest
   {:dest
-   (describe String "An IRODS path to a destination file where the metadata will be saved")
+   (describe NonBlankString "An IRODS path to a destination file where the metadata will be saved")
 
    :recursive
    (describe Boolean

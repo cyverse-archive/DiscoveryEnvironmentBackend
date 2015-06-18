@@ -1,12 +1,13 @@
 (ns data-info.routes.domain.stats
-  (:use [compojure.api.sweet :only [describe]])
+  (:use [compojure.api.sweet :only [describe]]
+        [data-info.routes.domain.common])
   (:require [schema.core :as s])
   (:import [java.util UUID]))
 
 (def DataTypeEnum (s/enum :file :dir))
 (def PermissionEnum (s/enum :read :write :own))
 (def DataItemIdParam (describe UUID "The UUID of this data item"))
-(def DataItemPathParam (describe String "The IRODS paths to this data item"))
+(def DataItemPathParam (describe NonBlankString "The IRODS paths to this data item"))
 
 (s/defschema PathIdInfo
   {:id   DataItemIdParam
@@ -47,13 +48,13 @@
      (describe Long "The size in bytes of this file")
 
      :content-type
-     (describe String "The detected media type of the data contained in this file")
+     (describe NonBlankString "The detected media type of the data contained in this file")
 
      :infoType
-     (describe String "The type of contents in this file")
+     (describe NonBlankString "The type of contents in this file")
 
      :md5
-     (describe String
+     (describe NonBlankString
        "The md5 hash of this file's contents, as calculated and saved by IRODS")}))
 
 (s/defschema FileStat
