@@ -9,10 +9,11 @@
 
 
 (def svc-info
-  {:desc     "DE service for data information logic"
+  {:desc     "DE service for data information logic and iRODS interactions."
    :app-name "data-info"
    :group-id "org.iplantc"
-   :art-id   "data-info"})
+   :art-id   "data-info"
+   :service  "data-info"})
 
 
 (def ^:private props

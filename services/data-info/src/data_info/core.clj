@@ -87,20 +87,9 @@
   (load-configuration-from-file)
   (icat/configure-icat))
 
-(def svc-info
-  {:desc "Service to provide an API for iRODS interactions."
-   :app-name "data-info"
-   :group-id "org.iplantc"
-   :art-id "data-info"
-   :service "data-info"})
-
 (defn context-middleware
   [handler]
-  (fn [request]
-    (tc/set-context! svc-info)
-    (let [resp (handler request)]
-      (tc/clear-context!)
-      resp)))
+  (tc/wrap-thread-context handler config/svc-info))
 
 (defapi app
   (swagger-ui "/api")
@@ -143,7 +132,7 @@
 
 (defn -main
   [& args]
-  (tc/set-context! svc-info)
+  (tc/set-context! config/svc-info)
   (let [{:keys [options arguments errors summary]} (ccli/handle-args config/svc-info
                                                                      args
                                                                      cli-options)]

@@ -56,6 +56,6 @@
   :main ^:skip-aot data-info.core
   :ring {:handler data-info.core/app
          :init data-info.core/lein-ring-init
-         :port 31325
+         :port 60000
          :auto-reload? false}
   :uberjar-exclusions [#".*[.]SF" #"LICENSE" #"NOTICE"])
