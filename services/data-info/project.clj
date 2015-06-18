@@ -52,9 +52,9 @@
   :plugins [[lein-ring "0.9.4"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev     {:resource-paths ["conf/test"]}
-             :uberjar {:aot :all}}
+             :uberjar {:aot [data-info.core]}}
   :main ^:skip-aot data-info.core
-  :ring {:handler data-info.core/app
+  :ring {:handler data-info.routes/app
          :init data-info.core/lein-ring-init
          :port 60000
          :auto-reload? false}

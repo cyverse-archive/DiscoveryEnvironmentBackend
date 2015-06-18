@@ -1,137 +1,52 @@
 (ns data-info.routes
-  (:use [compojure.api.sweet]
-        [compojure.api.legacy])
-  (:require [compojure.route :as route]
-            [data-info.services.cart :as cart]
-            [data-info.services.create :as create]
-            [data-info.services.entry :as entry]
-            [data-info.services.metadata :as meta]
-            [data-info.services.move :as move]
-            [data-info.services.page-csv :as csv]
-            [data-info.services.page-file :as file]
-            [data-info.services.preview :as preview]
-            [data-info.services.rename :as rename]
-            [data-info.services.service-info :as info]
-            [data-info.services.sharing :as sharing]
-            [data-info.services.space-handling :as sh]
-            [data-info.services.trash :as trash]
-            [data-info.services.type-detect.controllers :as detect]
-            [data-info.services.users :as user]
-            [data-info.services.uuids :as uuid]
+  (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
+        [clojure-commons.query-params :only [wrap-query-params]]
+        [compojure.api.sweet]
+        [compojure.api.legacy]
+        [ring.util.response :only [redirect]])
+  (:require [data-info.routes.data :as data-routes]
+            [data-info.routes.exists :as exists-routes]
+            [data-info.routes.home :as home-routes]
+            [data-info.routes.legacy :as legacy-routes]
+            [data-info.routes.navigation :as navigation-routes]
+            [data-info.routes.stats :as stat-routes]
             [data-info.util :as util]
-            [data-info.util.service :as svc]))
+            [data-info.util.config :as config]
+            [liberator.dev :as liberator]
+            [ring.middleware.keyword-params :as params]
+            [service-logging.thread-context :as tc]))
 
-(defroutes* all-routes
-  (GET "/status" [] (info/service-info))
+(defn context-middleware
+  [handler]
+  (tc/wrap-thread-context handler config/svc-info))
 
-  (POST "/cart" [user folder] (cart/cart user folder))
-
-  (HEAD "/entries/id/:entry-id" [entry-id user] (entry/id-entry entry-id user))
-
-  (GET "/entries/path/:zone/*" [zone & {path :*}] (entry/dispatch-path-to-resource zone path))
-
-  #_(;; These routes have not been migrated yet
-       (POST "/data/rename" [:as req]
-         (util/controller req rename/do-rename :params :body))
-
-       (POST "/data/delete" [:as req]
-         (util/controller req trash/do-delete :params :body))
-
-       (POST "/data/delete-contents" [:as req]
-         (util/controller req trash/do-delete-contents :params :body))
-
-       (POST "/data/move" [:as req]
-         (util/controller req move/do-move :params :body))
-
-       (POST "/data/move-contents" [:as req]
-         (util/controller req move/do-move-contents :params :body))
-
-       (GET "/data/file/preview" [:as req]
-         (util/controller req preview/do-preview :params))
-
-       (GET "/data/metadata" [:as req]
-         (util/controller req meta/do-metadata-get :params))
-
-       (POST "/data/metadata" [:as req]
-         (util/controller req meta/do-metadata-set :params :body))
-
-       (DELETE "/data/metadata" [:as req]
-         (util/controller req meta/do-metadata-delete :params))
-
-       (POST "/data/metadata-batch" [:as req]
-         (util/controller req meta/do-metadata-batch-set :params :body))
-
-       (POST "/data/share" [:as req]
-         (util/controller req sharing/do-share :params :body))
-
-       (POST "/data/unshare" [:as req]
-         (util/controller req sharing/do-unshare :params :body))
-
-       (POST "/data/user-permissions" [:as req]
-         (util/controller req user/do-user-permissions :params :body))
-
-       (GET "/data/groups" [:as req]
-         (util/controller req user/do-groups :params))
-
-       (GET "/data/quota" [:as req]
-         (util/controller req user/do-quota :params))
-
-       (POST "/data/restore" [:as req]
-         (util/controller req trash/do-restore :params :body))
-
-       (POST "/data/restore-all" [:as req]
-         (util/controller req trash/do-restore-all :params))
-
-       (GET "/data/user-trash-dir" [:as req]
-         (util/controller req trash/do-user-trash :params))
-
-       (POST "/data/paths-contain-space" [:as req]
-         (util/controller req sh/do-paths-contain-space :params :body))
-
-       (POST "/data/replace-spaces" [:as req]
-         (util/controller req sh/do-replace-spaces :params :body))
-
-       (DELETE "/data/trash" [:as req]
-         (util/controller req trash/do-delete-trash :params))
-
-       (POST "/data/read-chunk" [:as req]
-         (util/controller req file/do-read-chunk :params :body))
-
-       (POST "/data/overwrite-chunk" [:as req]
-         (util/controller req file/do-overwrite-chunk :params :body))
-
-       (POST "/data/read-csv-chunk" [:as req]
-         (util/controller req csv/do-read-csv-chunk :params :body))
-
-       (POST "/data/anon-files" [:as req]
-         (util/controller req sharing/do-anon-files :params :body))
-
-       (POST "/data/paths-for-uuids" [:as req]
-         (util/controller req uuid/do-paths-for-uuids :params :body))
-
-       (POST "/data/uuids-for-paths" [:as req]
-         (util/controller req uuid/do-uuids-for-paths :params :body))
-
-       (GET "/filetypes/type" [:as req]
-         (util/trap #(detect/get-types (:params req))))
-
-       (POST "/filetypes/type" [:as req]
-         (util/trap #(detect/add-type (:body req) (:params req))))
-
-       (DELETE "/filetypes/type" [:as req]
-         (util/trap #(detect/delete-type (:params req))))
-
-       (GET "/filetypes/type-list" []
-         (util/trap #(detect/get-type-list)))
-
-       (GET "/filetypes/type/paths" [:as req]
-         (util/trap #(detect/find-typed-paths (:params req))))
-
-       (GET "/filetypes/auto-type" [:as req]
-         (util/trap #(detect/preview-auto-type (:params req))))
-
-       (POST "/filetypes/auto-type" [:as req]
-         (util/trap #(detect/set-auto-type (:body req) (:params req))))
-       ) ;; ^^^
-
-  (route/not-found (svc/unrecognized-path-response)))
+(defapi app
+  (swagger-ui "/api")
+  (swagger-docs
+    {:info {:title "Discovery Environment Data Info API"
+            :description "Documentation for the Discovery Environment Data Info REST API"
+            :version "2.0.0"}})
+  (GET "/" [] (redirect "/api"))
+  (GET "/favicon.ico" [] {:status 404})
+  (middlewares
+    [tc/add-user-to-context
+     wrap-query-params
+     wrap-lcase-params
+     params/wrap-keyword-params
+     util/req-logger
+     context-middleware]
+    data-routes/data-operations
+    exists-routes/existence-marker
+    home-routes/home
+    navigation-routes/navigation
+    stat-routes/stat-gatherer)
+  (middlewares
+    [tc/add-user-to-context
+     wrap-query-params
+     wrap-lcase-params
+     params/wrap-keyword-params
+     util/req-logger
+     #_(liberator/wrap-trace :header :ui)
+     util/trap-handler
+     context-middleware]
+    legacy-routes/all-routes))
