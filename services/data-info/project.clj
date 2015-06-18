@@ -23,12 +23,12 @@
                                 [com.fasterxml.jackson.core/jackson-core]]]
                  [clj-time "0.9.0"]
                  [com.cemerick/url "0.1.1"]
-                 [compojure "1.3.3"]
+                 [compojure "1.3.4"]
                  [dire "0.5.3"]
                  [liberator "0.12.2"]
                  [me.raynes/fs "1.4.6"]
                  [medley "0.6.0"]
-                 [metosin/compojure-api "0.20.0"]
+                 [metosin/compojure-api "0.21.0"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [net.sf.opencsv/opencsv "2.3"]
                  [org.apache.tika/tika-core "1.8"]
@@ -49,7 +49,7 @@
                  [org.iplantc/heuristomancer "5.0.0"]
                  [org.iplantc/kameleon "5.0.0"]
                  [org.iplantc/service-logging "5.0.0"]]
-  :plugins [[lein-ring "0.9.2"]
+  :plugins [[lein-ring "0.9.4"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev     {:resource-paths ["conf/test"]}
              :uberjar {:aot :all}}

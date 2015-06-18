@@ -15,7 +15,6 @@
             [ring.middleware.keyword-params :as params]
             [common-cli.core :as ccli]
             [service-logging.thread-context :as tc]
-            [data-info.util.db :as db]
             [data-info.routes :as routes]
             [data-info.routes.data :as data-routes]
             [data-info.routes.exists :as exists-routes]
@@ -73,8 +72,7 @@
    (load-configuration-from-file (find-configuration-file)))
 
   ([path]
-    (config/load-config-from-file path)
-    (db/define-database)))
+    (config/load-config-from-file path)))
 
 
 (defn lein-ring-init

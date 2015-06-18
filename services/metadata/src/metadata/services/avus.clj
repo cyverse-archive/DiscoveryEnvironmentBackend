@@ -5,8 +5,8 @@
   (:require [clojure.tools.logging :as log]
             [clojure-commons.assertions :as assertions]
             [clojure-commons.error-codes :as error-codes]
-            [kameleon.metadata.avu :as persistence]
             [medley.core :as medley]
+            [metadata.persistence.avu :as persistence]
             [metadata.services.templates :as templates]))
 
 (defn- find-existing-metadata-template-avu

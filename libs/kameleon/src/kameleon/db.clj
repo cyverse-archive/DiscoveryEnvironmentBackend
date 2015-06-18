@@ -70,8 +70,3 @@
   "Returns a string containing the current number of milliseconds since the epoch."
   []
   (str (System/currentTimeMillis)))
-
-(defn define-metadata-database
-  "Defines the metadata database connection to use from within Clojure."
-  [metadata-spec]
-  (defonce metadata (create-db metadata-spec)))

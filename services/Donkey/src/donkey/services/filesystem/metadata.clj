@@ -220,7 +220,7 @@
 (defn- metadata-copy
   "Copies all IRODS AVUs visible to the client, and Metadata Template AVUs, from the data item with
    src-id to the items with dest-ids. When the 'force?' parameter is set, additional validation is
-   performed with the validate-dest-attrs function."
+   performed."
   [user force? src-id dest-ids]
   (with-jargon (icat/jargon-cfg) [cm]
     (transaction

@@ -13,14 +13,14 @@
             [cheshire.core :as json]
             [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [data-info.clients.metadata :as metadata]
             [data-info.services.directory :as directory]
             [data-info.services.stat :as stat]
             [data-info.services.uuids :as uuids]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.util.paths :as paths]
-            [data-info.util.validators :as validators]
-            [kameleon.metadata.avu :as db]))
+            [data-info.util.validators :as validators]))
 
 
 (defn- fix-unit
@@ -196,7 +196,7 @@
 
 (defn- get-metadata-template-avus
   [data-id]
-  (mapcat format-template-avus (:templates (db/metadata-template-list data-id))))
+  (mapcat format-template-avus (:templates (metadata/get-metadata-avus data-id))))
 
 (defn- get-data-item-metadata-for-save
   "Adds a :metadata key to the given data-item, with a list of all IRODS and Template AVUs together
