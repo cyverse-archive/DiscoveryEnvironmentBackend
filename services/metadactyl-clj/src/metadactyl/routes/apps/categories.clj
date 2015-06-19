@@ -14,7 +14,7 @@
         :query [params CategoryListingParams]
         :return AppCategoryListing
         :summary "List App Categories"
-        :notes "This service is used by the DE to obtain the list of app categories that
+        :description "This service is used by the DE to obtain the list of app categories that
          are visible to the user."
         (service/trap uri apps/get-app-categories current-user params))
 
@@ -23,7 +23,7 @@
         :query [params SecuredPagingParamsEmailRequired]
         :return AppCategoryAppListing
         :summary "List Apps in a Category"
-        :notes "This service lists all of the apps within an app category or any of its
+        :description "This service lists all of the apps within an app category or any of its
          descendents. The DE uses this service to obtain the list of apps when a user
          clicks on a category in the _Apps_ window.
          This endpoint accepts optional URL query parameters to limit and sort Apps,

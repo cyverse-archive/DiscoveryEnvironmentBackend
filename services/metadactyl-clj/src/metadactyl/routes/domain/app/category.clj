@@ -1,7 +1,7 @@
 (ns metadactyl.routes.domain.app.category
   (:use [metadactyl.routes.domain.app]
         [metadactyl.routes.params]
-        [ring.swagger.schema :only [describe]]
+        [compojure.api.sweet :only [describe]]
         [schema.core :only [defschema optional-key recursive]])
   (:import [java.util UUID]))
 

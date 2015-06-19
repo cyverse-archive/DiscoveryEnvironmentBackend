@@ -1,5 +1,5 @@
 (ns metadactyl.routes.domain.callback
-  (:use [ring.swagger.schema :only [describe]]
+  (:use [compojure.api.sweet :only [describe]]
         [schema.core :only [defschema optional-key]])
   (:import [java.util UUID]))
 

@@ -10,8 +10,7 @@
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
         [metadactyl.user :only [current-user]]
-        [compojure.api.sweet]
-        [ring.swagger.schema :only [describe]])
+        [compojure.api.sweet])
   (:require [clojure-commons.error-codes :as ce]
             [metadactyl.service.apps :as apps]
             [metadactyl.util.config :as config]
@@ -24,7 +23,7 @@
         :query [params ToolRequestListingParams]
         :return ToolRequestListing
         :summary "List Tool Requests"
-        :notes "This endpoint lists high level details about tool requests that have been submitted.
+        :description "This endpoint lists high level details about tool requests that have been submitted.
         Administrators may use this endpoint to track tool requests for all users."
         (service/trap uri list-tool-requests params))
 
@@ -33,7 +32,7 @@
         :query [params SecuredQueryParams]
         :return ToolRequestDetails
         :summary "Obtain Tool Request Details"
-        :notes "This service obtains detailed information about a tool request. This is the service
+        :description "This service obtains detailed information about a tool request. This is the service
         that the DE support team uses to obtain the request details."
         (service/trap uri get-tool-request request-id))
 
@@ -43,7 +42,7 @@
          :body [body (describe ToolRequestStatusUpdate "A Tool Request status update.")]
          :return ToolRequestDetails
          :summary "Update the Status of a Tool Request"
-         :notes "This endpoint is used by Discovery Environment administrators to update the status
+         :description "This endpoint is used by Discovery Environment administrators to update the status
          of a tool request."
          (service/trap uri update-tool-request request-id (config/uid-domain) current-user body)))
 
@@ -52,7 +51,7 @@
          :query [params SecuredQueryParams]
          :body [body (describe AppCategorizationRequest "An App Categorization Request.")]
          :summary "Categorize Apps"
-         :notes "This endpoint is used by the Admin interface to add or move Apps to into multiple
+         :description "This endpoint is used by the Admin interface to add or move Apps to into multiple
          Categories."
          (service/trap uri apps/categorize-apps current-user body))
 
@@ -60,7 +59,7 @@
          :query [params SecuredQueryParams]
          :body [body (describe AppDeletionRequest "List of App IDs to delete.")]
          :summary "Permanently Deleting Apps"
-         :notes "This service physically removes an App from the database, which allows
+         :description "This service physically removes an App from the database, which allows
          administrators to completely remove Apps that are causing problems."
          (service/trap uri apps/permanently-delete-apps current-user body))
 
@@ -68,7 +67,7 @@
            :path-params [app-id :- AppIdPathParam]
            :query [params SecuredQueryParams]
            :summary "Logically Deleting an App"
-           :notes "An app can be marked as deleted in the DE without being completely removed from
+           :description "An app can be marked as deleted in the DE without being completely removed from
            the database using this service. This endpoint is the same as the non-admin endpoint,
            except an error is not returned if the user does not own the App."
            (service/trap uri apps/admin-delete-app current-user app-id))
@@ -79,7 +78,7 @@
           :body [body (describe AdminAppPatchRequest "The App to update.")]
           :return AppDetails
           :summary "Update App Details and Labels"
-          :notes "This service is capable of updating high-level information of an App, including
+          :description "This service is capable of updating high-level information of an App, including
           'deleted' and 'disabled' flags, as well as just the labels within a single-step app that
           has already been made available for public use.
           <b>Note</b>: Although this endpoint accepts all App Group and Parameter fields within the
@@ -94,7 +93,7 @@
           :body [body (describe AppDocumentationRequest "The App Documentation Request.")]
           :return AppDocumentation
           :summary "Update App Documentation"
-          :notes "This service is used by DE administrators to update documentation for a single
+          :description "This service is used by DE administrators to update documentation for a single
           App"
           (service/coerced-trap uri AppDocumentation
                                 apps/admin-edit-app-docs current-user app-id body))
@@ -105,7 +104,7 @@
          :body [body (describe AppDocumentationRequest "The App Documentation Request.")]
          :return AppDocumentation
          :summary "Add App Documentation"
-         :notes "This service is used by DE administrators to add documentation for a single App"
+         :description "This service is used by DE administrators to add documentation for a single App"
          (service/coerced-trap uri AppDocumentation
                                apps/admin-add-app-docs current-user app-id body)))
 
@@ -114,7 +113,7 @@
         :query [params CategoryListingParams]
         :return AppCategoryListing
         :summary "List App Categories"
-        :notes "This service is used by DE admins to obtain a list of public app categories along
+        :description "This service is used by DE admins to obtain a list of public app categories along
         with the 'Trash' virtual category."
         (service/trap uri apps/get-admin-app-categories current-user params))
 
@@ -123,7 +122,7 @@
          :body [body (describe AppCategoryRequest "The details of the App Category to add.")]
          :return AppCategoryAppListing
          :summary "Add an App Category"
-         :notes "This endpoint adds an App Category under the given parent App Category, as long as
+         :description "This endpoint adds an App Category under the given parent App Category, as long as
          that parent Category doesn't already have a subcategory with the given name and it doesn't
          directly contain its own Apps."
          (service/trap uri apps/admin-add-category current-user body))
@@ -133,7 +132,7 @@
          :body [body (describe AppCategoryIdList "A List of App Category IDs to delete.")]
          :return AppCategoryIdList
          :summary "Delete App Categories"
-         :notes "App Categories can be deleted using this endpoint. The App Category and all of its
+         :description "App Categories can be deleted using this endpoint. The App Category and all of its
          subcategories will be deleted by this service, but no Apps will be removed. The response
          contains a list of Category IDs for which the deletion failed (including any subcategories
          of a Category already included in the request)."
@@ -143,7 +142,7 @@
            :path-params [category-id :- AppCategoryIdPathParam]
            :query [params SecuredQueryParams]
            :summary "Delete an App Category"
-           :notes "This service physically removes an App Category from the database, along with all
+           :description "This service physically removes an App Category from the database, along with all
            of its child Categories, as long as none of them contain any Apps."
            (service/trap uri apps/admin-delete-category current-user category-id))
 
@@ -152,7 +151,7 @@
           :query [params SecuredQueryParams]
           :body [body (describe AppCategoryPatchRequest "Details of the App Category to update.")]
           :summary "Update an App Category"
-          :notes "This service renames or moves an App Category to a new parent Category, depending
+          :description "This service renames or moves an App Category to a new parent Category, depending
           on the fields included in the request."
           (service/trap uri apps/admin-update-category current-user (assoc body :id category-id))))
 
@@ -162,7 +161,7 @@
          :body [body (describe ReferenceGenomeRequest "The Reference Genome to add.")]
          :return ReferenceGenome
          :summary "Add a Reference Genome."
-         :notes "This endpoint adds a Reference Genome to the Discovery Environment."
+         :description "This endpoint adds a Reference Genome to the Discovery Environment."
          (ce/trap uri #(add-reference-genome body)))
 
   (PUT* "/" [:as {uri :uri}]
@@ -170,7 +169,7 @@
             :body [body (describe ReferenceGenomesSetRequest "List of Reference Genomes to set.")]
             :return ReferenceGenomesList
             :summary "Replace Reference Genomes."
-            :notes "This endpoint replaces ALL the Reference Genomes in the Discovery Environment,
+            :description "This endpoint replaces ALL the Reference Genomes in the Discovery Environment,
             so if a genome is not listed in the request, it will not show up in the DE."
             (ce/trap uri #(replace-reference-genomes body)))
 
@@ -180,7 +179,7 @@
           :body [body (describe ReferenceGenomeRequest "The Reference Genome fields to update.")]
           :return ReferenceGenome
           :summary "Update a Reference Genome."
-          :notes "This endpoint modifies the name, path, and deleted fields of a Reference Genome in
+          :description "This endpoint modifies the name, path, and deleted fields of a Reference Genome in
           the Discovery Environment."
           (ce/trap uri #(update-reference-genome (assoc body :id reference-genome-id))))
 
@@ -188,7 +187,7 @@
            :path-params [reference-genome-id :- ReferenceGenomeIdParam]
            :query [params SecuredQueryParams]
            :summary "Delete a Reference Genome."
-           :notes "A Reference Genome can be marked as deleted in the DE without being completely
+           :description "A Reference Genome can be marked as deleted in the DE without being completely
            removed from the database using this service. <b>Note</b>: an attempt to delete a
            Reference Genome that is already marked as deleted is treated as a no-op rather than an
            error condition. If the Reference Genome doesn't exist in the database at all, however,

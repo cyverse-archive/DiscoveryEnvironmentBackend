@@ -1,6 +1,6 @@
 (ns metadactyl.routes.domain.tool
   (:use [metadactyl.routes.params]
-        [ring.swagger.schema :only [describe]]
+        [compojure.api.sweet :only [describe]]
         [schema.core :only [defschema enum optional-key]])
   (:import [java.util UUID]))
 

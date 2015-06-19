@@ -1,6 +1,6 @@
 (ns metadactyl.routes.domain.analysis.listing
   (:use [metadactyl.routes.params :only [ResultsTotalParam]]
-        [ring.swagger.schema :only [describe]]
+        [compojure.api.sweet :only [describe]]
         [schema.core :only [defschema optional-key Any Int Bool]])
   (:import [java.util UUID]))
 

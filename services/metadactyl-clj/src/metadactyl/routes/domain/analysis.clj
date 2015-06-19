@@ -1,5 +1,5 @@
 (ns metadactyl.routes.domain.analysis
-  (:use [ring.swagger.schema :only [describe]]
+  (:use [compojure.api.sweet :only [describe]]
         [schema.core :only [defschema optional-key Any Bool]]
         [metadactyl.schema.containers :only [ToolContainer]])
   (:import [java.util UUID]))

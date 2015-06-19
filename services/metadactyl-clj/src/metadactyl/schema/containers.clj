@@ -1,5 +1,5 @@
 (ns metadactyl.schema.containers
-  (:use [ring.swagger.schema :only [describe]]
+  (:use [compojure.api.sweet :only [describe]]
         [metadactyl.routes.domain.tool :only [ToolIdParam]])
   (:require [schema.core :as s]))
 

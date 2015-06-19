@@ -1,6 +1,6 @@
 (ns metadactyl.routes.domain.reference-genome
   (:use [metadactyl.routes.params]
-        [ring.swagger.schema :only [describe]]
+        [compojure.api.sweet :only [describe]]
         [schema.core :only [defschema optional-key]])
   (:import [java.util Date UUID]))
 

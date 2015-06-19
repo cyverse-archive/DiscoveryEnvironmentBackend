@@ -21,7 +21,6 @@
         [metadactyl.user :only [store-current-user]]
         [ring.middleware keyword-params nested-params]
         [ring.swagger.json-schema :only [json-type]]
-        [ring.swagger.schema :only [describe]]
         [ring.util.response :only [redirect]])
   (:require [metadactyl.routes.admin :as admin-routes]
             [metadactyl.routes.analyses :as analysis-routes]
@@ -58,73 +57,91 @@
 
 (defapi app
   (swagger-ui "/api")
-  (swagger-docs "/api/api-docs"
-    :title "Discovery Environment Apps API"
-    :description "Documentation for the Discovery Environment Apps REST API"
-    :apiVersion "2.0.0")
+  (swagger-docs
+    {:info {:title "Discovery Environment Apps API"
+            :description "Documentation for the Discovery Environment Apps REST API"
+            :version "2.0.0"}
+     :tags [{:name "callbacks", :description "General callback functions"}
+            {:name "app-categories", :description "App Category endpoints."}
+            {:name "app-element-types", :description "App Element endpoints."}
+            {:name "apps", :description "App endpoints."}
+            {:name "pipelines", :description "Pipeline endpoints."}
+            {:name "analyses", :description "Analysis endpoints."}
+            {:name "tools", :description "Tool endpoints."}
+            {:name "workspaces", :description "Workspace endpoints."}
+            {:name "users", :description "User endpoints."}
+            {:name "tool-requests", :description "Tool Request endpoints."}
+            {:name "reference-genomes", :description "Reference Genome endpoints."}
+            {:name "oauth-routes", :description "OAuth callback routes."}
+            {:name "collaborator-routes", :description "Collaborator Information Routes"}
+            {:name "admin-apps", :description "Admin App endpoints."}
+            {:name "admin-categories", :description "Admin App Category endpoints."}
+            {:name "admin-tools", :description "Admin Tool endpoints."}
+            {:name "admin-reference-genomes", :description "Admin Reference Genome endpoints."}
+            {:name "admin-tool-requests", :description "Admin Tool Request endpoints."}]})
   (GET "/" [] (redirect "/api"))
   (GET "/favicon.ico" [] {:status 404})
   (middlewares
     [wrap-keyword-params
      wrap-query-params
      wrap-context-map]
-    (swaggered "callbacks"
-      :description "General callback functions."
-      (context "/callbacks" [] callback-routes/callbacks)))
+    (context* "/callbacks" []
+      :tags ["callbacks"]
+      callback-routes/callbacks))
   (middlewares
     [wrap-keyword-params
      wrap-query-params
      tc/add-user-to-context
      wrap-context-map
      store-current-user]
-    (swaggered "app-categories"
-      :description "App Category endpoints."
-      (context "/apps/categories" [] app-category-routes/app-categories))
-    (swaggered "app-element-types"
-      :description "App Element endpoints."
-      (context "/apps/elements" [] app-element-routes/app-elements))
-    (swaggered "apps"
-      :description "App endpoints."
-      (context "/apps" [] app-routes/apps))
-    (swaggered "pipelines"
-      :description "Pipeline endpoints."
-      (context "/apps/pipelines" [] pipeline-routes/pipelines))
-    (swaggered "analyses"
-      :description "Analysis endpoints."
-      (context "/analyses" [] analysis-routes/analyses))
-    (swaggered "tools"
-      :description "Tool endpoints."
+    (context* "/apps/categories" []
+      :tags ["app-categories"]
+      app-category-routes/app-categories)
+    (context* "/apps/elements" []
+      :tags ["app-element-types"]
+      app-element-routes/app-elements)
+    (context* "/apps" []
+      :tags ["apps"]
+      app-routes/apps)
+    (context* "/apps/pipelines" []
+      :tags ["pipelines"]
+      pipeline-routes/pipelines)
+    (context* "/analyses" []
+      :tags ["analyses"]
+      analysis-routes/analyses)
+    (context* "/tools" []
+      :tags ["tools"]
       tool-routes/tools)
-    (swaggered "workspaces"
-      :description "Workspace endpoints."
-      (context "/workspaces" [] workspace-routes/workspaces))
-    (swaggered "users"
-      :description "User endpoints."
-      (context "/users" [] user-routes/users))
-    (swaggered "tool-requests"
-      :description "Tool Request endpoints."
-      (context "/tool-requests" [] tool-routes/tool-requests))
-    (swaggered "reference-genomes"
-      :description "Reference Genome endpoints."
-      (context "/reference-genomes" [] reference-genome-routes/reference-genomes))
-    (swaggered "oauth-routes"
-      :description "OAuth callback routes."
-      (context "/oauth" [] oauth-routes/oauth))
-    (swaggered "collaborator-routes"
-      :description "Collaborator Information Routes"
-      (context "/collaborators" [] collaborator-routes/collaborators))
-    (swaggered "admin-apps"
-      :description "Admin App endpoints."
-      (context "/admin/apps" [] admin-routes/admin-apps))
-    (swaggered "admin-categories"
-      :description "Admin App Category endpoints."
-      (context "/admin/apps/categories" [] admin-routes/admin-categories))
-    (swaggered "admin-reference-genomes"
-      :description "Admin Reference Genome endpoints."
-      (context "/admin/reference-genomes" [] admin-routes/reference-genomes))
-    (swaggered "admin-tools"
-      :description "Admin Tool endpoints."
-      (context "/admin/tools" [] tool-routes/admin-tools))
-    (swaggered "admin-tool-requests"
-      :description "Admin Tool Request endpoints."
-      (context "/admin/tool-requests" [] admin-routes/admin-tool-requests))))
+    (context* "/workspaces" []
+      :tags ["workspaces"]
+      workspace-routes/workspaces)
+    (context* "/users" []
+      :tags ["users"]
+      user-routes/users)
+    (context* "/tool-requests" []
+      :tags ["tool-requests"]
+      tool-routes/tool-requests)
+    (context* "/reference-genomes" []
+      :tags ["reference-genomes"]
+      reference-genome-routes/reference-genomes)
+    (context* "/oauth" []
+      :tags ["oauth-routes"]
+      oauth-routes/oauth)
+    (context* "/collaborators" []
+      :tags ["collaborator-routes"]
+      collaborator-routes/collaborators)
+    (context* "/admin/apps" []
+      :tags ["admin-apps"]
+      admin-routes/admin-apps)
+    (context* "/admin/apps/categories" []
+      :tags ["admin-categories"]
+      admin-routes/admin-categories)
+    (context* "/admin/reference-genomes" []
+      :tags ["admin-reference-genomes"]
+      admin-routes/reference-genomes)
+    (context* "/admin/tools" []
+      :tags ["admin-tools"]
+      tool-routes/admin-tools)
+    (context* "/admin/tool-requests" []
+      :tags ["admin-tool-requests"]
+      admin-routes/admin-tool-requests)))

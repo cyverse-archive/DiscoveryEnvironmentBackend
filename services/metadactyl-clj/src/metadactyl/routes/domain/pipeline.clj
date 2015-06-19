@@ -1,15 +1,17 @@
 (ns metadactyl.routes.domain.pipeline
   (:use [metadactyl.routes.params]
         [metadactyl.routes.domain.app :only [AppTaskListing]]
-        [ring.swagger.schema :only [describe]]
-        [schema.core :only [defschema optional-key Any]])
+        [compojure.api.sweet :only [describe]]
+        [schema.core :only [defschema optional-key Keyword]])
   (:import [java.util UUID]))
+
+(defschema PipelineMappingMap
+  {(describe Keyword "The input ID") (describe String "The output ID")})
 
 (defschema PipelineMapping
   {:source_step (describe Long "The step index of the Source Step")
    :target_step (describe Long "The step index of the Target Step")
-   ;; KLUDGE
-   :map (describe Any "The {'input-uuid': 'output-uuid'} mapping")})
+   :map (describe PipelineMappingMap "The {'input-id': 'output-id'} mappings")})
 
 (defschema PipelineStep
   {:name

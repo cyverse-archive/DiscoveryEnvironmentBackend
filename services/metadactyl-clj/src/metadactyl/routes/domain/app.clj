@@ -2,7 +2,7 @@
   (:use [metadactyl.routes.params]
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.tool :only [Tool]]
-        [ring.swagger.schema :only [describe]]
+        [compojure.api.sweet :only [describe]]
         [schema.core :only [Any defschema optional-key recursive]])
   (:import [java.util UUID Date]))
 

@@ -10,7 +10,7 @@
         :query [params ReferenceGenomeListingParams]
         :return ReferenceGenomesList
         :summary "List Reference Genomes."
-        :notes "This endpoint may be used to obtain lists of all available Reference Genomes."
+        :description "This endpoint may be used to obtain lists of all available Reference Genomes."
         (ce/trap uri #(list-reference-genomes params)))
 
   (GET* "/:reference-genome-id" [:as {uri :uri}]
@@ -18,5 +18,5 @@
         :query [params SecuredQueryParams]
         :return ReferenceGenome
         :summary "Get a Reference Genome."
-        :notes "This endpoint may be used to obtain a Reference Genome by its UUID."
+        :description "This endpoint may be used to obtain a Reference Genome by its UUID."
         (ce/trap uri #(get-reference-genome reference-genome-id))))
