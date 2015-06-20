@@ -7,6 +7,7 @@
             [clojure.tools.logging :as log]
             [common-cfg.cfg :as cfg]))
 
+(def docs-uri "/docs")
 
 (def svc-info
   {:desc     "DE service for data information logic and iRODS interactions."

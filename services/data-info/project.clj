@@ -34,7 +34,6 @@
                  [org.apache.tika/tika-core "1.8"]
                  [ring "1.3.2"]
                  [slingshot "0.12.2"]
-                 [trptcolin/versioneer "0.2.0"]
                  [org.iplantc/clj-icat-direct "5.0.0"
                    :exclusions [[org.slf4j/slf4j-api]
                                 [org.slf4j/slf4j-log4j12]

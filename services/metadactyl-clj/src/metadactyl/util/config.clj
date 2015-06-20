@@ -8,6 +8,15 @@
             [clojure.tools.logging :as log]
             [common-cfg.cfg :as cfg]))
 
+(def docs-uri "/docs")
+
+(def svc-info
+  {:desc "Framework for hosting DiscoveryEnvironment metadata services."
+   :app-name "metadactyl"
+   :group-id "org.iplantc"
+   :art-id "metadactyl"
+   :service "metadactyl"})
+
 (def ^:private props
   "A ref for storing the configuration properties."
   (ref nil))

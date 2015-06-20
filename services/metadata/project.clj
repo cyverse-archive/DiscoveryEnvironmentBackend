@@ -22,8 +22,7 @@
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/kameleon "5.0.0"]
                  [org.iplantc/service-logging "5.0.0"]
-                 [slingshot "0.12.2"]
-                 [trptcolin/versioneer "0.2.0"]]
+                 [slingshot "0.12.2"]]
   :main metadata.core
   :ring {:handler metadata.routes/app
          :init    metadata.core/init-service

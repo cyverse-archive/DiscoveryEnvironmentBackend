@@ -54,13 +54,6 @@
      (config/load-config-from-file cfg-path)
      (init-service)))
 
-(def svc-info
-  {:desc "Framework for hosting DiscoveryEnvironment metadata services."
-   :app-name "metadactyl"
-   :group-id "org.iplantc"
-   :art-id "metadactyl"
-   :service "metadactyl"})
-
 (defn cli-options
   []
   [["-c" "--config PATH" "Path to the config file"
@@ -70,17 +63,17 @@
 
 (defn -main
   [& args]
-  (tc/set-context! svc-info)
+  (tc/set-context! config/svc-info)
   (require 'metadactyl.routes.api)
-  (eval "(metadactyl.routes.api/set-context-map! svc-info)")
+  (eval "(metadactyl.routes.api/set-context-map! metadactyl.util.config/svc-info)")
   (let [app (eval 'metadactyl.routes.api/app)
-        {:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+        {:keys [options arguments errors summary]} (ccli/handle-args config/svc-info args cli-options)]
     (when-not (fs/exists? (:config options))
       (ccli/exit 1 (str "The config file does not exist.")))
     (when-not (fs/readable? (:config options))
       (ccli/exit 1 "The config file is not readable."))
     (load-config-from-file (:config options))
-    (tasks/set-logging-context! svc-info)
+    (tasks/set-logging-context! config/svc-info)
     (tasks/schedule-tasks)
     (log/warn "Listening on" (config/listen-port))
     (jetty/run-jetty app {:port (config/listen-port)})))

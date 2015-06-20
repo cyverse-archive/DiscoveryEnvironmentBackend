@@ -1,13 +1,13 @@
-(ns metadata.routes.status
+(ns data-info.routes.status
   (:use [compojure.api.sweet]
-        [metadata.routes.domain.status])
+        [data-info.routes.domain.status])
   (:require [clojure-commons.service :as commons-svc]
-            [metadata.util.config :as config]
-            [metadata.util.service :as service]))
+            [data-info.util.config :as config]
+            [data-info.util.service :as service]))
 
 (defroutes* status
   (context* "/" []
-    :tags ["service-info"]
+    :tags ["Service Information"]
 
     (GET* "/" [:as {:keys [uri server-name server-port]}]
       :return StatusResponse

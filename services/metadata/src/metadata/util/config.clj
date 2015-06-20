@@ -7,6 +7,8 @@
 
 (def default-config-file "/etc/iplant/de/metadata.properties")
 
+(def docs-uri "/docs")
+
 (def svc-info
   {:desc     "The REST API for the Discovery Environment Metadata services."
    :app-name "metadata"

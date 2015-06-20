@@ -11,7 +11,6 @@
             [data-info.services.page-file :as file]
             [data-info.services.preview :as preview]
             [data-info.services.rename :as rename]
-            [data-info.services.service-info :as info]
             [data-info.services.sharing :as sharing]
             [data-info.services.space-handling :as sh]
             [data-info.services.trash :as trash]
@@ -22,8 +21,6 @@
             [data-info.util.service :as svc]))
 
 (defroutes* all-routes
-  (GET "/status" [] (info/service-info))
-
   (POST "/cart" [user folder] (cart/cart user folder))
 
   (HEAD "/entries/id/:entry-id" [entry-id user] (entry/id-entry entry-id user))

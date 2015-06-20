@@ -9,6 +9,7 @@
             [data-info.routes.home :as home-routes]
             [data-info.routes.legacy :as legacy-routes]
             [data-info.routes.navigation :as navigation-routes]
+            [data-info.routes.status :as status-routes]
             [data-info.routes.stats :as stat-routes]
             [data-info.util :as util]
             [data-info.util.config :as config]
@@ -21,13 +22,11 @@
   (tc/wrap-thread-context handler config/svc-info))
 
 (defapi app
-  (swagger-ui "/api")
+  (swagger-ui config/docs-uri)
   (swagger-docs
     {:info {:title "Discovery Environment Data Info API"
             :description "Documentation for the Discovery Environment Data Info REST API"
             :version "2.0.0"}})
-  (GET "/" [] (redirect "/api"))
-  (GET "/favicon.ico" [] {:status 404})
   (middlewares
     [tc/add-user-to-context
      wrap-query-params
@@ -35,6 +34,7 @@
      params/wrap-keyword-params
      util/req-logger
      context-middleware]
+    status-routes/status
     data-routes/data-operations
     exists-routes/existence-marker
     home-routes/home

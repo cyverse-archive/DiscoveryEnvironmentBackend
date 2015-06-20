@@ -26,7 +26,7 @@
                  [slingshot "0.10.3"]
                  [org.mongodb/mongo-java-driver "2.12.3"]
                  [commons-configuration/commons-configuration "1.10"]
-                 [trptcolin/versioneer "0.1.1"]
+                 [trptcolin/versioneer "0.2.0"]
                  [cheshire "5.3.1"]]
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]

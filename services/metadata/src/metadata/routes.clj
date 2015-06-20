@@ -19,7 +19,7 @@
   (tc/wrap-thread-context handler config/svc-info))
 
 (defapi app
-  (swagger-ui)
+  (swagger-ui config/docs-uri)
   (swagger-docs
     {:info {:title "Discovery Environment Metadata API"
             :description "Documentation for the Discovery Environment Metadata REST API"

@@ -2,8 +2,7 @@
   (:use [ring.util.response :only [charset]])
   (:require [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
-            [metadata.util.config :as config]
-            [trptcolin.versioneer.core :as versioneer]))
+            [metadata.util.config :as config]))
 
 (def ^:private default-content-type-header
   {"Content-Type" "application/json; charset=utf-8"})
@@ -30,11 +29,3 @@
     (let [resp (handler req)]
       (log/info "RESPONSE:" (dissoc resp :body))
       resp)))
-
-(defn get-status
-  "Returns a service status map."
-  []
-  (let [{:keys [app-name desc group-id art-id]} config/svc-info]
-    {:service      app-name
-     :description  desc
-     :version      (versioneer/get-version group-id art-id)}))

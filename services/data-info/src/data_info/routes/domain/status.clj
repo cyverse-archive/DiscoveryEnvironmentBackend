@@ -1,6 +1,6 @@
-(ns metadata.routes.domain.status
+(ns data-info.routes.domain.status
   (:use [compojure.api.sweet :only [describe]]
-        [metadata.routes.domain.common])
+        [data-info.routes.domain.common])
   (:require [schema.core :as s]))
 
 (s/defschema StatusResponse

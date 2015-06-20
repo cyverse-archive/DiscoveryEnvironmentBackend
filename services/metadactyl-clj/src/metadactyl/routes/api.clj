@@ -1,7 +1,6 @@
 (ns metadactyl.routes.api
   (:use [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.api.sweet]
-        [compojure.api.legacy]
         [metadactyl.routes.domain.analysis]
         [metadactyl.routes.domain.analysis.listing]
         [metadactyl.routes.domain.app]
@@ -32,9 +31,11 @@
             [metadactyl.routes.collaborators :as collaborator-routes]
             [metadactyl.routes.oauth :as oauth-routes]
             [metadactyl.routes.reference-genomes :as reference-genome-routes]
+            [metadactyl.routes.status :as status-routes]
             [metadactyl.routes.tools :as tool-routes]
             [metadactyl.routes.users :as user-routes]
             [metadactyl.routes.workspaces :as workspace-routes]
+            [metadactyl.util.config :as config]
             [service-logging.thread-context :as tc]))
 
 (defmethod json-type schema.core.AnythingSchema [_] {:type "any"})
@@ -56,12 +57,13 @@
       resp)))
 
 (defapi app
-  (swagger-ui "/api")
+  (swagger-ui config/docs-uri)
   (swagger-docs
     {:info {:title "Discovery Environment Apps API"
             :description "Documentation for the Discovery Environment Apps REST API"
             :version "2.0.0"}
-     :tags [{:name "callbacks", :description "General callback functions"}
+     :tags [{:name "service-info", :description "Service Status Information"}
+            {:name "callbacks", :description "General callback functions"}
             {:name "app-categories", :description "App Category endpoints."}
             {:name "app-element-types", :description "App Element endpoints."}
             {:name "apps", :description "App endpoints."}
@@ -79,12 +81,13 @@
             {:name "admin-tools", :description "Admin Tool endpoints."}
             {:name "admin-reference-genomes", :description "Admin Reference Genome endpoints."}
             {:name "admin-tool-requests", :description "Admin Tool Request endpoints."}]})
-  (GET "/" [] (redirect "/api"))
-  (GET "/favicon.ico" [] {:status 404})
   (middlewares
     [wrap-keyword-params
      wrap-query-params
      wrap-context-map]
+    (context* "/" []
+      :tags ["service-info"]
+      status-routes/status)
     (context* "/callbacks" []
       :tags ["callbacks"]
       callback-routes/callbacks))
