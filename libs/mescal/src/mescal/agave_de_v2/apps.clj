@@ -142,7 +142,8 @@
      :disabled             (system-available? agave (:executionSystem app))
      :tools                [(format-tool-for-app app)]
      :categories           [c/hpc-group-overview]
-     :suggested_categories []}))
+     :suggested_categories []
+     :wiki_url             (:helpURI app)}))
 
 (defn- add-file-info
   [prop]
