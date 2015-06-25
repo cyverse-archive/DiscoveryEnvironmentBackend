@@ -72,7 +72,7 @@
   [{user :user} {paths :paths}]
   (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
-    {:paths (into {} (map #(vector % (path-stat cm user %)) paths))}))
+    {:paths (into {} (map (juxt identity (partial path-stat cm user)) paths))}))
 
 (with-pre-hook! #'do-stat
   (fn [params body]

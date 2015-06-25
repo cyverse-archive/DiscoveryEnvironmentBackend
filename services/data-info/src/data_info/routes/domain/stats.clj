@@ -51,7 +51,7 @@
      (describe NonBlankString "The detected media type of the data contained in this file")
 
      :infoType
-     (describe NonBlankString "The type of contents in this file")
+     (describe String "The type of contents in this file")
 
      :md5
      (describe NonBlankString
