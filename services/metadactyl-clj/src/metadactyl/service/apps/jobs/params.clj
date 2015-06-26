@@ -27,8 +27,10 @@
     #{}))
 
 (defn- get-full-param-id
-  [param]
-  (str (:step_id param) "_" (:id param)))
+  [{step-id :step_id param-id :id :as param}]
+  (if-not (string/blank? (str step-id))
+    (str step-id "_" param-id)
+    (str param-id)))
 
 (defn- remove-mapped-params
   [app-id params]
@@ -54,9 +56,10 @@
 
 (defn- format-list-selection
   [value]
-  (assoc value
-    :display (:display value (:name value ""))
-    :value   (:value value (:name value ""))))
+  {:value
+   (assoc value
+     :display (:display value (:name value ""))
+     :value   (:value value (:name value "")))})
 
 (defn- format-scalar-value
   [value]

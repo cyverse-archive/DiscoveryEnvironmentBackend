@@ -38,7 +38,7 @@
      :description     (:description param)
      :default_value   (:defaultValue param)}))
 
-(defn- load-agave-app-params
+(defn- load-agave-pipeline-step-params
   [agave-client {step-id :step_id agave-app-id :external_app_id}]
   (->> (.getApp agave-client agave-app-id)
        (:groups)
@@ -49,7 +49,14 @@
   [agave-client app-id]
   (->> (ap/load-app-steps app-id)
        (remove (comp nil? :external_app_id))
-       (mapcat (partial load-agave-app-params agave-client))))
+       (mapcat (partial load-agave-pipeline-step-params agave-client))))
+
+(defn- load-agave-app-params
+  [agave-client app-id]
+  (->> (.getApp agave-client app-id)
+       (:groups)
+       (mapcat :parameters)
+       (map (partial prep-agave-param nil app-id))))
 
 (defn get-param-definitions
   [agave app-id]
