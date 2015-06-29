@@ -194,6 +194,11 @@
   "metadactyl.agave.storage-system"
   "data.iplantcollaborative.org")
 
+(cc/defprop-int agave-read-timeout
+  "The maximum amount of time to wait for a response from Agave in milliseconds."
+  [props config-valid configs]
+  "metadactyl.agave.read-timeout")
+
 (cc/defprop-str pgp-keyring-path
   "The path to the PGP keyring file."
   [props config-valid configs]

@@ -52,7 +52,8 @@
      (config/agave-base-url)
      (config/agave-storage-system)
      (partial get-access-token (config/agave-oauth-settings) state-info username)
-     (config/agave-jobs-enabled))))
+     (config/agave-jobs-enabled)
+     :timeout (config/agave-read-timeout))))
 
 (defn- get-agave-apps-client
   [state-info {:keys [username] :as user}]
