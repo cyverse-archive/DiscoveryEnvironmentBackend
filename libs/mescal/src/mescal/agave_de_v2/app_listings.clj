@@ -19,7 +19,7 @@
         system   (:executionSystem listing)]
     (-> listing
         (dissoc :lastModified :name :shortDescription :revision :executionSystem :isPublic :version
-                :_links)
+                :_links :label)
         (assoc
             :name                 (get-app-name listing)
             :app_type             "External"
