@@ -1,7 +1,8 @@
 (ns metadactyl.service.apps.agave.listings
   (:use [metadactyl.service.util :only [sort-apps apply-offset apply-limit uuid?]]
         [slingshot.slingshot :only [try+]])
-  (:require [clojure-commons.error-codes :as ce]
+  (:require [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as ce]
             [metadactyl.persistence.app-metadata :as ap]))
 
 (defn list-apps
@@ -18,7 +19,21 @@
        (sort-apps params)
        (apply-offset params)
        (apply-limit params))
-   (catch [:error_code ce/ERR_UNAVAILABLE] _ nil)))
+   (catch [:error_code ce/ERR_UNAVAILABLE] _
+     (log/warn (:throwable &throw-context) "agave app search timed out")
+     nil)))
+
+(defn load-app-tables
+  [agave]
+  (try+
+   (->> (.listApps agave)
+        (:apps)
+        (map (juxt :id identity))
+        (into {})
+        (vector))
+   (catch [:error_code ce/ERR_UNAVAILABLE] _
+     (log/warn (:throwable &throw-context) "agave app table retrieval timed out")
+     [])))
 
 (defn- prep-agave-param
   [step-id agave-app-id param]
