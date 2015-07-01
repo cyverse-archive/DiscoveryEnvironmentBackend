@@ -6,7 +6,7 @@ SET search_path = public, pg_catalog;
 CREATE TABLE job_steps (
     job_id uuid NOT NULL,
     step_number integer NOT NULL,
-    external_id character varying(40),
+    external_id character varying(64),
     start_date timestamp,
     end_date timestamp,
     status character varying(64) NOT NULL,
