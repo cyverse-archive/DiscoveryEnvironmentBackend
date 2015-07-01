@@ -17,28 +17,25 @@
   [statuses jobs-enabled? listing]
   (let [mod-time (util/to-utc (:lastModified listing))
         system   (:executionSystem listing)]
-    (-> listing
-        (dissoc :lastModified :name :shortDescription :revision :executionSystem :isPublic :version
-                :_links :label)
-        (assoc
-            :name                 (get-app-name listing)
-            :app_type             "External"
-            :can_run              true
-            :can_favor            false
-            :can_rate             false
-            :deleted              false
-            :description          (:shortDescription listing)
-            :disabled             (not (and jobs-enabled? (= "UP" (statuses system))))
-            :edited_date          mod-time
-            :integration_date     mod-time
-            :integrator_email     c/unknown-value
-            :integrator_name      c/unknown-value
-            :is_favorite          false
-            :is_public            (:isPublic listing)
-            :pipeline_eligibility {:is_valid true :reason ""}
-            :rating               {:average 0.0 :total 0}
-            :step_count           1
-            :wiki_url             ""))))
+    {:id                   (:id listing)
+     :name                 (get-app-name listing)
+     :description          (:shortDescription listing)
+     :integration_date     mod-time
+     :edited_date          mod-time
+     :app_type             "External"
+     :can_favor            false
+     :can_rate             false
+     :can_run              true
+     :deleted              false
+     :disabled             (not (and jobs-enabled? (= "UP" (statuses system))))
+     :integrator_email     c/unknown-value
+     :integrator_name      c/unknown-value
+     :is_favorite          false
+     :is_public            (:isPublic listing)
+     :pipeline_eligibility {:is_valid true :reason ""}
+     :rating               {:average 0.0 :total 0}
+     :step_count           1
+     :wiki_url             ""}))
 
 (defn list-apps
   [agave statuses jobs-enabled?]
