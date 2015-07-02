@@ -60,14 +60,14 @@ documentation for more details.
 
 ## Updating Analysis Information
 
-*Secured Endpoint:* PATCH /secured/analysis/{analysis-id}
+*Secured Endpoint:* PATCH /analyses/{analysis-id}
 
 This endpoint forwards all requests to metadactyl. Please see the metadactyl
 documentation for details.
 
 ## Stopping a Running Analysis
 
-Secured Endpoint: DELETE /secured/stop-analysis/{job-id}
+*Secured Endpoint:* POST /analyses/{analysis-id}/stop
 
 This endpoint forwards all requests to metadactyl. Please see the metadactyl
 documentation for details.
