@@ -21,7 +21,8 @@
         [ring.middleware keyword-params nested-params]
         [ring.swagger.json-schema :only [json-type]]
         [ring.util.response :only [redirect]])
-  (:require [metadactyl.routes.admin :as admin-routes]
+  (:require [compojure.route :as route]
+            [metadactyl.routes.admin :as admin-routes]
             [metadactyl.routes.analyses :as analysis-routes]
             [metadactyl.routes.apps :as app-routes]
             [metadactyl.routes.apps.categories :as app-category-routes]
@@ -36,6 +37,7 @@
             [metadactyl.routes.users :as user-routes]
             [metadactyl.routes.workspaces :as workspace-routes]
             [metadactyl.util.config :as config]
+            [metadactyl.util.service :as service]
             [service-logging.thread-context :as tc]))
 
 (defmethod json-type schema.core.AnythingSchema [_] {:type "any"})
@@ -147,4 +149,5 @@
       tool-routes/admin-tools)
     (context* "/admin/tool-requests" []
       :tags ["admin-tool-requests"]
-      admin-routes/admin-tool-requests)))
+      admin-routes/admin-tool-requests)
+    (route/not-found (service/unrecognized-path-response))))
