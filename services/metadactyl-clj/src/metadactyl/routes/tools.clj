@@ -288,6 +288,15 @@
          :description "This endpoint updates a device's host path for the tool's container."
          (ce/trap uri (requester tool-id (update-device-field tool-id device-id :container_path (:container_path body)))))
 
+  (POST* "/:tool-id/container/entrypoint" [:as {uri :uri}]
+         :path-params [tool-id :- ToolIdParam]
+         :query [params SecuredQueryParams]
+         :body [body Entrypoint]
+         :return Entrypoint
+         :summary "Update Tool Container Entrypoint"
+         :description "This endpoint updates an entrypoint for the tool's container."
+         (ce/trap uri (requester tool-id (update-settings-field tool-id :entrypoint (:entrypoint body)))))
+
   (POST* "/:tool-id/container/cpu-shares" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
          :query [params SecuredQueryParams]

@@ -311,6 +311,7 @@
      :network_mode
      :working_directory
      :name
+     :entrypoint
      :tools_id]))
 
 (defn add-settings
