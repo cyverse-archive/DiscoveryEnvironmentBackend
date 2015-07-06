@@ -15,7 +15,7 @@
   (describe
    (dissoc Image :id)
    "The values needed to add a new image to a tool."))
- 
+
 (s/defschema Settings
   (describe
    {(s/optional-key :cpu_shares)         Integer
@@ -23,8 +23,14 @@
     (s/optional-key :network_mode)       s/Str
     (s/optional-key :working_directory)  s/Str
     (s/optional-key :name)               s/Str
+    (s/optional-key :entrypoint)         s/Str
     :id                 s/Uuid}
    "The group of settings for a container."))
+
+(s/defschema Entrypoint
+  (describe
+   {:entrypoint s/Str}
+   "The entrypoint for a tool container"))
 
 (s/defschema NewSettings
   (describe

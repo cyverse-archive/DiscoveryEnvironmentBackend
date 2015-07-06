@@ -113,6 +113,14 @@
         :description "Sets the initial working directory for the tool container."
         (ce/trap uri (requester tool-id (get-settings-field tool-id :working_directory))))
 
+  (GET* "/:tool-id/container/entrypoint" [:as {uri :uri}]
+        :path-params [tool-id :- ToolIdParam]
+        :query [params SecuredQueryParams]
+        :return Entrypoint
+        :summary "Tool Container Entrypoint"
+        :description "Get the entrypoint setting for the tool container."
+        (ce/trap uri (requester tool-id (get-settings-field tool-id :entrypoint))))
+
   (GET* "/:tool-id/container/name" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam]
         :query [params SecuredQueryParams]
