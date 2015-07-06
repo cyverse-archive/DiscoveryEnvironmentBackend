@@ -370,7 +370,7 @@
   (let [id (uuidify tool-uuid)]
     (when (tool-has-settings? id)
       (->  (select container-settings
-                   (fields :id :cpu_shares :memory_limit :network_mode :name :working_directory)
+                   (fields :id :cpu_shares :memory_limit :network_mode :name :working_directory :entrypoint)
                    (with container-devices
                          (fields :host_path :container_path :id))
                    (with container-volumes
