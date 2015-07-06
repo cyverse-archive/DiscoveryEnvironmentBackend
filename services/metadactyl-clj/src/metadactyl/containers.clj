@@ -341,21 +341,6 @@
             (set-fields values)
             (where {:id (uuidify settings-uuid)}))))
 
-(defn delete-settings
-  "Deletes an existing set of container settings. Requires the container-settings uuid."
-  [settings-uuid]
-  (when (settings? settings-uuid)
-    (let [id (uuidify settings-uuid)]
-      (transaction
-       (delete container-devices
-               (where {:container_settings_id id}))
-       (delete container-volumes
-               (where {:container_settings_id id}))
-       (delete container-volumes-from
-               (where {:container_settings_id id}))
-       (delete container-settings
-               (where {:id id}))))))
-
 (defn tool-settings
   "Returns the top-level settings for the tool container."
   [tool-uuid]
@@ -539,16 +524,6 @@
        (doseq [vf vfs]
          (add-volumes-from settings-uuid vf))
        (tool-container-info tool-uuid)))))
-
-(defn delete-tool-container
-  [tool-uuid]
-  (when (tool-has-settings? tool-uuid)
-    (let [settings-id (tool-settings-uuid tool-uuid)]
-      (log/warn "deleting container settings for tool" tool-uuid)
-      (transaction
-        (update tools (set-fields {:container_images_id nil}) (where {:id tool-uuid}))
-        (delete-settings settings-id))
-      nil)))
 
 (defn delete-tool-device
   [tool-uuid device-uuid]

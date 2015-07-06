@@ -244,15 +244,6 @@
          be used for modifications."
          (ce/trap uri (requester tool-id (add-tool-container tool-id body))))
 
-  (DELETE* "/:tool-id/container" [:as {uri :uri}]
-           :path-params [tool-id :- ToolIdParam]
-           :query [params SecuredQueryParams]
-           :return nil
-           :summary "Deletes a container from a tool."
-           :description "Delete a container from a tool. The tool will be assumed to be running in 'compatibility'
-           mode."
-           (ce/trap uri #(delete-tool-container tool-id)))
-
   (POST* "/:tool-id/container/devices" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
          :query [params SecuredQueryParams]

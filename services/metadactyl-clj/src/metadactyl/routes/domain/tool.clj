@@ -11,7 +11,6 @@
 (def VersionParam (describe String "The Tool's version"))
 (def AttributionParam (describe String "The Tool's author or publisher"))
 (def SubmittedByParam (describe String "The username of the user that submitted the Tool Request"))
-(def ContainerOptionalKey (optional-key :container))
 
 (defschema ToolTestData
   {(optional-key :params) (describe [String] "The list of command-line parameters")
@@ -38,7 +37,7 @@
       (merge
         {:implementation (describe ToolImplementation
                            "Information about the user who integrated the Tool into the DE")
-         ContainerOptionalKey containers/NewToolContainer})))
+         :container      containers/NewToolContainer})))
 
 (defschema ToolsImportRequest
   {:tools (describe [ToolImportRequest] "zero or more Tool definitions")})
@@ -49,7 +48,7 @@
       (->optional-param :location)
       (->optional-param :type)
       (->optional-param :implementation)
-      (dissoc ContainerOptionalKey)))
+      (dissoc :container)))
 
 (defschema ToolListing
   {:tools (describe [Tool] "Listing of App Tools")})
