@@ -8,7 +8,7 @@
    {:name                 s/Str
     :id                   s/Uuid
     (s/optional-key :tag) s/Str
-    (s/optional-key :url) s/Str}
+    :url                  s/Str}
    "A map describing a container image."))
 
 (s/defschema NewImage
