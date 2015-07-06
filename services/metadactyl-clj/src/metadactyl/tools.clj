@@ -3,6 +3,7 @@
         [kameleon.entities]
         [kameleon.queries]
         [kameleon.util.search]
+        [metadactyl.containers :only [add-tool-container]]
         [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
         [metadactyl.validation :only [verify-tool-name-location]]
@@ -80,9 +81,12 @@
     (select (tool-listing-base-query) (where {:tools.id [in tool-ids]}))))
 
 (defn- add-new-tool
-  [tool]
+  [{:keys [container] :as tool}]
   (verify-tool-name-location tool)
-  (persistence/add-tool tool))
+  (let [tool-id (persistence/add-tool tool)]
+    (when container
+      (add-tool-container tool-id container))
+    tool-id))
 
 (defn add-tools
   "Adds a list of tools to the database, returning a list of IDs of the tools added."

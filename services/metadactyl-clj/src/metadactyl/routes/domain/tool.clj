@@ -2,9 +2,9 @@
   (:use [metadactyl.routes.params]
         [compojure.api.sweet :only [describe]]
         [schema.core :only [defschema enum optional-key]])
+  (:require [metadactyl.schema.containers :as containers])
   (:import [java.util UUID]))
 
-(def ToolIdParam (describe UUID "A UUID that is used to identify the Tool"))
 (def ToolRequestIdParam (describe UUID "The Tool Requests's UUID"))
 (def ToolNameParam (describe String "The Tool's name (should be the file name)"))
 (def ToolDescriptionParam (describe String "A brief description of the Tool"))
@@ -36,7 +36,8 @@
       (->optional-param :id)
       (merge
         {:implementation (describe ToolImplementation
-                           "Information about the user who integrated the Tool into the DE")})))
+                           "Information about the user who integrated the Tool into the DE")
+         (optional-key :container) containers/NewToolContainer})))
 
 (defschema ToolsImportRequest
   {:tools (describe [ToolImportRequest] "zero or more Tool definitions")})

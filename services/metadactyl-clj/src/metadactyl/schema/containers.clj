@@ -1,6 +1,6 @@
 (ns metadactyl.schema.containers
   (:use [compojure.api.sweet :only [describe]]
-        [metadactyl.routes.domain.tool :only [ToolIdParam]])
+        [metadactyl.routes.params :only [ToolIdParam]])
   (:require [schema.core :as s]))
 
 (s/defschema Image
