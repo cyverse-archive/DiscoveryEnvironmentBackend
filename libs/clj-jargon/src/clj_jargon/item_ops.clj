@@ -10,7 +10,8 @@
   (:import [org.irods.jargon.core.exception CatNoAccessException]
            [org.irods.jargon.core.packinstr DataObjInp$OpenFlags]
            [org.irods.jargon.core.pub DataTransferOperations IRODSFileSystemAO] ; needed for cursive type navigation
-           [org.irods.jargon.core.pub.io IRODSFileReader]
+           [org.irods.jargon.core.pub.io IRODSFileReader PackingIrodsInputStream
+              PackingIrodsOutputStream]
            [org.irods.jargon.core.transfer TransferStatusCallbackListener
               TransferStatusCallbackListener$FileStatusCallbackResponse
               TransferStatusCallbackListener$CallbackResponse
@@ -100,16 +101,18 @@
   "Returns an FileOutputStream for a file in iRODS pointed to by 'output-path'. If the file exists,
    it will be truncated."
   [cm output-path]
-  (.instanceIRODSFileOutputStream (:fileFactory cm)
-                                  (info/file cm output-path)
-                                  DataObjInp$OpenFlags/WRITE_TRUNCATE))
+  (PackingIrodsOutputStream.
+   (.instanceIRODSFileOutputStream (:fileFactory cm)
+                                   (info/file cm output-path)
+                                   DataObjInp$OpenFlags/WRITE_TRUNCATE)))
 
 
 (defn input-stream
   "Returns a FileInputStream for a file in iRODS pointed to by 'input-path'"
   [cm input-path]
   (validate-path-lengths input-path)
-  (.instanceIRODSFileInputStream (:fileFactory cm) (info/file cm input-path)))
+  (PackingIrodsInputStream.
+   (.instanceIRODSFileInputStream (:fileFactory cm) (info/file cm input-path))))
 
 
 (defn read-file
