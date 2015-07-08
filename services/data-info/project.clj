@@ -30,7 +30,6 @@
                  [medley "0.6.0"]
                  [metosin/compojure-api "0.22.0"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
-                 [net.sf.opencsv/opencsv "2.3"]
                  [org.apache.tika/tika-core "1.9"]
                  [ring "1.3.2"]
                  [slingshot "0.12.2"]

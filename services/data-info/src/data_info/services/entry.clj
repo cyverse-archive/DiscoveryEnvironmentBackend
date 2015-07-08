@@ -1,8 +1,6 @@
 (ns data-info.services.entry
   "This namespace provides the business logic for all entries endpoints."
   (:require [clojure.string :as str]
-            [clojure.tools.logging :as log]
-            [cheshire.core :as json]
             [liberator.core :refer [defresource]]
             [liberator.representation :as rep]
             [me.raynes.fs :as fs]

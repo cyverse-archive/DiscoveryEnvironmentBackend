@@ -1,26 +1,22 @@
 (ns data-info.services.type-detect.irods
-  (:use [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-info :only [exists?]]
-        [clj-jargon.item-ops :only [input-stream]]
-        [clj-jargon.metadata]
-        [clj-jargon.permissions]
-        [clj-jargon.users :only [user-exists?]]
-        [clj-jargon.validations]
-        [clojure-commons.error-codes]
-        [slingshot.slingshot :only [try+ throw+]])
-  (:require [cheshire.core :as json]
-            [heuristomancer.core :as hm]
-            [clojure.java.shell :as sh]
-            [clojure.java.io :as io]
-            [clojure.tools.logging :as log]
+  (:use [clojure-commons.error-codes])
+  (:require [clojure.tools.logging :as log]
+            [slingshot.slingshot :refer [throw+]]
+            [clj-jargon.init :refer [with-jargon]]
+            [clj-jargon.item-info :as info]
+            [clj-jargon.item-ops :as ops]
+            [clj-jargon.metadata :as meta]
+            [clj-jargon.permissions :as perm]
+            [clj-jargon.users :as users]
             [clojure-commons.file-utils :as ft]
+            [heuristomancer.core :as hm]
             [data-info.util.config :as cfg]))
 
 
 (defn get-file-type
   [cm path]
   "Uses heuristomancer to determine a the file type of a file."
-  (let [result (hm/identify (input-stream cm path) (cfg/filetype-read-amount))]
+  (let [result (hm/identify (ops/input-stream cm path) (cfg/filetype-read-amount))]
     (if-not (nil? result)
       (name result)
       result)))
@@ -44,22 +40,16 @@
       (add-type cm user path type)))
 
   ([cm user path type]
-    (log/info "in add-type")
-
-    (when-not (exists? cm path)
-      (throw+ {:error_code ERR_DOES_NOT_EXIST
-               :path path}))
-
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER
-               :user user}))
-
-    (when-not (is-writeable? cm user path)
+    (when-not (info/exists? cm path)
+      (throw+ {:error_code ERR_DOES_NOT_EXIST :path path}))
+    (when-not (users/user-exists? cm user)
+      (throw+ {:error_code ERR_NOT_A_USER :user user}))
+    (when-not (perm/is-writeable? cm user path)
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
-    (set-metadata cm path (cfg/type-detect-type-attribute) type "")
-    (log/info "Added type " type " to " path " for " user ".")
+    (meta/set-metadata cm path (cfg/type-detect-type-attribute) type "")
+    (log/debug "Added type" type "to" path "for" (str user "."))
     {:path path
      :type type}))
 
@@ -70,50 +60,21 @@
       (auto-add-type cm user path)))
 
   ([cm user path]
-    (log/info "in auto-add-type")
-
-    (when-not (exists? cm path)
-      (throw+ {:error_code ERR_DOES_NOT_EXIST
-               :path path}))
-
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER
-               :user user}))
-
-    (when-not (is-writeable? cm user path)
+    (when-not (info/exists? cm path)
+      (throw+ {:error_code ERR_DOES_NOT_EXIST :path path}))
+    (when-not (users/user-exists? cm user)
+      (throw+ {:error_code ERR_NOT_A_USER :user user}))
+    (when-not (perm/is-writeable? cm user path)
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
 
     (let [type (content-type cm path)]
-      (add-metadata cm path (cfg/type-detect-type-attribute) type "")
-      (log/info "Auto-added type " type " to " path " for " user ".")
+      (meta/add-metadata cm path (cfg/type-detect-type-attribute) type "")
+      (log/debug "Auto-added type" type "to" path "for" (str user "."))
       {:path path
        :type type})))
 
-(defn preview-auto-type
-  "Returns the auto-type that (auto-add-type) would have associated with the file."
-  [user path]
-  (log/info "in preview-auto-type")
-
-  (with-jargon (cfg/jargon-cfg) [cm]
-    (when-not (exists? cm path)
-      (throw+ {:error_code ERR_DOES_NOT_EXIST
-               :path path}))
-
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER
-               :user user}))
-
-    (when-not (owns? cm user path)
-      (throw+ {:error_code ERR_NOT_OWNER
-               :user user
-               :path path}))
-
-    (let [ct (content-type cm path)]
-      (log/info "Preview type of " path " for " user " is " ct ".")
-      {:path path
-       :type ct})))
 
 (defn delete-type
   "Removes the association of type with path for the specified user."
@@ -121,65 +82,34 @@
   (log/info "in delete-type")
 
   (with-jargon (cfg/jargon-cfg) [cm]
-    (when-not (exists? cm path)
-      (throw+ {:error_code ERR_DOES_NOT_EXIST
-               :path path}))
-
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER
-               :user user}))
-
-    (when-not (is-writeable? cm user path)
+    (when-not (info/exists? cm path)
+      (throw+ {:error_code ERR_DOES_NOT_EXIST :path path}))
+    (when-not (users/user-exists? cm user)
+      (throw+ {:error_code ERR_NOT_A_USER :user user}))
+    (when-not (perm/is-writeable? cm user path)
       (throw+ {:error_code ERR_NOT_OWNER
                :user user
                :path path}))
-    (delete-avus cm path (get-attribute-value cm path (cfg/type-detect-type-attribute) type))
-    (log/info "Deleted type " type " from " path " for " user ".")
+    (meta/delete-avus cm path (meta/get-attribute-value cm path (cfg/type-detect-type-attribute) type))
+    (log/debug "Deleted type" type "from" path "for" (str user "."))
     {:path path
      :type type
      :user user}))
 
-(defn unset-types
-  "Removes all info-type associations from a path."
-  [user path]
-  (log/info "in unset-type")
-
-  (with-jargon (cfg/jargon-cfg) [cm]
-    (when-not (exists? cm path)
-      (throw+ {:error_code ERR_DOES_NOT_EXIST
-               :path path}))
-
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER
-               :user user}))
-
-    (when-not (is-writeable? cm user path)
-      (throw+ {:error_code ERR_NOT_OWNER
-               :user user
-               :path path}))
-    (delete-metadata cm path (cfg/type-detect-type-attribute))
-    (log/info "Deleted types from" path "for" user)
-    {:path path :user user}))
 
 (defn get-types
   "Gets all of the filetypes associated with path."
   ([cm user path]
-    (log/info "in get-types")
-
-    (when-not (exists? cm path)
-      (throw+ {:error_code ERR_DOES_NOT_EXIST
-               :path path}))
-
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER
-               :user user}))
-
-    (when-not (is-readable? cm user path)
+    (when-not (info/exists? cm path)
+      (throw+ {:error_code ERR_DOES_NOT_EXIST :path path}))
+    (when-not (users/user-exists? cm user)
+      (throw+ {:error_code ERR_NOT_A_USER :user user}))
+    (when-not (perm/is-readable? cm user path)
       (throw+ {:error_code ERR_NOT_READABLE
                :user user
                :path path}))
-    (let [path-types (get-attribute cm path (cfg/type-detect-type-attribute))]
-      (log/info "Retrieved types " path-types " from " path " for " user ".")
+    (let [path-types (meta/get-attribute cm path (cfg/type-detect-type-attribute))]
+      (log/info "Retrieved types" path-types "from" path "for" (str user "."))
       (or (:value (first path-types) ""))))
 
   ([user path]
@@ -199,13 +129,10 @@
   (log/info "in find-paths-with-type")
 
   (with-jargon (cfg/jargon-cfg) [cm]
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER
-               :user       user}))
-
-    (let [paths-with-type (list-everything-in-tree-with-attr cm
-                                                             (home-dir cm user)
-                                                             {:name  (cfg/type-detect-type-attribute)
-                                                              :value type})]
-      (log/info "Looked up all paths with a type of " type " for " user "\n" paths-with-type)
+    (when-not (users/user-exists? cm user)
+      (throw+ {:error_code ERR_NOT_A_USER :user user}))
+    (let [paths-with-type (meta/list-everything-in-tree-with-attr cm
+                                                                  (home-dir cm user)
+                                                                  {:name (cfg/type-detect-type-attribute) :value type})]
+      (log/debug "Looked up all paths with a type of" type "for" user "\n" paths-with-type)
       paths-with-type)))
