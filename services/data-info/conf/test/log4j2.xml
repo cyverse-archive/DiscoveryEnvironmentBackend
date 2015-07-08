@@ -11,13 +11,12 @@
             <AppenderRef ref="Console" />
         </Root>
 
-        <!-- Configuration Logging -->
-        <Logger name="clojure-commons.config" level="info" additivity="false">
+        <Logger name="data-info" level="debug" additivity="false">
             <AppenderRef ref="Console" />
         </Logger>
 
-        <!-- Jargon Logging -->
-        <Logger name="org.irods.jargon" level="warn" additivity="false">
+        <!-- Configuration Logging -->
+        <Logger name="clojure-commons.config" level="info" additivity="false">
             <AppenderRef ref="Console" />
         </Logger>
 
