@@ -41,11 +41,12 @@
 
 (defn ipc-exe
   [{:keys [steps] :as amap}]
-  (str "+IpcExe = \"" (fs/base-name (:executable (first steps))) "\"\n"))
+  (println (first steps))
+  (str "+IpcExe = \"" (get-in (first steps) [:component :name]) "\"\n"))
 
 (defn ipc-exe-path
   [{:keys [steps] :as amap}]
-  (str "+IpcExePath = \"" (fs/parent (:executable (first steps))) "\"\n"))
+  (str "+IpcExePath = \"" (get-in (first steps) [:component :location]) "\"\n"))
 
 (defn script-submission
   "Generates the Condor submission file that will execute the generated
@@ -135,6 +136,7 @@
      "export IPLANT_EXECUTION_ID\n"
      "export SCRIPT_LOCATION=${BASH_SOURCE}\n"
      "EXITSTATUS=0\n"
+     "if [ -e /data2 ]; then ls /data2; fi\n"
      "mkdir -p logs\n"
      fail-script
      "ls -al > logs/de-transfer-trigger.log\n"

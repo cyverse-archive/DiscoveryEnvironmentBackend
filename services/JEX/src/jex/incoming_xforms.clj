@@ -864,5 +864,5 @@
          all-input-jobs
          all-output-jobs
          extra-jobs
-         rm-step-component
+         #_(rm-step-component)
          rm-step-config)))
