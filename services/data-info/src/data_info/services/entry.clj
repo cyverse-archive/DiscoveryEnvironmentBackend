@@ -375,11 +375,11 @@
 
 ; TODO verify that each name in the path is not too large
 (defn dispatch-path-to-resource
-  [zone path-in-zone]
+  [zone path-in-zone req]
   (let [path (file/rm-last-slash (irods/abs-path zone path-in-zone))]
     (init/with-jargon (cfg/jargon-cfg) [cm]
       (cond
         (> (count path) jv/max-path-length) {:status 414}
         (not (item/exists? cm path))        {:status 404}
-        (item/is-dir? cm path)              (folder-entry cm path)
-        :else                               (file-entry cm path)))))
+        (item/is-dir? cm path)              ((folder-entry cm path) req)
+        :else                               ((file-entry cm path) req)))))
