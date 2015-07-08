@@ -2,31 +2,49 @@
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [slingshot.slingshot :refer [throw+]]
             [clj-icat-direct.icat :as icat]
             [clj-jargon.init :refer [with-jargon]]
-            [clj-jargon.item-info :refer [is-dir? stat]]
-            [clj-jargon.metadata :refer [get-attribute]]
-            [clj-jargon.permissions :refer [list-user-perms permission-for owns?]]
+            [clj-jargon.item-info :as info]
+            [clj-jargon.metadata :as meta]
+            [clj-jargon.permissions :as perm]
+            [clj-jargon.users :as users]
+            [clojure-commons.error-codes :refer [ERR_DOES_NOT_EXIST ERR_NOT_A_USER ERR_NOT_READABLE]]
             [clojure-commons.file-utils :as ft]
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.util.irods :as irods]
-            [data-info.util.validators :as validators]
-            [data-info.services.type-detect.irods :as filetypes])
+            [data-info.util.validators :as validators])
   (:import [clojure.lang IPersistentMap]))
+
+
+(defn- get-types
+  "Gets all of the filetypes associated with path."
+  [cm user path]
+  (when-not (info/exists? cm path)
+    (throw+ {:error_code ERR_DOES_NOT_EXIST :path path}))
+  (when-not (users/user-exists? cm user)
+    (throw+ {:error_code ERR_NOT_A_USER :user user}))
+  (when-not (perm/is-readable? cm user path)
+    (throw+ {:error_code ERR_NOT_READABLE
+             :user       user
+             :path       path}))
+  (let [path-types (meta/get-attribute cm path (cfg/type-detect-type-attribute))]
+    (log/info "Retrieved types" path-types "from" path "for" (str user "."))
+    (or (:value (first path-types) ""))))
 
 
 (defn- count-shares
   [cm user path]
   (let [filter-users (set (conj (cfg/perms-filter) user (cfg/irods-user)))
         other-perm?  (fn [perm] (not (contains? filter-users (:user perm))))]
-    (count (filterv other-perm? (list-user-perms cm path)))))
+    (count (filterv other-perm? (perm/list-user-perms cm path)))))
 
 
 (defn- merge-counts
   [stat-map cm user path]
-  (if (is-dir? cm path)
+  (if (info/is-dir? cm path)
     (assoc stat-map
       :file-count (icat/number-of-files-in-folder user (cfg/irods-zone) path)
       :dir-count  (icat/number-of-folders-in-folder user (cfg/irods-zone) path))
@@ -35,16 +53,16 @@
 
 (defn- merge-shares
   [stat-map cm user path]
-  (if (owns? cm user path)
+  (if (perm/owns? cm user path)
     (assoc stat-map :share-count (count-shares cm user path))
     stat-map))
 
 
 (defn- merge-type-info
   [stat-map cm user path]
-  (if-not (is-dir? cm path)
+  (if-not (info/is-dir? cm path)
     (assoc stat-map
-      :infoType     (filetypes/get-types cm user path)
+      :infoType     (get-types cm user path)
       :content-type (irods/detect-media-type cm path))
     stat-map))
 
@@ -53,8 +71,8 @@
   [^IPersistentMap cm ^String user ^IPersistentMap stat]
   (let [path (:path stat)]
     (-> stat
-      (assoc :id         (-> (get-attribute cm path "ipc_UUID") first :value)
-             :permission (permission-for cm user path))
+      (assoc :id         (-> (meta/get-attribute cm path "ipc_UUID") first :value)
+             :permission (perm/permission-for cm user path))
       (merge-type-info cm user path)
       (merge-shares cm user path)
       (merge-counts cm user path))))
@@ -65,7 +83,7 @@
   (let [path (ft/rm-last-slash path)]
     (log/debug "[path-stat] user:" user "path:" path)
     (validators/path-exists cm path)
-    (decorate-stat cm user (stat cm path))))
+    (decorate-stat cm user (info/stat cm path))))
 
 
 (defn do-stat
