@@ -49,7 +49,7 @@
 
 (s/defschema NetworkMode
   (describe
-   {:network_mode s/Str}
+   {:network_mode (s/maybe s/Str)}
    "The network mode for the tool container."))
 
 (s/defschema WorkingDirectory
