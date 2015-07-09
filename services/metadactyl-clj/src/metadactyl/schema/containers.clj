@@ -54,7 +54,7 @@
 
 (s/defschema WorkingDirectory
   (describe
-   {:working_directory s/Str}
+   {:working_directory (s/maybe s/Str)}
    "The working directory in the tool container."))
 
 (s/defschema ContainerName
