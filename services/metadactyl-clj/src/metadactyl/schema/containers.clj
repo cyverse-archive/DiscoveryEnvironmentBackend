@@ -59,7 +59,7 @@
 
 (s/defschema ContainerName
   (describe
-   {:name s/Str}
+   {:name (s/maybe s/Str)}
    "The name given to the tool container."))
 
 (s/defschema Device
