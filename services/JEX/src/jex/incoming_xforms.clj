@@ -322,10 +322,7 @@
   [step-map]
   (let [loc (get-in step-map [:component :location])
         img (container-image-arg (container-info step-map))]
-
-    (and (.startsWith img "discoenv/backwards-compat")
-         (or (re-find #"^\/usr\/local2" loc)
-             (re-find #"^\/usr\/local3" loc)))))
+    (.startsWith img "discoenv/backwards-compat")))
 
 (defn backwards-compatible-executable
   [step-map]
@@ -847,12 +844,18 @@
     :steps (for [step (:steps condor-map)]
              (dissoc step :config))))
 
+(defn log-thru
+  [condor-map]
+  (clojure.pprint/pprint condor-map)
+  condor-map)
+
 (defn transform
   "Transforms the condor-map that's passed in into something more useable."
   ([condor-map]
      (transform condor-map date))
   ([condor-map date-func]
      (-> condor-map
+         log-thru
          (now-date date-func)
          (analysis-attrs date-func)
          context-dirs
