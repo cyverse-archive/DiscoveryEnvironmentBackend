@@ -12,6 +12,11 @@
             [metadactyl.util.service :as service]
             [compojure.route :as route]))
 
+(def volumes-from-warning
+  (str "\n\n#### Warning\n"
+       "    Do not add `volumes-from` settings to tools unless it is certain that tool is authorized"
+       " to access those data containers."))
+
 (defmacro requester
   "Handles calling functions and returning request maps. The body of the call
    must return a nil if any of the objects can't be found, otherwise it returns a map."
@@ -220,7 +225,7 @@
          :query [params SecuredQueryParams]
          :body [body (describe ToolsImportRequest "The Tools to import.")]
          :summary "Add new Tools."
-         :description "This service adds new Tools to the DE."
+         :description (str "This service adds new Tools to the DE." volumes-from-warning)
          (ce/trap uri #(add-tools body)))
 
   (PATCH* "/:tool-id" [:as {uri :uri}]
@@ -374,7 +379,9 @@
          :body [body NewVolumesFrom]
          :return VolumesFrom
          :summary "Adds A Volume Host Container"
-         :description "Adds a new container from which the tool container will bind mount volumes."
+         :description (str
+                        "Adds a new container from which the tool container will bind mount volumes."
+                        volumes-from-warning)
          (ce/trap uri (requester tool-id (add-tool-volumes-from tool-id body))))
 
   (DELETE* "/:tool-id/container/volumes-from/:volumes-from-id" [:as {uri :uri}]
@@ -391,5 +398,7 @@
          :body [body VolumesFromName]
          :return VolumesFromName
          :summary "Update Name Of Volume Host Container"
-         :description "Updates the name of a container from which the tool container will bind mount volumes."
+         :description (str
+                        "Updates the name of a container from which the tool container will bind mount volumes."
+                        volumes-from-warning)
          (ce/trap uri (requester tool-id (update-volumes-from-field tool-id volumes-from-id :name (:name body))))))
