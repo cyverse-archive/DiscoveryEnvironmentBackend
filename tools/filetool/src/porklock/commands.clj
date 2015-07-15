@@ -57,7 +57,7 @@
   (filter #(= value (:value %)) (meta/get-attribute cm path attr)))
 
 
-(defn- apply-metadata
+(defn- apply-metadatum
   [cm destination avu]
   (porkprint "Might be adding metadata to" destination avu)
   (let [existent-avu (avu? cm destination (first avu) (second avu))]
@@ -76,7 +76,7 @@
       (doseq [tuple tuples]
         (porkprint "Size of tuple" tuple "is" (count tuple))
         (when (= (count tuple) 3)
-          (apply-metadata cm dest tuple))))))
+          (apply-metadatum cm dest tuple))))))
 
 (defn user-home-dir
   [cm username]
