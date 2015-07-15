@@ -59,11 +59,11 @@
 
 (defn- apply-metadata
   [cm destination avu]
-  (porkprint "Might be adding metadata to " destination " " avu)
+  (porkprint "Might be adding metadata to" destination avu)
   (let [existent-avu (avu? cm destination (first avu) (second avu))]
     (porkprint "AVU?" destination existent-avu)
     (when (empty? existent-avu)
-      (porkprint "Adding metadata " (first avu) " " (second avu) " " destination)
+      (porkprint "Adding metadata" (first avu) (second avu) destination)
       (apply (partial meta/add-metadata cm destination) avu))))
 
 
@@ -71,10 +71,10 @@
   [cm destination meta]
   (let [tuples (map fix-meta meta)
         dest   (ft/rm-last-slash destination)]
-    (porkprint "Metadata tuples for " destination " are  " tuples)
+    (porkprint "Metadata tuples for" destination "are" tuples)
     (when (pos? (count tuples))
       (doseq [tuple tuples]
-        (porkprint "Size of tuple " tuple " is " (count tuple))
+        (porkprint "Size of tuple" tuple "is" (count tuple))
         (when (= (count tuple) 3)
           (apply-metadata cm dest tuple))))))
 
@@ -99,18 +99,18 @@
   [transfer-status]
   (porkprint "-------")
   (porkprint "iput status update:")
-  (porkprint "\ttransfer state: " (.getTransferState transfer-status))
-  (porkprint "\ttransfer type: " (.getTransferType transfer-status))
-  (porkprint "\tsource path: " (.getSourceFileAbsolutePath transfer-status))
-  (porkprint "\tdest path: " (.getTargetFileAbsolutePath transfer-status))
-  (porkprint "\tfile size: " (.getTotalSize transfer-status))
-  (porkprint "\tbytes transferred: " (.getBytesTransfered transfer-status))
-  (porkprint "\tfiles to transfer: " (.getTotalFilesToTransfer transfer-status))
-  (porkprint "\tfiles skipped: " (.getTotalFilesSkippedSoFar transfer-status))
-  (porkprint "\tfiles transferred: " (.getTotalFilesTransferredSoFar transfer-status))
-  (porkprint "\ttransfer host: " (.getTransferHost transfer-status))
-  (porkprint "\ttransfer zone: " (.getTransferZone transfer-status))
-  (porkprint "\ttransfer resource: " (.getTargetResource transfer-status))
+  (porkprint "\ttransfer state:" (.getTransferState transfer-status))
+  (porkprint "\ttransfer type:" (.getTransferType transfer-status))
+  (porkprint "\tsource path:" (.getSourceFileAbsolutePath transfer-status))
+  (porkprint "\tdest path:" (.getTargetFileAbsolutePath transfer-status))
+  (porkprint "\tfile size:" (.getTotalSize transfer-status))
+  (porkprint "\tbytes transferred:" (.getBytesTransfered transfer-status))
+  (porkprint "\tfiles to transfer:" (.getTotalFilesToTransfer transfer-status))
+  (porkprint "\tfiles skipped:" (.getTotalFilesSkippedSoFar transfer-status))
+  (porkprint "\tfiles transferred:" (.getTotalFilesTransferredSoFar transfer-status))
+  (porkprint "\ttransfer host:" (.getTransferHost transfer-status))
+  (porkprint "\ttransfer zone:" (.getTransferZone transfer-status))
+  (porkprint "\ttransfer resource:" (.getTargetResource transfer-status))
   (porkprint "-------")
   (when-let [exc (.getTransferException transfer-status)]
     (throw exc))
@@ -169,18 +169,18 @@
 
       ;;; Now we can make sure the actual dest-dir is set up correctly.
       (when-not (info/exists? cm dest-dir)
-        (porkprint "Path " dest-dir " does not exist. Creating it.")
+        (porkprint "Path" dest-dir "does not exist. Creating it.")
         (ops/mkdir cm dest-dir))
 
       (doseq [[src dest] (seq dest-files)]
         (let [dir-dest (ft/dirname dest)]
           (if-not (or (.isFile (io/file src))
                       (.isDirectory (io/file src)))
-            (porkprint "Path " src " is neither a file nor a directory.")
+            (porkprint "Path" src "is neither a file nor a directory.")
             (do
               ;;; It's possible that the destination directory doesn't
               ;;; exist yet in iRODS, so create it if it's not there.
-              (porkprint "Creating all directories in iRODS down to " dir-dest)
+              (porkprint "Creating all directories in iRODS down to" dir-dest)
               (when-not (info/exists? cm dir-dest)
                 (ops/mkdirs cm dir-dest))
 
@@ -193,13 +193,13 @@
                 (retry 10 ops/iput cm src dest tcl)
 
                 ;;; Apply the App and Execution metadata to the newly uploaded file/directory.
-                (porkprint "Applying metadata to " dest)
+                (porkprint "Applying metadata to" dest)
                 (apply-metadata cm dest metadata)
                 (catch Object err
-                  (porkprint "iput failed: " err)
+                  (porkprint "iput failed:" err)
                   (reset! error? true)))))))
       (when-not skip-parent?
-        (porkprint "Applying metadata to " dest-dir)
+        (porkprint "Applying metadata to" dest-dir)
         (apply-metadata cm dest-dir metadata)
         (doseq [fileobj (file-seq (info/file cm dest-dir))]
           (apply-metadata cm (.getAbsolutePath fileobj) metadata)))
@@ -220,7 +220,7 @@
                  (retry 10 ops/iput cm src dest tcl)
                  (apply-metadata cm dest-path metadata))
                (catch [:error_code "ERR_BAD_EXIT_CODE"] err
-                 (porkprint "Command exited with a non-zero status: " err)
+                 (porkprint "Command exited with a non-zero status:" err)
                  (reset! error? true)))))))
 
       (if @error?
