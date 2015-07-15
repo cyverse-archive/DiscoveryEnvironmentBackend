@@ -12,7 +12,9 @@
             [clojure.java.io :as io]
             [slingshot.slingshot :refer [throw+ try+]]
             [clojure-commons.file-utils :as ft])
-  (:import [org.irods.jargon.core.transfer TransferStatus]))  ; needed for cursive type navigation
+  (:import [java.io File]                                            ; needed for cursive type navigation
+           [org.irods.jargon.core.exception DuplicateDataException]
+           [org.irods.jargon.core.transfer TransferStatus]))         ; needed for cursive type navigation
 
 
 (def porkprint (partial println "[porklock] "))
@@ -57,6 +59,14 @@
   (filter #(= value (:value %)) (meta/get-attribute cm path attr)))
 
 
+(defn- ensure-metadatum-applied
+  [cm destination avu]
+  (try+
+    (apply meta/add-metadata cm destination avu)
+    (catch DuplicateDataException _
+      (porkprint "Strange." destination "already has the metadatum" (str avu ".")))))
+
+
 (defn- apply-metadatum
   [cm destination avu]
   (porkprint "Might be adding metadata to" destination avu)
@@ -64,7 +74,7 @@
     (porkprint "AVU?" destination existent-avu)
     (when (empty? existent-avu)
       (porkprint "Adding metadata" (first avu) (second avu) destination)
-      (apply (partial meta/add-metadata cm destination) avu))))
+      (ensure-metadatum-applied cm destination avu))))
 
 
 (defn apply-metadata
