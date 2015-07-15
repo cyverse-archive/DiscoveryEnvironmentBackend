@@ -56,6 +56,17 @@
   [cm path attr value]
   (filter #(= value (:value %)) (meta/get-attribute cm path attr)))
 
+
+(defn- apply-metadata
+  [cm destination avu]
+  (porkprint "Might be adding metadata to " destination " " avu)
+  (let [existent-avu (avu? cm destination (first avu) (second avu))]
+    (porkprint "AVU?" destination existent-avu)
+    (when (empty? existent-avu)
+      (porkprint "Adding metadata " (first avu) " " (second avu) " " destination)
+      (apply (partial meta/add-metadata cm destination) avu))))
+
+
 (defn apply-metadata
   [cm destination meta]
   (let [tuples (map fix-meta meta)
@@ -65,11 +76,7 @@
       (doseq [tuple tuples]
         (porkprint "Size of tuple " tuple " is " (count tuple))
         (when (= (count tuple) 3)
-          (porkprint "Might be adding metadata to " dest " " tuple)
-          (porkprint "AVU? " dest (avu? cm dest (first tuple) (second tuple)))
-          (when (empty? (avu? cm dest (first tuple) (second tuple)))
-            (porkprint "Adding metadata " (first tuple) " " (second tuple) " " dest)
-            (apply (partial meta/add-metadata cm dest) tuple)))))))
+          (apply-metadata cm dest tuple))))))
 
 (defn user-home-dir
   [cm username]
