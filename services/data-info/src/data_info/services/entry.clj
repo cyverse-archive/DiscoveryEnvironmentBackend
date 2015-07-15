@@ -32,12 +32,11 @@
 
 
 (defn- path-allowed?
-  [irods path ctx]
-  (let [user (get-in ctx [:request :params :user])]
-    (if-not (user/user-exists? irods user)
-      {::user-exists? false}
-      (when (perm/is-readable? irods user path)
-        {::user-exists? true}))))
+  [attrs ctx]
+  (if-not (:user-exists? attrs)
+    {::user-exists? false}
+    (when (:path-readable? attrs)
+      {::user-exists? true})))
 
 
 ;; id specific
@@ -101,10 +100,11 @@
 
 
 (defn- get-file
-  [irods path]
-  (if (zero? (item/file-size irods path))
-    ""
-    (ops/input-stream irods path)))
+  [path]
+  (init/with-jargon (cfg/jargon-cfg) [irods]
+    (if (zero? (item/file-size irods path))
+      ""
+      (ops/input-stream irods path))))
 
 
 (defn- handle-unprocessable-file
@@ -116,14 +116,14 @@
      :parameters [:attachment]}))
 
 
-(defresource file-entry [irods path]
+(defresource file-entry [{:keys [path] :as attrs}]
   :allowed-methods             [:get]
-  :available-media-types       [(irods/detect-media-type irods path)]
+  :available-media-types       [(:media-type attrs)]
   :malformed?                  file-malformed?
-  :allowed?                    (partial path-allowed? irods path)
+  :allowed?                    (partial path-allowed? attrs)
   :processable?                file-processable?
   :as-response                 (partial as-file-response path)
-  :handle-ok                   (get-file irods path)
+  :handle-ok                   (get-file path)
   :handle-malformed            path-handle-malformed
   :handle-unprocessable-entity handle-unprocessable-file)
 
@@ -326,7 +326,7 @@
 
 
 (defn- get-folder
-  [irods path ctx]
+  [path ctx]
   (let [user        (get-in ctx [:request :params :user])
         entity-type (::entity-type ctx)
         badies      {:chars (::bad-chars ctx)
@@ -337,8 +337,9 @@
         offset      (::offset ctx)
         limit       (::limit ctx)
         info-types  (::info-type ctx)]
-    (paged-dir-listing irods user path entity-type badies sort-field sort-order offset limit
-                       info-types)))
+    (init/with-jargon (cfg/jargon-cfg) [irods]
+      (paged-dir-listing irods user path entity-type badies sort-field sort-order offset limit
+                         info-types))))
 
 
 (defn- as-folder-response
@@ -361,25 +362,46 @@
       {:error_code error/ERR_BAD_QUERY_PARAMETER :parameters bad-params})))
 
 
-(defresource folder-entry [irods path]
+(defresource folder-entry [{:keys [path] :as attrs}]
   :allowed-methods             [:get]
-  :available-media-types       ["application/json"]
+  :available-media-types       [(:media-type attrs)]
   :malformed?                  folder-malformed?
-  :allowed?                    (partial path-allowed? irods path)
+  :allowed?                    (partial path-allowed? attrs)
   :processable?                folder-processable?
   :as-response                 as-folder-response
-  :handle-ok                   (partial get-folder irods path)
+  :handle-ok                   (partial get-folder path)
   :handle-malformed            path-handle-malformed
   :handle-unprocessable-entity handle-unprocessable-folder)
+
+
+(defn- get-media-type
+  [cm path is-dir?]
+  (if is-dir?
+    "application/json"
+    (irods/detect-media-type cm path)))
+
+
+(defn- get-path-attrs
+  [zone path-in-zone req]
+  (init/with-jargon (cfg/jargon-cfg) [cm]
+    (let [path    (file/rm-last-slash (irods/abs-path zone path-in-zone))
+          exists? (item/exists? cm path)
+          is-dir? (and exists? (item/is-dir? cm path))
+          user    (get-in req [:params :user])]
+      {:path           path
+       :exists?        exists?
+       :is-dir?        is-dir?
+       :user-exists?   (user/user-exists? cm user)
+       :path-readable? (perm/is-readable? cm user path)
+       :media-type     (when exists? (get-media-type cm path is-dir?))})))
 
 
 ; TODO verify that each name in the path is not too large
 (defn dispatch-path-to-resource
   [zone path-in-zone req]
-  (let [path (file/rm-last-slash (irods/abs-path zone path-in-zone))]
-    (init/with-jargon (cfg/jargon-cfg) [cm]
-      (cond
-        (> (count path) jv/max-path-length) {:status 414}
-        (not (item/exists? cm path))        {:status 404}
-        (item/is-dir? cm path)              ((folder-entry cm path) req)
-        :else                               ((file-entry cm path) req)))))
+  (let [{:keys [path exists? is-dir?] :as attrs} (get-path-attrs zone path-in-zone req)]
+    (cond
+     (> (count path) jv/max-path-length) {:status 414}
+     (not exists?)                       {:status 404}
+     is-dir?                             (folder-entry attrs)
+     :else                               (file-entry attrs))))
