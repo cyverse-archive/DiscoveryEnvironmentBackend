@@ -98,7 +98,7 @@
 (defn save-job
   "Saves information about a job in the database."
   [{:keys [id job-name description app-id app-name app-description app-wiki-url result-folder-path
-           start-date end-date status deleted username notify]}
+           start-date end-date status deleted username notify parent-id]}
    submission]
   (let [user-id (get-user-id username)
         job-info (remove-nil-values
@@ -115,7 +115,8 @@
                     :status             status
                     :deleted            deleted
                     :user_id            user-id
-                    :notify             notify})]
+                    :notify             notify
+                    :parent_id          parent-id})]
     (kj/save-job job-info (cheshire/encode submission))))
 
 (defn save-job-step

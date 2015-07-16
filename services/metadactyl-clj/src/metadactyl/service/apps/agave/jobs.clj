@@ -1,6 +1,6 @@
 (ns metadactyl.service.apps.agave.jobs
   (:use [metadactyl.util.conversions :only [remove-nil-vals]]
-        [slingshot.slingshot :only [try+]])
+        [slingshot.slingshot :only [try+ throw+]])
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
             [clojure.string :as string]
@@ -74,12 +74,16 @@
 
 (defn- send-submission*
   [agave user submission job]
-  (let [job-info (.sendJobSubmission agave job)]
-    (assoc job-info
-      :name      (:name submission)
-      :notify    (:notify submission false)
-      :startdate (determine-start-time job)
-      :username  (:username user))))
+  (try+
+   (let [job-info (.sendJobSubmission agave job)]
+     (assoc job-info
+       :name      (:name submission)
+       :notify    (:notify submission false)
+       :startdate (determine-start-time job)
+       :username  (:username user)))
+   (catch Object _
+     (when-not (:parent_id submission)
+       (throw+)))))
 
 (defn- store-agave-job
   [job-id job submission]
@@ -94,7 +98,8 @@
                 :start-date         (:startdate job)
                 :username           (:username job)
                 :status             (:status job)
-                :notify             (:notify job)}
+                :notify             (:notify job)
+                :parent_id          (:parent_id submission)}
                submission))
 
 (defn- store-job-step
@@ -124,14 +129,27 @@
     :startdate       (str (.getTime (:startdate job)))
     :status          jp/submitted-status
     :username        (:username job)
-    :wiki_url        (:wiki_url job)}))
+    :wiki_url        (:wiki_url job)
+    :parent_id       (:parent_id submission)}))
 
-(defn- send-submission
-  [agave user job-id submission job]
-  (let [job (send-submission* agave user submission job)]
+(defn- handle-successful-submission
+  [job-id job submission]
+  (store-agave-job job-id job submission)
+  (store-job-step job-id job)
+  (format-job-submission-response job-id submission job))
+
+(defn- handle-failed-submission
+  [job-id job submission]
+  (let [job (assoc job :status jp/failed-status)]
     (store-agave-job job-id job submission)
     (store-job-step job-id job)
     (format-job-submission-response job-id submission job)))
+
+(defn- send-submission
+  [agave user job-id submission job]
+  (if-let [submitted-job (send-submission* agave user submission job)]
+    (handle-successful-submission job-id submitted-job submission)
+    (handle-failed-submission job-id job submission)))
 
 (defn submit
   [agave user submission]

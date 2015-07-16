@@ -15,6 +15,7 @@
   (listAppIds [_])
   (deleteApps [_ deletion-request])
   (getAppJobView [_ app-id])
+  (getAppSubmissionInfo [_ app-id])
   (deleteApp [_ app-id])
   (relabelApp [_ app])
   (updateApp [_ app])

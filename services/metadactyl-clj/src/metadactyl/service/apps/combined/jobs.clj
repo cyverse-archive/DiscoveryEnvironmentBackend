@@ -1,5 +1,5 @@
 (ns metadactyl.service.apps.combined.jobs
-  (:use [slingshot.slingshot :only [throw+]])
+  (:use [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
@@ -58,7 +58,8 @@
    :start-date         (db/now)
    :status             "Submitted"
    :username           (:username user)
-   :notify             (:notify submission false)})
+   :notify             (:notify submission false)
+   :parent-id          (:parent_id submission)})
 
 (defn- build-job-step-save-info
   [job-id job-step]
@@ -112,9 +113,13 @@
 
 (defn- submit-job-step
   [client {:keys [id] :as job-info} job-step submission]
-  (->> (prepare-job-step-submission job-info job-step submission)
-       (.submitJobStep client id)
-       (record-step-submission id (:step-number job-step))))
+  (try+
+   (->> (prepare-job-step-submission job-info job-step submission)
+        (.submitJobStep client id)
+        (record-step-submission id (:step-number job-step)))
+   (catch Object _
+     (log/error (:throwable (:throwable &throw-context) "job step submission failed"))
+     (when-not (boolean (:parent_id submission)) (throw+)))))
 
 (defn submit
   [user clients {app-id :app_id :as submission}]

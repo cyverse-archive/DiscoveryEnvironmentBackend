@@ -57,6 +57,9 @@
   (getAppJobView [_ app-id]
     (job-view/get-app app-id clients))
 
+  (getAppSubmissionInfo [_ app-id]
+    (job-view/get-app-submission-info app-id clients))
+
   (deleteApp [_ app-id]
     (.deleteApp (util/get-apps-client clients) app-id))
 

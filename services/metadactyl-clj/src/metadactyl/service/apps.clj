@@ -203,7 +203,7 @@
 (defn submit-job
   [{username :shortUsername email :email :as user} submission]
   (json-util/log-json "submission" submission)
-  (let [job-info (.submitJob (get-apps-client user) submission)]
+  (let [job-info (jobs/submit (get-apps-client user) user submission)]
     (cn/send-job-status-update username email job-info)
     (format-job-submission-response job-info)))
 

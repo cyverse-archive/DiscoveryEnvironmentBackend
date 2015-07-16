@@ -67,12 +67,21 @@
 (defn- get-app-from-client
   [app-id clients current-client]
   (when-let [app (.getAppJobView current-client app-id)]
-    (if (= (.getClientName current-client) "de")
-      (update-in app [:groups] (partial get-combined-groups clients (:id app)))
-      app)))
+    [(.getJobTypes current-client)
+     (if (= (.getClientName current-client) "de")
+       (update-in app [:groups] (partial get-combined-groups clients (:id app)))
+       app)]))
 
-(defn get-app
+(defn- get-app*
   [app-id clients]
   (->> (map (partial get-app-from-client app-id clients) clients)
        (remove nil?)
        (first)))
+
+(defn get-app
+  [app-id clients]
+  (second (get-app* app-id clients)))
+
+(defn get-app-submission-info
+  [app-id clients]
+  (get-app* app-id clients))

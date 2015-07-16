@@ -1,11 +1,13 @@
 (ns metadactyl.service.apps.jobs
-  (:use [slingshot.slingshot :only [try+]])
+  (:use [korma.db :only [transaction]]
+        [slingshot.slingshot :only [try+]])
   (:require [clojure.tools.logging :as log]
             [kameleon.db :as db]
             [metadactyl.clients.notifications :as cn]
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.service.apps.job-listings :as listings]
             [metadactyl.service.apps.jobs.params :as job-params]
+            [metadactyl.service.apps.jobs.submissions :as submissions]
             [metadactyl.util.service :as service]))
 
 (defn supports-job-type
@@ -157,7 +159,7 @@
   (jp/cancel-job-step-numbers id (mapv :step-number steps))
   (send-job-status-update apps-client job))
 
-(defn  stop-job
+(defn stop-job
   [apps-client {:keys [username] :as user} job-id]
   (validate-jobs-for-user username [job-id])
   (let [{:keys [status] :as job} (jp/get-job-by-id job-id)]
@@ -170,3 +172,7 @@
        (log/warn t "unable to cancel the most recent step of job, " job-id))
      (catch Object _
        (log/warn "unable to cancel the most recent step of job, " job-id)))))
+
+(defn submit
+  [apps-client user submission]
+  (transaction (submissions/submit apps-client user submission)))
