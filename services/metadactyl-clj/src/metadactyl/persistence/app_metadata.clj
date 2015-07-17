@@ -14,9 +14,11 @@
             [clojure.tools.logging :as log]))
 
 (def param-multi-input-type "MultiFileSelector")
+(def param-flex-input-type "FileFolderInput")
 (def param-input-reference-types #{"ReferenceAnnotation" "ReferenceGenome" "ReferenceSequence"})
-(def param-input-types (set/union #{"FileInput" "FolderInput" param-multi-input-type}
-                                  param-input-reference-types))
+(def param-input-types
+  (set/union #{"FileInput" "FolderInput" param-multi-input-type param-flex-input-type}
+             param-input-reference-types))
 (def param-output-types #{"FileOutput" "FolderOutput" "MultiFileOutput"})
 (def param-file-types (set/union param-input-types param-output-types))
 

@@ -99,7 +99,7 @@
                 :username           (:username job)
                 :status             (:status job)
                 :notify             (:notify job)
-                :parent_id          (:parent_id submission)}
+                :parent-id          (:parent_id submission)}
                submission))
 
 (defn- store-job-step
