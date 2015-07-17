@@ -237,18 +237,6 @@
           :description "This service updates a Tool definition in the DE."
           (ce/trap uri #(update-tool (assoc body :id tool-id))))
 
-  (POST* "/:tool-id/container" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam]
-         :query [params SecuredQueryParams]
-         :body [body NewToolContainer]
-         :return ToolContainer
-         :summary "Adds Container To Tool"
-         :description "Adds a container to a tool. This endpoint does NOT perform modifications. If you
-         attempt to POST twice you'll get an error. This is technically not correct RESTful behavior,
-         but this was done to prevent users from getting fooled into thinking that this endpoint can
-         be used for modifications."
-         (ce/trap uri (requester tool-id (add-tool-container tool-id body))))
-
   (POST* "/:tool-id/container/devices" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
          :query [params SecuredQueryParams]
