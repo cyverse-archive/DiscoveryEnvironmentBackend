@@ -6,6 +6,7 @@
         [compojure.api.legacy]
         [ring.util.response :only [redirect]])
   (:require [data-info.routes.data :as data-routes]
+            [data-info.routes.entries :as entry-routes]
             [data-info.routes.exists :as exists-routes]
             [data-info.routes.home :as home-routes]
             [data-info.routes.legacy :as legacy-routes]
@@ -38,6 +39,7 @@
      log-validation-errors]
     status-routes/status
     data-routes/data-operations
+    entry-routes/entries
     exists-routes/existence-marker
     home-routes/home
     navigation-routes/navigation

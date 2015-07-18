@@ -10,5 +10,4 @@
 (defroutes* all-routes
   (POST "/cart" [user folder]                             (cart/cart user folder))
   (HEAD "/entries/id/:entry-id" [entry-id user]           (entry/id-entry entry-id user))
-  (GET "/entries/path/:zone/*" [zone & {path :*} :as req] (entry/dispatch-path-to-resource zone path req))
   (route/not-found (svc/unrecognized-path-response)))

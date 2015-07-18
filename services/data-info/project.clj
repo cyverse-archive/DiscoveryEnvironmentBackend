@@ -28,7 +28,7 @@
                  [liberator "0.13"]
                  [me.raynes/fs "1.4.6"]
                  [medley "0.6.0"]
-                 [metosin/compojure-api "0.22.0"]
+                 [metosin/compojure-api "0.22.1"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [org.apache.tika/tika-core "1.9"]
                  [ring "1.3.2"]
