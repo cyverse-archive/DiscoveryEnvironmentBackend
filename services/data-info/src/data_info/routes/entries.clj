@@ -11,6 +11,17 @@
   (context* "/entries" []
     :tags ["Entries"]
 
+    (HEAD* "/id/:entry-id" [:as {uri :uri}]
+      :path-params [entry-id :- DataIdPathParam]
+      :query [{:keys [user]} SecuredQueryParamsRequired]
+      :responses {200 {:description "User has read permissions for given data item."}
+                  403 {:description "User does not have read permissions for given data item."}
+                  404 {:description "Entry ID does not exist."}
+                  422 {:description "User does not exist or an internal error occurred."}}
+      :summary "Entry Meta-Status"
+      :description "Returns an HTTP status according to the user's access level to the data item."
+      (ce/trap uri entry/id-entry entry-id user))
+
     (GET* "/path/:zone/*" [:as {{zone :zone path :*} :params uri :uri}]
       :query [params FolderListingParams]
       :summary "Entry Contents: incomplete docs"
@@ -19,7 +30,7 @@
 
 This endpoint definition can not be properly documented or used from the current version of the
 Swagger UI, but the alternate endpoint can be, and its requests will be processed by this endpoint."
-      (ce/trap uri #(entry/dispatch-path-to-resource zone path params)))
+      (ce/trap uri entry/dispatch-path-to-resource zone path params))
 
     (GET* "/path/:zone/:path" [:as {uri :uri}]
       :path-params [zone :- (describe String "The IRODS zone")

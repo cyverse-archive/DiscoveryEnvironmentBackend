@@ -3,7 +3,6 @@
   (:use [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as json]
             [clojure.string :as str]
-            [liberator.core :refer [defresource]]
             [me.raynes.fs :as fs]
             [clj-icat-direct.icat :as icat]
             [clj-jargon.by-uuid :as uuid]
@@ -19,33 +18,24 @@
             [data-info.util.config :as cfg]
             [data-info.util.irods :as irods]
             [data-info.util.validators :as duv]
-            [ring.util.http-response :as http-response])
-  (:import [java.util UUID]))
+            [ring.util.http-response :as http-response]))
 
 
 ;; id specific
 
-(defn- id-allowed?
-  [url-id user _]
+(defn id-entry
+  [url-id user]
   (try
     (init/with-jargon (cfg/jargon-cfg) [cm]
       (if-not (user/user-exists? cm user)
-        {::processable? false}
-        (if-let [path (uuid/get-path cm (UUID/fromString url-id))]
-          (when (perm/is-readable? cm user path)
-            {::processable? true ::exists? true})
-          {::processable? true ::exists? false})))
+        (http-response/unprocessable-entity)
+        (if-let [path (uuid/get-path cm url-id)]
+          (if (perm/is-readable? cm user path)
+            (http-response/ok)
+            (http-response/forbidden))
+          (http-response/not-found))))
     (catch IllegalArgumentException _
-      {::processable? false})))
-
-
-(defresource id-entry [url-id user]
-  :allowed-methods       [:head]
-  :allowed?              (partial id-allowed? url-id user)
-  :exists?               #(::exists? %)
-  :malformed?            (not user)
-  :media-type-available? true
-  :processable?          #(::processable? %))
+      (http-response/unprocessable-entity))))
 
 
 ;; file specific

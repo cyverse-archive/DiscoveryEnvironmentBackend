@@ -9,5 +9,4 @@
 
 (defroutes* all-routes
   (POST "/cart" [user folder]                             (cart/cart user folder))
-  (HEAD "/entries/id/:entry-id" [entry-id user]           (entry/id-entry entry-id user))
   (route/not-found (svc/unrecognized-path-response)))
