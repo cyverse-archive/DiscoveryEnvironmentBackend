@@ -5,7 +5,7 @@
 
 (defn get-error-code-block
   [& error-codes]
-  (str "\n\n#### Error codes:\n    " (clojure.string/join "\n    " error-codes)))
+  (str "\n\n#### Error Codes:\n    " (clojure.string/join "\n    " error-codes)))
 
 (def NonBlankString
   (describe

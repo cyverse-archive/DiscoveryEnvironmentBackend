@@ -17,10 +17,8 @@
       :body [body (describe Paths "The paths to gather status information on.")]
       :return (s/either StatResponse StatusInfo)
       :summary "File and Folder Status Information"
-      :description
-"This endpoint allows the caller to get information about many files and folders at once.
-
-#### Error codes:
-
-      ERR_DOES_NOT_EXIST, ERR_NOT_READABLE, ERR_NOT_A_USER, ERR_TOO_MANY_RESULTS"
+      :description (str
+"This endpoint allows the caller to get information about many files and folders at once."
+(get-error-code-block
+  "ERR_DOES_NOT_EXIST, ERR_NOT_READABLE, ERR_NOT_A_USER, ERR_TOO_MANY_RESULTS"))
       (svc/trap uri stat/do-stat params body))))

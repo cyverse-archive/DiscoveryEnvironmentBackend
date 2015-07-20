@@ -17,10 +17,8 @@
       :body [body (describe Paths "The paths to check for existence.")]
       :return (s/either ExistenceResponse ExistenceInfo)
       :summary "File and Folder Existence"
-      :description
-"This endpoint allows the caller to check for the existence of a set of files and folders.
-
-#### Error codes:
-
-      ERR_NOT_A_USER, ERR_TOO_MANY_RESULTS"
+      :description (str
+"This endpoint allows the caller to check for the existence of a set of files and folders."
+(get-error-code-block
+  "ERR_NOT_A_USER, ERR_TOO_MANY_RESULTS"))
       (svc/trap uri exists/do-exists params body))))
