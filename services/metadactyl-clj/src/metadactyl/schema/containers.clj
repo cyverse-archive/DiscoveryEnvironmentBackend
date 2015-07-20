@@ -44,7 +44,7 @@
 
 (s/defschema MemoryLimit
   (describe
-   {:memory_limit Long}
+   {:memory_limit (s/maybe Long)}
    "The amount of memory (in bytes) that the tool container is restricted to."))
 
 (s/defschema NetworkMode
