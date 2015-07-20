@@ -30,12 +30,12 @@
             :version "2.0.0"}})
   (middlewares
     [tc/add-user-to-context
-     log-validation-errors
      wrap-query-params
      wrap-lcase-params
      params/wrap-keyword-params
      util/req-logger
-     context-middleware]
+     context-middleware
+     log-validation-errors]
     status-routes/status
     data-routes/data-operations
     exists-routes/existence-marker
@@ -44,12 +44,12 @@
     stat-routes/stat-gatherer)
   (middlewares
     [tc/add-user-to-context
-     log-validation-errors
      wrap-query-params
      wrap-lcase-params
      params/wrap-keyword-params
      util/req-logger
      #_(liberator/wrap-trace :header :ui)
      util/trap-handler
-     context-middleware]
+     context-middleware
+     log-validation-errors]
     legacy-routes/all-routes))

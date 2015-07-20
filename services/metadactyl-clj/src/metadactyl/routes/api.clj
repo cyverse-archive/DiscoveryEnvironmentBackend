@@ -85,10 +85,10 @@
             {:name "admin-reference-genomes", :description "Admin Reference Genome endpoints."}
             {:name "admin-tool-requests", :description "Admin Tool Request endpoints."}]})
   (middlewares
-    [log-validation-errors
-     wrap-keyword-params
+    [wrap-keyword-params
      wrap-query-params
-     wrap-context-map]
+     wrap-context-map
+     log-validation-errors]
     (context* "/" []
       :tags ["service-info"]
       status-routes/status)
@@ -96,11 +96,11 @@
       :tags ["callbacks"]
       callback-routes/callbacks))
   (middlewares
-    [log-validation-errors
-     wrap-keyword-params
+    [wrap-keyword-params
      wrap-query-params
      tc/add-user-to-context
      wrap-context-map
+     log-validation-errors
      store-current-user]
     (context* "/apps/categories" []
       :tags ["app-categories"]

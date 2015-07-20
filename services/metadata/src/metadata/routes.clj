@@ -1,5 +1,6 @@
 (ns metadata.routes
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
+        [clojure-commons.middleware :only [log-validation-errors]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.api.sweet])
   (:require [metadata.routes.avus :as avu-routes]
@@ -40,7 +41,8 @@
      wrap-lcase-params
      params/wrap-keyword-params
      service/req-logger
-     context-middleware]
+     context-middleware
+     log-validation-errors]
     status-routes/status
     avu-routes/avus
     comment-routes/data-comment-routes
