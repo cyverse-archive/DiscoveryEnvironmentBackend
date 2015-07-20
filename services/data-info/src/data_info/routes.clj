@@ -1,5 +1,6 @@
 (ns data-info.routes
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
+        [clojure-commons.middleware :only [log-validation-errors]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.api.sweet]
         [compojure.api.legacy]
@@ -29,6 +30,7 @@
             :version "2.0.0"}})
   (middlewares
     [tc/add-user-to-context
+     log-validation-errors
      wrap-query-params
      wrap-lcase-params
      params/wrap-keyword-params
@@ -42,6 +44,7 @@
     stat-routes/stat-gatherer)
   (middlewares
     [tc/add-user-to-context
+     log-validation-errors
      wrap-query-params
      wrap-lcase-params
      params/wrap-keyword-params

@@ -1,5 +1,6 @@
 (ns metadactyl.routes.api
-  (:use [clojure-commons.query-params :only [wrap-query-params]]
+  (:use [clojure-commons.middleware :only [log-validation-errors]]
+        [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.api.sweet]
         [metadactyl.routes.domain.analysis]
         [metadactyl.routes.domain.analysis.listing]
@@ -84,7 +85,8 @@
             {:name "admin-reference-genomes", :description "Admin Reference Genome endpoints."}
             {:name "admin-tool-requests", :description "Admin Tool Request endpoints."}]})
   (middlewares
-    [wrap-keyword-params
+    [log-validation-errors
+     wrap-keyword-params
      wrap-query-params
      wrap-context-map]
     (context* "/" []
@@ -94,7 +96,8 @@
       :tags ["callbacks"]
       callback-routes/callbacks))
   (middlewares
-    [wrap-keyword-params
+    [log-validation-errors
+     wrap-keyword-params
      wrap-query-params
      tc/add-user-to-context
      wrap-context-map
