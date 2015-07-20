@@ -33,14 +33,20 @@
 
 (defn- load-path-list-stats
   [user input-paths-by-id]
-  (->> (:paths (get-file-stats user (vals input-paths-by-id)))
+  (->> (:paths (get-file-stats user (flatten (vals input-paths-by-id))))
        (map val)
        (filter (comp (partial = (config/path-list-info-type)) :infoType))))
+
+(defn- param-value-contains-paths?
+  [paths [_ v]]
+  (if (sequential? v)
+    (some (set paths) v)
+    ((set paths) v)))
 
 (defn- extract-ht-param-ids
   [path-list-stats input-paths-by-id]
   (let [ht-paths (set (map :path path-list-stats))]
-    (map key (filter (comp ht-paths val) input-paths-by-id))))
+    (map key (filter (partial param-value-contains-paths? ht-paths) input-paths-by-id))))
 
 (defn- max-path-list-size-exceeded
   [max-size path actual-size]
@@ -194,6 +200,6 @@
         input-params-by-id (get-app-inputs app)
         input-paths-by-id  (select-keys (:config submission) (keys input-params-by-id))]
     (if-let [path-list-stats (seq (load-path-list-stats user input-paths-by-id))]
-      (submit-batch-job apps-client user input-params-by-id input-paths-by-id path-list-stats
-                        job-types app submission)
+      (submit-batch-job apps-client user input-params-by-id input-paths-by-id
+                        (log/spy :warn path-list-stats) job-types app submission)
       (.submitJob apps-client submission))))
