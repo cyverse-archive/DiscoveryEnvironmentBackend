@@ -29,7 +29,7 @@
 
 (s/defschema Entrypoint
   (describe
-   {:entrypoint s/Str}
+   {:entrypoint (s/maybe s/Str)}
    "The entrypoint for a tool container"))
 
 (s/defschema NewSettings
