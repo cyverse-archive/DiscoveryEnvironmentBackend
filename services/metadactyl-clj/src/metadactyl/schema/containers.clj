@@ -39,7 +39,7 @@
 
 (s/defschema CPUShares
   (describe
-   {:cpu_shares Integer}
+   {:cpu_shares (s/maybe Integer)}
    "The shares of the CPU that the tool container will receive."))
 
 (s/defschema MemoryLimit
