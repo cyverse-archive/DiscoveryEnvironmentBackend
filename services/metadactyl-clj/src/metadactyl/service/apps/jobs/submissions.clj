@@ -14,11 +14,11 @@
             [metadactyl.util.config :as config]
             [metadactyl.util.service :as service]))
 
-(defn- get-app-inputs
-  [app]
+(defn- get-app-params
+  [app type-set]
   (->> (:groups app)
        (mapcat :parameters)
-       (filter (comp ap/param-input-types :type))
+       (filter (comp type-set :type))
        (map (juxt (comp keyword :id) identity))
        (into {})))
 
@@ -33,7 +33,10 @@
 
 (defn- load-path-list-stats
   [user input-paths-by-id]
-  (->> (:paths (get-file-stats user (flatten (vals input-paths-by-id))))
+  (->> (flatten (vals input-paths-by-id))
+       (remove nil?)
+       (get-file-stats user)
+       (:paths)
        (map val)
        (filter (comp (partial = (config/path-list-info-type)) :infoType))))
 
@@ -197,7 +200,7 @@
 (defn submit
   [apps-client user submission]
   (let [[job-types app]    (.getAppSubmissionInfo apps-client (:app_id submission))
-        input-params-by-id (get-app-inputs app)
+        input-params-by-id (get-app-params app ap/param-ds-input-types)
         input-paths-by-id  (select-keys (:config submission) (keys input-params-by-id))]
     (if-let [path-list-stats (seq (load-path-list-stats user input-paths-by-id))]
       (submit-batch-job apps-client user input-params-by-id input-paths-by-id
