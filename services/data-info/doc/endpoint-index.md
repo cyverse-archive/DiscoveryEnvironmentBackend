@@ -1,7 +1,6 @@
 # Endpoint Index
 
 * [GET /status](endpoints/service-info.md)
-* [POST /cart](endpoints/cart.md)
 
 ## Unmigrated Endpoints
 

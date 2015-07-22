@@ -51,17 +51,8 @@
     (POST "/filesystem/stat" [:as req]
       (controller req stat/do-stat :params :body))
 
-    (POST "/filesystem/download" [:as req]
-      (controller req ud/do-download :params :body))
-
-    (POST "/filesystem/download-contents" [:as req]
-      (controller req ud/do-download-contents :params :body))
-
     (GET "/filesystem/display-download" [:as req]
       (controller req ud/do-special-download :params))
-
-    (GET "/filesystem/upload" [:as req]
-      (controller req ud/do-upload :params))
 
     (GET "/filesystem/directory" [:as req]
       (controller req dir/do-directory :params))

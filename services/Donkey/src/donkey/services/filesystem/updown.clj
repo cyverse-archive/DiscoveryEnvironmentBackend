@@ -2,70 +2,11 @@
   (:use [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure.string :as string]
-            [clojure.tools.logging :as log]
-            [cheshire.core :as json]
+  (:require [clojure.tools.logging :as log]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clojure-commons.error-codes :as error]
             [clojure-commons.file-utils :as ft]
             [donkey.clients.data-info :as data]))
-
-
-(defn- fmt-cart-response
-  [action response]
-  {:data   (json/decode (:body response) true)})
-
-
-(defn- handle-unprocessable-cart
-  [method url err]
-  (let [body (json/decode (:body err) true)]
-    (if (= (:error_code body) error/ERR_NOT_A_FOLDER)
-      (throw+ body)
-      (data/respond-with-default-error method url err))))
-
-
-(defn do-download
-  [{user :user} {paths :paths}]
-  (let [req-map {:query-params {:user user}
-                 :content-type :json
-                 :body         (json/encode {:paths paths})}
-        resp    (data/request :post "cart" req-map)]
-    (fmt-cart-response "download" resp)))
-
-(with-pre-hook! #'do-download
-  (fn [params body]
-    (log-call "do-download" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:paths sequential?})))
-
-(with-post-hook! #'do-download (log-func "do-download"))
-
-
-(defn do-download-contents
-  [{user :user} {folder :path}]
-  (let [req-map {:query-params {:folder folder :user user}}
-        resp    (data/request :post "cart" req-map :422 handle-unprocessable-cart)]
-    (fmt-cart-response "download" resp)))
-
-(with-pre-hook! #'do-download-contents
-  (fn [params body]
-    (log-call "do-download-contents" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:path string?})))
-
-(with-post-hook! #'do-download-contents (log-func "do-download-contents"))
-
-
-(defn do-upload
-  [{user :user}]
-  (fmt-cart-response "upload" (data/request :post "cart" {:query-params {:user user}})))
-
-(with-pre-hook! #'do-upload
-  (fn [params]
-    (log-call "do-upload" params)
-    (validate-map params {:user string?})))
-
-(with-post-hook! #'do-upload (log-func "do-upload"))
 
 
 (defn- download-file
