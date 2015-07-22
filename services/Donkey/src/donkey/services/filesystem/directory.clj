@@ -213,14 +213,14 @@
 (defn- resolve-sort-field
   [sort-col]
   (if-not sort-col
-    "NAME"
-    (case (string/upper-case sort-col)
-      "DATECREATED"  "DATECREATED"
-      "ID"           "PATH"
-      "LASTMODIFIED" "DATEMODIFIED"
-      "NAME"         "NAME"
-      "PATH"         "PATH"
-      "SIZE"         "SIZE"
+    "name"
+    (case (string/lower-case sort-col)
+      "datecreated"  "datecreated"
+      "id"           "path"
+      "lastmodified" "datemodified"
+      "name"         "name"
+      "path"         "path"
+      "size"         "size"
                      (do
                        (log/warn "invalid sort column" sort-col)
                        (throw+ {:error_code "ERR_INVALID_SORT_COLUMN" :column sort-col})))))
