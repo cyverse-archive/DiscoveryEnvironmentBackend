@@ -18,17 +18,17 @@
   (agaveFilePath [_ file-url])
   (storageSystem [_]))
 
-(deftype AgaveClientV2 [base-url storage-system token-info-fn timeout]
+(deftype AgaveClientV2 [base-url storage-system token-info-fn timeout page-len]
   AgaveClient
   (listSystems [_]
     (v2/check-access-token token-info-fn timeout)
-    (v2/list-systems base-url token-info-fn timeout))
+    (v2/list-systems base-url token-info-fn timeout page-len))
   (getSystemInfo [_ system-name]
     (v2/check-access-token token-info-fn timeout)
     (v2/get-system-info base-url token-info-fn timeout system-name))
   (listApps [_]
     (v2/check-access-token token-info-fn timeout)
-    (v2/list-apps base-url token-info-fn timeout))
+    (v2/list-apps base-url token-info-fn timeout page-len))
   (getApp [_ app-id]
     (v2/check-access-token token-info-fn timeout)
     (v2/get-app base-url token-info-fn timeout app-id))
@@ -37,10 +37,10 @@
     (v2/submit-job base-url token-info-fn timeout submission))
   (listJobs [_]
     (v2/check-access-token token-info-fn timeout)
-    (v2/list-jobs base-url token-info-fn timeout))
+    (v2/list-jobs base-url token-info-fn timeout page-len))
   (listJobs [_ job-ids]
     (v2/check-access-token token-info-fn timeout)
-    (v2/list-jobs base-url token-info-fn timeout job-ids))
+    (v2/list-jobs base-url token-info-fn timeout page-len job-ids))
   (listJob [_ job-id]
     (v2/check-access-token token-info-fn timeout)
     (v2/list-job base-url token-info-fn timeout job-id))
@@ -58,7 +58,7 @@
     (v2/file-path-to-agave-url base-url token-info-fn timeout storage-system file-path))
   (irodsFilePath [_ file-url]
     (v2/check-access-token token-info-fn timeout)
-    (v2/agave-to-irods-path base-url token-info-fn timeout storage-system file-url))
+    (v2/agave-to-irods-path base-url token-info-fn timeout page-len storage-system file-url))
   (agaveFilePath [_ irods-path]
     (v2/check-access-token token-info-fn timeout)
     (v2/irods-to-agave-path base-url token-info-fn timeout storage-system irods-path))
@@ -66,6 +66,8 @@
     storage-system))
 
 (defn agave-client-v2
-  [base-url storage-system token-info-fn & {:keys [timeout] :or {timeout 5000}}]
+  [base-url storage-system token-info-fn & {:keys [timeout page-len]
+                                            :or {timeout  5000
+                                                 page-len 100}}]
   (let [token-info-wrapper-fn (memoize #(ref (token-info-fn)))]
-    (AgaveClientV2. base-url storage-system token-info-wrapper-fn timeout)))
+    (AgaveClientV2. base-url storage-system token-info-wrapper-fn timeout page-len)))

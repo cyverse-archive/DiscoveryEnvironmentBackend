@@ -69,7 +69,7 @@
     (v2/get-default-output-name agave app-id output-id)))
 
 (defn de-agave-client-v2
-  [base-url storage-system token-info-fn jobs-enabled? & {:keys [timeout] :or {timeout 5000}}]
+  [base-url storage-system token-info-fn jobs-enabled? & agave-opts]
   (DeAgaveClientV2.
-   (core/agave-client-v2 base-url storage-system token-info-fn :timeout timeout)
+   (apply core/agave-client-v2 base-url storage-system token-info-fn agave-opts)
    jobs-enabled?))
