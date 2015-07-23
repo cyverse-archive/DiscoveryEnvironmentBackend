@@ -199,6 +199,11 @@
   [props config-valid configs]
   "metadactyl.agave.read-timeout")
 
+(cc/defprop-int agave-page-length
+  "The maximum number of entities to receive from a single Agave service call."
+  [props config-valid configs]
+  "metadactyl.agave.page-length")
+
 (cc/defprop-str pgp-keyring-path
   "The path to the PGP keyring file."
   [props config-valid configs]
