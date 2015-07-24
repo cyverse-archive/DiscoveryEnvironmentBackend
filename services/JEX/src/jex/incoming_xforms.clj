@@ -285,7 +285,7 @@
 (defn- de-image?
   [container-map]
   (contains?
-    #{"discoenv/porklock" "discoenv/curl-wrapper" "discoenv/backwards-compat"}
+    #{"discoenv/porklock" "discoenv/curl-wrapper" "gims.iplantcollaborative.org:5000/backwards-compat"}
     (:name (:image container-map))))
 
 (defn container-image-tag
@@ -322,7 +322,7 @@
   [step-map]
   (let [loc (get-in step-map [:component :location])
         img (container-image-arg (container-info step-map))]
-    (.startsWith img "discoenv/backwards-compat")))
+    (.startsWith img "gims.iplantcollaborative.org:5000/backwards-compat")))
 
 (defn backwards-compatible-executable
   [step-map]
