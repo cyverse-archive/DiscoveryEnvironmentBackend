@@ -1,5 +1,19 @@
-(defproject fishy "0.1.0-SNAPSHOT"
+(use '[clojure.java.shell :only (sh)])
+(require '[clojure.string :as string])
+
+(defn git-ref
+  []
+  (or (System/getenv "GIT_COMMIT")
+      (string/trim (:out (sh "git" "rev-parse" "HEAD")))
+      ""))
+
+(defproject fishy "5.0.0"
   :description "A REST front-end for Grouper."
+  :url "http://www.iplantcollaborative.org"
+  :license {:name "BSD"
+            :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
+  :manifest {"Git-Ref" ~(git-ref)}
+  :uberjar-name "fishy-standalone.jar"
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [cheshire "5.5.0"]
                  [clj-http "1.1.2"]
@@ -15,4 +29,5 @@
   :main fishy.core
   :ring {:handler fishy.routes/app
          :init    fishy.core/load-config-from-file
-         :port    31310})
+         :port    31310}
+  :uberjar-exclusions [#"(?i)META-INF/[^/]*[.](SF|DSA|RSA)"])
