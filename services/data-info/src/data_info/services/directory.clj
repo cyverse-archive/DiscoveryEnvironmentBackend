@@ -5,6 +5,7 @@
             [clj-jargon.item-info :as item]
             [clj-jargon.permissions :as perm]
             [clojure-commons.validators :as cv]
+            [data-info.services.stat :as stat]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.util.irods :as irods]
@@ -56,12 +57,10 @@
     (validators/path-exists cm path)
     (validators/path-readable cm user path)
     (validators/path-is-dir cm path)
-    (let [stat (item/stat cm path)]
-      (-> stat
-        (select-keys [:path :date-created :date-modified])
-        (assoc :id         (irods/lookup-uuid cm path)
-               :permission (perm/permission-for cm user path)
-               :folders    (map fmt-folder (icat/list-folders-in-folder user (cfg/irods-zone) path)))))))
+    (-> (stat/path-stat cm user path)
+        (select-keys [:id :path :date-created :date-modified :permission])
+        (assoc :folders (map fmt-folder
+                             (icat/list-folders-in-folder user (cfg/irods-zone) path))))))
 
 
 (defn do-directory

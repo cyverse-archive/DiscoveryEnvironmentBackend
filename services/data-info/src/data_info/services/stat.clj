@@ -4,6 +4,7 @@
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [slingshot.slingshot :refer [throw+]]
             [clj-icat-direct.icat :as icat]
+            [clj-jargon.by-uuid :as uuid]
             [clj-jargon.init :refer [with-jargon]]
             [clj-jargon.item-info :as info]
             [clj-jargon.metadata :as meta]
@@ -71,7 +72,7 @@
   [^IPersistentMap cm ^String user ^IPersistentMap stat]
   (let [path (:path stat)]
     (-> stat
-      (assoc :id         (-> (meta/get-attribute cm path "ipc_UUID") first :value)
+      (assoc :id         (-> (meta/get-attribute cm path uuid/uuid-attr) first :value)
              :permission (perm/permission-for cm user path))
       (merge-type-info cm user path)
       (merge-shares cm user path)

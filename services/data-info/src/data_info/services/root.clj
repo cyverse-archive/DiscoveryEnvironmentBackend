@@ -1,13 +1,13 @@
 (ns data-info.services.root
   (:use [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
-        [clj-jargon.permissions :only [set-permission owns? permission-for]])
+        [clj-jargon.permissions :only [set-permission owns?]])
   (:require [clojure.tools.logging :as log]
             [clj-jargon.item-info :as item]
             [clj-jargon.item-ops :as ops]
             [clojure-commons.file-utils :as ft]
+            [data-info.services.stat :as stat]
             [data-info.util.config :as cfg]
-            [data-info.util.irods :as irods]
             [data-info.util.logging :as dul]
             [data-info.util.paths :as paths]
             [data-info.util.validators :as validators]
@@ -15,12 +15,8 @@
 
 (defn- get-root
   [cm user root-path]
-  (log/info "[get-root] for" user "at" root-path)
-  (validators/path-exists cm root-path)
-  (-> (item/stat cm root-path)
-      (select-keys [:path :date-created :date-modified])
-      (assoc :id         (irods/lookup-uuid cm root-path)
-             :permission (permission-for cm user root-path))))
+  (-> (stat/path-stat cm user root-path)
+      (select-keys [:id :path :date-created :date-modified :permission])))
 
 (defn- get-trash-root
   [cm user]
@@ -42,7 +38,7 @@
   (let [uhome          (paths/user-home-dir user)
         community-data (ft/rm-last-slash (cfg/community-data))
         irods-home     (ft/rm-last-slash (cfg/irods-home))]
-    (log/info "[root-listing]" "for" user)
+    (log/debug "[root-listing]" "for" user)
     (with-jargon (cfg/jargon-cfg) [cm]
       (validators/user-exists cm user)
       {:roots (remove nil?
