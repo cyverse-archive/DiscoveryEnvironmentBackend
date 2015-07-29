@@ -1,15 +1,22 @@
 (ns clojure-commons.client
   (:use [clojure.string :only [join]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clj-http.client :as client]
+  (:require [cemerick.url :as url]
+            [clj-http.client :as client]
             [clojure-commons.error-codes :as ce])
   (:import [java.io InputStream])
   (:refer-clojure :exclude [get]))
 
+(defn build-url-with-query
+  "Builds a URL from a base URL and one or more URL components.  Any query
+   string parameters that are provided will be included in the result."
+  [base query & components]
+  (str (assoc (apply url/url base (map url/url-encode components)) :query query)))
+
 (defn build-url
-  "Builds a URL from multiple component strings."
-  [& components]
-  (join "/" (map #(.replaceAll % "^/|/$" "") components)))
+  "Builds a URL from a base URL and one or more URL components."
+  [base & components]
+  (apply build-url-with-query base {} components))
 
 (defn- wrap-req
   "Wraps a request so that we can throw our own exception rather than catch and

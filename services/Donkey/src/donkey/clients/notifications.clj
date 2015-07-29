@@ -1,6 +1,6 @@
 (ns donkey.clients.notifications
-  (:use [donkey.util.config :only [notificationagent-base]]
-        [donkey.util.service :only [build-url-with-query]]
+  (:use [clojure-commons.client :only [build-url-with-query]]
+        [donkey.util.config :only [notificationagent-base]]
         [donkey.util.transformers :only [add-current-user-to-map]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]

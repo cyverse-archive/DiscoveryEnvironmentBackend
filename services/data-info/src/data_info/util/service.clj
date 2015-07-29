@@ -158,17 +158,6 @@
   (let [msg "unrecognized service path"]
     (cheshire/encode {:success false :reason msg})))
 
-(defn build-url-with-query
-  "Builds a URL from a base URL and one or more URL components.  Any query
-   string parameters that are provided will be included in the result."
-  [base query & components]
-  (str (assoc (apply url base (map url-encode components)) :query query)))
-
-(defn build-url
-  "Builds a URL from a base URL and one or more URL components."
-  [base & components]
-  (apply build-url-with-query base {} components))
-
 (defn prepare-forwarded-request
   "Prepares a request to be forwarded to a remote service."
   ([request body]

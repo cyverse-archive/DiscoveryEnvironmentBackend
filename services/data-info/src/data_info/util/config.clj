@@ -62,6 +62,12 @@
   "data-info.perms-filter")
 
 
+(cc/defprop-str community-data
+  "The path to the root directory for community data."
+  [props config-valid configs]
+  "data-info.community-data")
+
+
 (cc/defprop-str copy-attribute
   "The attribute to tag files with when they're a copy of another file."
   [props config-valid configs]

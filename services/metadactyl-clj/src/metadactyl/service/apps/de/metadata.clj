@@ -1,6 +1,7 @@
 (ns metadactyl.service.apps.de.metadata
   "DE app metadata services."
   (:use [clojure.java.io :only [reader]]
+        [clojure-commons.client :only [build-url]]
         [clojure-commons.validators]
         [kameleon.app-groups :only [add-app-to-category
                                     decategorize-app
@@ -10,7 +11,7 @@
         [metadactyl.service.apps.de.validation :only [app-publishable?]]
         [metadactyl.util.config :only [workspace-beta-app-category-id
                                        workspace-favorites-app-category-index]]
-        [metadactyl.util.service :only [build-url success-response]]
+        [metadactyl.util.service :only [success-response]]
         [metadactyl.validation :only [get-valid-user-id verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
         [korma.db :only [transaction]]

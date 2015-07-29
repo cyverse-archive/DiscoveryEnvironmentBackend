@@ -82,3 +82,5 @@
     (sharing? (ft/add-trailing-slash id)) "Shared With Me"
     (community? id)                       "Community Data"
     :else                                 (ft/basename id)))
+
+(def path->label id->label)

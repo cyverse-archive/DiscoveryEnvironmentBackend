@@ -31,17 +31,17 @@
          (mapcat select-listing)
          (map format-fn))))
 
-(defn format-dir
+(defn- format-dir
   [[path create-time mod-time perms]]
   {:date-created  (str (* (Integer/parseInt create-time) 1000))
    :date-modified (str (* (Integer/parseInt mod-time) 1000))
    :file-size     0
    :hasSubDirs    true
-   :id            path
+   :path          path
    :label         (ft/basename path)
    :permission    (fmt-perm perms)})
 
-(defn list-subdirs
+(defn- list-subdirs
   [cm user coll-path]
   (sort-by (comp string/upper-case :label)
            (format-listing
@@ -63,7 +63,7 @@
     RodsGenQueryEnum/COL_DATA_ACCESS_USER_ID
     user-id]))
 
-(defn format-file
+(defn- format-file
   [coll-path [name create-time mod-time size perms]]
   {:date-created  (str (* (Integer/parseInt create-time) 1000))
    :date-modified (str (* (Integer/parseInt mod-time) 1000))
@@ -72,7 +72,7 @@
    :id            (ft/path-join coll-path name)
    :label         name})
 
-(defn list-files-in-dir
+(defn- list-files-in-dir
   [cm user coll-path]
   (sort-by (comp string/upper-case :label)
            (format-listing
@@ -98,6 +98,7 @@
   (> (Integer/parseInt (last one))
      (Integer/parseInt (last two))))
 
+;; TODO: remove? obsolete?
 (defn list-dir
   [cm user coll-path & {:keys [include-files include-subdirs]
                         :or   {include-files   false

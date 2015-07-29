@@ -3,6 +3,12 @@
         [data-info.routes.domain.stats])
   (:require [schema.core :as s]))
 
+(s/defschema RootListing
+  (dissoc DataStatInfo :type))
+
+(s/defschema NavigationRootResponse
+  {:roots [RootListing]})
+
 (s/defschema FolderListing
   (-> DataStatInfo
       (dissoc :type)

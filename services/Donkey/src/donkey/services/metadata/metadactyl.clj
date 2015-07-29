@@ -1,5 +1,6 @@
 (ns donkey.services.metadata.metadactyl
   (:use [clojure.java.io :only [reader]]
+        [clojure-commons.client :only [build-url-with-query]]
         [donkey.util.config]
         [donkey.util.transformers :only [secured-params add-current-user-to-map]]
         [donkey.auth.user-attributes]

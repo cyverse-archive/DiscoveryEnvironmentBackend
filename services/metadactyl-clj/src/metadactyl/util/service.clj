@@ -35,12 +35,6 @@
   (let [msg "unrecognized service path"]
     (cheshire/encode {:reason msg})))
 
-(defn build-url
-  "Builds a URL from a base URL and one or more URL components."
-  [base & components]
-  (string/join "/" (map #(.replaceAll % "^/|/$" "")
-                        (cons base components))))
-
 (defn prepare-forwarded-request
   "Prepares a request to be forwarded to a remote service."
   [request body]

@@ -3,7 +3,7 @@
         [clojure.string :only [join]]
         [slingshot.slingshot :only [try+]]
         [clojure-commons.file-utils :only [basename]]
-        [donkey.util.service :only [build-url decode-stream success-response]]
+        [donkey.util.service :only [decode-stream success-response]]
         [donkey.util.transformers :only [add-current-user-to-url]]
         [donkey.auth.user-attributes])
   (:require [cheshire.core :as cheshire]

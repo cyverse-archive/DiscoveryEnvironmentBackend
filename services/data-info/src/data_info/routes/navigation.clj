@@ -4,12 +4,24 @@
         [data-info.routes.domain.navigation]
         [data-info.routes.domain.stats])
   (:require [data-info.services.directory :as dir]
+            [data-info.services.root :as root]
             [data-info.util.service :as svc]))
 
 (defroutes* navigation
 
   (context* "/navigation" []
     :tags ["Navigation"]
+
+    (GET* "/root" [:as {uri :uri}]
+      :query [{:keys [user]} SecuredQueryParamsRequired]
+      :return NavigationRootResponse
+      :summary "Root Listing"
+      :description (str
+"This endpoint provides a shortcut for the client to list the top-level directories (e.g. the user's
+ home directory, trash, and shared directories)."
+(get-error-code-block
+  "ERR_DOES_NOT_EXIST, ERR_NOT_READABLE, ERR_NOT_A_USER"))
+      (svc/trap uri root/do-root-listing user))
 
     (GET* "/path/:zone/*" [:as {{path :*} :params uri :uri}]
       :path-params [zone :- String]
