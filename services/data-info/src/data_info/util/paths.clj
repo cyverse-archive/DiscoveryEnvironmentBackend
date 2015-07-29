@@ -14,7 +14,7 @@
 
 (defn user-home-dir
   [user]
-  (ft/path-join "/" (cfg/irods-zone) "home" user))
+  (ft/path-join (cfg/irods-home) user))
 
 
 (defn base-trash-path

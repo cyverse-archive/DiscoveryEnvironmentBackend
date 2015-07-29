@@ -13,51 +13,47 @@
             [data-info.util.validators :as validators]
             [dire.core :refer [with-pre-hook! with-post-hook!]]))
 
-(defn- create-trash-folder?
+(defn- get-root
   [cm user root-path]
-  (and (= root-path (paths/user-trash-path user)) (not (exists? cm root-path))))
+  (log/info "[get-root] for" user "at" root-path)
+  (validators/path-exists cm root-path)
+  (-> (item/stat cm root-path)
+      (select-keys [:path :date-created :date-modified])
+      (assoc :id         (irods/lookup-uuid cm root-path)
+             :permission (permission-for cm user root-path))))
+
+(defn- get-trash-root
+  [cm user]
+  (let [trash-path (paths/user-trash-path user)]
+    (when (not (exists? cm trash-path))
+      (log/info "[get-trash-root] Creating" trash-path "for" user)
+      (ops/mkdirs cm trash-path)
+      (log/info "[get-trash-root] Setting own perms on" trash-path "for" user)
+      (set-permission cm user trash-path :own))
+
+    (when (not (owns? cm user trash-path))
+      (log/info "[get-trash-root] Setting own perms on" trash-path "for" user)
+      (set-permission cm user trash-path :own))
+
+    (get-root cm user trash-path)))
 
 (defn root-listing
-  ([user root-path]
-    (root-listing user root-path false))
-
-  ([user root-path set-own?]
-    (let [root-path (ft/rm-last-slash root-path)]
-      (log/info "[root-listing]" "for" user "at" root-path "with set own as" set-own?)
-      (with-jargon (cfg/jargon-cfg) [cm]
-        (log/info "in (root-listing)")
-        (validators/user-exists cm user)
-
-        (when (create-trash-folder? cm user root-path)
-          (log/info "[root-listing] Creating" root-path "for" user)
-          (ops/mkdirs cm root-path)
-          (log/info "[root-listing] Setting own perms on" root-path "for" user)
-          (set-permission cm user root-path :own))
-
-        (validators/path-exists cm root-path)
-
-        (when (and set-own? (not (owns? cm user root-path)))
-          (log/info "[root-listing] set-own? is true and" root-path "is not owned by" user)
-          (log/info "[root-listing] Setting own perms on" root-path "for" user)
-          (set-permission cm user root-path :own))
-
-        (-> (item/stat cm root-path)
-            (select-keys [:path :date-created :date-modified])
-            (assoc :id         (irods/lookup-uuid cm root-path)
-                   :permission (permission-for cm user root-path)))))))
+  [user]
+  (let [uhome          (paths/user-home-dir user)
+        community-data (ft/rm-last-slash (cfg/community-data))
+        irods-home     (ft/rm-last-slash (cfg/irods-home))]
+    (log/info "[root-listing]" "for" user)
+    (with-jargon (cfg/jargon-cfg) [cm]
+      (validators/user-exists cm user)
+      {:roots (remove nil?
+                [(get-root cm user uhome)
+                 (get-root cm user community-data)
+                 (get-root cm user irods-home)
+                 (get-trash-root cm user)])})))
 
 (defn do-root-listing
   [user]
-  (let [uhome          (ft/path-join (cfg/irods-home) user)
-        user-root-list (partial root-listing user)
-        user-trash-dir (paths/user-trash-path user)]
-    {:roots
-     (remove
-       nil?
-       [(user-root-list uhome)
-        (user-root-list (cfg/community-data))
-        (user-root-list (cfg/irods-home))
-        (user-root-list user-trash-dir true)])}))
+  (root-listing user))
 
 (with-pre-hook! #'do-root-listing
   (fn [user]
