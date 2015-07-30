@@ -124,3 +124,30 @@
          (:body)
          (:WsGetSubjectsResults)
          (:wsSubjects))))
+
+;; Groups for a subject.
+
+(defn- subject-lookup
+  [subject-id]
+  (remove-vals nil? {:subjectId subject-id}))
+
+(defn- format-groups-for-subject-request
+  [username subject-id]
+  (-> {:WsRestGetGroupsRequest
+       {:actAsSubjectLookup (act-as-subject-lookup username)
+        :subjectLookups     [(subject-lookup subject-id)]}}
+      (json/encode)))
+
+(defn groups-for-subject
+  [username subject-id]
+  (with-trap
+    (->> {:body         (format-groups-for-subject-request username subject-id)
+          :basic-auth   (auth-params)
+          :content-type content-type
+          :as           :json}
+         (http/post (grouper-uri "subjects"))
+         (:body)
+         (:WsGetGroupsResults)
+         (:results)
+         (first)
+         (:wsGroups))))

@@ -1,15 +1,11 @@
 (ns fishy.service.subjects
-  (:use [medley.core :only [remove-vals]])
-  (:require [fishy.clients.grouper :as grouper]))
-
-(defn- format-subject
-  [subject]
-  (->> {:attribute_values  (:attributeValues subject)
-        :id                (:id subject)
-        :name              (:name subject)
-        :source_id         (:sourceId subject)}
-       (remove-vals nil?)))
+  (:require [fishy.clients.grouper :as grouper]
+            [fishy.service.format :as fmt]))
 
 (defn subject-search
   [{:keys [user search]}]
-  {:subjects (mapv format-subject (grouper/subject-search user search))})
+  {:subjects (mapv fmt/format-subject (grouper/subject-search user search))})
+
+(defn groups-for-subject
+  [subject-id {:keys [user]}]
+  {:groups (mapv fmt/format-group (grouper/groups-for-subject user subject-id))})

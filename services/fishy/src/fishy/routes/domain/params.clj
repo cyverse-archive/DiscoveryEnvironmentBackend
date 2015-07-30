@@ -8,6 +8,9 @@
    (s/both String (s/pred (complement string/blank?) `non-blank?))
    "A non-blank string."))
 
+(def SubjectIdPathParam
+  (describe String "The subject identifier."))
+
 (s/defschema SecuredQueryParams
   {:user (describe NonBlankString "The short version of the username")})
 
