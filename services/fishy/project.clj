@@ -16,8 +16,9 @@
   :uberjar-name "fishy-standalone.jar"
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [cheshire "5.5.0"]
-                 [clj-http "1.1.2"]
+                 [clj-http "2.0.0"]
                  [com.cemerick/url "0.1.1"]
+                 [medley "0.7.0"]
                  [metosin/compojure-api "0.22.1"]
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/service-logging "5.0.0"]

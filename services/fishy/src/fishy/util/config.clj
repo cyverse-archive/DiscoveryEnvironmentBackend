@@ -39,6 +39,16 @@
   [props config-valid configs]
   "fishy.grouper.api-version")
 
+(cc/defprop-str grouper-username
+  "The username to use when authenticating to Grouper."
+  [props config-valid configs]
+  "fishy.grouper.username")
+
+(cc/defprop-str grouper-password
+  "The password to use when authenticating to Grouper."
+  [props config-valid configs]
+  "fishy.grouper.password")
+
 (defn- validate-config
   "Validates the configuration settings after they've been loaded."
   []
