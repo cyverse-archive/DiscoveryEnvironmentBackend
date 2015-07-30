@@ -1,13 +1,40 @@
 (ns fishy.clients.grouper
-  (:use [medley.core :only [remove-vals]])
+  (:use [medley.core :only [remove-vals]]
+        [slingshot.slingshot :only [throw+ try+]])
   (:require [cemerick.url :as curl]
             [cheshire.core :as json]
             [clj-http.client :as http]
-            [fishy.util.config :as config]))
+            [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as ce]
+            [fishy.util.config :as config]
+            [fishy.util.service :as service]))
 
 (def ^:private content-type "text/x-json")
 
 (def ^:private default-act-as-subject-id "GrouperSystem")
+
+(defn- build-error-object
+  [error-code body]
+  (let [result-metadata (:resultMetadata (val (first body)))]
+    {:error_code             error-code
+     :grouper_result_code    (:resultCode result-metadata)
+     :grouper_result_message (:resultMessage result-metadata)}))
+
+(defn- handle-error
+  [error-code {:keys [body] :as response}]
+  (log/warn "Grouper request failed:" response)
+  (throw+ (build-error-object error-code (service/parse-json body))))
+
+(defmacro ^:private with-trap
+  [& body]
+  `(try+
+    (do ~@body)
+    (catch [:status 400] bad-request#
+      (handle-error ce/ERR_BAD_REQUEST bad-request#))
+    (catch [:status 404] not-found#
+      (handle-error ce/ERR_NOT_FOUND not-found#))
+    (catch [:status 500] server-error#
+      (handle-error ce/ERR_REQUEST_FAILED server-error#))))
 
 (defn- grouper-uri
   [& components]
@@ -35,11 +62,12 @@
 
 (defn group-search
   [username stem name]
-  (->> {:body         (format-group-search-request username stem name)
-        :basic-auth   [(config/grouper-username) (config/grouper-password)]
-        :content-type content-type
-        :as           :json}
-       (http/post (grouper-uri "groups"))
-       (:body)
-       (:WsFindGroupsResults)
-       (:groupResults)))
+  (with-trap
+    (->> {:body         (format-group-search-request username stem name)
+          :basic-auth   [(config/grouper-username) (config/grouper-password)]
+          :content-type content-type
+          :as           :json}
+         (http/post (grouper-uri "groups"))
+         (:body)
+         (:WsFindGroupsResults)
+         (:groupResults))))

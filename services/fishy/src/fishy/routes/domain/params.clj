@@ -14,3 +14,8 @@
 (s/defschema SearchParams
   (assoc SecuredQueryParams
     :search (describe NonBlankString "The partial name of the entity to search for.")))
+
+(s/defschema GroupSearchParams
+  (assoc SearchParams
+    (s/optional-key :folder)
+    (describe NonBlankString "The name of the folder to search for.")))

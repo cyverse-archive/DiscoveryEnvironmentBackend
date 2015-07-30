@@ -15,5 +15,5 @@
        (remove-vals nil?)))
 
 (defn group-search
-  [{:keys [user search]}]
-  {:groups (mapv format-group (grouper/group-search user nil search))})
+  [{:keys [user search folder]}]
+  {:groups (mapv format-group (grouper/group-search user folder search))})
