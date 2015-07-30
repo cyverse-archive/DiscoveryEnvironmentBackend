@@ -13,6 +13,10 @@
 
 (def ^:private default-act-as-subject-id "GrouperSystem")
 
+(defn- auth-params
+  []
+  (vector (config/grouper-username) (config/grouper-password)))
+
 (defn- build-error-object
   [error-code body]
   (let [result-metadata (:resultMetadata (val (first body)))]
@@ -47,6 +51,8 @@
   ([]
      (act-as-subject-lookup default-act-as-subject-id)))
 
+;; Group search.
+
 (defn- group-search-query-filter
   [stem name]
   (remove-vals nil? {:groupName       name
@@ -64,10 +70,36 @@
   [username stem name]
   (with-trap
     (->> {:body         (format-group-search-request username stem name)
-          :basic-auth   [(config/grouper-username) (config/grouper-password)]
+          :basic-auth   (auth-params)
           :content-type content-type
           :as           :json}
          (http/post (grouper-uri "groups"))
          (:body)
          (:WsFindGroupsResults)
          (:groupResults))))
+
+;; Folder search.
+
+(defn- folder-search-query-filter
+  [name]
+  (remove-vals nil? {:stemName            name
+                     :stemQueryFilterType "FIND_BY_STEM_NAME_APPROXIMATE"}))
+
+(defn- format-folder-search-request
+  [username name]
+  (-> {:WsRestFindStemsRequest
+       {:actAsSubjectLookup (act-as-subject-lookup username)
+        :wsStemQueryFilter  (folder-search-query-filter name)}}
+      (json/encode true)))
+
+(defn folder-search
+  [username name]
+  (with-trap
+    (->> {:body         (format-folder-search-request username name)
+          :basic-auth   (auth-params)
+          :content-type content-type
+          :as           :json}
+         (http/post (grouper-uri "stems"))
+         (:body)
+         (:WsFindStemsResults)
+         (:stemResults))))

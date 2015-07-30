@@ -4,7 +4,8 @@
         [compojure.api.sweet]
         [fishy.routes.domain.group]
         [ring.middleware.keyword-params :only [wrap-keyword-params]])
-  (:require [fishy.routes.groups :as group-routes]
+  (:require [fishy.routes.folders :as folder-routes]
+            [fishy.routes.groups :as group-routes]
             [fishy.routes.status :as status-routes]
             [fishy.util.config :as config]
             [service-logging.thread-context :as tc]))
@@ -15,7 +16,8 @@
    {:info {:title       "RESTful Service Facade for Grouper"
            :description "Documentation for the Fishy API"
            :version     "2.0.0"}
-    :tags [{:name "groups", :description "Group Information"}
+    :tags [{:name "folders", :description "Folder Information"}
+           {:name "groups", :description "Group Information"}
            {:name "service-info", :description "Service Status Information"}]})
   (middlewares
    [wrap-keyword-params
@@ -25,6 +27,9 @@
    (context* "/" []
     :tags ["service-info"]
     status-routes/status)
+   (context* "/folders" []
+    :tags ["folders"]
+    folder-routes/folders)
    (context* "/groups" []
     :tags ["groups"]
     group-routes/groups)))
