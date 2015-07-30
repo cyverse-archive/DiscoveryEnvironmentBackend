@@ -64,7 +64,7 @@
   (-> {:WsRestFindGroupsRequest
        {:actAsSubjectLookup (act-as-subject-lookup username)
         :wsQueryFilter      (group-search-query-filter stem name)}}
-      (json/encode true)))
+      (json/encode)))
 
 (defn group-search
   [username stem name]
@@ -90,7 +90,7 @@
   (-> {:WsRestFindStemsRequest
        {:actAsSubjectLookup (act-as-subject-lookup username)
         :wsStemQueryFilter  (folder-search-query-filter name)}}
-      (json/encode true)))
+      (json/encode)))
 
 (defn folder-search
   [username name]
@@ -103,3 +103,24 @@
          (:body)
          (:WsFindStemsResults)
          (:stemResults))))
+
+;; Subject search.
+
+(defn- format-subject-search-request
+  [username search-string]
+  (-> {:WsRestGetSubjectsRequest
+       {:actAsSubjectLookup (act-as-subject-lookup username)
+        :searchString       search-string}}
+      (json/encode)))
+
+(defn subject-search
+  [username search-string]
+  (with-trap
+    (->> {:body         (format-subject-search-request username search-string)
+          :basic-auth   (auth-params)
+          :content-type content-type
+          :as           :json}
+         (http/post (grouper-uri "subjects"))
+         (:body)
+         (:WsGetSubjectsResults)
+         (:wsSubjects))))

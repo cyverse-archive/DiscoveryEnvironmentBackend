@@ -7,6 +7,7 @@
   (:require [fishy.routes.folders :as folder-routes]
             [fishy.routes.groups :as group-routes]
             [fishy.routes.status :as status-routes]
+            [fishy.routes.subjects :as subject-routes]
             [fishy.util.config :as config]
             [service-logging.thread-context :as tc]))
 
@@ -18,7 +19,8 @@
            :version     "2.0.0"}
     :tags [{:name "folders", :description "Folder Information"}
            {:name "groups", :description "Group Information"}
-           {:name "service-info", :description "Service Status Information"}]})
+           {:name "service-info", :description "Service Status Information"}
+           {:name "subjects", :description "Subject Information"}]})
   (middlewares
    [wrap-keyword-params
     wrap-query-params
@@ -32,4 +34,7 @@
     folder-routes/folders)
    (context* "/groups" []
     :tags ["groups"]
-    group-routes/groups)))
+    group-routes/groups)
+   (context* "/subjects" []
+    :tags ["subjects"]
+    subject-routes/subjects)))
