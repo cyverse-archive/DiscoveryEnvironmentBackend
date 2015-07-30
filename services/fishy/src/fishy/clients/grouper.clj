@@ -7,6 +7,8 @@
 
 (def ^:private content-type "text/x-json")
 
+(def ^:private default-act-as-subject-id "GrouperSystem")
+
 (defn- grouper-uri
   [& components]
   (str (apply curl/url (config/grouper-base) "servicesRest" (config/grouper-api-version)
@@ -14,9 +16,9 @@
 
 (defn- act-as-subject-lookup
   ([username]
-     {:subjectId username})
+     {:subjectId (or username default-act-as-subject-id)})
   ([]
-     (act-as-subject-lookup "GrouperSystem")))
+     (act-as-subject-lookup default-act-as-subject-id)))
 
 (defn- group-search-query-filter
   [stem name]
@@ -25,15 +27,15 @@
                      :stemName        stem}))
 
 (defn- format-group-search-request
-  [stem name]
+  [username stem name]
   (-> {:WsRestFindGroupsRequest
-       {:actAsSubjectLookup (act-as-subject-lookup)
+       {:actAsSubjectLookup (act-as-subject-lookup username)
         :wsQueryFilter      (group-search-query-filter stem name)}}
       (json/encode true)))
 
 (defn group-search
-  [stem name]
-  (->> {:body         (format-group-search-request stem name)
+  [username stem name]
+  (->> {:body         (format-group-search-request username stem name)
         :basic-auth   [(config/grouper-username) (config/grouper-password)]
         :content-type content-type
         :as           :json}

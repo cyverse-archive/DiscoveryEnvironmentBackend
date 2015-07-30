@@ -12,4 +12,5 @@
   {:user (describe NonBlankString "The short version of the username")})
 
 (s/defschema SearchParams
-  {:search (describe NonBlankString "The partial name of the entity to search for.")})
+  (assoc SecuredQueryParams
+    :search (describe NonBlankString "The partial name of the entity to search for.")))
