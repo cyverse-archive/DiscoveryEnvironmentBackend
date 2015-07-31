@@ -14,4 +14,13 @@
         are visible to the given user will be listed. The folder name, if provided, contains the
         name of the folder to search. Any folder name provided must exactly match the name of a
         folder in the system."
-        (service/trap uri groups/group-search params)))
+        (service/trap uri groups/group-search params))
+
+  (GET* "/:group-id" [:as {:keys [uri]}]
+        :path-params [group-id :- GroupIdPathParam]
+        :query       [params SecuredQueryParams]
+        :return      GroupWithDetail
+        :summary     "Get Group Information"
+        :description "This endpoint allows callers to get detailed information about a single
+        group."
+        (service/trap uri groups/get-group group-id params)))

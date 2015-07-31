@@ -11,6 +11,9 @@
 (def SubjectIdPathParam
   (describe String "The subject identifier."))
 
+(def GroupIdPathParam
+  (describe String "The group identifier."))
+
 (s/defschema SecuredQueryParams
   {:user (describe NonBlankString "The short version of the username")})
 

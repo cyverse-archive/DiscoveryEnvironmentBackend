@@ -1,5 +1,6 @@
 (ns fishy.util.service
-  (:use [ring.util.response :only [charset]])
+  (:use [ring.util.response :only [charset]]
+        [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure-commons.error-codes :as ce]))
 
@@ -13,6 +14,12 @@
     :body    map
     :headers default-content-type-header}
    "UTF-8"))
+
+(defn not-found
+  [desc id]
+  (throw+ {:error_code  ce/ERR_NOT_FOUND
+           :description desc
+           :id          id}))
 
 (defn trap
   "Traps a service call, automatically calling success-response on the result."

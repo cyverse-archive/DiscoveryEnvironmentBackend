@@ -78,6 +78,34 @@
          (:WsFindGroupsResults)
          (:groupResults))))
 
+;; Group retrieval.
+
+(defn- group-retrieval-query-filter
+  [group-id]
+  (remove-vals nil? {:groupUuid       group-id
+                     :queryFilterType "FIND_BY_GROUP_UUID"}))
+
+(defn- format-group-retrieval-request
+  [username group-id]
+  (-> {:WsRestFindGroupsRequest
+       {:actAsSubjectLookup (act-as-subject-lookup username)
+        :wsQueryFilter      (group-retrieval-query-filter group-id)
+        :includeGroupDetail "T"}}
+      (json/encode)))
+
+(defn get-group
+  [username group-id]
+  (with-trap
+    (->> {:body         (format-group-retrieval-request username group-id)
+          :basic-auth   (auth-params)
+          :content-type content-type
+          :as           :json}
+         (http/post (grouper-uri "groups"))
+         (:body)
+         (:WsFindGroupsResults)
+         (:groupResults)
+         (first))))
+
 ;; Folder search.
 
 (defn- folder-search-query-filter
