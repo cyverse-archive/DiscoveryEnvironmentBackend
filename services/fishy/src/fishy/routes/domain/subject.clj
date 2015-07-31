@@ -10,7 +10,7 @@
    :id
    (describe String "The subject ID.")
 
-   :name
+   (s/optional-key :name)
    (describe String "The subject name.")
 
    :source_id

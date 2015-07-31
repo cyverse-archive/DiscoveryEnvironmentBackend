@@ -23,4 +23,12 @@
         :summary     "Get Group Information"
         :description "This endpoint allows callers to get detailed information about a single
         group."
-        (service/trap uri groups/get-group group-id params)))
+        (service/trap uri groups/get-group group-id params))
+
+  (GET* "/:group-id/members" [:as {:keys [uri]}]
+        :path-params [group-id :- GroupIdPathParam]
+        :query       [params SecuredQueryParams]
+        :return      GroupMembers
+        :summary     "List Group Members"
+        :description "This endpoint allows callers to list the members of a single group."
+        (service/trap uri groups/get-group-members group-id params)))

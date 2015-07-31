@@ -1,6 +1,7 @@
 (ns fishy.routes.domain.group
   (:use [compojure.api.sweet :only [describe]])
   (:require [fishy.routes.domain.params :as params]
+            [fishy.routes.domain.subject :as subject]
             [schema.core :as s]))
 
 (s/defschema Group
@@ -72,3 +73,6 @@
 
 (s/defschema GroupList
   {:groups (describe [Group] "The list of groups in the result set.")})
+
+(s/defschema GroupMembers
+  {:members (describe [subject/Subject] "The list of group members.")})

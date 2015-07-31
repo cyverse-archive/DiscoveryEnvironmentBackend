@@ -12,3 +12,7 @@
   (if-let [group (grouper/get-group user group-id)]
     (fmt/format-group-with-detail group)
     (service/not-found "group" group-id)))
+
+(defn get-group-members
+  [group-id {:keys [user]}]
+  {:members (mapv fmt/format-subject (grouper/get-group-members user group-id))})
