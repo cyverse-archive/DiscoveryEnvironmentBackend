@@ -125,17 +125,39 @@
          (:WsGetSubjectsResults)
          (:wsSubjects))))
 
-;; Groups for a subject.
+;; Subject retrieval.
 
-(defn- subject-lookup
+(defn- subject-id-lookup
   [subject-id]
   (remove-vals nil? {:subjectId subject-id}))
+
+(defn- format-subject-id-lookup-request
+  [username subject-id]
+  (-> {:WsRestGetSubjectsRequest
+       {:actAsSubjectLookup (act-as-subject-lookup username)
+        :wsSubjectLookups   [(subject-id-lookup subject-id)]}}
+      (json/encode)))
+
+(defn get-subject
+  [username subject-id]
+  (with-trap
+   (->> {:body         (format-subject-id-lookup-request username subject-id)
+         :basic-auth   (auth-params)
+         :content-type content-type
+         :as           :json}
+        (http/post (grouper-uri "subjects"))
+        (:body)
+        (:WsGetSubjectsResults)
+        (:wsSubjects)
+        (first))))
+
+;; Groups for a subject.
 
 (defn- format-groups-for-subject-request
   [username subject-id]
   (-> {:WsRestGetGroupsRequest
-       {:actAsSubjectLookup (act-as-subject-lookup username)
-        :subjectLookups     [(subject-lookup subject-id)]}}
+       {:actAsSubjectLookup   (act-as-subject-lookup username)
+        :subjectLookups       [(subject-id-lookup subject-id)]}}
       (json/encode)))
 
 (defn groups-for-subject

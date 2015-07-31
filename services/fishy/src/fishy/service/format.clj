@@ -1,5 +1,13 @@
 (ns fishy.service.format
-  (:use [medley.core :only [remove-vals]]))
+  (:use [medley.core :only [remove-vals]]
+        [slingshot.slingshot :only [throw+]])
+  (:require [clojure-commons.error-codes :as ce]))
+
+(defn- not-found
+  [response]
+  (throw+ {:error_code          ce/ERR_NOT_FOUND
+           :grouper_result_code (:resultCode response)
+           :id                  (:id response)}))
 
 (defn format-group
   [group]
@@ -26,8 +34,10 @@
 
 (defn format-subject
   [subject]
-  (->> {:attribute_values  (:attributeValues subject)
-        :id                (:id subject)
-        :name              (:name subject)
-        :source_id         (:sourceId subject)}
-       (remove-vals nil?)))
+  (condp = (:resultCode subject)
+    "SUBJECT_NOT_FOUND" (not-found subject)
+    (->> {:attribute_values  (:attributeValues subject)
+          :id                (:id subject)
+          :name              (:name subject)
+          :source_id         (:sourceId subject)}
+         (remove-vals nil?))))
