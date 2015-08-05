@@ -54,8 +54,7 @@
      (describe String "The type of contents in this file")
 
      :md5
-     (describe NonBlankString
-       "The md5 hash of this file's contents, as calculated and saved by IRODS")}))
+     (describe String "The md5 hash of this file's contents, as calculated and saved by IRODS")}))
 
 (s/defschema FileStat
   {:file (describe FileStatInfo "File info")})
