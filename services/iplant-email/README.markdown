@@ -10,6 +10,9 @@ Installation
 iplant-email is packaged as an RPM and can be installed using the command,
 `yum install iplant-email`.
 
+Alternatively, iplant-email can be run using [Docker](https://www.docker.com);
+more details are in the "Docker" section below.
+
 Configuration
 -------------
 
@@ -81,3 +84,20 @@ extension.
 The syntax for templatizing emails is available in the "Learn basic
 StringTemplate syntax" section on this website:
 http://www.antlr.org/wiki/display/ST/Five+minute+Introduction
+
+Docker
+------
+
+In order to run iplant-email within Docker, you'll need to first create a standalone jar file and then a docker container. To do the former, follow the instructions at the top level of this repository using build_all.clj, which should produce `iplant-email.standalone.jar` in a `target` directory. To build a docker container, run `docker build -t iplant-email .` from the root iplant-email directory (the one with the Dockerfile in it).
+
+Once a docker image has been built, it can be run with the `docker run` command, but ensure that a configuration file is available to the process as well using the `-v` option; to access iplant-email from the host system, forward ports using `-P` or `-p`. For example, my configuration has:
+
+```properties
+iplant-email.smtp.host=smtp.example.org
+iplant-email.smtp.from-address=noreply@example.org
+iplant-email.app.listen-port=60000
+```
+
+I've saved this file to `~/conf-files/iplant-email.properties`. Then, to run iplant-email: `docker run --rm --name iplant_email -p 3000:60000 -v ~/conf-files/iplant-email.properties:/home/iplant/conf.properties iplant-email --config conf.properties`. (the `--name` configures the container name, and `--rm` removes the container after it's shut down; the double appearance of `conf.properties` is because the first (with `-v`) mounts the file in the container, where the second passes the path to iplant-email). If you'd prefer, add `-d` to daemonize the docker container.
+
+Once it's running, iplant-email can be accessed from port 3000 (or whatever port you configured externally using `-p`, or whatever port was chosen randomly by `-P`) on the IP of the machine running Docker. If you're using Docker locally, this should be http://127.0.0.1:3000/; if you're using Boot2Docker it will be on the VM's IP address, which means that from a shell (e.g. with curl) `http://$(boot2docker ip):3000/` should reach iplant-email.
