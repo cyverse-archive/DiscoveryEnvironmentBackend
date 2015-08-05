@@ -117,7 +117,8 @@ func init() {
 // Configuration contains the setting read from a config file.
 type Configuration struct {
 	EventLog                               string
-	AMQPURI                                string
+	AMQPUserPass                           string
+	AMQPHost                               string
 	ExchangeName, ExchangeType, RoutingKey string
 	Durable, Autodelete, Internal, NoWait  bool
 }
@@ -151,7 +152,8 @@ func ReadConfig(path string) (*Configuration, error) {
 // AMQPPublisher contains the state information for a connection to an AMQP
 // broker that is capable of publishing data to an exchange.
 type AMQPPublisher struct {
-	URI          string
+	UserPass     string
+	Host         string
 	ExchangeName string
 	ExchangeType string
 	RoutingKey   string
@@ -167,7 +169,8 @@ type AMQPPublisher struct {
 // pointer to it. The connection is not established at this point.
 func NewAMQPPublisher(cfg *Configuration) *AMQPPublisher {
 	return &AMQPPublisher{
-		URI:          cfg.AMQPURI,
+		UserPass:     cfg.AMQPUserPass,
+		Host:         cfg.AMQPHost,
 		ExchangeName: cfg.ExchangeName,
 		ExchangeType: cfg.ExchangeType,
 		RoutingKey:   cfg.RoutingKey,
@@ -187,8 +190,8 @@ type ConnectionErrorChan struct {
 // exchange, and create a new channel. Make sure you call the Close method when
 // you are done, most likely with a defer statement.
 func (p *AMQPPublisher) Connect(errorChan chan ConnectionErrorChan) error {
-	logger.Printf("Dialing %s", p.URI)
-	connection, err := amqp.Dial(p.URI)
+	logger.Printf("Dialing amqp://%s/", p.Host)
+	connection, err := amqp.Dial(strings.Join([]string{"amqp://", p.UserPass, "@", p.Host, "/"}, ""))
 	if err != nil {
 		return err
 	}
