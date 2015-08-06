@@ -20,7 +20,10 @@
        (apply-offset params)
        (apply-limit params))
    (catch [:error_code ce/ERR_UNAVAILABLE] _
-     (log/warn (:throwable &throw-context) "agave app search timed out")
+     (log/error (:throwable &throw-context) "Agave app search timed out")
+     nil)
+   (catch :status _
+     (log/error (:throwable &throw-context) "HTTP error returned by Agave")
      nil)))
 
 (defn load-app-tables
@@ -32,7 +35,10 @@
         (into {})
         (vector))
    (catch [:error_code ce/ERR_UNAVAILABLE] _
-     (log/warn (:throwable &throw-context) "agave app table retrieval timed out")
+     (log/warn (:throwable &throw-context) "Agave app table retrieval timed out")
+     [])
+   (catch :status _
+     (log/error (:throwable &throw-context) "HTTP error returned by Agave")
      [])))
 
 (defn- prep-agave-param
