@@ -1,5 +1,6 @@
 {
-  "AMQPURI" : "amqp://ipc:mostly810S@irods-2.iplantcollaborative.org:31333/",
+  "AMQPHost" : "irods-2.iplantcollaborative.org:31333",
+  "AMQPUserPass" : "ipc:mostly810S",
   "ExchangeName" : "de",
   "ExchangeType" : "direct",
   "RoutingKey" : "condor.events",
