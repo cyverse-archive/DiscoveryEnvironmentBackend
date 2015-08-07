@@ -82,7 +82,7 @@
    :name
    (describe String "The attribute name")
 
-   :required
+   (s/optional-key :required)
    (describe Boolean "True if the attribute must have a value")
 
    :type
