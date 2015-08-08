@@ -2,6 +2,8 @@
 
 A Clojure library for attempting to guess file types.
 
+Heuristomancer uses EBNF files defining context-free grammars with [instaparse](https://github.com/engelberg/instaparse) and a provided sample size (default 1000 bytes). EBNF grammars can be found in `resources/ebnf/` and are indexed by `resources/grammars.clj` for use by Heuristomancer.
+
 ## TL;DR
 
 ### Command-Line Usage
