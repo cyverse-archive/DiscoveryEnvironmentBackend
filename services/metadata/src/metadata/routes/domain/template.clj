@@ -1,12 +1,12 @@
 (ns metadata.routes.domain.template
-  (:use [compojure.api.sweet :only [describe]]
-        [korma.core])
-  (:require [schema.core :as s])
+  (:use [compojure.api.sweet :only [describe]])
+  (:require [schema.core :as s]
+            [metadata.persistence.templates :as tp])
   (:import [java.util Date UUID]))
 
 (def TemplateIdPathParam (describe UUID "The metadata template ID"))
 (def AttrIdPathParam (describe UUID "The metadata attribute ID"))
-(def ValidValueTypeEnum (apply s/enum (map #(:name %) (select :value_types (fields :name)))))
+(def ValidValueTypeEnum (describe (apply s/enum (tp/get-value-type-names)) "The attribute's data type"))
 
 (s/defschema MetadataTemplateListEntry
   {:created_by  (describe UUID "The ID of the user who created the template")
@@ -54,7 +54,7 @@
    (describe Boolean "True if the attribute must have a value")
 
    :type
-   (describe ValidValueTypeEnum "The attribute data type")
+   ValidValueTypeEnum
 
    (s/optional-key :values)
    (describe [TemplateAttrEnumValue] "The list of possible values for enumeration types")})
@@ -88,7 +88,7 @@
    (describe Boolean "True if the attribute must have a value")
 
    :type
-   (describe ValidValueTypeEnum "The attribute data type")
+   ValidValueTypeEnum
 
    (s/optional-key :values)
    (describe [TemplateAttrEnumValueUpdate] "The list of possible values for enumeration types")})

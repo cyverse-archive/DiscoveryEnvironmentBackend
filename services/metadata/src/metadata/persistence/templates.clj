@@ -117,6 +117,10 @@
                                    :attribute_id  attr-id
                                    :display_order order})))
 
+(defn get-value-type-names
+  []
+  (map #(:name %) (select :value_types (fields :name))))
+
 (defn- get-value-type-id
   [type-name]
   (:id (first (select :value_types (where {:name type-name})))))
