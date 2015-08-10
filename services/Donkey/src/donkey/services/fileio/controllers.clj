@@ -126,8 +126,6 @@
       (log/warn (str "Dest: " dest))
       (log/warn (str "Fname: " fname))
       (log/warn (str "Addr: " addr))
-      (with-open [_ (in-stream addr)]
-        (log/warn "connection to" addr "successfully established"))
       (actions/urlimport user addr fname dest))))
 
 (defn save
