@@ -66,7 +66,7 @@
   {(s/optional-key :id)
    (describe UUID "The attribute enumeration value ID")
 
-   :is_default
+   (s/optional-key :is_default)
    (describe Boolean "True if this value is the default for its enumeration type")
 
    :value
