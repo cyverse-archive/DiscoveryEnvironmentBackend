@@ -32,6 +32,8 @@
    ["sequence-quote.ace"      :ace]
    ["sequence-colon.ace"      :ace]
    ["test.ace"                :ace]
+   ["clone-paired-reads.bed"  :bed]
+   ["colored-lines.bed"       :bed]
    ["blastp2215.blast"        :blast]
    ["bug2246.blast"           :blast]
    ["frac_problems.blast"     :blast]
