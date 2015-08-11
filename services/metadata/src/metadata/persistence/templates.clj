@@ -126,59 +126,59 @@
   (:id (first (select :value_types (where {:name type-name})))))
 
 (defn- prepare-attr-insertion
-  [user-id {:keys [type] :as attribute}]
+  [user {:keys [type] :as attribute}]
   (->> (assoc (select-keys attribute [:id :name :description :required])
-         :created_by    user-id
-         :modified_by   user-id
+         :created_by    user
+         :modified_by   user
          :value_type_id (assert-found (get-value-type-id type) "value type" type))
        (remove-nil-values)))
 
 (defn- insert-attribute
-  [user-id attribute]
-  (:id (insert :attributes (values (prepare-attr-insertion user-id attribute)))))
+  [user attribute]
+  (:id (insert :attributes (values (prepare-attr-insertion user attribute)))))
 
 (defn- add-template-attribute
-  [user-id template-id order {enum-values :values :as attribute}]
-  (let [attr-id (insert-attribute user-id attribute)]
+  [user template-id order {enum-values :values :as attribute}]
+  (let [attr-id (insert-attribute user attribute)]
     (insert-template-attr template-id order attr-id)
     (dorun (map-indexed (partial add-attr-enum-value attr-id) enum-values))))
 
 (defn- prepare-template-insertion
-  [user-id template]
+  [user template]
   (->> (assoc (select-keys template [:id :name])
-         :created_by  user-id
-         :modified_by user-id)
+         :created_by  user
+         :modified_by user)
        (remove-nil-values)))
 
 (defn- insert-template
-  [user-id template]
-  (:id (insert :templates (values (prepare-template-insertion user-id template)))))
+  [user template]
+  (:id (insert :templates (values (prepare-template-insertion user template)))))
 
 (defn add-template
-  [user-id {:keys [attributes] :as template}]
-  (let [template-id (insert-template user-id template)]
-    (dorun (map-indexed (partial add-template-attribute user-id template-id) attributes))
+  [user {:keys [attributes] :as template}]
+  (let [template-id (insert-template user template)]
+    (dorun (map-indexed (partial add-template-attribute user template-id) attributes))
     template-id))
 
 (defn- prepare-template-update
-  [user-id template-id template]
+  [user template-id template]
   (->> (assoc (select-keys template [:name :deleted])
-         :modified_by user-id
+         :modified_by user
          :modified_on (sqlfn now))
        (remove-nil-values)))
 
 (defn- prepare-attr-update
-  [user-id {:keys [type] :as attr}]
+  [user {:keys [type] :as attr}]
   (->> (assoc (select-keys attr [:id :name :description :required])
-         :modified_by   user-id
+         :modified_by   user
          :modified_on   (sqlfn now)
          :value_type_id (assert-found (get-value-type-id type) "value type" type))
        (remove-nil-values)))
 
 (defn- update-attribute
-  [user-id attr-id attr]
+  [user attr-id attr]
   (:id (update :attributes
-               (set-fields (prepare-attr-update user-id attr))
+               (set-fields (prepare-attr-update user attr))
                (where {:id attr-id}))))
 
 (defn- attr-exists?
@@ -187,14 +187,14 @@
        (not (nil? (get-metadata-attribute attr-id)))))
 
 (defn- insert-or-update-attribute
-  [user-id {:keys [id] :as attr}]
+  [user {:keys [id] :as attr}]
   (if (attr-exists? id)
-    (update-attribute user-id id attr)
-    (insert-attribute user-id attr)))
+    (update-attribute user id attr)
+    (insert-attribute user attr)))
 
 (defn- update-template-attribute
-  [user-id template-id order {enum-values :values id :id :as attr}]
-  (let [attr-id (insert-or-update-attribute user-id attr)]
+  [user template-id order {enum-values :values id :id :as attr}]
+  (let [attr-id (insert-or-update-attribute user attr)]
     (insert-template-attr template-id order attr-id)
     (delete :attr_enum_values (where {:attribute_id attr-id}))
     (dorun (map-indexed (partial add-attr-enum-value attr-id) enum-values))))
@@ -216,26 +216,26 @@
                       (not (exists (attr-synonym-subselect)))))))
 
 (defn update-template
-  [user-id template-id {:keys [attributes] :as template}]
+  [user template-id {:keys [attributes] :as template}]
   (assert-found (get-metadata-template template-id) "metadata template" template-id)
   (update :templates
-          (set-fields (prepare-template-update user-id template-id template))
+          (set-fields (prepare-template-update user template-id template))
           (where {:id template-id}))
   (delete :template_attrs (where {:template_id template-id}))
-  (dorun (map-indexed (partial update-template-attribute user-id template-id) attributes))
+  (dorun (map-indexed (partial update-template-attribute user template-id) attributes))
   (delete-orphan-attributes)
   template-id)
 
 (defn- prepare-template-deletion
-  [user-id]
+  [user]
   {:deleted     true
-   :modified_by user-id
+   :modified_by user
    :modified_on (sqlfn now)})
 
 (defn delete-template
-  [user-id template-id]
+  [user template-id]
   (assert-found (get-metadata-template template-id) "metadata template" template-id)
   (update :templates
-          (set-fields (prepare-template-deletion user-id))
+          (set-fields (prepare-template-deletion user))
           (where {:id template-id}))
   nil)
