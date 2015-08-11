@@ -91,12 +91,11 @@
    script that will be executed out on the Condor nodes. This also
    handles capturing the exit value of a command in the shell script."
   [job-def]
-  (let [env    (:environment job-def)
-        exec   (:executable job-def)
+  (let [exec   (:executable job-def)
         args   (:arguments job-def)
         stderr (:stderr job-def)
         stdout (:stdout job-def)]
-    (str env " " exec " " args " 1> " stdout " 2> " stderr "\n"
+    (str exec " " args " 1> " stdout " 2> " stderr "\n"
          "if [ ! \"$?\" -eq \"0\" ]; then\n"
              "\tEXITSTATUS=1\n"
          "fi\n")))

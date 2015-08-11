@@ -38,11 +38,6 @@
   []
   (java.util.Date.))
 
-(defn filetool-env
-  "Creates the filetool environment variables."
-  []
-  (str "PATH=" (cfg/icommands-path)))
-
 (defn analysis-dirname
   "Creates a directory name for an analysis. Used when the submission
    doesn't specify an output directory.  Some types of jobs, for example
@@ -189,15 +184,6 @@
       (map
         #(vector (:name %1) (quote-value (:value %1)))
         (sort-by :order params)))))
-
-(defn format-env-variables
-  "Formats and escapes environment variables that are passed to it."
-  [env-map]
-  (string/join
-    " "
-    (mapv
-      #(str (name (first %1)) "=" (str "\"" (last %1) "\""))
-      (seq env-map))))
 
 (defn containerized?
   "Returns true if the step should run in a container."
@@ -413,16 +399,6 @@
     (quote-value (:stderr step-map))
     (str "logs/" "condor-stderr-" index)))
 
-(defn environment
-  "Returns the environment variables as a bash-compatible string. Used to set
-   the environment variables for each individual step in the analysis. Should
-   prevent any of the environment variables from leaking over to another step
-   in the analysis. "
-  [step-map]
-  (if (contains? step-map :environment)
-    (if-not (containerized? step-map)
-      (format-env-variables (:environment step-map)))))
-
 (defn log-file
   "Returns the path to the condor log files."
   [step-map index condor-log]
@@ -451,7 +427,6 @@
       :type            "condor"
       :submission_date (:submission_date condor-map)
       :status          "Submitted"
-      :environment     (environment step)
       :executable      (executable step)
       :arguments       (arguments step)
       :stdout          (stdout step step-idx)
@@ -556,7 +531,6 @@
      :multi           (:multiplicity input)
      :source          (:value input)
      :executable      (input-executable step-map)
-     :environment     (filetool-env)
      :arguments       (input-arguments
                        condor-map
                        step-map
@@ -632,7 +606,6 @@
      :submission_date (:submission_date condor-map)
      :retain          (:retain output)
      :multi           (:multiplicity output)
-     :environment     (filetool-env)
      :executable      (output-executable step-map)
      :arguments       (output-arguments
                        step-map
