@@ -292,16 +292,6 @@
   :language :clojure
   :archive? true}
 
- "clavin"
- {:type     :tool
-  :path     "tools/clavin"
-  :build    :cmdtar
-  :tarball? true
-  :uberjar? true
-  :install? false
-  :language :clojure
-  :archive? true}
-
  "facepalm"
  {:type     :tool
   :path     "tools/facepalm"
