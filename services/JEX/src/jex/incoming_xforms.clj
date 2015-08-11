@@ -357,20 +357,14 @@
    path to the executable since they're the same across all of the Condor
    nodes."
   [step-map]
-  (if (containerized? step-map)
-    "docker"
-    (ut/path-join
-     (get-in step-map [:component :location])
-     (get-in step-map [:component :name]))))
+  "docker")
 
 (defn arguments
   "Takes in a step map map and returns the formatted arguments
    for that step in the analysis."
   [step-map]
   (let [cmd (-> (get-in step-map [:config :params]) param-maps escape-params)]
-    (if (containerized? step-map)
-      (str (container-args step-map) " " cmd)
-      cmd)))
+    (str (container-args step-map) " " cmd)))
 
 (defn stdin
   "Returns the path to the stdin file or nil if there isn't one. This should
@@ -465,9 +459,7 @@
 
 (defn input-executable
   [step-map]
-  (if-not (containerized? step-map)
-    "java"
-    "docker"))
+  "docker")
 
 (defn input-stdout
   "Takes in the step index and the input index and returns the path to the
@@ -495,9 +487,7 @@
   "Formats the arguments to porklock for an input job."
   [condor-map step-map source input-map]
   (let [file-metadata (or (:file-metadata condor-map) [])
-        arg-prefix    (if-not (containerized? step-map)
-                        (str "-jar " (cfg/jar-path))
-                        (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:" (cfg/porklock-tag)))]
+        arg-prefix    (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:" (cfg/porklock-tag))]
     (str arg-prefix
          " get --user " (:username condor-map)
          " --source " (quote-value
@@ -560,20 +550,14 @@
 (defn output-arguments
   "Formats the porklock arguments for output jobs."
   [step-map user source dest]
-  (let [arg-prefix (if-not (containerized? step-map)
-                     (str "-jar " (cfg/jar-path))
-                     (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:" (cfg/porklock-tag)))]
+  (let [arg-prefix (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:" (cfg/porklock-tag))]
     (str arg-prefix
          " put --user " user
          " --source " (quote-value source)
          " --destination " (quote-value dest)
          " --config logs/irods-config")))
 
-(defn output-executable
-  [step-map]
-  (if-not (containerized? step-map)
-    "java"
-    "docker"))
+(defn output-executable [step-map] "docker")
 
 (defn output-id-str
   "Generates an identifier for output jobs based on the step index and the
@@ -701,21 +685,6 @@
       (str "--exclude " (string/join "," all-paths))
       "")))
 
-(defn imkdir-job-map
-  "Formats a job definition for the imkdir job, which is run first
-   and creates the iRODS output directory."
-  [output-dir condor-log username]
-  {:id "imkdir"
-   :status "Submitted"
-   :environment (filetool-env)
-   :executable "java"
-   :stderr "logs/imkdir-stderr"
-   :stdout "logs/imkdir-stdout"
-   :log-file (ut/path-join condor-log "logs" "imkdir-log")
-   :arguments (str "-jar " (cfg/jar-path)
-                   " mkdir --user " username
-                   " --destination " (quote-value output-dir))})
-
 (defn meta-analysis-id
   [{analysis-id :app_id :as condor-map}]
   (if-not (nil? analysis-id)
@@ -740,11 +709,7 @@
   [{analysis-id :app_id uuid :uuid :as condor-map}]
   (-> condor-map meta-analysis-id meta-app-execution))
 
-(defn shotgun-executable
-  [condor-map]
-  (if-not (containerized? (first (:steps condor-map)))
-    "java"
-    "docker"))
+(defn shotgun-executable [condor-map] "docker")
 
 (defn shotgun-arguments
   [{output-dir    :output_dir
@@ -754,9 +719,7 @@
     file-metadata :file-metadata
     :or {file-metadata []}
     :as condor-map}]
-  (let [arg-prefix (if-not (containerized? (first (:steps condor-map)))
-                     (str "-jar " (cfg/jar-path))
-                     (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:" (cfg/porklock-tag)))]
+  (let [arg-prefix (str "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:" (cfg/porklock-tag))]
     (str arg-prefix
          " put --user " username
          " --config irods-config"
@@ -781,25 +744,18 @@
   {:id          "output-last"
    :status      "Submitted"
    :executable  (shotgun-executable condor-map)
-   :environment (filetool-env)
    :stderr      "logs/output-last-stderr"
    :stdout      "logs/output-last-stdout"
    :log-file    "logs/output-last-log"
    :arguments   (shotgun-arguments condor-map)})
 
 (defn extra-jobs
-  "Associates the :final-output-job and :imkdir-job definitions
+  "Associates the :final-output-job definition
    with condor-map. Returns a new version of condor-map."
   [condor-map]
   (assoc condor-map
     :final-output-job
-    (shotgun-job-map condor-map)
-
-    :imkdir-job
-    (imkdir-job-map
-     (:output_dir condor-map)
-     (:condor-log-dir condor-map)
-     (:username condor-map))))
+    (shotgun-job-map condor-map)))
 
 (defn rm-step-component
   "Removes the :component key-value pair from each step in condor-map.

@@ -125,7 +125,8 @@
   [analysis-map]
   (let [job-uuid  (:uuid analysis-map)
         job-dir   (str "iplant-de-jobs/" (:username analysis-map) "/" job-uuid)
-        irods-cfg (irods-config-path analysis-map)]
+        irods-cfg (irods-config-path analysis-map)
+        data-container-name (str "data-" job-uuid)]
     (str
      "#!/bin/bash\n"
      "set -x\n"
