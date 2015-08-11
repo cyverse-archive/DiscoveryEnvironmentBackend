@@ -33,8 +33,7 @@
                  [slingshot "0.12.1"]
                  [korma "0.3.2"]]
   :plugins [[lein-ring "0.8.13"]
-            [lein-marginalia "0.7.0"]
-            [org.iplantc/lein-iplant-rpm "5.0.0"]]
+            [lein-marginalia "0.7.0"]]
   :ring {:handler notification-agent.core/app
          :init notification-agent.core/load-config-from-file
          :port 31320}

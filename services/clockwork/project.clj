@@ -37,7 +37,6 @@
                  [org.iplantc/service-logging "5.0.0"]
                  [me.raynes/fs "1.4.6"]
                  [slingshot "0.10.3"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]]
   :profiles {:dev     {:resource-paths ["resources/test"]}
              :uberjar {:aot :all}}
   :main ^:skip-aot clockwork.core

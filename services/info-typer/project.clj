@@ -25,14 +25,7 @@
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/heuristomancer "5.0.0"]
                  [org.iplantc/service-logging "5.0.0"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]]
   :main ^:skip-aot info-typer.core
   :profiles {:dev     {:resource-paths ["conf/test"]}
              :uberjar {:aot :all}}
-  :iplant-rpm {:summary "iPlant iRODS info type detection service"
-               :provides "info-typer"
-               :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
-               :exe-files []
-               :config-files ["log4j.properties"]
-               :config-path "conf/main"}
   :uberjar-exclusions [#"LICENSE" #"NOTICE"])

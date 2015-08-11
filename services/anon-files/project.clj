@@ -26,5 +26,4 @@
                  [medley "0.6.0"]
                  [compojure "1.3.4"]
                  [ring "1.3.2"]]
-  :plugins [[lein-ring "0.9.3"]
-            [org.iplantc/lein-iplant-rpm "5.0.0"]])
+  :plugins [[lein-ring "0.9.3"]])

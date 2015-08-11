@@ -43,7 +43,6 @@
   :profiles {:dev     {:dependencies   [[midje "1.6.3"]]
                        :resource-paths ["dev-resource"]}
              :uberjar {:aot :all}}
-  :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]]
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
   :deploy-repositories [["sonatype-nexus-staging"

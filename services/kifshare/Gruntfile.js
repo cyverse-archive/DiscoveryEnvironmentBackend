@@ -120,9 +120,6 @@ module.exports = function(grunt) {
         command: 'lein uberjar',
         stdout: true
       },
-      lein_iplant_rpm: {
-        command: 'lein iplant-rpm'
-      },
       clean_resources: {
         command: 'rm -rf build/'
       }

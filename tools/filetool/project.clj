@@ -27,10 +27,6 @@
                  [org.iplantc/clj-jargon "5.0.0"]
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/common-cli "5.0.0"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]]
-  :iplant-rpm {:summary "Porklock"
-               :type :command
-               :exe-files ["curl_wrapper.pl"]}
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
   :deploy-repositories [["sonatype-nexus-staging"

@@ -1,3 +1,0 @@
-#!/bin/bash
-
-java -jar /usr/local/lib/<(:name spec)>/<(:name spec)>-<(:jar-version spec)>-standalone.jar "$@"

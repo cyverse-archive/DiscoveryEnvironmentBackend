@@ -29,7 +29,6 @@
                  [ring/ring-jetty-adapter "1.0.1"]
                  [org.iplantc/common-cli "5.0.0"]
                  [me.raynes/fs "1.4.6"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]]
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
   :deploy-repositories [["sonatype-nexus-staging"

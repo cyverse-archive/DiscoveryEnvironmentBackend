@@ -56,8 +56,7 @@
                  [dire "0.5.3"]
                  [prismatic/schema "0.4.1"]
                  [slingshot "0.12.2"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]
-            [lein-ring "0.8.8"]
+  :plugins [[lein-ring "0.8.8"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev     {:resource-paths ["conf/test"]}
              :uberjar {:aot :all}}
@@ -66,12 +65,6 @@
          :init donkey.core/lein-ring-init
          :port 31325
          :auto-reload? false}
-  :iplant-rpm {:summary "iPlant Discovery Environment Business Layer Services"
-               :provides "donkey"
-               :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]
-               :exe-files ["resources/scripts/filetypes/guess-2.pl"]
-               :config-files ["log4j2.xml"]
-               :config-path "conf/main"}
   :uberjar-exclusions [#".*[.]SF" #"LICENSE" #"NOTICE"]
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]

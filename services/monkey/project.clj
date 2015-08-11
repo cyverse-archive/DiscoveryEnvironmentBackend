@@ -17,5 +17,4 @@
                  [org.iplantc/clojure-commons "5.0.0"]
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/service-logging "5.0.0"]]
-  :profiles {:dev {:resource-paths ["conf/test"]}}
-  :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]])
+  :profiles {:dev {:resource-paths ["conf/test"]}})

@@ -19,11 +19,7 @@
                  [medley "0.1.5"]
                  [me.raynes/fs "1.4.6"]
                  [org.iplantc/clojure-commons "5.0.0"]]
-  :plugins [[org.iplantc/lein-iplant-cmdtar "5.0.0"]
-            [org.iplantc/lein-iplant-rpm "5.0.0"]]
-  :iplant-rpm {:summary "Clavin"
-               :type :command
-               :provides "iplant-clavin"}
+  :plugins [[org.iplantc/lein-iplant-cmdtar "5.0.0"]]
   :aot [clavin.core]
   :main clavin.core
   :repositories [["sonatype-nexus-snapshots"

@@ -55,14 +55,6 @@ To archive the builds into the builds/ directory, add the --archive option to th
 
     lein exec build-all.clj tools --archive
 
-To build RPMs, you will need to run the build-all.clj script on a CentOS 5 box with rpm-build, leiningen, and lein-iplant-rpm installed (along with rest of the development environment requirements). Then you can do the following:
-
-    lein exec build-all.clj tools --rpm --build-number 1 --archive
-
-The --build-number option is required if you use the --rpm option. It should be passed an integer, but will probably accept other values fine. Don't do that, though.
-
-RPMs aren't necessary for most builds during development and are likely to be deprecated in the future.
-
 ## Building a specific project
 
 For the Leiningen projects, you'll want to create the checkouts symlinks first. They help make sure that you're developing against the latest version of our libraries.
@@ -88,5 +80,3 @@ We've also hacked a script together to report the versions of Clojure projects.
     ./get-versions
 
 Again, these were hacked together extremely quickly and still have sharp edges. Be careful and do all modifications in a branch.
-
-

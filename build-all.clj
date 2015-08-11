@@ -43,7 +43,6 @@
 ; cmdtar projects are an exceptional case
 (def cmdtar           (filter-vals :tarball? projects))
 (def uberjar-projects (filter-vals :uberjar? projects))
-(def rpm-projects     (filter-vals :rpm? projects))
 
 
 (defn path-join
@@ -168,22 +167,6 @@
   (println ">> Don't know how to build" (:path project-map)))
 
 
-;;; RPM building is a special case.
-(defn build-rpm
-  "Builds a RPM for the given project. Obeys the --rpm option.
-   uses the value passed in with --build-number. Uses the
-   lein-iplant-rpm project under the hood."
-  [opts project-map]
-  (if (:rpm? project-map)
-    (let [path-to-project (:path project-map)]
-      (sh/with-sh-dir
-       path-to-project
-       (println ">> Generating RPM for" path-to-project)
-       (if (= path-to-project "services/kifshare") ;;;Icky, kifshare. Icky.
-         (print-shell-result (sh/sh "./build.sh"))
-         (print-shell-result (sh/sh "lein" "iplant-rpm" (:build-number opts))))))))
-
-
 (defn install-libs
   "Installs the libraries in the correct order."
   []
@@ -248,15 +231,6 @@
     (print-shell-result (bash-cmd (str "mv " target-path "/*.jar " "builds")))))
 
 
-(defn move-rpm-build
-  "Moves all .rpm files from the project's root directory. Like all
-   of the (move-*) functions, it'll fail if no .rpms exist."
-  [project-map]
-  (let [path-to-project (:path project-map)]
-    (println ">> Copying any RPMs from" path-to-project "to builds directory.")
-    (print-shell-result (bash-cmd (str "mv " path-to-project "/*.rpm " "builds")))))
-
-
 (defn move-cmdtar-build
   "Moves all .tar.gz files found in the project's target directory."
   [project-map]
@@ -277,10 +251,6 @@
 (defn- archive-project
   [opts project-map]
   (when (:archive? project-map)
-    (if (:rpm opts)
-      (when (:rpm? project-map)
-        (move-rpm-build project-map)))
-
     (when (:tarball? project-map)
       (move-cmdtar-build project-map))
 
@@ -362,9 +332,6 @@
 (defn do-services
   [opts]
   (build-services)
-  (when (:rpm opts)
-    (doseq [[svc-name svc-map] services]
-      (build-rpm opts svc-map)))
   (if (:archive opts)
     (archive-services opts)))
 
@@ -372,9 +339,6 @@
 (defn do-tools
   [opts]
   (build-tools)
-  (when (:rpm opts)
-    (doseq [[tool-name tool-map] tools]
-      (build-rpm opts tool-map)))
   (if (:archive opts)
     (archive-tools opts)))
 
@@ -400,16 +364,9 @@
   (cli/cli
    args
    ["-h" "--help" "Show help." :default false :flag true]
-   ["-r" "--rpm" "Build RPM?" :default false :flag true]
    ["-b" "--build-number" "Assigns a build number" :default nil]
    ["-a" "--archive" "Archive builds?" :default false :flag true]))
 
-
-(defn validate-opts
-  [opts]
-  (when (and (:rpm opts) (nil? (:build-number opts)))
-    (println "You must specify --rpm and --build-number together")
-    (System/exit 1)))
 
 (def valid-cmds
   #{"help"
@@ -433,7 +390,6 @@
   (let [args *command-line-args*
         [opts cmds help-str] (parse-args args)
         cmds        (drop 1 cmds)
-        _           (validate-opts opts)
         _           (validate-cmds cmds)]
     (when (:archive opts)
       (prep-builds-dir))

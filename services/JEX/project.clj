@@ -31,8 +31,7 @@
                  [org.iplantc/common-cfg "5.0.0"]
                  [org.iplantc/service-logging "5.0.0"]
                  [me.raynes/fs "1.4.6"]]
-  :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]
-            [lein-midje "3.1.1"]]
+  :plugins [[lein-midje "3.1.1"]]
   :profiles {:dev {:dependencies [[midje "1.6.3"]]}}
   :aot [jex.core]
   :main jex.core

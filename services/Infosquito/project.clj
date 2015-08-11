@@ -33,7 +33,6 @@
                  [org.iplantc/common-cli "5.0.0"]
                  [org.iplantc/service-logging "5.0.0"]]
   :profiles {:dev {:resource-paths ["dev-resources"]}}
-  :plugins [[org.iplantc/lein-iplant-rpm "5.0.0"]]
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
   :deploy-repositories [["sonatype-nexus-staging"

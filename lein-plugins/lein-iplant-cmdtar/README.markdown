@@ -22,7 +22,7 @@ defined in `project.clj`:
 Next, the plugin has to be added to the `:plugins` section of `project.clj`:
 
 ```clojure
-[org.iplantc/lein-iplant-rpm "0.1.0-SNAPSHOT"]
+[org.iplantc/lein-iplant-cmdtar "0.1.0-SNAPSHOT"]
 ```
 
 No other configuration is necessary; the generated Bash script will

@@ -32,9 +32,5 @@
                  [midje "1.6.3"]
                  [ring "1.2.1"]
                  [ring/ring-json "0.3.1"]]
-  :iplant-rpm {:summary "DE API for managing saved searches."
-               :provides "saved-searches"
-               :dependencies ["iplant-service-config >= 0.1.0-5" "java-1.7.0-openjdk"]}
   :plugins [[lein-ring "0.8.10"]
-            [lein-midje "3.1.1"]
-            [org.iplantc/lein-iplant-rpm "5.0.0"]])
+            [lein-midje "3.1.1"]])
