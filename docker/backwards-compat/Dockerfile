@@ -26,6 +26,7 @@ ADD http://de.iplantcollaborative.org/dl/d/4A092F95-39AC-4C68-B3DA-916E7228CF78/
 ADD http://de.iplantcollaborative.org/dl/d/7DFDA524-3073-4A4C-9D2E-A705EFF62802/python24-libs.tar.gz /
 ADD http://de.iplantcollaborative.org/dl/d/D69F7547-BD83-4FBB-A84B-C2769B0205C8/python26-libs.tar.gz /
 ADD http://de.iplantcollaborative.org/dl/d/88EFCA72-091C-4DD8-8FF9-C2588CBDA1F4/BioPerl-1.6.1.tar.gz /
+ADD http://de.iplantcollaborative.org/dl/d/71537FC1-6207-48FF-9583-2A7FDC3655F6/perl5-libs.tar.gz /
 
 RUN yum update -y && yum install -y \
 a2ps \
@@ -1176,6 +1177,8 @@ RUN cpanm -v -n /BioPerl-1.6.1.tar.gz
 
 ADD http://download.osgeo.org/gdal/gdal-1.8.1.tar.gz /root/
 RUN cd /root/ && tar xzf /root/gdal-1.8.1.tar.gz && cd gdal-1.8.1 && ./configure && make && make install
+
+RUN tar -xzf /perl5-libs.tar.gz
 
 ENV PATH /usr/kerberos/bin:/usr/local2/icommands:/usr/local2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/bin:/usr/bin
 VOLUME ["/usr/local2/", "/usr/local3/", "/data2/", "/condor01/"]
