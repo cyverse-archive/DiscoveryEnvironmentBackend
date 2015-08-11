@@ -3,8 +3,6 @@
   :url "https://github.com/iPlantCollaborativeOpenSource/mescal"
   :license {:name "BSD Standard License"
             :url "http://www.iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
-  :classifiers [["javadoc" :javadoc]
-                ["sources" :sources]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [cheshire "5.3.1"]
                  [clj-http "1.0.0"]
