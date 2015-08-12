@@ -1,0 +1,30 @@
+<configuration scan="true" debug="false">
+ <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <customFields>{"service":"metadactyl"}</customFields>
+        <fieldNames>
+            <logger>loggerName</logger>
+            <thread>thread</thread>
+        </fieldNames>
+    </encoder>
+  </appender>
+
+
+  <logger name="donkey" level="debug" />
+  <!-- Configuration Logging -->
+  <logger name="clojure-commons.config" level="INFO"/>
+  <!-- Request Logging -->
+  <logger name="AccessLogger" level="INFO" />
+  <!-- Jargon Logging -->
+  <logger name="org.irods.jargon" level="ERROR" />
+
+  <logger name="metadactyl.service.callbacks" level="INFO" />
+  <logger name="metadactyl.util.json" level="DEBUG" />
+
+  <!-- Service Call Trace Message Logging -->
+  <logger name="trace" level="TRACE" />
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+</configuration>

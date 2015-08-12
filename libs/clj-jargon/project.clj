@@ -15,8 +15,6 @@
                  [org.irods.jargon/jargon-ticket "4.0.2.3-RELEASE"
                   :exclusions [[org.slf4j/slf4j-api]
                                [org.slf4j/slf4j-log4j12]]]
-                 [org.slf4j/slf4j-api "1.7.12"]
-                 [org.slf4j/slf4j-log4j12 "1.7.12"]
                  [slingshot "0.12.2"]
                  [org.iplantc/clojure-commons "5.0.0"]]
   :repositories [["dice.repository"

@@ -1,9 +1,9 @@
 FROM discoenv/javabase
 
 COPY target/tree-urls-standalone.jar /home/iplant/
-COPY conf/main/log4j2.xml /home/iplant/
+COPY conf/main/logback.xml /home/iplant/
 USER root
 RUN chown -R iplant:iplant /home/iplant/
 USER iplant
-ENTRYPOINT ["java", "-cp", ".:tree-urls-standalone.jar", "tree_urls.core"]
+ENTRYPOINT ["java", "-Dlogback.configurationFile=/etc/iplant/de/logging/tree-urls-logging.xml", "-cp", ".:tree-urls-standalone.jar", "tree_urls.core"]
 CMD ["--help"]

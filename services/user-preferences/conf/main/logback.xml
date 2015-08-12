@@ -1,0 +1,26 @@
+<configuration scan="true" debug="false">
+ <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <customFields>{"service":"user-preferences"}</customFields>
+        <fieldNames>
+            <logger>loggerName</logger>
+            <thread>thread</thread>
+        </fieldNames>
+    </encoder>
+  </appender>
+
+
+  <Logger name="donkey" level="debug" />
+  <!-- Configuration Logging -->
+  <Logger name="clojure-commons.config" level="INFO"/>
+  <!-- Request Logging -->
+  <Logger name="AccessLogger" level="INFO" />
+  <!-- Jargon Logging -->
+  <Logger name="org.irods.jargon" level="ERROR" />
+  <!-- Service Call Trace Message Logging -->
+  <Logger name="trace" level="TRACE" />
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+</configuration>
