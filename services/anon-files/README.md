@@ -30,6 +30,8 @@ anon-files's configuration file must be in the properties file format. Here's an
     anon-user = anonymous
     port = 60000
     log-file =
+    
+The Dockerfile is expecting anon-files to be listening on port 60000, so it's not recommended to place something different in the config file.
 
 Here are the command-line options:
 
@@ -45,7 +47,9 @@ Here are the command-line options:
 
 ## Run
 
-    docker run -v /path/to/config:/etc/iplant/de/anon-files.properties discoenv/anon-files
+    docker run -P -d --name anon-files -v /path/to/config:/etc/iplant/de/anon-files.properties discoenv/anon-files
+
+Use *docker ps* to see which random port anon-files is listening on.
 
 ## Downloading files
 
