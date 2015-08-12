@@ -10,10 +10,10 @@
   </appender>
 
    <appender name="ROLLING-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-       <file>/var/log/jex.log</file>
+       <file>/var/log/jex/jex.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
-            <fileNamePattern>/var/log/jex.log.%d{yyyy-MM-dd}</fileNamePattern>
+            <fileNamePattern>/var/log/jex/jex.log.%d{yyyy-MM-dd}</fileNamePattern>
             <!-- keep 1 week of history -->
             <maxHistory>7</maxHistory>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>
