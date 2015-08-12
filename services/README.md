@@ -30,5 +30,6 @@ The Go services more self-contained, so you don't have to worry about building t
 To build a new version of a Go service, run something like the following inside the project directory for the service. We'll use condor-log-monitor as a concrete example:
 
     > docker run --rm -t -v $(pwd):/condor-log-monitor -v $(pwd)/intra-container-build.sh:/bin/intra-container-build.sh -w /condor-log-monitor discoenv/clm-builder
+    > docker build -t discoenv/condor-log-monitor:dev .
 
 Substitute "jex-events" (without the quotes) for all instances of "condor-log-monitor" to build jex-events. It uses the clm-builder container image as well.
