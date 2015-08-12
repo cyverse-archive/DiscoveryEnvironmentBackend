@@ -8,7 +8,7 @@ If you're building locally ignore the docker-build.sh and build.sh files. Those 
 
 Periodically -- as in once a day or so -- run the following command from the top-level of the backend checkout (in other words, one directory up from this file):
 
-    > docker run --rm -it -v ~/.m2/:/root/.m2/ -v $(pwd):/build -w /build discoenv/buildenv lein exec build-all.clj lein-plugins libs
+    > docker run --rm -v ~/.m2/:/root/.m2/ -v $(pwd):/build -w /build discoenv/buildenv lein exec build-all.clj lein-plugins libs
 
 That will build the latest version of all of the libraries for the backend and place them into your local .m2 directory. As annoying as that is to type, it's still less annoying than trying to get a full development environment set up on your local box.
 
