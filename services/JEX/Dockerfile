@@ -1,7 +1,7 @@
 FROM java:8
 
 COPY target/jex-standalone.jar /jex-standalone.jar
-COPY conf/log4j2.xml /log4j2.xml
+COPY conf/main/logback.xml /logback.xml
 COPY submitnerator.sh /submitnerator.sh
-ENTRYPOINT ["java", "-jar", "/jex-standalone.jar"]
+ENTRYPOINT ["java", "-Dlogback.configurationFile=/etc/iplant/de/logging/jex-logging.xml", "-cp", ".:jex-standalone.jar", "jex.core"]
 CMD ["--help"]
