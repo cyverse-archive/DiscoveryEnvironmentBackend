@@ -1,8 +1,8 @@
 # Services documentation
 
-This directory contains the projects for each of the Discovery Environment's
-backend services. Most of the services are written in Clojure, the exceptions
-being condor-log-monitor and jex-events.
+This directory contains the projects for each of the Discovery Environment's backend services. Most of the services are written in Clojure, the exceptions being condor-log-monitor and jex-events.
+
+If you're building locally ignore the docker-build.sh and build.sh files. Those are intended for our Jenkins build system and are a bit too unwieldy to be manually run.
 
 ## Building Clojure services
 
@@ -20,8 +20,6 @@ To build a new version of a Clojure service, run something like the following in
 Substitute the project name -- in lowercase -- for "anon-files" in the "docker build" command.
 
 The build of the uberjar is separate from the build of the container image to keep the size of the container image a bit more reasonable.
-
-If you're building locally ignore the docker-build.sh and build.sh files. Those are intended for our Jenkins build system and are a bit too unwieldy to be manually run.
 
 ## Building Go services
 
