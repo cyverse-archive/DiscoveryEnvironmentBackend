@@ -81,7 +81,6 @@
 
 (defn- get-usernames
   [uuids]
-  (println uuids)
   (-> (select :id (sql/call :regexp_replace :username "@iplantcollaborative.org$" ""))
       (from :users)
       (where [:in (sql/call :cast :id :varchar) uuids])))
@@ -92,11 +91,9 @@
 
 (defn- migrate-table
   [table meta-trans uuid-mappings]
-  (println table)
-  (println uuid-mappings)
+  (println (str "Migrating " table))
   (doseq [column uuid-columns
           [uuid username] uuid-mappings]
-     (println (sql/format (update-uuids table column uuid username)))
      (jdbc/execute! meta-trans (sql/format (update-uuids table column uuid username)))))
 
 (defn- migrate-uuids
@@ -106,7 +103,6 @@
       (jdbc/with-db-transaction [de-trans de-db]
         (let [uuids (drop 1 (jdbc/query meta-trans (sql/format (get-uuids)) :as-arrays? true :row-fn first))
               uuid-mappings (drop 1 (jdbc/query de-trans (sql/format (get-usernames uuids)) :as-arrays? true))]
-         (println tables)
          (dorun (map #(migrate-table % meta-trans uuid-mappings) tables)))))
     (catch java.sql.SQLException e
       (log/error e)
