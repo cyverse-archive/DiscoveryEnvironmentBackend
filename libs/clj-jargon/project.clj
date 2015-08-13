@@ -5,6 +5,7 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.1"]
+                 [ch.qos.logback/logback-classic "1.1.3"]
                  [org.irods.jargon/jargon-core "4.0.2.3-RELEASE"
                   :exclusions [[org.jglobus/JGlobus-Core]
                                [org.slf4j/slf4j-api]
