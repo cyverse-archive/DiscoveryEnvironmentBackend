@@ -7,7 +7,7 @@
       (string/trim (:out (sh "git" "rev-parse" "HEAD")))
       ""))
 
-(defproject uuid-corrector "1.0.0"
+(defproject uuid-corrector "5.0.0"
   :description "Utility to correct UUIDs mistakenly copied to the metadata DB to usernames"
   :url "https://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend"
   :license {:name "BSD Standard License"
