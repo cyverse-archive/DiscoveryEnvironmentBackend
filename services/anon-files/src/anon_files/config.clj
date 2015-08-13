@@ -5,18 +5,20 @@
 (dosync
  (ref-set
   cfg/validators
-   {:port           [v/required cfg/intablev]
+   {:port           [cfg/intablev]
     :irods-host     [v/required cfg/stringv]
-    :irods-port     [v/required cfg/stringv]
+    :irods-port     [cfg/stringv]
     :irods-zone     [v/required cfg/stringv]
     :irods-home     [v/required cfg/stringv]
     :irods-user     [v/required cfg/stringv]
     :irods-password [v/required cfg/stringv]
-    :anon-user      [v/required cfg/stringv]
-    :log-file       cfg/stringv
-    :log-size       v/number
-    :log-backlog    v/number
-    :log-level      cfg/keywordv})
+    :anon-user      [cfg/stringv]})
+
+ (ref-set
+   cfg/defaults
+   {:port       "60000"
+    :anon-user  "anonymous"
+    :irods-port "1247"})
 
  (ref-set
   cfg/filters
