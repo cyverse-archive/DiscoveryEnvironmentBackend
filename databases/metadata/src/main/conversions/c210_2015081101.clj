@@ -5,6 +5,11 @@
   "The destination database version."
   "2.1.0:20150811.01")
 
+(defn- print-warning
+  [& lines]
+  (println)
+  (dorun (map (partial println "\t ") lines)))
+
 (defn- print-conversion-warning
   []
   (print-warning
