@@ -1,9 +1,9 @@
-(ns facepalm.c210-2015081002
+(ns facepalm.c210-2015081101
   (:use [korma.core]))
 
 (def ^:private version
   "The destination database version."
-  "2.1.0:20150810.02")
+  "2.1.0:20150811.01")
 
 (defn- print-conversion-warning
   []
