@@ -1,78 +1,30 @@
 (ns donkey.services.filesystem.metadata-templates
   (:use [donkey.services.filesystem.common-paths])
   (:require [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.clients.metadactyl :as metadactyl]
             [donkey.clients.metadata :as metadata]))
 
 (def user-id-ks [:created_by :modified_by])
 
-(defn- load-user-id-map
-  [ids]
-  (->> (metadactyl/get-users-by-id ids)
-       (:users)
-       (map (juxt :id :username))
-       (into {})))
-
-(defn- extract-user-ids
-  ([ms ks]
-     (extract-user-ids ms ks []))
-  ([ms ks ids]
-     (set (remove nil? (concat ids (mapcat (apply juxt ks) ms))))))
-
-(defn- user-ids-to-usernames
-  ([ms ks]
-     (user-ids-to-usernames ms ks (extract-user-ids ms ks)))
-  ([ms ks user-id-map]
-     (let [replace-user-id  (fn [m k] (assoc m k (user-id-map (m k))))
-           replace-user-ids (fn [m] (reduce replace-user-id m ks))]
-       (mapv replace-user-ids ms))))
-
 (defn- list-metadata-templates
   []
-  (update-in (metadata/list-templates) [:metadata_templates]
-             user-ids-to-usernames user-id-ks))
+  (metadata/list-templates))
 
 (defn- admin-list-metadata-templates
   []
-  (update-in (metadata/admin-list-templates) [:metadata_templates]
-             user-ids-to-usernames user-id-ks))
-
-(defn- load-template-user-id-map
-  [{attrs :attributes :as template}]
-  (->> ((apply juxt user-id-ks) template)
-       (extract-user-ids attrs user-id-ks)
-       (load-user-id-map)))
-
-(defn- replace-template-user-ids
-  ([template]
-     (replace-template-user-ids template (load-template-user-id-map template)))
-  ([template user-id-map]
-     (assoc template
-       :attributes  (user-ids-to-usernames (:attributes template) user-id-ks user-id-map)
-       :created_by  (user-id-map (:created_by template))
-       :modified_by (user-id-map (:modified_by template)))))
+  (metadata/admin-list-templates))
 
 (defn- view-metadata-template
   [id]
-  (replace-template-user-ids (metadata/get-template id)))
-
-(defn- replace-attr-user-ids
-  [attr]
-  (let [user-id-map (load-user-id-map ((apply juxt user-id-ks) attr))]
-    (assoc attr
-      :created_by  (user-id-map (:created_by attr))
-      :modified_by (user-id-map (:modified_by attr)))))
+  (metadata/get-template id))
 
 (defn- view-metadata-attribute
   [id]
-  (replace-attr-user-ids (metadata/get-attribute id)))
+  (metadata/get-attribute id))
 
 (defn- add-metadata-template
   "Adds a new metadata template."
   [template]
-  (-> (:id (metadactyl/get-authenticated-user))
-      (metadata/admin-add-template template)
-      (replace-template-user-ids)))
+  (metadata/admin-add-template template))
 
 (defn- remove-usernames-from-template
   [template]
@@ -84,15 +36,12 @@
   "Updates a Metadata Template and adds or updates its associated Attributes. Also deletes any
    orphaned Attributes."
   [template-id template]
-  (-> (:id (metadactyl/get-authenticated-user))
-      (metadata/admin-update-template template-id (remove-usernames-from-template template))
-      (replace-template-user-ids)))
+  (metadata/admin-update-template template-id (remove-usernames-from-template template)))
 
 (defn- delete-metadata-template
   "Sets a Metadata Template's deleted flag to 'true'."
   [template-id]
-  (-> (:id (metadactyl/get-authenticated-user))
-      (metadata/admin-delete-template template-id)))
+  (metadata/admin-delete-template template-id))
 
 (defn do-metadata-template-list
   []

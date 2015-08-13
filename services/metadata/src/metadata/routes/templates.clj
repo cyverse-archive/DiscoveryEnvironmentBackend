@@ -44,7 +44,7 @@
       (service/trap uri templates/admin-list-templates))
 
     (POST* "/" [:as {:keys [uri]}]
-      :query [params UserIdParams]
+      :query [params StandardQueryParams]
       :body [body (describe MetadataTemplateUpdate "The template to add.")]
       :return MetadataTemplate
       :summary "Add a Metadata Template"
@@ -54,7 +54,7 @@
     (PUT* "/:template-id" [:as {:keys [uri]}]
       :path-params [template-id :- TemplateIdPathParam]
       :body [body (describe MetadataTemplateUpdate "The template to update.")]
-      :query [params UserIdParams]
+      :query [params StandardQueryParams]
       :return MetadataTemplate
       :summary "Update a Metadata Template"
       :description "This endpoint allows administrators to update existing metadata templates."
@@ -62,7 +62,7 @@
 
     (DELETE* "/:template-id" [:as {:keys [uri]}]
       :path-params [template-id :- TemplateIdPathParam]
-      :query [params UserIdParams]
+      :query [params StandardQueryParams]
       :summary "Mark a Metadata Template as Deleted"
       :description "This endpoint allows administrators to mark existing metadata templates as
       deleted."
