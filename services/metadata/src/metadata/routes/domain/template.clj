@@ -9,11 +9,11 @@
 (def ValidValueTypeEnum (describe (apply s/enum (tp/get-value-type-names)) "The attribute's data type"))
 
 (s/defschema MetadataTemplateListEntry
-  {:created_by  (describe UUID "The ID of the user who created the template")
+  {:created_by  (describe String "The username of the user who created the template")
    :created_on  (describe Date "The date and time of template creation")
    :deleted     (describe Boolean "True if the template has been marked as deleted")
    :id          (describe UUID "The metadata template ID")
-   :modified_by (describe UUID "The ID if the user who most recently modified the template")
+   :modified_by (describe String "The username of the user who most recently modified the template")
    :modified_on (describe Date "The date and time of the most recent template modification")
    :name        (describe String "The metadata template name")})
 
@@ -36,13 +36,13 @@
    (describe String "A brief description of the attribute")
 
    :created_by
-   (describe UUID "The ID of the user who created the template")
+   (describe String "The username of the user who created the template")
 
    :created_on
    (describe Date "The date and time of template creation")
 
    :modified_by
-   (describe UUID "The ID if the user who most recently modified the template")
+   (describe String "The username of the user who most recently modified the template")
 
    :modified_on
    (describe Date "The date and time of the most recent template modification")
