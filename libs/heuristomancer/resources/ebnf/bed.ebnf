@@ -1,0 +1,8 @@
+S = header* data+ partial?
+header = #"[^\r\n]"+ linebreak
+data = #"[^\s]"+ tab number tab number (tab field)* linebreak
+partial = #"[^\s]"+ [tab [number [tab [number (tab field)* [linebreak]]]]]
+tab = "\t"
+number = #"[0-9]+"
+field = #'[^\t\r\n"]+'
+linebreak = #"(?:\r\n|\r|\n)"

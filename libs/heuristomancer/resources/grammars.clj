@@ -13,6 +13,7 @@
  [:newick    "ebnf/newick.ebnf"]
  [:nexml     "ebnf/nexml.ebnf"]
  [:ace       "ebnf/ace.ebnf"]
+ [:bed       "ebnf/bed.ebnf"]
  [:blast     "ebnf/blast.ebnf"]
  [:bowtie    "ebnf/bowtie.ebnf"]
  [:clustalw  "ebnf/clustal.ebnf"]
