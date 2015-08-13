@@ -17,8 +17,7 @@
   :profiles {:uberjar {:aot :all}}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.iplantc/clj-jargon "5.0.0"
-                  :exclusions [[org.slf4j/slf4j-api]
-                               [org.slf4j/slf4j-log4j12]
+                  :exclusions [[org.slf4j/slf4j-log4j12]
                                [log4j]]]
                  [org.iplantc/service-logging "5.0.0"]
                  [org.iplantc/common-cli "5.0.0"]

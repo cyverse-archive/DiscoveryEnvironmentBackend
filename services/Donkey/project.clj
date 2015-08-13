@@ -24,7 +24,6 @@
                  [org.iplantc/clj-cas "5.0.0"]
                  [org.iplantc/clj-jargon "5.0.0"
                   :exclusions [[xerces/xmlParserAPIs]
-                               [org.slf4j/slf4j-api]
                                [org.slf4j/slf4j-log4j12]
                                [log4j]]]
                  [org.iplantc/service-logging "5.0.0"]
