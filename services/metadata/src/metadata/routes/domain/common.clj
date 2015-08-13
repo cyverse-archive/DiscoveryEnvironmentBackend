@@ -19,10 +19,6 @@
 (s/defschema StandardQueryParams
   {:user (describe NonBlankString "The username of the authenticated user")})
 
-(s/defschema UserIdParams
-  (assoc StandardQueryParams
-    :user-id (describe UUID "The user ID from the app database")))
-
 (s/defschema StandardDataItemQueryParams
   (assoc StandardQueryParams
     :data-type (describe DataTypeEnum "The type of the requested data item.")))

@@ -29,13 +29,13 @@
   {:metadata_templates (mapv remove-nil-values (tp/list-templates false))})
 
 (defn add-template
-  [{:keys [user-id]} template]
-  (transaction (view-template (tp/add-template user-id template))))
+  [{:keys [user]} template]
+  (transaction (view-template (tp/add-template user template))))
 
 (defn update-template
-  [{:keys [user-id]} template-id template]
-  (transaction (view-template (tp/update-template user-id template-id template))))
+  [{:keys [user]} template-id template]
+  (transaction (view-template (tp/update-template user template-id template))))
 
 (defn delete-template
-  [{:keys [user-id]} template-id]
-  (transaction (tp/delete-template user-id template-id)))
+  [{:keys [user]} template-id]
+  (transaction (tp/delete-template user template-id)))

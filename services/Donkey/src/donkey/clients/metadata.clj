@@ -24,13 +24,13 @@
   (parse-body (raw/admin-list-templates)))
 
 (defn admin-add-template
-  [user-id template]
-  (parse-body (raw/admin-add-template user-id (cheshire/encode template))))
+  [template]
+  (parse-body (raw/admin-add-template (cheshire/encode template))))
 
 (defn admin-update-template
-  [user-id template-id template]
-  (parse-body (raw/admin-update-template user-id template-id (cheshire/encode template))))
+  [template-id template]
+  (parse-body (raw/admin-update-template template-id (cheshire/encode template))))
 
 (defn admin-delete-template
-  [user-id template-id]
-  (raw/admin-delete-template user-id template-id))
+  [template-id]
+  (raw/admin-delete-template template-id))

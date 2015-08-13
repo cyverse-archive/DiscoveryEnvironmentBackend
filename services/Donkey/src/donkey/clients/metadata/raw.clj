@@ -174,14 +174,14 @@
   (http/get (metadata-url "admin" "templates") (get-options)))
 
 (defn admin-add-template
-  [user-id template]
-  (http/post (metadata-url "admin" "templates") (post-options template {:user-id user-id})))
+  [template]
+  (http/post (metadata-url "admin" "templates") (post-options template)))
 
 (defn admin-update-template
-  [user-id template-id template]
+  [template-id template]
   (http/put (metadata-url "admin" "templates" template-id)
-            (put-options template {:user-id user-id})))
+            (put-options template)))
 
 (defn admin-delete-template
-  [user-id template-id]
-  (http/delete (metadata-url "admin" "templates" template-id) (delete-options {:user-id user-id})))
+  [template-id]
+  (http/delete (metadata-url "admin" "templates" template-id) (delete-options)))
