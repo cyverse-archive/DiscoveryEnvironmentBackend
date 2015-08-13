@@ -71,7 +71,7 @@
 
 (def uuid-columns [:created_by :modified_by])
 (def tables [:templates :attributes])
-(def table-columns (partition 2 (flatten (map (fn [table] (map #(list table %) uuid-columns)) tables))))
+(def table-columns (mapcat (fn [table] (map #(list table %) uuid-columns)) tables))
 
 (defn- update-uuids
   [table column uuid username]
@@ -94,13 +94,10 @@
   [table meta-trans uuid-mappings]
   (println table)
   (println uuid-mappings)
-  (dorun (map
-    (fn [column] (println column) (dorun (map
-      (fn [[uuid username]]
-        (println (sql/format (update-uuids table column uuid username)))
-        (jdbc/execute! meta-trans (sql/format (update-uuids table column uuid username))))
-      uuid-mappings)))
-    uuid-columns)))
+  (doseq [column uuid-columns
+          [uuid username] uuid-mappings]
+     (println (sql/format (update-uuids table column uuid username)))
+     (jdbc/execute! meta-trans (sql/format (update-uuids table column uuid username)))))
 
 (defn- migrate-uuids
   [de-db metadata-db]
