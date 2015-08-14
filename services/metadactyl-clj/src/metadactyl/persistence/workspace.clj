@@ -1,5 +1,6 @@
 (ns metadactyl.persistence.workspace
-  (:use [korma.core])
+  (:use [korma.core]
+        [korma.db :only [transaction]])
   (:require [kameleon.app-groups :as app-groups]
             [kameleon.queries :as queries]
             [metadactyl.util.config :as config]))
@@ -31,7 +32,8 @@
 
 (defn create-workspace
   [username]
-  (-> (queries/get-user-id username)
-      (queries/create-workspace)
-      (add-root-app-category)
-      (select-keys [:id :user_id :root_category_id :is_public])))
+  (transaction
+    (-> (queries/get-user-id username)
+        (queries/create-workspace)
+        (add-root-app-category)
+        (select-keys [:id :user_id :root_category_id :is_public]))))
