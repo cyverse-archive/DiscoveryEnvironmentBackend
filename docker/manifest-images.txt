@@ -20,3 +20,4 @@ saved-searches
 tree-urls
 user-preferences
 user-sessions
+uuid-corrector
