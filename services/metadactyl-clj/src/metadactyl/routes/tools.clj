@@ -83,7 +83,7 @@
         :query [params SecuredQueryParams]
         :return DeviceContainerPath
         :summary "Tool Device Container Path"
-        :description "Returns a device's host path."
+        :description "Returns a device's in-container path."
         (ce/trap uri (requester tool-id (device-field tool-id device-id :container_path))))
 
   (GET* "/:tool-id/container/cpu-shares" [:as {uri :uri}]
@@ -269,7 +269,7 @@
          :body [body DeviceContainerPath]
          :return DeviceContainerPath
          :summary "Update Tool Device Container Path"
-         :description "This endpoint updates a device's host path for the tool's container."
+         :description "This endpoint updates a device's container path for the tool's container."
          (ce/trap uri (requester tool-id (update-device-field tool-id device-id :container_path (:container_path body)))))
 
   (POST* "/:tool-id/container/entrypoint" [:as {uri :uri}]
@@ -332,7 +332,7 @@
          :body [body NewVolume]
          :return Volume
          :summary "Tool Container Volume Information"
-         :description "Returns volume information for the container associated with a tool."
+         :description "This endpoint updates volume information for the container associated with a tool."
          (ce/trap uri (requester tool-id (add-tool-volume tool-id body))))
 
   (DELETE* "/:tool-id/container/volumes/:volume-id" [:as {uri :uri}]
