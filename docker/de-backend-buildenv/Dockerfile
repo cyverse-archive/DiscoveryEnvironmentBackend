@@ -1,8 +1,8 @@
-FROM centos:centos6
+FROM centos:centos7
 MAINTAINER John Wregglesworth <wregglej@gmail.com>
 
 ENV GOOS=linux GOARCH=amd64 GOVERSION=1.4.1
-ENV MVNVERSION=3.2.5
+ENV MVNVERSION=3.3.3
 ENV MVNURL=http://apache.claz.org/maven/maven-3/$MVNVERSION/binaries/apache-maven-$MVNVERSION-bin.tar.gz
 
 ##RUN rpm -Uvh http://ftp.linux.ncsu.edu/pub/epel/5/i386/epel-release-5-4.noarch.rpm
