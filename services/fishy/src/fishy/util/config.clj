@@ -3,6 +3,8 @@
   (:require [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]))
 
+(def default-config-file "/etc/iplant/de/fishy.properties")
+
 (def docs-uri "/docs")
 
 (def svc-info
@@ -23,6 +25,11 @@
 (def ^:private configs
   "A ref for storing the symbols used to get configuration settings."
   (ref []))
+
+(cc/defprop-int listen-port
+  "The port that fishy listens on."
+  [props config-valid configs]
+  "fishy.app.listen-port")
 
 (cc/defprop-str grouper-base
   "The base URL to use when connecting to the Grouper API."

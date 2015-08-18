@@ -4,15 +4,17 @@ A RESTful facade in front of [Grouper](http://www.internet2.edu/products-service
 
 ## Usage
 
-To compile a jar file for use, run `lein do clean, ring uberjar`. This will produce `target/fishy-standalone.jar`.
+To compile a jar file for use, run `lein do clean, uberjar`. This will produce `target/fishy-standalone.jar`. To simply run a server for direct use, run `lein run`
 
-Fishy listens on port 31310
+Fishy listens on port 31310 rather than any configured port when run with lein-ring or a jar produced by lein-ring, rather than the methods listed above.
 
 ### Configuration
 
-This program requires a configuration file called `fishy.properties` to run, found by searching `/etc/iplant/de`, the current working directory, and the classpath. A sample configuration:
+This program requires a configuration file to run, provided via the `--config` command-line option. A sample configuration:
 
 ```properties
+# App settings
+fishy.app.listen-port     = 60000
 # Grouper settings
 
 fishy.grouper.base-url    = http://some-grouper-server:5555/grouperWs
@@ -20,6 +22,10 @@ fishy.grouper.api-version = v_2_1_000
 fishy.grouper.username    = epinephelinae
 fishy.grouper.password    = really-big-fish
 ```
+
+### Docker
+
+This program includes a Dockerfile for use with docker. To use it, first build a jar with `lein do clean, uberjar`, and then run `docker build -t fishy .` and `docker run --rm fishy` to run the container. You will likely want to mount a configuration file when running the container with the `-v` option, and the container exposes port 60000 by default, so you should most likely configure this in your properties file.
 
 ## License
 

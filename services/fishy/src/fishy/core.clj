@@ -1,43 +1,33 @@
 (ns fishy.core
   (:gen-class)
   (:use [clojure.java.io :only [file]])
-  (:require [fishy.util.config :as config]))
-
-(def ^:private default-conf-dir "/etc/iplant/de")
-
-(defn- iplant-conf-dir-file
-  [filename]
-  (let [conf-dir (or (System/getenv "IPLANT_CONF_DIR") default-conf-dir)]
-    (let [f (file conf-dir filename)]
-      (when (.isFile f) (.getPath f)))))
-
-(defn- cwd-file
-  [filename]
-  (let [f (file filename)]
-    (when (.isFile f) (.getPath f))))
-
-(defn- classpath-file
-  [filename]
-  (-> (Thread/currentThread)
-      (.getContextClassLoader)
-      (.findResource filename)
-      (.toURI)
-      (file)))
-
-(defn- no-configuration-found
-  [filename]
-  (throw (RuntimeException. (str "configuration file " filename " not found"))))
-
-(defn- find-config-file
-  []
-  (let [conf-file "fishy.properties"]
-    (or (iplant-conf-dir-file conf-file)
-        (cwd-file conf-file)
-        (classpath-file conf-file)
-        (no-configuration-found conf-file))))
+  (:require [fishy.util.config :as config]
+            [me.raynes.fs :as fs]
+            [clojure.tools.logging :as log]
+            [common-cli.core :as ccli]
+            [ring.adapter.jetty :as jetty]
+            [service-logging.thread-context :as tc]))
 
 (defn init-service
   ([]
-     (init-service (find-config-file)))
+     (init-service config/default-config-file))
   ([config-path]
      (config/load-config-from-file config-path)))
+
+(defn cli-options
+  []
+  [["-c" "--config PATH" "Path to the config file"
+    :default config/default-config-file
+    :validate [#(fs/exists? %) "The config file does not exist."
+               #(fs/readable? %) "The config file is not readable."]]
+   ["-v" "--version" "Print out the version number."]
+   ["-h" "--help"]])
+
+(defn -main
+  [& args]
+  (tc/set-context! config/svc-info)
+  (require 'fishy.routes)
+  (let [{:keys [options arguments errors summary]} (ccli/handle-args config/svc-info args cli-options)]
+    (init-service (:config options))
+    (log/warn "Started listening on" (config/listen-port))
+    (jetty/run-jetty (eval 'fishy.routes/app) {:port (config/listen-port)})))
