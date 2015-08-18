@@ -1,7 +1,7 @@
 FROM centos:centos7
 MAINTAINER John Wregglesworth <wregglej@gmail.com>
 
-ENV GOOS=linux GOARCH=amd64 GOVERSION=1.4.1
+ENV GOOS=linux GOARCH=amd64 GOVERSION=1.4.2
 ENV MVNVERSION=3.3.3
 ENV MVNURL=http://apache.claz.org/maven/maven-3/$MVNVERSION/binaries/apache-maven-$MVNVERSION-bin.tar.gz
 
