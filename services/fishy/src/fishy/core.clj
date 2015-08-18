@@ -41,8 +41,3 @@
      (load-config-from-file (find-config-file)))
   ([config-path]
      (config/load-config-from-file config-path)))
-
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
