@@ -24,11 +24,6 @@
   "A ref for storing the symbols used to get configuration settings."
   (ref []))
 
-(cc/defprop-int listen-port
-  "The port that fishy listens to."
-  [props config-valid configs]
-  "fishy.app.listen-port")
-
 (cc/defprop-str grouper-base
   "The base URL to use when connecting to the Grouper API."
   [props config-valid configs]
