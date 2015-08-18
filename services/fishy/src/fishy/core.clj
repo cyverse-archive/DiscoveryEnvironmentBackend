@@ -36,8 +36,8 @@
         (classpath-file conf-file)
         (no-configuration-found conf-file))))
 
-(defn load-config-from-file
+(defn init-service
   ([]
-     (load-config-from-file (find-config-file)))
+     (init-service (find-config-file)))
   ([config-path]
      (config/load-config-from-file config-path)))

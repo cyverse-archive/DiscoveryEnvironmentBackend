@@ -30,6 +30,6 @@
   :aot [fishy.core]
   :main fishy.core
   :ring {:handler fishy.routes/app
-         :init    fishy.core/load-config-from-file
+         :init    fishy.core/init-service
          :port    31310}
   :uberjar-exclusions [#"(?i)META-INF/[^/]*[.](SF|DSA|RSA)"])
