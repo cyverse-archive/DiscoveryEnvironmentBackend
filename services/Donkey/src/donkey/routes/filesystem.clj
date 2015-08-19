@@ -21,7 +21,6 @@
             [donkey.services.filesystem.page-csv :as csv]
             [donkey.services.filesystem.page-file :as file]
             [donkey.services.filesystem.preview :as preview]
-            [donkey.services.filesystem.rename :as rename]
             [donkey.services.filesystem.root :as root]
             [donkey.services.filesystem.sharing :as sharing]
             [donkey.services.filesystem.space-handling :as sh]
@@ -67,7 +66,7 @@
       (controller req data/create-dir :params :body))
 
     (POST "/filesystem/rename" [:as req]
-      (controller req rename/do-rename :params :body))
+      (controller req data/rename :params :body))
 
     (POST "/filesystem/delete" [:as req]
       (controller req trash/do-delete :params :body))

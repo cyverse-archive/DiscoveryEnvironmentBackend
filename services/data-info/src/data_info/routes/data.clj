@@ -4,6 +4,7 @@
         [data-info.routes.domain.data]
         [data-info.routes.domain.stats])
   (:require [data-info.services.create :as create]
+            [data-info.services.rename :as rename]
             [data-info.services.metadata :as meta]
             [data-info.util.service :as svc]))
 
@@ -26,6 +27,17 @@ for the requesting user."
 (get-error-code-block
   "ERR_BAD_OR_MISSING_FIELD, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER"))
       (svc/trap uri create/do-create params body))
+
+    (POST* "/rename" [:as {uri :uri}]
+      :query [params SecuredQueryParamsRequired]
+      :body [body (describe RenameRequest "The renaming to perform.")]
+      :return RenameResult
+      :summary "Rename Files"
+      :description (str
+"Renames a file given two paths."
+(get-error-code-block
+  "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
+      (svc/trap uri rename/do-rename params body))
 
     (POST* "/:data-id/metadata/save" [:as {uri :uri}]
       :path-params [data-id :- DataIdPathParam]

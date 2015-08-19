@@ -86,6 +86,13 @@
         :paths
         (get path))))
 
+(defn rename
+  [params body]
+  (let [url (url/url (cfg/data-info-base-url) "data" "rename")
+        req-map {:query-params (select-keys params [:user])
+                 :content-type :json
+                 :body         (json/encode body)}]
+    (http/post (str url) req-map)))
 
 (defn get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If

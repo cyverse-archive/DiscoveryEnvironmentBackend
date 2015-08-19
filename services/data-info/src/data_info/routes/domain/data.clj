@@ -12,3 +12,13 @@
      "When set to true and the given source is a folder, then all files and subfolders (plus all
       their files and subfolders) under the source folder will be included in the exported file,
       along with all of their metadata")})
+
+(s/defschema RenameRequest
+  {:source
+   (describe NonBlankString "An iRODS path to the initial location of the file being renamed.")
+
+   :dest
+   (describe NonBlankString "An iRODS path to the final location of the file being renamed.")})
+
+(s/defschema RenameResult
+  (assoc RenameRequest :user (describe NonBlankString "The user performing the request.")))
