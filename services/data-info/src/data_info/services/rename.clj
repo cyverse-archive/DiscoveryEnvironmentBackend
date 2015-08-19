@@ -44,8 +44,6 @@
 (with-pre-hook! #'do-rename
   (fn [params body]
     (dul/log-call "do-rename" params body)
-    (validate-map params {:user string?})
-    (validate-map body {:source string? :dest string?})
     (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user       (:user params)}))
