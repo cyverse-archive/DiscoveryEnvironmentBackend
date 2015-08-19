@@ -1,21 +1,21 @@
-(ns donkey.services.filesystem.rename
+(ns data-info.services.rename
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [move]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.util.config :as cfg]
-            [donkey.services.filesystem.icat :as icat]
-            [donkey.services.filesystem.validators :as validators]))
+            [data-info.util.config :as cfg]
+            [data-info.util.logging :as dul]
+            [data-info.util.paths :as paths]
+            [data-info.util.validators :as validators]))
 
-(defn rename-path
+(defn- rename-path
   "High-level file renaming. Calls rename-func, passing it file-rename as the mv-func param."
   [user source dest]
-  (with-jargon (icat/jargon-cfg) [cm]
+  (with-jargon (cfg/jargon-cfg) [cm]
     (let [source    (ft/rm-last-slash source)
           dest      (ft/rm-last-slash dest)
           src-base  (ft/basename source)
@@ -39,14 +39,14 @@
   [{user :user} {source :source dest :dest}]
   (rename-path user source dest))
 
-(with-post-hook! #'do-rename (log-func "do-rename"))
+(with-post-hook! #'do-rename (dul/log-func "do-rename"))
 
 (with-pre-hook! #'do-rename
   (fn [params body]
-    (log-call "do-rename" params body)
+    (dul/log-call "do-rename" params body)
     (validate-map params {:user string?})
     (validate-map body {:source string? :dest string?})
-    (when (super-user? (:user params))
+    (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user       (:user params)}))
     (validators/validate-num-paths-under-folder (:user params) (:source body))))
