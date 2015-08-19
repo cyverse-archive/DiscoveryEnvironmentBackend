@@ -17,8 +17,8 @@ This program requires a configuration file to run, provided via the `--config` c
 fishy.app.listen-port     = 60000
 # Grouper settings
 
-fishy.grouper.base-url    = http://some-grouper-server:5555/grouperWs
-fishy.grouper.api-version = v_2_1_000
+fishy.grouper.base-url    = http://some-grouper-server:5555/grouper-ws
+fishy.grouper.api-version = json/2.2.1
 fishy.grouper.username    = epinephelinae
 fishy.grouper.password    = really-big-fish
 ```
