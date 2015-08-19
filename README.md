@@ -1,4 +1,4 @@
-# DE Backend Project
+# Discovery Environment Services
 
 This project contains all of the code used in the Discovery Environment backend. That includes internally developed libraries, tools, services, database schemas and migrations, and build tool plugins.
 
