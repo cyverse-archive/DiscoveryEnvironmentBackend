@@ -14,7 +14,7 @@
 
 (defn cli-options
   []
-  [["-p" "--port PORT" "Port number"
+  [["-p" "--port PORT" "Listen port number"
     :parse-fn #(Integer/parseInt %)
     :validate [#(< 0 % 0x10000) "Ports must be 0-65536"]]
 
