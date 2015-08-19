@@ -1,6 +1,6 @@
 # anon-files
 
-A service that serves up files that have been shared with the anonymous user in iRODS.
+A Discovery Environment service that serves up files that have been shared with the anonymous user in iRODS.
 
 ## Build
 
