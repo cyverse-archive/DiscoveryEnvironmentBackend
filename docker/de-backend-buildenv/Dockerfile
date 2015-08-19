@@ -22,6 +22,7 @@ ENV GOROOT /opt/go
 ENV LEIN_ROOT 1
 ENV PATH /bin:/usr/bin:/usr/local/bin:/sbin/:/usr/sbin:/opt/go/bin:/opt/gopath/bin:/opt/maven/bin:/opt/nodejs/bin
 RUN go get github.com/tools/godep
+RUN go get github.com/constabulary/gb/...
 ADD https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein /usr/bin/lein
 ADD build_profiles.clj /root/.lein/profiles.clj
 
