@@ -24,19 +24,15 @@
 
     (GET* "/path/:zone/*" [:as {{zone :zone path :*} :params uri :uri}]
       :query [params FolderListingParams]
-      :summary "Entry Contents: incomplete docs"
-      :description
-"See alternate endpoint documentation.
-
-This endpoint definition can not be properly documented or used from the current version of the
-Swagger UI, but the alternate endpoint can be, and its requests will be processed by this endpoint."
+      :no-doc true
       (ce/trap uri entry/dispatch-path-to-resource zone path params))
 
+    ;; This is actually handled by the above route, which cannot be documented properly.
     (GET* "/path/:zone/:path" [:as {uri :uri}]
       :path-params [zone :- (describe String "The IRODS zone")
                     path :- (describe String "The IRODS path under the zone")]
       :query [params FolderListingParams]
-      :summary "Entry Contents: documented"
+      :summary "Entry Contents"
       :description (str
 "Lists subdirectories and file details of directory paths, or gets file contents of paths to files.
 

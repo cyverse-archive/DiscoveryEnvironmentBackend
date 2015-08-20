@@ -12,7 +12,7 @@
     (s/both String (s/pred (complement clojure.string/blank?) 'non-blank?))
     "A non-blank string."))
 
-(def DataIdPathParam (describe UUID "The data items's UUID"))
+(def DataIdPathParam (describe UUID "The data item's UUID"))
 
 (def SortFieldOptionalKey (s/optional-key :sort-field))
 (def SortFieldDocs
