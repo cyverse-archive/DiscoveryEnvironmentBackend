@@ -27,20 +27,16 @@
       :path-params [zone :- String]
       :query [params SecuredQueryParamsRequired]
       :return NavigationResponse
-      :summary "Directory List (Non-Recursive): incomplete docs"
-      :description
-"See alternate endpoint documentation.
-
-This endpoint definition can not be properly documented or used from the current version of the
-Swagger UI, but the alternate endpoint can be, and its requests will be processed by this endpoint."
+      :no-doc true
       (svc/trap uri dir/do-directory zone path params))
 
+    ;; This is actually handled by the above route, which cannot be documented properly.
     (GET* "/path/:zone/:path" [:as {uri :uri}]
       :path-params [zone :- (describe String "The IRODS zone")
                     path :- (describe String "The IRODS path under the zone")]
       :query [params SecuredQueryParamsRequired]
       :return NavigationResponse
-      :summary "Directory List (Non-Recursive): documented"
+      :summary "Directory List (Non-Recursive)"
       :description (str
                      "Only lists subdirectories of the directory path passed into it."
                      (get-error-code-block
