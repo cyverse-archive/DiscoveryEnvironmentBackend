@@ -1,6 +1,4 @@
-FROM golang
-
-RUN go get github.com/tools/godep
+FROM discoenv/buildenv
 
 ADD intra-container-build.sh /bin/
 
