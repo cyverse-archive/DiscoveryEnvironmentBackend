@@ -1,7 +1,7 @@
 FROM ubuntu:14.04
 
 RUN useradd -m -U -s /bin/bash iplant
-ADD jex-events /bin/
+ADD bin/jex-events /bin/
 USER iplant
 RUN mkdir -p /home/iplant/logs/
 WORKDIR /home/iplant

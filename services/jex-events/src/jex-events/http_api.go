@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"code.google.com/p/go-uuid/uuid"
+	"github.com/pborman/uuid"
 )
 
 // HTTPAPI encapsulates the HTTP+JSON API for jex-events. It provides access to
