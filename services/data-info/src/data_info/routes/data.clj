@@ -28,16 +28,17 @@ for the requesting user."
   "ERR_BAD_OR_MISSING_FIELD, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER"))
       (svc/trap uri create/do-create params body))
 
-    (POST* "/rename" [:as {uri :uri}]
+    (PUT* "/:data-id/name" [:as {uri :uri}]
+      :path-params [data-id :- DataIdPathParam]
       :query [params SecuredQueryParamsRequired]
-      :body [body (describe RenameRequest "The renaming to perform.")]
+      :body [body (describe Filename "The new name of the file.")]
       :return RenameResult
-      :summary "Rename Files"
+      :summary "Change a file's name."
       :description (str
-"Renames a file given two paths."
+"Moves the file with the provided UUID to a new name within the same folder."
 (get-error-code-block
   "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
-      (svc/trap uri rename/do-rename params body))
+      (svc/trap uri rename/do-rename-uuid params body data-id))
 
     (POST* "/:data-id/metadata/save" [:as {uri :uri}]
       :path-params [data-id :- DataIdPathParam]

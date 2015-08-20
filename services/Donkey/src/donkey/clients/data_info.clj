@@ -1,5 +1,6 @@
 (ns donkey.clients.data-info
   (:use [donkey.auth.user-attributes :only [current-user]]
+        [clj-jargon.init :only [with-jargon]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
@@ -9,6 +10,7 @@
             [me.raynes.fs :as fs]
             [clj-icat-direct.icat :as db]
             [clojure-commons.error-codes :as error]
+            [clojure-commons.file-utils :as ft]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
             [donkey.services.filesystem.exists :as e]
@@ -87,12 +89,17 @@
         (get path))))
 
 (defn rename
+  "Uses the data-info set-name endpoint to rename a file within the same directory."
   [params body]
-  (let [url (url/url (cfg/data-info-base-url) "data" "rename")
-        req-map {:query-params (select-keys params [:user])
-                 :content-type :json
-                 :body         (json/encode body)}]
-    (http/post (str url) req-map)))
+  (with-jargon (icat/jargon-cfg) [cm]
+    (if (not= (ft/dirname (:dest body)) (ft/dirname (:source body)))
+      (throw+ {:error_code error/ERR_BAD_OR_MISSING_FIELD}))
+    (let [path-uuid (:id (uuids/uuid-for-path cm (:user params) (:source body)))
+          url (url/url (cfg/data-info-base-url) "data" path-uuid "name")
+          req-map {:query-params (select-keys params [:user])
+                   :content-type :json
+                   :body         (json/encode {:filename (ft/basename (:dest body))})}]
+      (http/put (str url) req-map))))
 
 (defn get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If

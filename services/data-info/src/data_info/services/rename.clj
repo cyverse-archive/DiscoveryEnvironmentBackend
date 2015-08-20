@@ -7,6 +7,7 @@
   (:require [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [data-info.services.uuids :as uuids]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.util.paths :as paths]
@@ -35,16 +36,24 @@
                        :user user}))
             {:source source :dest dest :user user}))))))
 
-(defn do-rename
-  [{user :user} {source :source dest :dest}]
-  (rename-path user source dest))
+(defn- rename-uuid
+  "Rename by UUID: given a user, a source file UUID, and a new name, rename within the same folder."
+  [user source-uuid dest-base]
+  (let [source (ft/rm-last-slash (:path (uuids/path-for-uuid user source-uuid)))
+        src-dir (ft/dirname source)
+        dest (str (ft/add-trailing-slash src-dir) dest-base)]
+    (validators/validate-num-paths-under-folder user source)
+    (rename-path user source dest)))
 
-(with-post-hook! #'do-rename (dul/log-func "do-rename"))
+(defn do-rename-uuid
+  [{user :user} {dest :filename} source-uuid]
+  (rename-uuid user source-uuid dest))
 
-(with-pre-hook! #'do-rename
-  (fn [params body]
-    (dul/log-call "do-rename" params body)
+(with-post-hook! #'do-rename-uuid (dul/log-func "do-rename-uuid"))
+
+(with-pre-hook! #'do-rename-uuid
+  (fn [params body source-uuid]
+    (dul/log-call "do-rename-uuid" params body source-uuid)
     (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
-               :user       (:user params)}))
-    (validators/validate-num-paths-under-folder (:user params) (:source body))))
+               :user       (:user params)}))))
