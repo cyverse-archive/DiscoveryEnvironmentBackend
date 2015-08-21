@@ -11,6 +11,7 @@
             [clj-icat-direct.icat :as db]
             [clojure-commons.error-codes :as error]
             [clojure-commons.file-utils :as ft]
+            [clojure-commons.assertions :as assertions]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
             [donkey.services.filesystem.exists :as e]
@@ -92,8 +93,8 @@
   "Uses the data-info set-name endpoint to rename a file within the same directory."
   [params body]
   (with-jargon (icat/jargon-cfg) [cm]
-    (if (not= (ft/dirname (:dest body)) (ft/dirname (:source body)))
-      (throw+ {:error_code error/ERR_BAD_OR_MISSING_FIELD}))
+    (assertions/assert-valid (= (ft/dirname (:dest body)) (ft/dirname (:source body)))
+        "The directory names of the source and destination must match for this endpoint.")
     (let [path-uuid (:id (uuids/uuid-for-path cm (:user params) (:source body)))
           url (url/url (cfg/data-info-base-url) "data" path-uuid "name")
           req-map {:query-params (select-keys params [:user])
