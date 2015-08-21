@@ -70,18 +70,18 @@
 
 
 (defn- fmt-folder
-  [user favorite-ids entry]
-  (let [id   (:id entry)
-        path (:path entry)]
+  [user favorite-ids data-item]
+  (let [id   (:id data-item)
+        path (:path data-item)]
     {:id            id
      :path          path
      :label         (paths/id->label user path)
      :isFavorite    (is-favorite? favorite-ids id)
      :badName       (or (is-bad? user path)
                         (is-bad? user (fs/base-name path)))
-     :permission    (:permission entry)
-     :date-created  (:dateCreated entry)
-     :date-modified (:dateModified entry)
+     :permission    (:permission data-item)
+     :date-created  (:dateCreated data-item)
+     :date-modified (:dateModified data-item)
      :file-size     0
      :hasSubDirs    true}))
 
@@ -146,20 +146,20 @@
 (with-post-hook! #'do-directory (paths/log-func "do-directory"))
 
 
-(defn- format-entry
-  [user favorite-ids entry]
-  (let [id   (:id entry)
-        path (:path entry)]
+(defn- format-data-item
+  [user favorite-ids data-item]
+  (let [id   (:id data-item)
+        path (:path data-item)]
     {:id            id
      :path          path
      :label         (paths/id->label user path)
-     :infoType      (:infoType entry)
+     :infoType      (:infoType data-item)
      :isFavorite    (is-favorite? favorite-ids id)
-     :badName       (:badName entry)
-     :permission    (:permission entry)
-     :date-created  (:dateCreated entry)
-     :date-modified (:dateModified entry)
-     :file-size     (:size entry)}))
+     :badName       (:badName data-item)
+     :permission    (:permission data-item)
+     :date-created  (:dateCreated data-item)
+     :date-modified (:dateModified data-item)
+     :file-size     (:size data-item)}))
 
 
 (defn- format-page
@@ -167,10 +167,10 @@
   (let [file-ids (map :id files)
         folder-ids (map :id folders)
         favorite-ids (lookup-favorite-ids (concat file-ids folder-ids [id]))]
-    (assoc (format-entry user favorite-ids page)
+    (assoc (format-data-item user favorite-ids page)
       :hasSubDirs true
-      :files      (map (partial format-entry user favorite-ids) files)
-      :folders    (map (partial format-entry user favorite-ids) folders)
+      :files      (map (partial format-data-item user favorite-ids) files)
+      :folders    (map (partial format-data-item user favorite-ids) folders)
       :total      total
       :totalBad   totalBad)))
 
@@ -188,7 +188,7 @@
   "Provides paged directory listing as an alternative to (list-dir). Always contains files."
   [user path entity-type limit offset sort-field sort-order info-type]
   (log/info "paged-dir-listing - user:" user "path:" path "limit:" limit "offset:" offset)
-  (let [url-path         (data/mk-entries-path-url-path path)
+  (let [url-path         (data/mk-data-path-url-path path)
         params           {:user        user
                           :entity-type (name entity-type)
                           :limit       limit
