@@ -1,7 +1,6 @@
 (ns donkey.services.fileio.actions
   (:use [clj-jargon.init :only [with-jargon]]
         [clj-jargon.metadata]
-        [clj-jargon.users :only [user-exists?]]
         [clojure-commons.error-codes]
         [donkey.util.service :only [success-response]]
         [slingshot.slingshot :only [try+ throw+]])
@@ -13,8 +12,6 @@
             [clj-jargon.item-info :as info]
             [clj-jargon.item-ops :as ops]
             [clj-jargon.permissions :as perm]
-            [donkey.clients.data-info :as data]
-            [donkey.util.config :as cfg]
             [donkey.services.fileio.config :as jargon]
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.metadata.internal-jobs :as internal-jobs])
@@ -84,34 +81,6 @@
     (if (= (info/file-size cm file-path) 0)
       ""
       (ops/input-stream cm file-path))))
-
-(defn- new-filename
-  [tmp-path]
-  (string/join "." (drop-last (string/split (ft/basename tmp-path) #"\."))))
-
-
-(defn upload-and-move
-  ^:deprecated
-  [user tmp-path fpath]
-  (log/info "In upload for " user tmp-path fpath)
-  (let [final-path (ft/rm-last-slash fpath)]
-    (with-jargon (jargon/jargon-cfg) [cm]
-      (when-not (user-exists? cm user)
-        (throw+ {:error_code ERR_NOT_A_USER :user user}))
-      (when-not (info/exists? cm final-path)
-        (throw+ {:error_code ERR_DOES_NOT_EXIST :id final-path}))
-      (when-not (perm/is-writeable? cm user final-path)
-        (throw+ {:error_code ERR_NOT_WRITEABLE :id final-path}))
-      (let [new-fname (new-filename tmp-path)
-            new-path  (ft/path-join final-path new-fname)]
-        (if (info/exists? cm new-path)
-          (ops/delete cm new-path))
-        (ops/move cm tmp-path new-path
-          :user               user
-          :admin-users        (cfg/irods-admins)
-          :skip-source-perms? true)
-        (perm/set-owner cm new-path user)
-        (success-response {:file (data/path-stat user new-path)})))))
 
 
 (defn url-encoded?

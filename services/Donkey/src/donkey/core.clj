@@ -153,7 +153,6 @@
     (unsecured-misc-routes)
     (unsecured-notification-routes)
     (unsecured-tree-viewer-routes)
-    (unsecured-fileio-routes)
     (unsecured-callback-routes)
     (context "/admin" [] admin-handler)
     (context "/secured" [] secured-handler)

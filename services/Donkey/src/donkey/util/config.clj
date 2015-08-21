@@ -1,8 +1,6 @@
 (ns donkey.util.config
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [cemerick.url :as curl]
-            [cheshire.core :as cheshire]
-            [clojure.string :as string]
+  (:require [clojure.string :as string]
             [clojure-commons.config :as cc]
             [clojure-commons.error-codes :as ce]
             [common-cfg.cfg :as cfg]
@@ -317,11 +315,6 @@
 ;;; End of Garnish configuration
 
 ;;; File IO configuration
-(cc/defprop-str fileio-temp-dir
-  "The directory, in iRODS, to use as temp storage for uploads."
-  [props config-valid configs fileio-routes-enabled]
-  "donkey.fileio.temp-dir")
-
 (cc/defprop-uuid fileio-url-import-app
   "The identifier of the internal app used for URL imports."
   [props config-valid configs fileio-routes-enabled]

@@ -4,14 +4,12 @@
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.permissions :only [process-parent-dirs]]
         [clj-jargon.item-info :only [exists?]]
-        [clj-jargon.item-ops]
         [slingshot.slingshot :only [try+ throw+]])
-  (:require [clojure.tools.logging :as log]
-            [clojure.string :as string]
+  (:require [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
             [clojure.set :as set]
-            [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [clj-jargon.item-ops :as ops]
             [donkey.util.config :as cfg]
             [donkey.util.validators :as valid]
             [donkey.services.filesystem.common-paths :as paths]
@@ -75,7 +73,7 @@
     (let [new-basename (new-name cm (ft/basename path) new-char :parent parent)
           new-path     (ft/path-join (ft/dirname path) new-basename)]
       (if (and (not (exists? cm new-path)) (exists? cm path))
-        (move cm path new-path :user user :admin-users (cfg/irods-admins)))
+        (ops/move cm path new-path :user user :admin-users (cfg/irods-admins)))
       {path new-path})))
 
 (defn- fix-return-map

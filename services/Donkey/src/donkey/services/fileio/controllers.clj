@@ -1,12 +1,10 @@
 (ns donkey.services.fileio.controllers
   (:use [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.users :only [user-exists?]]
         [clojure-commons.error-codes]
         [donkey.util.service :only [success-response]]
         [donkey.util.transformers :only [add-current-user-to-map]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [donkey.services.fileio.actions :as actions]
-            [cheshire.core :as json]
             [clojure-commons.file-utils :as ft]
             [clojure.string :as string]
             [donkey.util.ssl :as ssl]
@@ -20,35 +18,18 @@
             [donkey.util.config :as cfg]
             [donkey.util.validators :as valid]
             [donkey.services.fileio.config :as jargon])
-  (:import [clojure.lang IPersistentMap]))
+  (:import [clojure.lang IPersistentMap]
+           [java.io IOException]))
 
 
 (defn- in-stream
   [address]
   (try+
    (ssl/input-stream address)
-   (catch java.io.IOException e
+   (catch IOException e
      (throw+ {:error_code ERR_INVALID_URL
               :url address
               :msg (.getMessage e)}))))
-
-
-(defn- gen-uuid []
-  (str (java.util.UUID/randomUUID)))
-
-
-(defn store-irods
-  ^:deprecated
-  [{stream :stream orig-filename :filename}]
-  (let [uuid     (gen-uuid)
-        filename (str orig-filename "." uuid)
-        user     (cfg/irods-user)
-        temp-dir (cfg/fileio-temp-dir)]
-    (if-not (valid/good-string? orig-filename)
-      (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-               :path orig-filename}))
-    (with-jargon (jargon/jargon-cfg) [cm]
-      (actions/store cm stream user (ft/path-join temp-dir filename)))))
 
 
 (defn download
@@ -81,20 +62,6 @@
     (when-not file
       (throw+ {:error_code ERR_MISSING_FORM_FIELD :field "file"}))
     (success-response {:file (data/path-stat user file)})))
-
-
-(defn unsecured-upload
-  ^:deprecated
-  [req-params req-multipart]
-  (log/info "Detected params: " req-params)
-  (ccv/validate-map req-params {"file" string? "user" string? "dest" string?})
-  (let [user    (get req-params "user")
-        dest    (get req-params "dest")
-        up-path (get req-multipart "file")]
-    (if-not (valid/good-string? up-path)
-      {:status 500
-       :body   (json/generate-string {:error_code ERR_BAD_OR_MISSING_FIELD :path up-path})}
-      (actions/upload-and-move user up-path dest))))
 
 
 (defn url-filename
