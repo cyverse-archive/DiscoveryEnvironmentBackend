@@ -14,7 +14,7 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "info-typer-standalone.jar"
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.7.0"]
                  [com.novemberain/langohr "3.1.0"]
                  [me.raynes/fs "1.4.6"]
                  [org.iplantc/clj-jargon "5.0.0"

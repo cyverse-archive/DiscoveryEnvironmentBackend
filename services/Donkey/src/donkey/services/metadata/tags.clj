@@ -1,6 +1,5 @@
 (ns donkey.services.metadata.tags
   (:use [kameleon.uuids :only [uuidify]]
-        [medley.core :only [update]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.set :as set]
             [cheshire.core :as json]
