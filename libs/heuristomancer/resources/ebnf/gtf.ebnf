@@ -1,0 +1,47 @@
+S = comment-line* score-line (comment-line | score-line)* partial-score-line?
+
+comment-line = #"\s*" comment EOL
+
+score-line = (
+    seqname tab source tab feature tab start tab end tab score tab strand tab
+    frame [tab attributes] [tab comment] EOL
+)
+
+partial-score-line = (
+    [seqname]
+    [tab [source
+     [tab [feature
+      [tab [start
+       [tab [end
+        [tab [score
+         [tab [strand
+          [tab [frame
+           [tab [#"[^#\t\r\n]+"
+            [tab [comment]]
+            [EOL]]]]]]]]]]]]]]]]]
+)
+
+comment = #"#[^\r\n]*"
+seqname = field
+source = field
+feature = field
+start = number
+end = number
+score = (number "." number) | "."
+strand = #"[+-.]"
+frame = #"[012.]"
+
+attributes = (
+    "gene_id" attribute_delimiter quoted_attribute attribute_separator
+    ["transcript_id" attribute_delimiter quoted_attribute attribute_separator]
+    [#"[^#\t\r\n]+"]
+)
+
+quoted_attribute = #'"[^"]*"'
+attribute_separator = ";" [" "]
+attribute_delimiter = " "
+
+field = #'[^\t\r\n]+'
+number = #"[0-9]+"
+tab = "\t"
+EOL = #"(?:\r\n|\r|\n)"

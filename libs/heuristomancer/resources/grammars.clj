@@ -28,6 +28,7 @@
  [:genbank   "ebnf/genbank.ebnf"]
  [:genscan   "ebnf/genscan.ebnf"]
  [:vcf       "ebnf/vcf.ebnf"]
+ [:gtf       "ebnf/gtf.ebnf"]
  [:gff       "ebnf/gff.ebnf"]
  [:hmmer     "ebnf/hmmer.ebnf"]
  [:ht-analysis-path-list "ebnf/de_path_list.ebnf"]

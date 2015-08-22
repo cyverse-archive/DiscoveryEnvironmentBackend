@@ -91,6 +91,7 @@
    ["dna.genbank"             :genbank]
    ["genomic-seq.genscan"     :genscan]
    ["no-genes.genscan"        :genscan]
+   ["neg-utr.gtf"             :gtf]
    ["HUMBETGLOA.gff"          :gff]
    ["hg16_chroms.gff"         :gff]
    ["myco_sites.gff"          :gff]
