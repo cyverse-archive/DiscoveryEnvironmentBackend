@@ -9,8 +9,8 @@
 
 
 (defn- validate-comment-id
-  [entry-id comment-id]
-  (when-not (db/comment-on? comment-id entry-id)
+  [data-id comment-id]
+  (when-not (db/comment-on? comment-id data-id)
     (throw+ {:error_code err/ERR_NOT_FOUND})))
 
 (defn- prepare-comment
@@ -25,7 +25,7 @@
 
    Parameters:
      user - the user adding the comment (the comment owner)
-     target-id - the UUID corresponding to the entry being commented on
+     target-id - the UUID corresponding to the data item being commented on
      target-type - The type of target (`analysis`|`app`|`file`|`folder`|`user`)
      comment - the comment text"
   [user target-id target-type comment]
@@ -33,16 +33,16 @@
                  prepare-comment)})
 
 (defn add-data-comment
-  "Adds a comment to a filesystem entry.
+  "Adds a comment to a data item.
 
    Parameters:
      user - the user adding the comment (the comment owner)
-     entry-id - the `entry-id` from the request. This should be the UUID corresponding to the entry
-                being commented on
+     data-id - the `data-id` from the request. This should be the UUID corresponding to the data item 
+               being commented on
      data-type - The type of target (`file`|`folder`)
      body - the request body. It should be a map containing the comment"
-  [user entry-id data-type {:keys [comment]}]
-  (add-comment user entry-id data-type comment))
+  [user data-id data-type {:keys [comment]}]
+  (add-comment user data-id data-type comment))
 
 (defn add-app-comment
   "Adds a comment to an App.
@@ -59,18 +59,18 @@
   "Returns a list of comments attached to a given target ID.
 
    Parameters:
-     target-id - the UUID corresponding to the entry being inspected"
+     target-id - the UUID corresponding to the data item being inspected"
    (let [comments (map prepare-comment (db/select-all-comments target-id))]
      {:comments comments}))
 
 (defn list-data-comments
-  [entry-id]
-  "Returns a list of comments attached to a given filesystem entry.
+  [data-id]
+  "Returns a list of comments attached to a given data item.
 
    Parameters:
-     entry-id - the `entry-id` from the request. This should be the UUID corresponding to the entry
+     data-id - the `data-id` from the request. This should be the UUID corresponding to the data item
                 being inspected"
-  (list-comments entry-id))
+  (list-comments data-id))
 
 (defn list-app-comments
   [app-id]
@@ -103,17 +103,17 @@
     nil))
 
 (defn update-data-retract-status
-  [user entry-id comment-id retracted]
+  [user data-id comment-id retracted]
   "Changes the retraction status for a given comment.
 
    Parameters:
      user - the user updating the comment retraction
-     entry-id - the `entry-id` from the request. This should be the UUID corresponding to the entry
+     data-id - the `data-id` from the request. This should be the UUID corresponding to the data item 
                 owning the comment being modified
      comment-id - the comment-id from the request. This should be the UUID corresponding to the
                   comment being modified
      retracted - the `retracted` query parameter. This should be a Boolean."
-  (update-retract-status user entry-id comment-id retracted false))
+  (update-retract-status user data-id comment-id retracted false))
 
 (defn update-app-retract-status
   [user app-id comment-id retracted]
@@ -138,8 +138,8 @@
   nil)
 
 (defn delete-data-comment
-  [entry-id comment-id]
-  (delete-comment entry-id comment-id))
+  [data-id comment-id]
+  (delete-comment data-id comment-id))
 
 (defn delete-app-comment
   [app-id comment-id]

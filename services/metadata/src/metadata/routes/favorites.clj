@@ -16,19 +16,19 @@
       :description "This endpoint lists IDs for the authenticated user's favorite files and folders."
       (service/trap uri fave/list-favorite-data-ids user entity-type))
 
-    (DELETE* "/filesystem/:entry-id" [:as {uri :uri}]
-      :path-params [entry-id :- TargetIdPathParam]
+    (DELETE* "/filesystem/:data-id" [:as {uri :uri}]
+      :path-params [data-id :- TargetIdPathParam]
       :query [{:keys [user]} StandardQueryParams]
       :summary "Unmark a Data Resource as Favorite"
       :description "This endpoint removes a file or folder from the authenticated user's favorites."
-      (service/trap uri fave/remove-favorite user entry-id))
+      (service/trap uri fave/remove-favorite user data-id))
 
-   (PUT* "/filesystem/:entry-id" [:as {uri :uri}]
-     :path-params [entry-id :- TargetIdPathParam]
+   (PUT* "/filesystem/:data-id" [:as {uri :uri}]
+     :path-params [data-id :- TargetIdPathParam]
      :query [{:keys [user data-type]} StandardDataItemQueryParams]
      :summary "Mark a Data Resource as Favorite"
      :description "This endpoint marks a given file or folder a favorite of the authenticated user."
-     (service/trap uri fave/add-favorite user entry-id data-type))
+     (service/trap uri fave/add-favorite user data-id data-type))
 
    (POST* "/filter" [:as {uri :uri}]
      :query [{:keys [user]} StandardQueryParams]

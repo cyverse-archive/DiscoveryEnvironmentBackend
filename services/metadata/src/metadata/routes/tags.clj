@@ -6,20 +6,20 @@
             [metadata.util.service :as service]))
 
 (defroutes* filesystem-tags
-  (context* "/filesystem/entry" []
+  (context* "/filesystem/data" []
     :tags ["tags"]
 
-    (GET* "/:entry-id/tags" [:as {uri :uri}]
-      :path-params [entry-id :- TargetIdPathParam]
+    (GET* "/:data-id/tags" [:as {uri :uri}]
+      :path-params [data-id :- TargetIdPathParam]
       :query [{:keys [user]} StandardQueryParams]
       :return TagList
       :summary "List Attached Tags"
       :description
       "This endpoint lists the tags of the user that are attached to the indicated file or folder."
-      (service/trap uri tags/list-attached-tags user entry-id))
+      (service/trap uri tags/list-attached-tags user data-id))
 
-    (PATCH* "/:entry-id/tags" [:as {uri :uri}]
-      :path-params [entry-id :- TargetIdPathParam]
+    (PATCH* "/:data-id/tags" [:as {uri :uri}]
+      :path-params [data-id :- TargetIdPathParam]
       :query [{:keys [user data-type type]} UpdateAttachedTagsQueryParams]
       :body [body (describe TagIdList "The UUIDs of the tags to attach/detach.")]
       :return UpdateAttachedTagsResponse
@@ -27,7 +27,7 @@
       :description "
 Depending on the `type` parameter, this endpoint either attaches a set of the authenticated user's
 tags to the indicated file or folder, or it detaches the set."
-      (service/trap uri tags/handle-patch-file-tags user entry-id data-type type body))))
+      (service/trap uri tags/handle-patch-file-tags user data-id data-type type body))))
 
 (defroutes* tags
   (context* "/tags" []

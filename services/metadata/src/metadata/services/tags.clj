@@ -29,22 +29,22 @@
 
 
 (defn- attach-tags
-  [user entry-id data-type new-tags]
+  [user data-id data-type new-tags]
   (let [tag-set         (set new-tags)
         known-tags      (set (db/filter-tags-owned-by-user user tag-set))
         unknown-tags    (set/difference tag-set known-tags)
         unattached-tags (set/difference known-tags
-                                        (set (db/filter-attached-tags entry-id known-tags)))]
+                                        (set (db/filter-attached-tags data-id known-tags)))]
     (when-not (empty? unknown-tags)
       (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
-    (db/insert-attached-tags user entry-id data-type unattached-tags)
+    (db/insert-attached-tags user data-id data-type unattached-tags)
     (get-tag-target-details known-tags)))
 
 
 (defn- detach-tags
-  [user entry-id tag-ids]
+  [user data-id tag-ids]
   (let [known-tags (db/filter-tags-owned-by-user user (set tag-ids))]
-    (db/mark-tags-detached user entry-id known-tags)
+    (db/mark-tags-detached user data-id known-tags)
     (get-tag-target-details known-tags)))
 
 
@@ -87,30 +87,30 @@
 
 
 (defn handle-patch-file-tags
-  "Adds or removes tags to a filesystem entry.
+  "Adds or removes tags to a data item.
 
    Parameters:
      user - The user name of the requestor.
-     entry-id - The entry-id from the request. It should be a filesystem UUID.
+     data-id - The data-id from the request. It should be a filesystem UUID.
      type - The `type` query parameter. It should be either `attach` or `detach`.
      body - This is the request body. It should be a JSON document containing a `tags` field. This
             field should hold an array of tag UUIDs."
-  [user entry-id data-type type {mods :tags}]
+  [user data-id data-type type {mods :tags}]
   (condp = type
-    "attach" (attach-tags user entry-id data-type mods)
-    "detach" (detach-tags user entry-id mods)
+    "attach" (attach-tags user data-id data-type mods)
+    "detach" (detach-tags user data-id mods)
     (throw+ {:error_code error/ERR_BAD_QUERY_PARAMETER
              :type       type})))
 
 
 (defn list-attached-tags
-  "Lists the tags attached to a filesystem entry.
+  "Lists the tags attached to a data item.
 
    Parameters:
      user - The user name of the requestor.
-     entry-id - The entry-id from the request.  It should be a filesystem UUID."
-  [user entry-id]
-  (let [tags (db/select-attached-tags user entry-id)]
+     data-id - The data-id from the request.  It should be a filesystem UUID."
+  [user data-id]
+  (let [tags (db/select-attached-tags user data-id)]
     {:tags (map #(dissoc % :owner_id) tags)}))
 
 

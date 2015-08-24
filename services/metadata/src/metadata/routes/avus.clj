@@ -6,7 +6,7 @@
             [metadata.util.service :as service]))
 
 (defroutes* avus
-  (context* "/filesystem/entry/:data-id/avus" []
+  (context* "/filesystem/data/:data-id/avus" []
     :tags ["avus"]
 
     (GET* "/" [:as {uri :uri}]

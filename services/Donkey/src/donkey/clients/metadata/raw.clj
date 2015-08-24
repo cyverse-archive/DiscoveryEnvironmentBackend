@@ -34,38 +34,38 @@
 
 (defn list-metadata-avus
   [target-id]
-  (http/get (metadata-url "filesystem" "entry" target-id "avus")
+  (http/get (metadata-url "filesystem" "data" target-id "avus")
     {:as               :stream
      :follow_redirects false}))
 
 (defn copy-metadata-template-avus
   [target-id force? dest-items]
-  (http/post (metadata-url "filesystem" "entry" target-id "avus" "copy")
+  (http/post (metadata-url "filesystem" "data" target-id "avus" "copy")
     (post-options (json/encode {:filesystem dest-items}) {:force force?})))
 
 (defn list-metadata-template-avus
   [target-id template-id]
-  (http/get (metadata-url "filesystem" "entry" target-id "avus" template-id)
+  (http/get (metadata-url "filesystem" "data" target-id "avus" template-id)
     {:as               :stream
      :follow_redirects false}))
 
 (defn set-metadata-template-avus
   [target-id data-type template-id avus-req]
-  (http/post (metadata-url "filesystem" "entry" target-id "avus" template-id)
+  (http/post (metadata-url "filesystem" "data" target-id "avus" template-id)
     (post-options (json/encode avus-req) {:data-type data-type})))
 
 (defn remove-metadata-template-avus
   [target-id template-id]
-  (http/delete (metadata-url "filesystem" "entry" target-id "avus" template-id) (delete-options)))
+  (http/delete (metadata-url "filesystem" "data" target-id "avus" template-id) (delete-options)))
 
 (defn remove-metadata-template-avu
   [target-id template-id avu-id]
-  (http/delete (metadata-url "filesystem" "entry" target-id "avus" template-id avu-id)
+  (http/delete (metadata-url "filesystem" "data" target-id "avus" template-id avu-id)
                (delete-options)))
 
 (defn list-data-comments
   [target-id]
-  (http/get (metadata-url "filesystem" "entry" target-id "comments")
+  (http/get (metadata-url "filesystem" "data" target-id "comments")
             {:as               :stream
              :follow_redirects false}))
 
@@ -77,7 +77,7 @@
 
 (defn add-data-comment
   [target-id data-type body]
-  (http/post (metadata-url "filesystem" "entry" target-id "comments")
+  (http/post (metadata-url "filesystem" "data" target-id "comments")
              (post-options body {:data-type data-type})))
 
 (defn add-app-comment
@@ -86,7 +86,7 @@
 
 (defn update-data-retract-status
   [target-id comment-id retracted]
-  (http/patch (metadata-url "filesystem" "entry" target-id "comments" comment-id)
+  (http/patch (metadata-url "filesystem" "data" target-id "comments" comment-id)
               (post-options nil {:retracted retracted})))
 
 (defn update-app-retract-status
@@ -96,7 +96,7 @@
 
 (defn admin-update-data-retract-status
   [target-id comment-id retracted]
-  (http/patch (metadata-url "admin" "filesystem" "entry" target-id "comments" comment-id)
+  (http/patch (metadata-url "admin" "filesystem" "data" target-id "comments" comment-id)
     (post-options nil {:retracted retracted})))
 
 (defn admin-update-app-retract-status
@@ -106,7 +106,7 @@
 
 (defn delete-data-comment
   [target-id comment-id]
-  (http/delete (metadata-url "admin" "filesystem" "entry" target-id "comments" comment-id)
+  (http/delete (metadata-url "admin" "filesystem" "data" target-id "comments" comment-id)
     (delete-options)))
 
 (defn delete-app-comment
@@ -132,11 +132,11 @@
 
 (defn list-attached-tags
   [target-id]
-  (http/get (metadata-url "filesystem" "entry" target-id "tags") (get-options)))
+  (http/get (metadata-url "filesystem" "data" target-id "tags") (get-options)))
 
 (defn update-attached-tags
   [target-id data-type type body]
-  (http/patch (metadata-url "filesystem" "entry" target-id "tags")
+  (http/patch (metadata-url "filesystem" "data" target-id "tags")
               (post-options body {:data-type data-type
                                   :type type})))
 

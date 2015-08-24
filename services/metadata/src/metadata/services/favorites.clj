@@ -5,11 +5,11 @@
 
 
 (defn add-favorite
-  "This function marks a given filesystem entry as a favorite of the authenticated user.
+  "This function marks a given data item as a favorite of the authenticated user.
 
    Parameters:
      user - the user adding the favorite
-     target-id - This is the `target-id` from the request.  It should be the UUID of the entry being
+     target-id - This is the `target-id` from the request.  It should be the UUID of the data item being
                 marked
      target-type - the type of target (`analysis`|`app`|`file`|`folder`|`user`)."
   [user target-id target-type]
@@ -19,11 +19,11 @@
 
 
 (defn remove-favorite
-  "This function unmarks a given resource as a favortie of the authenticated user.
+  "This function unmarks a given resource as a favorite of the authenticated user.
 
    Parameters:
      user - the user removing the favorite
-     target-id - This is the `target-id` from the request.  It should be the UUID of the entry being
+     target-id - This is the `target-id` from the request.  It should be the UUID of the data item being
                  unmarked."
   [user target-id]
   (when-not (db/is-favorite? user target-id)
@@ -52,7 +52,7 @@
 
 
 (defn filter-favorites
-  "Given a list of UUIDs for filesystem entries, it filters the list, returning only the UUIDS that
+  "Given a list of UUIDs for data items, it filters the list, returning only the UUIDS that
    are marked as favorite by the authenticated user.
 
    Parameters:
