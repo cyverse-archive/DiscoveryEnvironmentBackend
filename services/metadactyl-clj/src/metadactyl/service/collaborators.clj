@@ -2,7 +2,7 @@
   (:use [metadactyl.util.conversions :only [remove-nil-vals]])
   (:require [clojure.string :as string]
             [kameleon.queries :as queries]
-            [metadactyl.clients.trellis :as trellis]
+            [metadactyl.clients.iplant_groups :as ipg]
             [metadactyl.util.config :as config]))
 
 (defn- remove-domain
@@ -15,6 +15,15 @@
   [username]
   (str username "@" (config/uid-domain)))
 
+(defn- format-like-trellis
+  "Reformat an iplant-groups response to look like a trellis response."
+  [response]
+  {:username (:id response)
+   :firstname (:first_name response)
+   :lastname (:last_name response)
+   :email (:email response)
+   :institution (:institution response)})
+
 (defn get-collaborators
   "Gets the list of collaborators for the current user and retrieves detailed information from
    Trellis."
@@ -22,8 +31,9 @@
   (->> (queries/get-collaborators username)
        (map remove-domain)
        (remove string/blank?)
-       (map trellis/get-user-details)
+       (map (partial ipg/lookup-subject (remove-domain username)))
        (map remove-nil-vals)
+       (map format-like-trellis)
        (hash-map :users)))
 
 (defn add-collaborators

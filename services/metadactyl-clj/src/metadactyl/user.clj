@@ -4,7 +4,7 @@
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as common-errors]
-            [metadactyl.clients.trellis :as trellis]
+            [metadactyl.clients.iplant_groups :as ipg]
             [metadactyl.util.service :as service]))
 
 (def
@@ -42,10 +42,10 @@
   "Loads information for the user with the given username."
   [username]
   (let [short-username (string/replace username #"@.*" "")
-        user-info      (trellis/get-user-details short-username)]
+        user-info      (ipg/lookup-subject (:shortUsername current-user) short-username)]
     {:username      username
      :password      nil
      :email         (:email user-info)
      :shortUsername short-username
-     :first-name    (:firstname user-info)
-     :last-name     (:lastname user-info)}))
+     :first-name    (:first-name user-info)
+     :last-name     (:last-name user-info)}))

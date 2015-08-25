@@ -226,20 +226,10 @@
   [props config-valid configs]
   "metadactyl.notificationagent.base-url")
 
-(cc/defprop-str userinfo-base
-  "The base URL for the user info service."
+(cc/defprop-str ipg-base
+  "The base URL for the iplant-groups service."
   [props config-valid configs]
-  "metadactyl.userinfo.base-url")
-
-(cc/defprop-str userinfo-key
-  "The client key for the user info service."
-  [props config-valid configs]
-  "metadactyl.userinfo.client-key")
-
-(cc/defprop-str userinfo-secret
-  "The client secret for the user info service."
-  [props config-valid configs]
-  "metadactyl.userinfo.password")
+  "metadactyl.iplant-groups.base-url")
 
 (cc/defprop-str jex-events-base-url
   "The base URL for the JEX events service."
