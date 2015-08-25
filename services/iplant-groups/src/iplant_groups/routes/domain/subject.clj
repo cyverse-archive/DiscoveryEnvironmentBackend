@@ -19,6 +19,9 @@
    (s/optional-key :email)
    (describe String "The subject email.")
 
+   (s/optional-key :institution)
+   (describe String "The subject institution.")
+
    (s/optional-key :attribute_values)
    (describe [String] "A list of additional attributes applied to the subject.")
 

@@ -83,7 +83,7 @@
   [attribute-names subject]
   (condp = (:resultCode subject)
     "SUBJECT_NOT_FOUND" (not-found subject)
-    (let [known-keys #{"mail" "givenName" "sn"}
+    (let [known-keys #{"mail" "givenName" "sn" "o"}
           known-mappings (keep-indexed #(if (contains? known-keys %2) [%2 %1]) attribute-names)
           known-key-indexes (into {} known-mappings)]
       (->> {:attribute_values  (keep-indexed #(if (not (contains? (set (map second known-mappings)) %1)) %2)
@@ -93,6 +93,7 @@
             :first_name        (nth (:attributeValues subject) (get known-key-indexes "givenName"))
             :last_name         (nth (:attributeValues subject) (get known-key-indexes "sn"))
             :email             (nth (:attributeValues subject) (get known-key-indexes "mail"))
+            :institution       (nth (:attributeValues subject) (get known-key-indexes "o"))
             :source_id         (:sourceId subject)}
            (remove-vals nil?)
            (remove-vals empty?)))))
