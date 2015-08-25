@@ -22,9 +22,7 @@
                :read_only          true}
               {:name_prefix        "ncbi-ssh-key"
                :container_image_id ssh-key-id
-               :read_only          true}]))
-
-    (insert :version (values {:version version}))))
+               :read_only          true}]))))
 
 (defn convert
   "Performs the conversion for database version 2.1.0:20150825.02"
