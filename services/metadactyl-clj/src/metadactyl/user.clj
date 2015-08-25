@@ -4,7 +4,7 @@
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as common-errors]
-            [metadactyl.clients.iplant_groups :as ipg]
+            [metadactyl.clients.iplant-groups :as ipg]
             [metadactyl.util.service :as service]))
 
 (def

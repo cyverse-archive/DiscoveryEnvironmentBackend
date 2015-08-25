@@ -1,4 +1,4 @@
-(ns metadactyl.clients.iplant_groups
+(ns metadactyl.clients.iplant-groups
   (:require [cemerick.url :as curl]
             [clj-http.client :as http]
             [clojure.tools.logging :as log]

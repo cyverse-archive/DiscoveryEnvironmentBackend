@@ -2,7 +2,7 @@
   (:use [metadactyl.util.conversions :only [remove-nil-vals]])
   (:require [clojure.string :as string]
             [kameleon.queries :as queries]
-            [metadactyl.clients.iplant_groups :as ipg]
+            [metadactyl.clients.iplant-groups :as ipg]
             [metadactyl.util.config :as config]))
 
 (defn- remove-domain
