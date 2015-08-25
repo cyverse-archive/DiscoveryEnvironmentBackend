@@ -14,7 +14,7 @@ Run a named instance of de-db as a daemon:
 
 Run a de-db-loader container, linking it to the de-db container you just started:
 
-    docker run --rm --link de-db:postgres discoenv/de-db-loader
+    docker run --rm --link de-db:postgres discoenv/de-db-loader:dev
 
 When de-db-loader finishes, you should have an intialized instance of the DE database running in the de-db container.
 
