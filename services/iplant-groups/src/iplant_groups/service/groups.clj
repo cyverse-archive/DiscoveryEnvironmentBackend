@@ -15,4 +15,5 @@
 
 (defn get-group-members
   [group-id {:keys [user]}]
-  {:members (mapv fmt/format-subject (grouper/get-group-members user group-id))})
+  (let [[subjects attribute-names] (grouper/get-group-members user group-id)]
+    {:members (mapv #(fmt/format-subject attribute-names %) subjects)}))
