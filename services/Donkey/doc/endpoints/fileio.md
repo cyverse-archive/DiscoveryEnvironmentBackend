@@ -97,52 +97,6 @@ Uploading is handled through multipart requests:
 Notice that the `dest` value points to a directory and not a file.
 
 
-## Uploading (DEPRECATED)
-
-__URL Path__: /fileio/upload
-
-__HTTP Method__: POST
-
-__Request Form Fields__:
-
-* file - The contents of the file to be uploaded.
-* user - The iRODS user uploading the file.
-* dest - The destination directory for the file.
-
-__Error Codes__:
-
-+ ERR_MISSING_FORM_FIELD (One of the form data fields is missing)
-+ ERR_NOT_A_USER (Invalid user specified)
-+ ERR_DOES_NOT_EXIST (Destination directory doesn't exist)
-+ ERR_NOT_WRITEABLE (Destination directory isn't writeable)
-
-__Response Body__:
-
-A success will return JSON like this:
-
-```json
-{
-    "file": {
-        "id": "<path to the file>",
-        "path": "<path to the file>",
-        "label": "<basename of the file path>",
-        "permission": "own",
-        "date-created": <seconds since the epoch>,
-        "date-modified": <seconds since the epoch>,
-        "file-size": <size in bytes>
-    }
-}
-```
-
-__Curl Command__:
-
-Uploading is handled through multipart requests:
-
-    curl -F file=@testfile.txt -F user=testuser -F dest=/iplant/home/testuser/ http://127.0.0.1:31370/fileio/upload
-
-Notice that the 'dest' value points to a directory and not a file.
-
-
 ## URL Uploads
 
 __URL Path__: /secured/fileio/urlupload

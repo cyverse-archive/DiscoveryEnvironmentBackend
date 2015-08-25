@@ -85,7 +85,6 @@
 * [POST /callbacks/notification](endpoints/callbacks.md#receiving-de-notifications)
 * [GET /export-workflow/{analysis-id}](endpoints/app-metadata.md#exporting-an-analysis)
 * [GET /favorites/filesystem](endpoints/favorites.md#listing-stat-info-for-favorite-data)
-* [POST /fileio/upload](endpoints/fileio.md#uploading-deprecated)
 * [PATCH /filesystem/entry/{entry-id}/comments/{comment-id}](endpoints/comments.md#retractingreadmitting-a-comment)
 * [GET /reference-genomes](endpoints/reference-genomes.md#exporting-reference-genomes)
 * [GET /reference-genomes/{reference-genome-id}](endpoints/reference-genomes.md#get-a-reference-genome-by-id)
