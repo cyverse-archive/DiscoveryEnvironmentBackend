@@ -4,14 +4,23 @@
             [schema.core :as s]))
 
 (s/defschema Subject
-  {(s/optional-key :attribute_values)
-   (describe [String] "A list of attributes applied to the subject.")
-
-   :id
+  {:id
    (describe String "The subject ID.")
 
    (s/optional-key :name)
    (describe String "The subject name.")
+
+   (s/optional-key :first_name)
+   (describe String "The subject's first name.")
+
+   (s/optional-key :last_name)
+   (describe String "The subject's last name.")
+
+   (s/optional-key :email)
+   (describe String "The subject email.")
+
+   (s/optional-key :attribute_values)
+   (describe [String] "A list of additional attributes applied to the subject.")
 
    :source_id
    (describe String "The ID of the source of the subject information.")})

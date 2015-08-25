@@ -80,11 +80,19 @@
        (remove-vals nil?)))
 
 (defn format-subject
-  [subject]
+  [attribute-names subject]
   (condp = (:resultCode subject)
     "SUBJECT_NOT_FOUND" (not-found subject)
-    (->> {:attribute_values  (:attributeValues subject)
-          :id                (:id subject)
-          :name              (:name subject)
-          :source_id         (:sourceId subject)}
-         (remove-vals nil?))))
+    (let [known-keys #{"mail" "givenName" "sn"}
+          known-mappings (keep-indexed #(if (contains? known-keys %2) [%2 %1]) attribute-names)
+          known-key-indexes (into {} known-mappings)]
+      (->> {:attribute_values  (keep-indexed #(if (not (contains? (set (map second known-mappings)) %1)) %2)
+                                             (:attributeValues subject))
+            :id                (:id subject)
+            :name              (:name subject)
+            :first_name        (nth (:attributeValues subject) (get known-key-indexes "givenName"))
+            :last_name         (nth (:attributeValues subject) (get known-key-indexes "sn"))
+            :email             (nth (:attributeValues subject) (get known-key-indexes "mail"))
+            :source_id         (:sourceId subject)}
+           (remove-vals nil?)
+           (remove-vals empty?)))))

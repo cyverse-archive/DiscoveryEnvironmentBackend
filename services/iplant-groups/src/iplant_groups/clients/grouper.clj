@@ -127,16 +127,14 @@
 (defn get-group-members
   [username group-id]
   (with-trap [(partial group-membership-listing-error-handler group-id)]
-    (->> {:body         (format-group-member-listing-request username group-id)
-          :basic-auth   (auth-params)
-          :content-type content-type
-          :as           :json}
-         (http/post (grouper-uri "groups"))
-         (:body)
-         (:WsGetMembersResults)
-         (:results)
-         (first)
-         (:wsSubjects))))
+    (let [response (->> {:body         (format-group-member-listing-request username group-id)
+                         :basic-auth   (auth-params)
+                         :content-type content-type
+                         :as           :json}
+                        (http/post (grouper-uri "groups"))
+                        (:body)
+                        (:WsGetMembersResults))]
+      [(:wsSubjects (first (:results response))) (:subjectAttributeNames response)])))
 
 ;; Folder search.
 
@@ -176,14 +174,14 @@
 (defn subject-search
   [username search-string]
   (with-trap [default-error-handler]
-    (->> {:body         (format-subject-search-request username search-string)
-          :basic-auth   (auth-params)
-          :content-type content-type
-          :as           :json}
-         (http/post (grouper-uri "subjects"))
-         (:body)
-         (:WsGetSubjectsResults)
-         (:wsSubjects))))
+    (let [response (->> {:body         (format-subject-search-request username search-string)
+                         :basic-auth   (auth-params)
+                         :content-type content-type
+                         :as           :json}
+                        (http/post (grouper-uri "subjects"))
+                        (:body)
+                        (:WsGetSubjectsResults))]
+      [(:wsSubjects response) (:subjectAttributeNames response)])))
 
 ;; Subject retrieval.
 
@@ -201,15 +199,14 @@
 (defn get-subject
   [username subject-id]
   (with-trap [default-error-handler]
-    (->> {:body         (format-subject-id-lookup-request username subject-id)
-          :basic-auth   (auth-params)
-          :content-type content-type
-          :as           :json}
-         (http/post (grouper-uri "subjects"))
-         (:body)
-         (:WsGetSubjectsResults)
-         (:wsSubjects)
-         (first))))
+    (let [response (->> {:body         (format-subject-id-lookup-request username subject-id)
+                         :basic-auth   (auth-params)
+                         :content-type content-type
+                         :as           :json}
+                        (http/post (grouper-uri "subjects"))
+                        (:body)
+                        (:WsGetSubjectsResults))]
+      [(first (:wsSubjects response)) (:subjectAttributeNames response)])))
 
 ;; Groups for a subject.
 
