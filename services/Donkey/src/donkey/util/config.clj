@@ -196,6 +196,11 @@
        (cfg/env-setting "NOTIFICATIONAGENT_PORT")
        (notificationagent-base-url)))))
 
+(cc/defprop-str ipg-base
+  "The base URL for the iplant-groups service."
+  [props config-valid configs]
+  "donkey.iplant-groups.base-url")
+
 (cc/defprop-str userinfo-base-url
   "The base URL for the user info API."
   [props config-valid configs user-info-routes-enabled]

@@ -6,24 +6,18 @@
         [byte-streams]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
-            [clojurewerkz.welle.core :as wc]
-            [clojurewerkz.welle.kv :as kv]
-            [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.clients.user-info :as uc]
-            [clojure.tools.logging :as log]
-            [ring.util.response :as rsp]))
+            [donkey.clients.iplant-groups :as ipg]
+            [donkey.auth.user-attributes :as user]
+            [clojure.tools.logging :as log]))
 
-(def
-  ^{:private true
-    :doc "The list of functions to use in a generalized search."}
-  search-fns [(partial uc/search "name") (partial uc/search "email")])
-
-(defn- remove-duplicates
-  "Removes duplicate user records from the merged search results.  We use
-   (map val ...) here rather than (vals) because (vals) returns nil if the
-   map is empty."
-  [results]
-  (map val (into {} (map #(vector (:id %) %) results))))
+(defn- format-like-trellis
+  "Reformat an iplant-groups response to look like a trellis response."
+  [response]
+  {:username (:id response)
+   :firstname (:first_name response)
+   :lastname (:last_name response)
+   :email (:email response)
+   :institution (:institution response)})
 
 (defn- to-int
   "Converts a string to an integer, throwing an IllegalArgumentException if
@@ -57,10 +51,9 @@
      (validate-field "search" search (comp not blank?))
      (apply user-search search (parse-range range)))
   ([search-string start end]
-     (let [results (map #(% search-string start end) search-fns)
-           users (remove-duplicates (mapcat :users results))
-           truncated (if (some :truncated results) true false)]
-       (success-response {:users users :truncated truncated}))))
+     (let [results (ipg/search-subjects (:shortUsername user/current-user) search-string start end)
+           users (map format-like-trellis (:subjects results))]
+       (success-response {:users users :truncated false}))))
 
 (defn- add-user-info
   "Adds the information for a single user to a user-info lookup result."
@@ -74,10 +67,8 @@
    element is the username and the second element is either the user info or nil
    if the user doesn't exist."
   [username]
-  (->> (uc/search "username" username 0 100)
-       (:users)
-       (filter #(= (:username %) username))
-       (first)
+  (->> (ipg/lookup-subject (:shortUsername user/current-user) username)
+       (format-like-trellis)
        (vector username)))
 
 (defn user-info
