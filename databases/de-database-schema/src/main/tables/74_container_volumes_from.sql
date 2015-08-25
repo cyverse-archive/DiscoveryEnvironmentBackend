@@ -7,13 +7,11 @@ SET search_path = public, pg_catalog;
 --
 CREATE TABLE container_volumes_from (
   -- primary key
-  id uuid UNIQUE NOT NULL DEFAULT uuid_generate_v1(),
+  id uuid NOT NULL UNIQUE DEFAULT uuid_generate_v1(),
+
+  -- foreign key into the data_containers table.
+  data_container_id uuid NOT NULL,
 
   -- foreign key into the container_settings_table.
-  container_settings_id uuid NOT NULL,
-
-  -- The name of the container to mount volumes from
-  name text NOT NULL,
-
-  unique(container_settings_id, name)
+  container_settings_id uuid NOT NULL
 )
