@@ -11,11 +11,7 @@ fi
 
 OS=$(uname)
 
-if [ "$OS" == 'Darwin' ]; then
-    $(boot2docker shellinit)
-fi
-
-if [ $(docker ps | grep de-db | wc -l) -gt 0 ]; then 
+if [ $(docker ps | grep de-db | wc -l) -gt 0 ]; then
     docker kill de-db
 fi
 
