@@ -34,9 +34,12 @@
   [sha1 tree-urls-str]
   (if-not (tree-urls? sha1)
     (insert-tree-urls sha1 tree-urls-str)
-    (update e/tree-urls
-            (set-fields {:tree_urls tree-urls-str})
-            (where {:sha1 sha1}))))
+    (do
+      (update e/tree-urls
+              (set-fields {:tree_urls tree-urls-str})
+              (where {:sha1 sha1}))
+      (first (select e/tree-urls
+                     (where {:sha1 sha1}))))))
 
 (defn delete-tree-urls
   "Does a hard delete of the tree-urls associated with UUID."
