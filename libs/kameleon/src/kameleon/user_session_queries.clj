@@ -43,9 +43,12 @@
   [username session-str]
   (if-not (user-session? username)
     (insert-user-session username session-str)
-    (update user-sessions
-            (set-fields {:session session-str})
-            (where {:user_id (user-id username)}))))
+    (do
+      (update user-sessions
+              (set-fields {:session session-str})
+              (where {:user_id (user-id username)}))
+      (first (select user-sessions
+                     (where {:user_id (user-id username)}))))))
 
 (defn delete-user-session
   "Fully evil function that deletes a user session. Deletes the entire
