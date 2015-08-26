@@ -1,9 +1,9 @@
 (ns metadactyl.service.apps.jobs.submissions
   (:use [clojure-commons.core :only [remove-nil-values]]
-        [metadactyl.util.conversions :only [remove-nil-vals]]
         [slingshot.slingshot :only [try+ throw+]]
         [kameleon.uuids :only [uuid]])
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
             [clojure-commons.file-utils :as ft]
             [kameleon.db :as db]
@@ -34,7 +34,7 @@
 (defn- load-path-list-stats
   [user input-paths-by-id]
   (->> (flatten (vals input-paths-by-id))
-       (remove nil?)
+       (remove string/blank?)
        (get-file-stats user)
        (:paths)
        (map val)
