@@ -7,6 +7,7 @@
             [data-info.services.rename :as rename]
             [data-info.services.metadata :as meta]
             [data-info.services.entry :as entry]
+            [clojure-commons.error-codes :as ce]
             [data-info.util.service :as svc]))
 
 (defroutes* data-operations
@@ -23,12 +24,12 @@
                   422 {:description "User does not exist or an internal error occurred."}}
       :summary "Data Item Meta-Status"
       :description "Returns an HTTP status according to the user's access level to the data item."
-      (svc/trap uri entry/id-entry data-id user))
+      (ce/trap uri entry/id-entry data-id user))
 
     (GET* "/path/:zone/*" [:as {{zone :zone path :*} :params uri :uri}]
       :query [params FolderListingParams]
       :no-doc true
-      (svc/trap uri entry/dispatch-path-to-resource zone path params))
+      (ce/trap uri entry/dispatch-path-to-resource zone path params))
 
     ;; This is actually handled by the above route, which cannot be documented properly.
     (GET* "/path/:zone/:path" [:as {uri :uri}]
