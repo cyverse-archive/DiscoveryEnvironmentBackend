@@ -201,21 +201,6 @@
   [props config-valid configs]
   "donkey.iplant-groups.base-url")
 
-(cc/defprop-str userinfo-base-url
-  "The base URL for the user info API."
-  [props config-valid configs user-info-routes-enabled]
-  "donkey.userinfo.base-url")
-
-(cc/defprop-str userinfo-key
-  "The key to use when authenticating to the user info API."
-  [props config-valid configs user-info-routes-enabled]
-  "donkey.userinfo.client-key")
-
-(cc/defprop-str userinfo-secret
-  "The secret to use when authenticating to the user info API."
-  [props config-valid configs user-info-routes-enabled]
-  "donkey.userinfo.password")
-
 (cc/defprop-str jex-base-url
   "The base URL for the JEX."
   [props config-valid configs app-routes-enabled]

@@ -2,8 +2,7 @@
   (:use [donkey.util.config])
   (:require [clj-cas.cas-proxy-auth :as cas]
             [clojure.string :as string]
-            [clojure.tools.logging :as log]
-            [donkey.clients.user-info :as du]))
+            [clojure.tools.logging :as log]))
 
 (def
   ^{:doc "The authenticated user or nil if the service is unsecured."
@@ -22,18 +21,6 @@
    :firstName     (get user-attributes "firstName")
    :lastName      (get user-attributes "lastName")
    :principal     (get user-attributes "principal")})
-
-(defn user-from-user-info
-  "Creates a map of values from user attributes retrieved from the user info service."
-  [username]
-  (let [short-username (string/replace username #"@.*" "")
-        user-info      (du/get-user-details short-username)]
-    {:username      username
-     :password      nil
-     :email         (:email user-info)
-     :shortUsername short-username
-     :firstName     (:firstname user-info)
-     :lastName      (:lastname user-info)}))
 
 (defn fake-user-from-attributes
   "Creates a real map of fake values for a user base on environment variables."
@@ -86,11 +73,4 @@
    for debugging in the REPL."
   [[user] & body]
   `(binding [current-user (user-from-attributes {:user-attributes ~user})]
-     (do ~@body)))
-
-(defmacro with-directory-user
-  "Performs a task with user information for the given username bound to current-user. This
-   macro is used for callback endpoints."
-  [[username] & body]
-  `(binding [current-user (user-from-user-info ~username)]
      (do ~@body)))
