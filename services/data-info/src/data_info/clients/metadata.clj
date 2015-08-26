@@ -14,7 +14,7 @@
 
 (defn list-metadata-avus
   [target-id]
-  (http/get (metadata-url "filesystem" "entry" target-id "avus")
+  (http/get (metadata-url "filesystem" "data" target-id "avus")
     {:as               :stream
      :follow_redirects false}))
 

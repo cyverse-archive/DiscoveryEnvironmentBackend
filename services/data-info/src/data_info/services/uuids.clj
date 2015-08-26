@@ -46,14 +46,14 @@
         (remove #(nil? (:permission %)))))))
 
 (defn- fmt-stat
-  [cm user entry]
-  (let [path (:full_path entry)]
-    (->> {:date-created  (* 1000 (Long/valueOf (:create_ts entry)))
-          :date-modified (* 1000 (Long/valueOf (:modify_ts entry)))
-          :file-size     (:data_size entry)
-          :id            (:uuid entry)
+  [cm user data-item]
+  (let [path (:full_path data-item)]
+    (->> {:date-created  (* 1000 (Long/valueOf (:create_ts data-item)))
+          :date-modified (* 1000 (Long/valueOf (:modify_ts data-item)))
+          :file-size     (:data_size data-item)
+          :id            (:uuid data-item)
           :path          path
-          :type          (case (:type entry)
+          :type          (case (:type data-item)
                            "collection" :dir
                            "dataobject" :file)}
       (stat/decorate-stat cm user))))
@@ -104,15 +104,15 @@
 
 
 (defn ^Boolean uuid-accessible?
-  "Indicates if a filesystem entry is readble by a given user.
+  "Indicates if a data item is readable by a given user.
 
    Parameters:
      user     - the authenticated name of the user
-     entry-id - the UUID of the filesystem entry
+     data-id  - the UUID of the data item
 
    Returns:
-     It returns true if the user can access the entry, otherwise false"
-  [^String user ^UUID entry-id]
+     It returns true if the user can access the data item, otherwise false"
+  [^String user ^UUID data-id]
   (init/with-jargon (cfg/jargon-cfg) [cm]
-    (let [entry-path (:path (path-for-uuid cm user (str entry-id)))]
-      (and entry-path (is-readable? cm user entry-path)))))
+    (let [data-path (:path (path-for-uuid cm user (str data-id)))]
+      (and data-path (is-readable? cm user data-path)))))

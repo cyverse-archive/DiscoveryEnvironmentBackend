@@ -41,26 +41,26 @@
 
 
 (defn add-favorite
-  "This function marks a given filesystem entry as a favorite of the authenticated user.
+  "This function marks a given data item as a favorite of the authenticated user.
 
    Parameters:
-     entry-id - This is the `entry-id` from the request.  It should be the UUID of the entry being
-                marked."
-  [entry-id]
+     data-id - This is the `data-id` from the request.  It should be the UUID of the data item
+               being marked."
+  [data-id]
   (let [user     (:shortUsername user/current-user)
-        entry-id (UUID/fromString entry-id)]
-    (data/validate-uuid-accessible user entry-id)
-    (metadata/add-favorite entry-id (data/resolve-data-type entry-id))))
+        data-id (UUID/fromString data-id)]
+    (data/validate-uuid-accessible user data-id)
+    (metadata/add-favorite data-id (data/resolve-data-type data-id))))
 
 
 (defn remove-favorite
-  "This function unmarks a given filesystem entry as a favortie of the authenticated user.
+  "This function unmarks a given data item as a favorite of the authenticated user.
 
    Parameters:
-     entry-id - This is the `entry-id` from the request.  It should be the UUID of the entry being
-                unmarked."
-  [entry-id]
-  (metadata/remove-favorite entry-id))
+     data-id - This is the `data-id` from the request.  It should be the UUID of the data item
+               being unmarked."
+  [data-id]
+  (metadata/remove-favorite data-id))
 
 
 (defn- ids-txt->uuids-set
@@ -111,25 +111,25 @@
 
 
 (defn filter-favorites
-  "Forwards a list of UUIDs for filesystem entries to the metadata service favorites filter
+  "Forwards a list of UUIDs for data items to the metadata service favorites filter
    endpoint, parsing its response and returning a set of the returned UUIDs.
 
    Parameters:
-     entries - A list of UUIDs to filter."
-  [entries]
-  (extract-favorite-uuids-set (metadata/filter-favorites entries)))
+     data-ids - A list of UUIDs to filter."
+  [data-ids]
+  (extract-favorite-uuids-set (metadata/filter-favorites data-ids)))
 
 (defn filter-accessible-favorites
-  "Given a list of UUIDs for filesystem entries, it filters the list, returning only the UUIDS that
+  "Given a list of UUIDs for data items, it filters the list, returning only the UUIDS that
    are accessible and marked as favorite by the authenticated user.
 
    Parameters:
      body - This is the request body. It should contain a JSON document containing a field
             `filesystem` containing an array of UUIDs."
   [body]
-  (let [user    (:shortUsername user/current-user)
-        entries (->> body slurp parse-filesystem-ids ids-txt->uuids-set)]
-    (->> (filter-favorites entries)
+  (let [user     (:shortUsername user/current-user)
+        data-ids (->> body slurp parse-filesystem-ids ids-txt->uuids-set)]
+    (->> (filter-favorites data-ids)
       (filter (partial data/uuid-accessible? user))
       (hash-map :filesystem)
       svc/success-response)))

@@ -235,27 +235,27 @@
 
 
 (defn ^Boolean uuid-accessible?
-  "Indicates if a filesystem entry is readble by a given user.
+  "Indicates if a data item is readable by a given user.
 
    Parameters:
      user     - the authenticated name of the user
-     entry-id - the UUID of the filesystem entry
+     data-id  - the UUID of the data item
 
    Returns:
-     It returns true if the user can access the entry, otherwise false"
-  [^String user ^UUID entry-id]
-  (uuids/uuid-accessible? user entry-id))
+     It returns true if the user can access the data item, otherwise false"
+  [^String user ^UUID data-id]
+  (uuids/uuid-accessible? user data-id))
 
 
 (defn validate-uuid-accessible
-  "Throws an exception if the given entry is not accessible to the given user.
+  "Throws an exception if the given data item is not accessible to the given user.
 
    Parameters:
      user     - the authenticated name of the user
-     entry-id - the UUID of the filesystem entry"
-  [^String user ^UUID entry-id]
-  (when-not (uuid-accessible? user entry-id)
-    (throw+ {:error_code error/ERR_NOT_FOUND :uuid entry-id})))
+     data-id  - the UUID of the data item"
+  [^String user ^UUID data-id]
+  (when-not (uuid-accessible? user data-id)
+    (throw+ {:error_code error/ERR_NOT_FOUND :uuid data-id})))
 
 
 (defn ^Boolean owns?
@@ -263,24 +263,24 @@
 
    Parameters:
      user       - the username of the user
-     entry-path - The absolute path to the file or folder
+     data-path - The absolute path to the file or folder
 
    Returns:
-     It returns true if the user own the entry, otherwise false."
-  [^String user ^String entry-path]
-  (users/owns? user entry-path))
+     It returns true if the user own the data item, otherwise false."
+  [^String user ^String data-path]
+  (users/owns? user data-path))
 
 
 (defn ^String resolve-data-type
-  "Given filesystem id, it returns the type of the entry it is, file or folder.
+  "Given filesystem id, it returns the type of data item it is, file or folder.
 
    Parameters:
-     entry-id - The UUID of the entry to inspect
+     data-id - The UUID of the data item to inspect
 
    Returns:
-     The type of the entry, `file` or `folder`"
-  [^UUID entry-id]
-  (icat/resolve-data-type entry-id))
+     The type of the data item, `file` or `folder`"
+  [^UUID data-id]
+  (icat/resolve-data-type data-id))
 
 
   (defn ^IPersistentMap share
@@ -344,18 +344,18 @@
     (svc/request-failure full-msg)))
 
 
-(defn ^String mk-entries-path-url-path
-  "This function constructs the url path to the resource backing a given data entry.
+(defn ^String mk-data-path-url-path
+  "This function constructs the url path to the resource backing a given data item.
 
    Parameters:
-     path - the absolute iRODS path to the data entry
+     path - the absolute iRODS path to the data item 
 
    Returns:
      It returns the data-info URL path to the corresponding resource"
   [^String path]
   (let [nodes (fs/split path)
         nodes (if (= "/" (first nodes)) (next nodes) nodes)]
-    (str "entries/path/" (string/join "/" (map url/url-encode nodes)))))
+    (str "data/path/" (string/join "/" (map url/url-encode nodes)))))
 
 
 (defn respond-with-default-error

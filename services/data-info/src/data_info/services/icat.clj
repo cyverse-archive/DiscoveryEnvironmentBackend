@@ -25,17 +25,17 @@
 
 
 (defn ^String resolve-data-type
-  "Given filesystem id, it returns the type of the entry it is, file or folder.
+  "Given filesystem id, it returns the type of data item it is, file or folder.
 
    Parameters:
      fs       - (optional) An open jargon context
-     entry-id - The UUID of the entry to inspect
+     data-id  - The UUID of the data item to inspect
 
    Returns:
-     The type of the entry, `file` or `folder`"
-  ([^IPersistentMap fs ^UUID entry-id]
-   (if (empty? (meta/list-collections-with-attr-value fs "ipc_UUID" entry-id)) "file" "folder"))
+     The type of the data item, `file` or `folder`"
+  ([^IPersistentMap fs ^UUID data-id]
+   (if (empty? (meta/list-collections-with-attr-value fs "ipc_UUID" data-id)) "file" "folder"))
 
-  ([^UUID entry-id]
+  ([^UUID data-id]
    (init/with-jargon (cfg/jargon-cfg) [fs]
-     (resolve-data-type fs entry-id))))
+     (resolve-data-type fs data-id))))
