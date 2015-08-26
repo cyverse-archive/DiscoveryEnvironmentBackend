@@ -14,7 +14,7 @@
             [clj-jargon.validations :as jv]
             [clojure-commons.error-codes :as error]
             [clojure-commons.file-utils :as file]
-            [data-info.routes.domain.entry :as domain]
+            [data-info.routes.domain.data :as domain]
             [data-info.util.config :as cfg]
             [data-info.util.irods :as irods]
             [data-info.util.validators :as duv]
