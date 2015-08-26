@@ -10,15 +10,6 @@
             [donkey.auth.user-attributes :as user]
             [clojure.tools.logging :as log]))
 
-(defn- format-like-trellis
-  "Reformat an iplant-groups response to look like a trellis response."
-  [response]
-  {:username (:id response)
-   :firstname (:first_name response)
-   :lastname (:last_name response)
-   :email (:email response)
-   :institution (:institution response)})
-
 (defn- to-int
   "Converts a string to an integer, throwing an IllegalArgumentException if
    the number can't be parsed.  This function is intended to be used from
@@ -52,7 +43,7 @@
      (apply user-search search (parse-range range)))
   ([search-string start end]
      (let [results (ipg/search-subjects (:shortUsername user/current-user) search-string start end)
-           users (map format-like-trellis (:subjects results))]
+           users (map ipg/format-like-trellis (:subjects results))]
        (success-response {:users users :truncated false}))))
 
 (defn- add-user-info
@@ -68,7 +59,7 @@
    if the user doesn't exist."
   [username]
   (->> (ipg/lookup-subject (:shortUsername user/current-user) username)
-       (format-like-trellis)
+       (ipg/format-like-trellis)
        (vector username)))
 
 (defn user-info

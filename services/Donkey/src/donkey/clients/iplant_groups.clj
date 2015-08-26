@@ -4,6 +4,15 @@
             [clojure.tools.logging :as log]
             [donkey.util.config :as config]))
 
+(defn format-like-trellis
+  "Reformat an iplant-groups response to look like a trellis response."
+  [response]
+  {:username (:id response)
+   :firstname (:first_name response)
+   :lastname (:last_name response)
+   :email (:email response)
+   :institution (:institution response)})
+
 (defn- empty-user-info
   "Returns an empty user-info record for the given username."
   [username]
