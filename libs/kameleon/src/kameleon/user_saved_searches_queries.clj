@@ -42,9 +42,12 @@
   [username saved-searches-str]
   (if-not (saved-searches? username)
     (insert-saved-searches username saved-searches-str)
-    (update user-saved-searches
-            (set-fields {:saved_searches saved-searches-str})
-            (where {:user_id (user-id username)}))))
+    (do
+      (update user-saved-searches
+              (set-fields {:saved_searches saved-searches-str})
+              (where {:user_id (user-id username)}))
+      (first (select user-saved-searches
+                     (where {:user_id (user-id username)}))))))
 
 (defn delete-saved-searches
   "Hard deletes the record container a user's saved searches from the
