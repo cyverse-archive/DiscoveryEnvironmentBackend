@@ -182,13 +182,13 @@
         :description "Returns a list of container names that the container associated with the tool should import volumes from."
         (ce/trap uri (requester tool-id (tool-volumes-from tool-id volumes-from-id))))
 
-  (GET* "/:tool-id/container/volumes-from/:volumes-from-id/name" [:as {uri :uri}]
+  (GET* "/:tool-id/container/volumes-from/:volumes-from-id/data-container-id" [:as {uri :uri}]
         :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
         :query [params SecuredQueryParams]
-        :return VolumesFromName
+        :return VolumesFromDataContainer
         :summary "Name Of Volume Host Container"
         :description "Returns the name of the container from which the tool container will bind mount volumes."
-        (ce/trap uri (requester tool-id (volumes-from-field tool-id volumes-from-id :name)))))
+        (ce/trap uri (requester tool-id (volumes-from-field tool-id volumes-from-id :data_container_id)))))
 
 (defroutes* tool-requests
   (GET* "/" [:as {uri :uri}]
@@ -380,13 +380,13 @@
            :description "Deletes a container name that the tool container should import volumes from."
            (ce/trap uri #(delete-tool-volumes-from tool-id volumes-from-id)))
 
-  (POST* "/:tool-id/container/volumes-from/:volumes-from-id/name" [:as {uri :uri}]
+  (POST* "/:tool-id/container/volumes-from/:volumes-from-id/data-container-id" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
          :query [params SecuredQueryParams]
-         :body [body VolumesFromName]
-         :return VolumesFromName
+         :body [body VolumesFromDataContainer]
+         :return VolumesFromDataContainer
          :summary "Update Name Of Volume Host Container"
          :description (str
-                        "Updates the name of a container from which the tool container will bind mount volumes."
+                        "Updates the data container UUID of a container from which the tool container will bind mount volumes."
                         volumes-from-warning)
-         (ce/trap uri (requester tool-id (update-volumes-from-field tool-id volumes-from-id :name (:name body))))))
+         (ce/trap uri (requester tool-id (update-volumes-from-field tool-id volumes-from-id :data_container_id (:data_container_id body))))))

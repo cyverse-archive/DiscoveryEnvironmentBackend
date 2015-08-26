@@ -128,9 +128,9 @@
 
 (s/defschema VolumesFrom
   (describe
-   {:name s/Str
+   {:data_container_id s/Uuid
     :id   s/Uuid}
-   "The name of a container from which to bind mount volumes."))
+   "The UUID of the data container from which to bind mount volumes."))
 
 (s/defschema NewVolumesFrom
   (describe
@@ -141,6 +141,11 @@
   (describe
    {:name s/Str}
    "The name of a container from which volumes will be bind mounted."))
+
+(s/defschema VolumesFromDataContainer
+  (describe
+    {:data-container-id s/Uuid}
+    "The UUID of the data container from which volumes will be bind mounted."))
 
 (def VolumesFromIdParam
   (describe

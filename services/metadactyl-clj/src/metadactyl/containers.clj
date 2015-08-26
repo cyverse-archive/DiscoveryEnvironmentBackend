@@ -249,16 +249,16 @@
 (defn volumes-from-mapping?
   "Returns true if the combination of the container_settings UUID and container
    already exists in the container_volumes_from table."
-  [settings-uuid volumes-from-name]
+  [settings-uuid data-container-uuid]
   (pos? (count (select container-volumes-from
                        (where {:container_settings_id (uuidify settings-uuid)
-                               :name volumes-from-name})))))
+                               :data_container_id     (uuidify data-container-uuid)})))))
 
 (defn volumes-from-mapping
-  [settings-uuid volumes-from-name]
+  [settings-uuid data-container-uuid]
   (first (select container-volumes-from
                  (where {:container_settings_id (uuidify settings-uuid)
-                         :name                  volumes-from-name}))))
+                         :data_container_id     (uuidify data-container-uuid)}))))
 
 (defn settings-has-volumes-from?
   "Returns true if the indicated container_settings record has at least one
@@ -271,10 +271,10 @@
 (defn add-volumes-from
   "Adds a record to container_volumes_from associated with the given
    container_settings UUID."
-  [settings-uuid volumes-from-name]
+  [settings-uuid data-container-uuid]
   (insert container-volumes-from
           (values {:container_settings_id (uuidify settings-uuid)
-                   :name volumes-from-name})))
+                   :data_container_id     (uuidify data-container-uuid)})))
 
 (defn modify-volumes-from
   "Modifies a record in container_volumes_from."
@@ -282,7 +282,7 @@
   (if-not (volumes-from? volumes-from-uuid)
     (throw (Exception. (str "volume from setting does not exist: " volumes-from-uuid))))
   (update container-volumes-from
-          (set-fields (select-keys vf-map [:name]))
+          (set-fields (select-keys vf-map [:data_container_id]))
           (where {:id (uuidify volumes-from-uuid)})))
 
 (defn delete-volumes-from
