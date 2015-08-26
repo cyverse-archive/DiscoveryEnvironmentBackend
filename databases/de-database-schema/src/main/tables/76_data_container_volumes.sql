@@ -8,7 +8,7 @@ CREATE TABLE data_container_volumes (
   id UUID UNIQUE NOT NULL DEFAULT uuid_generate_v4(),
 
   -- Foreign key into the data_containers table
-  data_container_id UUID NOT NULL,
+  data_containers_id UUID NOT NULL,
 
   -- In-container path to the volumes
   volume_container_path TEXT NOT NULL,
@@ -18,5 +18,5 @@ CREATE TABLE data_container_volumes (
 
   -- The same volume shouldn't be associated with a single data container more
   -- than once.
-  unique(id, data_container_id)
+  unique(id, data_containers_id)
 )

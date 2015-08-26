@@ -15,4 +15,5 @@ EOF
 
 chmod 0600 /root/.pgpass
 
-java -jar /facepalm-standalone.jar -m update -A $PGADMIN -U de -d de -h $PGHOST -p $PGPORT -f /database.tar.gz
+cp /database.tar.gz /de-db.tar.gz
+java -jar /facepalm-standalone.jar -m update -A $PGADMIN -U de -d de -h $PGHOST -p $PGPORT -f /de-db.tar.gz

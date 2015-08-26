@@ -21,6 +21,6 @@ ALTER TABLE ONLY container_volumes_from
 -- data_containers table.
 --
 ALTER TABLE ONLY container_volumes_from
-   ADD CONSTRAINT container_volumes_from_data_container_id_fkey
-   FOREIGN KEY(data_container_id)
+   ADD CONSTRAINT container_volumes_from_data_containers_id_fkey
+   FOREIGN KEY(data_containers_id)
    REFERENCES data_containers(id);
