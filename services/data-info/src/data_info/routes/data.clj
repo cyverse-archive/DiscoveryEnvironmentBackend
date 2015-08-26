@@ -23,12 +23,12 @@
                   422 {:description "User does not exist or an internal error occurred."}}
       :summary "Data Item Meta-Status"
       :description "Returns an HTTP status according to the user's access level to the data item."
-      (ce/trap uri entry/id-entry data-id user))
+      (svc/trap uri entry/id-entry data-id user))
 
     (GET* "/path/:zone/*" [:as {{zone :zone path :*} :params uri :uri}]
       :query [params FolderListingParams]
       :no-doc true
-      (ce/trap uri entry/dispatch-path-to-resource zone path params))
+      (svc/trap uri entry/dispatch-path-to-resource zone path params))
 
     ;; This is actually handled by the above route, which cannot be documented properly.
     (GET* "/path/:zone/:path" [:as {uri :uri}]
