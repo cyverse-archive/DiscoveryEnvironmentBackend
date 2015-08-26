@@ -41,9 +41,12 @@
   [username prefs-str]
   (if-not (user-prefs? username)
     (insert-user-prefs username prefs-str)
-    (update user-preferences
-            (set-fields {:preferences prefs-str})
-            (where {:user_id (user-id username)}))))
+    (do
+      (update user-preferences
+              (set-fields {:preferences prefs-str})
+              (where {:user_id (user-id username)}))
+      (first (select user-preferences
+                     (where {:user_id (user-id username)}))))))
 
 (defn delete-user-prefs
   "Does a hard delete of the entire record containing a user's prefs."
