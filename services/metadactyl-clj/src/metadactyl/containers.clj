@@ -32,6 +32,13 @@
                  (fields :name :tag :url :id)
                  (where {:id (uuidify image-uuid)}))))
 
+(defn list-images
+  "Returns a list of all defined images."
+  []
+  {:container_images
+    (select container-images
+      (fields :name :tag :url :id))})
+
 (defn tool-image-info
   "Returns a map containing information about a container image. Info is looked up by the tool UUID"
   [tool-uuid]
@@ -80,16 +87,24 @@
 (defn modify-image-info
   "Updates the record for a container image. Basically, just allows you to set a new URL
    at this point."
-  [image-map]
-  (let [tag  (get-tag image-map)
-        name (:name image-map)
-        url  (:url image-map)]
-    (if-not (image? image-map)
-      (throw (Exception. (str "image doesn't exist: " image-map)))
+  [image-id update-map]
+  (let [umap (select-keys update-map [:name :tag :url])]
+    (when-not (empty? umap)
       (update container-images
-              (set-fields {:url url})
-              (where (and (= :name name)
-                          (= :tag tag)))))))
+        (set-fields umap)
+        (where (= :id (uuidify image-id))))
+      (select container-images
+        (where (= :id (uuidify image-id)))))))
+
+(defn delete-image
+  [image-id]
+  (when (image-id image-id)
+    (transaction
+      (update tools
+        (set-fields {:container_images_id nil})
+        (where {:container_images_id (uuidify image-id)}))
+      (delete container-images
+        (where (= :id (uuidify image-id)))))))
 
 (defn delete-image-info
   "Deletes a record for an image"
@@ -233,6 +248,41 @@
   (when (volume? volume-uuid)
     (delete container-volumes (where {:id (uuidify volume-uuid)}))))
 
+; (defn data-container
+;   "Returns a map describing a data container."
+;   [data-container-id]
+;   (first (select data-containers
+;                  (where {:id (uuidify data-container-id)}))))
+;
+; (defn list-data-containers
+;   "Returns a list of all data containers."
+;   []
+;   {:data_containers (select data-containers)})
+;
+; (defn add-data-container
+;   [add-map]
+;   (insert data-containers
+;           (values add-map)))
+;
+; (defn delete-data-container
+;   "Deletes a data container."
+;   [data-container-id]
+;   (when (data-container data-container-id)
+;     (delete data-containers
+;             (where (= :id (uuidify data-container-id))))))
+;
+; (defn modify-data-container
+;   "Modifies a data container based on the update map. Valid keys for the update map
+;   are: :container_image_id, :name_prefix, :read_only. :read_only's value should
+;   be a boolean."
+;   [data-container-id update-map]
+;   (let [umap (select-keys update-map [:container_image_id :name_prefix :read_only])]
+;     (when (data-container data-container-id)
+;       (update data-containers
+;               (set-fields umap)
+;               (where (= :id (uuidify data-container-id))))
+;       (data-container data-container-id))))
+
 (defn volumes-from
   "Returns all records from container_volumes_from associated with the UUID passed in. There
    should only be a single result, but we're returning a seq just in case."
@@ -351,7 +401,10 @@
   (-> retval remove-nil-vals remove-empty-vals))
 
 (defn tool-container-info
-  "Returns container info associated with a tool or nil"
+  "Returns container info associated with a tool or nil. This is used to build
+  the JSON map that is passed down to the JEX. If you make changes to the
+  container-related parts of the DE database schema, you'll likely need to make
+  changes here."
   [tool-uuid]
   (let [id (uuidify tool-uuid)]
     (when (tool-has-settings? id)
@@ -361,8 +414,7 @@
                          (fields :host_path :container_path :id))
                    (with container-volumes
                          (fields :host_path :container_path :id))
-                   (with container-volumes-from
-                         (fields :name :id))
+                   (with container-volumes-from)
                    (where {:tools_id id}))
            first
            (merge {:image (tool-image-info tool-uuid)})

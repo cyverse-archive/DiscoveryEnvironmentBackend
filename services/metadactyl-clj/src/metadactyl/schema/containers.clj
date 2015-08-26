@@ -11,10 +11,35 @@
     :url                  s/Str}
    "A map describing a container image."))
 
+(s/defschema Images
+  (describe
+    {:container_images [Image]}
+    "A list of container images."))
+
 (s/defschema NewImage
   (describe
    (dissoc Image :id)
    "The values needed to add a new image to a tool."))
+
+(s/defschema ImageId
+  (describe
+    java.util.UUID
+    "A container image UUID."))
+
+(s/defschema ImageName
+  (describe
+    {:name s/Str}
+    "The image's name."))
+
+(s/defschema ImageTag
+  (describe
+    {:tag s/Str}
+    "The image's tag."))
+
+(s/defschema ImageURL
+  (describe
+    {:url s/Str}
+    "The image's URL."))
 
 (s/defschema Settings
   (describe
@@ -125,6 +150,23 @@
   (describe
    {:container_path s/Str}
    "The path to a bind mounted volume in the tool container."))
+
+(s/defschema DataContainer
+  (describe
+    {:name_prefix        s/Str
+     :container_image_id s/Uuid
+     :read_only          s/Bool}
+    "A description of a data container."))
+
+(s/defschema DataContainers
+  (describe
+   {:data_containers [DataContainer]}
+   "A list of data containers."))
+
+(s/defschema DataContainerIdParam
+  (describe
+    java.util.UUID
+    "A data container's UUID."))
 
 (s/defschema VolumesFrom
   (describe
