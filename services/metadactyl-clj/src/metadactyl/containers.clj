@@ -5,7 +5,9 @@
                                   container-settings
                                   container-devices
                                   container-volumes
-                                  container-volumes-from]]
+                                  container-volumes-from
+                                  data-containers
+                                  data-container-volumes]]
         [kameleon.uuids :only [uuidify]]
         [korma.core]
         [korma.db :only [transaction]]
@@ -411,10 +413,12 @@
       (->  (select container-settings
                    (fields :id :cpu_shares :memory_limit :network_mode :name :working_directory :entrypoint)
                    (with container-devices
-                         (fields :host_path :container_path :id))
+                     (fields :host_path :container_path :id))
                    (with container-volumes
-                         (fields :host_path :container_path :id))
-                   (with container-volumes-from)
+                     (fields :host_path :container_path :id))
+                   (with container-volumes-from
+                     (with data-containers
+                       (with data-container-volumes)))
                    (where {:tools_id id}))
            first
            (merge {:image (tool-image-info tool-uuid)})
