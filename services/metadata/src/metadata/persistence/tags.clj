@@ -100,7 +100,8 @@
                   (assoc updates :description ""))]
     (update :tags
       (set-fields updates)
-      (where {:id tag-id}))))
+      (where {:id tag-id}))
+    (first (select :tags (where {:id tag-id})))))
 
 
 (defn delete-user-tag
