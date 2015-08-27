@@ -46,7 +46,10 @@
   :plugins [[lein-ring "0.9.4"]
             [swank-clojure "1.4.2"]]
   :profiles {:dev     {:resource-paths ["conf/test"]}
-             :uberjar {:aot [data-info.core]}}
+             ;; compojure-api route macros should not be AOT compiled:
+             ;; https://github.com/metosin/compojure-api/issues/135#issuecomment-121388539
+             ;; https://github.com/metosin/compojure-api/issues/102
+             :uberjar {:aot [#"data-info.(?!routes).*"]}}
   :main ^:skip-aot data-info.core
   :ring {:handler data-info.routes/app
          :init data-info.core/lein-ring-init

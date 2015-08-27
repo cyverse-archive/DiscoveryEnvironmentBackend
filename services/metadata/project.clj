@@ -30,5 +30,8 @@
   :uberjar-name "metadata-standalone.jar"
   :profiles {:dev     {:plugins        [[lein-ring "0.9.4"]]
                        :resource-paths ["conf/test"]}
-             :uberjar {:aot [metadata.core]}}
+             ;; compojure-api route macros should not be AOT compiled:
+             ;; https://github.com/metosin/compojure-api/issues/135#issuecomment-121388539
+             ;; https://github.com/metosin/compojure-api/issues/102
+             :uberjar {:aot [#"metadata.(?!routes).*"]}}
   :uberjar-exclusions [#".*[.]SF" #"LICENSE" #"NOTICE"])

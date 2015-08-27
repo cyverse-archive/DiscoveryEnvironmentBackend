@@ -30,7 +30,10 @@
                  [ring/ring-jetty-adapter "1.4.0"]]
   :plugins [[lein-ring "0.9.6"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
-  :aot [iplant_groups.core]
+  ;; compojure-api route macros should not be AOT compiled:
+  ;; https://github.com/metosin/compojure-api/issues/135#issuecomment-121388539
+  ;; https://github.com/metosin/compojure-api/issues/102
+  :aot [#"iplant_groups.(?!routes).*"]
   :main iplant_groups.core
   :ring {:handler iplant_groups.routes/app
          :init    iplant_groups.core/init-service
