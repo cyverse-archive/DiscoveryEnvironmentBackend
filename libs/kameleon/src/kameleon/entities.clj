@@ -79,6 +79,14 @@
   (table :container_volumes_from)
   (belongs-to container-settings))
 
+(defentity data-containers
+  (table :data_containers)
+  (belongs-to container-images))
+
+(defentity data-container-volumes
+  (table :data_container_volumes)
+  (belongs-to data-containers))
+
 
 ;; Information about a deployed tool.
 (defentity tools
@@ -293,4 +301,3 @@
 (defentity user-saved-searches
   (table :user_saved_searches)
   (belongs-to users {:fk :user_id}))
-
