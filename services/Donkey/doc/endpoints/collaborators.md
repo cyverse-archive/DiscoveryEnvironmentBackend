@@ -37,7 +37,7 @@ for more information.
 
 ## Searching for Users
 
-Secured Endpoint: GET /secured/user-search/{search-string}
+Secured Endpoint: GET /secured/user-search?search={search-string}
 
 This endpoint allows the caller to search for user information by username,
 email address and actual name. The search search string provided in the URL
@@ -46,24 +46,22 @@ the following format:
 
 ```json
 {
-    username-1: {
-        "email": "email-address-1",
-        "firstname": "first-name-1",
-        "id": "id-1",
-        "institution": "institution-1",
-        "lastname": "last-name-1",
-        "position": "position-1",
-        "username": "username-1"
-    },
-    username-n: {
-        "email": "email-address-n",
-        "firstname": "first-name-n",
-        "id": "id-n",
-        "institution": "institution-n",
-        "lastname": "last-name-n",
-        "position": "position-n",
-        "username": "username-n"
-    }
+    "truncated": true|false,
+    "users": [
+      username-1: {
+          "email": "email-address-1",
+          "firstname": "first-name-1",
+          "institution": "institution-1",
+          "lastname": "last-name-1",
+          "username": "username-1"
+      },
+      username-n: {
+          "email": "email-address-n",
+          "firstname": "first-name-n",
+          "institution": "institution-n",
+          "lastname": "last-name-n",
+          "username": "username-n"
+      }]
 }
 ```
 
@@ -74,7 +72,7 @@ and up to the first fifty users whose email address matched the search
 string. Here's an example:
 
 ```
-$ curl -s "http://by-tor:8888/secured/user-search/nobody?proxyToken=$(cas-ticket)" | python -mjson.tool
+$ curl -s "http://by-tor:8888/secured/user-search?proxyToken=$(cas-ticket)&search=nobody" | python -mjson.tool
 {
     "truncated": false,
     "users": [
@@ -90,6 +88,8 @@ $ curl -s "http://by-tor:8888/secured/user-search/nobody?proxyToken=$(cas-ticket
     ]
 }
 ```
+
+This endpoint delegates to iplant-groups' GET /subjects endpoint, but reformats the results to match the prior implementation with Trellis.
 
 ## Obtaining User Info
 
@@ -151,3 +151,5 @@ Here's an example with no matches:
 $ curl -s "http://by-tor:8888/secured/user-info?proxyToken=$(cas-ticket)&username=foo" | python -mjson.tool
 {}
 ```
+
+This endpoint delegates to iplant-groups' GET /subjects/:subject-id endpoint, but reformats the results to match the prior implementation with Trellis.
