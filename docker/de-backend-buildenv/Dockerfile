@@ -29,3 +29,9 @@ ADD build_profiles.clj /root/.lein/profiles.clj
 RUN chmod a+x /usr/bin/lein
 RUN npm install -g grunt-cli
 RUN lein help
+RUN git clone https://github.com/iPlantCollaborativeOpenSource/DiscoveryEnvironmentBackend.git backend && \
+    cd backend && \
+    git checkout dev && \
+    lein exec build-all.clj lein-plugins libs
+
+
