@@ -77,6 +77,18 @@ for the requesting user."
   "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
       (svc/trap uri rename/do-rename-uuid params body data-id))
 
+    (PUT* "/:data-id/dir" [:as {uri :uri}]
+      :path-params [data-id :- DataIdPathParam]
+      :query [params SecuredQueryParamsRequired]
+      :body [body (describe Dirname "The new directory name of the file.")]
+      :return RenameResult
+      :summary "Change a file's directory."
+      :description (str
+"Moves the file with the provided UUID to a new folder, retaining its name."
+(get-error-code-block
+  "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
+      (svc/trap uri rename/do-move-uuid params body data-id))
+
     (POST* "/:data-id/metadata/save" [:as {uri :uri}]
       :path-params [data-id :- DataIdPathParam]
       :query [params SecuredQueryParamsRequired]

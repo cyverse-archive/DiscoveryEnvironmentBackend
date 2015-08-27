@@ -19,13 +19,16 @@
    (describe NonBlankString "The user performing the request.")
 
    :source
-   (describe NonBlankString "An iRODS path to the initial location of the file being renamed.")
+   (describe NonBlankString "An iRODS path to the initial location of the data item being renamed.")
 
    :dest
-   (describe NonBlankString "An iRODS path to the final location of the file being renamed.")})
+   (describe NonBlankString "An iRODS path to the destination of the data item being renamed.")})
 
 (s/defschema Filename
-  {:filename (describe NonBlankString "The name of the file.")})
+  {:filename (describe NonBlankString "The name of the data item.")})
+
+(s/defschema Dirname
+  {:dirname (describe NonBlankString "The directory name of the data item.")})
 
 (def ValidSortFields
   #{:datecreated
