@@ -55,10 +55,18 @@
   (has-many apps)
   (has-many tools))
 
+(defentity data-container-volumes
+  (table :data_container_volumes))
+
+(defentity data-containers
+  (table :data_containers)
+  (has-one data-container-volumes)
+  (has-one container-volumes-from))
 
 ;; Information about containers containing tools.
 (defentity container-images
-  (table :container_images))
+  (table :container_images)
+  (has-one data-containers))
 
 (defentity container-settings
   (table :container_settings)
@@ -77,16 +85,8 @@
 
 (defentity container-volumes-from
   (table :container_volumes_from)
-  (belongs-to container-settings))
-
-(defentity data-containers
-  (table :data_containers)
-  (belongs-to container-images))
-
-(defentity data-container-volumes
-  (table :data_container_volumes)
+  (belongs-to container-settings)
   (belongs-to data-containers))
-
 
 ;; Information about a deployed tool.
 (defentity tools
