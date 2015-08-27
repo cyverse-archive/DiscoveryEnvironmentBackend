@@ -177,9 +177,10 @@
 
 (defn- update-attribute
   [user attr-id attr]
-  (:id (update :attributes
-               (set-fields (prepare-attr-update user attr))
-               (where {:id attr-id}))))
+  (update :attributes
+          (set-fields (prepare-attr-update user attr))
+          (where {:id attr-id}))
+  (:id (first (select :attributes (where {:id attr-id})))))
 
 (defn- attr-exists?
   [attr-id]
