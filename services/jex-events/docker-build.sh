@@ -2,7 +2,6 @@
 set -x
 set -e
 
-DOCKER_USER=discoenv
 VERSION=$(cat version | sed -e 's/^ *//' -e 's/ *$//')
 
 docker pull $DOCKER_USER/clm-builder:latest
