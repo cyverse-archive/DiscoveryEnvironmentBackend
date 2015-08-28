@@ -25,7 +25,7 @@
       :path-params [zone :- (describe String "The IRODS zone")
                     path :- (describe String "The IRODS path under the zone")]
       :query [params FolderListingParams]
-      :summary "Entry Contents"
+      :summary "Data Item Contents"
       :description (str
 "Lists subdirectories and file details of directory paths, or gets file contents of paths to files.
 
@@ -70,22 +70,22 @@ for the requesting user."
 
       (PUT* "/name" [:as {uri :uri}]
         :query [params SecuredQueryParamsRequired]
-        :body [body (describe Filename "The new name of the file.")]
+        :body [body (describe Filename "The new name of the data item.")]
         :return RenameResult
-        :summary "Change a file's name."
+        :summary "Change a data item's name."
         :description (str
-  "Moves the file with the provided UUID to a new name within the same folder."
+  "Moves the data item with the provided UUID to a new name within the same folder."
   (get-error-code-block
     "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
         (svc/trap uri rename/do-rename-uuid params body data-id))
 
       (PUT* "/dir" [:as {uri :uri}]
         :query [params SecuredQueryParamsRequired]
-        :body [body (describe Dirname "The new directory name of the file.")]
+        :body [body (describe Dirname "The new directory name of the data item.")]
         :return RenameResult
-        :summary "Change a file's directory."
+        :summary "Change a data item's directory."
         :description (str
-  "Moves the file with the provided UUID to a new folder, retaining its name."
+  "Moves the data item with the provided UUID to a new folder, retaining its name."
   (get-error-code-block
     "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
         (svc/trap uri rename/do-move-uuid params body data-id))
