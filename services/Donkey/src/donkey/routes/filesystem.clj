@@ -22,7 +22,6 @@
             [donkey.services.filesystem.page-file :as file]
             [donkey.services.filesystem.root :as root]
             [donkey.services.filesystem.sharing :as sharing]
-            [donkey.services.filesystem.space-handling :as sh]
             [donkey.services.filesystem.stat :as stat]
             [donkey.services.filesystem.tickets :as ticket]
             [donkey.services.filesystem.trash :as trash]
@@ -132,12 +131,6 @@
 
     (GET "/filesystem/user-trash-dir" [:as req]
       (controller req trash/do-user-trash :params))
-
-    (POST "/filesystem/paths-contain-space" [:as req]
-      (controller req sh/do-paths-contain-space :params :body))
-
-    (POST "/filesystem/replace-spaces" [:as req]
-      (controller req sh/do-replace-spaces :params :body))
 
     (DELETE "/filesystem/trash" [:as req]
       (controller req trash/do-delete-trash :params))
