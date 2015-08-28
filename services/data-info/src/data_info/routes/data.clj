@@ -15,17 +15,6 @@
   (context* "/data" []
     :tags ["Data Operations"]
 
-    (HEAD* "/id/:data-id" [:as {uri :uri}]
-      :path-params [data-id :- DataIdPathParam]
-      :query [{:keys [user]} SecuredQueryParamsRequired]
-      :responses {200 {:description "User has read permissions for given data item."}
-                  403 {:description "User does not have read permissions for given data item."}
-                  404 {:description "Data Item ID does not exist."}
-                  422 {:description "User does not exist or an internal error occurred."}}
-      :summary "Data Item Meta-Status"
-      :description "Returns an HTTP status according to the user's access level to the data item."
-      (ce/trap uri entry/id-entry data-id user))
-
     (GET* "/path/:zone/*" [:as {{zone :zone path :*} :params uri :uri}]
       :query [params FolderListingParams]
       :no-doc true
@@ -36,7 +25,7 @@
       :path-params [zone :- (describe String "The IRODS zone")
                     path :- (describe String "The IRODS path under the zone")]
       :query [params FolderListingParams]
-      :summary "Entry Contents"
+      :summary "Data Item Contents"
       :description (str
 "Lists subdirectories and file details of directory paths, or gets file contents of paths to files.
 
@@ -65,30 +54,64 @@ for the requesting user."
   "ERR_BAD_OR_MISSING_FIELD, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER"))
       (svc/trap uri create/do-create params body))
 
-    (PUT* "/:data-id/name" [:as {uri :uri}]
+    (context* "/:data-id" []
       :path-params [data-id :- DataIdPathParam]
-      :query [params SecuredQueryParamsRequired]
-      :body [body (describe Filename "The new name of the file.")]
-      :return RenameResult
-      :summary "Change a file's name."
-      :description (str
-"Moves the file with the provided UUID to a new name within the same folder."
-(get-error-code-block
-  "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
-      (svc/trap uri rename/do-rename-uuid params body data-id))
+      :tags ["Data Operations (by ID)"]
 
-    (POST* "/:data-id/metadata/save" [:as {uri :uri}]
-      :path-params [data-id :- DataIdPathParam]
-      :query [params SecuredQueryParamsRequired]
-      :body [body (describe MetadataSaveRequest "The metadata save request.")]
-      :return FileStat
-      :summary "Exporting Metadata to a File"
-      :description (str
-"Exports file/folder details in a JSON format (similar to the /stat-gatherer endpoint response),
-including all Metadata Template AVUs and IRODS AVUs visible to the requesting user, to the file
-specified in the request."
-(get-error-code-block
-  "ERR_INVALID_JSON, ERR_EXISTS, ERR_DOES_NOT_EXIST, ERR_NOT_READABLE,"
-  "ERR_NOT_WRITEABLE, ERR_NOT_A_USER, ERR_BAD_PATH_LENGTH, ERR_BAD_DIRNAME_LENGTH,"
-  "ERR_BAD_BASENAME_LENGTH, ERR_TOO_MANY_RESULTS"))
-      (svc/trap uri meta/do-metadata-save data-id params body))))
+      (HEAD* "/" [:as {uri :uri}]
+        :query [{:keys [user]} SecuredQueryParamsRequired]
+        :responses {200 {:description "User has read permissions for given data item."}
+                    403 {:description "User does not have read permissions for given data item."}
+                    404 {:description "Data Item ID does not exist."}
+                    422 {:description "User does not exist or an internal error occurred."}}
+        :summary "Data Item Meta-Status"
+        :description "Returns an HTTP status according to the user's access level to the data item."
+        (ce/trap uri entry/id-entry data-id user))
+
+      (PUT* "/name" [:as {uri :uri}]
+        :query [params SecuredQueryParamsRequired]
+        :body [body (describe Filename "The new name of the data item.")]
+        :return RenameResult
+        :summary "Rename Data Item"
+        :description (str
+  "Moves the data item with the provided UUID to a new name within the same folder."
+  (get-error-code-block
+    "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
+        (svc/trap uri rename/do-rename-uuid params body data-id))
+
+      (PUT* "/dir" [:as {uri :uri}]
+        :query [params SecuredQueryParamsRequired]
+        :body [body (describe Dirname "The new directory name of the data item.")]
+        :return RenameResult
+        :summary "Move Data Item"
+        :description (str
+  "Moves the data item with the provided UUID to a new folder, retaining its name."
+  (get-error-code-block
+    "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
+        (svc/trap uri rename/do-move-uuid params body data-id))
+
+      (PUT* "/children/dir" [:as {uri :uri}]
+        :query [params SecuredQueryParamsRequired]
+        :body [body (describe Dirname "The new directory name of the data items.")]
+        :return MultiRenameResult
+        :summary "Move Data Item Contents"
+        :description (str
+  "Moves the contents of the folder with the provided UUID to a new folder, retaining their filenames."
+  (get-error-code-block
+    "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
+        (svc/trap uri rename/do-move-uuid-contents params body data-id))
+
+      (POST* "/metadata/save" [:as {uri :uri}]
+        :query [params SecuredQueryParamsRequired]
+        :body [body (describe MetadataSaveRequest "The metadata save request.")]
+        :return FileStat
+        :summary "Exporting Metadata to a File"
+        :description (str
+  "Exports file/folder details in a JSON format (similar to the /stat-gatherer endpoint response),
+  including all Metadata Template AVUs and IRODS AVUs visible to the requesting user, to the file
+  specified in the request."
+  (get-error-code-block
+    "ERR_INVALID_JSON, ERR_EXISTS, ERR_DOES_NOT_EXIST, ERR_NOT_READABLE,"
+    "ERR_NOT_WRITEABLE, ERR_NOT_A_USER, ERR_BAD_PATH_LENGTH, ERR_BAD_DIRNAME_LENGTH,"
+    "ERR_BAD_BASENAME_LENGTH, ERR_TOO_MANY_RESULTS"))
+        (svc/trap uri meta/do-metadata-save data-id params body)))))

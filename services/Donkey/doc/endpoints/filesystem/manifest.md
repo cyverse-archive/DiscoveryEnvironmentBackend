@@ -16,7 +16,6 @@ __Response Body__:
 
     {
         "content-type" : "text/plain",
-        "preview":"file\/preview?user=johnw&path=\/iplant\/home\/johnw\/LICENSE.txt",
         "urls" : [],
         "info-type" : "<an info type or empty string>"
     }

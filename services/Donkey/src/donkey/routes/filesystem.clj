@@ -20,7 +20,6 @@
             [donkey.services.filesystem.move :as move]
             [donkey.services.filesystem.page-csv :as csv]
             [donkey.services.filesystem.page-file :as file]
-            [donkey.services.filesystem.preview :as preview]
             [donkey.services.filesystem.root :as root]
             [donkey.services.filesystem.sharing :as sharing]
             [donkey.services.filesystem.space-handling :as sh]
@@ -78,10 +77,7 @@
       (controller req move/do-move :params :body))
 
     (POST "/filesystem/move-contents" [:as req]
-      (controller req move/do-move-contents :params :body))
-
-    (GET "/filesystem/file/preview" [:as req]
-      (controller req preview/do-preview :params))
+      (controller req data/move-contents :params :body))
 
     (GET "/filesystem/file/manifest" [:as req]
       (controller req manifest/do-manifest :params))

@@ -24,10 +24,6 @@
 
 (def ^:private coge-attr "ipc-coge-link")
 
-(defn- preview-url
-  [user path]
-  (str "file/preview?user=" (cdc/url-encode user) "&path=" (cdc/url-encode path)))
-
 (defn- extract-tree-urls
   [cm fpath]
   (if (attribute? cm fpath "tree-urls")
@@ -62,8 +58,7 @@
   {:action       "manifest"
    :content-type (detect-content-type cm path)
    :urls         (extract-urls cm path)
-   :info-type    (filetypes/get-types cm user path)
-   :preview      (preview-url user path)})
+   :info-type    (filetypes/get-types cm user path)})
 
 (defn- manifest
   [user path data-threshold]
