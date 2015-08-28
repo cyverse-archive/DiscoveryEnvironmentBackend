@@ -2,16 +2,39 @@
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-ops :only [move]]
+        [clj-jargon.item-ops :only [move move-all]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.services.uuids :as uuids]
+            [data-info.services.directory :as directory]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.util.paths :as paths]
             [data-info.util.validators :as validators]))
+
+(defn- source->dest
+  [source-path dest-path]
+  (ft/path-join dest-path (ft/basename source-path)))
+
+(defn- move-paths
+  "As 'user', moves directories listed in 'sources' into the directory listed in 'dest'."
+  [user sources dest]
+  (with-jargon (cfg/jargon-cfg) [cm]
+    (let [all-paths  (apply merge (mapv #(hash-map (source->dest %1 dest) %1) sources))
+          dest-paths (keys all-paths)
+          sources    (mapv ft/rm-last-slash sources)
+          dest       (ft/rm-last-slash dest)]
+      (validators/user-exists cm user)
+      (validators/all-paths-exist cm sources)
+      (validators/all-paths-exist cm [dest])
+      (validators/path-is-dir cm dest)
+      (validators/user-owns-paths cm user sources)
+      (validators/path-writeable cm user dest)
+      (validators/no-paths-exist cm dest-paths)
+      (move-all cm sources dest :user user :admin-users (cfg/irods-admins))
+      {:user user :sources sources :dest dest})))
 
 (defn- rename-path
   "Data item renaming. As 'user', move 'source' to 'dest'."
@@ -63,6 +86,19 @@
   [{user :user} {dest-dir :dirname} source-uuid]
   (rename-uuid user source-uuid dest-dir))
 
+(defn- move-uuid-contents
+  "Rename by UUID: given a user, a source directory UUID, and a new directory, move the directory contents, retaining the filename."
+  [user source-uuid dest-dir]
+  (let [source (ft/rm-last-slash (:path (uuids/path-for-uuid user source-uuid)))]
+    (with-jargon (cfg/jargon-cfg) [cm]
+      (validators/path-is-dir cm source))
+    (let [sources (directory/get-paths-in-folder user source)]
+      (move-paths user sources dest-dir))))
+
+(defn do-move-uuid-contents
+  [{user :user} {dest-dir :dirname} source-uuid]
+  (move-uuid-contents user source-uuid dest-dir))
+
 (with-post-hook! #'do-rename-uuid (dul/log-func "do-rename-uuid"))
 
 (with-pre-hook! #'do-rename-uuid
@@ -77,6 +113,15 @@
 (with-pre-hook! #'do-move-uuid
   (fn [params body source-uuid]
     (dul/log-call "do-move-uuid" params body source-uuid)
+    (when (paths/super-user? (:user params))
+      (throw+ {:error_code ERR_NOT_AUTHORIZED
+               :user       (:user params)}))))
+
+(with-post-hook! #'do-move-uuid-contents (dul/log-func "do-move-uuid-contents"))
+
+(with-pre-hook! #'do-move-uuid-contents
+  (fn [params body source-uuid]
+    (dul/log-call "do-move-uuid-contents" params body source-uuid)
     (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user       (:user params)}))))

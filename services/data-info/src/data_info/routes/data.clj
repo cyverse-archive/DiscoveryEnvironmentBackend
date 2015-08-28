@@ -90,6 +90,17 @@ for the requesting user."
     "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
         (svc/trap uri rename/do-move-uuid params body data-id))
 
+      (PUT* "/children/dir" [:as {uri :uri}]
+        :query [params SecuredQueryParamsRequired]
+        :body [body (describe Dirname "The new directory name of the data items.")]
+        :return MultiRenameResult
+        :summary "Move Data Item Contents"
+        :description (str
+  "Moves the contents of the folder with the provided UUID to a new folder, retaining their filenames."
+  (get-error-code-block
+    "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
+        (svc/trap uri rename/do-move-uuid-contents params body data-id))
+
       (POST* "/metadata/save" [:as {uri :uri}]
         :query [params SecuredQueryParamsRequired]
         :body [body (describe MetadataSaveRequest "The metadata save request.")]
