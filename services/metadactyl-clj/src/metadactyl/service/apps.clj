@@ -81,7 +81,7 @@
   ([username]
      (get-apps-client-for-username username ""))
   ([username state-info]
-     (get-apps-client (user/load-user username) state-info)))
+     (get-apps-client (user/load-user-as-user username username) state-info)))
 
 (defn get-app-categories
   [user params]

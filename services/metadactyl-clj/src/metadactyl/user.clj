@@ -38,14 +38,20 @@
   (fn [{uri :uri :as request}]
     (common-errors/trap uri #(with-user [(:params request)] (handler request)))))
 
-(defn load-user
-  "Loads information for the user with the given username."
-  [username]
+(defn load-user-as-user
+  "Loads information for the user with the given username, as another username."
+  [username act-as-username]
   (let [short-username (string/replace username #"@.*" "")
-        user-info      (ipg/lookup-subject (:shortUsername current-user) short-username)]
+        short-act-as-username (string/replace act-as-username #"@.*" "")
+        user-info      (ipg/lookup-subject short-act-as-username short-username)]
     {:username      username
      :password      nil
      :email         (:email user-info)
      :shortUsername short-username
      :first-name    (:first-name user-info)
      :last-name     (:last-name user-info)}))
+
+(defn load-user
+  "Loads information for the user with the given username."
+  [username]
+  (load-user-as-username username (:shortUsername current-user)))
