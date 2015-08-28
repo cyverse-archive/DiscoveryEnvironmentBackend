@@ -12,12 +12,12 @@ CREATE TABLE data_containers (
   name_prefix TEXT NOT NULL,
 
   -- Foreign key into the container_images table
-  container_images_id UUID NOT NULL,
+  container_image_id UUID NOT NULL,
 
   -- Whether the container is mounted read-only
   read_only BOOLEAN NOT NULL DEFAULT false,
 
   -- Don't allow a data container to get listed with the same container_image_id
   -- more than once.
-  unique(id, container_images_id)
+  unique(id, container_image_id)
 )

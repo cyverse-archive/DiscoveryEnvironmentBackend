@@ -8,7 +8,7 @@
 
 (defn- fix-container-volumes-from
   []
-  ;;; add data_containers_id column (without constraints)
+  ;;; add data_container_id column (without constraints)
   (exec-raw "ALTER TABLE ONLY container_volumes_from
              ADD COLUMN data_container_id uuid;")
 

@@ -10,6 +10,6 @@ ALTER TABLE ONLY data_containers
 -- Foreign key constraint for the data_containers.container_image_id field.
 --
 ALTER TABLE ONLY data_containers
-    ADD CONSTRAINT data_containers_container_images_id_fkey
-    FOREIGN KEY (container_images_id)
+    ADD CONSTRAINT data_containers_container_image_id_fkey
+    FOREIGN KEY (container_image_id)
     REFERENCES container_images(id);
