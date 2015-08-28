@@ -133,7 +133,6 @@
 * [GET /secured/filesystem/paged-directory](endpoints/filesystem/directory-listing.md#paged-directory-listing)
 * [POST /secured/filesystem/paths-contain-space](endpoints/filesystem/paths-contain-space.md#checking-for-spaces-in-paths-andor-directories)
 * [POST /secured/filesystem/paths-for-uuids](endpoints/filesystem/uuids.md#paths-for-uuids)
-* [GET /secured/filesystem/quota](endpoints/filesystem/quotas.md#listing-a-users-quotas)
 * [POST /secured/filesystem/read-chunk](endpoints/filesystem/read-chunk.md#reading-a-chunk-of-a-file)
 * [POST /secured/filesystem/read-csv-chunk](endpoints/filesystem/csv-tsv-parsing.md#csvtsv-parsing)
 * [POST /secured/filesystem/rename](endpoints/filesystem/rename.md#renaming-a-file-or-directory)

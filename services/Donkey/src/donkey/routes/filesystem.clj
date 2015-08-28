@@ -115,9 +115,6 @@
     (POST "/filesystem/user-permissions" [:as req]
       (controller req user/do-user-permissions :params :body))
 
-    (GET "/filesystem/quota" [:as req]
-      (controller req user/do-quota :params))
-
     (POST "/filesystem/restore" [:as req]
       (controller req trash/do-restore :params :body))
 

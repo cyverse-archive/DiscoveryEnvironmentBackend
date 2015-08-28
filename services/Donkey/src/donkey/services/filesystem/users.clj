@@ -3,7 +3,6 @@
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-info :only [quota]]
         [clj-jargon.users]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
@@ -42,23 +41,6 @@
     (validators/all-paths-exist cm abspaths)
     (validators/user-owns-paths cm user abspaths)
     (mapv (partial list-perm cm user) abspaths)))
-
-(defn- get-quota
-  [user]
-  (with-jargon (icat/jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (quota cm user)))
-
-(defn do-quota
-  [{user :user}]
-  {:quotas (get-quota user)})
-
-(with-pre-hook! #'do-quota
-  (fn [params]
-    (log-call "do-quota" params)
-    (validate-map params {:user string?})))
-
-(with-post-hook! #'do-quota (log-func "do-quota"))
 
 (defn do-user-permissions
   [{user :user} {paths :paths}]
