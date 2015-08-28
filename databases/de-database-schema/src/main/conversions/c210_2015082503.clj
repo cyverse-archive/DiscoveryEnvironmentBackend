@@ -8,11 +8,11 @@
 
 (defn- fix-container-volumes-from
   []
-  ;;; add data_container_id column (without constraints)
+  ;;; add data_containers_id column (without constraints)
   (exec-raw "ALTER TABLE ONLY container_volumes_from
-             ADD COLUMN data_container_id uuid;")
+             ADD COLUMN data_containers_id uuid;")
 
-  ;;; get the data_container_id column for the ncbi stuff
+  ;;; get the data_containers_id column for the ncbi stuff
   (let [ssh-key-id (first (map :id (select :data_containers (fields [:id]) (where (= :name_prefix "ncbi-ssh-key")))))
         configs-id (first (map :id (select :data_containers (fields [:id]) (where (= :name_prefix "ncbi-sra-configs")))))]
     ;;; add the ncbi data_container_ids where the name matches the name_prefix
@@ -31,7 +31,7 @@
     (exec-raw "ALTER TABLE ONLY container_volumes_from
                DROP COLUMN name;")
 
-    ;;; add the not null constraint on the data_container_id column
+    ;;; add the not null constraint on the data_containers_id column
     (exec-raw "ALTER TABLE ONLY container_volumes_from
                ALTER COLUMN data_containers_id SET NOT NULL;")
 
