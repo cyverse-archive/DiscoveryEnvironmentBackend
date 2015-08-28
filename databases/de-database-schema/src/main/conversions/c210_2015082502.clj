@@ -18,10 +18,10 @@
                               :url  "https://gims.iplantcollaborative.org:5000/ncbi-ssh-key"})))]
     (insert :data_containers
       (values [{:name_prefix       "ncbi-sra-configs"
-               :container_image_id configs-id
+               :container_images_id configs-id
                :read_only          true}
               {:name_prefix        "ncbi-ssh-key"
-               :container_image_id ssh-key-id
+               :container_images_id ssh-key-id
                :read_only          true}]))))
 
 (defn convert

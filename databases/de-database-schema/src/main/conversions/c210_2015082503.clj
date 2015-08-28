@@ -17,15 +17,15 @@
         configs-id (first (map :id (select :data_containers (fields [:id]) (where (= :name_prefix "ncbi-sra-configs")))))]
     ;;; add the ncbi data_container_ids where the name matches the name_prefix
     (update :container_volumes_from
-      (set-fields {:data_container_id ssh-key-id})
+      (set-fields {:data_containers_id ssh-key-id})
       (where {:name [= "ncbi-ssh-key"]}))
     (update :container_volumes_from
-      (set-fields {:data_container_id configs-id})
+      (set-fields {:data_containers_id configs-id})
       (where {:name [= "ncbi-sra-configs"]}))
 
     ;;; delete all rows that don't have a data_container_ids
     (delete :container_volumes_from
-      (where {:data_container_id [= nil]}))
+      (where {:data_containers_id [= nil]}))
 
     ;;; drop the name column
     (exec-raw "ALTER TABLE ONLY container_volumes_from
@@ -33,12 +33,12 @@
 
     ;;; add the not null constraint on the data_container_id column
     (exec-raw "ALTER TABLE ONLY container_volumes_from
-               ALTER COLUMN data_container_id SET NOT NULL;")
+               ALTER COLUMN data_containers_id SET NOT NULL;")
 
     ;;; add the foreign key constraint
     (exec-raw "ALTER TABLE ONLY container_volumes_from
-               ADD CONSTRAINT container_volumes_from_data_container_id_fkey
-               FOREIGN KEY(data_container_id)
+               ADD CONSTRAINT container_volumes_from_data_containers_id_fkey
+               FOREIGN KEY(data_containers_id)
                REFERENCES data_containers(id);")))
 
 (defn convert
