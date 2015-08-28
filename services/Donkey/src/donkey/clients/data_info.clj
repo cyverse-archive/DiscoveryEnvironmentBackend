@@ -102,6 +102,18 @@
                    :body         (json/encode {:filename (ft/basename (:dest body))})}]
       (http/put (str url) req-map))))
 
+(defn move-contents
+  "Uses the data-info set-children-directory-name endpoint to move the contents of one directory
+   into another directory."
+  [params body]
+  (with-jargon (icat/jargon-cfg) [cm]
+    (let [path-uuid (:id (uuids/uuid-for-path cm (:user params) (:source body)))
+          url (url/url (cfg/data-info-base-url) "data" path-uuid "children" "dir")
+          req-map {:query-params (select-keys params [:user])
+                   :content-type :json
+                   :body         (json/encode {:dirname (:dest body)})}]
+      (http/put (str url) req-map))))
+
 (defn get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If
    the path exists and refers to a regular file then nil is returned.

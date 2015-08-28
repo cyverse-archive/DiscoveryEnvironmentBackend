@@ -78,7 +78,7 @@
       (controller req move/do-move :params :body))
 
     (POST "/filesystem/move-contents" [:as req]
-      (controller req move/do-move-contents :params :body))
+      (controller req data/move-contents :params :body))
 
     (GET "/filesystem/file/preview" [:as req]
       (controller req preview/do-preview :params))
