@@ -118,7 +118,6 @@
 * [PATCH /secured/filesystem/entry/{entry-id}/tags](endpoints/tags.md#attaching-or-detaching-multiple-tags-to-a-file-or-folder)
 * [POST /secured/filesystem/exists](endpoints/filesystem/existence.md#filedirectory-existence)
 * [GET /secured/filesystem/file/manifest](endpoints/filesystem/manifest.md#file-manifest)
-* [GET /secured/filesystem/file/preview](endpoints/filesystem/preview.md#file-preview)
 * [GET /secured/filesystem/groups](endpoints/filesystem/groups.md#listing-a-users-group-memberships)
 * [GET /secured/filesystem/index-status](endpoints/filesystem/search.md#endpoint)
 * [POST /secured/filesystem/list-tickets](endpoints/filesystem/tickets.md#listing-tickets)
