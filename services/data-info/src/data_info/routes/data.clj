@@ -72,7 +72,7 @@ for the requesting user."
         :query [params SecuredQueryParamsRequired]
         :body [body (describe Filename "The new name of the data item.")]
         :return RenameResult
-        :summary "Change a data item's name."
+        :summary "Rename Data Item"
         :description (str
   "Moves the data item with the provided UUID to a new name within the same folder."
   (get-error-code-block
@@ -83,7 +83,7 @@ for the requesting user."
         :query [params SecuredQueryParamsRequired]
         :body [body (describe Dirname "The new directory name of the data item.")]
         :return RenameResult
-        :summary "Change a data item's directory."
+        :summary "Move Data Item"
         :description (str
   "Moves the data item with the provided UUID to a new folder, retaining its name."
   (get-error-code-block
