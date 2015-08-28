@@ -158,8 +158,6 @@
 * [GET /secured/filesystem/{data-id}/template-avus/{template-id}](endpoints/filesystem/metadata.md#viewing-a-metadata-templates-avus-on-a-filefolder)
 * [POST /secured/filesystem/{data-id}/template-avus/{template-id}](endpoints/filesystem/metadata.md#adding-and-updating-metadata-template-avus-on-a-filefolder)
 * [DELETE /secured/filesystem/{data-id}/template-avus/{template-id}/{avu-id}](endpoints/filesystem/metadata.md#removing-a-metadata-template-avu-from-a-filefolder)
-* [GET /secured/filetypes/auto-type](endpoints/filetypes.md#preview-what-the-automatically-assigned-type-would-be)
-* [POST /secured/filetypes/auto-type](endpoints/filetypes.md#automatically-assign-a-type-to-a-file)
 * [DELETE /secured/filetypes/type](endpoints/filetypes.md#delete-a-file-type-from-a-file)
 * [GET /secured/filetypes/type](endpoints/filetypes.md#get-the-file-type-associated-with-a-file)
 * [POST /secured/filetypes/type](endpoints/filetypes.md#add-a-file-type-to-a-file)

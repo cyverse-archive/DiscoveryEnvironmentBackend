@@ -62,20 +62,3 @@
 (defn get-type-list
   []
   (success-response {:types script-types}))
-
-(defn set-auto-type
-  [req-body req-params]
-  (let [body   (valid/parse-body (slurp req-body))
-        params (add-current-user-to-map req-params)]
-    (log/warn body)
-    (validate-map params {:user string?})
-    (validate-map body {:path string?})
-    (success-response
-      (prods/auto-add-type (:user params) (:path body)))))
-
-(defn preview-auto-type
-  [req-params]
-  (let [params (add-current-user-to-map req-params)]
-    (validate-map params {:user string? :path string?})
-    (success-response
-      (prods/preview-auto-type (:user params) (:path params)))))

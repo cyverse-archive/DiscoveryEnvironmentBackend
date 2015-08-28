@@ -27,19 +27,6 @@
       (name result)
       result)))
 
-
-(defn- content-type
-  "Determines the filetype of path. Reads in a chunk, writes it to a temp file, runs it
-   against the configured script. If the script can't identify it, it's passed to Tika."
-  [cm path]
-  (log/info "in content-type")
-
-  (let [script-type (get-file-type cm path)]
-    (log/info "Path " path " has a type of " script-type " from the script.")
-    (if (or (nil? script-type) (empty? script-type))
-      ""
-      script-type)))
-
 (defn add-type
   "Adds the type to a file in iRODS at path for the specified user."
   ([user path type]
@@ -65,58 +52,6 @@
     (log/info "Added type " type " to " path " for " user ".")
     {:path path
      :type type}))
-
-(defn auto-add-type
-  "Uses (content-type) to guess at a file type and associates it with the file."
-  ([user path]
-    (with-jargon (icat/jargon-cfg) [cm]
-      (auto-add-type cm user path)))
-
-  ([cm user path]
-    (log/info "in auto-add-type")
-
-    (when-not (exists? cm path)
-      (throw+ {:error_code ERR_DOES_NOT_EXIST
-               :path path}))
-
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER
-               :user user}))
-
-    (when-not (is-writeable? cm user path)
-      (throw+ {:error_code ERR_NOT_OWNER
-               :user user
-               :path path}))
-
-    (let [type (content-type cm path)]
-      (add-metadata cm path (cfg/garnish-type-attribute) type "")
-      (log/info "Auto-added type " type " to " path " for " user ".")
-      {:path path
-       :type type})))
-
-(defn preview-auto-type
-  "Returns the auto-type that (auto-add-type) would have associated with the file."
-  [user path]
-  (log/info "in preview-auto-type")
-
-  (with-jargon (icat/jargon-cfg) [cm]
-    (when-not (exists? cm path)
-      (throw+ {:error_code ERR_DOES_NOT_EXIST
-               :path path}))
-
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER
-               :user user}))
-
-    (when-not (owns? cm user path)
-      (throw+ {:error_code ERR_NOT_OWNER
-               :user user
-               :path path}))
-
-    (let [ct (content-type cm path)]
-      (log/info "Preview type of " path " for " user " is " ct ".")
-      {:path path
-       :type ct})))
 
 (defn delete-type
   "Removes the association of type with path for the specified user."
