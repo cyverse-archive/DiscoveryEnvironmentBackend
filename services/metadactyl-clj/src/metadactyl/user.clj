@@ -54,4 +54,4 @@
 (defn load-user
   "Loads information for the user with the given username."
   [username]
-  (load-user-as-username username (:shortUsername current-user)))
+  (load-user-as-user username (:shortUsername current-user)))
