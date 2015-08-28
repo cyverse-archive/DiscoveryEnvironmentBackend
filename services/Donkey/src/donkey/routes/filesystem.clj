@@ -115,9 +115,6 @@
     (POST "/filesystem/user-permissions" [:as req]
       (controller req user/do-user-permissions :params :body))
 
-    (GET "/filesystem/groups" [:as req]
-      (controller req user/do-groups :params))
-
     (GET "/filesystem/quota" [:as req]
       (controller req user/do-quota :params))
 

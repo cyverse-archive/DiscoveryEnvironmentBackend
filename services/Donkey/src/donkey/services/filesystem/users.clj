@@ -49,17 +49,6 @@
     (validators/user-exists cm user)
     (quota cm user)))
 
-(defn do-groups
-  [{user :user}]
-  {:groups (list-user-groups user)})
-
-(with-pre-hook! #'do-groups
-  (fn [params]
-    (log-call "do-groups" params)
-    (validate-map params {:user string?})))
-
-(with-post-hook! #'do-groups (log-func "do-groups"))
-
 (defn do-quota
   [{user :user}]
   {:quotas (get-quota user)})
