@@ -417,8 +417,11 @@
                    (with container-volumes
                      (fields :host_path :container_path :id))
                    (with container-volumes-from
+                     (fields)
                      (with data-containers
-                       (with data-container-volumes)))
+                       (fields :name_prefix)
+                       (with data-container-volumes
+                         (fields :volume_host_path :volume_container_path))))
                    (where {:tools_id id}))
            first
            (merge {:image (tool-image-info tool-uuid)})
