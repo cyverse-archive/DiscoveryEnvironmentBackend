@@ -77,7 +77,7 @@
   [table column uuid username]
   (-> (update table)
       (sset {column username})
-      (where [:= column (sql/call :cast uuid :varchar)])))
+      (where [:= (sql/call :cast column :varchar) (sql/call :cast uuid :varchar)])))
 
 (defn- get-usernames
   [uuids]
