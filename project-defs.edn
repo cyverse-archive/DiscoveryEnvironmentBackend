@@ -295,7 +295,7 @@
  "facepalm"
  {:type     :tool
   :path     "tools/facepalm"
-  :build    :cmdtar
+  :build    :lein
   :tarball? true
   :uberjar? true
   :install? false
