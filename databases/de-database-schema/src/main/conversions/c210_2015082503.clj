@@ -6,6 +6,13 @@
   "The destination database version."
   "2.1.0:20150825.03")
 
+(defn- get-data-container-id
+  [name-prefix]
+  (:id (first
+         (select :data_containers
+                 (fields :id)
+                 (where {:name_prefix name-prefix})))))
+
 (defn- fix-container-volumes-from
   []
   ;;; add data_containers_id column (without constraints)
@@ -13,15 +20,19 @@
              ADD COLUMN data_containers_id uuid;")
 
   ;;; get the data_containers_id column for the ncbi stuff
-  (let [ssh-key-id (first (map :id (select :data_containers (fields [:id]) (where (= :name_prefix "ncbi-ssh-key")))))
-        configs-id (first (map :id (select :data_containers (fields [:id]) (where (= :name_prefix "ncbi-sra-configs")))))]
+  (let [ssh-key-id (get-data-container-id "ncbi-sra-submit-ssh-key-data")
+        configs-id (get-data-container-id "ncbi-sra-configs")
+        test-configs-id (get-data-container-id "ncbi-sra-test-configs")]
     ;;; add the ncbi data_container_ids where the name matches the name_prefix
     (update :container_volumes_from
       (set-fields {:data_containers_id ssh-key-id})
-      (where {:name [= "ncbi-ssh-key"]}))
+      (where {:name "ncbi-sra-submit-ssh-key-data"}))
     (update :container_volumes_from
       (set-fields {:data_containers_id configs-id})
-      (where {:name [= "ncbi-sra-configs"]}))
+      (where {:name "ncbi-sra-configs"}))
+    (update :container_volumes_from
+      (set-fields {:data_containers_id test-configs-id})
+      (where {:name "ncbi-sra-test-configs"}))
 
     ;;; delete all rows that don't have a data_container_ids
     (delete :container_volumes_from
