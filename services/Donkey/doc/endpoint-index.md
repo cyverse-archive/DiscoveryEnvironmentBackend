@@ -129,7 +129,6 @@
 * [GET /secured/filesystem/metadata/template/{template_id}](endpoints/filesystem/metadata.md#viewing-a-metadata-template)
 * [POST /secured/filesystem/move](endpoints/filesystem/move.md#moving-files-andor-directories)
 * [POST /secured/filesystem/move-contents](endpoints/filesystem/move.md#moving-all-items-in-a-directory)
-* [POST /secured/filesystem/overwrite-chunk](endpoints/filesystem/overwrite-chunk.md#overwriting-a-chunk-of-a-file)
 * [GET /secured/filesystem/paged-directory](endpoints/filesystem/directory-listing.md#paged-directory-listing)
 * [POST /secured/filesystem/paths-for-uuids](endpoints/filesystem/uuids.md#paths-for-uuids)
 * [POST /secured/filesystem/read-chunk](endpoints/filesystem/read-chunk.md#reading-a-chunk-of-a-file)

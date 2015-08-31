@@ -138,9 +138,6 @@
     (POST "/filesystem/read-chunk" [:as req]
       (controller req file/do-read-chunk :params :body))
 
-    (POST "/filesystem/overwrite-chunk" [:as req]
-      (controller req file/do-overwrite-chunk :params :body))
-
     (POST "/filesystem/read-csv-chunk" [:as req]
       (controller req csv/do-read-csv-chunk :params :body))
 
