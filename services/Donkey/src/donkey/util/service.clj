@@ -8,9 +8,8 @@
             [clj-http.client :as client]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
-            [donkey.util.config :as config]
-            [ring.util.codec :as codec])
-  (:import [clojure.lang IPersistentMap]))
+            [ring.util.codec :as codec]))
+
 
 (defn error-body [e]
   (cheshire/encode {:reason (.getMessage e)}))
