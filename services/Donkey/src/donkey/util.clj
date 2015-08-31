@@ -6,19 +6,14 @@
         [donkey.util.transformers]
         [donkey.util.validators :only [parse-body]]
         [slingshot.slingshot :only [try+ throw+]])
-  (:require [clojure-commons.error-codes :as ce]
-            [clojure.tools.logging :as log]))
+  (:require [clojure-commons.error-codes :as ce]))
+
 
 (defn trap-handler
   [handler]
   (fn [{:keys [uri] :as req}]
     (ce/trap uri #(handler req))))
 
-(defn req-logger
-  [handler]
-  (fn [req]
-    (log/info "Request received:" req)
-    (handler req)))
 
 (defn as-vector
   "Returns the given parameter inside a vector if it's not a vector already."

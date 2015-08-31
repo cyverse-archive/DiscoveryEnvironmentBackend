@@ -17,7 +17,6 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/core.memoize "0.5.7"]
                  [org.clojure/data.codec "0.1.0"]
-                 [org.clojure/java.classpath "0.2.2"]
                  [org.clojure/tools.nrepl "0.2.10"]
                  [byte-streams "0.2.0"
                   :exclusions [[clj-tuple]
@@ -27,7 +26,6 @@
                  [clj-time "0.11.0"]
                  [clojurewerkz/elastisch "2.1.0"]
                  [com.cemerick/url "0.1.1" :exclusions [com.cemerick/clojurescript.test]]
-                 [com.novemberain/welle "3.0.0"]
                  [commons-net "3.3"]
                  [compojure "1.4.0"]
                  [de.ubercode.clostache/clostache "1.4.0" :exclusions [org.clojure/core.incubator]]
@@ -40,7 +38,6 @@
                  [org/forester "1.005" ]
                  [ring "1.4.0"]
                  [slingshot "0.12.2"]
-                 [org.iplantc/authy "5.0.0"]
                  [org.iplantc/clj-cas "5.0.0"]
                  [org.iplantc/clj-icat-direct "5.0.0"]
                  [org.iplantc/clj-jargon "5.0.0"]
