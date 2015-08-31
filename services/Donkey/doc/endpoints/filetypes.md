@@ -170,27 +170,3 @@ __Response Body__:
 __Curl Command__:
 
     curl -X DELETE 'http://donkey.example.org:31325/secured/filetypes/type?proxyToken=notARealOne&type=csv&path=/path/to/irods/file'
-
-
-Look up paths in a user's home directory based on file type
------------------------------------------------------------
-
-__URL Path__: /secured/filetypes/type/paths
-
-__HTTP Method__: GET
-
-__Error Codes__: ERR_NOT_A_USER
-
-__Request Parameters__:
-* proxyToken - A valid CAS proxy token.
-* type - A valid file type.
-
-__Response Body__:
-
-    {
-        "paths" : ["/path/to/irods/file"]
-    }
-
-__Curl Command__:
-
-    curl 'http://donkey.example.org:31325/secured/filetypes/type/paths?proxyToken=notARealOne&type=csv'

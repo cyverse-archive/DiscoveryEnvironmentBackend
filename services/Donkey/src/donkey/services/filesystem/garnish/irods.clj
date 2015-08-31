@@ -129,21 +129,3 @@
   [cm user]
   (log/info "in home-dir")
   (ft/path-join "/" (:zone cm) "home" user))
-
-(defn find-paths-with-type
-  "Returns all of the paths under the user's home directory that have the specified type
-   associated with it."
-  [user type]
-  (log/info "in find-paths-with-type")
-
-  (with-jargon (icat/jargon-cfg) [cm]
-    (when-not (user-exists? cm user)
-      (throw+ {:error_code ERR_NOT_A_USER
-               :user       user}))
-
-    (let [paths-with-type (list-everything-in-tree-with-attr cm
-                                                             (home-dir cm user)
-                                                             {:name  (cfg/garnish-type-attribute)
-                                                              :value type})]
-      (log/info "Looked up all paths with a type of " type " for " user "\n" paths-with-type)
-      paths-with-type)))

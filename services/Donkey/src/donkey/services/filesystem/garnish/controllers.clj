@@ -52,13 +52,6 @@
     (success-response
       {:type (prods/get-types (:user params) (:path params))})))
 
-(defn find-typed-paths
-  [req-params]
-  (let [params (add-current-user-to-map req-params)]
-    (validate-map params {:user string? :type string?})
-    (success-response
-      {:paths (prods/find-paths-with-type (:user params) (:type params))})))
-
 (defn get-type-list
   []
   (success-response {:types script-types}))

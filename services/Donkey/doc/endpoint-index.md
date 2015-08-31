@@ -157,7 +157,6 @@
 * [GET /secured/filetypes/type](endpoints/filetypes.md#get-the-file-type-associated-with-a-file)
 * [POST /secured/filetypes/type](endpoints/filetypes.md#add-a-file-type-to-a-file)
 * [GET /secured/filetypes/type-list](endpoints/filetypes.md#get-the-list-of-supported-file-types)
-* [GET /secured/filetypes/type/paths](endpoints/filetypes.md#look-up-paths-in-a-users-home-directory-based-on-file-type)
 * [GET /secured/logout](endpoints/misc.md#recording-when-a-user-logs-out)
 * [GET /secured/notifications/count-messages](endpoints/notifications.md#obtaining-notification-counts)
 * [POST /secured/notifications/delete](endpoints/notifications.md#marking-notifications-as-deleted)

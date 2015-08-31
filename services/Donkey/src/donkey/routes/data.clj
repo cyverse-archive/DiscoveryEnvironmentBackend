@@ -26,9 +26,6 @@
    (GET "/filetypes/type-list" []
         (garnish/get-type-list))
 
-   (GET "/filetypes/type/paths" [:as {:keys [params]}]
-        (garnish/find-typed-paths params))
-
    (POST "/share" [:as req]
          (share req))
 
