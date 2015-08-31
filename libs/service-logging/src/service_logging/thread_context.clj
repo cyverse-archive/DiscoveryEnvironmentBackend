@@ -1,6 +1,6 @@
 (ns service-logging.thread-context
-  (:import [org.slf4j LoggerFactory MDC]
-           ))
+  (:import [org.slf4j MDC]))
+
 
 (defn set-context!
   "set-context! puts the data from the context-map into the current thread's
