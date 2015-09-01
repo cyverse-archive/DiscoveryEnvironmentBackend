@@ -18,6 +18,9 @@
   :uberjar-name "kifshare-standalone.jar"
 
   :dependencies [[org.clojure/clojure "1.6.0"]
+                 [org.clojure/tools.logging "0.3.1"]
+                 [medley "0.5.5"]
+                 [ring/ring-core "1.3.2"]
                  [org.iplantc/clj-jargon "5.0.0"
                    :exclusions [[org.slf4j/slf4j-log4j12]
                                 [log4j]]]
