@@ -89,7 +89,7 @@
   [job-id job submission]
   (jp/save-job {:id                 job-id
                 :job-name           (:name job)
-                :description        (:description job)
+                :description        (:description submission)
                 :app-id             (:app_id job)
                 :app-name           (:app_name job)
                 :app-description    (:app_details job)
