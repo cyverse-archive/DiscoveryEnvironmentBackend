@@ -131,21 +131,15 @@
 
 
 (defn success-resp [_ retval]
-  (cond
-   (response-map? retval)
-   retval
+  (log/spy :trace retval)
+  (if (response-map? retval)
+    retval
+    {:status 200
+     :body   (cond
+               (map? retval)          (cheshire/encode retval)
+               (not (string? retval)) (str retval)
+               :else                  retval)}))
 
-   :else
-   {:status 200
-    :body
-    (cond
-     (map? retval)
-     (cheshire/encode retval)
-
-     (not (string? retval))
-     (str retval)
-
-     :else retval)}))
 
 (def filters (ref #{}))
 
