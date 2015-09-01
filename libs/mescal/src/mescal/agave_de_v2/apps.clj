@@ -123,8 +123,8 @@
   {:attribution ""
    :description (:shortDescription app)
    :id          (:id app)
-   :location    (string/replace path #"/[^/]+$" "")
-   :name        (string/replace path #"^.*/" "")
+   :location    path
+   :name        (:id app)
    :type        (:executionType app)
    :version     (:version app)})
 
