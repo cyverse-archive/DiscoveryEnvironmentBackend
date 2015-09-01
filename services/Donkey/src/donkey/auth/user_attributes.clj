@@ -1,7 +1,8 @@
 (ns donkey.auth.user-attributes
-  (:use [donkey.util.config])
-  (:require [clj-cas.cas-proxy-auth :as cas]
-            [clojure.tools.logging :as log]))
+  (:require [clojure.tools.logging :as log]
+            [clj-cas.cas-proxy-auth :as cas]
+            [donkey.util.config :as cfg]))
+
 
 (def
   ^{:doc "The authenticated user or nil if the service is unsecured."
@@ -13,7 +14,7 @@
    validate-cas-proxy-ticket."
   [{:keys [user-attributes]}]
   (log/trace user-attributes)
-  {:username      (str (get user-attributes "uid") "@" (uid-domain)),
+  {:username      (str (get user-attributes "uid") "@" (cfg/uid-domain)),
    :password      (get user-attributes "password"),
    :email         (get user-attributes "email"),
    :shortUsername (get user-attributes "uid")
