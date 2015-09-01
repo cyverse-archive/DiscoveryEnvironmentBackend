@@ -61,7 +61,8 @@
 (defentity data-containers
   (table :data_containers)
   (has-one data-container-volumes)
-  (has-one container-volumes-from))
+  (has-one container-volumes-from)
+  (belongs-to container-images))
 
 ;; Information about containers containing tools.
 (defentity container-images

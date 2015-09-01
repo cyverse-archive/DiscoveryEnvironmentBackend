@@ -402,6 +402,11 @@
   [retval]
   (-> retval remove-nil-vals remove-empty-vals))
 
+(defn log-thru
+  [amap]
+  (log/info (with-out-str (clojure.pprint/pprint amap)))
+  amap)
+
 (defn tool-container-info
   "Returns container info associated with a tool or nil. This is used to build
   the JSON map that is passed down to the JEX. If you make changes to the
@@ -420,11 +425,15 @@
                      (fields)
                      (with data-containers
                        (fields :name_prefix)
+                       (with container-images
+                         (fields :name :tag))
                        (with data-container-volumes
-                         (fields :volume_host_path :volume_container_path))))
+                         (fields [:volume_host_path :host_path]
+                                 [:volume_container_path :container_path]))))
                    (where {:tools_id id}))
            first
            (merge {:image (tool-image-info tool-uuid)})
+           (log-thru)
            filter-returns))))
 
 (defn update-settings-field
