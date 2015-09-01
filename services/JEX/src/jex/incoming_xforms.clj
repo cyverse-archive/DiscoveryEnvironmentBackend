@@ -195,6 +195,15 @@
   [step-map]
   (get-in step-map [:component :container]))
 
+(defn data-containers
+  "Returns a list of the data containers associated with the job."
+  [condor-map]
+  (assoc condor-map :data-containers
+         (mapv
+          (fn [step]
+            (get-in step [:component :container :container_volumes_from :data_containers]))
+          (:steps condor-map))))
+
 (defn container-volumes?
   "Returns true if the container has volumes defined."
   [container-map]
@@ -791,6 +800,7 @@
          add-analysis-metadata
          set-container-images
          steps
+         data-containers
          input-jobs
          output-jobs
          all-input-jobs
