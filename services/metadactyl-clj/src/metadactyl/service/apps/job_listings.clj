@@ -90,3 +90,22 @@
   [apps-client job-id]
   (let [job-info (jp/get-job-by-id job-id)]
     (format-job (.loadAppTables apps-client [(:app-id job-info)]) job-info)))
+
+(defn- format-job-step
+  [step]
+  (remove-nil-vals
+   {:step_number     (:step-number step)
+    :external_id     (:external-id step)
+    :startdate       (job-timestamp (:start-date step))
+    :enddate         (job-timestamp (:end-date step))
+    :status          (:status step)
+    :app_step_number (:app-step-number step)
+    :step_type       (:job-type step)}))
+
+(defn list-job-steps
+  [job-id]
+  (let [steps (jp/list-job-steps job-id)]
+    {:analysis_id job-id
+     :steps       (map format-job-step steps)
+     :timestamp   (str (System/currentTimeMillis))
+     :total       (count steps)}))

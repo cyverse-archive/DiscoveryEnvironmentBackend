@@ -90,4 +90,12 @@
          :return      StopAnalysisResponse
          :summary     "Stop a running analysis."
          :description       "This service allows DE users to stop running analyses."
-         (service/coerced-trap uri StopAnalysisResponse apps/stop-job current-user analysis-id)))
+         (service/coerced-trap uri StopAnalysisResponse apps/stop-job current-user analysis-id))
+
+  (GET* "/:analysis-id/steps" [:as {:keys [uri]}]
+        :path-params [analysis-id :- AnalysisIdPathParam]
+        :query       [params SecuredQueryParams]
+        :return      AnalysisStepList
+        :summary     "Display the steps of an analysis."
+        :description "This service returns a list of steps in an analysis."
+        (service/trap uri apps/list-job-steps current-user analysis-id)))

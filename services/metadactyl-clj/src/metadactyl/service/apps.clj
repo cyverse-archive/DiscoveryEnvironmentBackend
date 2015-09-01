@@ -282,6 +282,10 @@
   (jobs/stop-job (get-apps-client user) user job-id)
   {:id job-id})
 
+(defn list-job-steps
+  [user job-id]
+  (jobs/list-job-steps user job-id))
+
 (defn categorize-apps
   [user body]
   (.categorizeApps (get-apps-client user) body))

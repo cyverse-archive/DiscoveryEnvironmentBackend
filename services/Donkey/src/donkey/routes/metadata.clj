@@ -182,6 +182,9 @@
    (GET "/analyses/:analysis-id/relaunch-info" [analysis-id]
         (service/success-response (metadactyl/get-job-relaunch-info analysis-id)))
 
+   (GET "/analyses/:analysis-id/steps" [analysis-id]
+        (service/success-response (metadactyl/list-job-steps analysis-id)))
+
    (POST "/analyses/:analysis-id/stop" [analysis-id]
          (service/success-response (metadactyl/stop-job analysis-id)))))
 

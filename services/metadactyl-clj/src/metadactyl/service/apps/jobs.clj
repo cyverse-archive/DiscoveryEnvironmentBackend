@@ -173,6 +173,11 @@
      (catch Object _
        (log/warn "unable to cancel the most recent step of job, " job-id)))))
 
+(defn list-job-steps
+  [{:keys [username]} job-id]
+  (validate-jobs-for-user username [job-id])
+  (listings/list-job-steps job-id))
+
 (defn submit
   [apps-client user submission]
   (transaction (submissions/submit apps-client user submission)))

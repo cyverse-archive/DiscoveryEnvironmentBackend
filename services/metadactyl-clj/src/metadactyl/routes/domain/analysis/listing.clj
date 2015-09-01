@@ -74,3 +74,35 @@
 
 (defschema AnalysisUpdateResponse
   (select-keys Analysis (cons :id (map optional-key [:description :name]))))
+
+(def AppStepNumber
+  (describe Integer (str "The sequential step number from the app, which might be different "
+                         "from the analysis step number if app steps have been combined.")))
+
+(defschema AnalysisStep
+  {:step_number
+   (describe Integer "The sequential step number in the analysis.")
+
+   (optional-key :external_id)
+   (describe String "The step ID from the execution system.")
+
+   (optional-key :startdate)
+   (describe Timestamp "The time the step started.")
+
+   (optional-key :enddate)
+   (describe Timestamp "The time the step ended.")
+
+   (optional-key :status)
+   (describe String "The status of the step.")
+
+   (optional-key :app_step_number)
+   AppStepNumber
+
+   (optional-key :step_type)
+   (describe String "The analysis type associated with the step.")})
+
+(defschema AnalysisStepList
+  {:analysis_id (describe UUID "The analysis ID.")
+   :steps       (describe [AnalysisStep] "The list of analysis steps.")
+   :timestamp   (describe Timestamp "The time the list of analysis steps was retrieved.")
+   :total       ResultsTotalParam})

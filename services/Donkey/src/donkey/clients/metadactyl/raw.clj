@@ -274,6 +274,13 @@
                :as               :stream
                :follow-redirects false}))
 
+(defn list-job-steps
+  [analysis-id]
+  (client/get (metadactyl-url "analyses" analysis-id "steps")
+              {:query-params     (secured-params)
+               :as               :stream
+               :follow-redirects false}))
+
 (defn stop-job
   [analysis-id]
   (client/post (metadactyl-url "analyses" analysis-id "stop")

@@ -1,13 +1,14 @@
 # Table of Contents
 
 * [Application Execution Endpoints](#application-execution-endpoints)
-    * [Obtaining Property Values for a Previously Executed Job](#obtaining-property-values-for-a-previously-executed-job)
+    * [Obtaining Parameter Values for a Previously Executed Job](#obtaining-parameter-values-for-a-previously-executed-job)
     * [Obtaining Information to Rerun a Job](#obtaining-information-to-rerun-a-job)
     * [Submitting a Job for Execution](#submitting-a-job-for-execution)
     * [Listing Jobs](#listing-jobs)
     * [Deleting a Job](#deleting-a-job)
     * [Deleting Multiple Jobs](#deleting-multiple-jobs)
     * [Updating Analysis Information](#updating-analysis-information)
+    * [Listing Analysis Steps](#listing-analysis-steps)
     * [Stopping a Running Analysis](#stopping-a-running-analysis)
 
 # Application Execution Endpoints
@@ -61,6 +62,13 @@ documentation for more details.
 ## Updating Analysis Information
 
 *Secured Endpoint:* PATCH /analyses/{analysis-id}
+
+This endpoint forwards all requests to metadactyl. Please see the metadactyl
+documentation for details.
+
+## Listing Analysis Steps
+
+*Secured Endpoint:* GET /analyses/{analysis-id}/steps
 
 This endpoint forwards all requests to metadactyl. Please see the metadactyl
 documentation for details.
