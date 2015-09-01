@@ -8,7 +8,7 @@
 (defn list-apps
   [agave category-id params]
   (-> (.listApps agave)
-      (sort-apps params)
+      (sort-apps params {:default-sort-field "name"})
       (apply-offset params)
       (apply-limit params)))
 
@@ -16,7 +16,7 @@
   [agave search-term params]
   (try+
    (-> (.searchApps agave search-term)
-       (sort-apps params)
+       (sort-apps params {:default-sort-field "name"})
        (apply-offset params)
        (apply-limit params))
    (catch [:error_code ce/ERR_UNAVAILABLE] _

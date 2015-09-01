@@ -9,12 +9,12 @@
   (partial sort-by
            (keyword sort-field)
            (if (and sort-dir (= (string/upper-case sort-dir) "DESC"))
-             #(compare %2 %1)
-             #(compare %1 %2))))
+             #(compare (string/lower-case %2) (string/lower-case %1))
+             #(compare (string/lower-case %1) (string/lower-case %2)))))
 
 (defn sort-apps
-  [res {:keys [sort-field sort-dir]}]
-  (if sort-field
+  [res {:keys [sort-field sort-dir]} & [{:keys [default-sort-field]}]]
+  (if-let [sort-field (or sort-field default-sort-field)]
     (update-in res [:apps] (app-sorter sort-field sort-dir))
     res))
 
