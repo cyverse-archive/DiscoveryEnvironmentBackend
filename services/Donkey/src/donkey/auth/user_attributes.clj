@@ -1,7 +1,6 @@
 (ns donkey.auth.user-attributes
   (:use [donkey.util.config])
   (:require [clj-cas.cas-proxy-auth :as cas]
-            [clojure.string :as string]
             [clojure.tools.logging :as log]))
 
 (def
@@ -24,7 +23,7 @@
 
 (defn fake-user-from-attributes
   "Creates a real map of fake values for a user base on environment variables."
-  [placeholder & args]
+  [& _]
   {:username      (System/getenv "IPLANT_CAS_USER")
    :password      (System/getenv "IPLANT_CAS_PASS")
    :email         (System/getenv "IPLANT_CAS_EMAIL")
@@ -57,7 +56,7 @@
 
 (defn fake-store-current-user
   "Fake storage of a user"
-  [handler & cas-config-fns]
+  [handler & _]
   (fn [req]
     (log/info "Storing current user from IPLANT_CAS_* env vars.")
     (binding [current-user (fake-user-from-attributes req)]
