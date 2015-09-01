@@ -26,15 +26,15 @@
                  [clj-time "0.11.0"]
                  [clojurewerkz/elastisch "2.1.0"]
                  [com.cemerick/url "0.1.1" :exclusions [com.cemerick/clojurescript.test]]
-                 [commons-net "3.3"]
+                 [commons-net "3.3"]                               ; provides org.apache.commons.net
                  [compojure "1.4.0"]
                  [de.ubercode.clostache/clostache "1.4.0" :exclusions [org.clojure/core.incubator]]
                  [dire "0.5.3"]
                  [me.raynes/fs "1.4.6"]
                  [medley "0.7.0"]
                  [net.sf.opencsv/opencsv "2.3"]
-                 [org.apache.tika/tika-core "1.10"]
-                 [org.nexml.model/nexml "1.5-SNAPSHOT"]
+                 [org.apache.tika/tika-core "1.10"]      ; provides org.apache.tika
+                 [org.nexml.model/nexml "1.5-SNAPSHOT"]  ; provides org.nexml.model
                  [org/forester "1.005" ]
                  [ring "1.4.0"]
                  [slingshot "0.12.2"]
