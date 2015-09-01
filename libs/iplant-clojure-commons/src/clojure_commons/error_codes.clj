@@ -2,7 +2,9 @@
   (:use [slingshot.slingshot :only [try+]])
   (:require [clojure.tools.logging :as log]
             [cheshire.core :as cheshire]
-            [clojure.string :as string]))
+            [clojure.string :as string])
+  (:import [java.io PrintWriter
+                    StringWriter]))
 
 (defmacro deferr
   [sym]
@@ -80,7 +82,7 @@
   [obj]
   (try
     (contains? obj :error_code)
-    (catch Exception e
+    (catch Exception _
       false)))
 
 (defn clj-http-error?
@@ -96,7 +98,7 @@
      {:status (get-http-status (:error_code err-obj))
       :headers (get-http-headers err-obj)
       :body (cheshire/encode err-obj)})
-  ([action err-obj]
+  ([_ err-obj]
    (err-resp err-obj)))
 
 (defn invalid-cfg-response
@@ -127,7 +129,8 @@
        (contains? m :status)
        (number? (:status m))))
 
-(defn success-resp [action retval]
+
+(defn success-resp [_ retval]
   (cond
    (response-map? retval)
    retval
@@ -156,17 +159,16 @@
 (defn format-exception
   "Formats the exception as a string."
   [exception]
-  (let [string-writer  (java.io.StringWriter.)
-        print-writer   (java.io.PrintWriter. string-writer)]
+  (let [string-writer (StringWriter.)
+        print-writer  (PrintWriter. string-writer)]
     (.printStackTrace exception print-writer)
-    (let [stack-trace (str string-writer)]
-      (reduce #(string/replace %1 %2 "xxxxxxxx")
-              (cons (str string-writer) (log-filters))))))
+    (reduce #(string/replace %1 %2 "xxxxxxxx")
+      (cons (str string-writer) (log-filters)))))
 
 (defn trap [action func & args]
   (try+
     (success-resp action (apply func args))
-    (catch error? err
+    (catch error? _
       (log/error (format-exception (:throwable &throw-context)))
       (err-resp action (:object &throw-context)))
     (catch clj-http-error? o o)
@@ -184,6 +186,6 @@
   (fn [req]
     (try+
       (handler req)
-      (catch java.lang.Exception e
+      (catch Exception _
         (log/error (format-exception (:throwable &throw-context)))
         (err-resp (unchecked &throw-context))))))
