@@ -78,7 +78,8 @@
   [{app-id :id name :name :as app}]
   (-> (select-keys app [:id :name :description :disabled :deleted])
       (assoc :label  name
-             :groups (remove (comp empty? :parameters) (format-steps app-id)))))
+             :groups   (remove (comp empty? :parameters) (format-steps app-id))
+             :app_type "DE")))
 
 (defn get-app
   "This service obtains an app description in a format that is suitable for building the job

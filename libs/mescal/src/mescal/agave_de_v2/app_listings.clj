@@ -22,7 +22,7 @@
      :description          (:shortDescription listing)
      :integration_date     mod-time
      :edited_date          mod-time
-     :app_type             "External"
+     :app_type             c/hpc-app-type
      :can_favor            false
      :can_rate             false
      :can_run              true

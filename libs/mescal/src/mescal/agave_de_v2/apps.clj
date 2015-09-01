@@ -106,7 +106,8 @@
         :name             app-label
         :description      (:shortDescription app)
         :integration_date mod-time
-        :edited_date      mod-time}))
+        :edited_date      mod-time
+        :app_type         c/hpc-app-type}))
   ([agave app]
      (format-app agave app format-groups)))
 

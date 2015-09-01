@@ -238,6 +238,7 @@
 
 (defschema AppJobView
   (assoc AppBase
+    :app_type         (describe String "DE or External.")
     :id               (describe String "The app ID.")
     :label            (describe String "An alias for the App's name")
     :deleted          AppDeletedParam
