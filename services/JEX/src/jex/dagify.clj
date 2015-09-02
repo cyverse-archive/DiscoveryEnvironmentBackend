@@ -1,6 +1,7 @@
 (ns jex.dagify
   (:use [clojure-commons.file-utils :as ut]
-        [clojure.string :only (join split trim blank?)])
+        [clojure.string :only (join split trim blank?)]
+        [jex.common])
   (:require [jex.config :as cfg]
             [clojure.tools.logging :as log]
             [me.raynes.fs :as fs])
@@ -118,6 +119,87 @@
   [image-name]
   (str "docker pull " image-name "\n" fail-script))
 
+(defn- dc-pull
+  [name tag]
+  (str "docker pull " name ":" tag "\n"
+       fail-script))
+
+(defn data-containers-pull-sh
+  [{data-containers :data-containers :as condor-map}]
+  (if (pos? (count data-containers))
+    (join "" (map #(dc-pull (:name %1) (:tag %1)) data-containers))
+    ""))
+
+(defn- dc-vol?
+  [dc-map]
+  (or (contains? dc-map :container_path)
+      (contains? dc-map :host_path)))
+
+(defn- dc-vol-host?
+  [dc-map]
+  (contains? dc-map :host_path))
+
+(defn dc-vol-container?
+  [dc-map]
+  (contains? dc-map :container_path))
+
+(defn dc-vol-read-only?
+  [dc-map]
+  (if (contains? dc-map :read_only)
+    (:read_only dc-map)
+    false))
+
+(defn- dc-create
+  [uuid dc-map]
+  (str
+   "docker create "
+
+   (if (dc-vol? dc-map)
+     "-v ")
+
+   (cond
+     (and (dc-vol-host? dc-map)
+          (dc-vol-container? dc-map)
+          (dc-vol-read-only? dc-map))
+     (str (:host_path dc-map) ":" (:container_path dc-map) ":ro ")
+
+     (and (dc-vol-host? dc-map)
+          (dc-vol-container? dc-map)
+          (not (dc-vol-read-only? dc-map)))
+     (str (:host_path dc-map) ":" (:container_path dc-map) " ")
+
+     (and (dc-vol-container? dc-map)
+          (not (dc-vol-host? dc-map))
+          (dc-vol-read-only? dc-map))
+     (str (:container_path dc-map) ":ro ")
+
+     (and (dc-vol-container? dc-map)
+          (not (dc-vol-host? dc-map))
+          (not (dc-vol-read-only? dc-map)))
+     (str (:container_path dc-map) " ")
+
+     :else "")
+
+   "--name " (volumes-from-name uuid (:name_prefix dc-map)) " "
+   (:name dc-map) ":" (:tag dc-map) "\n"
+   fail-script))
+
+(defn data-containers-create
+  [{uuid :uuid data-containers :data-containers :as condor-map}]
+  (if (pos? (count data-containers))
+    (join "" (map (partial dc-create uuid) data-containers))
+    ""))
+
+(defn- dc-rm
+  [uuid dc-map]
+  (str "docker rm " (volumes-from-name uuid (:name_prefix dc-map))))
+
+(defn data-containers-rm
+  [{uuid :uuid data-containers :data-containers :as condor-map}]
+  (if (pos? (count data-containers))
+    (join "\n" (map (partial dc-rm uuid) data-containers))
+    ""))
+
 (defn script
   "Takes in an analysis map that has been processed by
    (jex.incoming-xforms/transform) and turns it into a shell script
@@ -142,8 +224,11 @@
      "ls -al > logs/de-transfer-trigger.log\n"
      fail-script
      rearrange-working-dir
+     (data-containers-pull-sh analysis-map)
      (join "" (map docker-pull (seq (:container-images analysis-map))))
+     (data-containers-create analysis-map)
      (join "\n" (map script-line (jobs-in-order analysis-map)))
+     (data-containers-rm analysis-map) "\n"
      "hostname\n"
      "ps aux\n"
      "echo -----\n"

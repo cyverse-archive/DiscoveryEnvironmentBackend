@@ -1,4 +1,5 @@
 (ns jex.incoming-xforms
+  (:use [jex.common])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ut]
@@ -201,7 +202,7 @@
   (assoc condor-map :data-containers
          (flatten
           (mapv (fn [step]
-                  (mapv #(select-keys %1 [:tag :name])
+                  (mapv #(select-keys %1 [:tag :name :name_prefix :host_path :container_path :read_only])
                         (get-in step [:component :container :container_volumes_from])))
                 (:steps condor-map)))))
 
@@ -250,11 +251,11 @@
                       (:container_devices container-map)))))
 
 (defn container-volumes-from-args
-  [container-map]
+  [uuid container-map]
   (if (container-volumes-from? container-map)
     (string/join " " (map
                       (fn [vf]
-                        (str "--volumes-from=" (:name vf)))
+                        (str "--volumes-from=" (volumes-from-name uuid (:name_prefix vf))))
                       (:container_volumes_from container-map)))))
 
 (defn container-name-arg
@@ -334,7 +335,7 @@
     (str "-v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/")))
 
 (defn container-args
-  [step-map]
+  [uuid step-map]
   (let [container-map (container-info step-map)]
     (string/join
      " "
@@ -344,7 +345,7 @@
        (backwards-compatible-args step-map)
        (container-volume-args container-map)
        (container-device-args container-map)
-       (container-volumes-from-args container-map)
+       (container-volumes-from-args uuid container-map)
        (container-name-arg container-map)
        (container-working-directory-arg container-map)
        (container-name-arg container-map)
@@ -372,9 +373,9 @@
 (defn arguments
   "Takes in a step map map and returns the formatted arguments
    for that step in the analysis."
-  [step-map]
+  [uuid step-map]
   (let [cmd (-> (get-in step-map [:config :params]) param-maps escape-params)]
-    (str (container-args step-map) " " cmd)))
+    (str (container-args uuid step-map) " " cmd)))
 
 (defn stdin
   "Returns the path to the stdin file or nil if there isn't one. This should
@@ -432,7 +433,7 @@
       :submission_date (:submission_date condor-map)
       :status          "Submitted"
       :executable      (executable step)
-      :arguments       (arguments step)
+      :arguments       (arguments (:uuid condor-map) step)
       :stdout          (stdout step step-idx)
       :stderr          (stderr step step-idx)
       :log-file        (log-file step step-idx (:condor-log-dir condor-map)))))

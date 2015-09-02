@@ -419,7 +419,7 @@
                    (with container-volumes-from
                      (fields)
                      (with data-containers
-                       (fields :name_prefix)
+                       (fields :name_prefix :read_only)
                        (with container-images
                          (fields :name :tag))
                        (with data-container-volumes
