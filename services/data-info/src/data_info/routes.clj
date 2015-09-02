@@ -27,7 +27,13 @@
   (swagger-docs
     {:info {:title "Discovery Environment Data Info API"
             :description "Documentation for the Discovery Environment Data Info REST API"
-            :version "2.0.0"}})
+            :version "2.0.0"}
+     :tags [{:name "service-info", :description "Service Information"}
+            {:name "data-by-id", :description "Data Operatiosn (by ID)"}
+            {:name "data", :description "Data Operations"}
+            {:name "bulk", :description "Bulk Operations"}
+            {:name "navigation", :description "Navigation"}
+            {:name "home", :description "User Home Directories"}]})
   (middlewares
     [tc/add-user-to-context
      wrap-query-params

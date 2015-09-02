@@ -8,7 +8,7 @@
 (defroutes* home
 
   (context* "/home" []
-    :tags ["User Home Dirs"]
+    :tags ["home"]
 
     (GET* "/" [:as {uri :uri}]
       :query [params SecuredQueryParamsRequired]

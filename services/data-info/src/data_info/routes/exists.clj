@@ -10,7 +10,7 @@
 (defroutes* existence-marker
 
   (context* "/existence-marker" []
-    :tags ["Existence Marker"]
+    :tags ["bulk"]
 
     (POST* "/" [:as {uri :uri}]
       :query [params SecuredQueryParamsRequired]

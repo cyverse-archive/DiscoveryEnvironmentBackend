@@ -10,7 +10,7 @@
 (defroutes* navigation
 
   (context* "/navigation" []
-    :tags ["Navigation"]
+    :tags ["navigation"]
 
     (GET* "/root" [:as {uri :uri}]
       :query [{:keys [user]} SecuredQueryParamsRequired]

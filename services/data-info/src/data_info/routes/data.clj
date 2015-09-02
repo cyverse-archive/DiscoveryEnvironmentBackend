@@ -13,7 +13,7 @@
 (defroutes* data-operations
 
   (context* "/data" []
-    :tags ["Data Operations"]
+    :tags ["data"]
 
     (GET* "/path/:zone/*" [:as {{zone :zone path :*} :params uri :uri}]
       :query [params FolderListingParams]
@@ -40,6 +40,7 @@
       {:status 501})
 
     (POST* "/directories" [:as {uri :uri}]
+      :tags ["bulk"]
       :query [params SecuredQueryParamsRequired]
       :body [body (describe Paths "The paths to create.")]
       :return Paths
@@ -56,7 +57,7 @@ for the requesting user."
 
     (context* "/:data-id" []
       :path-params [data-id :- DataIdPathParam]
-      :tags ["Data Operations (by ID)"]
+      :tags ["data-by-id"]
 
       (HEAD* "/" [:as {uri :uri}]
         :query [{:keys [user]} SecuredQueryParamsRequired]

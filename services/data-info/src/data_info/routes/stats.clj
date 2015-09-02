@@ -10,7 +10,7 @@
 (defroutes* stat-gatherer
 
   (context* "/stat-gatherer" []
-    :tags ["Status Information"]
+    :tags ["bulk"]
 
     (POST* "/" [:as {uri :uri}]
       :query [params SecuredQueryParamsRequired]

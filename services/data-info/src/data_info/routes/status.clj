@@ -7,7 +7,7 @@
 
 (defroutes* status
   (context* "/" []
-    :tags ["Service Information"]
+    :tags ["service-info"]
 
     (GET* "/" [:as {:keys [uri server-name server-port]}]
       :return StatusResponse
