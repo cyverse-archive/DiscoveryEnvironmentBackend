@@ -60,16 +60,6 @@
       (uuid-exists? cm uuid))))
 
 
-(defn paths-for-uuids
-  [user uuids]
-  (letfn [(id-type [type entity] (merge entity {:id (:path entity) :type type}))]
-    (init/with-jargon (jargon/jargon-cfg) [cm]
-      (user-exists cm user)
-      (->> (concat (map (partial id-type :dir) (icat/select-folders-with-uuids uuids))
-                   (map (partial id-type :file) (icat/select-files-with-uuids uuids)))
-        (mapv (partial stat/decorate-stat cm user))
-        (remove #(nil? (:permission %)))))))
-
 (defn- fmt-stat
   [cm user data-item]
   (let [path (:full_path data-item)]
@@ -113,12 +103,6 @@
            (icat/paged-uuid-listing user zone sort-col sort-order limit offset uuids info-types)))))
 
 
-(defn do-paths-for-uuids
-  [params body]
-  (validate-map params {:user string?})
-  (validate-map body {:uuids sequential?})
-  (json/encode {:paths (paths-for-uuids (:user params) (:uuids body))}))
-
 (defn uuid-for-path
   [cm user path]
   (let [attrs (get-attribute cm path uuid-attr)]
@@ -128,21 +112,6 @@
     (if (pos? (count attrs))
       (merge {:uuid (:value (first attrs))}
              (stat/path-stat cm user path)))))
-
-(defn uuids-for-paths
-  [user paths]
-  (init/with-jargon (jargon/jargon-cfg) [cm]
-    (user-exists cm user)
-    (all-paths-exist cm paths)
-    (all-paths-readable cm user paths)
-    (filter #(not (nil? %)) (mapv (partial uuid-for-path cm user) paths))))
-
-(defn do-uuids-for-paths
-  [params body]
-  (log/warn body)
-  (validate-map params {:user string?})
-  (validate-map body {:paths sequential?})
-  (json/encode {:paths (uuids-for-paths (:user params) (:paths body))}))
 
 
 (defn ^Boolean uuid-accessible?

@@ -142,13 +142,7 @@
       (controller req csv/do-read-csv-chunk :params :body))
 
     (POST "/filesystem/anon-files" [:as req]
-      (controller req sharing/do-anon-files :params :body))
-
-    (POST "/filesystem/paths-for-uuids" [:as req]
-      (controller req uuid/do-paths-for-uuids :params :body))
-
-    (POST "/filesystem/uuids-for-paths" [:as req]
-      (controller req uuid/do-uuids-for-paths :params :body))))
+      (controller req sharing/do-anon-files :params :body))))
 
 (defn secured-filesystem-metadata-routes
   "The routes for file metadata endpoints."
