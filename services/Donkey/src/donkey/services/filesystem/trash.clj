@@ -81,12 +81,6 @@
         "")
     name)))
 
-(defn- user-trash
-  [user]
-  (with-jargon (jargon/jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    {:trash (paths/user-trash-path user)}))
-
 
 (defn- trash-origin-path
   [cm user p]
@@ -253,18 +247,6 @@
       (validators/validate-num-paths-under-folder user (paths/user-trash-path user)))))
 
 (with-post-hook! #'do-restore-all (paths/log-func "do-restore-all"))
-
-(defn do-user-trash
-  [{user :user}]
-  {:id   (str "/root" (:trash (user-trash user)))
-   :path (:trash (user-trash user))})
-
-(with-pre-hook! #'do-user-trash
-  (fn [params]
-    (paths/log-call "do-user-trash" params)
-    (validate-map params {:user string?})))
-
-(with-post-hook! #'do-user-trash (paths/log-func "do-user-trash"))
 
 (defn do-delete-trash
   [{user :user}]

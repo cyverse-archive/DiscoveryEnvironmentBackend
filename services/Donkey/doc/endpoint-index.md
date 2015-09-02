@@ -143,7 +143,6 @@
 * [DELETE /secured/filesystem/trash](endpoints/filesystem/empty-trash.md#emptying-a-users-trash-directory)
 * [POST /secured/filesystem/unshare](endpoints/filesystem/sharing.md#unsharing)
 * [POST /secured/filesystem/user-permissions](endpoints/filesystem/permissions.md#listing-user-permissions)
-* [GET /secured/filesystem/user-trash-dir](endpoints/filesystem/user-trash-dir.md#getting-the-path-to-a-users-trash-directory)
 * [POST /secured/filesystem/{data-id}/metadata/copy](endpoints/filesystem/metadata.md#copying-all-metadata-from-a-filefolder)
 * [POST /secured/filesystem/{data-id}/metadata/save](endpoints/filesystem/metadata.md#exporting-metadata-to-a-file)
 * [GET /secured/filesystem/{data-id}/template-avus](endpoints/filesystem/metadata.md#viewing-all-metadata-template-avus-on-a-filefolder)

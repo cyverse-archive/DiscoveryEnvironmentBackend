@@ -129,9 +129,6 @@
     (POST "/filesystem/list-tickets" [:as req]
       (controller req ticket/do-list-tickets :params :body))
 
-    (GET "/filesystem/user-trash-dir" [:as req]
-      (controller req trash/do-user-trash :params))
-
     (DELETE "/filesystem/trash" [:as req]
       (controller req trash/do-delete-trash :params))
 
