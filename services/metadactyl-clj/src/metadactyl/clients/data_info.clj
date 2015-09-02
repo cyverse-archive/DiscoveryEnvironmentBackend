@@ -29,7 +29,7 @@
 (defn get-file-contents
   [user path]
   (:body
-   (http/get (data-info-url "entries" "path" path)
+   (http/get (data-info-url "data" "path" path)
              {:query-params (secured-params user)
               :as           :stream})))
 
