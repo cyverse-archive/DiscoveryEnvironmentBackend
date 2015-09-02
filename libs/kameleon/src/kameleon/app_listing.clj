@@ -119,6 +119,7 @@
                         (modifier "DISTINCT")
                         (fields :id
                                 :name
+                                [(sqlfn :lower :name) :lower_case_name]
                                 :description
                                 :integrator_name
                                 :integrator_email

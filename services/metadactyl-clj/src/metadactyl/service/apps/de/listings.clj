@@ -21,6 +21,17 @@
 (def my-public-apps-id (uuidify "00000000-0000-0000-0000-000000000000"))
 (def trash-category-id (uuidify "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"))
 
+(def default-sort-params
+  {:sort-field :lower_case_name
+   :sort-dir   :ASC})
+
+(defn- fix-sort-params
+  [params]
+  (let [params (merge default-sort-params params)]
+    (if (= (keyword (:sort-field params)) :name)
+      (assoc params :sort-field (:sort-field default-sort-params))
+      params)))
+
 (defn- add-subgroups
   [group groups]
   (let [subgroups (filter #(= (:id group) (:parent_id %)) groups)
@@ -186,7 +197,7 @@
   "Formats certain app fields into types more suitable for the client."
   [app]
   (-> (assoc app :can_run (app-can-run? app))
-      (dissoc :tool_count :task_count :external_app_count)
+      (dissoc :tool_count :task_count :external_app_count :lower_case_name)
       (format-app-ratings)
       (format-app-pipeline-eligibility)
       (assoc :can_favor true :can_rate true :app_type "DE")
@@ -233,7 +244,8 @@
   "This service lists all of the apps in an app group and all of its
    descendents."
   [user app-group-id params]
-  (let [workspace (get-optional-workspace (:username user))]
+  (let [workspace (get-optional-workspace (:username user))
+        params    (fix-sort-params params)]
     (or (list-apps-in-virtual-group user workspace app-group-id params)
         (list-apps-in-real-group user workspace app-group-id params))))
 
@@ -254,7 +266,7 @@
                         search_term
                         workspace
                         (workspace-favorites-app-category-index)
-                        params)
+                        (fix-sort-params params))
         search_results (map format-app-listing search_results)]
     {:app_count total
      :apps search_results}))
