@@ -29,7 +29,7 @@
             :description "Documentation for the Discovery Environment Data Info REST API"
             :version "2.0.0"}
      :tags [{:name "service-info", :description "Service Information"}
-            {:name "data-by-id", :description "Data Operatiosn (by ID)"}
+            {:name "data-by-id", :description "Data Operations (by ID)"}
             {:name "data", :description "Data Operations"}
             {:name "bulk", :description "Bulk Operations"}
             {:name "navigation", :description "Navigation"}
