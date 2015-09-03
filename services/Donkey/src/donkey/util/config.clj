@@ -201,12 +201,6 @@
   [props config-valid configs]
   "donkey.iplant-groups.base-url")
 
-(cc/defprop-int default-user-search-result-limit
-  "The default limit for the number of results for an iplant-groups search.
-   This limiting is (now) done in Donkey, so will be exact."
-  [props config-valid configs user-info-routes-enabled]
-  "donkey.iplant-groups.default-search-limit")
-
 (cc/defprop-str jex-base-url
   "The base URL for the JEX."
   [props config-valid configs app-routes-enabled]

@@ -38,17 +38,9 @@
       (log/error e (str "username search for '" short-username "' failed"))
       (empty-user-info short-username))))
 
-(defn- extract-range
-  "Extracts a range of results from a list of results."
-  [start end results]
-  (let [max-count (- end start)]
-    (if (> (count results) max-count)
-      (take max-count (drop start results))
-      results)))
-
 (defn search-subjects
   "Uses iplant-groups's subject search endpoint to retrieve user details."
-  [user search start end]
+  [user search]
   (let [res (http/get (str (curl/url (config/ipg-base) "subjects"))
                       ;; Adding wildcards matches previous (trellis) search behavior
                       {:query-params {:user user :search (str "*" search "*")}
@@ -56,4 +48,4 @@
         status (:status res)]
     (when-not (#{200 404} status)
       (throw (Exception. (str "iplant-groups service returned status " status))))
-    {:subjects (extract-range start end (:subjects (:body res)))}))
+    {:subjects (:subjects (:body res))}))

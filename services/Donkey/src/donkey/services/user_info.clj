@@ -10,41 +10,13 @@
             [donkey.auth.user-attributes :as user]
             [clojure.tools.logging :as log]))
 
-(defn- to-int
-  "Converts a string to an integer, throwing an IllegalArgumentException if
-   the number can't be parsed.  This function is intended to be used from
-   within parse-range."
-  [string]
-  (try
-    (Integer/parseInt string)
-    (catch NumberFormatException e
-      (throw (IllegalArgumentException.
-              (str "invalid number format in Range header: " string) e)))))
-
-(defn- parse-range
-  "Parses the value of a range header in the request.  We expect the header
-   value to be in the format, records=<first>-<last>.  For example, to get
-   records 0 through 50, the header value should be records=0-50."
-  [value]
-  (if (nil? value)
-    [0 (default-user-search-result-limit)]
-    (let [[units begin-str end-str] (split value #"[=-]")
-          [begin end] (map to-int [begin-str end-str])]
-      (if (or (not= "records" units) (neg? begin) (neg? end) (>= begin end))
-        (throw (IllegalArgumentException.
-                "invalid Range header value: should be records=0-50")))
-      [begin end])))
-
 (defn user-search
   "Performs user searches by username, name and e-mail address and returns the
    merged results."
-  ([{:keys [search]} {:strs [range]}]
-     (validate-field "search" search (comp not blank?))
-     (apply user-search search (parse-range range)))
-  ([search-string start end]
-     (let [results (ipg/search-subjects (:shortUsername user/current-user) search-string start end)
+  [search-string]
+     (let [results (ipg/search-subjects (:shortUsername user/current-user) search-string)
            users (map ipg/format-like-trellis (:subjects results))]
-       (success-response {:users users :truncated false}))))
+       (success-response {:users users :truncated false})))
 
 (defn- add-user-info
   "Adds the information for a single user to a user-info lookup result."
