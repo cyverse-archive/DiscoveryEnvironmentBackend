@@ -251,16 +251,9 @@
         :query [params SecuredQueryParams]
         :return VolumesFrom
         :summary "Tool Container Volumes From Information"
-        :description "Returns a list of container names that the container associated with the tool should import volumes from."
-        (ce/trap uri (requester tool-id (tool-volumes-from tool-id volumes-from-id))))
-
-  (GET* "/:tool-id/container/volumes-from/:volumes-from-id/data-container-id" [:as {uri :uri}]
-        :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
-        :query [params SecuredQueryParams]
-        :return VolumesFromDataContainer
-        :summary "Name Of Volume Host Container"
-        :description "Returns the name of the container from which the tool container will bind mount volumes."
-        (ce/trap uri (requester tool-id (volumes-from-field tool-id volumes-from-id :data_container_id)))))
+        :description "Returns the data container settings for the given `volumes-from-id` the tool
+         should import volumes from."
+        (ce/trap uri (requester tool-id (tool-volumes-from tool-id volumes-from-id)))))
 
 (defroutes* tool-requests
   (GET* "/" [:as {uri :uri}]
@@ -433,7 +426,7 @@
          :description "This endpoint updates a volume container path for the tool's container."
          (ce/trap uri (requester tool-id (update-volume-field tool-id volume-id :container_path (:container_path body)))))
 
-  (POST* "/:tool-id/container/volumes-from" [:as {uri :uri}]
+  (PUT* "/:tool-id/container/volumes-from" [:as {uri :uri}]
          :path-params [tool-id :- ToolIdParam]
          :query [params SecuredQueryParams]
          :body [body NewVolumesFrom]
@@ -450,15 +443,4 @@
            :return nil
            :summary "Delete Tool Container Volumes From Information"
            :description "Deletes a container name that the tool container should import volumes from."
-           (ce/trap uri #(delete-tool-volumes-from tool-id volumes-from-id)))
-
-  (POST* "/:tool-id/container/volumes-from/:volumes-from-id/data-container-id" [:as {uri :uri}]
-         :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
-         :query [params SecuredQueryParams]
-         :body [body VolumesFromDataContainer]
-         :return VolumesFromDataContainer
-         :summary "Update Name Of Volume Host Container"
-         :description (str
-                        "Updates the data container UUID of a container from which the tool container will bind mount volumes."
-                        volumes-from-warning)
-         (ce/trap uri (requester tool-id (update-volumes-from-field tool-id volumes-from-id :data_container_id (:data_container_id body))))))
+           (ce/trap uri #(delete-tool-volumes-from tool-id volumes-from-id))))

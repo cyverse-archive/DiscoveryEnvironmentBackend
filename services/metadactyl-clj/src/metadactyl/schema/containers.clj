@@ -170,24 +170,16 @@
 
 (s/defschema VolumesFrom
   (describe
-   {:data_container_id s/Uuid
-    :id   s/Uuid}
-   "The UUID of the data container from which to bind mount volumes."))
+    (merge (dissoc Image :id)
+      {:id                         s/Uuid
+       :name_prefix                s/Str
+       (s/optional-key :read_only) s/Bool})
+   "A description of a data container volumes-from settings."))
 
 (s/defschema NewVolumesFrom
   (describe
    (dissoc VolumesFrom :id)
    "A map for adding a new container from which to bind mount volumes."))
-
-(s/defschema VolumesFromName
-  (describe
-   {:name s/Str}
-   "The name of a container from which volumes will be bind mounted."))
-
-(s/defschema VolumesFromDataContainer
-  (describe
-    {:data-container-id s/Uuid}
-    "The UUID of the data container from which volumes will be bind mounted."))
 
 (def VolumesFromIdParam
   (describe
