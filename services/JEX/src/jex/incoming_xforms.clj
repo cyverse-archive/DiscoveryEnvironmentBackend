@@ -200,11 +200,10 @@
   "Returns a list of the data containers associated with the job."
   [condor-map]
   (assoc condor-map :data-containers
-         (flatten
-          (mapv (fn [step]
-                  (mapv #(select-keys %1 [:tag :name :name_prefix :host_path :container_path :read_only])
-                        (get-in step [:component :container :container_volumes_from])))
-                (:steps condor-map)))))
+         (distinct (flatten (mapv (fn [step]
+                   (mapv #(select-keys %1 [:tag :name :name_prefix :host_path :container_path :read_only])
+                         (get-in step [:component :container :container_volumes_from])))
+                 (:steps condor-map))))))
 
 (defn container-volumes?
   "Returns true if the container has volumes defined."

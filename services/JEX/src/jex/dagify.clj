@@ -130,18 +130,20 @@
     (join "" (map #(dc-pull (:name %1) (:tag %1)) data-containers))
     ""))
 
-(defn- dc-vol?
-  [dc-map]
-  (or (contains? dc-map :container_path)
-      (contains? dc-map :host_path)))
-
 (defn- dc-vol-host?
   [dc-map]
-  (contains? dc-map :host_path))
+  (and (contains? dc-map :host_path)
+       (not (blank? (:host_path dc-map)))))
 
 (defn dc-vol-container?
   [dc-map]
-  (contains? dc-map :container_path))
+  (and (contains? dc-map :container_path)
+       (not (blank? (:container_path dc-map)))))
+
+(defn- dc-vol?
+  [dc-map]
+  (or (dc-vol-host? dc-map)
+      (dc-vol-container? dc-map)))
 
 (defn dc-vol-read-only?
   [dc-map]
@@ -224,7 +226,7 @@
      "ls -al > logs/de-transfer-trigger.log\n"
      fail-script
      rearrange-working-dir
-     (data-containers-pull-sh analysis-map)
+     (data-containers-pull-sh analysis-map) "\n"
      (join "" (map docker-pull (seq (:container-images analysis-map))))
      (data-containers-create analysis-map)
      (join "\n" (map script-line (jobs-in-order analysis-map)))
