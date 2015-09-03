@@ -22,14 +22,11 @@
                                    :url  "https://gims.iplantcollaborative.org:5000/ncbi-sra-submit-ssh-key-data"})))]
     (insert :data_containers
       (values [{:name_prefix         "ncbi-sra-configs"
-                :container_images_id configs-id
-                :read_only           true}
+                :container_images_id configs-id}
                {:name_prefix         "ncbi-sra-test-configs"
-                :container_images_id test-configs-id
-                :read_only           true}
+                :container_images_id test-configs-id}
                {:name_prefix         "ncbi-sra-submit-ssh-key-data"
-                :container_images_id ssh-key-id
-                :read_only           true}]))))
+                :container_images_id ssh-key-id}]))))
 
 (defn convert
   "Performs the conversion for database version 2.1.0:20150825.02"
