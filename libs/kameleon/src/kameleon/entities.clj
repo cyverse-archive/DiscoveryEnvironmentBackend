@@ -55,12 +55,8 @@
   (has-many apps)
   (has-many tools))
 
-(defentity data-container-volumes
-  (table :data_container_volumes))
-
 (defentity data-containers
   (table :data_containers)
-  (has-one data-container-volumes)
   (has-one container-volumes-from)
   (belongs-to container-images))
 

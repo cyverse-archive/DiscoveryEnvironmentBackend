@@ -6,8 +6,7 @@
                                   container-devices
                                   container-volumes
                                   container-volumes-from
-                                  data-containers
-                                  data-container-volumes]]
+                                  data-containers]]
         [kameleon.uuids :only [uuidify]]
         [korma.core]
         [korma.db :only [transaction]]
@@ -421,10 +420,7 @@
                      (with data-containers
                        (fields :name_prefix :read_only)
                        (with container-images
-                         (fields :name :tag))
-                       (with data-container-volumes
-                         (fields [:volume_host_path :host_path]
-                                 [:volume_container_path :container_path]))))
+                         (fields :name :tag))))
                    (where {:tools_id id}))
            first
            (merge {:image (tool-image-info tool-uuid)})

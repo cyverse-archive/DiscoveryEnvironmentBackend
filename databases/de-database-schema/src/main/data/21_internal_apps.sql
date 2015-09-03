@@ -236,9 +236,6 @@ INSERT INTO container_settings (tools_id)
 INSERT INTO data_containers (id, name_prefix, container_images_id)
   VALUES ('115584ad-7bc3-4601-89a2-85a4e5b5f6a4', 'wc-data', '15959300-b972-4571-ace2-081af0909599');
 
-INSERT INTO data_container_volumes (data_containers_id, volume_container_path, volume_host_path)
-  VALUES ('115584ad-7bc3-4601-89a2-85a4e5b5f6a4', '/wc-test/', '$(pwd)');
-
 INSERT INTO container_volumes_from (data_containers_id, container_settings_id)
   SELECT '115584ad-7bc3-4601-89a2-85a4e5b5f6a4',
          container_settings.id
