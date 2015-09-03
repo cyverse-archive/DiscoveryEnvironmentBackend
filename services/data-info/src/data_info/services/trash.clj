@@ -68,6 +68,13 @@
 
          {:paths paths}))))
 
+(defn- delete-uuid
+  "Delete by UUID: given a user and a data item UUID, delete that data item, returning a list of filenames deleted."
+  [user source-uuid]
+  (let [path (ft/rm-last-slash (:path (uuids/path-for-uuid user source-uuid)))]
+    (validators/validate-num-paths-under-folder user path)
+    (delete-paths user [path])))
+
 (defn- delete-uuid-contents
   "Delete contents by UUID: given a user and a data item UUID, delete the contents, returning a list of filenames deleted."
   [user source-uuid]
@@ -77,6 +84,20 @@
       (validators/path-is-dir cm source))
     (let [paths (directory/get-paths-in-folder user source)]
       (delete-paths user paths))))
+
+(defn do-delete-uuid
+  [{user :user} data-id]
+  (delete-uuid user data-id))
+
+(with-pre-hook! #'do-delete-uuid
+  (fn [params data-id]
+    (dul/log-call "do-delete-uuid" params data-id)
+
+    (when (paths/super-user? (:user params))
+      (throw+ {:error_code ERR_NOT_AUTHORIZED
+               :user       (:user params)}))))
+
+(with-post-hook! #'do-delete-uuid (dul/log-func "do-delete-uuid"))
 
 (defn do-delete-uuid-contents
   [{user :user} data-id]
