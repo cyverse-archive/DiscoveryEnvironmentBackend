@@ -33,10 +33,17 @@
                            (:body))]
       user-info
       (do (log/warn (str "no user info found for username '" short-username "'"))
-          (empty-user-info short-username)))
+          nil))
     (catch Exception e
-      (log/error e (str "username search for '" short-username "' failed"))
-      (empty-user-info short-username))))
+      (log/error e (str "username lookup for '" short-username "' failed"))
+      nil)))
+
+(defn lookup-subject-add-empty
+  "Uses iplant-groups's subject lookup by ID endpoint to retrieve user details, returning an empty user info block if nothing is found."
+  [user short-username]
+  (if-let [user-info (lookup-subject user short-username)]
+    user-info
+    (empty-user-info short-username)))
 
 (defn search-subjects
   "Uses iplant-groups's subject search endpoint to retrieve user details."

@@ -131,7 +131,7 @@
   (if (<= 200 (:status res) 299)
     (let [tool-req     (cheshire/decode-stream (reader (:body res)) true)
           username     (string/replace (:submitted_by tool-req) #"@.*" "")
-          user-details (ipg/format-like-trellis (ipg/lookup-subject username username))]
+          user-details (ipg/format-like-trellis (ipg/lookup-subject-add-empty username username))]
       (f tool-req user-details))
     res))
 

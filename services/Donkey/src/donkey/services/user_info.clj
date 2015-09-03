@@ -23,7 +23,7 @@
   [result [username user-info]]
   (if (nil? user-info)
     result
-    (assoc result username user-info)))
+    (assoc result username (ipg/format-like-trellis user-info))))
 
 (defn- get-user-info
   "Gets the information for a single user, returning a vector in which the first
@@ -31,7 +31,6 @@
    if the user doesn't exist."
   [username]
   (->> (ipg/lookup-subject (:shortUsername user/current-user) username)
-       (ipg/format-like-trellis)
        (vector username)))
 
 (defn user-info
