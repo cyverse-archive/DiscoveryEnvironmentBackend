@@ -73,7 +73,7 @@
    (ipc-exe-path analysis-map)
    "should_transfer_files = YES\n"
    "transfer_input_files = iplant.sh,irods-config,iplant.cmd\n"
-   "transfer_output_files = logs/de-transfer-trigger.log,output-last-stdout,output-last-stderr\n"
+   "transfer_output_files = logs/de-transfer-trigger.log,logs/output-last-stdout,logs/output-last-stderr\n"
    "when_to_transfer_output = ON_EXIT_OR_EVICT\n"
    "notification = NEVER\n"
    "queue\n"))
