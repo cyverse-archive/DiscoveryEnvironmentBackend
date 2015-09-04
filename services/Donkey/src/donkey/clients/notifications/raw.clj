@@ -134,7 +134,7 @@
 
 (defn mark-all-system-messages-seen
   [body]
-  (client/post (na-url "system" "seen")
+  (client/post (na-url "system" "mark-all-seen")
                {:query-params     (secured-params)
                 :as               :stream
                 :content-type     :json
