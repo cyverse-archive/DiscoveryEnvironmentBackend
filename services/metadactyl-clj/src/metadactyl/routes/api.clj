@@ -72,6 +72,7 @@
             {:name "apps", :description "App endpoints."}
             {:name "pipelines", :description "Pipeline endpoints."}
             {:name "analyses", :description "Analysis endpoints."}
+            {:name "tool-data-containers", :description "Tool Docker Data Container endpoints."}
             {:name "tools", :description "Tool endpoints."}
             {:name "workspaces", :description "Workspace endpoints."}
             {:name "users", :description "User endpoints."}
@@ -81,6 +82,7 @@
             {:name "collaborator-routes", :description "Collaborator Information Routes"}
             {:name "admin-apps", :description "Admin App endpoints."}
             {:name "admin-categories", :description "Admin App Category endpoints."}
+            {:name "admin-data-containers", :description "Admin Docker Data Container endpoints."}
             {:name "admin-tools", :description "Admin Tool endpoints."}
             {:name "admin-reference-genomes", :description "Admin Reference Genome endpoints."}
             {:name "admin-tool-requests", :description "Admin Tool Request endpoints."}]})
@@ -117,6 +119,9 @@
     (context* "/analyses" []
       :tags ["analyses"]
       analysis-routes/analyses)
+    (context* "/tools/data-containers" []
+      :tags ["tool-data-containers"]
+      tool-routes/data-containers)
     (context* "/tools" []
       :tags ["tools"]
       tool-routes/tools)
@@ -147,6 +152,9 @@
     (context* "/admin/reference-genomes" []
       :tags ["admin-reference-genomes"]
       admin-routes/reference-genomes)
+    (context* "/admin/tools/data-containers" []
+      :tags ["admin-data-containers"]
+      tool-routes/admin-data-containers)
     (context* "/admin/tools" []
       :tags ["admin-tools"]
       tool-routes/admin-tools)

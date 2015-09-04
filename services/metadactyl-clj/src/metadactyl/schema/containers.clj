@@ -1,6 +1,6 @@
 (ns metadactyl.schema.containers
   (:use [compojure.api.sweet :only [describe]]
-        [metadactyl.routes.params :only [ToolIdParam]])
+        [metadactyl.routes.params :only [->optional-param ToolIdParam]])
   (:require [schema.core :as s]))
 
 (s/defschema Image
@@ -153,9 +153,10 @@
 
 (s/defschema DataContainer
   (describe
-    {:name_prefix        s/Str
-     :container_image_id s/Uuid
-     :read_only          s/Bool}
+    (merge (dissoc Image :id)
+      {:id                         s/Uuid
+       :name_prefix                s/Str
+       (s/optional-key :read_only) s/Bool})
     "A description of a data container."))
 
 (s/defschema DataContainers
@@ -168,13 +169,17 @@
     java.util.UUID
     "A data container's UUID."))
 
-(s/defschema VolumesFrom
+(s/defschema DataContainerUpdateRequest
   (describe
-    (merge (dissoc Image :id)
-      {:id                         s/Uuid
-       :name_prefix                s/Str
-       (s/optional-key :read_only) s/Bool})
-   "A description of a data container volumes-from settings."))
+    (-> DataContainer
+        (->optional-param :name_prefix)
+        (->optional-param :name)
+        (->optional-param :url)
+        (dissoc :id))
+    "A map for updating data container settings."))
+
+(s/defschema VolumesFrom
+  (describe DataContainer "A description of a data container volumes-from settings."))
 
 (s/defschema NewVolumesFrom
   (describe

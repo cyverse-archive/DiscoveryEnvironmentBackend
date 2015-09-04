@@ -11,6 +11,7 @@
         [korma.core]
         [korma.db :only [transaction]]
         [metadactyl.persistence.app-metadata :only [update-tool]]
+        [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.conversions :only [remove-nil-vals remove-empty-vals]])
   (:require [clojure.tools.logging :as log]))
 
@@ -254,42 +255,45 @@
   (when (volume? volume-uuid)
     (delete container-volumes (where {:id (uuidify volume-uuid)}))))
 
-; (defn data-container
-;   "Returns a map describing a data container."
-;   [data-container-id]
-;   (first (select data-containers
-;                  (where {:id (uuidify data-container-id)}))))
-;
-; (defn list-data-containers
-;   "Returns a list of all data containers."
-;   []
-;   {:data_containers (select data-containers)})
-;
+(defn data-container
+  "Returns a map describing a data container."
+  [data-container-id]
+  (assert-not-nil [:data-container-id data-container-id]
+    (first
+      (select data-containers
+              (fields :id :name_prefix :read_only)
+              (with container-images (fields :name :tag :url))
+              (where {:id data-container-id})))))
+
+(defn list-data-containers
+  "Returns a list of all data containers."
+  []
+  {:data_containers (select data-containers
+                      (fields :id :name_prefix :read_only)
+                      (with container-images (fields :name :tag :url)))})
+
 (defn- add-data-container
   [data-container-info]
   (let [image-uuid (find-or-add-image-id data-container-info)
         insert-values (assoc (select-keys data-container-info [:name_prefix :read_only])
                              :container_images_id image-uuid)]
     (insert data-containers (values insert-values))))
-;
-; (defn delete-data-container
-;   "Deletes a data container."
-;   [data-container-id]
-;   (when (data-container data-container-id)
-;     (delete data-containers
-;             (where (= :id (uuidify data-container-id))))))
-;
-; (defn modify-data-container
-;   "Modifies a data container based on the update map. Valid keys for the update map
-;   are: :container_images_id, :name_prefix, :read_only. :read_only's value should
-;   be a boolean."
-;   [data-container-id update-map]
-;   (let [umap (select-keys update-map [:container_images_id :name_prefix :read_only])]
-;     (when (data-container data-container-id)
-;       (update data-containers
-;               (set-fields umap)
-;               (where (= :id (uuidify data-container-id))))
-;       (data-container data-container-id))))
+
+(defn modify-data-container
+  "Modifies a data container based on the update map."
+  [data-container-id {:keys [name url] :as data-container-info}]
+  (when (data-container data-container-id)
+    (transaction
+      (let [container-images-id (when name (find-or-add-image-id data-container-info))
+            umap (-> data-container-info
+                     (select-keys [:name_prefix :read_only])
+                     (assoc :container_images_id container-images-id)
+                     remove-nil-vals)]
+        (when-not (empty? umap)
+          (update data-containers
+                  (set-fields umap)
+                  (where {:id data-container-id})))
+        (data-container data-container-id)))))
 
 (defn- find-data-container-id
   "Returns the UUID used as the primary key in the data_containers table."

@@ -29,75 +29,88 @@
 
 (defroutes* container-images
   (GET* "/" [:as {uri :uri}]
+        :query [params SecuredQueryParams]
         :return Images
         :summary "List Container Images"
         :description "Returns all of the container images defined in the database."
-        (ce/trap uri #(list-images)))
+        (service/trap uri list-images))
 
   (GET* "/:image-id" [:as {uri :uri}]
         :path-params [image-id :- ImageId]
+        :query [params SecuredQueryParams]
         :return Image
         :summary "Container Image"
         :description "Returns a JSON description of a container image."
-        (ce/trap uri #(image-info image-id)))
+        (service/trap uri image-info image-id))
 
   (POST* "/" [:as {uri :uri}]
+        :query [params SecuredQueryParams]
         :body [body NewImage]
         :return Image
         :summary "Add Container Image"
         :description "Adds a new container image to the system."
-        (ce/trap uri #(add-image-info body)))
+        (service/trap uri add-image-info body))
 
   (POST* "/:image-id/name" [:as {uri :uri}]
         :path-params [image-id :- ImageId]
+        :query [params SecuredQueryParams]
         :body [body ImageName]
         :return Image
         :summary "Update Container Image Name"
         :description "Updates a container image's name field."
-        (ce/trap uri #(modify-image-info image-id body)))
+        (service/trap uri modify-image-info image-id body))
 
   (POST* "/:image-id/url" [:as {uri :uri}]
         :path-params [image-id :- ImageId]
+        :query [params SecuredQueryParams]
         :body [body ImageURL]
         :return Image
         :summary "Update Container Image URL"
         :description "Updates a container image's url field."
-        (ce/trap uri #(modify-image-info image-id body)))
+        (service/trap uri modify-image-info image-id body))
 
   (POST* "/:image-id/tag" [:as {uri :uri}]
         :path-params [image-id :- ImageId]
+        :query [params SecuredQueryParams]
         :body [body ImageTag]
         :return Image
         :summary "Update Container Image Tag"
         :description "Updates a container image's tag field."
-        (ce/trap uri #(modify-image-info image-id body)))
+        (service/trap uri modify-image-info image-id body))
 
   (DELETE* "/:image-id" [:as {uri :uri}]
         :path-params [image-id :- ImageId]
+        :query [params SecuredQueryParams]
         :return nil
         :summary "Delete Container Image"
         :description "Deletes a container image from the system."
-        (ce/trap uri #(delete-image image-id))))
+        (service/trap uri delete-image image-id)))
 
-; (defroutes* data-containers
-;   (GET* "/" [:as {uri :uri}]
-;         :return DataContainers
-;         :summary "List Data Containers"
-;         :description "Lists all of the available data containers."
-;         (ce/trap uri #(list-data-containers)))
-;
-;   (GET* "/:data-container-id" [:as {uri :uri}]
-;         :path-params [data-container-id :- DataContainerIdParam]
-;         :return DataContainer
-;         :summary "Data Container"
-;         :description "Returns a JSON description of a data container."
-;         (ce/trap uri #(data-container data-container-id)))
-;
-;   (POST* "/" [:as {uri :uri}]
-;          :body [body NewDataContainer]
-;          :return DataContainer
-;          :summary "Add Data Container"
-;          :description "Adds a new data container to the system."))
+ (defroutes* data-containers
+   (GET* "/" [:as {uri :uri}]
+         :query [params SecuredQueryParams]
+         :return DataContainers
+         :summary "List Data Containers"
+         :description "Lists all of the available data containers."
+         (service/trap uri list-data-containers))
+
+   (GET* "/:data-container-id" [:as {uri :uri}]
+         :path-params [data-container-id :- DataContainerIdParam]
+         :query [params SecuredQueryParams]
+         :return DataContainer
+         :summary "Data Container"
+         :description "Returns a JSON description of a data container."
+         (service/trap uri data-container data-container-id)))
+
+(defroutes* admin-data-containers
+  (PATCH* "/:data-container-id" [:as {uri :uri}]
+          :path-params [data-container-id :- DataContainerIdParam]
+          :query [params SecuredQueryParams]
+          :body [body DataContainerUpdateRequest]
+          :return DataContainer
+          :summary "Update Data Container"
+          :description "Updates a data container's settings."
+          (service/trap uri modify-data-container data-container-id body)))
 
 (defroutes* tools
   (GET* "/" [:as {uri :uri}]
