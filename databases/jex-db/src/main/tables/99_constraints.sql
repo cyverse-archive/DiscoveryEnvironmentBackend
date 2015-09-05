@@ -139,3 +139,10 @@ ALTER TABLE ONLY condor_job_deps
 ALTER TABLE ONLY version
     ADD CONSTRAINT version_pkey
     PRIMARY KEY (id);
+
+--
+-- Uniqueness constraint for the condor_id column of the jobs table
+--
+ALTER TABLE ONLY jobs
+    ADD CONSTRAINT condor_id_key
+    UNIQUE (condor_id);
