@@ -192,25 +192,6 @@
 
 (with-post-hook! #'do-delete (paths/log-func "do-delete"))
 
-(defn do-delete-contents
-  [{user :user} {path :path}]
-  (with-jargon (jargon/jargon-cfg) [cm] (validators/path-is-dir cm path))
-  (let [paths (directory/get-paths-in-folder user path)]
-    (delete-paths user paths)))
-
-(with-pre-hook! #'do-delete-contents
-  (fn [params body]
-    (paths/log-call "do-delete-contents" params body)
-    (validate-map params {:user string?})
-    (validate-map body   {:path string?})
-
-    (when (paths/super-user? (:user params))
-      (throw+ {:error_code ERR_NOT_AUTHORIZED
-               :user       (:user params)}))
-    (validators/validate-num-paths-under-folder (:user params) (:path body))))
-
-(with-post-hook! #'do-delete-contents (paths/log-func "do-delete-contents"))
-
 (defn do-restore
   [{user :user} {paths :paths}]
   (restore-path

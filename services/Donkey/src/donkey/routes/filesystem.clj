@@ -70,7 +70,7 @@
       (controller req trash/do-delete :params :body))
 
     (POST "/filesystem/delete-contents" [:as req]
-      (controller req trash/do-delete-contents :params :body))
+      (controller req data/delete-contents :params :body))
 
     (POST "/filesystem/move" [:as req]
       (controller req move/do-move :params :body))

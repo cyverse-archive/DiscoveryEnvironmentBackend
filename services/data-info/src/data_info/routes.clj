@@ -12,6 +12,7 @@
             [data-info.routes.navigation :as navigation-routes]
             [data-info.routes.status :as status-routes]
             [data-info.routes.stats :as stat-routes]
+            [data-info.routes.trash :as trash-routes]
             [data-info.util :as util]
             [data-info.util.config :as config]
             [data-info.util.service :as svc]
@@ -48,4 +49,5 @@
     home-routes/home
     navigation-routes/navigation
     stat-routes/stat-gatherer
+    trash-routes/trash
     (route/not-found (svc/unrecognized-path-response))))
