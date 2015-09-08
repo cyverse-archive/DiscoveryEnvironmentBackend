@@ -114,6 +114,16 @@
                    :body         (json/encode {:dirname (:dest body)})}]
       (http/put (str url) req-map))))
 
+(defn delete-contents
+    "Uses the data-info delete-children endpoint to delete the contents of a directory."
+    [params body]
+    (with-jargon (icat/jargon-cfg) [cm]
+      (let [path-uuid (:id (uuids/uuid-for-path cm (:user params) (:path body)))
+            url (url/url (cfg/data-info-base-url) "data" path-uuid "children")
+            req-map {:query-params (select-keys params [:user])
+                     :content-type :json}]
+        (http/delete (str url) req-map))))
+
 (defn get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If
    the path exists and refers to a regular file then nil is returned.
