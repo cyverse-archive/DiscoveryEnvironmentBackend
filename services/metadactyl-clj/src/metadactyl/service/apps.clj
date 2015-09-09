@@ -244,16 +244,15 @@
 
 (defn sync-job-statuses
   []
-  (try+
-   (tc/set-context! @logging-context-map)
-   (log/info "synchronizing job statuses")
-   (dorun (map sync-job-status (jp/list-incomplete-jobs)))
-   (catch Object _
-     (log/error (:throwable &throw-context)
-                "error while obtaining the list of jobs to synchronize."))
-   (finally
-     (log/info "done synchronizing job statuses")
-     (tc/clear-context!))))
+  (tc/with-logging-context @logging-context-map
+    (try+
+      (log/info "synchronizing job statuses")
+      (dorun (map sync-job-status (jp/list-incomplete-jobs)))
+      (catch Object _
+        (log/error (:throwable &throw-context)
+                   "error while obtaining the list of jobs to synchronize."))
+      (finally
+        (log/info "done synchronizing job statuses")))))
 
 (defn update-job
   [user job-id body]

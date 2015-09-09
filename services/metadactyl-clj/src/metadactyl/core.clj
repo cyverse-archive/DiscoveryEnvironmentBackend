@@ -63,9 +63,7 @@
 
 (defn -main
   [& args]
-  (tc/set-context! config/svc-info)
   (require 'metadactyl.routes.api)
-  (eval "(metadactyl.routes.api/set-context-map! metadactyl.util.config/svc-info)")
   (let [app (eval 'metadactyl.routes.api/app)
         {:keys [options arguments errors summary]} (ccli/handle-args config/svc-info args cli-options)]
     (when-not (fs/exists? (:config options))

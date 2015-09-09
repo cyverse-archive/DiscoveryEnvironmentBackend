@@ -43,21 +43,9 @@
 
 (defmethod json-type schema.core.AnythingSchema [_] {:type "any"})
 
-(def context-map (ref {}))
-
-(defn set-context-map!
-  "Sets the map that will be used to create the ThreadContext by wrap-context-map."
-  [cm]
-  (dosync (ref-set context-map cm)))
-
-(defn wrap-context-map
-  "Sets the ThreadContext for each request."
+(defn context-middleware
   [handler]
-  (fn [request]
-    (tc/set-context! @context-map)
-    (let [resp (handler request)]
-      (tc/clear-context!)
-      resp)))
+  (tc/wrap-thread-context handler config/svc-info))
 
 (defapi app
   (swagger-ui config/docs-uri)
@@ -89,7 +77,7 @@
   (middlewares
     [wrap-keyword-params
      wrap-query-params
-     wrap-context-map
+     context-middleware
      log-validation-errors]
     (context* "/" []
       :tags ["service-info"]
@@ -101,7 +89,7 @@
     [wrap-keyword-params
      wrap-query-params
      tc/add-user-to-context
-     wrap-context-map
+     context-middleware
      log-validation-errors
      store-current-user]
     (context* "/apps/categories" []
