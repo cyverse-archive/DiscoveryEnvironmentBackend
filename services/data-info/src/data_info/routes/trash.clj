@@ -1,10 +1,20 @@
 (ns data-info.routes.trash
   (:use [compojure.api.sweet]
-        [data-info.routes.domain.common])
+        [data-info.routes.domain.common]
+        [data-info.routes.domain.trash])
   (:require [data-info.services.trash :as trash]
             [data-info.util.service :as svc]))
 
 (defroutes* trash
+    (DELETE* "/trash" [:as {uri :uri}]
+      :tags ["data"]
+      :query [params SecuredQueryParamsRequired]
+      :return Trash
+      :summary "Empty Trash"
+      :description (str
+  "Empty the trash of the user provided.")
+      (svc/trap uri trash/do-delete-trash params))
+
     (context* "/data/:data-id" []
       :path-params [data-id :- DataIdPathParam]
       :tags ["data-by-id"]

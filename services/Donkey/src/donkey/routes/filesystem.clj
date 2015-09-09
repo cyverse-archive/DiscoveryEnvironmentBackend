@@ -130,7 +130,7 @@
       (controller req ticket/do-list-tickets :params :body))
 
     (DELETE "/filesystem/trash" [:as req]
-      (controller req trash/do-delete-trash :params))
+      (controller req data/delete-trash :params))
 
     (POST "/filesystem/read-chunk" [:as req]
       (controller req file/do-read-chunk :params :body))

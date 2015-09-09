@@ -124,6 +124,14 @@
                      :content-type :json}]
         (http/delete (str url) req-map))))
 
+(defn delete-trash
+    "Uses the data-info trash endpoint to empty the trash of a user."
+    [params]
+    (let [url (url/url (cfg/data-info-base-url) "/trash")
+          req-map {:query-params (select-keys params [:user])
+                   :content-type :json}]
+      (http/delete (str url) req-map)))
+
 (defn get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If
    the path exists and refers to a regular file then nil is returned.

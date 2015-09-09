@@ -157,25 +157,6 @@
                                          :partial-restore restored-to-homedir}))))
         {:restored @retval}))))
 
-(defn- list-in-dir
-  [cm fixed-path]
-  (let [ffilter (proxy [java.io.FileFilter] [] (accept [stuff] true))]
-    (.getListInDirWithFileFilter
-      (:fileSystemAO cm)
-      (file cm fixed-path)
-      ffilter)))
-
-(defn- delete-trash
-  [user]
-  (with-jargon (jargon/jargon-cfg) [cm]
-    (validators/user-exists cm user)
-    (let [trash-dir  (paths/user-trash-path user)
-          trash-list (mapv #(.getAbsolutePath %) (list-in-dir cm (ft/rm-last-slash trash-dir)))]
-      (doseq [trash-path trash-list]
-        (delete cm trash-path true))
-      {:trash trash-dir
-       :paths trash-list})))
-
 (defn do-delete
   [{user :user} {paths :paths}]
   (delete-paths user paths))
@@ -228,14 +209,3 @@
       (validators/validate-num-paths-under-folder user (paths/user-trash-path user)))))
 
 (with-post-hook! #'do-restore-all (paths/log-func "do-restore-all"))
-
-(defn do-delete-trash
-  [{user :user}]
-  (delete-trash user))
-
-(with-post-hook! #'do-delete-trash (paths/log-func "do-delete-trash"))
-
-(with-pre-hook! #'do-delete-trash
-  (fn [params]
-    (paths/log-call "do-delete-trash" params)
-    (validate-map params {:user string?})))
