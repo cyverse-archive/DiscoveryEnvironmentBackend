@@ -67,7 +67,7 @@ func LogWriter(logbuf []byte) (n int, err error) {
 }
 
 func init() {
-	logger = log.New(LoggerFunc(LogWriter), "", 0)
+	logger = log.New(LoggerFunc(LogWriter), "", log.Lshortfile)
 	flag.Parse()
 }
 
