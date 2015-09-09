@@ -4,8 +4,18 @@ import (
 	"database/sql"
 	"time"
 
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
+
+var epoch = time.Unix(0, 0)
+
+// Returns nil if a string is empty or the string itself otherwise.
+func emptyStringToNil(s *string) *string {
+	if s == nil || *s == "" {
+		return nil
+	}
+	return s
+}
 
 // Databaser is a type used to interact with the database.
 type Databaser struct {
@@ -138,32 +148,165 @@ func (d *Databaser) AddJob(condorID string) (*JobRecord, error) {
 	return job, nil
 }
 
+var _upsertJobStmt = `
+    WITH new_values (
+        batch_id,
+        submitter,
+        date_submitted,
+        date_started,
+        date_completed,
+        app_id,
+        exit_code,
+        failure_threshold,
+        failure_count,
+        condor_id,
+        invocation_id
+    ) AS (
+        VALUES (
+           cast($1 AS uuid),
+           $2,
+           cast($3 AS timestamp with time zone),
+           cast($4 AS timestamp with time zone),
+           cast($5 AS timestamp with time zone),
+           cast($6 AS uuid),
+           cast($7 AS integer),
+           cast($8 AS integer),
+           cast($9 AS integer),
+           $10,
+           cast($11 AS uuid )
+        )
+    ),
+    upsert AS (
+        UPDATE jobs j
+        SET batch_id  = nv.batch_id,
+            submitter = nv.submitter,
+            date_submitted    = nv.date_submitted,
+            date_started      = nv.date_started,
+            date_completed    = nv.date_completed,
+            app_id            = nv.app_id,
+            exit_code         = nv.exit_code,
+            failure_threshold = nv.failure_threshold,
+            failure_count     = nv.failure_count,
+            invocation_id     = nv.invocation_id
+        FROM new_values nv
+        WHERE j.condor_id = nv.condor_id
+        RETURNING j.*
+    )
+    INSERT INTO jobs (
+        batch_id,
+        submitter,
+        date_submitted,
+        date_started,
+        date_completed,
+        app_id,
+        exit_code,
+        failure_threshold,
+        failure_count,
+        condor_id,
+        invocation_id
+    )
+    SELECT batch_id,
+           submitter,
+           date_submitted,
+           date_started,
+           date_completed,
+           app_id,
+           exit_code,
+           failure_threshold,
+           failure_count,
+           condor_id,
+           invocation_id
+    FROM new_values
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM upsert up
+        WHERE up.condor_id = new_values.condor_id
+    )
+    RETURNING cast(jobs.id AS varchar),
+              jobs.batch_id,
+              jobs.submitter,
+              jobs.date_submitted,
+              jobs.date_started,
+              jobs.date_completed,
+              jobs.app_id,
+              jobs.exit_code,
+              jobs.failure_threshold,
+              jobs.failure_count,
+              jobs.condor_id,
+              jobs.invocation_id
+`
+
+// Attempts to perform a job upsert.
+func attemptJobUpsert(stmt *sql.Stmt, jr *JobRecord) (*JobRecord, error) {
+	row := stmt.QueryRow(
+		emptyStringToNil(&jr.BatchID),
+		jr.Submitter,
+		jr.DateSubmitted,
+		jr.DateStarted,
+		jr.DateCompleted,
+		emptyStringToNil(&jr.AppID),
+		jr.ExitCode,
+		jr.FailureThreshold,
+		jr.FailureCount,
+		jr.CondorID,
+		emptyStringToNil(&jr.InvocationID),
+	)
+	jr, err := jobRecordFromRow(row)
+	return jr, err
+}
+
 // UpsertJob updates a job if it already exists, otherwise it inserts a new job
 // into the database.
 func (d *Databaser) UpsertJob(jr *JobRecord) (*JobRecord, error) {
-	job, err := d.GetJobByCondorID(jr.CondorID)
-	if err == sql.ErrNoRows {
-		id, err := d.InsertJob(jr)
-		if err != nil {
-			logger.Println("Error inserting job")
-			return nil, err
-		}
-		newJob, err := d.GetJob(id)
-		if err != nil {
-			return nil, err
-		}
-		return newJob, nil
+	var updatedJr *JobRecord = nil
+
+	// This needs to be done inside a transaction.
+	tx, err := d.db.Begin()
+	if err != nil {
+		logger.Println("Unable to start a transaction:", err)
+		return nil, err
 	}
+
+	// Prepare the SQL statement.
+	stmt, err := tx.Prepare(_upsertJobStmt)
+	if err != nil {
+		logger.Println("Unable to prepare job upsert statement:", err)
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Attempt to insert or update the job.
+	firstAttemptJr, err := attemptJobUpsert(stmt, jr)
+	if err != nil {
+		pqErr, ok := err.(*pq.Error)
+		if ok && pqErr.Code.Name() == "unique_violation" {
+			logger.Println("Unique violation on job upsert - retrying")
+		} else {
+			logger.Println("Error upserting job:", err)
+			tx.Rollback()
+			return nil, err
+		}
+	} else {
+		updatedJr = firstAttemptJr
+	}
+
+	// Retry the upsert if necessary.
+	if updatedJr == nil {
+		secondAttemptJr, err := attemptJobUpsert(stmt, jr)
+		if err != nil {
+			logger.Println("Error upserting job:", err)
+			tx.Rollback()
+			return nil, err
+		}
+		updatedJr = secondAttemptJr
+	}
+
+	// Commit the transaction.
+	err = tx.Commit()
 	if err != nil {
 		return nil, err
 	}
-	jr.ID = job.ID
-	updated, err := d.UpdateJob(jr)
-	if err != nil {
-		logger.Println("Error updating job")
-		return nil, err
-	}
-	return updated, nil
+	return updatedJr, nil
 }
 
 // DeleteJob removes a JobRecord from the database.
@@ -203,6 +346,64 @@ func FixInvID(jr *JobRecord, invid interface{}) {
 	}
 }
 
+// fixNullableUuid returns a string representation of a UUID, with the empty string
+// being used to represent a null UUID.
+func fixNullableUuid(nullableUuid interface{}) string {
+	if nullableUuid == nil {
+		return ""
+	} else {
+		return string(nullableUuid.([]uint8))
+	}
+}
+
+// This evil has been perpetrated to avoid an issue where time.Time instances
+// set to their zero value and stored in PostgreSQL with timezone info can
+// come back as Time instances from __before__ the epoch. We need to re-zero
+// the dates on the fly when that happens.
+func fixTimestamp(timestamp *time.Time) *time.Time {
+	if timestamp.Before(epoch) {
+		return &epoch
+	}
+	return timestamp
+}
+
+// jobRecordFromRow converts a row from a result set to a job record
+func jobRecordFromRow(row *sql.Row) (*JobRecord, error) {
+	jr := &JobRecord{}
+
+	// Workaround for nullable UUID fields in the database.
+	var batchid interface{}
+	var appid interface{}
+	var invid interface{}
+
+	err := row.Scan(
+		&jr.ID,
+		&batchid,
+		&jr.Submitter,
+		&jr.DateSubmitted,
+		&jr.DateStarted,
+		&jr.DateCompleted,
+		&appid,
+		&jr.ExitCode,
+		&jr.FailureThreshold,
+		&jr.FailureCount,
+		&jr.CondorID,
+		&invid,
+	)
+
+	// Update the nullable UUID fields in the job record.
+	jr.BatchID = fixNullableUuid(batchid)
+	jr.AppID = fixNullableUuid(appid)
+	jr.InvocationID = fixNullableUuid(invid)
+
+	// Fix any malformed timestamps.
+	jr.DateSubmitted = *fixTimestamp(&jr.DateSubmitted)
+	jr.DateStarted = *fixTimestamp(&jr.DateStarted)
+	jr.DateCompleted = *fixTimestamp(&jr.DateCompleted)
+
+	return jr, err
+}
+
 // GetJob returns a JobRecord from the database.
 func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	query := `
@@ -221,43 +422,8 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	  FROM jobs
 	 WHERE id = cast($1 as uuid)
 	`
-	jr := &JobRecord{}
-	rows := d.db.QueryRow(query, uuid)
-	var batchid interface{}
-	var appid interface{}
-	var invid interface{}
-	err := rows.Scan(
-		&jr.ID,
-		&batchid,
-		&jr.Submitter,
-		&jr.DateSubmitted,
-		&jr.DateStarted,
-		&jr.DateCompleted,
-		&appid,
-		&jr.ExitCode,
-		&jr.FailureThreshold,
-		&jr.FailureCount,
-		&jr.CondorID,
-		&invid,
-	)
-	// This evil has been perpetrated to avoid an issue where time.Time instances
-	// set to their zero value and stored in PostgreSQL with timezone info can
-	// come back as Time instances from __before__ the epoch. We need to re-zero
-	// the dates on the fly when that happens.
-	epoch := time.Unix(0, 0)
-	if jr.DateSubmitted.Before(epoch) {
-		jr.DateSubmitted = epoch
-	}
-	if jr.DateStarted.Before(epoch) {
-		jr.DateStarted = epoch
-	}
-	if jr.DateCompleted.Before(epoch) {
-		jr.DateCompleted = epoch
-	}
-	FixBatchID(jr, batchid)
-	FixAppID(jr, appid)
-	FixInvID(jr, invid)
-	return jr, err
+	row := d.db.QueryRow(query, uuid)
+	return jobRecordFromRow(row)
 }
 
 // GetJobByCondorID returns a JobRecord from the database.
@@ -278,43 +444,8 @@ func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
  	 FROM jobs
 	WHERE condor_id = $1
 	`
-	jr := &JobRecord{}
-	rows := d.db.QueryRow(query, condorID)
-	var batchid interface{}
-	var appid interface{}
-	var invid interface{}
-	err := rows.Scan(
-		&jr.ID,
-		&batchid,
-		&jr.Submitter,
-		&jr.DateSubmitted,
-		&jr.DateStarted,
-		&jr.DateCompleted,
-		&appid,
-		&jr.ExitCode,
-		&jr.FailureThreshold,
-		&jr.FailureCount,
-		&jr.CondorID,
-		&invid,
-	)
-	// This evil has been perpetrated to avoid an issue where time.Time instances
-	// set to their zero value and stored in PostgreSQL with timezone info can
-	// come back as Time instances from __before__ the epoch. We need to re-zero
-	// the dates on the fly when that happens.
-	epoch := time.Unix(0, 0)
-	if jr.DateSubmitted.Before(epoch) {
-		jr.DateSubmitted = epoch
-	}
-	if jr.DateStarted.Before(epoch) {
-		jr.DateStarted = epoch
-	}
-	if jr.DateCompleted.Before(epoch) {
-		jr.DateCompleted = epoch
-	}
-	FixBatchID(jr, batchid)
-	FixAppID(jr, appid)
-	FixInvID(jr, invid)
-	return jr, err
+	row := d.db.QueryRow(query, condorID)
+	return jobRecordFromRow(row)
 }
 
 // GetJobByInvocationID returns a JobRecord from the database.
@@ -335,47 +466,8 @@ func (d *Databaser) GetJobByInvocationID(invocationID string) (*JobRecord, error
 	  FROM jobs
 	 WHERE invocation_id = cast($1 as uuid)
 	`
-	jr := &JobRecord{}
-	rows := d.db.QueryRow(query, invocationID)
-	var batchid interface{}
-	var appid interface{}
-	var invid interface{}
-	err := rows.Scan(
-		&jr.ID,
-		&batchid,
-		&jr.Submitter,
-		&jr.DateSubmitted,
-		&jr.DateStarted,
-		&jr.DateCompleted,
-		&appid,
-		&jr.ExitCode,
-		&jr.FailureThreshold,
-		&jr.FailureCount,
-		&jr.CondorID,
-		&invid,
-	)
-	// rows.Scan returns ErrNoRows if no rows were found.
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-	// This evil has been perpetrated to avoid an issue where time.Time instances
-	// set to their zero value and stored in PostgreSQL with timezone info can
-	// come back as Time instances from __before__ the epoch. We need to re-zero
-	// the dates on the fly when that happens.
-	epoch := time.Unix(0, 0)
-	if jr.DateSubmitted.Before(epoch) {
-		jr.DateSubmitted = epoch
-	}
-	if jr.DateStarted.Before(epoch) {
-		jr.DateStarted = epoch
-	}
-	if jr.DateCompleted.Before(epoch) {
-		jr.DateCompleted = epoch
-	}
-	FixBatchID(jr, batchid)
-	FixAppID(jr, appid)
-	FixInvID(jr, invid)
-	return jr, err
+	row := d.db.QueryRow(query, invocationID)
+	return jobRecordFromRow(row)
 }
 
 // UpdateJob updates a job instance in the database

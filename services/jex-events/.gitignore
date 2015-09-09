@@ -2,3 +2,5 @@ Godeps/_workspace/
 Godeps/Readme
 bin/
 pkg/
+.hg/
+.git/
