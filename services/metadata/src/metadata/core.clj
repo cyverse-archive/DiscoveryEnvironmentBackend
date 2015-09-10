@@ -26,9 +26,9 @@
 
 (defn -main
   [& args]
-  (tc/set-context! config/svc-info)
-  (let [{:keys [options arguments errors summary]} (ccli/handle-args config/svc-info args cli-options)]
-    (init-service (:config options))
-    (log/warn "Started listening on" (config/listen-port))
-    (require 'metadata.routes) ; After init-service so the database is initialized
-    (jetty/run-jetty (eval 'metadata.routes/app) {:port (config/listen-port)})))
+  (tc/with-logging-context config/svc-info
+    (let [{:keys [options arguments errors summary]} (ccli/handle-args config/svc-info args cli-options)]
+      (init-service (:config options))
+      (log/warn "Started listening on" (config/listen-port))
+      (require 'metadata.routes) ; After init-service so the database is initialized
+      (jetty/run-jetty (eval 'metadata.routes/app) {:port (config/listen-port)}))))

@@ -116,11 +116,11 @@
 
 (defn -main
   [& args]
-  (tc/set-context! svc-info)
-  (try+
-   (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
-     (when-not (fs/exists? (:config options))
-       (ccli/exit 1 (str "The config file does not exist.")))
-     (run (partial config/load-config-from-file (:config options))))
-    (catch Object _
-      (log/error (:throwable &throw-context) "UNEXPECTED ERROR - EXITING"))))
+  (tc/with-logging-context svc-info
+    (try+
+     (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+       (when-not (fs/exists? (:config options))
+         (ccli/exit 1 (str "The config file does not exist.")))
+       (run (partial config/load-config-from-file (:config options))))
+      (catch Object _
+        (log/error (:throwable &throw-context) "UNEXPECTED ERROR - EXITING")))))

@@ -82,16 +82,16 @@
 
 (defn -main
   [& args]
-  (tc/set-context! config/svc-info)
-  (require 'data-info.routes)
-  (let [app (eval 'data-info.routes/app)
-        {:keys [options arguments errors summary]} (ccli/handle-args config/svc-info
-                                                                     args
-                                                                     cli-options)]
-    (when-not (fs/exists? (:config options))
-      (ccli/exit 1 (str "The config file does not exist.")))
-    (when-not (fs/readable? (:config options))
-      (ccli/exit 1 "The config file is not readable."))
-    (load-configuration-from-file (:config options))
-    (icat/configure-icat)
-    (jetty/run-jetty app {:port (config/listen-port)})))
+  (tc/with-logging-context config/svc-info
+    (require 'data-info.routes)
+    (let [app (eval 'data-info.routes/app)
+          {:keys [options arguments errors summary]} (ccli/handle-args config/svc-info
+                                                                       args
+                                                                       cli-options)]
+      (when-not (fs/exists? (:config options))
+        (ccli/exit 1 (str "The config file does not exist.")))
+      (when-not (fs/readable? (:config options))
+        (ccli/exit 1 "The config file is not readable."))
+      (load-configuration-from-file (:config options))
+      (icat/configure-icat)
+      (jetty/run-jetty app {:port (config/listen-port)}))))

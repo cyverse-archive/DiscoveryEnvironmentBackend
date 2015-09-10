@@ -121,8 +121,8 @@
   (fn [request]
     (let [user-info (transform/add-current-user-to-map {})
           request   (assoc request :user-info user-info)]
-      (tc/set-context! user-info)
-      (handler request))))
+      (tc/with-logging-context user-info
+        (handler request)))))
 
 
 (def secured-handler-no-context
@@ -243,12 +243,12 @@
 
 (defn -main
   [& args]
-  (tc/set-context! svc-info)
-  (let [{:keys [options]} (ccli/handle-args svc-info args cli-options)]
-    (when-not (fs/exists? (:config options))
-      (ccli/exit 1 (str "The config file does not exist.")))
-    (when-not (fs/readable? (:config options))
-      (ccli/exit 1 "The config file is not readable."))
-    (config/load-config-from-file (:config options))
-    (icat/configure-icat)
-    (jetty/run-jetty app {:port (config/listen-port)})))
+  (tc/with-logging-context svc-info
+    (let [{:keys [options]} (ccli/handle-args svc-info args cli-options)]
+      (when-not (fs/exists? (:config options))
+        (ccli/exit 1 (str "The config file does not exist.")))
+      (when-not (fs/readable? (:config options))
+        (ccli/exit 1 "The config file is not readable."))
+      (config/load-config-from-file (:config options))
+      (icat/configure-icat)
+      (jetty/run-jetty app {:port (config/listen-port)}))))

@@ -52,18 +52,18 @@
 
 (defn -main
   [& args]
-  (tc/set-context! svc-info)
-  (try+
-    (let [{:keys [options _ _ _]} (cli/handle-args svc-info args (fn [] cli-options))]
-      (when-not (fs/exists? (:config options))
-        (cli/exit 1 "The config file does not exist."))
-      (when-not (fs/readable? (:config options))
-        (cli/exit 1 "The config file is not readable."))
-      (let [props (load-config-from-file (:config options))]
-        (if (:reindex options)
-          (reindex props)
-          (listen props))))
-    (catch Object _
-      (log/fatal (:message &throw-context)
-                 (apply str (map #(str "\n\t" %) (:stack-trace &throw-context))))
-      (log/fatal "EXITING"))))
+  (tc/with-logging-context svc-info
+    (try+
+      (let [{:keys [options _ _ _]} (cli/handle-args svc-info args (fn [] cli-options))]
+        (when-not (fs/exists? (:config options))
+          (cli/exit 1 "The config file does not exist."))
+        (when-not (fs/readable? (:config options))
+          (cli/exit 1 "The config file is not readable."))
+        (let [props (load-config-from-file (:config options))]
+          (if (:reindex options)
+            (reindex props)
+            (listen props))))
+      (catch Object _
+        (log/fatal (:message &throw-context)
+                   (apply str (map #(str "\n\t" %) (:stack-trace &throw-context))))
+        (log/fatal "EXITING")))))

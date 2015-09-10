@@ -124,16 +124,16 @@
 
 (defn -main
   [& args]
-  (tc/set-context! svc-info)
-  (let [{:keys [options]} (ccli/handle-args svc-info args cli-options)]
-    (when-not (fs/exists? (:config options))
-      (ccli/exit 1 (str "The config file does not exist.")))
-    (when-not (fs/readable? (:config options))
-      (ccli/exit 1 "The config file is not readable."))
-    (cfg/local-init (:config options))
-    (cfg/jargon-init)
-    (cfg/log-config)
-    (with-redefs [clojure.java.io/buffer-size override-buffer-size]
-      (let [port (Integer/parseInt (string/trim (get @cfg/props "kifshare.app.port")))]
-        (log/warn "Configured listen port is: " port)
-        (jetty/run-jetty app {:port port})))))
+  (tc/with-logging-context svc-info
+    (let [{:keys [options]} (ccli/handle-args svc-info args cli-options)]
+      (when-not (fs/exists? (:config options))
+        (ccli/exit 1 (str "The config file does not exist.")))
+      (when-not (fs/readable? (:config options))
+        (ccli/exit 1 "The config file is not readable."))
+      (cfg/local-init (:config options))
+      (cfg/jargon-init)
+      (cfg/log-config)
+      (with-redefs [clojure.java.io/buffer-size override-buffer-size]
+        (let [port (Integer/parseInt (string/trim (get @cfg/props "kifshare.app.port")))]
+          (log/warn "Configured listen port is: " port)
+          (jetty/run-jetty app {:port port}))))))

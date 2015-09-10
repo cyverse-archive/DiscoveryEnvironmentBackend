@@ -40,11 +40,11 @@
 
 (defn -main
   [& args]
-  (tc/set-context! svc-info)
-  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
-    (when-not (fs/exists? (:config options))
-      (ccli/exit 1 "The config file does not exist."))
-    (when-not (fs/readable? (:config options))
-      (ccli/exit 1 "The config file is not readable."))
-    (cfg/load-config-from-file (:config options))
-    (messages/receive (mk-jargon-cfg))))
+  (tc/with-logging-context svc-info
+    (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+      (when-not (fs/exists? (:config options))
+        (ccli/exit 1 "The config file does not exist."))
+      (when-not (fs/readable? (:config options))
+        (ccli/exit 1 "The config file is not readable."))
+      (cfg/load-config-from-file (:config options))
+      (messages/receive (mk-jargon-cfg)))))

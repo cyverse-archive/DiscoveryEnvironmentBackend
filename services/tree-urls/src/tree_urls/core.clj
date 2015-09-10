@@ -78,11 +78,11 @@
 
 (defn -main
   [& args]
-  (tc/set-context! svc-info)
-  (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
-    (when-not (fs/exists? (:config options))
-      (ccli/exit 1 (str "The default --config file " (:config options) " does not exist.")))
-    (cfg/load-config options)
-    (connect-db)
-    (log/info "Started listening on" (:port @cfg/cfg))
-    (jetty/run-jetty app {:port (Integer/parseInt (:port @cfg/cfg))})))
+  (tc/with-logging-context svc-info
+    (let [{:keys [options arguments errors summary]} (ccli/handle-args svc-info args cli-options)]
+      (when-not (fs/exists? (:config options))
+        (ccli/exit 1 (str "The default --config file " (:config options) " does not exist.")))
+      (cfg/load-config options)
+      (connect-db)
+      (log/info "Started listening on" (:port @cfg/cfg))
+      (jetty/run-jetty app {:port (Integer/parseInt (:port @cfg/cfg))}))))

@@ -25,9 +25,9 @@
 
 (defn -main
   [& args]
-  (tc/set-context! config/svc-info)
-  (require 'iplant_groups.routes)
-  (let [{:keys [options arguments errors summary]} (ccli/handle-args config/svc-info args cli-options)]
-    (init-service (:config options))
-    (log/warn "Started listening on" (config/listen-port))
-    (jetty/run-jetty (eval 'iplant_groups.routes/app) {:port (config/listen-port)})))
+  (tc/with-logging-context config/svc-info
+    (require 'iplant_groups.routes)
+    (let [{:keys [options arguments errors summary]} (ccli/handle-args config/svc-info args cli-options)]
+      (init-service (:config options))
+      (log/warn "Started listening on" (config/listen-port))
+      (jetty/run-jetty (eval 'iplant_groups.routes/app) {:port (config/listen-port)}))))
