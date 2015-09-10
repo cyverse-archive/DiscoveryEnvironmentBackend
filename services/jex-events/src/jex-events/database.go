@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/lib/pq"
@@ -148,20 +150,22 @@ func (d *Databaser) AddJob(condorID string) (*JobRecord, error) {
 	return job, nil
 }
 
-var _upsertJobStmt = `
-    WITH new_values (
-        batch_id,
-        submitter,
-        date_submitted,
-        date_started,
-        date_completed,
-        app_id,
-        exit_code,
-        failure_threshold,
-        failure_count,
-        condor_id,
-        invocation_id
-    ) AS (
+var _upsertJobColumns = []string{
+	"batch_id",
+	"submitter",
+	"date_submitted",
+	"date_started",
+	"date_completed",
+	"app_id",
+	"exit_code",
+	"failure_threshold",
+	"failure_count",
+	"condor_id",
+	"invocation_id",
+}
+
+const _upsertJobStmt = `
+    WITH new_values ( %[1]s ) AS (
         VALUES (
            cast($1 AS uuid),
            $2,
@@ -178,34 +182,24 @@ var _upsertJobStmt = `
     ),
     upsert AS (
         UPDATE jobs j
-        SET batch_id  = nv.batch_id,
-            submitter = nv.submitter,
-            date_submitted    = nv.date_submitted,
-            date_started      = nv.date_started,
-            date_completed    = nv.date_completed,
-            app_id            = nv.app_id,
-            exit_code         = nv.exit_code,
-            failure_threshold = nv.failure_threshold,
-            failure_count     = nv.failure_count,
-            invocation_id     = nv.invocation_id
+        SET %[2]s
         FROM new_values nv
         WHERE j.condor_id = nv.condor_id
         RETURNING j.*
     )
-    INSERT INTO jobs (
-        batch_id,
-        submitter,
-        date_submitted,
-        date_started,
-        date_completed,
-        app_id,
-        exit_code,
-        failure_threshold,
-        failure_count,
-        condor_id,
-        invocation_id
+    INSERT INTO jobs (%[1]s)
+    SELECT %[1]s
+    FROM new_values
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM upsert up
+        WHERE up.condor_id = new_values.condor_id
     )
-    SELECT batch_id,
+`
+
+const _jobByCondorIdQuery = `
+    SELECT cast(id as varchar),
+           batch_id,
            submitter,
            date_submitted,
            date_started,
@@ -216,29 +210,26 @@ var _upsertJobStmt = `
            failure_count,
            condor_id,
            invocation_id
-    FROM new_values
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM upsert up
-        WHERE up.condor_id = new_values.condor_id
-    )
-    RETURNING cast(jobs.id AS varchar),
-              jobs.batch_id,
-              jobs.submitter,
-              jobs.date_submitted,
-              jobs.date_started,
-              jobs.date_completed,
-              jobs.app_id,
-              jobs.exit_code,
-              jobs.failure_threshold,
-              jobs.failure_count,
-              jobs.condor_id,
-              jobs.invocation_id
-`
+    FROM jobs
+    WHERE condor_id = $1 `
+
+func upsertSetList(prefix string) string {
+	columns := make([]string, len(_upsertJobColumns), len(_upsertJobColumns))
+	for i := 0; i < len(_upsertJobColumns); i++ {
+		column := _upsertJobColumns[i]
+		columns[i] = fmt.Sprintf("%s = %s.%s", column, prefix, column)
+	}
+	return strings.Join(columns, ", ")
+}
+
+func upsertJobStmt() string {
+	stdColumnList := strings.Join(_upsertJobColumns, ", ")
+	return fmt.Sprintf(_upsertJobStmt, stdColumnList, upsertSetList("nv"))
+}
 
 // Attempts to perform a job upsert.
-func attemptJobUpsert(stmt *sql.Stmt, jr *JobRecord) (*JobRecord, error) {
-	row := stmt.QueryRow(
+func attemptJobUpsert(stmt *sql.Stmt, jr *JobRecord) (sql.Result, error) {
+	return stmt.Exec(
 		emptyStringToNil(&jr.BatchID),
 		jr.Submitter,
 		jr.DateSubmitted,
@@ -251,8 +242,12 @@ func attemptJobUpsert(stmt *sql.Stmt, jr *JobRecord) (*JobRecord, error) {
 		jr.CondorID,
 		emptyStringToNil(&jr.InvocationID),
 	)
-	jr, err := jobRecordFromRow(row)
-	return jr, err
+}
+
+// Retrieves an upserted job.
+func getUpsertedJob(tx *sql.Tx, condorId string) (*JobRecord, error) {
+	row := tx.QueryRow(_jobByCondorIdQuery, condorId)
+	return jobRecordFromRow(row)
 }
 
 // UpsertJob updates a job if it already exists, otherwise it inserts a new job
@@ -268,7 +263,7 @@ func (d *Databaser) UpsertJob(jr *JobRecord) (*JobRecord, error) {
 	}
 
 	// Prepare the SQL statement.
-	stmt, err := tx.Prepare(_upsertJobStmt)
+	stmt, err := tx.Prepare(upsertJobStmt())
 	if err != nil {
 		logger.Println("Unable to prepare job upsert statement:", err)
 		tx.Rollback()
@@ -276,7 +271,7 @@ func (d *Databaser) UpsertJob(jr *JobRecord) (*JobRecord, error) {
 	}
 
 	// Attempt to insert or update the job.
-	firstAttemptJr, err := attemptJobUpsert(stmt, jr)
+	_, err = attemptJobUpsert(stmt, jr)
 	if err != nil {
 		pqErr, ok := err.(*pq.Error)
 		if ok && pqErr.Code.Name() == "unique_violation" {
@@ -287,18 +282,26 @@ func (d *Databaser) UpsertJob(jr *JobRecord) (*JobRecord, error) {
 			return nil, err
 		}
 	} else {
-		updatedJr = firstAttemptJr
+		updatedJr, err = getUpsertedJob(tx, jr.CondorID)
+		if err != nil {
+			logger.Println("unable to look up job with Condor ID", jr.CondorID)
+			return nil, err
+		}
 	}
 
 	// Retry the upsert if necessary.
 	if updatedJr == nil {
-		secondAttemptJr, err := attemptJobUpsert(stmt, jr)
+		_, err := attemptJobUpsert(stmt, jr)
 		if err != nil {
 			logger.Println("Error upserting job:", err)
 			tx.Rollback()
 			return nil, err
 		}
-		updatedJr = secondAttemptJr
+		updatedJr, err = getUpsertedJob(tx, jr.CondorID)
+		if err != nil {
+			logger.Println("unable to look up job with Condor ID", jr.CondorID)
+			return nil, err
+		}
 	}
 
 	// Commit the transaction.
@@ -428,23 +431,7 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 
 // GetJobByCondorID returns a JobRecord from the database.
 func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
-	query := `
-	SELECT cast(id as varchar),
-				batch_id,
-				submitter,
-				date_submitted,
-				date_started,
-				date_completed,
-				app_id,
-				exit_code,
-				failure_threshold,
-				failure_count,
-				condor_id,
-				invocation_id
- 	 FROM jobs
-	WHERE condor_id = $1
-	`
-	row := d.db.QueryRow(query, condorID)
+	row := d.db.QueryRow(_jobByCondorIdQuery, condorID)
 	return jobRecordFromRow(row)
 }
 

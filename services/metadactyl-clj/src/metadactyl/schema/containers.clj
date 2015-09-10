@@ -8,7 +8,7 @@
    {:name                 s/Str
     :id                   s/Uuid
     (s/optional-key :tag) s/Str
-    :url                  s/Str}
+    (s/optional-key :url) (s/maybe s/Str)}
    "A map describing a container image."))
 
 (s/defschema Images
@@ -174,7 +174,6 @@
     (-> DataContainer
         (->optional-param :name_prefix)
         (->optional-param :name)
-        (->optional-param :url)
         (dissoc :id))
     "A map for updating data container settings."))
 
