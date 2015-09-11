@@ -89,6 +89,31 @@
         :paths
         (get path))))
 
+(defn get-or-create-dir
+  "Returns the path argument if the path exists and refers to a directory.  If
+   the path exists and refers to a regular file then nil is returned.
+   Otherwise, a new directory is created and the path is returned."
+  [path]
+  (log/debug "getting or creating dir: path =" path)
+  (cond
+   (not (e/path-exists? path))
+    (create-dir {:user (:shortUsername current-user)} {:path path})
+
+   (and (e/path-exists? path) (st/path-is-dir? path))
+   path
+
+   (and (e/path-exists? path) (not (st/path-is-dir? path)))
+   nil
+
+   :else
+   nil))
+
+(defn can-create-dir?
+  "Determines if a directory exists or can be created."
+  [user path]
+  (log/warn "checking to see if" path "can be created")
+  (st/can-create-dir? user path))
+
 (defn rename
   "Uses the data-info set-name endpoint to rename a file within the same directory."
   [params body]
@@ -132,30 +157,14 @@
                    :content-type :json}]
       (http/delete (str url) req-map)))
 
-(defn get-or-create-dir
-  "Returns the path argument if the path exists and refers to a directory.  If
-   the path exists and refers to a regular file then nil is returned.
-   Otherwise, a new directory is created and the path is returned."
-  [path]
-  (log/debug "getting or creating dir: path =" path)
-  (cond
-   (not (e/path-exists? path))
-    (create-dir {:user (:shortUsername current-user)} {:path path})
-
-   (and (e/path-exists? path) (st/path-is-dir? path))
-   path
-
-   (and (e/path-exists? path) (not (st/path-is-dir? path)))
-   nil
-
-   :else
-   nil))
-
-(defn can-create-dir?
-  "Determines if a directory exists or can be created."
-  [user path]
-  (log/warn "checking to see if" path "can be created")
-  (st/can-create-dir? user path))
+(defn collect-permissions
+    "Uses the data-info permissions-gatherer endpoint to query user permissions for a set of files/folders."
+    [params body]
+    (let [url (url/url (cfg/data-info-base-url) "permissions-gatherer")
+          req-map {:query-params (select-keys params [:user])
+                   :content-type :json
+                   :body (json/encode body)}]
+      (http/post (str url) req-map)))
 
 (defn gen-output-dir
   "Either obtains or creates a default output directory using a specified base name."

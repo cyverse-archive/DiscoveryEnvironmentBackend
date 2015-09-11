@@ -8,6 +8,7 @@
   (:require [compojure.route :as route]
             [data-info.routes.data :as data-routes]
             [data-info.routes.exists :as exists-routes]
+            [data-info.routes.users :as users-routes]
             [data-info.routes.home :as home-routes]
             [data-info.routes.navigation :as navigation-routes]
             [data-info.routes.status :as status-routes]
@@ -46,6 +47,7 @@
     status-routes/status
     data-routes/data-operations
     exists-routes/existence-marker
+    users-routes/permissions-gatherer
     home-routes/home
     navigation-routes/navigation
     stat-routes/stat-gatherer

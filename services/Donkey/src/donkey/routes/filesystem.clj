@@ -112,7 +112,7 @@
       (controller req sharing/do-unshare :params :body))
 
     (POST "/filesystem/user-permissions" [:as req]
-      (controller req user/do-user-permissions :params :body))
+      (controller req data/collect-permissions :params :body))
 
     (POST "/filesystem/restore" [:as req]
       (controller req trash/do-restore :params :body))
