@@ -11,76 +11,12 @@
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
-            [clj-icat-direct.icat :as icat]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.directory :as directory]
             [donkey.services.filesystem.icat :as jargon]
             [donkey.services.filesystem.validators :as validators]))
-
-(def alphanums (concat (range 48 58) (range 65 91) (range 97 123)))
-
-(defn- trim-leading-slash
-  [str-to-trim]
-  (string/replace-first str-to-trim #"^\/" ""))
-
-(defn- rand-str
-  [length]
-  (apply str (take length (repeatedly #(char (rand-nth alphanums))))))
-
-(defn- randomized-trash-path
-  [user path-to-inc]
-  (ft/path-join
-   (paths/user-trash-path user)
-   (str (ft/basename path-to-inc) "." (rand-str 7))))
-
-(defn- move-to-trash
-  [cm p user]
-  (let [trash-path (randomized-trash-path user p)]
-    (move cm p trash-path :user user :admin-users (cfg/irods-admins))
-    (set-metadata cm trash-path "ipc-trash-origin" p paths/IPCSYSTEM)))
-
-(defn- delete-paths
-  [user paths]
-  (let [home-matcher #(= (str "/" (cfg/irods-zone) "/home/" user)
-                         (ft/rm-last-slash %1))]
-    (with-jargon (jargon/jargon-cfg) [cm]
-      (let [paths (mapv ft/rm-last-slash paths)]
-        (validators/user-exists cm user)
-        (validators/all-paths-exist cm paths)
-        (validators/user-owns-paths cm user paths)
-
-        ;;; Not allowed to delete the user's home directory.
-        (when (some true? (mapv home-matcher paths))
-          (throw+ {:error_code ERR_NOT_AUTHORIZED
-                   :paths (filterv home-matcher paths)}))
-
-        (doseq [p paths]
-          (log/debug "path" p)
-          (log/debug "readable?" user (owns? cm user p))
-
-          ;;; Delete all of the tickets associated with the file.
-          (let [path-tickets (mapv :ticket-id (ticket-ids-for-path cm (:username cm) p))]
-            (doseq [path-ticket path-tickets]
-              (delete-ticket cm (:username cm) path-ticket)))
-
-          ;;; If the file isn't already in the user's trash, move it there
-          ;;; otherwise, do a hard delete.
-          (if-not (.startsWith p (paths/user-trash-path user))
-            (move-to-trash cm p user)
-            (delete cm p true))) ;;; Force a delete to bypass proxy user's trash.
-
-         {:paths paths}))))
-
-(defn- trash-relative-path
-  [path name user-trash]
-  (trim-leading-slash
-   (ft/path-join
-    (or (ft/dirname (string/replace-first path (ft/add-trailing-slash user-trash) ""))
-        "")
-    name)))
-
 
 (defn- trash-origin-path
   [cm user p]
@@ -156,22 +92,6 @@
                     (assoc @retval path {:restored-path fully-restored
                                          :partial-restore restored-to-homedir}))))
         {:restored @retval}))))
-
-(defn do-delete
-  [{user :user} {paths :paths}]
-  (delete-paths user paths))
-
-(with-pre-hook! #'do-delete
-  (fn [params body]
-    (paths/log-call "do-delete" params body)
-    (validate-map params {:user string?})
-    (validate-map body   {:paths sequential?})
-    (when (paths/super-user? (:user params))
-      (throw+ {:error_code ERR_NOT_AUTHORIZED
-               :user       (:user params)}))
-    (validators/validate-num-paths-under-paths (:user params) (:paths body))))
-
-(with-post-hook! #'do-delete (paths/log-func "do-delete"))
 
 (defn do-restore
   [{user :user} {paths :paths}]

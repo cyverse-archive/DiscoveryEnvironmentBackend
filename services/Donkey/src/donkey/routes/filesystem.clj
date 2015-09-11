@@ -67,7 +67,7 @@
       (controller req data/rename :params :body))
 
     (POST "/filesystem/delete" [:as req]
-      (controller req trash/do-delete :params :body))
+      (controller req data/delete-paths :params :body))
 
     (POST "/filesystem/delete-contents" [:as req]
       (controller req data/delete-contents :params :body))

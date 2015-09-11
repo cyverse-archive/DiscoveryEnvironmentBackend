@@ -139,6 +139,15 @@
                    :body         (json/encode {:dirname (:dest body)})}]
       (http/put (str url) req-map))))
 
+(defn delete-paths
+    "Uses the data-info deleter endpoint to delete many paths."
+    [params body]
+    (let [url (url/url (cfg/data-info-base-url) "deleter")
+          req-map {:query-params (select-keys params [:user])
+                   :content-type :json
+                   :body (json/encode body)}]
+      (http/post (str url) req-map)))
+
 (defn delete-contents
     "Uses the data-info delete-children endpoint to delete the contents of a directory."
     [params body]
@@ -387,7 +396,7 @@
   "This function constructs the url path to the resource backing a given data item.
 
    Parameters:
-     path - the absolute iRODS path to the data item 
+     path - the absolute iRODS path to the data item
 
    Returns:
      It returns the data-info URL path to the corresponding resource"

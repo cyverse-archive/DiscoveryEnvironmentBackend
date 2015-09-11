@@ -15,6 +15,18 @@
   "Empty the trash of the user provided.")
       (svc/trap uri trash/do-delete-trash params))
 
+    (POST* "/deleter" [:as {uri :uri}]
+      :tags ["bulk"]
+      :query [params SecuredQueryParamsRequired]
+      :body [body (describe Paths "The paths to move to the trash")]
+      :return
+      :summary "Delete Data Items"
+      :description (str
+  "Delete the data items with the listed paths."
+  (get-error-code-block
+    "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_TOO_MANY_PATHS, ERR_NOT_A_USER"))
+      (svc/trap uri trash/do-delete params body))
+
     (context* "/data/:data-id" []
       :path-params [data-id :- DataIdPathParam]
       :tags ["data-by-id"]

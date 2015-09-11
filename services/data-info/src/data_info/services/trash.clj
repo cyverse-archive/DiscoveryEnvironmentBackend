@@ -105,6 +105,20 @@
       {:trash trash-dir
        :paths trash-list})))
 
+(defn do-delete
+  [{user :user} {paths :paths}]
+  (delete-paths user paths))
+
+(with-pre-hook! #'do-delete
+  (fn [params body]
+    (dul/log-call "do-delete" params body)
+    (when (paths/super-user? (:user params))
+      (throw+ {:error_code ERR_NOT_AUTHORIZED
+               :user       (:user params)}))
+    (validators/validate-num-paths-under-paths (:user params) (:paths body))))
+
+(with-post-hook! #'do-delete (dul/log-func "do-delete"))
+
 (defn do-delete-uuid
   [{user :user} data-id]
   (delete-uuid user data-id))
