@@ -30,7 +30,8 @@ should look like this:
 
 ```json
 {
-  "AMQPURI" : "amqp://user:password@hostname:5672/",
+  "AMQPHost" : "hostname:5672",
+  "AMQPUserPass" : "user:password",
   "ExchangeName" : "exchange",
   "ExchangeType" : "direct",
   "RoutingKey" : "condor.events",
