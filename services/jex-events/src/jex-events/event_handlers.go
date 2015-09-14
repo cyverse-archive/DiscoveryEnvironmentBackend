@@ -60,8 +60,8 @@ func (p *PostEventHandler) Route(event *Event) error {
 	}
 }
 
-// Indicates whether or not an event should cause last_condor_job_events to be
-// updated.
+// ShouldUpdateLastEvents indicates whether or not an event should cause
+// last_condor_job_events to be updated.
 func (p *PostEventHandler) ShouldUpdateLastEvents(event *Event) bool {
 	switch event.EventNumber {
 	case "000": //Job Submitted
