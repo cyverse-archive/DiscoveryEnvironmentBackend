@@ -5,6 +5,7 @@
         <fieldNames>
             <logger>loggerName</logger>
             <thread>thread</thread>
+            <levelValue>[ignore]</levelValue>
         </fieldNames>
     </encoder>
   </appender>
