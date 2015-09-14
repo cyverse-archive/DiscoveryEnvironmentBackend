@@ -197,7 +197,7 @@ const _upsertJobStmt = `
     )
 `
 
-const _jobByCondorIdQuery = `
+const _jobByCondorIDQuery = `
     SELECT cast(id as varchar),
            batch_id,
            submitter,
@@ -245,15 +245,15 @@ func attemptJobUpsert(stmt *sql.Stmt, jr *JobRecord) (sql.Result, error) {
 }
 
 // Retrieves an upserted job.
-func getUpsertedJob(tx *sql.Tx, condorId string) (*JobRecord, error) {
-	row := tx.QueryRow(_jobByCondorIdQuery, condorId)
+func getUpsertedJob(tx *sql.Tx, condorID string) (*JobRecord, error) {
+	row := tx.QueryRow(_jobByCondorIDQuery, condorID)
 	return jobRecordFromRow(row)
 }
 
 // UpsertJob updates a job if it already exists, otherwise it inserts a new job
 // into the database.
 func (d *Databaser) UpsertJob(jr *JobRecord) (*JobRecord, error) {
-	var updatedJr *JobRecord = nil
+	var updatedJr *JobRecord
 
 	// This needs to be done inside a transaction.
 	tx, err := d.db.Begin()
@@ -349,14 +349,13 @@ func FixInvID(jr *JobRecord, invid interface{}) {
 	}
 }
 
-// fixNullableUuid returns a string representation of a UUID, with the empty string
+// fixNullableUUID returns a string representation of a UUID, with the empty string
 // being used to represent a null UUID.
-func fixNullableUuid(nullableUuid interface{}) string {
-	if nullableUuid == nil {
+func fixNullableUUID(nullableUUID interface{}) string {
+	if nullableUUID == nil {
 		return ""
-	} else {
-		return string(nullableUuid.([]uint8))
 	}
+	return string(nullableUUID.([]uint8))
 }
 
 // This evil has been perpetrated to avoid an issue where time.Time instances
@@ -395,9 +394,9 @@ func jobRecordFromRow(row *sql.Row) (*JobRecord, error) {
 	)
 
 	// Update the nullable UUID fields in the job record.
-	jr.BatchID = fixNullableUuid(batchid)
-	jr.AppID = fixNullableUuid(appid)
-	jr.InvocationID = fixNullableUuid(invid)
+	jr.BatchID = fixNullableUUID(batchid)
+	jr.AppID = fixNullableUUID(appid)
+	jr.InvocationID = fixNullableUUID(invid)
 
 	// Fix any malformed timestamps.
 	jr.DateSubmitted = *fixTimestamp(&jr.DateSubmitted)
@@ -431,7 +430,7 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 
 // GetJobByCondorID returns a JobRecord from the database.
 func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
-	row := d.db.QueryRow(_jobByCondorIdQuery, condorID)
+	row := d.db.QueryRow(_jobByCondorIDQuery, condorID)
 	return jobRecordFromRow(row)
 }
 
