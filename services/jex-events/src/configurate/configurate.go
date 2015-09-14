@@ -10,8 +10,12 @@ import (
 
 // Configuration instance contain config values for jex-events.
 type Configuration struct {
+	EventLog                                                              string //clm
+	AMQPUserPass                                                          string
+	AMQPHost                                                              string
+	Durable, Autodelete, Internal, NoWait                                 bool
 	AMQPURI, DBURI, EventURL, JEXURL                                      string
-	ConsumerTag, HTTPListenPort                                           string
+	ConsumerTag, HTTPListenPort                                           string // jex-events
 	ExchangeName, ExchangeType, RoutingKey, QueueName, QueueBindingKey    string
 	ExchangeDurable, ExchangeAutodelete, ExchangeInternal, ExchangeNoWait bool
 	QueueDurable, QueueAutodelete, QueueExclusive, QueueNoWait            bool
