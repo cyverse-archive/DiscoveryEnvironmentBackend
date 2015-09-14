@@ -45,33 +45,6 @@
         (mapv (partial stat/decorate-stat cm user))
         (remove #(nil? (:permission %)))))))
 
-(defn- fmt-stat
-  [cm user data-item]
-  (let [path (:full_path data-item)]
-    (->> {:date-created  (* 1000 (Long/valueOf (:create_ts data-item)))
-          :date-modified (* 1000 (Long/valueOf (:modify_ts data-item)))
-          :file-size     (:data_size data-item)
-          :id            (:uuid data-item)
-          :path          path
-          :type          (case (:type data-item)
-                           "collection" :dir
-                           "dataobject" :file)}
-      (stat/decorate-stat cm user))))
-
-(defn paths-for-uuids-paged
-  [user sort-col sort-order limit offset uuids]
-  (init/with-jargon (cfg/jargon-cfg) [cm]
-    (valid/user-exists cm user)
-    (map (partial fmt-stat cm user)
-         (icat/paged-uuid-listing user (cfg/irods-zone) sort-col sort-order limit offset uuids))))
-
-(defn do-paths-for-uuids
-  [params body]
-  (validate-map params {:user string?})
-  (validate-map body {:uuids sequential?})
-  (json/encode {:paths (paths-for-uuids (:user params) (:uuids body))}))
-
-
 (defn ^IPersistentMap uuid-for-path
   "Retrieves the path stat info for a given entity. It attaches the UUID in a additional :uuid
    field.
@@ -94,14 +67,6 @@
     (valid/all-paths-exist cm paths)
     (valid/all-paths-readable cm user paths)
     (filter #(not (nil? %)) (mapv (partial uuid-for-path cm user) paths))))
-
-(defn do-uuids-for-paths
-  [params body]
-  (log/warn body)
-  (validate-map params {:user string?})
-  (validate-map body {:paths sequential?})
-  (json/encode {:paths (uuids-for-paths (:user params) (:paths body))}))
-
 
 (defn ^Boolean uuid-accessible?
   "Indicates if a data item is readable by a given user.
