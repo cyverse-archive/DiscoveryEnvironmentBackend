@@ -1,11 +1,12 @@
 package main
 
 import (
+	"configurate"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"logcabin"
 	"math/rand"
 	"os"
 	"regexp"
@@ -25,119 +26,9 @@ var (
 	logger  *log.Logger
 )
 
-// LoggerFunc adapts a function so it can be used as an io.Writer.
-type LoggerFunc func([]byte) (int, error)
-
-func (l LoggerFunc) Write(logbuf []byte) (n int, err error) {
-	return l(logbuf)
-}
-
-// LogMessage represents a message that will be logged in JSON format.
-type LogMessage struct {
-	Service  string `json:"service"`
-	Artifact string `json:"art-id"`
-	Group    string `json:"group-id"`
-	Level    string `json:"level"`
-	Time     int64  `json:"timeMillis"`
-	Message  string `json:"message"`
-}
-
-// NewLogMessage returns a pointer to a new instance of LogMessage.
-func NewLogMessage(message string) *LogMessage {
-	lm := &LogMessage{
-		Service:  "jex-events",
-		Artifact: "jex-events",
-		Group:    "org.iplantc",
-		Level:    "INFO",
-		Time:     time.Now().UnixNano() / int64(time.Millisecond),
-		Message:  message,
-	}
-	return lm
-}
-
-// LogWriter writes to stdout with a custom timestamp.
-func LogWriter(logbuf []byte) (n int, err error) {
-	m := NewLogMessage(string(logbuf[:]))
-	j, err := json.Marshal(m)
-	if err != nil {
-		return 0, err
-	}
-	j = append(j, []byte("\n")...)
-	return os.Stdout.Write(j)
-}
-
 func init() {
-	logger = log.New(LoggerFunc(LogWriter), "", log.Lshortfile)
+	logger = log.New(logcabin.LoggerFunc(logcabin.LogWriter), "", log.Lshortfile)
 	flag.Parse()
-}
-
-// Configuration instance contain config values for jex-events.
-type Configuration struct {
-	AMQPURI, DBURI, EventURL, JEXURL                                      string
-	ConsumerTag, HTTPListenPort                                           string
-	ExchangeName, ExchangeType, RoutingKey, QueueName, QueueBindingKey    string
-	ExchangeDurable, ExchangeAutodelete, ExchangeInternal, ExchangeNoWait bool
-	QueueDurable, QueueAutodelete, QueueExclusive, QueueNoWait            bool
-}
-
-// ReadConfig reads JSON from 'path' and returns a pointer to a Configuration
-// instance. Hopefully.
-func ReadConfig(path string) (*Configuration, error) {
-	fileInfo, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
-	if fileInfo.IsDir() {
-		return nil, fmt.Errorf("%s is a directory", path)
-	}
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	fileData, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-	var config Configuration
-	err = json.Unmarshal(fileData, &config)
-	if err != nil {
-		return &config, err
-	}
-	return &config, nil
-}
-
-// Valid returns true if the configuration settings contain valid values.
-func (c *Configuration) Valid() bool {
-	retval := true
-	if c.AMQPURI == "" {
-		logger.Println("AMQPURI must be set in the configuration file.")
-		retval = false
-	}
-	if c.ConsumerTag == "" {
-		logger.Println("ConsumerTag must be set in the configuration file.")
-		retval = false
-	}
-	if c.ExchangeName == "" {
-		logger.Println("ExchangeName must be set in the configuration file.")
-		retval = false
-	}
-	if c.ExchangeType == "" {
-		logger.Println("ExchangeType must be set in the configuration file.")
-		retval = false
-	}
-	if c.RoutingKey == "" {
-		logger.Println("RoutingKey must be set in the configuration file.")
-		retval = false
-	}
-	if c.QueueName == "" {
-		logger.Println("QueueName must be set in the configuration file.")
-		retval = false
-	}
-	if c.QueueBindingKey == "" {
-		logger.Println("QueueBindingKey must be set in the configuration file.")
-		retval = false
-	}
-	return retval
 }
 
 // AMQPConsumer contains the state for a connection to an AMQP broker. An
@@ -164,7 +55,7 @@ type AMQPConsumer struct {
 
 // NewAMQPConsumer creates a new instance of AMQPConsumer and returns a
 // pointer to it. The connection is not established at this point.
-func NewAMQPConsumer(cfg *Configuration) *AMQPConsumer {
+func NewAMQPConsumer(cfg *configurate.Configuration) *AMQPConsumer {
 	return &AMQPConsumer{
 		URI:                cfg.AMQPURI,
 		ExchangeName:       cfg.ExchangeName,
@@ -551,7 +442,7 @@ func main() {
 		fmt.Println("--config must be set.")
 		os.Exit(-1)
 	}
-	config, err := ReadConfig(*cfgPath)
+	config, err := configurate.New(*cfgPath, logger)
 	if err != nil {
 		logger.Print(err)
 		os.Exit(-1)

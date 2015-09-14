@@ -1,6 +1,7 @@
 package main
 
 import (
+	"configurate"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -331,7 +332,7 @@ func formatPort(port string) string {
 // SetupHTTP configures a new HTTPAPI instance, registers handlers, and fires
 // off a goroutinge that listens for requests. Should probably only be called
 // once.
-func SetupHTTP(config *Configuration, d *Databaser) {
+func SetupHTTP(config *configurate.Configuration, d *Databaser) {
 	go func() {
 		api := HTTPAPI{
 			d: d,

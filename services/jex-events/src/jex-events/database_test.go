@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"os"
 	"testing"
 	"time"
@@ -9,17 +9,19 @@ import (
 	"github.com/pborman/uuid"
 )
 
-func ConnString() string {
+func ConnString() (string, error) {
 	connString := os.Getenv("JEXDB")
 	if connString == "" {
-		fmt.Println("JEXDB environment variable must be set to a postgresql URL")
-		os.Exit(-1)
+		return connString, errors.New("empty JEXDB string")
 	}
-	return connString
+	return connString, nil
 }
 
 func TestNewDatabaser(t *testing.T) {
-	connString := ConnString()
+	connString, err := ConnString()
+	if err != nil {
+		return
+	}
 	d, err := NewDatabaser(connString)
 	if err != nil {
 		t.Error(err)
@@ -31,7 +33,10 @@ func TestNewDatabaser(t *testing.T) {
 }
 
 func TestInsertGetUpdateDeleteRecord(t *testing.T) {
-	connString := ConnString()
+	connString, err := ConnString()
+	if err != nil {
+		return
+	}
 	d, err := NewDatabaser(connString)
 	if err != nil {
 		t.Error(err)
@@ -195,7 +200,10 @@ func TestFixInvID(t *testing.T) {
 }
 
 func TestCRUDCondorEvents(t *testing.T) {
-	connString := ConnString()
+	connString, err := ConnString()
+	if err != nil {
+		return
+	}
 	d, err := NewDatabaser(connString)
 	if err != nil {
 		t.Error(err)
@@ -252,7 +260,10 @@ func TestCRUDCondorEvents(t *testing.T) {
 }
 
 func TestCRUDCondorRawEvents(t *testing.T) {
-	connString := ConnString()
+	connString, err := ConnString()
+	if err != nil {
+		return
+	}
 	d, err := NewDatabaser(connString)
 	if err != nil {
 		t.Error(err)
@@ -331,7 +342,10 @@ func TestCRUDCondorRawEvents(t *testing.T) {
 }
 
 func TestCRUDCondorJobEvent(t *testing.T) {
-	connString := ConnString()
+	connString, err := ConnString()
+	if err != nil {
+		return
+	}
 	d, err := NewDatabaser(connString)
 	if err != nil {
 		t.Error(err)
@@ -447,7 +461,10 @@ func TestCRUDCondorJobEvent(t *testing.T) {
 }
 
 func TestCRUDLastCondorJobEvent(t *testing.T) {
-	connString := ConnString()
+	connString, err := ConnString()
+	if err != nil {
+		return
+	}
 	d, err := NewDatabaser(connString)
 	if err != nil {
 		t.Error(err)
@@ -566,7 +583,10 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 }
 
 func TestCondorJobStopRequest(t *testing.T) {
-	connString := ConnString()
+	connString, err := ConnString()
+	if err != nil {
+		return
+	}
 	d, err := NewDatabaser(connString)
 	if err != nil {
 		t.Error(err)
@@ -651,7 +671,10 @@ func TestCondorJobStopRequest(t *testing.T) {
 }
 
 func TestCRUDJobDeps(t *testing.T) {
-	connString := ConnString()
+	connString, err := ConnString()
+	if err != nil {
+		return
+	}
 	d, err := NewDatabaser(connString)
 	if err != nil {
 		t.Error(err)
