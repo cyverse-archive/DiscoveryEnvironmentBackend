@@ -700,7 +700,8 @@ func Version() {
 // Run takes in a configuration and a logger and runs jex-events in 'monitor'
 // mode. It watches the configured event_log path for changes and ships to
 // another service via AMQP.
-func Run(cfg *configurate.Configuration, logger *log.Logger) {
+func Run(cfg *configurate.Configuration, l *log.Logger) {
+	logger = l
 	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
 	errChan := make(chan ConnectionErrorChan)
 	pub := NewAMQPPublisher(cfg)
