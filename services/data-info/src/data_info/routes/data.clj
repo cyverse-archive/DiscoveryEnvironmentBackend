@@ -12,6 +12,17 @@
 
 (defroutes* data-operations
 
+  (POST* "/mover" [:as {uri :uri}]
+    :tags ["bulk"]
+    :query [params SecuredQueryParamsRequired]
+    :body [body (describe MultiRenameRequest "The paths to rename and their destination.")]
+    :return MultiRenameResult
+    :summary "Move Data Items"
+    :description (str
+"Given a list of sources and a destination in the body, moves all the sources into the given destination directory."
+(get-error-code-block "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_TOO_MANY_PATHS, ERR_NOT_A_USER"))
+    (svc/trap uri rename/do-move params body))
+
   (context* "/data" []
     :tags ["data"]
 
@@ -54,17 +65,6 @@ for the requesting user."
 (get-error-code-block
   "ERR_BAD_OR_MISSING_FIELD, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER"))
       (svc/trap uri create/do-create params body))
-
-    (POST* "/mover" [:as {uri :uri}]
-      :tags ["bulk"]
-      :query [params SecuredQueryParamsRequired]
-      :body [body (describe MultiRenameRequest "The paths to rename and their destination.")]
-      :return MultiRenameResult
-      :summary "Move Data Items"
-      :description (str
-"Given a list of sources and a destination in the body, moves all the sources into the given destination directory."
-(get-error-code-block "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_TOO_MANY_PATHS, ERR_NOT_A_USER"))
-      (svc/trap uri rename/do-move params body))
 
     (context* "/:data-id" []
       :path-params [data-id :- DataIdPathParam]
