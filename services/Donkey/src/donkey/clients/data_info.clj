@@ -127,6 +127,15 @@
                    :body         (json/encode {:filename (ft/basename (:dest body))})}]
       (http/put (str url) req-map))))
 
+(defn move
+  "Uses the data-info bulk mover endpoint to move a number of files into a directory."
+  [params body]
+  (let [url (url/url (cfg/data-info-base-url) "mover")
+        req-map {:query-params (select-keys params [:user])
+                 :content-type :json
+                 :body         (json/encode body)}]
+    (http/post (str url) req-map)))
+
 (defn move-contents
   "Uses the data-info set-children-directory-name endpoint to move the contents of one directory
    into another directory."

@@ -24,6 +24,13 @@
    :dest
    (describe NonBlankString "An iRODS path to the destination of the data item being renamed.")})
 
+(s/defschema MultiRenameRequest
+  {:sources
+   (describe [NonBlankString] "iRODS paths to the initial locations of the data items to rename.")
+
+   :dest
+   (describe NonBlankString "An iRODS path to the destination directory for the items being renamed.")})
+
 (s/defschema MultiRenameResult
   {:user
    (describe NonBlankString "The user performing the request.")

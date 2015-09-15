@@ -17,7 +17,6 @@
             [donkey.services.filesystem.metadata :as meta]
             [donkey.services.filesystem.metadata-template-avus :as mta]
             [donkey.services.filesystem.metadata-templates :as mt]
-            [donkey.services.filesystem.move :as move]
             [donkey.services.filesystem.page-csv :as csv]
             [donkey.services.filesystem.page-file :as file]
             [donkey.services.filesystem.root :as root]
@@ -73,7 +72,7 @@
       (controller req data/delete-contents :params :body))
 
     (POST "/filesystem/move" [:as req]
-      (controller req move/do-move :params :body))
+      (controller req data/move :params :body))
 
     (POST "/filesystem/move-contents" [:as req]
       (controller req data/move-contents :params :body))
