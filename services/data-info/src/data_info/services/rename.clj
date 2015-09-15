@@ -133,8 +133,7 @@
 (with-pre-hook! #'do-move
   (fn [params body]
     (dul/log-call "do-move" params body)
-    (log/info "Body: " (json/encode body))
-    (when (super-user? (:user params))
+    (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user (:user params)}))
     (validators/validate-num-paths-under-paths (:user params) (:sources body))))
