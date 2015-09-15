@@ -1,0 +1,17 @@
+{
+  "AMQPURI" : "amqp://ipc:mostly810S@irods-2.iplantcollaborative.org:31333/",
+  "ExchangeName" : "condor_events",
+  "ExchangeType" : "fanout",
+  "RoutingKey" : "condor.events",
+  "ExchangeDurable" : true,
+  "ExchangeAutodelete" : false,
+  "ExchangeInternal" : false,
+  "ExchangeNoWait" : false,
+  "QueueName" : "condor_events",
+  "QueueBindingKey" : "condor_events_binding_key",
+  "QueueDurable" : true,
+  "QueueAutodelete" : false,
+  "QueueInternal" : false,
+  "QueueNoWait" : false,
+  "ConsumerTag" : "tag"
+}

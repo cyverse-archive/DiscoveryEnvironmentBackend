@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"messaging"
 	"os"
 	"regexp"
 	"strconv"
@@ -17,154 +18,25 @@ import (
 
 var logger *log.Logger
 
-// AMQPConsumer contains the state for a connection to an AMQP broker. An
-// instance of it should be capable of reading messages from an exchange.
-type AMQPConsumer struct {
-	URI                string
-	ExchangeName       string
-	ExchangeType       string
-	RoutingKey         string
-	ExchangeDurable    bool
-	ExchangeAutodelete bool
-	ExchangeInternal   bool
-	ExchangeNoWait     bool
-	QueueName          string
-	QueueDurable       bool
-	QueueAutodelete    bool
-	QueueExclusive     bool
-	QueueNoWait        bool
-	QueueBindingKey    string
-	ConsumerTag        string
-	connection         *amqp.Connection
-	channel            *amqp.Channel
-}
-
-// NewAMQPConsumer creates a new instance of AMQPConsumer and returns a
-// pointer to it. The connection is not established at this point.
-func NewAMQPConsumer(cfg *configurate.Configuration) *AMQPConsumer {
-	return &AMQPConsumer{
-		URI:                cfg.AMQPURI,
-		ExchangeName:       cfg.ExchangeName,
-		ExchangeType:       cfg.ExchangeType,
-		RoutingKey:         cfg.RoutingKey,
-		ExchangeDurable:    cfg.ExchangeDurable,
-		ExchangeAutodelete: cfg.ExchangeAutodelete,
-		ExchangeInternal:   cfg.ExchangeInternal,
-		ExchangeNoWait:     cfg.ExchangeNoWait,
-		QueueName:          cfg.QueueName,
-		QueueBindingKey:    cfg.QueueBindingKey,
-		QueueDurable:       cfg.QueueDurable,
-		QueueAutodelete:    cfg.QueueAutodelete,
-		QueueExclusive:     cfg.QueueExclusive,
-		QueueNoWait:        cfg.QueueNoWait,
-		ConsumerTag:        cfg.ConsumerTag,
-	}
-}
-
-// ConnectionErrorChannel is used to send error channels to goroutines.
-type ConnectionErrorChannel struct {
-	Channel chan *amqp.Error
-}
-
 // MsgHandler functions will accept msgs from a Delivery channel and report
 // error on the error channel.
 type MsgHandler func(<-chan amqp.Delivery, <-chan int, *Databaser, string, string)
 
-// Connect sets up a connection to an AMQP exchange
-func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChannel) (<-chan amqp.Delivery, error) {
-	var err error
-	logger.Printf("Connecting to %s", c.URI)
-	c.connection, err = amqp.Dial(c.URI)
-	if err != nil {
-		return nil, err
-	}
-	logger.Printf("Connected to the broker. Setting up channel...")
-	c.channel, err = c.connection.Channel()
-	if err != nil {
-		logger.Printf("Error getting channel")
-		return nil, err
-	}
-	logger.Printf("Initialized channel. Setting up the %s exchange...", c.ExchangeName)
-	if err = c.channel.ExchangeDeclare(
-		c.ExchangeName,
-		c.ExchangeType,
-		c.ExchangeDurable,
-		c.ExchangeAutodelete,
-		c.ExchangeInternal,
-		c.ExchangeNoWait,
-		nil,
-	); err != nil {
-		logger.Printf("Error setting up exchange")
-		return nil, err
-	}
-	logger.Printf("Done setting up exchange. Setting up the %s queue...", c.QueueName)
-	queue, err := c.channel.QueueDeclare(
-		c.QueueName,
-		c.QueueDurable,
-		c.QueueAutodelete,
-		c.QueueExclusive,
-		c.QueueNoWait,
-		nil,
-	)
-	if err != nil {
-		logger.Printf("Error setting up queue")
-		return nil, err
-	}
-	logger.Printf("Done setting up queue %s. Binding queue to the %s exchange.", c.QueueName, c.ExchangeName)
-	if err = c.channel.QueueBind(
-		queue.Name,
-		c.QueueBindingKey,
-		c.ExchangeName,
-		c.QueueNoWait,
-		nil,
-	); err != nil {
-		logger.Printf("Error binding the %s queue to the %s exchange", c.QueueName, c.ExchangeName)
-		return nil, err
-	}
-	logger.Printf("Done binding the %s queue to the %s exchange", c.QueueName, c.ExchangeName)
-	deliveries, err := c.channel.Consume(
-		queue.Name,
-		c.ConsumerTag,
-		false, //autoAck
-		false, //exclusive
-		false, //noLocal
-		false, //noWait
-		nil,   //arguments
-	)
-	if err != nil {
-		logger.Printf("Error binding the %s queue to the %s exchange", c.QueueName, c.ExchangeName)
-		return nil, err
-	}
-	errors := c.connection.NotifyClose(make(chan *amqp.Error))
-	msg := ConnectionErrorChannel{
-		Channel: errors,
-	}
-	errorChannel <- msg // 'prime' anything receiving error messages
-	return deliveries, err
-}
+func reconnect(errorChan chan messaging.ConnectionErrorChan) {
+	msg := <-errorChan
+	exitChan := msg.Channel
 
-// SetupReconnection fires up a goroutine that listens for Close() errors and
-// reconnects to the AMQP server if they're encountered.
-func (c *AMQPConsumer) SetupReconnection(
-	errorChan chan ConnectionErrorChannel,
-) {
-	//errors := p.connection.NotifyClose(make(chan *amqp.Error))
-	go func() {
-		msg := <-errorChan
-		exitChan := msg.Channel
-
-		for {
-			select {
-			case exitError, ok := <-exitChan:
-				if !ok {
-					logger.Println("Exit channel closed.")
-				}
-				logger.Println(exitError)
-				logger.Println("An error was detected with the AMQP connection. Exiting with a -1000 exit code.")
-				os.Exit(-1000)
+	for {
+		select {
+		case exitError, ok := <-exitChan:
+			if !ok {
+				logger.Println("Exit channel closed.")
 			}
+			logger.Println(exitError)
+			logger.Println("An error was detected with the AMQP connection. Exiting with a -1000 exit code.")
+			os.Exit(-1000)
 		}
-	}()
+	}
 }
 
 // Event contains an event received from the AMQP broker and parsed from JSON.
@@ -410,6 +282,7 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 func Run(config *configurate.Configuration, l *log.Logger) {
 	logger = l
 	logger.Println("Configuring database connection...")
+	messaging.Init(logger)
 	databaser, err := NewDatabaser(config.DBURI)
 	if err != nil {
 		logger.Print(err)
@@ -418,10 +291,10 @@ func Run(config *configurate.Configuration, l *log.Logger) {
 	logger.Println("Done configuring database connection.")
 
 	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
-	connErrChan := make(chan ConnectionErrorChannel)
+	connErrChan := make(chan messaging.ConnectionErrorChan)
 	quitHandler := make(chan int)
-	consumer := NewAMQPConsumer(config)
-	consumer.SetupReconnection(connErrChan)
+	consumer := messaging.NewAMQPConsumer(config)
+	messaging.SetupReconnection(connErrChan, reconnect)
 
 	logger.Print("Setting up HTTP")
 	SetupHTTP(config, databaser)
