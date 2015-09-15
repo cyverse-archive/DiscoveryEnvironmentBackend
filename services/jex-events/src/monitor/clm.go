@@ -39,6 +39,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"messaging"
 	"os"
 	"path"
 	"path/filepath"
@@ -48,8 +49,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-
-	"github.com/streadway/amqp"
 )
 
 var (
@@ -62,151 +61,35 @@ var (
 // TombstonePath is the path to the tombstone file.
 const TombstonePath = "/tmp/condor-log-monitor.tombstone"
 
-// AMQPPublisher contains the state information for a connection to an AMQP
-// broker that is capable of publishing data to an exchange.
-type AMQPPublisher struct {
-	UserPass     string
-	Host         string
-	ExchangeName string
-	ExchangeType string
-	RoutingKey   string
-	Durable      bool
-	Autodelete   bool
-	Internal     bool
-	NoWait       bool
-	connection   *amqp.Connection
-	channel      *amqp.Channel
-}
-
-// NewAMQPPublisher creates a new instance of AMQPPublisher and returns a
-// pointer to it. The connection is not established at this point.
-func NewAMQPPublisher(cfg *configurate.Configuration) *AMQPPublisher {
-	return &AMQPPublisher{
-		UserPass:     cfg.AMQPUserPass,
-		Host:         cfg.AMQPHost,
-		ExchangeName: cfg.ExchangeName,
-		ExchangeType: cfg.ExchangeType,
-		RoutingKey:   cfg.RoutingKey,
-		Durable:      cfg.Durable,
-		Autodelete:   cfg.Autodelete,
-		Internal:     cfg.Internal,
-		NoWait:       cfg.NoWait,
-	}
-}
-
-// ConnectionErrorChan is used to send error channels to goroutines.
-type ConnectionErrorChan struct {
-	Channel chan *amqp.Error
-}
-
-// Connect will attempt to connect to the AMQP broker, create/use the configured
-// exchange, and create a new channel. Make sure you call the Close method when
-// you are done, most likely with a defer statement.
-func (p *AMQPPublisher) Connect(errorChan chan ConnectionErrorChan) error {
-	logger.Printf("Dialing amqp://%s/", p.Host)
-	connection, err := amqp.Dial(strings.Join([]string{"amqp://", p.UserPass, "@", p.Host, "/"}, ""))
-	if err != nil {
-		return err
-	}
-	p.connection = connection
-
-	logger.Println("Creating channel on the connection.")
-	channel, err := p.connection.Channel()
-	if err != nil {
-		return err
-	}
-	logger.Printf("Done creating channel on the connection.")
-
-	logger.Printf("Declaring exchange %s with a type of %s", p.ExchangeName, p.ExchangeType)
-	err = channel.ExchangeDeclare(
-		p.ExchangeName,
-		p.ExchangeType,
-		p.Durable,
-		p.Autodelete,
-		p.Internal,
-		p.NoWait,
-		nil, //arguments
-	)
-	if err != nil {
-		return err
-	}
-	logger.Println("Done declaring exchange.")
-	p.channel = channel
-	errors := p.connection.NotifyClose(make(chan *amqp.Error))
-	msg := ConnectionErrorChan{
-		Channel: errors,
-	}
-	errorChan <- msg
-	return nil
-}
-
-// SetupReconnection fires up a goroutine that listens for Close() errors and
-// reconnects to the AMQP server if they're encountered.
-func (p *AMQPPublisher) SetupReconnection(errorChan chan ConnectionErrorChan) {
-	//errors := p.connection.NotifyClose(make(chan *amqp.Error))
-	go func() {
-		msg := <-errorChan      //msg is sent from the Connect() function
-		exitChan := msg.Channel //This is the channel that error notifications will come over.
-		for {
-			select {
-			case exitError, ok := <-exitChan:
-				if !ok {
-					logger.Println("Exit channel closed.")
-				}
-				logger.Println(exitError)
-				logger.Println("An error was detected with the AMQP connection.")
-				logger.Println("condor-log-monitor could be in an inconsistent state.")
-				logger.Println("Removing /tmp/condor-log-monitor.tombstone...")
-				_, err := os.Stat(TombstonePath)
-				if err != nil {
-					logger.Printf("Failed to stat %s, could not remove it.", TombstonePath)
-				} else {
-					err = os.Remove(TombstonePath)
-					if err != nil {
-						logger.Printf("Error removing %s: \n %s", TombstonePath, err)
-					} else {
-						logger.Printf("Done removing %s", TombstonePath)
-						logger.Println("condor-log-monitor will process the entire log when it restarts")
-					}
-				}
-				logger.Println("Exiting with a -1000 exit code")
-				os.Exit(-1000)
+func reconnect(errorChan chan messaging.ConnectionErrorChan) {
+	msg := <-errorChan      //msg is sent from the Connect() function
+	exitChan := msg.Channel //This is the channel that error notifications will come over.
+	for {
+		select {
+		case exitError, ok := <-exitChan:
+			if !ok {
+				logger.Println("Exit channel closed.")
 			}
+			logger.Println(exitError)
+			logger.Println("An error was detected with the AMQP connection.")
+			logger.Println("condor-log-monitor could be in an inconsistent state.")
+			logger.Println("Removing /tmp/condor-log-monitor.tombstone...")
+			_, err := os.Stat(TombstonePath)
+			if err != nil {
+				logger.Printf("Failed to stat %s, could not remove it.", TombstonePath)
+			} else {
+				err = os.Remove(TombstonePath)
+				if err != nil {
+					logger.Printf("Error removing %s: \n %s", TombstonePath, err)
+				} else {
+					logger.Printf("Done removing %s", TombstonePath)
+					logger.Println("condor-log-monitor will process the entire log when it restarts")
+				}
+			}
+			logger.Println("Exiting with a -1000 exit code")
+			os.Exit(-1000)
 		}
-	}()
-}
-
-// PublishString sends the body off to the configured AMQP exchange.
-func (p *AMQPPublisher) PublishString(body string) error {
-	return p.PublishBytes([]byte(body))
-}
-
-// PublishBytes sends off the bytes to the AMQP broker.
-func (p *AMQPPublisher) PublishBytes(body []byte) error {
-	log.Printf("Publishing message to the %s exchange using routing key %s", p.ExchangeName, p.RoutingKey)
-	if err := p.channel.Publish(
-		p.ExchangeName,
-		p.RoutingKey,
-		false, //mandatory?
-		false, //immediate?
-		amqp.Publishing{
-			Headers:         amqp.Table{},
-			ContentType:     "text/plain",
-			ContentEncoding: "",
-			Body:            body,
-			DeliveryMode:    amqp.Transient,
-			Priority:        0,
-		},
-	); err != nil {
-		return err
 	}
-	logger.Printf("Done publishing message.")
-	return nil
-}
-
-// Close calls Close() on the underlying AMQP connection.
-func (p *AMQPPublisher) Close() {
-	p.connection.Close()
 }
 
 // PublishableEvent is a type that contains the information that gets sent to
@@ -230,7 +113,7 @@ func NewPublishableEvent(event string) *PublishableEvent {
 func ParseEventFile(
 	filepath string,
 	seekTo int64,
-	pub *AMQPPublisher,
+	pub *messaging.AMQPPublisher,
 	setTombstone bool,
 ) (int64, error) {
 	startRegex := "^[\\d][\\d][\\d]\\s.*"
@@ -702,10 +585,11 @@ func Version() {
 // another service via AMQP.
 func Run(cfg *configurate.Configuration, l *log.Logger) {
 	logger = l
+	messaging.Init(logger)
 	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
-	errChan := make(chan ConnectionErrorChan)
-	pub := NewAMQPPublisher(cfg)
-	pub.SetupReconnection(errChan)
+	errChan := make(chan messaging.ConnectionErrorChan)
+	pub := messaging.NewAMQPPublisher(cfg)
+	messaging.SetupReconnection(errChan, reconnect)
 
 	// Handle badness with AMQP at startup.
 	var err error
