@@ -8,8 +8,7 @@
             [clj-http.client :as client]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
-            [data-info.util.config :as config]
-            [ring.util.codec :as codec])
+            [data-info.util.config :as config])
   (:import [clojure.lang IPersistentMap]))
 
 (defn empty-response []
@@ -157,91 +156,6 @@
   []
   (let [msg "unrecognized service path"]
     (cheshire/encode {:success false :reason msg})))
-
-(defn prepare-forwarded-request
-  "Prepares a request to be forwarded to a remote service."
-  ([request body]
-    {:content-type (or (get-in request [:headers :content-type])
-                       (get-in request [:content-type]))
-      :headers (dissoc
-                (:headers request)
-                "content-length"
-                "content-type"
-                "transfer-encoding")
-      :body body
-      :throw-exceptions false
-      :as :stream})
-  ([request]
-     (prepare-forwarded-request request nil)))
-
-(defn forward-get
-  "Forwards a GET request to a remote service.  If no body is provided, the
-   request body is stripped off.
-
-   Parameters:
-     addr - the URL receiving the request
-     request - the request to send structured by compojure
-     body - the body to attach to the request
-
-   Returns:
-     the response from the remote service"
-  ([addr request]
-     (client/get addr (prepare-forwarded-request request)))
-  ([addr request body]
-     (client/get addr (prepare-forwarded-request request body))))
-
-(defn forward-post
-  "Forwards a POST request to a remote service."
-  ([addr request]
-     (forward-post addr request (slurp (:body request))))
-  ([addr request body]
-     (client/post addr (prepare-forwarded-request request body))))
-
-(defn forward-put
-  "Forwards a PUT request to a remote service."
-  ([addr request]
-     (forward-put addr request (slurp (:body request))))
-  ([addr request body]
-     (client/put addr (prepare-forwarded-request request body))))
-
-(defn forward-patch
-  "Forwards a PATCH request to a remote service."
-  ([addr request]
-   (forward-patch addr request (slurp (:body request))))
-  ([addr request body]
-   (client/patch addr (prepare-forwarded-request request body))))
-
-(defn forward-delete
-  "Forwards a DELETE request to a remote service."
-  [addr request]
-  (client/delete addr (prepare-forwarded-request request)))
-
-(defn decode-stream
-  "Decodes a stream containing a JSON object."
-  [stream]
-  (cheshire/decode-stream (reader stream) true))
-
-(defn decode-json
-  "Decodes JSON from either a string or an input stream."
-  [source]
-  (if (string? source)
-    (cheshire/decode source true)
-    (cheshire/decode-stream (reader source) true)))
-
-(defn- contains-form?
-  "Determines if a request contains a URL encoded form."
-  [req]
-  (re-find #"^application/x-www-form-urlencoded" (str (:content-type req))))
-
-(defn parse-form
-  "Parses a URL encoded form from a request."
-  [req]
-  (or (if-let [body (and (contains-form? req) (:body req))]
-        (let [encoding (or (:character-encoding req) "UTF-8")
-              content  (slurp body :encoding encoding)
-              params   (codec/form-decode content encoding)]
-          (when (map? params) params)))
-      {}))
 
 (defmacro log-runtime
   [[msg] & body]
