@@ -22,6 +22,7 @@ var logger *log.Logger
 // error on the error channel.
 type MsgHandler func(<-chan amqp.Delivery, <-chan int, *Databaser, string, string)
 
+// reconnect is a handler for AMQP errors.
 func reconnect(errorChan chan messaging.ConnectionError) {
 	msg := <-errorChan
 	exitChan := msg.Channel
