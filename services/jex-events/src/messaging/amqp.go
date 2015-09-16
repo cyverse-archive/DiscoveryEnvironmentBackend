@@ -71,7 +71,7 @@ func (p *AMQPPublisher) PublishString(body string) error {
 
 // PublishBytes sends off the bytes to the AMQP broker.
 func (p *AMQPPublisher) PublishBytes(body []byte) error {
-	log.Printf("Publishing message to the %s exchange using routing key %s", p.ExchangeName, p.RoutingKey)
+	logger.Printf("Publishing message to the %s exchange using routing key %s", p.ExchangeName, p.RoutingKey)
 	if err := p.channel.Publish(
 		p.ExchangeName,
 		p.RoutingKey,
