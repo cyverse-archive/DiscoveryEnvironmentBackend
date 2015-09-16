@@ -1,6 +1,5 @@
 (ns iplant_groups.core
   (:gen-class)
-  (:use [clojure.java.io :only [file]])
   (:require [iplant_groups.util.config :as config]
             [me.raynes.fs :as fs]
             [clojure.tools.logging :as log]
