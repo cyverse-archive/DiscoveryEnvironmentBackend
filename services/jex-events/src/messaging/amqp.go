@@ -49,8 +49,10 @@ type AMQPConsumer struct {
 // NewAMQPPublisher creates a new instance of AMQPPublisher and returns a
 // pointer to it. The connection is not established at this point.
 func NewAMQPPublisher(cfg *configurate.Configuration) *AMQPPublisher {
+	logger.Println(cfg.AMQPURI)
 	return &AMQPPublisher{
 		jexamqp: jexamqp{
+			URI:                cfg.AMQPURI,
 			ExchangeName:       cfg.ExchangeName,
 			ExchangeType:       cfg.ExchangeType,
 			ExchangeDurable:    cfg.ExchangeDurable,
