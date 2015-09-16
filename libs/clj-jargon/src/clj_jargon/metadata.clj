@@ -14,13 +14,13 @@
            [org.irods.jargon.core.query AVUQueryOperatorEnum]))
 
 (defn map2avu
-  [avu-map]
   "Converts an avu map into an AvuData instance."
+  [avu-map]
   (AvuData/instance (:attr avu-map) (:value avu-map) (:unit avu-map)))
 
 (defn get-metadata
-  [cm dir-path]
   "Returns all of the metadata associated with a path."
+  [cm dir-path]
   (validate-path-lengths dir-path)
   (mapv
     #(hash-map :attr  (.getAvuAttribute %1)
@@ -31,8 +31,8 @@
       (.findMetadataValuesForDataObject (:dataObjectAO cm) dir-path))))
 
 (defn get-attribute
-  [cm dir-path attr]
   "Returns a list of avu maps for set of attributes associated with dir-path"
+  [cm dir-path attr]
   (validate-path-lengths dir-path)
   (filter
     #(= (:attr %1) attr)
@@ -55,8 +55,8 @@
     (get-metadata cm apath)))
 
 (defn attribute?
-  [cm dir-path attr]
   "Returns true if the path has the associated attribute."
+  [cm dir-path attr]
   (validate-path-lengths dir-path)
   (pos? (count (get-attribute cm dir-path attr))))
 
@@ -86,8 +86,8 @@
 
 
 (defn set-metadata
-  [cm dir-path attr value unit]
   "Sets an avu for dir-path."
+  [cm dir-path attr value unit]
   (validate-path-lengths dir-path)
   (let [avu    (AvuData/instance attr value unit)
         ao-obj (if (is-dir? cm dir-path)
@@ -312,7 +312,6 @@
            #(str (first (.getColumnsAsList %)))))
 
 (defn list-everything-in-tree-with-attr
-  [cm path avu-spec]
   "Lists the paths to both files and directories in a subtree given the path to the root of the
    subtree and an AVU specification. The AVU specification is a map in the following format:
 
@@ -329,6 +328,7 @@
    The path is the absolute path to the root of the subtree to search. Items that are not in this
    directory or any of its descendants will not be matched. The root of the subtree is included
    in the search."
+  [cm path avu-spec]
   (doall (mapcat #(% cm path avu-spec)
                  [list-collections-in-tree-with-attr list-files-in-tree-with-attr])))
 

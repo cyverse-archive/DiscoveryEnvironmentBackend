@@ -289,13 +289,13 @@
     (every? (partial accessible? user) subdirs)))
 
 (defn set-owner
-  [cm path owner]
   "Sets the owner of 'path' to the username 'owner'.
 
     Parameters:
       cm - The iRODS context map
       path - The path whose owner is being set.
       owner - The username of the user who will be the owner of 'path'."
+  [cm path owner]
   (validate-path-lengths path)
   (cond
    (item/is-file? cm path)
@@ -305,35 +305,35 @@
    (.setAccessPermissionOwn (:collectionAO cm) (:zone cm) path owner true)))
 
 (defn set-inherits
-  [cm path]
   "Sets the inheritance attribute of a collection to true.
 
     Parameters:
       cm - The iRODS context map
       path - The path being altered."
+  [cm path]
   (validate-path-lengths path)
   (if (item/is-dir? cm path)
     (.setAccessPermissionInherit (:collectionAO cm) (:zone cm) path false)))
 
 (defn permissions-inherited?
-  [cm path]
   "Determines whether the inheritance attribute of a collection is true.
 
     Parameters:
       cm - The iRODS context map
       path - The path being checked."
+  [cm path]
   (validate-path-lengths path)
   (when (item/is-dir? cm path)
     (.isCollectionSetForPermissionInheritance (:collectionAO cm) path)))
 
 (defn is-writeable?
-  [cm user path]
   "Returns true if 'user' can write to 'path'.
 
     Parameters:
       cm - The iRODS context map
       user - String containign a username.
       path - String containing an absolute path for something in iRODS."
+  [cm user path]
   (validate-path-lengths path)
   (cond
    (not (user-exists? cm user))
@@ -349,13 +349,13 @@
    false))
 
 (defn is-readable?
-  [cm user path]
   "Returns true if 'user' can read 'path'.
 
     Parameters:
       cm - The iRODS context map
       user - String containing a username.
       path - String containing an path for something in iRODS."
+  [cm user path]
   (validate-path-lengths path)
   (cond
    (not (user-exists? cm user))
@@ -371,13 +371,13 @@
    false))
 
 (defn paths-writeable?
-  [cm user paths]
   "Returns true if all of the paths in 'paths' are writeable by 'user'.
 
     Parameters:
       cm - The iRODS context map
       user - A string containing the username of the user requesting the check.
       paths - A sequence of strings containing the paths to be checked."
+  [cm user paths]
   (doseq [p paths] (validate-path-lengths p))
   (reduce
     #(and %1 %2)

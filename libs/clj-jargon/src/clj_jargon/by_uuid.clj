@@ -1,5 +1,5 @@
 (ns clj-jargon.by-uuid
-  (require [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
            [slingshot.slingshot :refer [throw+]]
            [clojure-commons.error-codes :as error]
            [clj-jargon.metadata :as meta])

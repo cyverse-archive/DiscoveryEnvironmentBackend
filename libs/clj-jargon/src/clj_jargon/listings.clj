@@ -115,7 +115,6 @@
                        [include-files :files list-files-in-dir]])))))
 
 (defn last-dir-in-path
-  [cm path]
   "Returns the name of the last directory in 'path'.
 
     Please note that this function works by calling
@@ -128,12 +127,12 @@
 
     Returns:
       String containing the name of the last directory in the path."
+  [cm path]
   (validate-path-lengths path)
   (.getCollectionLastPathComponent
     (.findByAbsolutePath (:collectionAO cm) (ft/rm-last-slash path))))
 
 (defn sub-collections
-  [cm path]
   "Returns a sequence of Collections that reside directly in the directory
     refered to by 'path'.
 
@@ -144,11 +143,11 @@
     Returns:
       Sequence containing Collections (the Jargon kind) representing
       directories that reside under the directory represented by 'path'."
+  [cm path]
   (validate-path-lengths path)
   (.listCollectionsUnderPath (:lister cm) (ft/rm-last-slash path) 0))
 
 (defn sub-collection-paths
-  [cm path]
   "Returns a sequence of string containing the paths for directories
     that live under 'path' in iRODS.
 
@@ -158,6 +157,7 @@
 
     Returns:
       Sequence containing the paths for directories that live under 'path'."
+  [cm path]
   (validate-path-lengths path)
   (map
     #(.getFormattedAbsolutePath %)
