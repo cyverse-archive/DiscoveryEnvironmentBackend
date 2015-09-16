@@ -116,8 +116,8 @@ func ParseEventFile(
 	pub *messaging.AMQPPublisher,
 	setTombstone bool,
 ) (int64, error) {
-	startRegex := "^[\\d][\\d][\\d]\\s.*"
-	endRegex := "^\\.\\.\\..*"
+	startRegex := "^\\d{3}\\s"
+	endRegex := "^[.]{3}"
 	foundStart := false
 	var eventlines string //accumulates lines in an event entry
 
