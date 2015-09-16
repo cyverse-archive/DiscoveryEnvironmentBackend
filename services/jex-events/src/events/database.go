@@ -12,14 +12,6 @@ import (
 
 var epoch = time.Unix(0, 0)
 
-// Returns nil if a string is empty or the string itself otherwise.
-func emptyStringToNil(s *string) *string {
-	if s == nil || *s == "" {
-		return nil
-	}
-	return s
-}
-
 // Databaser is a type used to interact with the database.
 type Databaser struct {
 	db         *sql.DB
@@ -44,11 +36,31 @@ func NewDatabaser(connString string) (*Databaser, error) {
 	return databaser, nil
 }
 
-func nilify(val string) *string {
-	if val == "" {
+func nilify(val *string) *string {
+	if *val == "" {
 		return nil
 	}
-	return &val
+	return val
+}
+
+// stringifyUUID returns a string representation of a UUID, with the empty string
+// being used to represent a null UUID.
+func stringifyUUID(nullableUUID interface{}) string {
+	if nullableUUID == nil {
+		return ""
+	}
+	return string(nullableUUID.([]uint8))
+}
+
+// This evil has been perpetrated to avoid an issue where time.Time instances
+// set to their zero value and stored in PostgreSQL with timezone info can
+// come back as Time instances from __before__ the epoch. We need to re-zero
+// the dates on the fly when that happens.
+func epochizeTime(timestamp *time.Time) *time.Time {
+	if timestamp.Before(epoch) {
+		return &epoch
+	}
+	return timestamp
 }
 
 // InsertJob adds a new model.JobRecord to the database.
@@ -82,17 +94,17 @@ func (d *Databaser) InsertJob(jr *model.JobRecord) (string, error) {
 	var id string
 	err := d.db.QueryRow(
 		query,
-		nilify(jr.BatchID),
+		nilify(&jr.BatchID),
 		jr.Submitter,
 		jr.DateSubmitted,
 		jr.DateStarted,
 		jr.DateCompleted,
-		nilify(jr.AppID),
+		nilify(&jr.AppID),
 		jr.ExitCode,
 		jr.FailureThreshold,
 		jr.FailureCount,
 		jr.CondorID,
-		nilify(jr.InvocationID),
+		nilify(&jr.InvocationID),
 	).Scan(&id)
 	if err != nil {
 		return "", err
@@ -204,17 +216,17 @@ func upsertJobStmt() string {
 // Attempts to perform a job upsert.
 func attemptJobUpsert(stmt *sql.Stmt, jr *model.JobRecord) (sql.Result, error) {
 	return stmt.Exec(
-		emptyStringToNil(&jr.BatchID),
+		nilify(&jr.BatchID),
 		jr.Submitter,
 		jr.DateSubmitted,
 		jr.DateStarted,
 		jr.DateCompleted,
-		emptyStringToNil(&jr.AppID),
+		nilify(&jr.AppID),
 		jr.ExitCode,
 		jr.FailureThreshold,
 		jr.FailureCount,
 		jr.CondorID,
-		emptyStringToNil(&jr.InvocationID),
+		nilify(&jr.InvocationID),
 	)
 }
 
@@ -296,53 +308,6 @@ func (d *Databaser) DeleteJob(uuid string) error {
 	return nil
 }
 
-// FixAppID fixes the uuid for the AppID field for the model.JobRecord.
-func FixAppID(jr *model.JobRecord, appid interface{}) {
-	if appid == nil {
-		jr.AppID = ""
-	} else {
-		jr.AppID = string(appid.([]uint8))
-	}
-}
-
-// FixBatchID fixes the uuid for the BatchID field for the model.JobRecord.
-func FixBatchID(jr *model.JobRecord, batchid interface{}) {
-	if batchid == nil {
-		jr.BatchID = ""
-	} else {
-		jr.BatchID = string(batchid.([]uint8))
-	}
-}
-
-// FixInvID fixes the InvocationID field for the model.JobRecord
-func FixInvID(jr *model.JobRecord, invid interface{}) {
-	if invid == nil {
-		jr.InvocationID = ""
-	} else {
-		jr.InvocationID = string(invid.([]uint8))
-	}
-}
-
-// fixNullableUUID returns a string representation of a UUID, with the empty string
-// being used to represent a null UUID.
-func fixNullableUUID(nullableUUID interface{}) string {
-	if nullableUUID == nil {
-		return ""
-	}
-	return string(nullableUUID.([]uint8))
-}
-
-// This evil has been perpetrated to avoid an issue where time.Time instances
-// set to their zero value and stored in PostgreSQL with timezone info can
-// come back as Time instances from __before__ the epoch. We need to re-zero
-// the dates on the fly when that happens.
-func fixTimestamp(timestamp *time.Time) *time.Time {
-	if timestamp.Before(epoch) {
-		return &epoch
-	}
-	return timestamp
-}
-
 // jobRecordFromRow converts a row from a result set to a job record
 func jobRecordFromRow(row *sql.Row) (*model.JobRecord, error) {
 	jr := &model.JobRecord{}
@@ -368,14 +333,14 @@ func jobRecordFromRow(row *sql.Row) (*model.JobRecord, error) {
 	)
 
 	// Update the nullable UUID fields in the job record.
-	jr.BatchID = fixNullableUUID(batchid)
-	jr.AppID = fixNullableUUID(appid)
-	jr.InvocationID = fixNullableUUID(invid)
+	jr.BatchID = stringifyUUID(batchid)
+	jr.AppID = stringifyUUID(appid)
+	jr.InvocationID = stringifyUUID(invid)
 
 	// Fix any malformed timestamps.
-	jr.DateSubmitted = *fixTimestamp(&jr.DateSubmitted)
-	jr.DateStarted = *fixTimestamp(&jr.DateStarted)
-	jr.DateCompleted = *fixTimestamp(&jr.DateCompleted)
+	jr.DateSubmitted = *epochizeTime(&jr.DateSubmitted)
+	jr.DateStarted = *epochizeTime(&jr.DateStarted)
+	jr.DateCompleted = *epochizeTime(&jr.DateCompleted)
 
 	return jr, err
 }
@@ -451,17 +416,17 @@ func (d *Databaser) UpdateJob(jr *model.JobRecord) (*model.JobRecord, error) {
 	var id string
 	err := d.db.QueryRow(
 		query,
-		nilify(jr.BatchID),
+		nilify(&jr.BatchID),
 		jr.Submitter,
 		jr.DateSubmitted,
 		jr.DateStarted,
 		jr.DateCompleted,
-		nilify(jr.AppID),
+		nilify(&jr.AppID),
 		jr.ExitCode,
 		jr.FailureThreshold,
 		jr.FailureCount,
 		jr.CondorID,
-		nilify(jr.InvocationID),
+		nilify(&jr.InvocationID),
 		jr.ID,
 	).Scan(&id)
 	if err != nil {

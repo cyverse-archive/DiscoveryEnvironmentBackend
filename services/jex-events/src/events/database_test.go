@@ -145,58 +145,17 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 	}
 }
 
-// TestFixAppID tests the FixAppID function.
-func TestFixAppID(t *testing.T) {
+// TestStringifyUUID tests the FixAppID function.
+func TestStringifyUUID(t *testing.T) {
 	jr := &model.JobRecord{}
-
-	var appIDNil interface{}
-	appIDNil = nil
-	FixAppID(jr, appIDNil)
+	jr.AppID = stringifyUUID(nil)
 	if jr.AppID != "" {
 		t.Errorf("AppID was not an empty string after call to FixAppID: %s", jr.AppID)
 	}
 
-	var appID interface{}
-	appID = []uint8("000000")
-	FixAppID(jr, appID)
+	jr.AppID = stringifyUUID([]uint8("000000"))
 	if jr.AppID != "000000" {
 		t.Errorf("AppID was not set to '000000' after call to FixAppID: %s", jr.AppID)
-	}
-}
-
-// TestFixBatchID tests the FixBatchID function.
-func TestFixBatchID(t *testing.T) {
-	jr := &model.JobRecord{}
-
-	var batchIDNil interface{}
-	batchIDNil = nil
-	FixBatchID(jr, batchIDNil)
-	if jr.BatchID != "" {
-		t.Errorf("BatchID was not an empty string after call to FixBatchID: %s", jr.BatchID)
-	}
-
-	batchID := []uint8("000000")
-	FixBatchID(jr, batchID)
-	if jr.BatchID != "000000" {
-		t.Errorf("BatchID was not set to '000000' after call to FixBatchID: %s", jr.BatchID)
-	}
-}
-
-// TestFixInvID tests the FixInvID function.
-func TestFixInvID(t *testing.T) {
-	jr := &model.JobRecord{}
-
-	var invIDNil interface{}
-	invIDNil = nil
-	FixInvID(jr, invIDNil)
-	if jr.InvocationID != "" {
-		t.Errorf("InvocationID was not an empty string after call to FixInvID: %s", jr.InvocationID)
-	}
-
-	invID := []uint8("000000")
-	FixInvID(jr, invID)
-	if jr.InvocationID != "000000" {
-		t.Errorf("InvocationID was not set to '000000' after call to FixInvID: %s", jr.InvocationID)
 	}
 }
 
