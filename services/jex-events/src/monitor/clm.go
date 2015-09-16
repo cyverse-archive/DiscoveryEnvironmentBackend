@@ -61,7 +61,7 @@ var (
 // TombstonePath is the path to the tombstone file.
 const TombstonePath = "/tmp/condor-log-monitor.tombstone"
 
-func reconnect(errorChan chan messaging.ConnectionErrorChan) {
+func reconnect(errorChan chan messaging.ConnectionError) {
 	msg := <-errorChan      //msg is sent from the Connect() function
 	exitChan := msg.Channel //This is the channel that error notifications will come over.
 	for {
@@ -588,7 +588,7 @@ func Run(cfg *configurate.Configuration, l *log.Logger) {
 	logger = l
 	messaging.Init(logger)
 	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
-	errChan := make(chan messaging.ConnectionErrorChan)
+	errChan := make(chan messaging.ConnectionError)
 	pub := messaging.NewAMQPPublisher(cfg)
 	messaging.SetupReconnection(errChan, reconnect)
 

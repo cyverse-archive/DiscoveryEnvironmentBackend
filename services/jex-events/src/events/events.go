@@ -22,7 +22,7 @@ var logger *log.Logger
 // error on the error channel.
 type MsgHandler func(<-chan amqp.Delivery, <-chan int, *Databaser, string, string)
 
-func reconnect(errorChan chan messaging.ConnectionErrorChan) {
+func reconnect(errorChan chan messaging.ConnectionError) {
 	msg := <-errorChan
 	exitChan := msg.Channel
 
@@ -288,17 +288,16 @@ func Run(config *configurate.Configuration, l *log.Logger) {
 	}
 	logger.Println("Done configuring database connection.")
 
-	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
-	connErrChan := make(chan messaging.ConnectionErrorChan)
+	connErrChan := make(chan messaging.ConnectionError)
 	consumer := messaging.NewAMQPConsumer(config)
 	messaging.SetupReconnection(connErrChan, reconnect)
-
 	logger.Print("Setting up HTTP")
 	SetupHTTP(config, databaser)
 	logger.Print("Done setting up HTTP")
 
 	// This is the retry logic that the events mode goes through at start up. It's
 	// there just in case the AMQP broker isn't up when events mode starts.
+	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var deliveries <-chan amqp.Delivery
 	for {
 		logger.Println("Attempting AMQP connection...")
