@@ -92,7 +92,7 @@ func (p *AMQPPublisher) PublishBytes(body []byte) error {
 
 // connect performs connection initialization logic that is common to both
 // AMQPPublishers and AMQPConsumers.
-func (j *jexamqp) connect(errorChannel chan ConnectionErrorChan) error {
+func (j *jexamqp) connect(errorChannel chan ConnectionError) error {
 	var err error
 	logger.Printf("Connecting to %s", j.URI)
 	j.connection, err = amqp.Dial(j.URI)
@@ -125,9 +125,9 @@ func (j *jexamqp) connect(errorChannel chan ConnectionErrorChan) error {
 // finishconnection performs the final bits of initialization logic that is
 // common to both AMQPPublishers and AMQPConsumers. Should be called last in the
 // Connect() functions.
-func (j *jexamqp) finishconnection(errorChannel chan ConnectionErrorChan) {
+func (j *jexamqp) finishconnection(errorChannel chan ConnectionError) {
 	errors := j.connection.NotifyClose(make(chan *amqp.Error))
-	msg := ConnectionErrorChan{
+	msg := ConnectionError{
 		Channel: errors,
 	}
 	errorChannel <- msg
@@ -136,7 +136,7 @@ func (j *jexamqp) finishconnection(errorChannel chan ConnectionErrorChan) {
 // Connect will attempt to connect to the AMQP broker, create/use the configured
 // exchange, and create a new channel. Make sure you call the Close method when
 // you are done, most likely with a defer statement.
-func (p *AMQPPublisher) Connect(errorChannel chan ConnectionErrorChan) error {
+func (p *AMQPPublisher) Connect(errorChannel chan ConnectionError) error {
 	err := p.connect(errorChannel)
 	if err != nil {
 		return err
@@ -146,7 +146,7 @@ func (p *AMQPPublisher) Connect(errorChannel chan ConnectionErrorChan) error {
 }
 
 // Connect sets up a connection to an AMQP exchange
-func (c *AMQPConsumer) Connect(errorChannel chan ConnectionErrorChan) (<-chan amqp.Delivery, error) {
+func (c *AMQPConsumer) Connect(errorChannel chan ConnectionError) (<-chan amqp.Delivery, error) {
 	err := c.connect(errorChannel)
 	logger.Printf("Setting up the %s queue...\n", c.QueueName)
 	queue, err := c.channel.QueueDeclare(
@@ -219,15 +219,15 @@ func NewAMQPConsumer(cfg *configurate.Configuration) *AMQPConsumer {
 	}
 }
 
-// ConnectionErrorChan is used to send error channels to goroutines.
-type ConnectionErrorChan struct {
+// ConnectionError is used to send error channels to goroutines.
+type ConnectionError struct {
 	Channel chan *amqp.Error
 }
 
-type reconnector func(chan ConnectionErrorChan)
+type reconnector func(chan ConnectionError)
 
 // SetupReconnection fires up a goroutine that listens for Close() errors and
 // reconnects to the AMQP server if they're encountered.
-func SetupReconnection(errorChan chan ConnectionErrorChan, r reconnector) {
+func SetupReconnection(errorChan chan ConnectionError, r reconnector) {
 	go r(errorChan)
 }
