@@ -19,7 +19,7 @@
       :tags ["bulk"]
       :query [params SecuredQueryParamsRequired]
       :body [body (describe Paths "The paths to move to the trash")]
-      :return
+      :return Paths
       :summary "Delete Data Items"
       :description (str
   "Delete the data items with the listed paths."
