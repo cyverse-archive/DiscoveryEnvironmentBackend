@@ -54,9 +54,9 @@ func NewAMQPPublisher(cfg *configurate.Configuration) *AMQPPublisher {
 			ExchangeName:       cfg.ExchangeName,
 			ExchangeType:       cfg.ExchangeType,
 			ExchangeDurable:    cfg.ExchangeDurable,
-			ExchangeAutodelete: cfg.Autodelete,
-			ExchangeInternal:   cfg.Internal,
-			ExchangeNoWait:     cfg.NoWait,
+			ExchangeAutodelete: cfg.ExchangeAutodelete,
+			ExchangeInternal:   cfg.ExchangeInternal,
+			ExchangeNoWait:     cfg.ExchangeNoWait,
 			RoutingKey:         cfg.RoutingKey,
 		},
 	}
