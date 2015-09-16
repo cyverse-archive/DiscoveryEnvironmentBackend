@@ -40,18 +40,6 @@
   (System/exit 1))
 
 
-(defn- update-props
-  [load-props old-props]
-  (ss/try+
-   (let [new-props (load-props)]
-     (validate-props new-props)
-     (when-not (= old-props new-props)
-       (config/log-config new-props))
-     new-props)
-   (catch IllegalStateException t (exit (or (.getMessage t) (str t))))
-   (catch Object _ (exit "Unable to load the configuration parameters."))))
-
-
 (defmacro ^:private trap-exceptions!
   [& body]
   `(ss/try+
