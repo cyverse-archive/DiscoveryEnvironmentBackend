@@ -92,7 +92,7 @@ func (p *AMQPPublisher) PublishBytes(body []byte) error {
 
 // connect performs connection initialization logic that is common to both
 // AMQPPublishers and AMQPConsumers.
-func (j *jexamqp) connect(errorChannel chan ConnectionError) error {
+func (j *jexamqp) connect() error {
 	var err error
 	logger.Printf("Connecting to %s", j.URI)
 	j.connection, err = amqp.Dial(j.URI)
@@ -126,18 +126,19 @@ func (j *jexamqp) connect(errorChannel chan ConnectionError) error {
 // common to both AMQPPublishers and AMQPConsumers. Should be called last in the
 // Connect() functions.
 func (j *jexamqp) finishconnection(errorChannel chan ConnectionError) {
+	// The channel created here is wrapped in a ConnectionError
 	errors := j.connection.NotifyClose(make(chan *amqp.Error))
 	msg := ConnectionError{
 		Channel: errors,
 	}
-	errorChannel <- msg
+	errorChannel <- msg // triggers the reconnection logic
 }
 
 // Connect will attempt to connect to the AMQP broker, create/use the configured
 // exchange, and create a new channel. Make sure you call the Close method when
 // you are done, most likely with a defer statement.
 func (p *AMQPPublisher) Connect(errorChannel chan ConnectionError) error {
-	err := p.connect(errorChannel)
+	err := p.connect()
 	if err != nil {
 		return err
 	}
@@ -147,7 +148,7 @@ func (p *AMQPPublisher) Connect(errorChannel chan ConnectionError) error {
 
 // Connect sets up a connection to an AMQP exchange
 func (c *AMQPConsumer) Connect(errorChannel chan ConnectionError) (<-chan amqp.Delivery, error) {
-	err := c.connect(errorChannel)
+	err := c.connect()
 	logger.Printf("Setting up the %s queue...\n", c.QueueName)
 	queue, err := c.channel.QueueDeclare(
 		c.QueueName,
