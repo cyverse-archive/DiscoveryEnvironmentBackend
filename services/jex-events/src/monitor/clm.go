@@ -226,7 +226,7 @@ func ParseEventFile(
 	return currentPos, err
 }
 
-// Path spawns a gorouting that will check the last modified date on the
+// Path spawns a goroutine that will check the last modified date on the
 // file specified by path and attempt to parse it when the date changes.
 func Path(path string, sleepyTime time.Duration, changeDetected chan<- int) error {
 	logger.Printf("Monitoring path %s every %s\n", path, sleepyTime.String())
