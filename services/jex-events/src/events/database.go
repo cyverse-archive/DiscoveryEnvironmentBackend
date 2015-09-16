@@ -3,6 +3,7 @@ package events
 import (
 	"database/sql"
 	"fmt"
+	"model"
 	"strings"
 	"time"
 
@@ -43,24 +44,8 @@ func NewDatabaser(connString string) (*Databaser, error) {
 	return databaser, nil
 }
 
-// JobRecord is a type that contains info that goes into the jobs table.
-type JobRecord struct {
-	ID               string
-	BatchID          string
-	CondorID         string
-	Submitter        string
-	DateSubmitted    time.Time
-	DateStarted      time.Time
-	DateCompleted    time.Time
-	AppID            string
-	InvocationID     string
-	ExitCode         int
-	FailureThreshold int64
-	FailureCount     int64
-}
-
-// InsertJob adds a new JobRecord to the database.
-func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
+// InsertJob adds a new model.JobRecord to the database.
+func (d *Databaser) InsertJob(jr *model.JobRecord) (string, error) {
 	query := `
 	INSERT INTO jobs (
 		batch_id,
@@ -126,13 +111,13 @@ func (d *Databaser) InsertJob(jr *JobRecord) (string, error) {
 	return id, err
 }
 
-// AddJob add a new JobRecord to the database in a more friendly way than
+// AddJob add a new model.JobRecord to the database in a more friendly way than
 // InsertJob. Only adds the job if it doesn't already exist.
 // Uses InsertJob under the hood. Used for new jobs.
-func (d *Databaser) AddJob(condorID string) (*JobRecord, error) {
+func (d *Databaser) AddJob(condorID string) (*model.JobRecord, error) {
 	job, err := d.GetJobByCondorID(condorID)
 	if err == sql.ErrNoRows {
-		jr := &JobRecord{
+		jr := &model.JobRecord{
 			CondorID: condorID,
 		}
 		id, err := d.InsertJob(jr)
@@ -228,7 +213,7 @@ func upsertJobStmt() string {
 }
 
 // Attempts to perform a job upsert.
-func attemptJobUpsert(stmt *sql.Stmt, jr *JobRecord) (sql.Result, error) {
+func attemptJobUpsert(stmt *sql.Stmt, jr *model.JobRecord) (sql.Result, error) {
 	return stmt.Exec(
 		emptyStringToNil(&jr.BatchID),
 		jr.Submitter,
@@ -245,15 +230,15 @@ func attemptJobUpsert(stmt *sql.Stmt, jr *JobRecord) (sql.Result, error) {
 }
 
 // Retrieves an upserted job.
-func getUpsertedJob(tx *sql.Tx, condorID string) (*JobRecord, error) {
+func getUpsertedJob(tx *sql.Tx, condorID string) (*model.JobRecord, error) {
 	row := tx.QueryRow(_jobByCondorIDQuery, condorID)
 	return jobRecordFromRow(row)
 }
 
 // UpsertJob updates a job if it already exists, otherwise it inserts a new job
 // into the database.
-func (d *Databaser) UpsertJob(jr *JobRecord) (*JobRecord, error) {
-	var updatedJr *JobRecord
+func (d *Databaser) UpsertJob(jr *model.JobRecord) (*model.JobRecord, error) {
+	var updatedJr *model.JobRecord
 
 	// This needs to be done inside a transaction.
 	tx, err := d.db.Begin()
@@ -312,7 +297,7 @@ func (d *Databaser) UpsertJob(jr *JobRecord) (*JobRecord, error) {
 	return updatedJr, nil
 }
 
-// DeleteJob removes a JobRecord from the database.
+// DeleteJob removes a model.JobRecord from the database.
 func (d *Databaser) DeleteJob(uuid string) error {
 	query := `DELETE FROM jobs WHERE id = cast($1 as uuid)`
 	_, err := d.db.Exec(query, uuid)
@@ -322,8 +307,8 @@ func (d *Databaser) DeleteJob(uuid string) error {
 	return nil
 }
 
-// FixAppID fixes the uuid for the AppID field for the JobRecord.
-func FixAppID(jr *JobRecord, appid interface{}) {
+// FixAppID fixes the uuid for the AppID field for the model.JobRecord.
+func FixAppID(jr *model.JobRecord, appid interface{}) {
 	if appid == nil {
 		jr.AppID = ""
 	} else {
@@ -331,8 +316,8 @@ func FixAppID(jr *JobRecord, appid interface{}) {
 	}
 }
 
-// FixBatchID fixes the uuid for the BatchID field for the JobRecord.
-func FixBatchID(jr *JobRecord, batchid interface{}) {
+// FixBatchID fixes the uuid for the BatchID field for the model.JobRecord.
+func FixBatchID(jr *model.JobRecord, batchid interface{}) {
 	if batchid == nil {
 		jr.BatchID = ""
 	} else {
@@ -340,8 +325,8 @@ func FixBatchID(jr *JobRecord, batchid interface{}) {
 	}
 }
 
-// FixInvID fixes the InvocationID field for the JobRecord
-func FixInvID(jr *JobRecord, invid interface{}) {
+// FixInvID fixes the InvocationID field for the model.JobRecord
+func FixInvID(jr *model.JobRecord, invid interface{}) {
 	if invid == nil {
 		jr.InvocationID = ""
 	} else {
@@ -370,8 +355,8 @@ func fixTimestamp(timestamp *time.Time) *time.Time {
 }
 
 // jobRecordFromRow converts a row from a result set to a job record
-func jobRecordFromRow(row *sql.Row) (*JobRecord, error) {
-	jr := &JobRecord{}
+func jobRecordFromRow(row *sql.Row) (*model.JobRecord, error) {
+	jr := &model.JobRecord{}
 
 	// Workaround for nullable UUID fields in the database.
 	var batchid interface{}
@@ -406,8 +391,8 @@ func jobRecordFromRow(row *sql.Row) (*JobRecord, error) {
 	return jr, err
 }
 
-// GetJob returns a JobRecord from the database.
-func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
+// GetJob returns a model.JobRecord from the database.
+func (d *Databaser) GetJob(uuid string) (*model.JobRecord, error) {
 	query := `
 	SELECT cast(id as varchar),
 				 batch_id,
@@ -428,14 +413,14 @@ func (d *Databaser) GetJob(uuid string) (*JobRecord, error) {
 	return jobRecordFromRow(row)
 }
 
-// GetJobByCondorID returns a JobRecord from the database.
-func (d *Databaser) GetJobByCondorID(condorID string) (*JobRecord, error) {
+// GetJobByCondorID returns a model.JobRecord from the database.
+func (d *Databaser) GetJobByCondorID(condorID string) (*model.JobRecord, error) {
 	row := d.db.QueryRow(_jobByCondorIDQuery, condorID)
 	return jobRecordFromRow(row)
 }
 
-// GetJobByInvocationID returns a JobRecord from the database.
-func (d *Databaser) GetJobByInvocationID(invocationID string) (*JobRecord, error) {
+// GetJobByInvocationID returns a model.JobRecord from the database.
+func (d *Databaser) GetJobByInvocationID(invocationID string) (*model.JobRecord, error) {
 	query := `
 	SELECT cast(id as varchar),
 	       batch_id,
@@ -457,7 +442,7 @@ func (d *Databaser) GetJobByInvocationID(invocationID string) (*JobRecord, error
 }
 
 // UpdateJob updates a job instance in the database
-func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
+func (d *Databaser) UpdateJob(jr *model.JobRecord) (*model.JobRecord, error) {
 	query := `
 	UPDATE jobs
 		SET batch_id = cast($1 as uuid),
@@ -518,17 +503,9 @@ func (d *Databaser) UpdateJob(jr *JobRecord) (*JobRecord, error) {
 	return updated, nil
 }
 
-// CondorEvent contains info about an event that Condor emitted.
-type CondorEvent struct {
-	ID          string
-	EventNumber string
-	EventName   string
-	EventDesc   string
-}
-
-// InsertCondorEvent adds a new CondorEvent to the database. The ID field is
+// InsertCondorEvent adds a new model.CondorEvent to the database. The ID field is
 // ignored.
-func (d *Databaser) InsertCondorEvent(ce *CondorEvent) (string, error) {
+func (d *Databaser) InsertCondorEvent(ce *model.CondorEvent) (string, error) {
 	query := `
 	INSERT INTO condor_events (
 		event_number,
@@ -553,7 +530,7 @@ func (d *Databaser) InsertCondorEvent(ce *CondorEvent) (string, error) {
 	return id, nil
 }
 
-// DeleteCondorEvent removes a CondorEvent from the database by its uuid.
+// DeleteCondorEvent removes a model.CondorEvent from the database by its uuid.
 func (d *Databaser) DeleteCondorEvent(uuid string) error {
 	query := `
 	DELETE FROM condor_events WHERE id = cast($1 as uuid)
@@ -565,9 +542,9 @@ func (d *Databaser) DeleteCondorEvent(uuid string) error {
 	return nil
 }
 
-// GetCondorEvent gets a CondorEvent from the database and returns a pointer to
-// a filled out instance of CondorEvent.
-func (d *Databaser) GetCondorEvent(uuid string) (*CondorEvent, error) {
+// GetCondorEvent gets a model.CondorEvent from the database and returns a pointer to
+// a filled out instance of model.CondorEvent.
+func (d *Databaser) GetCondorEvent(uuid string) (*model.CondorEvent, error) {
 	query := `
 	SELECT id,
 				 event_number,
@@ -592,7 +569,7 @@ func (d *Databaser) GetCondorEvent(uuid string) (*CondorEvent, error) {
 	if err != nil {
 		return nil, err
 	}
-	ce := &CondorEvent{
+	ce := &model.CondorEvent{
 		ID:          id,
 		EventNumber: eventNumber,
 		EventName:   eventName,
@@ -601,9 +578,9 @@ func (d *Databaser) GetCondorEvent(uuid string) (*CondorEvent, error) {
 	return ce, nil
 }
 
-// GetCondorEventByNumber gets a CondorEvent from the database and returns a pointer to
-// a filled out instance of CondorEvent.
-func (d *Databaser) GetCondorEventByNumber(number string) (*CondorEvent, error) {
+// GetCondorEventByNumber gets a model.CondorEvent from the database and returns a pointer to
+// a filled out instance of model.CondorEvent.
+func (d *Databaser) GetCondorEventByNumber(number string) (*model.CondorEvent, error) {
 	query := `
 	SELECT id,
 				event_number,
@@ -628,7 +605,7 @@ func (d *Databaser) GetCondorEventByNumber(number string) (*CondorEvent, error) 
 	if err != nil {
 		return nil, err
 	}
-	ce := &CondorEvent{
+	ce := &model.CondorEvent{
 		ID:          id,
 		EventNumber: eventNumber,
 		EventName:   eventName,
@@ -637,10 +614,10 @@ func (d *Databaser) GetCondorEventByNumber(number string) (*CondorEvent, error) 
 	return ce, nil
 }
 
-// UpdateCondorEvent updates a CondorEvent in the database. The CondorEvent must
+// UpdateCondorEvent updates a model.CondorEvent in the database. The model.CondorEvent must
 // be fully filled out with information, not just the fields that you want to
 // update.
-func (d *Databaser) UpdateCondorEvent(ce *CondorEvent) (*CondorEvent, error) {
+func (d *Databaser) UpdateCondorEvent(ce *model.CondorEvent) (*model.CondorEvent, error) {
 	query := `
 	UPDATE condor_events
 	   SET event_number = $1,
@@ -668,16 +645,8 @@ func (d *Databaser) UpdateCondorEvent(ce *CondorEvent) (*CondorEvent, error) {
 
 }
 
-// CondorRawEvent contains the raw, unparsed event that was emitted from Condor.
-type CondorRawEvent struct {
-	ID            string
-	JobID         string
-	EventText     string
-	DateTriggered time.Time
-}
-
 // InsertCondorRawEvent adds an unparsed event record to the database.
-func (d *Databaser) InsertCondorRawEvent(re *CondorRawEvent) (string, error) {
+func (d *Databaser) InsertCondorRawEvent(re *model.CondorRawEvent) (string, error) {
 	query := `
 	INSERT INTO condor_raw_events (
 		job_id,
@@ -705,7 +674,7 @@ func (d *Databaser) InsertCondorRawEvent(re *CondorRawEvent) (string, error) {
 // AddCondorRawEvent adds a raw event to the database. You'll probably want to
 // use this instead of InsertCondorRawEvent.
 func (d *Databaser) AddCondorRawEvent(eventText string, jobID string) (string, error) {
-	re := &CondorRawEvent{
+	re := &model.CondorRawEvent{
 		JobID:         jobID,
 		EventText:     eventText,
 		DateTriggered: time.Now(),
@@ -730,7 +699,7 @@ func (d *Databaser) DeleteCondorRawEvent(uuid string) error {
 }
 
 // GetCondorRawEvent retrieves an unparsed job event from the database.
-func (d *Databaser) GetCondorRawEvent(uuid string) (*CondorRawEvent, error) {
+func (d *Databaser) GetCondorRawEvent(uuid string) (*model.CondorRawEvent, error) {
 	query := `
 	SELECT id,
 	       job_id,
@@ -752,7 +721,7 @@ func (d *Databaser) GetCondorRawEvent(uuid string) (*CondorRawEvent, error) {
 	if err != nil {
 		return nil, err
 	}
-	re := &CondorRawEvent{
+	re := &model.CondorRawEvent{
 		ID:            id,
 		JobID:         jobID,
 		EventText:     eventText,
@@ -762,7 +731,7 @@ func (d *Databaser) GetCondorRawEvent(uuid string) (*CondorRawEvent, error) {
 }
 
 // UpdateCondorRawEvent updates a record of an unparsed job event.
-func (d *Databaser) UpdateCondorRawEvent(re *CondorRawEvent) (*CondorRawEvent, error) {
+func (d *Databaser) UpdateCondorRawEvent(re *model.CondorRawEvent) (*model.CondorRawEvent, error) {
 	query := `
 	UPDATE condor_raw_events
 	   SET job_id = cast($1 as uuid),
@@ -789,18 +758,8 @@ func (d *Databaser) UpdateCondorRawEvent(re *CondorRawEvent) (*CondorRawEvent, e
 	return updated, nil
 }
 
-// CondorJobEvent ties a CondorEvent to a job and raw event.
-type CondorJobEvent struct {
-	ID               string
-	JobID            string
-	CondorEventID    string
-	CondorRawEventID string
-	Hash             string
-	DateTriggered    time.Time
-}
-
 // InsertCondorJobEvent adds a parsed job event to the database.
-func (d *Databaser) InsertCondorJobEvent(je *CondorJobEvent) (string, error) {
+func (d *Databaser) InsertCondorJobEvent(je *model.CondorJobEvent) (string, error) {
 	query := `
 	INSERT INTO condor_job_events (
 		job_id,
@@ -848,10 +807,10 @@ func (d *Databaser) DoesCondorJobEventExist(checksum string) (bool, error) {
 	return false, nil
 }
 
-// AddCondorJobEvent adds a CondorJobEvent to the database. You'll probably want
+// AddCondorJobEvent adds a model.CondorJobEvent to the database. You'll probably want
 // to use this over InsertCondorJobEvent.
 func (d *Databaser) AddCondorJobEvent(jobID string, eventID string, rawEventID string, hash string) (string, error) {
-	je := &CondorJobEvent{
+	je := &model.CondorJobEvent{
 		JobID:            jobID,
 		CondorEventID:    eventID,
 		CondorRawEventID: rawEventID,
@@ -877,9 +836,9 @@ func (d *Databaser) DeleteCondorJobEvent(uuid string) error {
 	return nil
 }
 
-// GetCondorJobEvent returns a pointer to an instance of CondorJobEvent that's
+// GetCondorJobEvent returns a pointer to an instance of model.CondorJobEvent that's
 // been filled in with data from the database.
-func (d *Databaser) GetCondorJobEvent(uuid string) (*CondorJobEvent, error) {
+func (d *Databaser) GetCondorJobEvent(uuid string) (*model.CondorJobEvent, error) {
 	query := `
 	SELECT id,
 	       job_id,
@@ -904,7 +863,7 @@ func (d *Databaser) GetCondorJobEvent(uuid string) (*CondorJobEvent, error) {
 	if err != nil {
 		return nil, err
 	}
-	je := &CondorJobEvent{
+	je := &model.CondorJobEvent{
 		ID:               id,
 		JobID:            jobID,
 		CondorEventID:    condorEventID,
@@ -915,9 +874,9 @@ func (d *Databaser) GetCondorJobEvent(uuid string) (*CondorJobEvent, error) {
 }
 
 // UpdateCondorJobEvent updates values for a parsed job event in the database.
-// The CondorJobEvent that gets passed in must have all fields set ot the
+// The model.CondorJobEvent that gets passed in must have all fields set ot the
 // desired values.
-func (d *Databaser) UpdateCondorJobEvent(je *CondorJobEvent) (*CondorJobEvent, error) {
+func (d *Databaser) UpdateCondorJobEvent(je *model.CondorJobEvent) (*model.CondorJobEvent, error) {
 	query := `
 	UPDATE condor_job_events
 	   SET job_id = cast($1 as uuid),
@@ -946,15 +905,9 @@ func (d *Databaser) UpdateCondorJobEvent(je *CondorJobEvent) (*CondorJobEvent, e
 	return updated, nil
 }
 
-// LastCondorJobEvent records the last updated CondorJobEvent for a job.
-type LastCondorJobEvent struct {
-	JobID            string
-	CondorJobEventID string
-}
-
 // InsertLastCondorJobEvent adds an entry that points to the last event for a
 // job.
-func (d *Databaser) InsertLastCondorJobEvent(je *LastCondorJobEvent) (string, error) {
+func (d *Databaser) InsertLastCondorJobEvent(je *model.LastCondorJobEvent) (string, error) {
 	query := `
 	INSERT INTO last_condor_job_events (
 		job_id,
@@ -991,7 +944,7 @@ func (d *Databaser) DeleteLastCondorJobEvent(uuid string) error {
 
 // GetLastCondorJobEvent returns a record that tells what the last event for a
 // job was.
-func (d *Databaser) GetLastCondorJobEvent(uuid string) (*LastCondorJobEvent, error) {
+func (d *Databaser) GetLastCondorJobEvent(uuid string) (*model.LastCondorJobEvent, error) {
 	query := `
 	SELECT job_id,
 	       condor_job_event_id
@@ -1007,7 +960,7 @@ func (d *Databaser) GetLastCondorJobEvent(uuid string) (*LastCondorJobEvent, err
 	if err != nil {
 		return nil, err
 	}
-	je := &LastCondorJobEvent{
+	je := &model.LastCondorJobEvent{
 		JobID:            jobID,
 		CondorJobEventID: condorJobEventID,
 	}
@@ -1016,7 +969,7 @@ func (d *Databaser) GetLastCondorJobEvent(uuid string) (*LastCondorJobEvent, err
 
 // UpdateLastCondorJobEvent modifies the record that tells what the last event
 // for a job was.
-func (d *Databaser) UpdateLastCondorJobEvent(je *LastCondorJobEvent) (*LastCondorJobEvent, error) {
+func (d *Databaser) UpdateLastCondorJobEvent(je *model.LastCondorJobEvent) (*model.LastCondorJobEvent, error) {
 	query := `
 	UPDATE last_condor_job_events
 	   SET condor_job_event_id = cast($1 as uuid)
@@ -1035,12 +988,12 @@ func (d *Databaser) UpdateLastCondorJobEvent(je *LastCondorJobEvent) (*LastCondo
 	return updated, nil
 }
 
-// UpsertLastCondorJobEvent updates the last CondorJobEvent for a job if it's
+// UpsertLastCondorJobEvent updates the last model.CondorJobEvent for a job if it's
 // already set, but will insert it if it isn't already set.
 func (d *Databaser) UpsertLastCondorJobEvent(jobEventID, jobID string) (string, error) {
 	je, err := d.GetLastCondorJobEvent(jobID)
 	if err == sql.ErrNoRows {
-		le := &LastCondorJobEvent{
+		le := &model.LastCondorJobEvent{
 			JobID:            jobID,
 			CondorJobEventID: jobEventID,
 		}
@@ -1060,17 +1013,8 @@ func (d *Databaser) UpsertLastCondorJobEvent(jobEventID, jobID string) (string, 
 	return updated.JobID, nil
 }
 
-// CondorJobStopRequest records a request to stop a job.
-type CondorJobStopRequest struct {
-	ID            string
-	JobID         string
-	Username      string
-	DateRequested time.Time
-	Reason        string
-}
-
 // InsertCondorJobStopRequest adds a record of a job stop request.
-func (d *Databaser) InsertCondorJobStopRequest(jr *CondorJobStopRequest) (string, error) {
+func (d *Databaser) InsertCondorJobStopRequest(jr *model.CondorJobStopRequest) (string, error) {
 	query := `
 	INSERT INTO condor_job_stop_requests (
 		job_id,
@@ -1111,7 +1055,7 @@ func (d *Databaser) DeleteCondorJobStopRequest(uuid string) error {
 }
 
 // GetCondorJobStopRequest returns the record of a job stop request.
-func (d *Databaser) GetCondorJobStopRequest(uuid string) (*CondorJobStopRequest, error) {
+func (d *Databaser) GetCondorJobStopRequest(uuid string) (*model.CondorJobStopRequest, error) {
 	query := `
 	SELECT id,
 	       job_id,
@@ -1139,7 +1083,7 @@ func (d *Databaser) GetCondorJobStopRequest(uuid string) (*CondorJobStopRequest,
 	if err != nil {
 		return nil, err
 	}
-	jr := &CondorJobStopRequest{
+	jr := &model.CondorJobStopRequest{
 		ID:            id,
 		JobID:         jobID,
 		Username:      username,
@@ -1150,7 +1094,7 @@ func (d *Databaser) GetCondorJobStopRequest(uuid string) (*CondorJobStopRequest,
 }
 
 // UpdateCondorJobStopRequest updates the record of a job stop request.
-func (d *Databaser) UpdateCondorJobStopRequest(jr *CondorJobStopRequest) (*CondorJobStopRequest, error) {
+func (d *Databaser) UpdateCondorJobStopRequest(jr *model.CondorJobStopRequest) (*model.CondorJobStopRequest, error) {
 	query := `
 	UPDATE condor_job_stop_requests
 	   SET job_id = cast($1 as uuid),
@@ -1179,14 +1123,8 @@ func (d *Databaser) UpdateCondorJobStopRequest(jr *CondorJobStopRequest) (*Condo
 	return updated, nil
 }
 
-// CondorJobDep tracks dependencies between jobs.
-type CondorJobDep struct {
-	SuccessorID   string
-	PredecessorID string
-}
-
 // InsertCondorJobDep adds a job dependency to the database.
-func (d *Databaser) InsertCondorJobDep(jd *CondorJobDep) error {
+func (d *Databaser) InsertCondorJobDep(jd *model.CondorJobDep) error {
 	query := `
 	INSERT INTO condor_job_deps (
 		successor_id,
@@ -1207,9 +1145,9 @@ func (d *Databaser) InsertCondorJobDep(jd *CondorJobDep) error {
 	return nil
 }
 
-// GetPredecessors will return a []JobRecord containing the JobRecords for jobs
+// GetPredecessors will return a []model.JobRecord containing the model.JobRecords for jobs
 // that are predecessors of the job whose ID is passed in.
-func (d *Databaser) GetPredecessors(successor string) ([]JobRecord, error) {
+func (d *Databaser) GetPredecessors(successor string) ([]model.JobRecord, error) {
 	query := `
 	SELECT successor_id,
 	       predecessor_id
@@ -1220,7 +1158,7 @@ func (d *Databaser) GetPredecessors(successor string) ([]JobRecord, error) {
 	if err != nil {
 		return nil, err
 	}
-	var retval []JobRecord
+	var retval []model.JobRecord
 	for rows.Next() {
 		var successorID string
 		var predecessorID string
@@ -1237,9 +1175,9 @@ func (d *Databaser) GetPredecessors(successor string) ([]JobRecord, error) {
 	return retval, nil
 }
 
-// GetSuccessors returns a []JobRecord of all jobs that are successors of the
+// GetSuccessors returns a []model.JobRecord of all jobs that are successors of the
 // job whose ID is passed into the function.
-func (d *Databaser) GetSuccessors(predecessor string) ([]JobRecord, error) {
+func (d *Databaser) GetSuccessors(predecessor string) ([]model.JobRecord, error) {
 	query := `
 	SELECT successor_id,
 	       predecessor_id
@@ -1250,7 +1188,7 @@ func (d *Databaser) GetSuccessors(predecessor string) ([]JobRecord, error) {
 	if err != nil {
 		return nil, err
 	}
-	var retval []JobRecord
+	var retval []model.JobRecord
 	for rows.Next() {
 		var successorID string
 		var predecessorID string
@@ -1277,11 +1215,4 @@ func (d *Databaser) DeleteCondorJobDep(predUUID, succUUID string) error {
 		return err
 	}
 	return nil
-}
-
-// Version contains info about the version of the database in use.
-type Version struct {
-	ID      int64
-	Version string
-	Applied time.Time
 }

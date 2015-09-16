@@ -2,6 +2,7 @@ package events
 
 import (
 	"errors"
+	"model"
 	"os"
 	"testing"
 	"time"
@@ -47,7 +48,7 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 	completed := time.Now()
 	condorID := "999"
 	invID := uuid.New()
-	jr := &JobRecord{
+	jr := &model.JobRecord{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		CondorID:      condorID,
@@ -146,7 +147,7 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 
 // TestFixAppID tests the FixAppID function.
 func TestFixAppID(t *testing.T) {
-	jr := &JobRecord{}
+	jr := &model.JobRecord{}
 
 	var appIDNil interface{}
 	appIDNil = nil
@@ -165,7 +166,7 @@ func TestFixAppID(t *testing.T) {
 
 // TestFixBatchID tests the FixBatchID function.
 func TestFixBatchID(t *testing.T) {
-	jr := &JobRecord{}
+	jr := &model.JobRecord{}
 
 	var batchIDNil interface{}
 	batchIDNil = nil
@@ -183,7 +184,7 @@ func TestFixBatchID(t *testing.T) {
 
 // TestFixInvID tests the FixInvID function.
 func TestFixInvID(t *testing.T) {
-	jr := &JobRecord{}
+	jr := &model.JobRecord{}
 
 	var invIDNil interface{}
 	invIDNil = nil
@@ -209,7 +210,7 @@ func TestCRUDCondorEvents(t *testing.T) {
 		t.Error(err)
 	}
 	defer d.db.Close()
-	ce := &CondorEvent{
+	ce := &model.CondorEvent{
 		EventNumber: "999",
 		EventName:   "test_event",
 		EventDesc:   "event for unit tests",
@@ -272,7 +273,7 @@ func TestCRUDCondorRawEvents(t *testing.T) {
 	submitted := time.Now()
 	started := time.Now()
 	completed := time.Now()
-	jr := &JobRecord{
+	jr := &model.JobRecord{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,
@@ -291,7 +292,7 @@ func TestCRUDCondorRawEvents(t *testing.T) {
 	}
 	jr.ID = newUUID
 
-	ce := &CondorRawEvent{
+	ce := &model.CondorRawEvent{
 		JobID:         jr.ID,
 		EventText:     "this is a unit test event",
 		DateTriggered: time.Now(),
@@ -354,7 +355,7 @@ func TestCRUDCondorJobEvent(t *testing.T) {
 	submitted := time.Now()
 	started := time.Now()
 	completed := time.Now()
-	jr := &JobRecord{
+	jr := &model.JobRecord{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,
@@ -372,7 +373,7 @@ func TestCRUDCondorJobEvent(t *testing.T) {
 		t.Fail()
 	}
 	jr.ID = jobID
-	ce := &CondorEvent{
+	ce := &model.CondorEvent{
 		EventNumber: "001",
 		EventName:   "test_event",
 		EventDesc:   "event for unit tests",
@@ -382,7 +383,7 @@ func TestCRUDCondorJobEvent(t *testing.T) {
 		t.Error(err)
 	}
 	ce.ID = eventID
-	cr := &CondorRawEvent{
+	cr := &model.CondorRawEvent{
 		JobID:         jr.ID,
 		EventText:     "this is a unit test event",
 		DateTriggered: time.Now(),
@@ -392,7 +393,7 @@ func TestCRUDCondorJobEvent(t *testing.T) {
 		t.Error(err)
 	}
 	cr.ID = rawEventID
-	cje := &CondorJobEvent{
+	cje := &model.CondorJobEvent{
 		JobID:            jr.ID,
 		CondorEventID:    ce.ID,
 		CondorRawEventID: cr.ID,
@@ -473,7 +474,7 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 	submitted := time.Now()
 	started := time.Now()
 	completed := time.Now()
-	jr := &JobRecord{
+	jr := &model.JobRecord{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,
@@ -491,7 +492,7 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 		t.Fail()
 	}
 	jr.ID = jobID
-	ce := &CondorEvent{
+	ce := &model.CondorEvent{
 		EventNumber: "001",
 		EventName:   "test_event",
 		EventDesc:   "event for unit tests",
@@ -501,7 +502,7 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 		t.Error(err)
 	}
 	ce.ID = eventID
-	cr := &CondorRawEvent{
+	cr := &model.CondorRawEvent{
 		JobID:         jr.ID,
 		EventText:     "this is a unit test event",
 		DateTriggered: time.Now(),
@@ -511,7 +512,7 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 		t.Error(err)
 	}
 	cr.ID = rawEventID
-	cje := &CondorJobEvent{
+	cje := &model.CondorJobEvent{
 		JobID:            jr.ID,
 		CondorEventID:    ce.ID,
 		CondorRawEventID: cr.ID,
@@ -523,7 +524,7 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 	}
 	cje.ID = jobEventUUID
 
-	lj := &LastCondorJobEvent{
+	lj := &model.LastCondorJobEvent{
 		JobID:            jr.ID,
 		CondorJobEventID: cje.ID,
 	}
@@ -541,7 +542,7 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 	if retLJ.CondorJobEventID != lj.CondorJobEventID {
 		t.Errorf("CondorJobEventIDs don't match")
 	}
-	newcje := &CondorJobEvent{
+	newcje := &model.CondorJobEvent{
 		JobID:            jr.ID,
 		CondorEventID:    ce.ID,
 		CondorRawEventID: cr.ID,
@@ -595,7 +596,7 @@ func TestCondorJobStopRequest(t *testing.T) {
 	submitted := time.Now()
 	started := time.Now()
 	completed := time.Now()
-	jr := &JobRecord{
+	jr := &model.JobRecord{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,
@@ -610,7 +611,7 @@ func TestCondorJobStopRequest(t *testing.T) {
 	}
 	jr.ID = newUUID
 
-	sr := &CondorJobStopRequest{
+	sr := &model.CondorJobStopRequest{
 		JobID:         jr.ID,
 		Username:      "unit_tests",
 		DateRequested: time.Now(),
@@ -683,7 +684,7 @@ func TestCRUDJobDeps(t *testing.T) {
 	submitted := time.Now()
 	started := time.Now()
 	completed := time.Now()
-	jr1 := &JobRecord{
+	jr1 := &model.JobRecord{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,
@@ -701,7 +702,7 @@ func TestCRUDJobDeps(t *testing.T) {
 		t.Fail()
 	}
 	jr1.ID = jobID
-	jr2 := &JobRecord{
+	jr2 := &model.JobRecord{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,
@@ -719,7 +720,7 @@ func TestCRUDJobDeps(t *testing.T) {
 		t.Fail()
 	}
 	jr2.ID = job2ID
-	jr3 := &JobRecord{
+	jr3 := &model.JobRecord{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,
@@ -737,11 +738,11 @@ func TestCRUDJobDeps(t *testing.T) {
 		t.Fail()
 	}
 	jr3.ID = job3ID
-	dep1 := &CondorJobDep{
+	dep1 := &model.CondorJobDep{
 		PredecessorID: jr1.ID,
 		SuccessorID:   jr2.ID,
 	}
-	dep2 := &CondorJobDep{
+	dep2 := &model.CondorJobDep{
 		PredecessorID: jr1.ID,
 		SuccessorID:   jr3.ID,
 	}
