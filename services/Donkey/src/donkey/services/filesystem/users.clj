@@ -1,7 +1,6 @@
 (ns donkey.services.filesystem.users
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
-        [donkey.services.filesystem.common-paths]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.users])
   (:require [clj-jargon.permissions :as perm]

@@ -50,7 +50,7 @@
         (HttpsURLConnection/setDefaultHostnameVerifier hostname-verifier)
         (.openConnection url))
       (catch GeneralSecurityException e
-        (throw IOException "Unable to establish trusting SSL connection." e))
+        (throw (IOException. "Unable to establish trusting SSL connection." e)))
       (finally
         (do
           (HttpsURLConnection/setDefaultSSLSocketFactory orig-socket-factory)

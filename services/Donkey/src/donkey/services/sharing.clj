@@ -4,14 +4,10 @@
         [slingshot.slingshot :only [try+]]
         [clojure-commons.file-utils :only [basename]]
         [donkey.util.service :only [decode-stream success-response]]
-        [donkey.util.transformers :only [add-current-user-to-url]]
         [donkey.auth.user-attributes])
-  (:require [cheshire.core :as cheshire]
-            [clojure.tools.logging :as log]
-            [clj-http.client :as client]
+  (:require [clojure.tools.logging :as log]
             [donkey.clients.data-info :as data]
             [donkey.clients.notifications :as dn]))
-
 
 (def file-list-threshold 10)
 

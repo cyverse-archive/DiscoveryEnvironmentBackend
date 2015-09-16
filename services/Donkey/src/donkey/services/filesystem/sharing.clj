@@ -5,13 +5,10 @@
         [clj-jargon.item-info :only [trash-base-dir is-dir?]]
         [clj-jargon.metadata]
         [clj-jargon.permissions]
-        [clj-jargon.gen-query]
-        [clj-jargon.listings]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
-            [cheshire.core :as json]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.common-paths :as paths]
@@ -20,11 +17,6 @@
             [donkey.services.filesystem.validators :as validators]))
 
 (def shared-with-attr "ipc-contains-obj-shared-with")
-
-(defn- delete-avu
-  "Deletes the provided AVU from the path."
-  [cm fpath avu-map]
-  (.deleteAVUMetadata (:collectionAO cm) fpath (map2avu avu-map)))
 
 (defn- add-user-shared-with
   "Adds 'ipc-contains-obj-shared-with' AVU for a user to an object if it's not there."
@@ -115,18 +107,6 @@
        :skipped     (map #(dissoc % :skipped) (:skipped share-recs))
        :permission  perm})))
 
-(defn- contains-subdir?
-  [cm dpath]
-  (some #(is-dir? cm %) (list-paths cm dpath)))
-
-(defn- subdirs
-  [cm dpath]
-  (filter #(is-dir? cm %) (list-paths cm dpath)))
-
-(defn- some-subdirs-readable?
-  [cm user parent-path]
-  (some #(is-readable? cm user %1) (subdirs cm parent-path)))
-
 (defn- remove-inherit-bit?
   [cm user fpath]
   (empty? (remove (comp (conj (set (cfg/irods-admins)) user) :user)
@@ -211,10 +191,6 @@
   (if (re-seq #"@" username)
     (subs username 0 (.indexOf username "@"))
     username))
-
-(defn- boolean?
-  [flag]
-  (or (true? flag) (false? flag)))
 
 (defn do-share
   [{user :user} {users :users paths :paths permission :permission}]

@@ -1,8 +1,5 @@
 (ns donkey.services.filesystem.directory
   (:use [clojure-commons.validators]
-        [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-info]
-        [clj-jargon.permissions]
         [kameleon.uuids :only [uuidify]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]

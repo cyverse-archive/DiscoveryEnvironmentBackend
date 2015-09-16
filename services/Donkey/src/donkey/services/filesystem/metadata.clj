@@ -10,16 +10,13 @@
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
-            [clojure.set :as set]
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
             [cemerick.url :as url]
             [cheshire.core :as json]
             [clj-http.client :as http]
-            [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.icat :as icat]
-            [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as validators]
             [donkey.util.config :as cfg]))
 
