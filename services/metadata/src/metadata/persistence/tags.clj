@@ -16,7 +16,6 @@
   (first (select :tags (where {:id tag-id}))))
 
 (defn filter-tags-owned-by-user
-  [owner tag-ids]
   "Filters a set of tags for those owned by the given user.
 
    Parameters:
@@ -25,6 +24,7 @@
 
    Returns:
      It returns a lazy sequence of tag UUIDs owned by the given user."
+  [owner tag-ids]
   (map :id
     (select :tags
       (fields :id)
