@@ -64,26 +64,25 @@
   (metadata/add-app-comment (extract-app-id app-id) (read-body body)))
 
 (defn list-data-comments
-  [entry-id]
   "Returns a list of comments attached to a given filesystem entry.
 
    Parameters:
      entry-id - the `entry-id` from the request. This should be the UUID corresponding to the entry
                 being inspected"
+  [entry-id]
   (metadata/list-data-comments
     (extract-accessible-entry-id (:shortUsername user/current-user) entry-id)))
 
 (defn list-app-comments
-  [app-id]
   "Returns a list of comments attached to a given App ID.
 
    Parameters:
      app-id - the `app-id` from the request. This should be the UUID corresponding to the App being
               inspected"
+  [app-id]
   (metadata/list-app-comments (extract-app-id app-id)))
 
 (defn update-data-retract-status
-  [entry-id comment-id retracted]
   "Changes the retraction status for a given comment.
 
    Parameters:
@@ -92,6 +91,7 @@
      comment-id - the comment-id from the request. This should be the UUID corresponding to the
                   comment being modified
      retracted - the `retracted` query parameter. This should be either `true` or `false`."
+  [entry-id comment-id retracted]
   (let [user        (:shortUsername user/current-user)
         comment-id  (valid/extract-uri-uuid comment-id)
         entry-id    (extract-accessible-entry-id user entry-id)
@@ -102,7 +102,6 @@
       (metadata/update-data-retract-status entry-id comment-id retracted))))
 
 (defn update-app-retract-status
-  [app-id comment-id retracted]
   "Changes the retraction status for a given comment.
 
    Parameters:
@@ -110,6 +109,7 @@
      comment-id - the comment-id from the request. This should be the UUID corresponding to the
                   comment being modified
      retracted - the `retracted` query parameter. This should be either `true` or `false`."
+  [app-id comment-id retracted]
   (let [app-id     (valid/extract-uri-uuid app-id)
         comment-id (valid/extract-uri-uuid comment-id)
         app        (metadactyl/get-app-details app-id)
