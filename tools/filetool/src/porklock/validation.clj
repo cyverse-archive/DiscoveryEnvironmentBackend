@@ -3,8 +3,7 @@
         [clojure.pprint]
         [slingshot.slingshot :only [try+ throw+]]
         [clojure-commons.error-codes])
-  (:require [clojure-commons.file-utils :as ft]
-            [clojure.string :as string]))
+  (:require [clojure-commons.file-utils :as ft]))
 
 (def ERR_MISSING_OPTION "ERR_MISSING_OPTION")
 (def ERR_PATH_NOT_ABSOLUTE "ERR_PATH_NOT_ABSOLUTE")

@@ -1,8 +1,6 @@
 (ns porklock.pathing
   (:use [clojure.set]
-        [clojure.java.io]
-        [porklock.fileops]
-        [porklock.system])
+        [porklock.fileops])
   (:require [clojure.string :as string]
             [clojure-commons.file-utils :as ft]))
 

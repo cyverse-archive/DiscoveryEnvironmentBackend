@@ -20,15 +20,3 @@
   "Takes in a sequence of paths and turns them all into absolute paths."
   [paths]
   (map #(ft/abs-path %) paths))
-
-(defn user-home
-  "Returns the path to the user's home directory."
-  []
-  (FileUtils/getUserDirectoryPath))
-
-(defn filenames-in-dir
-  "Grabs all of the filenames in a directory."
-  [dirpath]
-  (map 
-    #(.getName %)  
-    (FileUtils/listFiles (file dirpath) TrueFileFilter/INSTANCE nil)))

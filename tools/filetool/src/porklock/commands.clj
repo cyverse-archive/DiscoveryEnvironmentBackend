@@ -1,9 +1,6 @@
 (ns porklock.commands
   (:use [porklock.pathing]
-        [porklock.system]
-        [porklock.config]
-        [porklock.fileops :only [absify]]
-        [clojure.pprint :only [pprint]])
+        [porklock.config])
   (:require [clj-jargon.init :as jg]
             [clj-jargon.item-info :as info]
             [clj-jargon.item-ops :as ops]
