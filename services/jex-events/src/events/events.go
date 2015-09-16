@@ -170,7 +170,7 @@ func (e *Event) Parse() {
 }
 
 // EventHandler processes incoming event messages
-func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser, postURL string, JEXURL string) {
+func EventHandler(deliveries <-chan amqp.Delivery, d *Databaser, postURL string, JEXURL string) {
 	eventHandler := PostEventHandler{
 		PostURL: postURL,
 		JEXURL:  JEXURL,
@@ -270,8 +270,6 @@ func EventHandler(deliveries <-chan amqp.Delivery, quit <-chan int, d *Databaser
 					continue
 				}
 			}
-		case <-quit:
-			break
 		}
 	}
 }
@@ -292,7 +290,6 @@ func Run(config *configurate.Configuration, l *log.Logger) {
 
 	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
 	connErrChan := make(chan messaging.ConnectionErrorChan)
-	quitHandler := make(chan int)
 	consumer := messaging.NewAMQPConsumer(config)
 	messaging.SetupReconnection(connErrChan, reconnect)
 
@@ -300,6 +297,8 @@ func Run(config *configurate.Configuration, l *log.Logger) {
 	SetupHTTP(config, databaser)
 	logger.Print("Done setting up HTTP")
 
+	// This is the retry logic that the events mode goes through at start up. It's
+	// there just in case the AMQP broker isn't up when events mode starts.
 	var deliveries <-chan amqp.Delivery
 	for {
 		logger.Println("Attempting AMQP connection...")
@@ -315,5 +314,6 @@ func Run(config *configurate.Configuration, l *log.Logger) {
 		}
 	}
 
-	EventHandler(deliveries, quitHandler, databaser, config.EventURL, config.JEXURL)
+	// The actual logic for events mode occurs here.
+	EventHandler(deliveries, databaser, config.EventURL, config.JEXURL)
 }
