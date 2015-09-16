@@ -84,7 +84,7 @@
 
 (defn do-move-uuid
   [{user :user} {dest-dir :dirname} source-uuid]
-  (rename-uuid user source-uuid dest-dir))
+  (move-uuid user source-uuid dest-dir))
 
 (defn do-move
   [{user :user} {sources :sources dest :dest}]
