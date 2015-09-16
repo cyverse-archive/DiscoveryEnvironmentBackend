@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.logging "0.3.1"]       ; exported
                  [ch.qos.logback/logback-classic "1.1.3"]
+                 [org.slf4j/jcl-over-slf4j "1.7.12"]
                  [net.logstash.logback/logstash-logback-encoder "4.3"]
                  [com.fasterxml.jackson.core/jackson-core "2.5.1"]
                  [com.fasterxml.jackson.core/jackson-databind "2.5.1"]
