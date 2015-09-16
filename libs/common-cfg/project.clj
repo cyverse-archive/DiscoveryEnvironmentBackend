@@ -9,7 +9,6 @@
                  [com.fasterxml.jackson.core/jackson-annotations "2.5.1"]
                  [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.5.1"]
                  [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.5.1"]
-                 [filevents "0.1.0"]
                  [bouncer "0.3.2"]
                  [medley "0.5.5"]
                  [me.raynes/fs "1.4.6"]
