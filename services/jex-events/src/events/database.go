@@ -44,6 +44,13 @@ func NewDatabaser(connString string) (*Databaser, error) {
 	return databaser, nil
 }
 
+func nilify(val string) *string {
+	if val == "" {
+		return nil
+	}
+	return &val
+}
+
 // InsertJob adds a new model.JobRecord to the database.
 func (d *Databaser) InsertJob(jr *model.JobRecord) (string, error) {
 	query := `
@@ -72,38 +79,20 @@ func (d *Databaser) InsertJob(jr *model.JobRecord) (string, error) {
 		$10,
 		$11
 	) RETURNING id`
-	var fixedBatch *string
-	if jr.BatchID == "" {
-		fixedBatch = nil
-	} else {
-		fixedBatch = &jr.BatchID
-	}
-	var fixedAppID *string
-	if jr.AppID == "" {
-		fixedAppID = nil
-	} else {
-		fixedAppID = &jr.AppID
-	}
-	var fixedInvID *string
-	if jr.InvocationID == "" {
-		fixedInvID = nil
-	} else {
-		fixedInvID = &jr.InvocationID
-	}
 	var id string
 	err := d.db.QueryRow(
 		query,
-		fixedBatch,
+		nilify(jr.BatchID),
 		jr.Submitter,
 		jr.DateSubmitted,
 		jr.DateStarted,
 		jr.DateCompleted,
-		fixedAppID,
+		nilify(jr.AppID),
 		jr.ExitCode,
 		jr.FailureThreshold,
 		jr.FailureCount,
 		jr.CondorID,
-		fixedInvID,
+		nilify(jr.InvocationID),
 	).Scan(&id)
 	if err != nil {
 		return "", err
@@ -460,37 +449,19 @@ func (d *Databaser) UpdateJob(jr *model.JobRecord) (*model.JobRecord, error) {
 	RETURNING id
 	`
 	var id string
-	var batchid *string
-	if jr.BatchID == "" {
-		batchid = nil
-	} else {
-		batchid = &jr.BatchID
-	}
-	var appid *string
-	if jr.AppID == "" {
-		appid = nil
-	} else {
-		appid = &jr.AppID
-	}
-	var invid *string
-	if jr.InvocationID == "" {
-		invid = nil
-	} else {
-		invid = &jr.InvocationID
-	}
 	err := d.db.QueryRow(
 		query,
-		batchid,
+		nilify(jr.BatchID),
 		jr.Submitter,
 		jr.DateSubmitted,
 		jr.DateStarted,
 		jr.DateCompleted,
-		appid,
+		nilify(jr.AppID),
 		jr.ExitCode,
 		jr.FailureThreshold,
 		jr.FailureCount,
 		jr.CondorID,
-		invid,
+		nilify(jr.InvocationID),
 		jr.ID,
 	).Scan(&id)
 	if err != nil {
