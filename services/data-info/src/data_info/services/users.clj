@@ -1,7 +1,5 @@
 (ns data-info.services.users
-  (:use [clojure-commons.error-codes]
-        [clojure-commons.validators]
-        [clj-jargon.init :only [with-jargon]])
+  (:use [clj-jargon.init :only [with-jargon]])
   (:require [clojure.tools.logging :as log]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clj-jargon.permissions :as perm]

@@ -1,11 +1,9 @@
 (ns data-info.services.uuids
   (:use [clj-jargon.permissions]
-        [clojure-commons.validators]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
             [clj-icat-direct.icat :as icat]
             [data-info.services.stat :as stat]
-            [cheshire.core :as json]
             [clj-jargon.by-uuid :as uuid]
             [clj-jargon.init :as init]
             [clojure-commons.error-codes :as error]

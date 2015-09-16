@@ -1,11 +1,9 @@
 (ns data-info.services.exists
-  (:require [cemerick.url :as url]
-            [dire.core :refer [with-pre-hook! with-post-hook!]]
+  (:require [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clj-jargon.init :refer [with-jargon]]
             [clj-jargon.item-info :as item]
             [clj-jargon.permissions :as perm]
             [clojure-commons.file-utils :as ft]
-            [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as log]
             [data-info.util.validators :as duv]))

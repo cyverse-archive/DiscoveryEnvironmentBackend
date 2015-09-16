@@ -11,7 +11,6 @@
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
-            [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.clients.metadata :as metadata]
             [data-info.services.directory :as directory]
