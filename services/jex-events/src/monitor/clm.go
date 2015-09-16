@@ -125,6 +125,7 @@ func ParseEventFile(
 	if err != nil {
 		return -1, err
 	}
+	defer openFile.Close()
 
 	fileStat, err := openFile.Stat()
 	if err != nil {
