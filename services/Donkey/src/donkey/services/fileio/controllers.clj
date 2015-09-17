@@ -64,7 +64,7 @@
     (success-response {:file (data/path-stat user file)})))
 
 
-(defn url-filename
+(defn- url-filename
   [address]
   (let [parsed-url (url-parser/url address)]
     (when-not (:protocol parsed-url)
