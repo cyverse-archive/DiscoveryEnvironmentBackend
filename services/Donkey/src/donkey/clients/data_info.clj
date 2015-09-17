@@ -127,14 +127,34 @@
                    :body         (json/encode {:filename (ft/basename (:dest body))})}]
       (http/put (str url) req-map))))
 
-(defn move
-  "Uses the data-info bulk mover endpoint to move a number of files into a directory."
-  [params body]
+(defn- move-single
+  "Uses the data-info single-item directory change endpoint to move an item to a different directory."
+  [user source dest]
+  (with-jargon (icat/jargon-cfg) [cm]
+    (let [path-uuid (:id (uuids/uuid-for-path cm user source))
+          url (url/url (cfg/data-info-base-url) "data" path-uuid "dir")
+          req-map {:query-params {:user user}
+                   :content-type :json
+                   :body         (json/encode {:dirname dest})}]
+      (log/info "using " (str url) " to move data item " source " (" path-uuid ") to " dest)
+      (http/put (str url) req-map))))
+
+(defn- move-multi
+  "Uses the data-info bulk mover endpoint to move a number of items to a different directory."
+  [user sources dest]
   (let [url (url/url (cfg/data-info-base-url) "mover")
-        req-map {:query-params (select-keys params [:user])
+        req-map {:query-params {:user user}
                  :content-type :json
-                 :body         (json/encode body)}]
+                 :body         (json/encode {:sources sources :dest dest})}]
+    (log/info "using " (str url) " to move several data items to " dest)
     (http/post (str url) req-map)))
+
+(defn move
+  "Uses the data-info single and bulk mover endpoints to move an item or many items into a new directory."
+  [params body]
+  (if (= 1 (count (:sources body)))
+    (move-single (:user params) (first (:sources body)) (:dest body))
+    (move-multi (:user params) (:sources body) (:dest body))))
 
 (defn move-contents
   "Uses the data-info set-children-directory-name endpoint to move the contents of one directory

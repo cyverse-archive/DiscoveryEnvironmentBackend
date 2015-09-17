@@ -2,7 +2,6 @@
   (:use [medley.core])
   (:require [clojure.edn :as edn]
             [bouncer [core :as b] [validators :as v]]
-            [filevents.core :refer [watch]]
             [clojure.java.io :refer [reader]]
             [me.raynes.fs :as fs]
             [clojure.tools.logging :as log]

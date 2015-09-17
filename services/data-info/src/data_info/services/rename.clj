@@ -1,6 +1,5 @@
 (ns data-info.services.rename
   (:use [clojure-commons.error-codes]
-        [clojure-commons.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-ops :only [move move-all]]
         [slingshot.slingshot :only [try+ throw+]])

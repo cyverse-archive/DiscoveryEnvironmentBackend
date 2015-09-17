@@ -162,6 +162,31 @@
          (:WsFindStemsResults)
          (:stemResults))))
 
+(defn- folder-retrieval-query-filter
+  [folder-id]
+  {:stemUuid            folder-id
+   :stemQueryFilterType "FIND_BY_STEM_UUID"})
+
+(defn format-folder-retrieval-request
+  [username folder-id]
+  (-> {:WsRestFindStemsRequest
+       {:actAsSubjectLookup (act-as-subject-lookup username)
+        :wsStemQueryFilter  (folder-retrieval-query-filter folder-id)}}
+      (json/encode)))
+
+(defn get-folder
+  [username folder-id]
+  (with-trap [default-error-handler]
+    (->> {:body         (format-folder-retrieval-request username folder-id)
+          :basic-auth   (auth-params)
+          :content-type content-type
+          :as           :json}
+         (http/post (grouper-uri "stems"))
+         (:body)
+         (:WsFindStemsResults)
+         (:stemResults)
+         (first))))
+
 ;; Subject search.
 
 (defn- format-subject-search-request

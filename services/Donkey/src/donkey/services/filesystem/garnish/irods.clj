@@ -1,31 +1,16 @@
 (ns donkey.services.filesystem.garnish.irods
   (:use [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]]
-        [clj-jargon.item-ops :only [input-stream]]
         [clj-jargon.metadata]
         [clj-jargon.permissions]
         [clj-jargon.users :only [user-exists?]]
-        [clj-jargon.validations]
         [clojure-commons.error-codes]
         [slingshot.slingshot :only [try+ throw+]])
-  (:require [cheshire.core :as json]
-            [heuristomancer.core :as hm]
-            [clojure.java.shell :as sh]
-            [clojure.java.io :as io]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [clojure-commons.file-utils :as ft]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.icat :as icat])
   (:import [org.apache.tika Tika]))
-
-
-(defn- get-file-type
-  [cm path]
-  "Uses heuristomancer to determine a the file type of a file."
-  (let [result (hm/identify (input-stream cm path) (cfg/filetype-read-amount))]
-    (if-not (nil? result)
-      (name result)
-      result)))
 
 (defn add-type
   "Adds the type to a file in iRODS at path for the specified user."

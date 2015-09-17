@@ -1,21 +1,17 @@
 (ns data-info.services.create
   (:use [clojure-commons.error-codes]
-        [clojure-commons.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.permissions :only [set-owner]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [clojure.tools.logging :as log]
-            [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
-            [cheshire.core :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [clj-jargon.item-info :as item]
             [clj-jargon.item-ops :as ops]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as dul]
             [data-info.util.validators :as validators]
-            [data-info.util.paths :as paths]
-            [data-info.services.stat :as stat]))
+            [data-info.util.paths :as paths]))
 
 (defn- sort-existing
   [cm path]

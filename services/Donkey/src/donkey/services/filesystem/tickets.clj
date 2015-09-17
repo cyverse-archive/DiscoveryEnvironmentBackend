@@ -35,10 +35,6 @@
   (stache/render tmpl {:url       (cfg/kifshare-external-url)
                        :ticket-id (:ticket-id ticket-map)
                        :filename  (ft/basename (:path ticket-map))}))
-(defn- ticket-kifshare-url
-  [cm user path]
-  (mapv #(ft/path-join (cfg/kifshare-external-url) %)
-        (ticket-ids-for-path cm (:username cm) path)))
 
 (defn url-join
   [url path]
@@ -98,10 +94,6 @@
     (validators/all-paths-readable cm user paths)
     {:tickets
      (apply merge (mapv #(hash-map %1 (returnable-tickets-for-path cm %1)) paths))}))
-
-(defn- check-tickets
-  [tickets]
-  (every? true? (mapv #(= (set (keys %)) (set [:path :ticket-id])) tickets)))
 
 (defn do-add-tickets
   [{public :public user :user} {paths :paths}]

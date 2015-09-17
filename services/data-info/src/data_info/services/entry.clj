@@ -1,9 +1,7 @@
 (ns data-info.services.entry
   "This namespace provides the business logic for all entries endpoints."
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [cheshire.core :as json]
-            [clojure.string :as str]
-            [me.raynes.fs :as fs]
+  (:require [me.raynes.fs :as fs]
             [clj-icat-direct.icat :as icat]
             [clj-jargon.by-uuid :as uuid]
             [clj-jargon.init :as init]

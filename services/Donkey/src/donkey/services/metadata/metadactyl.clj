@@ -17,11 +17,6 @@
             [donkey.clients.notifications :as dn]
             [donkey.services.fileio.actions :as io]))
 
-(defn- secured-notification-url
-  [req & components]
-  (apply build-url-with-query (notificationagent-base)
-         (add-current-user-to-map (:params req)) components))
-
 (defn- metadactyl-request
   "Prepares a metadactyl request by extracting only the body of the client request and sets the
    forwarded request's content-type to json."
@@ -105,24 +100,6 @@
   (let [url (metadactyl-url {} "admin" "reference-genomes" reference-genome-id)
         req (metadactyl-request req)]
     (forward-patch url req)))
-
-(defn- extract-uploaded-path
-  "Gets the file ID as a path from the given upload results."
-  [upload]
-  (get-in upload [:file :id]))
-
-(defn- upload-tool-request-file
-  "Uploads a file with a tmp path, found in params by the given file-key, to the
-   given user's final-path dir, then updates file-key in params with the file's
-   new path."
-  [params file-key user final-path]
-  (let [tmp-path (params file-key)]
-    (if (nil? tmp-path)
-      params
-      (assoc params
-             file-key
-             (extract-uploaded-path (io/upload user tmp-path final-path))))))
-
 
 (defn- postprocess-tool-request
   "Postprocesses a tool request update or submission. The postprocessing function

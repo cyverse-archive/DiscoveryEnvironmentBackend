@@ -23,8 +23,8 @@
     (.getUserGroupName ug)))
 
 (defn user-exists?
-  [cm user]
   "Returns true if 'user' exists in iRODS."
+  [cm user]
   (try
     (do
       (.findByName (:userAO cm) user)

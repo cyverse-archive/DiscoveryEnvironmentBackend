@@ -6,8 +6,8 @@
 
 
 (defn- get-file-type
-  [cm path]
   "Uses heuristomancer to determine a the file type of a file."
+  [cm path]
   (let [result (hm/identify (input-stream cm path) (cfg/filetype-read-amount))]
     (if-not (nil? result)
       (name result)

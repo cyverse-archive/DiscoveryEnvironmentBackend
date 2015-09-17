@@ -3,7 +3,6 @@
             [clj-jargon.init :refer [with-jargon]]
             [clj-jargon.item-info :refer [exists?]]
             [clj-jargon.item-ops :refer [mkdirs]]
-            [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as log]
             [data-info.util.irods :as irods]

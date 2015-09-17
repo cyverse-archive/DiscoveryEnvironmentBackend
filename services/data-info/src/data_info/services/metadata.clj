@@ -11,7 +11,6 @@
             [clojure.string :as string]
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
-            [clojure.data.codec.base64 :as b64]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [data-info.clients.metadata :as metadata]
             [data-info.services.directory :as directory]
@@ -121,22 +120,6 @@
     (validators/path-exists cm path)
     (validators/path-writeable cm (cfg/irods-user) path)
     (common-metadata-set cm path avu-map)))
-
-(defn- encode-str
-  "Returns str-to-encode as a base 64 encoded string."
-  [str-to-encode]
-  (String. (b64/encode (.getBytes str-to-encode))))
-
-(defn- workaround-delete
-  "Gnarly workaround for a bug (I think) in Jargon. If a value
-   in an AVU is formatted a certain way, it can't be deleted.
-   We're base64 encoding the value before deletion to ensure
-   that the deletion will work."
-  [cm path attr value]
-  (let [{:keys [attr value unit]} (first (get-attribute-value cm path attr value))
-        new-val (encode-str value)]
-    (add-metadata cm path attr new-val unit)
-    new-val))
 
 (defn- metadata-batch-set
   "Adds and deletes metadata on path for a user. add-dels should be in the

@@ -17,10 +17,11 @@
   (MDC/clear))
 
 ;; With thanks to https://github.com/vaughnd/clojure-example-logback-integration/
-(defmacro with-logging-context [context & body]
+(defmacro with-logging-context
   "Use this to add a map to any logging wrapped in the macro. Macro can be nested.
   (with-logging-context {:key \"value\"} (log/info \"yay\"))
   "
+  [context & body]
   `(let [wrapped-context# ~context
          ctx# (MDC/getCopyOfContextMap)]
      (try

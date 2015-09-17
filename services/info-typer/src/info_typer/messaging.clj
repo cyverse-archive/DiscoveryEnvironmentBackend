@@ -5,7 +5,6 @@
             [slingshot.slingshot :refer [throw+ try+]]
             [clj-jargon.by-uuid :as uuid]
             [clj-jargon.init :refer [with-jargon]]
-            [clj-jargon.item-info :as info]
             [clj-jargon.metadata :as meta]
             [clojure-commons.error-codes :as ce]
             [info-typer.amqp :as amqp]

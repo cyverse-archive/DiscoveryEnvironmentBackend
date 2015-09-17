@@ -1,15 +1,9 @@
 (ns donkey.routes.filesystem
   (:use [compojure.core]
-        [donkey.auth.user-attributes]
-        [donkey.util.validators :only [parse-body]]
-        [donkey.util.transformers :only [add-current-user-to-map]]
-        [donkey.util]
-        [slingshot.slingshot :only [try+ throw+]])
+        [donkey.util])
   (:require [donkey.util.config :as config]
             [clojure.tools.logging :as log]
-            [dire.core :refer [with-pre-hook!]]
             [donkey.clients.data-info :as data]
-            [donkey.services.filesystem.create :as create]
             [donkey.services.filesystem.directory :as dir]
             [donkey.services.filesystem.exists :as exists]
             [donkey.services.filesystem.home :as home]
@@ -24,10 +18,7 @@
             [donkey.services.filesystem.stat :as stat]
             [donkey.services.filesystem.tickets :as ticket]
             [donkey.services.filesystem.trash :as trash]
-            [donkey.services.filesystem.updown :as ud]
-            [donkey.services.filesystem.users :as user]
-            [donkey.services.filesystem.uuids :as uuid]))
-
+            [donkey.services.filesystem.updown :as ud]))
 
 (defn secured-filesystem-routes
   "The routes for file IO endpoints."

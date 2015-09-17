@@ -5,8 +5,7 @@
             [clojurewerkz.elastisch.rest.document :as cerd]
             [clojurewerkz.elastisch.rest.index :as ceri]
             [cheshire.custom :as json]
-            [clj-http.client :as http]
-			[slingshot.slingshot :as ss])
+            [slingshot.slingshot :as ss])
   (:import [java.net ConnectException]))
 
 
