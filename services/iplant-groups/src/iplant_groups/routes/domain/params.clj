@@ -14,6 +14,9 @@
 (def GroupIdPathParam
   (describe String "The group identifier."))
 
+(def FolderIdPathParam
+  (describe String "The folder identifier."))
+
 (s/defschema SecuredQueryParams
   {:user (describe NonBlankString "The short version of the username")})
 

@@ -1,7 +1,14 @@
 (ns iplant_groups.service.folders
   (:require [iplant_groups.clients.grouper :as grouper]
-            [iplant_groups.service.format :as fmt]))
+            [iplant_groups.service.format :as fmt]
+            [iplant_groups.util.service :as service]))
 
 (defn folder-search
   [{:keys [user search]}]
   {:folders (mapv fmt/format-folder (grouper/folder-search user search))})
+
+(defn get-folder
+  [folder-id {:keys [user]}]
+  (if-let [folder (grouper/get-folder user folder-id)]
+    (fmt/format-folder folder)
+    (service/not-found "folder" folder-id)))
