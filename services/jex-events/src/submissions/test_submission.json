@@ -72,11 +72,11 @@
             "type":"condor"
         }
     ],
-    "create_output_subdir":false,
+    "create_output_subdir":true,
     "request_type":"submit",
-    "app_description":"Counts and summarizes the number of lines, words, and bytes in a target file",
+    "app_description":"this is an app description",
     "output_dir":"/iplant/home/wregglej/analyses/Word_Count_analysis1-2015-09-17-21-42-20.9",
-    "wiki_url":"https://pods.iplantcollaborative.org/wiki/display/DEapps/Word%20Count",
+    "wiki_url":"https://pods.iplantcollaborative.org/wiki/display/DEapps/WordCount",
     "uuid":"07b04ce2-7757-4b21-9e15-0b4c2f44be26",
     "notify":true,
     "execution_target":"condor",
