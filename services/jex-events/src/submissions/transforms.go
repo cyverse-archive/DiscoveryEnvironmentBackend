@@ -64,7 +64,7 @@ type StepParam struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
 	Value string `json:"value"`
-	Order string `json:"order"`
+	Order int    `json:"order"`
 }
 
 // StepConfig is where configuration settings for a job step are located.
@@ -112,7 +112,7 @@ type Step struct {
 }
 
 // Submission describes a job passed down through the API.
-var Submission struct {
+type Submission struct {
 	Description        string          `json:"description"`
 	Email              string          `json:"email"`
 	Name               string          `json:"name"`
