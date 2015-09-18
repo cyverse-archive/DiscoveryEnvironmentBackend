@@ -51,7 +51,3 @@
                           :user string?})
     (success-response
       {:type (prods/get-types (:user params) (:path params))})))
-
-(defn get-type-list
-  []
-  (success-response {:types script-types}))

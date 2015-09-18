@@ -6,6 +6,7 @@
         [donkey.util])
   (:require [donkey.util.config :as config]
             [donkey.services.filesystem.garnish.controllers :as garnish]
+            [donkey.clients.data-info :as data]
             [donkey.clients.saved-searches :as saved]))
 
 (defn secured-data-routes
@@ -24,7 +25,7 @@
            (garnish/delete-type params))
 
    (GET "/filetypes/type-list" []
-        (garnish/get-type-list))
+        (data/get-type-list))
 
    (POST "/share" [:as req]
          (share req))

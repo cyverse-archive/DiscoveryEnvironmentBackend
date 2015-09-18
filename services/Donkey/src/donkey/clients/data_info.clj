@@ -204,6 +204,13 @@
                    :body (json/encode body)}]
       (http/post (str url) req-map)))
 
+(defn get-type-list
+    "Uses the data-info file-types endpoint to produce a list of acceptable types."
+    []
+    (let [url (url/url (cfg/data-info-base-url) "file-types")
+          req-map {:content-type :json}]
+      (http/get (str url) req-map)))
+
 (defn gen-output-dir
   "Either obtains or creates a default output directory using a specified base name."
   [base]
