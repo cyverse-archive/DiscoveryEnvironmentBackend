@@ -67,11 +67,6 @@ type StepParam struct {
 	Order int    `json:"order"`
 }
 
-// StepConfig is where configuration settings for a job step are located.
-type StepConfig struct {
-	Params []StepParam `json:"params"`
-}
-
 // StepEnvironment defines the environment variables that should be set for a
 // step
 type StepEnvironment map[string]string
@@ -95,6 +90,13 @@ type StepOutput struct {
 	QualID       string `json:"qual-id"`
 	Retain       bool   `json:"retain"`
 	Type         string `json:"type"`
+}
+
+// StepConfig is where configuration settings for a job step are located.
+type StepConfig struct {
+	Params []StepParam  `json:"params"`
+	Input  []StepInput  `json:"input"`
+	Output []StepOutput `json:"output"`
 }
 
 // Step describes a single step in a job. All jobs contain multiple steps.

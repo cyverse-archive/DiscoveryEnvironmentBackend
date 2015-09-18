@@ -32,7 +32,7 @@
                         "multiplicity":"single",
                         "name":"Acer-tree.txt",
                         "property":"Acer-tree.txt",
-                        "retain":false,
+                        "retain":true,
                         "type":"FileInput",
                         "value":"/iplant/home/wregglej/Acer-tree.txt"
                     }

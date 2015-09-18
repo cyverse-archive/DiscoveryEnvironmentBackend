@@ -210,3 +210,229 @@ func TestStepComponentDescription(t *testing.T) {
 		t.Errorf("The step's component description was '%s' when it should have been 'Word Count'", step.Component.Description)
 	}
 }
+
+func TestStepContainerID(t *testing.T) {
+	s := inittests(t)
+	container := s.Steps[0].Component.Container
+	if container.ID != "16fd2a16-3ac6-11e5-a25d-2fa4b0893ef1" {
+		t.Errorf("The step's container ID was '%s' when it should have been '16fd2a16-3ac6-11e5-a25d-2fa4b0893ef1'", container.ID)
+	}
+}
+
+func TestStepContainerImageID(t *testing.T) {
+	s := inittests(t)
+	image := s.Steps[0].Component.Container.Image
+	if image.ID != "fc210a84-f7cd-4067-939c-a68ec3e3bd2b" {
+		t.Errorf("The container image ID was '%s' when it should have been 'fc210a84-f7cd-4067-939c-a68ec3e3bd2b'", image.ID)
+	}
+}
+
+func TestStepContainerImageURL(t *testing.T) {
+	s := inittests(t)
+	image := s.Steps[0].Component.Container.Image
+	if image.URL != "https://registry.hub.docker.com/u/discoenv/backwards-compat" {
+		t.Errorf("The container image URL was '%s' when it should have been 'https://registry.hub.docker.com/u/discoenv/backwards-compat'", image.URL)
+	}
+}
+
+func TestStepContainerImageTag(t *testing.T) {
+	s := inittests(t)
+	image := s.Steps[0].Component.Container.Image
+	if image.Tag != "latest" {
+		t.Errorf("The container image tag was '%s' when it should have been 'latest'", image.Tag)
+	}
+}
+
+func TestStepContainerImageName(t *testing.T) {
+	s := inittests(t)
+	image := s.Steps[0].Component.Container.Image
+	if image.Name != "gims.iplantcollaborative.org:5000/backwards-compat" {
+		t.Errorf("The container image name was '%s' when it should have been 'gims.iplantcollaborative.org:5000/backwards-compat'", image.Name)
+	}
+}
+
+func TestStepEnvironmentLength(t *testing.T) {
+	s := inittests(t)
+	env := s.Steps[0].Environment
+	envlen := len(env)
+	if envlen != 2 {
+		t.Errorf("The number of env vars is '%d' when it should have been '2'", envlen)
+	}
+}
+
+func TestStepEnvironment(t *testing.T) {
+	s := inittests(t)
+	env := s.Steps[0].Environment
+	if env["food"] != "banana" {
+		t.Errorf("The env var 'food' was set to '%s' instead of 'banana'", env["food"])
+	}
+}
+
+func TestStepEnvironment2(t *testing.T) {
+	s := inittests(t)
+	env := s.Steps[0].Environment
+	if env["foo"] != "bar" {
+		t.Errorf("The env var 'foo' was set to '%s' instead of 'bar'", env["foo"])
+	}
+}
+
+func TestStepConfig(t *testing.T) {
+	s := inittests(t)
+	config := s.Steps[0].Config
+	inputlen := len(config.Input)
+	outputlen := len(config.Output)
+	paramslen := len(config.Params)
+	if inputlen != 1 {
+		t.Errorf("The number of inputs was '%d' when it should have been '1'", inputlen)
+	}
+	if outputlen != 2 {
+		t.Errorf("The number of outputs was '%d' when it should have been '2'", outputlen)
+	}
+	if paramslen != 2 {
+		t.Errorf("The number of params was '%d' when it should have been '2'", paramslen)
+	}
+}
+
+func TestConfigInputID(t *testing.T) {
+	s := inittests(t)
+	input := s.Steps[0].Config.Input[0]
+	if input.ID != "2f58fce9-8183-4ab5-97c4-970592d1c35a" {
+		t.Errorf("The input ID was '%s' when it should have been '2f58fce9-8183-4ab5-97c4-970592d1c35a'", input.ID)
+	}
+}
+
+func TestConfigInputMultiplicity(t *testing.T) {
+	s := inittests(t)
+	input := s.Steps[0].Config.Input[0]
+	if input.Multiplicity != "single" {
+		t.Errorf("The input multiplicity was '%s' when it should have been 'single'", input.Multiplicity)
+	}
+}
+
+func TestConfigInputName(t *testing.T) {
+	s := inittests(t)
+	input := s.Steps[0].Config.Input[0]
+	if input.Name != "Acer-tree.txt" {
+		t.Errorf("The input name was '%s' when it should have been 'Acer-tree.txt'", input.Name)
+	}
+}
+
+func TestConfigInputProperty(t *testing.T) {
+	s := inittests(t)
+	input := s.Steps[0].Config.Input[0]
+	if input.Property != "Acer-tree.txt" {
+		t.Errorf("The input property was '%s' when it should have been 'Acer-tree.txt'", input.Name)
+	}
+}
+
+func TestConfigInputRetain(t *testing.T) {
+	s := inittests(t)
+	input := s.Steps[0].Config.Input[0]
+	if !input.Retain {
+		t.Error("The input property was false when it should have been true")
+	}
+}
+
+func TestConfigInputType(t *testing.T) {
+	s := inittests(t)
+	input := s.Steps[0].Config.Input[0]
+	if input.Type != "FileInput" {
+		t.Errorf("The input type was '%s' when it should have been 'FileInput'", input.Type)
+	}
+}
+
+func TestConfigInputValue(t *testing.T) {
+	s := inittests(t)
+	input := s.Steps[0].Config.Input[0]
+	if input.Value != "/iplant/home/wregglej/Acer-tree.txt" {
+		t.Errorf("The input value was '%s' when it should have been '/iplant/home/wregglej/Acer-tree.txt'", input.Value)
+	}
+}
+
+func TestConfigOutput0Multiplicity(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[0]
+	if output.Multiplicity != "single" {
+		t.Errorf("The output multiplicity was '%s' when it should have been 'single'", output.Multiplicity)
+	}
+}
+
+func TestConfigOutput0Name(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[0]
+	if output.Name != "wc_out.txt" {
+		t.Errorf("The output name was '%s' when it should have been 'wc_out.txt'", output.Name)
+	}
+}
+
+func TestConfigOutput0Property(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[0]
+	if output.Property != "wc_out.txt" {
+		t.Errorf("The output property was '%s' when it should have been 'wc_out.txt'", output.Property)
+	}
+}
+
+func TestConfigOutput0QualID(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[0]
+	if output.QualID != "67781636-854a-11e4-b715-e70c4f8db0dc_e7721c78-56c9-41ac-8ff5-8d46093f1fb1" {
+		t.Errorf("The output qual-id was '%s' when it should have been '67781636-854a-11e4-b715-e70c4f8db0dc_e7721c78-56c9-41ac-8ff5-8d46093f1fb1'", output.QualID)
+	}
+}
+
+func TestConfigOutput0Retain(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[0]
+	if !output.Retain {
+		t.Errorf("The output retain was false when it should have been true")
+	}
+}
+
+func TestConfigOutput0Type(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[0]
+	if output.Type != "File" {
+		t.Errorf("The output type was '%s' when it should have been 'File'", output.Type)
+	}
+}
+
+func TestConfigOutput1Multiplicity(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[1]
+	if output.Multiplicity != "collection" {
+		t.Errorf("The output multiplicity was '%s' when it should have been 'collection'", output.Multiplicity)
+	}
+}
+
+func TestConfigOutput1Name(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[1]
+	if output.Name != "logs" {
+		t.Errorf("The output name was '%s' when it should have been 'logs'", output.Name)
+	}
+}
+
+func TestConfigOutput1Property(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[1]
+	if output.Property != "logs" {
+		t.Errorf("The output property was '%s' when it should have been 'logs'", output.Property)
+	}
+}
+
+func TestConfigOutput1Retain(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[1]
+	if !output.Retain {
+		t.Errorf("The output retain was false when it should have been true")
+	}
+}
+
+func TestConfigOutput1Type(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[1]
+	if output.Type != "File" {
+		t.Errorf("The output type was '%s' when it should have been 'File'", output.Type)
+	}
+}
