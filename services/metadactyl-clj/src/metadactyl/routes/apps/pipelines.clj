@@ -1,8 +1,8 @@
 (ns metadactyl.routes.apps.pipelines
-  (:use [metadactyl.routes.domain.pipeline]
+  (:use [common-swagger-api.schema]
+        [metadactyl.routes.domain.pipeline]
         [metadactyl.routes.params]
-        [metadactyl.user :only [current-user]]
-        [compojure.api.sweet])
+        [metadactyl.user :only [current-user]])
   (:require [clojure-commons.error-codes :as ce]
             [metadactyl.service.apps :as apps]
             [metadactyl.util.service :as service]

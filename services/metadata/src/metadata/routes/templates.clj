@@ -1,5 +1,5 @@
 (ns metadata.routes.templates
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [metadata.routes.domain.common]
         [metadata.routes.domain.template])
   (:require [metadata.services.templates :as templates]
@@ -10,7 +10,7 @@
     :tags ["template-info"]
 
     (GET* "/" [:as {:keys [uri]}]
-      :query [params StandardQueryParams]
+      :query [params StandardUserQueryParams]
       :return MetadataTemplateList
       :summary "List Metadata Templates"
       :description "This endpoint lists undeleted metadata templates."
@@ -18,7 +18,7 @@
 
     (GET* "/attr/:attr-id" [:as {:keys [uri]}]
       :path-params [attr-id :- AttrIdPathParam]
-      :query [params StandardQueryParams]
+      :query [params StandardUserQueryParams]
       :return MetadataTemplateAttr
       :summary "View a Metadata Attribute"
       :description "This endpoint returns the details of a single metadata attribute."
@@ -26,7 +26,7 @@
 
     (GET* "/:template-id" [:as {:keys [uri]}]
       :path-params [template-id :- TemplateIdPathParam]
-      :query [params StandardQueryParams]
+      :query [params StandardUserQueryParams]
       :return MetadataTemplate
       :summary "View a Metadata Template"
       :description "This endpoint returns the details of a single metadata template."
@@ -37,14 +37,14 @@
     :tags ["template-administration"]
 
     (GET* "/" [:as {:keys [uri]}]
-      :query [params StandardQueryParams]
+      :query [params StandardUserQueryParams]
       :return MetadataTemplateList
       :summary "List Metadata Templates for Administrators"
       :description "This endpoint lists all metadata templates."
       (service/trap uri templates/admin-list-templates))
 
     (POST* "/" [:as {:keys [uri]}]
-      :query [params StandardQueryParams]
+      :query [params StandardUserQueryParams]
       :body [body (describe MetadataTemplateUpdate "The template to add.")]
       :return MetadataTemplate
       :summary "Add a Metadata Template"
@@ -54,7 +54,7 @@
     (PUT* "/:template-id" [:as {:keys [uri]}]
       :path-params [template-id :- TemplateIdPathParam]
       :body [body (describe MetadataTemplateUpdate "The template to update.")]
-      :query [params StandardQueryParams]
+      :query [params StandardUserQueryParams]
       :return MetadataTemplate
       :summary "Update a Metadata Template"
       :description "This endpoint allows administrators to update existing metadata templates."
@@ -62,7 +62,7 @@
 
     (DELETE* "/:template-id" [:as {:keys [uri]}]
       :path-params [template-id :- TemplateIdPathParam]
-      :query [params StandardQueryParams]
+      :query [params StandardUserQueryParams]
       :summary "Mark a Metadata Template as Deleted"
       :description "This endpoint allows administrators to mark existing metadata templates as
       deleted."

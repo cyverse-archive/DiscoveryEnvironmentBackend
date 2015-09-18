@@ -1,6 +1,6 @@
 (ns metadactyl.schema.containers
-  (:use [compojure.api.sweet :only [describe]]
-        [metadactyl.routes.params :only [->optional-param ToolIdParam]])
+  (:use [common-swagger-api.schema :only [->optional-param describe]]
+        [metadactyl.routes.params :only [ToolIdParam]])
   (:require [schema.core :as s]))
 
 (s/defschema Image

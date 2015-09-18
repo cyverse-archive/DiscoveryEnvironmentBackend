@@ -1,6 +1,6 @@
 (ns metadactyl.routes.domain.tool
-  (:use [metadactyl.routes.params]
-        [compojure.api.sweet :only [describe]]
+  (:use [common-swagger-api.schema :only [->optional-param describe]]
+        [metadactyl.routes.params]
         [schema.core :only [defschema enum optional-key]])
   (:require [metadactyl.schema.containers :as containers])
   (:import [java.util UUID]))

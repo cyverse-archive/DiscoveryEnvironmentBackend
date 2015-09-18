@@ -1,6 +1,7 @@
 (ns metadata.persistence.comments
-  (:use korma.core)
-  (:require [kameleon.db :as db]))
+  (:use [korma.core :exclude [update]])
+  (:require [kameleon.db :as db]
+            [korma.core :as sql]))
 
 (defn- fmt-comment
   [comment]
@@ -80,7 +81,7 @@
      comment-id      - The UUID of the comment being retracted
      retracting-user - The authenticated user retracting the comment."
   [comment-id retracting-user]
-  (update :comments
+  (sql/update :comments
     (set-fields {:retracted true :retracted_by retracting-user})
     (where {:id comment-id}))
   nil)
@@ -91,7 +92,7 @@
    Parameters:
      comment-id - The UUID of the comment being readmitted."
   [comment-id]
-  (update :comments
+  (sql/update :comments
     (set-fields {:retracted false :retracted_by nil})
     (where {:id comment-id}))
   nil)
@@ -102,6 +103,6 @@
    Parameters:
      comment-id - The UUID of the comment being deleted."
   [comment-id deleted?]
-  (update :comments
+  (sql/update :comments
     (set-fields {:deleted deleted?})
     (where {:id comment-id})))

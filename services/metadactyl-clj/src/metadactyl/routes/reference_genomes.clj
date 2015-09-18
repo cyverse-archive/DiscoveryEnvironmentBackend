@@ -1,8 +1,8 @@
 (ns metadactyl.routes.reference-genomes
-  (:use [metadactyl.metadata.reference-genomes :only [get-reference-genome list-reference-genomes]]
+  (:use [common-swagger-api.schema]
+        [metadactyl.metadata.reference-genomes :only [get-reference-genome list-reference-genomes]]
         [metadactyl.routes.domain.reference-genome]
-        [metadactyl.routes.params]
-        [compojure.api.sweet])
+        [metadactyl.routes.params])
   (:require [clojure-commons.error-codes :as ce]))
 
 (defroutes* reference-genomes

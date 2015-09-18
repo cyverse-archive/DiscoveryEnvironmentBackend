@@ -1,5 +1,5 @@
 (ns metadata.routes.domain.template
-  (:use [compojure.api.sweet :only [describe]])
+  (:use [common-swagger-api.schema :only [describe]])
   (:require [schema.core :as s]
             [metadata.persistence.templates :as tp])
   (:import [java.util Date UUID]))

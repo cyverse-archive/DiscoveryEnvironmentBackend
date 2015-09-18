@@ -1,5 +1,5 @@
 (ns metadactyl.routes.domain.app.rating
-  (:use [compojure.api.sweet :only [describe]]
+  (:use [common-swagger-api.schema :only [describe]]
         [schema.core :only [defschema optional-key]]))
 
 (def UserRatingParam (describe Long "The current user's rating for this App"))

@@ -1,5 +1,5 @@
 (ns metadactyl.routes.users
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [metadactyl.routes.domain.user]
         [metadactyl.routes.params]
         [metadactyl.user :only [current-user]])

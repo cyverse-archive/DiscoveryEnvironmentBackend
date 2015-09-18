@@ -1,0 +1,12 @@
+pom.xml
+*jar
+lib
+classes
+*~
+bin
+.classpath
+.project
+.lein*
+\#*\#
+/target
+/.settings

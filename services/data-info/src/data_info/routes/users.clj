@@ -1,5 +1,5 @@
 (ns data-info.routes.users
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [data-info.routes.domain.common]
         [data-info.routes.domain.users])
   (:require [data-info.services.users :as users]
@@ -12,7 +12,7 @@
     :tags ["bulk"]
 
     (POST* "/" [:as {uri :uri}]
-      :query [params SecuredQueryParamsRequired]
+      :query [params StandardUserQueryParams]
       :body [body (describe Paths "The paths to gather permissions information on.")]
       :return PermissionsResponse
       :summary "File and Folder Permissions Information"

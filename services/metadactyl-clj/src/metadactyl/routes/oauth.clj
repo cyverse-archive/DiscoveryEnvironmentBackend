@@ -1,7 +1,7 @@
 (ns metadactyl.routes.oauth
-  (:use [metadactyl.routes.domain.oauth]
-        [metadactyl.routes.params]
-        [compojure.api.sweet])
+  (:use [common-swagger-api.schema]
+        [metadactyl.routes.domain.oauth]
+        [metadactyl.routes.params])
   (require [clojure-commons.error-codes :as ce]
            [metadactyl.service.oauth :as oauth]
            [metadactyl.util.service :as service]))

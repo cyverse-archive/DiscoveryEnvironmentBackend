@@ -1,5 +1,5 @@
 (ns metadata.routes.domain.status
-  (:use [compojure.api.sweet :only [describe]]
+  (:use [common-swagger-api.schema :only [describe NonBlankString]]
         [metadata.routes.domain.common])
   (:require [schema.core :as s]))
 

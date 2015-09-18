@@ -1,5 +1,5 @@
 (ns data-info.routes.domain.exists
-  (:use [compojure.api.sweet :only [describe]])
+  (:use [common-swagger-api.schema :only [describe]])
   (:require [schema.core :as s]))
 
 (s/defschema PathExistenceMap

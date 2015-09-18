@@ -1,8 +1,6 @@
 (ns data-info.routes.domain.users
-  (:use [compojure.api.sweet :only [describe]]
-        [data-info.routes.domain.common])
-  (:require [schema.core :as s])
-  (:import [java.util UUID]))
+  (:use [common-swagger-api.schema :only [describe]])
+  (:require [schema.core :as s]))
 
 (def PermissionEnum (s/enum :read :write :own))
 

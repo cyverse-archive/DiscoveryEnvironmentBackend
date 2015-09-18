@@ -1,5 +1,5 @@
 (ns kameleon.app-listing
-  (:use [korma.core]
+  (:use [korma.core :exclude [update]]
         [kameleon.entities]
         [kameleon.queries]
         [kameleon.util.search]

@@ -1,5 +1,5 @@
 (ns data-info.routes.data
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [data-info.routes.domain.common]
         [data-info.routes.domain.data]
         [data-info.routes.domain.stats])
@@ -14,7 +14,7 @@
 
   (POST* "/mover" [:as {uri :uri}]
     :tags ["bulk"]
-    :query [params SecuredQueryParamsRequired]
+    :query [params StandardUserQueryParams]
     :body [body (describe MultiRenameRequest "The paths to rename and their destination.")]
     :return MultiRenameResult
     :summary "Move Data Items"
@@ -52,7 +52,7 @@
 
     (POST* "/directories" [:as {uri :uri}]
       :tags ["bulk"]
-      :query [params SecuredQueryParamsRequired]
+      :query [params StandardUserQueryParams]
       :body [body (describe Paths "The paths to create.")]
       :return Paths
       :summary "Create Directories"
@@ -71,7 +71,7 @@ for the requesting user."
       :tags ["data-by-id"]
 
       (HEAD* "/" [:as {uri :uri}]
-        :query [{:keys [user]} SecuredQueryParamsRequired]
+        :query [{:keys [user]} StandardUserQueryParams]
         :responses {200 {:description "User has read permissions for given data item."}
                     403 {:description "User does not have read permissions for given data item."}
                     404 {:description "Data Item ID does not exist."}
@@ -81,7 +81,7 @@ for the requesting user."
         (ce/trap uri entry/id-entry data-id user))
 
       (PUT* "/name" [:as {uri :uri}]
-        :query [params SecuredQueryParamsRequired]
+        :query [params StandardUserQueryParams]
         :body [body (describe Filename "The new name of the data item.")]
         :return RenameResult
         :summary "Rename Data Item"
@@ -92,7 +92,7 @@ for the requesting user."
         (svc/trap uri rename/do-rename-uuid params body data-id))
 
       (PUT* "/dir" [:as {uri :uri}]
-        :query [params SecuredQueryParamsRequired]
+        :query [params StandardUserQueryParams]
         :body [body (describe Dirname "The new directory name of the data item.")]
         :return RenameResult
         :summary "Move Data Item"
@@ -103,7 +103,7 @@ for the requesting user."
         (svc/trap uri rename/do-move-uuid params body data-id))
 
       (PUT* "/children/dir" [:as {uri :uri}]
-        :query [params SecuredQueryParamsRequired]
+        :query [params StandardUserQueryParams]
         :body [body (describe Dirname "The new directory name of the data items.")]
         :return MultiRenameResult
         :summary "Move Data Item Contents"
@@ -114,7 +114,7 @@ for the requesting user."
         (svc/trap uri rename/do-move-uuid-contents params body data-id))
 
       (POST* "/metadata/save" [:as {uri :uri}]
-        :query [params SecuredQueryParamsRequired]
+        :query [params StandardUserQueryParams]
         :body [body (describe MetadataSaveRequest "The metadata save request.")]
         :return FileStat
         :summary "Exporting Metadata to a File"

@@ -595,7 +595,7 @@
 
 (defn get-app-parameters
   [app-id]
-  (select [:apps :app]
+  (select [:task_param_listing :p]
           (fields :p.id
                   :p.name
                   :p.description
@@ -604,29 +604,17 @@
                   :p.is_visible
                   :p.ordering
                   :p.omit_if_blank
-                  [:pt.name :type]
-                  [:vt.name :value_type]
-                  :fp.is_implicit
-                  [:info_type.name :info_type]
-                  [:df.name :data_format]
+                  [:p.parameter_type :type]
+                  :p.value_type
+                  :p.is_implicit
+                  :p.info_type
+                  :p.data_format
                   [:s.id :step_id]
                   [:t.external_app_id :external_app_id])
           (join [:app_steps :s]
-                {:app.id :s.app_id})
+                {:s.task_id :p.task_id})
           (join [:tasks :t]
-                {:s.task_id :t.id})
-          (join [:parameter_groups :pg]
-                {:pg.task_id :t.id})
-          (join [:parameters :p]
-                {:p.parameter_group_id :pg.id})
-          (join [:parameter_types :pt]
-                {:p.parameter_type :pt.id})
-          (join [:value_type :vt]
-                {:pt.value_type_id :vt.id})
-          (join [:file_parameters :fp]
-                {:fp.parameter_id :p.id})
-          (join [:data_formats :df]
-                {:df.id :fp.data_format})
-          (join :info_type
-                {:info_type.id :fp.info_type})
+                {:p.task_id :t.id})
+          (join [:apps :app]
+                {:app.id :s.app_id})
           (where {:app.id (uuidify app-id)})))

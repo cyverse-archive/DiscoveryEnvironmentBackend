@@ -1,5 +1,5 @@
 (ns data-info.routes.status
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [data-info.routes.domain.status])
   (:require [clojure-commons.service :as commons-svc]
             [data-info.util.config :as config]

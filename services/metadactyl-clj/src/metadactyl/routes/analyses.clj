@@ -1,9 +1,9 @@
 (ns metadactyl.routes.analyses
-  (:use [metadactyl.routes.domain.analysis]
+  (:use [common-swagger-api.schema]
+        [metadactyl.routes.domain.analysis]
         [metadactyl.routes.domain.analysis.listing]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.params]
-        [compojure.api.sweet]
         [metadactyl.user :only [current-user]])
   (:require [clojure-commons.error-codes :as ce]
             [metadactyl.json :as json]

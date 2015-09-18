@@ -1,5 +1,5 @@
 (ns metadata.routes.tags
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [metadata.routes.domain.common]
         [metadata.routes.domain.tags])
   (:require [metadata.services.tags :as tags]
@@ -11,7 +11,7 @@
 
     (GET* "/:data-id/tags" [:as {uri :uri}]
       :path-params [data-id :- TargetIdPathParam]
-      :query [{:keys [user]} StandardQueryParams]
+      :query [{:keys [user]} StandardUserQueryParams]
       :return TagList
       :summary "List Attached Tags"
       :description
@@ -43,7 +43,7 @@ authenticated user's tags that contain the fragment."
       (service/trap uri tags/suggest-tags user contains limit))
 
     (POST* "/user" [:as {uri :uri}]
-      :query [{:keys [user]} StandardQueryParams]
+      :query [{:keys [user]} StandardUserQueryParams]
       :body [body (describe TagRequest "The user tag to create.")]
       :return TagDetails
       :summary "Create a Tag"
@@ -52,14 +52,14 @@ authenticated user's tags that contain the fragment."
 
     (DELETE* "/user/:tag-id" [:as {uri :uri}]
       :path-params [tag-id :- TagIdPathParam]
-      :query [{:keys [user]} StandardQueryParams]
+      :query [{:keys [user]} StandardUserQueryParams]
       :summary "Delete a Tag"
       :description "This endpoint allows a user tag to be deleted, detaching it from all metadata."
       (service/trap uri tags/delete-user-tag user tag-id))
 
     (PATCH* "/user/:tag-id" [:as {uri :uri}]
       :path-params [tag-id :- TagIdPathParam]
-      :query [{:keys [user]} StandardQueryParams]
+      :query [{:keys [user]} StandardUserQueryParams]
       :body [body (describe TagUpdateRequest "The tag fields to update.")]
       :return TagDetails
       :summary "Update Tag Labels/Descriptions"
