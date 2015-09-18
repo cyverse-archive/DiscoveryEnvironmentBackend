@@ -436,3 +436,67 @@ func TestConfigOutput1Type(t *testing.T) {
 		t.Errorf("The output type was '%s' when it should have been 'File'", output.Type)
 	}
 }
+
+func TestConfigParams0ID(t *testing.T) {
+	s := inittests(t)
+	params := s.Steps[0].Config.Params[0]
+	if params.ID != "e7721c78-56c9-41ac-8ff5-8d46093f1fb1" {
+		t.Errorf("The param ID was '%s' when it should have been 'e7721c78-56c9-41ac-8ff5-8d46093f1fb1'", params.ID)
+	}
+}
+
+func TestConfigParams0Name(t *testing.T) {
+	s := inittests(t)
+	params := s.Steps[0].Config.Params[0]
+	if params.Name != "param0" {
+		t.Errorf("The param name was '%s' when it should have been 'param0'", params.Name)
+	}
+}
+
+func TestConfigParams0Order(t *testing.T) {
+	s := inittests(t)
+	params := s.Steps[0].Config.Params[0]
+	if params.Order != 1 {
+		t.Errorf("The param order was '%d' when it should have been '1'", params.Order)
+	}
+}
+
+func TestConfigParams0Value(t *testing.T) {
+	s := inittests(t)
+	params := s.Steps[0].Config.Params[0]
+	if params.Value != "wc_out.txt" {
+		t.Errorf("The param value was '%s' when it should have been 'wc_out.txt'", params.Value)
+	}
+}
+
+func TestConfigParams1ID(t *testing.T) {
+	s := inittests(t)
+	params := s.Steps[0].Config.Params[1]
+	if params.ID != "2f58fce9-8183-4ab5-97c4-970592d1c35a" {
+		t.Errorf("The param ID was '%s' when it should have been '2f58fce9-8183-4ab5-97c4-970592d1c35a'", params.ID)
+	}
+}
+
+func TestConfigParams1Name(t *testing.T) {
+	s := inittests(t)
+	params := s.Steps[0].Config.Params[1]
+	if params.Name != "param1" {
+		t.Errorf("The param name was '%s' when it should have been 'param1'", params.Name)
+	}
+}
+
+func TestConfigParams1Order(t *testing.T) {
+	s := inittests(t)
+	params := s.Steps[0].Config.Params[1]
+	if params.Order != 2 {
+		t.Errorf("The param order was '%d' when it should have been '2'", params.Order)
+	}
+}
+
+func TestConfigParams1Value(t *testing.T) {
+	s := inittests(t)
+	params := s.Steps[0].Config.Params[1]
+	if params.Value != "Acer-tree.txt" {
+		t.Errorf("The param value was '%s' when it should have been 'Acer-tree.txt'", params.Value)
+	}
+}
