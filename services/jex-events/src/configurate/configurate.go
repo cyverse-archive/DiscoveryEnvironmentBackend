@@ -10,13 +10,47 @@ import (
 
 // Configuration instance contain config values for jex-events.
 type Configuration struct {
-	EventLog                                                              string
-	AMQPURI, DBURI, EventURL, JEXURL                                      string
-	ConsumerTag, HTTPListenPort                                           string
-	ExchangeName, ExchangeType, RoutingKey, QueueName, QueueBindingKey    string
-	ExchangeDurable, ExchangeAutodelete, ExchangeInternal, ExchangeNoWait bool
-	QueueDurable, QueueAutodelete, QueueExclusive, QueueNoWait            bool
-	logger                                                                *log.Logger
+	AMQPURI            string
+	BatchGroup         string
+	CondorConfig       string
+	CondorLogPath      string
+	ConsumerTag        string
+	DBURI              string
+	EventLog           string
+	EventURL           string
+	ExchangeName       string
+	ExchangeType       string
+	ExchangeDurable    bool
+	ExchangeAutodelete bool
+	ExchangeInternal   bool
+	ExchangeNoWait     bool
+	FilterFiles        string
+	HTTPListenPort     string
+	ICommandsPath      string
+	IRODSBase          string
+	IRODSUser          string
+	IRODSPass          string
+	IRODSHost          string
+	IRODSPort          string
+	IRODSZone          string
+	IRODSResc          string
+	JarPath            string
+	JEXEvents          string
+	JEXListenPort      string
+	JEXURL             string
+	NFSBase            string
+	Path               string
+	PorklockTag        string
+	QueueName          string
+	QueueBindingKey    string
+	QueueDurable       bool
+	QueueAutodelete    bool
+	QueueExclusive     bool
+	QueueNoWait        bool
+	RequestDisk        string
+	RoutingKey         string
+	RunOnNFS           bool
+	logger             *log.Logger
 }
 
 // New reads JSON from 'path' and returns a pointer to a Configuration

@@ -1,10 +1,15 @@
 package submissions
 
 import (
-	"encoding/json"
+	"configurate"
+	"fmt"
 	"io/ioutil"
+	"log"
+	"logcabin"
 	"os"
+	"path"
 	"testing"
+	"time"
 )
 
 func JSONData() ([]byte, error) {
@@ -19,16 +24,25 @@ func JSONData() ([]byte, error) {
 	return c, err
 }
 
-var s *Submission
+var (
+	s *Submission
+	c = &configurate.Configuration{}
+	l = log.New(logcabin.LoggerFunc(logcabin.LogWriter), "", log.Lshortfile)
+)
 
-func inittests(t *testing.T) *Submission {
-	if s == nil {
+func _inittests(t *testing.T, memoize bool) *Submission {
+	if s == nil || !memoize {
+		c.RunOnNFS = true
+		c.NFSBase = "/path/to/base"
+		c.IRODSBase = "/path/to/irodsbase"
+		c.CondorLogPath = "/path/to/logs"
+		Init(c, l)
 		data, err := JSONData()
 		if err != nil {
 			t.Error(err)
 			t.Fail()
 		}
-		err = json.Unmarshal(data, &s)
+		s, err = NewFromData(data)
 		if err != nil {
 			t.Error(err)
 			t.Fail()
@@ -37,8 +51,33 @@ func inittests(t *testing.T) *Submission {
 	return s
 }
 
+func inittests(t *testing.T) *Submission {
+	return _inittests(t, true)
+}
+
 func TestJSONParsing(t *testing.T) {
 	inittests(t)
+}
+
+func TestNFSBase(t *testing.T) {
+	s := inittests(t)
+	if s.NFSBase != "/path/to/base" {
+		t.Errorf("The nfs base directory was set to '%s' instead of '/path/to/base'", s.NFSBase)
+	}
+}
+
+func TestIRODSBase(t *testing.T) {
+	s := inittests(t)
+	if s.IRODSBase != "/path/to/irodsbase" {
+		t.Errorf("The IRODS base directory was set to '%s' instead of '/path/to/irodsbase'", s.IRODSBase)
+	}
+}
+
+func TestRunOnNFS(t *testing.T) {
+	s := inittests(t)
+	if !s.RunOnNFS {
+		t.Error("RunOnNFS was false when it should have been true")
+	}
 }
 
 func TestDescription(t *testing.T) {
@@ -57,15 +96,15 @@ func TestEmail(t *testing.T) {
 
 func TestName(t *testing.T) {
 	s := inittests(t)
-	if s.Name != "Word_Count_analysis1" {
-		t.Errorf("The name field was '%s' instead of 'Word_Count_analysis1'", s.Name)
+	if s.Name != "Word_Count_analysis1__" {
+		t.Errorf("The name field was '%s' instead of 'Word_Count_analysis1__'", s.Name)
 	}
 }
 
 func TestUsername(t *testing.T) {
 	s := inittests(t)
-	if s.Username != "wregglej" {
-		t.Errorf("The username was '%s' instead of 'wregglej'", s.Username)
+	if s.Username != "wregglej_this_is_a_test" {
+		t.Errorf("The username was '%s' instead of 'wregglej_this_is_a_test'", s.Username)
 	}
 }
 
@@ -498,5 +537,45 @@ func TestConfigParams1Value(t *testing.T) {
 	params := s.Steps[0].Config.Params[1]
 	if params.Value != "Acer-tree.txt" {
 		t.Errorf("The param value was '%s' when it should have been 'Acer-tree.txt'", params.Value)
+	}
+}
+
+func TestDirname(t *testing.T) {
+	s := _inittests(t, false)
+	s.NowDate = time.Now().Format(nowfmt)
+	expected := fmt.Sprintf("%s-%s", s.Name, s.NowDate)
+	actual := s.Dirname()
+	if actual != expected {
+		t.Errorf("Dirname() returned '%s' when it should have returned '%s'", actual, expected)
+	}
+}
+
+func TestWorkingDir(t *testing.T) {
+	s := _inittests(t, false)
+	s.NowDate = time.Now().Format(nowfmt)
+	expected := fmt.Sprintf("%s/", path.Join(s.NFSBase, s.Username, s.Dirname()))
+	actual := s.WorkingDir()
+	if actual != expected {
+		t.Errorf("WorkingDir() returned '%s' when it should have returned '%s'", actual, expected)
+	}
+}
+
+func TestCondorLogDir(t *testing.T) {
+	s := _inittests(t, false)
+	s.NowDate = time.Now().Format(nowfmt)
+	expected := fmt.Sprintf("%s/", path.Join(c.CondorLogPath, s.Username, s.Dirname()))
+	actual := s.CondorLogDir()
+	if actual != expected {
+		t.Errorf("CondorLogDir() returned '%s' when it should have returned '%s'", actual, expected)
+	}
+}
+
+func TestIRODSConfig(t *testing.T) {
+	s := _inittests(t, false)
+	s.NowDate = time.Now().Format(nowfmt)
+	expected := path.Join(s.WorkingDir(), "logs", "irods-config")
+	actual := s.IRODSConfig()
+	if actual != expected {
+		t.Errorf("IRODSConfig() returned '%s' when it should have returned '%s'", actual, expected)
 	}
 }

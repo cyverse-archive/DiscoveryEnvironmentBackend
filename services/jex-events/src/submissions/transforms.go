@@ -1,5 +1,16 @@
 package submissions
 
+import (
+	"configurate"
+	"encoding/json"
+	"fmt"
+	"log"
+	"path"
+	"regexp"
+	"strings"
+	"time"
+)
+
 // Volume describes how a local path is mounted into a container.
 type Volume struct {
 	HostPath      string `json:"host_path"`
@@ -128,8 +139,6 @@ type Submission struct {
 	IRODSBase          string          `json:"irods_base"`
 	SubmissionDate     string          `json:"submission_date"`
 	CreateOutputSubdir bool            `json:"create_output_subdir"`
-	CondorLogDir       string          `json:"condor-log-dir"`
-	WorkingDir         string          `json:"working_dir"`
 	OutputDir          string          `json:"output_dir"`
 	DataContainers     []DataContainer `json:"data_containers"`
 	Steps              []Step          `json:"steps"`
@@ -142,5 +151,89 @@ type Submission struct {
 }
 
 var (
-	nowfmt = "2006-01-02-15-04-05.000" // appears in file and directory names.
+	nowfmt    = "2006-01-02-15-04-05.000"                       // appears in file and directory names.
+	validName = regexp.MustCompile(`-\d{4}(?:-\d{2}){5}\.\d+$`) // this isn't included in the Dirname() function so it isn't re-evaluated a lot
+	cfg       *configurate.Configuration
+	logger    *log.Logger
 )
+
+// Init intializes the package. Call this first.
+func Init(c *configurate.Configuration, l *log.Logger) {
+	cfg = c
+	logger = l
+}
+
+// New returns a pointer to a newly instantiated Submission with NowDate set.
+func New() *Submission {
+	n := time.Now().Format(nowfmt)
+	return &Submission{
+		NowDate: n,
+	}
+}
+
+// NewFromData creates a new submission and populates it by parsing the passed
+// in []byte as JSON.
+func NewFromData(data []byte) (*Submission, error) {
+	n := time.Now().Format(nowfmt)
+	s := &Submission{
+		NowDate:        n,
+		SubmissionDate: n,
+		RunOnNFS:       cfg.RunOnNFS,
+		NFSBase:        cfg.NFSBase,
+		IRODSBase:      cfg.IRODSBase,
+	}
+	err := json.Unmarshal(data, s)
+	if err != nil {
+		return nil, err
+	}
+	s.Sanitize()
+	return s, err
+}
+
+// sanitize replaces @ and spaces with _, making a string safe to use as a
+// part of a path. Mostly to keep things from getting really confusing when
+// a path is passed to Condor.
+func sanitize(s string) string {
+	step := strings.Replace(s, "@", "_", -1)
+	step = strings.Replace(step, " ", "_", -1)
+	return step
+}
+
+// Sanitize makes sure the fields in a submission are ready to be used in things
+// like file names.
+func (s *Submission) Sanitize() {
+	s.Username = sanitize(s.Username)
+	if s.Type == "" {
+		s.Type = "analysis"
+	}
+	s.Name = sanitize(s.Name)
+}
+
+// Dirname creates a directory name for an analysis. Used when the submission
+// doesn't specify an output directory.  Some types of jobs, for example
+// Foundational API jobs, include a timestamp in the job name, so a timestamp
+// will not be appended to the directory name in those cases.
+func (s *Submission) Dirname() string {
+	if validName.MatchString(s.Name) {
+		return s.Name
+	}
+	return fmt.Sprintf("%s-%s", s.Name, s.NowDate)
+}
+
+// WorkingDir returns the path to the working directory for an analysis. This
+// value is computed based on values inside the submission, which is why it
+// isn't a field in the Submission struct.
+func (s *Submission) WorkingDir() string {
+	return fmt.Sprintf("%s/", path.Join(s.NFSBase, s.Username, s.Dirname()))
+}
+
+// CondorLogDir returns the path to the directory containing condor logs on the
+// submission node. This a computed value, so it isn't in the struct.
+func (s *Submission) CondorLogDir() string {
+	return fmt.Sprintf("%s/", path.Join(cfg.CondorLogPath, s.Username, s.Dirname()))
+}
+
+// IRODSConfig returns the path to iRODS config inside the working directory.
+func (s *Submission) IRODSConfig() string {
+	return path.Join(s.WorkingDir(), "logs", "irods-config")
+}
