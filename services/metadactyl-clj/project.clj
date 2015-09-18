@@ -15,14 +15,6 @@
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "metadactyl-standalone.jar"
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [cheshire "5.5.0"
-                   :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
-                                [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
-                                [com.fasterxml.jackson.core/jackson-annotations]
-                                [com.fasterxml.jackson.core/jackson-databind]
-                                [com.fasterxml.jackson.core/jackson-core]]]
-                 [clj-http "1.0.0"]
-                 [clj-time "0.9.0"]
                  [com.cemerick/url "0.1.1"]
                  [com.google.guava/guava "18.0"]
                  [medley "0.7.0"]
@@ -36,10 +28,7 @@
                  [org.iplantc/common-swagger-api "5.0.0"]
                  [org.iplantc/service-logging "5.0.0"]
                  [me.raynes/fs "1.4.6"]
-                 [mvxcvi/clj-pgp "0.8.0"]
-                 [ring "1.2.2"]
-                 [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
-                 [slingshot "0.10.3"]]
+                 [mvxcvi/clj-pgp "0.8.0"]]
   :plugins [[lein-ring "0.9.6"]
             [lein-swank "1.4.4"]]
   :profiles {:dev {:resource-paths ["conf/test"]}}
