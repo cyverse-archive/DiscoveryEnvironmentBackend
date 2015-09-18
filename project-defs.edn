@@ -214,6 +214,16 @@
   :language :clojure
   :archive? true}
 
+ "iplant-groups"
+ {:type     :service
+  :path     "services/iplant-groups"
+  :build    :lein
+  :tarball? false
+  :uberjar? true
+  :install? false
+  :language :clojure
+  :archive? true}
+
  "JEX"
  {:type     :service
   :path     "services/JEX"
