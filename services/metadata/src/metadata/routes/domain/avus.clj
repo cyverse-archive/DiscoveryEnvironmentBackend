@@ -1,5 +1,5 @@
 (ns metadata.routes.domain.avus
-  (:use [compojure.api.sweet :only [describe]]
+  (:use [common-swagger-api.schema :only [->optional-param describe StandardUserQueryParams]]
         [metadata.routes.domain.common])
   (:require [schema.core :as s])
   (:import [java.util UUID]))
@@ -12,7 +12,7 @@
 (def MetadataTemplateIdParam TemplateIdPathParam)
 
 (s/defschema AvuCopyQueryParams
-  (assoc StandardQueryParams
+  (assoc StandardUserQueryParams
     (s/optional-key :force)
     (describe Boolean "
 Whether to validate that none of the destination data items already have Metadata Template AVUs set

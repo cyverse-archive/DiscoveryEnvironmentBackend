@@ -2,10 +2,10 @@
   (:use [clojure-commons.file-utils :only [build-result-folder-path]]
         [kameleon.jobs :only [get-job-type-id save-job save-job-step]]
         [kameleon.queries :only [get-user-id]]
+        [korma.core :only [sqlfn]]
+        [korma.db :only [transaction]]
         [medley.core :only [dissoc-in]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
-        [korma.core]
-        [korma.db :only [transaction]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]

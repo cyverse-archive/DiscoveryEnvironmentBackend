@@ -1,8 +1,8 @@
 (ns metadactyl.routes.domain.app
-  (:use [metadactyl.routes.params]
+  (:use [common-swagger-api.schema :only [->optional-param describe]]
+        [metadactyl.routes.params]
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.tool :only [Tool]]
-        [compojure.api.sweet :only [describe]]
         [schema.core :only [Any defschema optional-key recursive]])
   (:import [java.util UUID Date]))
 

@@ -2,16 +2,17 @@
   "Persistence layer for app metadata."
   (:use [kameleon.entities]
         [kameleon.uuids :only [uuidify]]
-        [korma.core]
+        [korma.core :exclude [update]]
         [korma.db :only [transaction]]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.assertions]
         [metadactyl.util.conversions :only [remove-nil-vals]])
-  (:require [kameleon.app-listing :as app-listing]
+  (:require [clojure.set :as set]
+            [clojure.tools.logging :as log]
+            [kameleon.app-listing :as app-listing]
+            [korma.core :as sql]
             [metadactyl.persistence.app-metadata.delete :as delete]
-            [metadactyl.persistence.app-metadata.relabel :as relabel]
-            [clojure.set :as set]
-            [clojure.tools.logging :as log]))
+            [metadactyl.persistence.app-metadata.relabel :as relabel]))
 
 (def param-multi-input-type "MultiFileSelector")
 (def param-flex-input-type "FileFolderInput")
@@ -179,7 +180,7 @@
                   filter-valid-tool-values
                   remove-nil-vals)]
      (when-not (empty? tool)
-       (update tools (set-fields tool) (where {:id tool-id})))
+       (sql/update tools (set-fields tool) (where {:id tool-id})))
      (when-not (empty? test)
        (delete tool_test_data_files (where {:tool_id tool-id}))
        (dorun (map (partial add-tool-data-file tool-id true) (:input_files test)))
@@ -250,7 +251,7 @@
                    (assoc :edited_date (sqlfn now)
                           :integration_date (when publish? (sqlfn now)))
                    (remove-nil-vals))]
-       (update apps (set-fields app) (where {:id app-id})))))
+       (sql/update apps (set-fields app) (where {:id app-id})))))
 
 (defn add-app-reference
   "Adds an App's reference to the database."
@@ -284,7 +285,7 @@
 (defn update-task
   "Updates a task in the database."
   [{task-id :id :as task}]
-  (update tasks (set-fields (filter-valid-task-values task)) (where {:id task-id})))
+  (sql/update tasks (set-fields (filter-valid-task-values task)) (where {:id task-id})))
 
 (defn remove-app-steps
   "Removes all steps from an App. This delete will cascade to workflow_io_maps and
@@ -328,9 +329,9 @@
 (defn update-app-group
   "Updates an App group in the database."
   [{group-id :id :as group}]
-  (update parameter_groups
-          (set-fields (filter-valid-app-group-values group))
-          (where {:id group-id})))
+  (sql/update parameter_groups
+    (set-fields (filter-valid-app-group-values group))
+    (where {:id group-id})))
 
 (defn remove-app-group-orphans
   "Removes groups associated with the given task ID, but not in the given group-ids list."
@@ -387,10 +388,11 @@
 (defn update-app-parameter
   "Updates a parameter in the parameters table."
   [{parameter-id :id param-type :type :as parameter}]
-  (update parameters
-          (set-fields (filter-valid-app-parameter-values
-                       (assoc parameter :parameter_type (get-parameter-type-id param-type))))
-          (where {:id parameter-id})))
+  (sql/update parameters
+    (set-fields (filter-valid-app-parameter-values
+                  (assoc parameter
+                    :parameter_type (get-parameter-type-id param-type))))
+    (where {:id parameter-id})))
 
 (defn remove-parameter-orphans
   "Removes parameters associated with the given group ID, but not in the given parameter-ids list."
@@ -493,24 +495,24 @@
   ([app-id]
      (delete-app true app-id))
   ([deleted? app-id]
-     (update :apps (set-fields {:deleted deleted?}) (where {:id app-id}))))
+     (sql/update :apps (set-fields {:deleted deleted?}) (where {:id app-id}))))
 
 (defn disable-app
   "Marks or unmarks an app as disabled in the metadata database."
   ([app-id]
      (disable-app true app-id))
   ([disabled? app-id]
-     (update :apps (set-fields {:disabled disabled?}) (where {:id app-id}))))
+     (sql/update :apps (set-fields {:disabled disabled?}) (where {:id app-id}))))
 
 (defn rate-app
   "Adds or updates a user's rating and comment ID for the given app."
   [app-id user-id request]
   (let [rating (first (select ratings (where {:app_id app-id, :user_id user-id})))]
     (if rating
-      (update ratings
-              (set-fields (remove-nil-vals request))
-              (where {:app_id app-id
-                      :user_id user-id}))
+      (sql/update ratings
+        (set-fields (remove-nil-vals request))
+        (where {:app_id app-id
+                :user_id user-id}))
       (insert ratings
               (values (assoc (remove-nil-vals request) :app_id app-id, :user_id user-id))))))
 
@@ -595,7 +597,7 @@
 
 (defn get-app-parameters
   [app-id]
-  (select [:apps :app]
+  (select [:task_param_listing :p]
           (fields :p.id
                   :p.name
                   :p.description
@@ -604,29 +606,17 @@
                   :p.is_visible
                   :p.ordering
                   :p.omit_if_blank
-                  [:pt.name :type]
-                  [:vt.name :value_type]
-                  :fp.is_implicit
-                  [:info_type.name :info_type]
-                  [:df.name :data_format]
+                  [:p.parameter_type :type]
+                  :p.value_type
+                  :p.is_implicit
+                  :p.info_type
+                  :p.data_format
                   [:s.id :step_id]
                   [:t.external_app_id :external_app_id])
           (join [:app_steps :s]
-                {:app.id :s.app_id})
+                {:s.task_id :p.task_id})
           (join [:tasks :t]
-                {:s.task_id :t.id})
-          (join [:parameter_groups :pg]
-                {:pg.task_id :t.id})
-          (join [:parameters :p]
-                {:p.parameter_group_id :pg.id})
-          (join [:parameter_types :pt]
-                {:p.parameter_type :pt.id})
-          (join [:value_type :vt]
-                {:pt.value_type_id :vt.id})
-          (join [:file_parameters :fp]
-                {:fp.parameter_id :p.id})
-          (join [:data_formats :df]
-                {:df.id :fp.data_format})
-          (join :info_type
-                {:info_type.id :fp.info_type})
+                {:p.task_id :t.id})
+          (join [:apps :app]
+                {:app.id :s.app_id})
           (where {:app.id (uuidify app-id)})))

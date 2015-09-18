@@ -3,7 +3,7 @@
         [kameleon.queries :only [get-existing-user-id]]
         [metadactyl.user :only [current-user]]
         [clojure.string :only [blank?]]
-        [korma.core]
+        [korma.core :exclude [update]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as cc-errs]
             [clojure-commons.validators :as validators]

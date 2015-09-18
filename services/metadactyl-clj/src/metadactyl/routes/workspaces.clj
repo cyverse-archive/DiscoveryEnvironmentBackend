@@ -1,5 +1,5 @@
 (ns metadactyl.routes.workspaces
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [metadactyl.routes.domain.workspace]
         [metadactyl.routes.params]
         [metadactyl.user :only [current-user]])

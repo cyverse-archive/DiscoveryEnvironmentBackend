@@ -1,5 +1,5 @@
 (ns metadactyl.routes.callbacks
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [metadactyl.routes.domain.callback]
         [metadactyl.routes.params])
   (:require [compojure.core :as route]

@@ -3,7 +3,6 @@
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.set :as set]
             [clojure-commons.error-codes :as error]
-            [medley.core :as medley]
             [metadata.persistence.tags :as db])
   (:import [java.util UUID]
            [clojure.lang IPersistentMap]))
@@ -11,8 +10,8 @@
 (defn- format-tag
   [tag]
   (-> tag
-      (medley/update :created_on millis-from-timestamp)
-      (medley/update :modified_on millis-from-timestamp)))
+      (update :created_on millis-from-timestamp)
+      (update :modified_on millis-from-timestamp)))
 
 (defn- get-tag-details
   [id]

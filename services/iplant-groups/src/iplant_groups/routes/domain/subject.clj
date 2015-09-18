@@ -1,5 +1,5 @@
 (ns iplant_groups.routes.domain.subject
-  (:use [compojure.api.sweet :only [describe]])
+  (:use [common-swagger-api.schema :only [describe]])
   (:require [iplant_groups.routes.domain.params :as params]
             [schema.core :as s]))
 

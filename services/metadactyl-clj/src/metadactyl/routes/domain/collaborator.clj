@@ -1,5 +1,5 @@
 (ns metadactyl.routes.domain.collaborator
-  (:use [ring.swagger.schema :only [describe]]
+  (:use [common-swagger-api.schema :only [describe]]
         [schema.core :only [defschema optional-key]])
   (:import [java.util UUID Date]))
 

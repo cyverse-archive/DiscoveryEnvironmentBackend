@@ -93,6 +93,18 @@
   :language :clojure
   :archive  false}
 
+ "common-swagger-api"
+ {:type     :library
+  :type-num 15
+  :path     "libs/common-swagger-api"
+  :build    :lein
+  :install  :lein
+  :tarball? false
+  :uberjar? false
+  :install? true
+  :language :clojure
+  :archive? false}
+
  "kameleon"
  {:type     :library
   :type-num 6

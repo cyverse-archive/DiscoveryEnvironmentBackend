@@ -1,7 +1,7 @@
 (ns iplant_groups.routes
   (:use [clojure-commons.middleware :only [log-validation-errors]]
         [clojure-commons.query-params :only [wrap-query-params]]
-        [compojure.api.sweet]
+        [common-swagger-api.schema]
         [iplant_groups.routes.domain.group]
         [ring.middleware.keyword-params :only [wrap-keyword-params]])
   (:require [iplant_groups.routes.folders :as folder-routes]

@@ -8,7 +8,7 @@
         [metadactyl.util.conversions :only [remove-nil-vals]]
         [metadactyl.validation :only [verify-tool-name-location]]
         [clojure.string :only [upper-case]]
-        [korma.core]
+        [korma.core :exclude [update]]
         [korma.db :only [transaction]])
   (:require [clojure-commons.error-codes :as cc-errs]
             [metadactyl.persistence.app-metadata :as persistence]

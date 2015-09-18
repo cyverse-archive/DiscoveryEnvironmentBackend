@@ -1,6 +1,6 @@
 (ns metadactyl.persistence.users
   (:use [kameleon.uuids :only [uuidify]]
-        [korma.core]))
+        [korma.core :exclude [update]]))
 
 (defn- user-base-query
   []

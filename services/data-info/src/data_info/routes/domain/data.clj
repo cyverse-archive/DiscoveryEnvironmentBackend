@@ -1,5 +1,10 @@
 (ns data-info.routes.domain.data
-  (:use [compojure.api.sweet :only [describe]]
+  (:use [common-swagger-api.schema :only [describe
+                                          NonBlankString
+                                          PagingParams
+                                          SortFieldDocs
+                                          SortFieldOptionalKey
+                                          StandardUserQueryParams]]
         [data-info.routes.domain.common]
         [heuristomancer.core :as info])
   (:require [schema.core :as s]))
@@ -58,7 +63,7 @@
 
 (s/defschema FolderListingParams
   (merge
-    SecuredQueryParamsRequired
+    StandardUserQueryParams
     (assoc PagingParams
       SortFieldOptionalKey
       (describe (apply s/enum ValidSortFields) SortFieldDocs))

@@ -1,9 +1,9 @@
 (ns metadactyl.routes.apps.elements
-  (:use [metadactyl.metadata.element-listings :only [list-elements]]
+  (:use [common-swagger-api.schema]
+        [metadactyl.metadata.element-listings :only [list-elements]]
         [metadactyl.routes.domain.app.element]
         [metadactyl.routes.domain.tool :only [ToolListing]]
-        [metadactyl.routes.params]
-        [compojure.api.sweet])
+        [metadactyl.routes.params])
   (:require [clojure-commons.error-codes :as ce]
             [metadactyl.util.service :as service]
             [compojure.route :as route]))

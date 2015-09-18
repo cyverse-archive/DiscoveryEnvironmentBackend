@@ -1,6 +1,6 @@
 (ns metadactyl.service.apps.de.validation
   (:use [slingshot.slingshot :only [try+ throw+]]
-        [korma.core]
+        [korma.core :exclude [update]]
         [kameleon.core]
         [kameleon.entities]
         [kameleon.queries :only [parameter-types-for-tool-type]]

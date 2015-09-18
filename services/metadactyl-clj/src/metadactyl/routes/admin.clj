@@ -1,5 +1,6 @@
 (ns metadactyl.routes.admin
-  (:use [metadactyl.metadata.reference-genomes :only [add-reference-genome
+  (:use [common-swagger-api.schema]
+        [metadactyl.metadata.reference-genomes :only [add-reference-genome
                                                       delete-reference-genome
                                                       replace-reference-genomes
                                                       update-reference-genome]]
@@ -9,8 +10,7 @@
         [metadactyl.routes.domain.reference-genome]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
-        [metadactyl.user :only [current-user]]
-        [compojure.api.sweet])
+        [metadactyl.user :only [current-user]])
   (:require [clojure-commons.error-codes :as ce]
             [metadactyl.service.apps :as apps]
             [metadactyl.util.config :as config]

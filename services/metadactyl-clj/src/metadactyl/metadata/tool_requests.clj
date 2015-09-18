@@ -1,7 +1,7 @@
 (ns metadactyl.metadata.tool-requests
   (:use [clojure.java.io :only [reader]]
         [kameleon.entities]
-        [korma.core]
+        [korma.core :exclude [update]]
         [korma.db]
         [metadactyl.user :only [load-user]]
         [metadactyl.util.conversions :only [remove-nil-vals]]

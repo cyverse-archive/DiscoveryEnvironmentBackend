@@ -1,7 +1,8 @@
 (ns metadata.persistence.avu
-  (:use [korma.core]
+  (:use [korma.core :exclude [update]]
         [korma.db :only [transaction]])
-  (:require [kameleon.db :as db]))
+  (:require [kameleon.db :as db]
+            [korma.core :as sql]))
 
 (def ^:private data-types [(db/->enum-val "file") (db/->enum-val "folder")])
 
@@ -70,7 +71,7 @@
 (defn update-avu
   "Updates the attribute, value, unit, modified_by, and modified_on fields of the given AVU."
   [user-id avu]
-  (update :avus
+  (sql/update :avus
     (set-fields (-> (select-keys avu [:attribute :value :unit])
                     (assoc :modified_by user-id
                            :modified_on (sqlfn now))))

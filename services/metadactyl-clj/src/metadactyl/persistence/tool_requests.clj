@@ -1,6 +1,6 @@
 (ns metadactyl.persistence.tool-requests
   "Functions for storing and retrieving information about tool requests."
-  (:use [korma.core]
+  (:use [korma.core :exclude [update]]
         [korma.db :only [with-db]]))
 
 (def ^:private default-email-template "tool_request_updated")

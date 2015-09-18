@@ -1,5 +1,5 @@
 (ns metadactyl.routes.domain.analysis
-  (:use [compojure.api.sweet :only [describe]]
+  (:use [common-swagger-api.schema :only [describe]]
         [schema.core :only [defschema optional-key Any Bool]]
         [metadactyl.schema.containers :only [ToolContainer]])
   (:import [java.util UUID]))

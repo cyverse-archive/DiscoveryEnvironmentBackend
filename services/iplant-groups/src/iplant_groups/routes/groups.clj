@@ -1,5 +1,5 @@
 (ns iplant_groups.routes.groups
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [iplant_groups.routes.domain.group]
         [iplant_groups.routes.domain.params])
   (:require [iplant_groups.service.groups :as groups]
@@ -18,7 +18,7 @@
 
   (GET* "/:group-id" [:as {:keys [uri]}]
         :path-params [group-id :- GroupIdPathParam]
-        :query       [params SecuredQueryParams]
+        :query       [params StandardUserQueryParams]
         :return      GroupWithDetail
         :summary     "Get Group Information"
         :description "This endpoint allows callers to get detailed information about a single
@@ -27,7 +27,7 @@
 
   (GET* "/:group-id/members" [:as {:keys [uri]}]
         :path-params [group-id :- GroupIdPathParam]
-        :query       [params SecuredQueryParams]
+        :query       [params StandardUserQueryParams]
         :return      GroupMembers
         :summary     "List Group Members"
         :description "This endpoint allows callers to list the members of a single group."

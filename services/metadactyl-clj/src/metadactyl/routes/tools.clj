@@ -1,12 +1,12 @@
 (ns metadactyl.routes.tools
-  (:use [metadactyl.metadata.tool-requests]
+  (:use [common-swagger-api.schema]
+        [metadactyl.metadata.tool-requests]
         [metadactyl.containers]
         [metadactyl.schema.containers]
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
         [metadactyl.tools :only [add-tools get-tool search-tools update-tool]]
         [metadactyl.user :only [current-user]]
-        [compojure.api.sweet]
         [metadactyl.util.service])
   (:require [clojure-commons.error-codes :as ce]
             [metadactyl.util.service :as service]
