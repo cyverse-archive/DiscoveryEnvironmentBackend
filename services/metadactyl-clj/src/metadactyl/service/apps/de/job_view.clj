@@ -1,5 +1,5 @@
 (ns metadactyl.service.apps.de.job-view
-  (:use [korma.core]
+  (:use [korma.core :exclude [update]]
         [kameleon.core]
         [kameleon.entities]
         [metadactyl.util.conversions :only [remove-nil-vals]])

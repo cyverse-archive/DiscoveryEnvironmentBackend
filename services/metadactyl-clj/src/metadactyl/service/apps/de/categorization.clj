@@ -1,5 +1,5 @@
 (ns metadactyl.service.apps.de.categorization
-  (:use [korma.core]
+  (:use [korma.core :exclude [update]]
         [korma.db :only [transaction]]
         [kameleon.app-groups]
         [kameleon.entities]

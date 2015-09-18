@@ -2,7 +2,7 @@
   "Functions used to remove apps from the database."
   (:use [metadactyl.user :only [current-user]]
         [kameleon.entities]
-        [korma.core]
+        [korma.core :exclude [update]]
         [korma.db :only [transaction]])
   (:require [clojure.tools.logging :as log]))
 

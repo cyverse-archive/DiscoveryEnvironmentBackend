@@ -1,8 +1,9 @@
 (ns metadactyl.persistence.oauth
   "Functions to use for storing and retrieving OAuth access tokens."
-  (:use [korma.core]
+  (:use [korma.core :exclude [update]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as ce]
+            [korma.core :as sql]
             [metadactyl.util.pgp :as pgp])
   (:import [java.sql Timestamp]
            [java.util UUID]))
@@ -22,12 +23,12 @@
 (defn- replace-access-token
   "Replaces an existing access token in the database."
   [api-name username expires-at refresh-token access-token]
-  (update :access_tokens
-          (set-fields {:token         (pgp/encrypt access-token)
-                       :expires_at    expires-at
-                       :refresh_token (pgp/encrypt refresh-token)})
-          (where {:webapp  api-name
-                  :user_id (user-id-subselect username)})))
+  (sql/update :access_tokens
+    (set-fields {:token         (pgp/encrypt access-token)
+                 :expires_at    expires-at
+                 :refresh_token (pgp/encrypt refresh-token)})
+    (where {:webapp  api-name
+            :user_id (user-id-subselect username)})))
 
 (defn- insert-access-token
   "Inserts a new access token into the database."

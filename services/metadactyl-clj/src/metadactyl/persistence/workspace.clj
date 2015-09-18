@@ -1,5 +1,5 @@
 (ns metadactyl.persistence.workspace
-  (:use [korma.core]
+  (:use [korma.core :exclude [update]]
         [korma.db :only [transaction]])
   (:require [kameleon.app-groups :as app-groups]
             [kameleon.queries :as queries]

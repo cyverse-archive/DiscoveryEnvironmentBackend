@@ -14,7 +14,7 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :manifest {"Git-Ref" ~(git-ref)}
   :uberjar-name "metadactyl-standalone.jar"
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.7.0"]
                  [cheshire "5.5.0"
                    :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
                                 [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
@@ -25,7 +25,7 @@
                  [clj-time "0.9.0"]
                  [com.cemerick/url "0.1.1"]
                  [com.google.guava/guava "18.0"]
-                 [medley "0.5.1"]
+                 [medley "0.7.0"]
                  [metosin/compojure-api "0.23.1"]
                  [org.iplantc/authy "5.0.0"]
                  [org.iplantc/clojure-commons "5.0.0"]

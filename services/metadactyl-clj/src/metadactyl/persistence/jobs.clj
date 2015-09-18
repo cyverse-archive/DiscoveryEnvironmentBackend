@@ -4,14 +4,15 @@
   (:use [clojure-commons.core :only [remove-nil-values]]
         [kameleon.queries :only [get-user-id]]
         [kameleon.uuids :only [uuidify]]
-        [korma.core]
+        [korma.core :exclude [update]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.set :as set]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
-            [kameleon.jobs :as kj]))
+            [kameleon.jobs :as kj]
+            [korma.core :as sql]))
 
 (def de-job-type "DE")
 (def agave-job-type "Agave")
@@ -413,13 +414,13 @@
   "Updates an existing job in the database."
   ([id {:keys [status end-date deleted name description]}]
      (when (or status end-date deleted name description)
-       (update :jobs
-               (set-fields (remove-nil-values {:status          status
-                                               :end_date        end-date
-                                               :deleted         deleted
-                                               :job_name        name
-                                               :job_description description}))
-               (where {:id id}))))
+       (sql/update :jobs
+         (set-fields (remove-nil-values {:status          status
+                                         :end_date        end-date
+                                         :deleted         deleted
+                                         :job_name        name
+                                         :job_description description}))
+         (where {:id id}))))
   ([id status end-date]
      (update-job id {:status   status
                      :end-date end-date})))
@@ -428,23 +429,23 @@
   "Updates an existing job step in the database using the job ID and the step number as keys."
   [job-id step-number {:keys [external-id status end-date start-date]}]
   (when (or external-id status end-date start-date)
-    (update :job_steps
-            (set-fields (remove-nil-values {:external_id external-id
-                                            :status      status
-                                            :end_date    end-date
-                                            :start_date  start-date}))
-            (where {:job_id      job-id
-                    :step_number step-number}))))
+    (sql/update :job_steps
+      (set-fields (remove-nil-values {:external_id external-id
+                                      :status      status
+                                      :end_date    end-date
+                                      :start_date  start-date}))
+      (where {:job_id      job-id
+              :step_number step-number}))))
 
 (defn cancel-job-step-numbers
   "Marks a job step as canceled in the database."
   [job-id step-numbers]
-  (update :job_steps
-          (set-fields {:status     canceled-status
-                       :start_date (sqlfn coalesce :start_date (sqlfn now))
-                       :end_date   (sqlfn now)})
-          (where {:job_id      job-id
-                  :step_number [in step-numbers]})))
+  (sql/update :job_steps
+    (set-fields {:status     canceled-status
+                 :start_date (sqlfn coalesce :start_date (sqlfn now))
+                 :end_date   (sqlfn now)})
+    (where {:job_id      job-id
+            :step_number [in step-numbers]})))
 
 (defn get-job-step-number
   "Retrieves a job step from the database by its step number."
@@ -458,20 +459,20 @@
   "Updates an existing job step in the database."
   [job-id external-id status end-date]
   (when (or status end-date)
-    (update :job_steps
-            (set-fields (remove-nil-values {:status   status
-                                            :end_date end-date}))
-            (where {:job_id      job-id
-                    :external_id external-id}))))
+    (sql/update :job_steps
+      (set-fields (remove-nil-values {:status   status
+                                      :end_date end-date}))
+      (where {:job_id      job-id
+              :external_id external-id}))))
 
 (defn update-job-steps
   "Updates all steps for a job in the database."
   [job-id status end-date]
   (when (or status end-date)
-    (update :job_steps
-            (set-fields (remove-nil-values {:status   status
-                                            :end_date end-date}))
-            (where {:job_id job-id}))))
+    (sql/update :job_steps
+      (set-fields (remove-nil-values {:status   status
+                                      :end_date end-date}))
+      (where {:job_id job-id}))))
 
 (defn list-incomplete-jobs
   []
@@ -497,9 +498,9 @@
 
 (defn delete-jobs
   [ids]
-  (update :jobs
-          (set-fields {:deleted true})
-          (where {:id [in ids]})))
+  (sql/update :jobs
+    (set-fields {:deleted true})
+    (where {:id [in ids]})))
 
 (defn get-jobs
   [ids]

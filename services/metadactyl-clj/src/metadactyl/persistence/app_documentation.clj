@@ -1,6 +1,7 @@
 (ns metadactyl.persistence.app-documentation
   (:use [kameleon.entities]
-        [korma.core]))
+        [korma.core :exclude [update]])
+  (:require [korma.core :as sql]))
 
 (defn get-app-references
   "Retrieves references for the given app ID."
@@ -38,7 +39,7 @@
 (defn edit-documentation
   "Updates the given App's documentation, modified_on timestamp, and modified_by ID in the database."
   [editor-id docs app-id]
-  (update :app_documentation
+  (sql/update :app_documentation
     (set-fields {:value       docs
                  :modified_by editor-id
                  :modified_on (sqlfn now)})

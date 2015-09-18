@@ -2,7 +2,7 @@
   (:use [kameleon.core]
         [kameleon.entities]
         [kameleon.uuids :only [uuid]]
-        [korma.core]
+        [korma.core :exclude [update]]
         [medley.core :only [remove-vals]]
         [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.conversions :only [remove-nil-vals]])

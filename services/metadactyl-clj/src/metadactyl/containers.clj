@@ -8,12 +8,13 @@
                                   container-volumes-from
                                   data-containers]]
         [kameleon.uuids :only [uuidify]]
-        [korma.core]
+        [korma.core :exclude [update]]
         [korma.db :only [transaction]]
         [metadactyl.persistence.app-metadata :only [update-tool]]
         [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.conversions :only [remove-nil-vals remove-empty-vals]])
-  (:require [clojure.tools.logging :as log]))
+  (:require [clojure.tools.logging :as log]
+            [korma.core :as sql]))
 
 (defn containerized?
   "Returns true if the tool is available in a container."
@@ -97,7 +98,7 @@
   [image-id update-map]
   (let [umap (select-keys update-map [:name :tag :url])]
     (when-not (empty? umap)
-      (update container-images
+      (sql/update container-images
         (set-fields umap)
         (where (= :id (uuidify image-id))))
       (select container-images
@@ -107,7 +108,7 @@
   [image-id]
   (when (image-id image-id)
     (transaction
-      (update tools
+      (sql/update tools
         (set-fields {:container_images_id nil})
         (where {:container_images_id (uuidify image-id)}))
       (delete container-images
@@ -120,9 +121,9 @@
     (let [tag  (get-tag image-map)
           name (:name image-map)]
       (transaction
-       (update tools
-               (set-fields {:container_images_id nil})
-               (where {:container_images_id (image-id image-map)}))
+       (sql/update tools
+         (set-fields {:container_images_id nil})
+         (where {:container_images_id (image-id image-map)}))
        (delete container-images
                (where (and (= :name name)
                            (= :tag tag))))))))
@@ -180,9 +181,9 @@
   [settings-uuid device-uuid update-map]
   (if-not (device? device-uuid)
     (throw (Exception. (str "device does not exist: " device-uuid))))
-  (update container-devices
-          (set-fields (select-keys update-map [:host_path :container_path :container_settings_id]))
-          (where {:id (uuidify device-uuid)})))
+  (sql/update container-devices
+    (set-fields (select-keys update-map [:host_path :container_path :container_settings_id]))
+    (where {:id (uuidify device-uuid)})))
 
 (defn delete-device
   [device-uuid]
@@ -244,10 +245,10 @@
   [settings-uuid volume-uuid volume-map]
   (if-not (volume? volume-uuid)
     (throw (Exception. (str "volume does not exist: " volume-uuid))))
-  (update container-volumes
-          (set-fields (merge {:container_settings_id (uuidify settings-uuid)}
-                             (select-keys volume-map [:host_path :container_path])))
-          (where {:id (uuidify volume-uuid)})))
+  (sql/update container-volumes
+    (set-fields (merge {:container_settings_id (uuidify settings-uuid)}
+                       (select-keys volume-map [:host_path :container_path])))
+    (where {:id (uuidify volume-uuid)})))
 
 (defn delete-volume
   "Deletes the volume associated with uuid in the container_volumes table."
@@ -290,9 +291,9 @@
                      (assoc :container_images_id container-images-id)
                      remove-nil-vals)]
         (when-not (empty? umap)
-          (update data-containers
-                  (set-fields umap)
-                  (where {:id data-container-id})))
+          (sql/update data-containers
+            (set-fields umap)
+            (where {:id data-container-id})))
         (data-container data-container-id)))))
 
 (defn- find-data-container-id
@@ -401,9 +402,9 @@
   (if-not (settings? settings-uuid)
     (throw (Exception. (str "Container settings do not exist for UUID: " settings-uuid))))
   (let [values (filter-container-settings settings-map)]
-    (update container-settings
-            (set-fields values)
-            (where {:id (uuidify settings-uuid)}))))
+    (sql/update container-settings
+      (set-fields values)
+      (where {:id (uuidify settings-uuid)}))))
 
 (defn tool-settings
   "Returns the top-level settings for the tool container."

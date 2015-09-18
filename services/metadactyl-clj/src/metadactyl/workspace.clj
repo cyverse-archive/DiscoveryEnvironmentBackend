@@ -1,6 +1,6 @@
 (ns metadactyl.workspace
-  (:use [korma.core]
-        [kameleon.queries]
+  (:use [kameleon.queries]
+        [korma.core :exclude [update]]
         [metadactyl.user :only [current-user]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as cc-errs]))

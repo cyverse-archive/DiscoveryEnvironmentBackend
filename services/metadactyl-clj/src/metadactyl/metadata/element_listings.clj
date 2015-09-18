@@ -2,9 +2,9 @@
   (:use [kameleon.core]
         [kameleon.entities]
         [kameleon.queries]
+        [korma.core :exclude [update]]
         [metadactyl.tools :only [tool-listing-base-query]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
-        [korma.core]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [metadactyl.util.service :as service]))

@@ -1,6 +1,6 @@
 (ns kameleon.jobs
   (:use [kameleon.entities]
-         [korma.core]
+         [korma.core :exclude [update]]
          [korma.db :only [transaction]]
          [slingshot.slingshot :only [throw+]]))
 

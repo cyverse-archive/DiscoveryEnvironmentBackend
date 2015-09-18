@@ -1,8 +1,8 @@
 (ns metadactyl.metadata.params
-  (:use [korma.core]
-        [kameleon.core]
+  (:use [kameleon.core]
         [kameleon.entities]
         [kameleon.uuids :only [uuidify]]
+        [korma.core :exclude [update]]
         [metadactyl.metadata.reference-genomes :only [get-reference-genomes-by-id]])
   (:require [metadactyl.persistence.app-metadata :as persistence]
             [metadactyl.util.conversions :as conv]))

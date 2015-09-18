@@ -2,7 +2,7 @@
   "Persistence layer for app metadata."
   (:use [kameleon.entities]
         [kameleon.queries :only [get-tasks-for-app]]
-        [korma.core]
+        [korma.core :exclude [update]]
         [medley.core :only [remove-vals]]
         [metadactyl.routes.domain.app :only [AppParameterListGroup]]
         [metadactyl.util.conversions :only [long->timestamp
@@ -11,7 +11,8 @@
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
-            [clojure-commons.error-codes :as ce]))
+            [clojure-commons.error-codes :as ce]
+            [korma.core :as sql]))
 
 (defn- get-single-task-for-app
   "Retrieves the task from a single-step app. An exception will be thrown if the app doesn't have
@@ -77,7 +78,7 @@
                       {:description description
                        :label       display})]
     (when (seq update-vals)
-      (update parameter_values (set-fields update-vals) (where {:id id}))))
+      (sql/update parameter_values (set-fields update-vals) (where {:id id}))))
   (when (seq arguments)
     (dorun (map (partial update-parameter-value-labels parameter-id) arguments)))
 
@@ -99,7 +100,7 @@
                       {:description description
                        :label       label})]
     (when (seq update-vals)
-      (update parameters (set-fields update-vals) (where {:id id})))
+      (sql/update parameters (set-fields update-vals) (where {:id id})))
     (when (seq arguments)
       (update-parameter-values id info_type arguments))))
 
@@ -112,7 +113,7 @@
                        :description description
                        :label       label})]
     (when (seq update-vals)
-      (update parameter_groups (set-fields update-vals) (where {:id id}))))
+      (sql/update parameter_groups (set-fields update-vals) (where {:id id}))))
   (dorun (map (partial update-parameter-labels id) (:parameters group))))
 
 (defn- update-task-labels
@@ -122,7 +123,7 @@
                                         :description description
                                         :label       label})]
     (when-not (empty? update-values)
-      (update tasks (set-fields update-values) (where {:id task-id}))))
+      (sql/update tasks (set-fields update-values) (where {:id task-id}))))
   (dorun (map (partial update-parameter-group-labels task-id) groups)))
 
 (defn update-app-labels
@@ -130,5 +131,5 @@
   [{id :id :as req}]
   (let [update-values (remove-nil-vals (select-keys req [:name :description]))]
     (when-not (empty? update-values)
-      (update apps (set-fields (assoc update-values :edited_date (sqlfn now))) (where {:id id}))))
+      (sql/update apps (set-fields (assoc update-values :edited_date (sqlfn now))) (where {:id id}))))
   (update-task-labels req (:id (get-single-task-for-app id))))

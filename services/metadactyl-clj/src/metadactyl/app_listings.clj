@@ -1,6 +1,6 @@
 (ns metadactyl.app-listings
   (:use [slingshot.slingshot :only [try+ throw+]]
-        [korma.core]
+        [korma.core :exclude [update]]
         [kameleon.core]
         [kameleon.entities]
         [kameleon.app-groups]
