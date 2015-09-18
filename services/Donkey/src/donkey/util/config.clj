@@ -403,10 +403,10 @@
   [props config-valid configs data-routes-enabled]
   "donkey.infosquito.es-url")
 
-(cc/defprop-str coge-genome-load-url
-  "The COGE service URL for loading genomes and creating viewer URLs."
+(cc/defprop-str coge-base-url
+  "The base URL for CoGe services."
   [props config-valid configs coge-enabled]
-  "donkey.coge.genome-load-url")
+  "donkey.coge.base-url")
 
 (cc/defprop-str coge-user
   "The COGE user that needs file sharing permissions for genome viewer services."

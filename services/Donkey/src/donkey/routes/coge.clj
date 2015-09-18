@@ -3,11 +3,12 @@
         [donkey.services.coge]
         [donkey.util.service]
         [donkey.util])
-  (:require [donkey.util.config :as config]))
+  (:require [clojure.tools.logging :as log]
+            [donkey.util.config :as config]))
 
-(defn secured-coge-routes
+(defn coge-routes
   []
   (optional-routes
     [config/coge-enabled]
-    (POST "/coge/load-genomes" [:as {body :body}]
-          (get-genome-viewer-url body))))
+    (POST "/coge/genomes/load" [:as {:keys [body]}]
+          (success-response (log/spy :warn (get-genome-viewer-url body))))))
