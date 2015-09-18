@@ -17,7 +17,7 @@
      (coge-params request-url {}))
   ([request-url existing-params]
      (assoc existing-params
-       :username {:shortUsername current-user}
+       :username (:shortUsername current-user)
        :token    (get-proxy-ticket request-url)
        :use_cas  1)))
 
