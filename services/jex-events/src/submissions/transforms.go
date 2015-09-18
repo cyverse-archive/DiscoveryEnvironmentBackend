@@ -199,6 +199,15 @@ func sanitize(s string) string {
 	return step
 }
 
+// naivelyquote single-quotes a string that will be placed on the command line
+// using plain string substitution.  This works, but may leave extra pairs
+// of leading or trailing quotes if there was a leading or trailing quote
+// in the original string, which is valid, but may be confusing to human
+// readers.
+func naivelyquote(s string) string {
+	return fmt.Sprintf("'%s'", strings.Replace(s, "'", "''", -1))
+}
+
 // Sanitize makes sure the fields in a submission are ready to be used in things
 // like file names.
 func (s *Submission) Sanitize() {
@@ -236,4 +245,17 @@ func (s *Submission) CondorLogDir() string {
 // IRODSConfig returns the path to iRODS config inside the working directory.
 func (s *Submission) IRODSConfig() string {
 	return path.Join(s.WorkingDir(), "logs", "irods-config")
+}
+
+// OutputDirectory returns the path to the output directory in iRODS. It's
+// computed, which is why it isn't in the struct.
+func (s *Submission) OutputDirectory() string {
+	if s.OutputDir == "" {
+		return path.Join(s.IRODSBase, s.Username, "analyses", s.Dirname())
+	} else if s.OutputDir != "" && s.CreateOutputSubdir {
+		return path.Join(s.OutputDir, s.Dirname())
+	} else if s.OutputDir != "" && !s.CreateOutputSubdir {
+		return strings.TrimSuffix(s.OutputDir, "/")
+	}
+	return path.Join(s.IRODSBase, s.Username, "analyses", s.Dirname())
 }
