@@ -31,23 +31,3 @@
      (if-not (string/blank? (:type body))
        (prods/add-type (:user params) (:path body) (:type body))
        (prods/unset-types (:user params) (:path body))))))
-
-(defn delete-type
-  [req-params]
-  (log/info "(delete-type) request parameters:" req-params)
-  (let [params (add-current-user-to-map req-params)]
-    (log/info "(delete-type) request parameters after conversion:" params)
-    (log/info "(delete-type) contains accepted type" (contains? (accepted-types) (:type params)))
-    (validate-map params {:user string?
-                          :type #(contains? (accepted-types) %)
-                          :path string?})
-    (success-response
-      (prods/delete-type (:user params) (:path params) (:type params)))))
-
-(defn get-types
-  [req-params]
-  (let [params (add-current-user-to-map req-params)]
-    (validate-map params {:path string?
-                          :user string?})
-    (success-response
-      {:type (prods/get-types (:user params) (:path params))})))

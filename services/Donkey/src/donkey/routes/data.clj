@@ -15,14 +15,8 @@
   (optional-routes
    [config/data-routes-enabled]
 
-   (GET "/filetypes/type" [:as {:keys [params]}]
-        (garnish/get-types params))
-
    (POST "/filetypes/type" [:as {:keys [body params]}]
          (garnish/add-type body params))
-
-   (DELETE "/filetypes/type" [:as {:keys [params]}]
-           (garnish/delete-type params))
 
    (GET "/filetypes/type-list" []
         (data/get-type-list))
