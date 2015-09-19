@@ -9,14 +9,6 @@
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as validators]))
 
-(defn- resolve-data-type
-  "Returns a type converted from the type field of a stat result to a type expected by the
-   metadata service endpoints."
-  [type]
-  (if (= type "file")
-    type
-    "folder"))
-
 (defn- get-metadata-copy-src-path
   [cm user src-id]
   (let [src-path (:path (uuids/path-for-uuid cm user src-id))]
@@ -33,7 +25,7 @@
 (defn- format-copy-dest-item
   [{:keys [id type]}]
   {:id   id
-   :type (resolve-data-type type)})
+   :type (metadata/resolve-data-type type)})
 
 (defn copy-metadata-template-avus
   "Copies all AVUs from the data item with data-id to dest-ids with the metadata service, and
@@ -78,7 +70,7 @@
     (let [data-id (uuidify data-id)
           template-id (uuidify template-id)
           {:keys [path type]} (uuids/path-for-uuid cm username data-id)
-          data-type (resolve-data-type type)]
+          data-type (metadata/resolve-data-type type)]
       (validators/path-writeable cm username path)
       (metadata/set-metadata-template-avus data-id data-type template-id body))))
 

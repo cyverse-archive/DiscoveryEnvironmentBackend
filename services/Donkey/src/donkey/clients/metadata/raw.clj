@@ -10,6 +10,15 @@
   [& components]
   (str (apply curl/url (config/metadata-base) components)))
 
+(defn resolve-data-type
+  "Returns a type converted from the type field of a stat result to a type expected by the
+   metadata service endpoints."
+  [type]
+  (let [type (name type)]
+    (if (= type "dir")
+    "folder"
+    type)))
+
 (defn get-options
   ([]
      (get-options {}))
