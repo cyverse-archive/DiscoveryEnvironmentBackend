@@ -35,6 +35,15 @@
   (json-schema/convert [_ _]
     {:type "any"}))
 
+(def ->required-key s/explicit-schema-key)
+
+(defn ->required-param
+  "Removes an optional param from the given schema and re-adds it as a required param."
+  [schema param]
+  (-> schema
+    (assoc (->required-key param) (schema param))
+    (dissoc param)))
+
 (defn ->optional-param
   "Removes a required param from the given schema and re-adds it as an optional param."
   [schema param]
