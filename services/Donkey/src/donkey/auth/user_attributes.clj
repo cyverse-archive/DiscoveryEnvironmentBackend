@@ -1,8 +1,9 @@
 (ns donkey.auth.user-attributes
+  (:use [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
+            [clojure-commons.error-codes :as ce]
             [clj-cas.cas-proxy-auth :as cas]
             [donkey.util.config :as cfg]))
-
 
 (def
   ^{:doc "The authenticated user or nil if the service is unsecured."
@@ -63,10 +64,22 @@
     (binding [current-user (fake-user-from-attributes req)]
       (handler req))))
 
+(defn- proxy-ticket-retrieval-failure
+  []
+  (throw+ {:error_code ce/ERR_REQUEST_FAILED
+           :reason     "unable to obtain a proxy ticket"}))
+
 (defn get-proxy-ticket
   "Obtains a CAS proxy ticket for authentication to another service."
   [url]
-  (cas/get-proxy-ticket (:principal current-user) url))
+  (let [start-time (System/currentTimeMillis)
+        get-ticket #(cas/get-proxy-ticket (:principal current-user) url)
+        timed-out? #(> (- (System/currentTimeMillis) start-time) (cfg/proxy-ticket-timeout))
+        sleep      #(Thread/sleep (cfg/proxy-ticket-poll-interval))]
+    (loop [proxy-ticket (get-ticket)]
+      (cond proxy-ticket proxy-ticket
+            (timed-out?) (proxy-ticket-retrieval-failure)
+            :else        (do (sleep) (recur (get-ticket)))))))
 
 (defmacro with-user
   "Performs a task with the given user information bound to current-user. This macro is used

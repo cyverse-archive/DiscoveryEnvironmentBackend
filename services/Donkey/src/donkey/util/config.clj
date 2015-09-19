@@ -49,6 +49,16 @@
   [props config-valid configs]
   "donkey.cas.pgt-callback-path")
 
+(cc/defprop-optint proxy-ticket-timeout
+  "The number of milliseconds to wait before giving up on obtaining a proxy ticket."
+  [props config-valid configs]
+  "donkey.cas.proxy-ticket-timeout" 10000)
+
+(cc/defprop-optint proxy-ticket-poll-interval
+  "The number of milliseconds between attempts to obtain a proxy ticket."
+  [props config-valid configs]
+  "donkey.cas.proxy-ticket-poll-interval" 500)
+
 (cc/defprop-str server-name
   "The name of the local server."
   [props config-valid configs]

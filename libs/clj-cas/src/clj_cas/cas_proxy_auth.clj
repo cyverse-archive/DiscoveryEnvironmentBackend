@@ -83,6 +83,7 @@
 
 (defn- store-pgt
   [pgt-storage pgt-iou pgt-id]
+  (log/debug "got a proxy granting ticket callback for " pgt-iou " - " pgt-id)
   (.save pgt-storage pgt-iou pgt-id)
   {:status       200
    :content-type "application/xml"
@@ -144,6 +145,6 @@
 (defn get-proxy-ticket
   "Obtains a proxy ticket that can be used to authenticate to other CAS-secured services."
   [principal url]
-  (log/warn "obtaining a proxy ticket for " principal " for service " url)
+  (log/debug "obtaining a proxy ticket for " principal " for service " url)
   (when (and principal url)
     (.getProxyTicketFor principal url)))
