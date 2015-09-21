@@ -609,3 +609,39 @@ func TestOutputDirectory3(t *testing.T) {
 		t.Errorf("OutputDirectory() returned '%s' when it should have returned '%s'", actual, expected)
 	}
 }
+
+func TestNaivelyQuote(t *testing.T) {
+	test1 := naivelyquote("foo")
+	test2 := naivelyquote("'foo'")
+	test3 := naivelyquote("foo'oo")
+	test4 := naivelyquote("'foo'oo'")
+	test5 := naivelyquote("foo''oo")
+	test6 := naivelyquote("'foo''oo'")
+	test7 := naivelyquote("f'oo'oo")
+	test8 := naivelyquote("'f'oo'oo'")
+
+	if test1 != "'foo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo'", test1)
+	}
+	if test2 != "'''foo'''" {
+		t.Errorf("naivelyquote returned %s instead of '''foo'''", test2)
+	}
+	if test3 != "'foo''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo''oo'", test3)
+	}
+	if test4 != "'''foo''oo'''" {
+		t.Errorf("naivelyquote returned %s instead of '''foo''oo'''", test4)
+	}
+	if test5 != "'foo''''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo''''oo'", test5)
+	}
+	if test6 != "'''foo''''oo'''" {
+		t.Errorf("naivelyquote returned %s instead of '''foo''''oo'''", test6)
+	}
+	if test7 != "'f''oo''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'f''oo''oo'", test7)
+	}
+	if test8 != "'''f''oo''oo'''" {
+		t.Errorf("naivelyquote returned %s instead of '''f''oo''oo'''", test8)
+	}
+}
