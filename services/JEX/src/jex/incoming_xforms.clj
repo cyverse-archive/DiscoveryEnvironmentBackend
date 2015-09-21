@@ -347,7 +347,6 @@
        (container-volumes-from-args uuid container-map)
        (container-name-arg container-map)
        (container-working-directory-arg container-map)
-       (container-name-arg container-map)
        (container-memory-limit-arg container-map)
        (container-cpu-shares-arg container-map)
        (container-network-mode-arg container-map)
