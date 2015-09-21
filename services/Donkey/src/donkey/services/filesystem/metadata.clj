@@ -32,14 +32,14 @@
     (assoc avu :unit "")
     avu))
 
-(def ipc-regex #"(?i)^ipc")
+(def ^:private ipc-regex #"(?i)^ipc")
 
-(defn ipc-avu?
+(defn- ipc-avu?
   "Returns a truthy value if the AVU map passed in is reserved for the DE's use."
   [avu]
   (re-find ipc-regex (:attr avu)))
 
-(defn authorized-avus
+(defn- authorized-avus
   "Validation to make sure the AVUs aren't system AVUs. Throws a slingshot error
    map if the validation fails."
   [avus]
