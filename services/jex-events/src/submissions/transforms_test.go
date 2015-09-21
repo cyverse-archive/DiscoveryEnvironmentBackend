@@ -490,6 +490,14 @@ func TestMemoryLimitOption(t *testing.T) {
 	}
 }
 
+func TestIsDEImage(t *testing.T) {
+	s := inittests(t)
+	actual := s.Steps[0].Component.Container.IsDEImage()
+	if !actual {
+		t.Error("IsDEImage() returned false instead of true")
+	}
+}
+
 func TestDevices(t *testing.T) {
 	s := inittests(t)
 	numdevices := len(s.Steps[0].Component.Container.Devices)

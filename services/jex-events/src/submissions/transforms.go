@@ -168,6 +168,25 @@ func (c *Container) MemoryLimitOption() string {
 	return ""
 }
 
+// IsDEImage returns true if container image is one of the DE image that requires
+// special tag logic.
+func (c *Container) IsDEImage() bool {
+	deImages := []string{
+		"discoenv/porklock",
+		"discoenv/curl-wrapper",
+		"gims.iplantcollaborative.org:5000/backwards-compat",
+		"discoenv/backwards-compat",
+	}
+	actualName := c.Image.Name
+	found := false
+	for _, d := range deImages {
+		if actualName == d {
+			found = true
+		}
+	}
+	return found
+}
+
 // StepComponent is where the settings for a tool in a job step are located.
 type StepComponent struct {
 	Container   Container `json:"container"`
