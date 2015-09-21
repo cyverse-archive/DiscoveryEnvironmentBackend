@@ -367,8 +367,8 @@ func TestStepContainerVolumes(t *testing.T) {
 		t.Errorf("The volume container path was set to '%s' instead of '/container/path1'", vol.ContainerPath)
 	}
 	vol = vols[1]
-	if vol.HostPath != "/host/path2" {
-		t.Errorf("The volume host path was set to '%s' instead of '/host/path2'", vol.HostPath)
+	if vol.HostPath != "" {
+		t.Errorf("The volume host path was set to '%s' instead of an empty string", vol.HostPath)
 	}
 	if vol.ContainerPath != "/container/path2" {
 		t.Errorf("The volume container path was set to '%s' instead of '/container/path2'", vol.ContainerPath)
@@ -398,11 +398,50 @@ func TestStepContainerDevices(t *testing.T) {
 	}
 }
 
-func TestStepContainerWorkingDirectory(t *testing.T) {
+func TestStepContainerWorkingDir(t *testing.T) {
 	s := inittests(t)
 	w := s.Steps[0].Component.Container.WorkingDir
 	if w != "/work" {
 		t.Errorf("The working directory for the container was '%s' instead of '/work'", w)
+	}
+}
+
+func TestStepContainerWorkingDirectory(t *testing.T) {
+	s := _inittests(t, false)
+	w := s.Steps[0].Component.Container.WorkingDirectory()
+	if w != "/work" {
+		t.Errorf("The return value of WorkingDirectory() was '%s' instead of '/work'", w)
+	}
+	s.Steps[0].Component.Container.WorkingDir = ""
+	w = s.Steps[0].Component.Container.WorkingDirectory()
+	if w != "/de-app-work" {
+		t.Errorf("The return value of WorkingDirectory was '%s' instead of '/de-app-work'", w)
+	}
+}
+
+func TestStepContainerWorkingDirectoryOption(t *testing.T) {
+	s := _inittests(t, false)
+	w := s.Steps[0].Component.Container.WorkingDirectoryOption()
+	if w != "-w /work" {
+		t.Errorf("WorkingDirectoryOption() returned '%s' instead of '-w /work'", w)
+	}
+	s.Steps[0].Component.Container.WorkingDir = ""
+	w = s.Steps[0].Component.Container.WorkingDirectoryOption()
+	if w != "-w /de-app-work" {
+		t.Errorf("WorkingDirectoryOption() returned '%s' instead of '-w /de-app-work'", w)
+	}
+}
+
+func TestVolumeOptions(t *testing.T) {
+	s := _inittests(t, false)
+	actual := s.Steps[0].Component.Container.VolumeOptions()
+	expected := "-v $(pwd):/work -v /host/path1:/container/path1 -v /container/path2"
+	if actual != expected {
+		t.Errorf(
+			"The volume option was: \n\t%s\nrather than:\n\t%s",
+			actual,
+			expected,
+		)
 	}
 }
 

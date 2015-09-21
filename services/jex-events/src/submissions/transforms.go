@@ -1,6 +1,7 @@
 package submissions
 
 import (
+	"bytes"
 	"configurate"
 	"encoding/json"
 	"fmt"
@@ -81,6 +82,30 @@ func (c *Container) WorkingDirectory() string {
 		return "/de-app-work"
 	}
 	return c.WorkingDir
+}
+
+// WorkingDirectoryOption returns a string containing a Docker command-line option
+// setting the working directory.
+func (c *Container) WorkingDirectoryOption() string {
+	return fmt.Sprintf("-w %s", c.WorkingDirectory())
+}
+
+// VolumeOptions returns a string container the docker command-line options that
+// set all of the defined volumes.
+func (c *Container) VolumeOptions() string {
+	var buffer bytes.Buffer
+	buffer.WriteString(fmt.Sprintf("-v $(pwd):%s", c.WorkingDirectory()))
+	if c.HasVolumes() {
+		for _, v := range c.Volumes {
+			buffer.WriteString(" ")
+			if v.HostPath != "" {
+				buffer.WriteString(fmt.Sprintf("-v %s:%s", v.HostPath, v.ContainerPath))
+			} else {
+				buffer.WriteString(fmt.Sprintf("-v %s", v.ContainerPath))
+			}
+		}
+	}
+	return buffer.String()
 }
 
 // StepComponent is where the settings for a tool in a job step are located.

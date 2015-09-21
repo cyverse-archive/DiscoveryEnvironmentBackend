@@ -41,7 +41,7 @@
                         "container_path" : "/container/path1"
                       },
                       {
-                        "host_path" : "/host/path2",
+                        "host_path" : "",
                         "container_path" : "/container/path2"
                       }
                     ],
