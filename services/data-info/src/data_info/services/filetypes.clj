@@ -23,6 +23,7 @@
     (validators/path-exists cm path)
     (validators/user-exists cm user)
     (validators/user-owns-path cm user path)
+    (validators/path-is-file cm path)
 
     (set-metadata cm path (cfg/type-detect-type-attribute) type "")
     {:path path

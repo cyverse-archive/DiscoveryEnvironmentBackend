@@ -21,5 +21,5 @@
     :return FileTypeReturn
     :summary "Set File Type"
     :description (str "Set a file's type to a specific value, or unset it with an empty string."
-(get-error-code-block "ERR_NOT_OWNER, ERR_BAD_OR_MISSING_FIELD,ERR_DOES_NOT_EXIST,ERR_NOT_A_USER"))
+(get-error-code-block "ERR_NOT_OWNER, ERR_BAD_OR_MISSING_FIELD, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER, ERR_NOT_A_FILE"))
     (svc/trap uri filetypes/do-add-type-uuid params body data-id)))
