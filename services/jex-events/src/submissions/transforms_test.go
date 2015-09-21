@@ -645,3 +645,39 @@ func TestNaivelyQuote(t *testing.T) {
 		t.Errorf("naivelyquote returned %s instead of '''f''oo''oo'''", test8)
 	}
 }
+
+func TestQuote(t *testing.T) {
+	test1 := quote("foo")
+	test2 := quote("'foo'")
+	test3 := quote("foo'oo")
+	test4 := quote("'foo'oo'")
+	test5 := quote("foo''oo")
+	test6 := quote("'foo''oo'")
+	test7 := quote("f'oo'oo")
+	test8 := quote("'f'oo'oo'")
+
+	if test1 != "'foo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo'", test1)
+	}
+	if test2 != "'foo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo'", test2)
+	}
+	if test3 != "'foo''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo''oo'", test3)
+	}
+	if test4 != "'foo''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo''oo'", test4)
+	}
+	if test5 != "'foo''''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo''''oo'", test5)
+	}
+	if test6 != "'foo''''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo''''oo'", test6)
+	}
+	if test7 != "'f''oo''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'f''oo''oo'", test7)
+	}
+	if test8 != "'f''oo''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'f''oo''oo'", test8)
+	}
+}

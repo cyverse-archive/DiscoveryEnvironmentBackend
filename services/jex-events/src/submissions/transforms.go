@@ -153,6 +153,7 @@ type Submission struct {
 var (
 	nowfmt    = "2006-01-02-15-04-05.000"                       // appears in file and directory names.
 	validName = regexp.MustCompile(`-\d{4}(?:-\d{2}){5}\.\d+$`) // this isn't included in the Dirname() function so it isn't re-evaluated a lot
+	quoteStr  = regexp.MustCompile(`^''|''$`)
 	cfg       *configurate.Configuration
 	logger    *log.Logger
 )
@@ -206,6 +207,12 @@ func sanitize(s string) string {
 // readers.
 func naivelyquote(s string) string {
 	return fmt.Sprintf("'%s'", strings.Replace(s, "'", "''", -1))
+}
+
+// quote quotes and escapes a string that is supposed to be passed in to a tool on
+// the command line.
+func quote(s string) string {
+	return quoteStr.ReplaceAllString(naivelyquote(s), "")
 }
 
 // Sanitize makes sure the fields in a submission are ready to be used in things
