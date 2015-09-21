@@ -90,7 +90,7 @@ func (c *Container) WorkingDirectoryOption() string {
 	return fmt.Sprintf("-w %s", c.WorkingDirectory())
 }
 
-// VolumeOptions returns a string container the docker command-line options that
+// VolumeOptions returns a string containing the docker command-line options that
 // set all of the defined volumes.
 func (c *Container) VolumeOptions() string {
 	var buffer bytes.Buffer
@@ -106,6 +106,18 @@ func (c *Container) VolumeOptions() string {
 		}
 	}
 	return buffer.String()
+}
+
+// DeviceOptions returns a string containing the docker command-line options
+// that set all of the defined devices.
+func (c *Container) DeviceOptions() string {
+	var buffer bytes.Buffer
+	if c.HasDevices() {
+		for _, d := range c.Devices {
+			buffer.WriteString(fmt.Sprintf("--device=%s:%s ", d.HostPath, d.ContainerPath))
+		}
+	}
+	return strings.TrimSpace(buffer.String())
 }
 
 // StepComponent is where the settings for a tool in a job step are located.

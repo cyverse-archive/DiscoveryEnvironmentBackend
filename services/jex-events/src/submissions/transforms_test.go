@@ -445,6 +445,33 @@ func TestVolumeOptions(t *testing.T) {
 	}
 }
 
+func TestDevices(t *testing.T) {
+	s := inittests(t)
+	numdevices := len(s.Steps[0].Component.Container.Devices)
+	if numdevices != 2 {
+		t.Errorf("The number of devices was '%d' rather than '2'", numdevices)
+	}
+	d1 := s.Steps[0].Component.Container.Devices[0]
+	if d1.HostPath != "/host/path1" {
+		t.Errorf("The first device's host path was '%s' instead of '/host/path1'", d1.HostPath)
+	}
+	if d1.ContainerPath != "/container/path1" {
+		t.Errorf("The first device's container path was '%s' instead of '/container/path1'", d1.ContainerPath)
+	}
+	d2 := s.Steps[0].Component.Container.Devices[1]
+	if d2.HostPath != "/host/path2" {
+		t.Errorf("The second device's host path was '%s' instead of '/host/path2'", d2.HostPath)
+	}
+	if d2.ContainerPath != "/container/path2" {
+		t.Errorf("The second device's container path was '%s' instead of '/container/path1'", d2.ContainerPath)
+	}
+	actual := s.Steps[0].Component.Container.DeviceOptions()
+	expected := "--device=/host/path1:/container/path1 --device=/host/path2:/container/path2"
+	if actual != expected {
+		t.Errorf("The device option was:\n\t%s\nrather than:\n\t%s", actual, expected)
+	}
+}
+
 func TestStepEnvironmentLength(t *testing.T) {
 	s := inittests(t)
 	env := s.Steps[0].Environment
