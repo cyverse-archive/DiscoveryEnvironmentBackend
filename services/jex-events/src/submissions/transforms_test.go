@@ -37,6 +37,7 @@ func _inittests(t *testing.T, memoize bool) *Submission {
 		c.NFSBase = "/path/to/base"
 		c.IRODSBase = "/path/to/irodsbase"
 		c.CondorLogPath = "/path/to/logs"
+		c.PorklockTag = "test"
 		Init(c, l)
 		data, err := JSONData()
 		if err != nil {
@@ -488,6 +489,29 @@ func TestMemoryLimitOption(t *testing.T) {
 	if actual != expected {
 		t.Errorf("The container memory limit was '%s' instead of '%s'", actual, expected)
 	}
+}
+
+func TestTag(t *testing.T) {
+	s := inittests(t)
+	actual := s.Steps[0].Component.Container.Tag()
+	expected := ":test"
+	if actual != expected {
+		t.Errorf("Tag() returned '%s' instead of '%s'", actual, expected)
+	}
+	s.Steps[0].Component.Container.Image.Name = "discoenv/test"
+	s.Steps[0].Component.Container.Image.Tag = "dev"
+	actual = s.Steps[0].Component.Container.Tag()
+	expected = ":dev"
+	if actual != expected {
+		t.Errorf("Tag() returned '%s' instead of '%s'", actual, expected)
+	}
+	s.Steps[0].Component.Container.Image.Tag = ""
+	actual = s.Steps[0].Component.Container.Tag()
+	expected = ""
+	if actual != expected {
+		t.Errorf("Tag() returned '%s' instead of '%s'", actual, expected)
+	}
+	s = _inittests(t, false)
 }
 
 func TestIsDEImage(t *testing.T) {

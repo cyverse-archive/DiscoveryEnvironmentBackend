@@ -187,6 +187,18 @@ func (c *Container) IsDEImage() bool {
 	return found
 }
 
+// Tag returns a string containing the correct tag to use with this image. The
+// tag will be prefixed with a ':' unless the image is neither a DE image nor
+// has the Tag field set.
+func (c *Container) Tag() string {
+	if c.IsDEImage() {
+		return fmt.Sprintf(":%s", cfg.PorklockTag)
+	} else if c.Image.Tag != "" {
+		return fmt.Sprintf(":%s", c.Image.Tag)
+	}
+	return ""
+}
+
 // StepComponent is where the settings for a tool in a job step are located.
 type StepComponent struct {
 	Container   Container `json:"container"`
