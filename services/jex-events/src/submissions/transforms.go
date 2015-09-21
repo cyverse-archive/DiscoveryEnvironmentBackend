@@ -305,6 +305,15 @@ func (s *Step) BackwardsCompatibleOptions() string {
 	return ""
 }
 
+// Executable returns a string containing the executable path as it gets placed
+// inside the docker command-line.
+func (s *Step) Executable() string {
+	if s.IsBackwardsCompatible() {
+		return path.Join(s.Component.Location, s.Component.Name)
+	}
+	return ""
+}
+
 // Submission describes a job passed down through the API.
 type Submission struct {
 	Description        string `json:"description"`

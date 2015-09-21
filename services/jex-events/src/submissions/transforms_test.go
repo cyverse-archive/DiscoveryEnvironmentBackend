@@ -662,6 +662,23 @@ func TestBackwardsCompatibleOptions(t *testing.T) {
 	if actual != expected {
 		t.Errorf("BackwardsCompatibleOptions() returned '%s' instead of '%s'", actual, expected)
 	}
+	_inittests(t, false)
+}
+
+func TestExecutable(t *testing.T) {
+	s := inittests(t)
+	actual := s.Steps[0].Executable()
+	expected := "/usr/local3/bin/wc_tool-1.00/wc_wrapper.sh"
+	if actual != expected {
+		t.Errorf("Executable() returned '%s' instead of '%s'", actual, expected)
+	}
+	s.Steps[0].Component.Container.Image.Name = "discoenv/test"
+	actual = s.Steps[0].Executable()
+	expected = ""
+	if actual != expected {
+		t.Errorf("Executable() returned '%s' instead of '%s'", actual, expected)
+	}
+	_inittests(t, false)
 }
 
 func TestStepConfig(t *testing.T) {
