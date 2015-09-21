@@ -314,6 +314,35 @@ func (s *Step) Executable() string {
 	return ""
 }
 
+// CommandLine returns a string containing all of the options passed to the
+// docker run command for this step in the submission.
+func (s *Step) CommandLine(uuid string) string {
+	container := s.Component.Container
+	allLines := []string{
+		"run --rm -e IPLANT_USER -e IPLANT_EXECUTION_ID",
+		s.BackwardsCompatibleOptions(),
+		container.VolumeOptions(),
+		container.DeviceOptions(),
+		container.VolumesFromOptions(uuid),
+		container.NameOption(),
+		container.WorkingDirectoryOption(),
+		container.MemoryLimitOption(),
+		container.CPUSharesOption(),
+		container.NetworkModeOption(),
+		s.EnvOptions(),
+		container.EntryPointOption(),
+		container.ImageOption(),
+		s.Executable(),
+	}
+	var cmdLine []string
+	for _, l := range allLines {
+		if l != "" {
+			cmdLine = append(cmdLine, l)
+		}
+	}
+	return strings.Join(cmdLine, " ")
+}
+
 // Submission describes a job passed down through the API.
 type Submission struct {
 	Description        string `json:"description"`

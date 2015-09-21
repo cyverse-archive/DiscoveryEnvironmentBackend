@@ -681,6 +681,16 @@ func TestExecutable(t *testing.T) {
 	_inittests(t, false)
 }
 
+func TestCommandLine(t *testing.T) {
+	s := inittests(t)
+	s.Steps[0].Environment = make(StepEnvironment) // Removed the environment to save my sanity. It's unordered.
+	actual := s.Steps[0].CommandLine("foo")
+	expected := `run --rm -e IPLANT_USER -e IPLANT_EXECUTION_ID -v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/ -v $(pwd):/work -v /host/path1:/container/path1 -v /container/path2 --device=/host/path1:/container/path1 --device=/host/path2:/container/path2 --volumes-from=foo-vf-prefix1 --volumes-from=foo-vf-prefix2 --name test-name -w /work --memory=2048M --cpu-shares=2048 --net=none --entrypoint=/bin/true gims.iplantcollaborative.org:5000/backwards-compat:test /usr/local3/bin/wc_tool-1.00/wc_wrapper.sh`
+	if actual != expected {
+		t.Errorf("CommandLine returned:\n\t%s\ninstead of:\n\t%s", actual, expected)
+	}
+}
+
 func TestStepConfig(t *testing.T) {
 	s := inittests(t)
 	config := s.Steps[0].Config
