@@ -54,6 +54,33 @@ type Container struct {
 	MemoryLimit string         `json:"memory_limit"`
 	Image       ContainerImage `json:"image"`
 	EntryPoint  string         `json:"entrypoint"`
+	WorkingDir  string         `json:"working_directory"`
+}
+
+// HasVolumes returns true if the container has volumes associated with it.
+func (c *Container) HasVolumes() bool {
+	return len(c.Volumes) > 0
+}
+
+// HasDevices returns true if the container has devices associated with it.
+func (c *Container) HasDevices() bool {
+	return len(c.Devices) > 0
+}
+
+// HasVolumesFrom returns true if the container has volumes from associated with
+// it.
+func (c *Container) HasVolumesFrom() bool {
+	return len(c.VolumesFrom) > 0
+}
+
+// WorkingDirectory returns the container's working directory. Defaults to
+// /de-app-work if the job submission didn't specify one. Use this function
+// rather than accessing the field directly.
+func (c *Container) WorkingDirectory() string {
+	if c.WorkingDir == "" {
+		return "/de-app-work"
+	}
+	return c.WorkingDir
 }
 
 // StepComponent is where the settings for a tool in a job step are located.

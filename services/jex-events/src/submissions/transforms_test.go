@@ -352,6 +352,29 @@ func TestStepContainerVolumesFrom3(t *testing.T) {
 	}
 }
 
+func TestStepContainerVolumes(t *testing.T) {
+	s := inittests(t)
+	vols := s.Steps[0].Component.Container.Volumes
+	volslen := len(vols)
+	if volslen != 2 {
+		t.Errorf("The number of volumes was %d when it should have been 2", volslen)
+	}
+	vol := vols[0]
+	if vol.HostPath != "/host/path1" {
+		t.Errorf("The volume host path was set to '%s' instead of '/host/path1'", vol.HostPath)
+	}
+	if vol.ContainerPath != "/container/path1" {
+		t.Errorf("The volume container path was set to '%s' instead of '/container/path1'", vol.ContainerPath)
+	}
+	vol = vols[1]
+	if vol.HostPath != "/host/path2" {
+		t.Errorf("The volume host path was set to '%s' instead of '/host/path2'", vol.HostPath)
+	}
+	if vol.ContainerPath != "/container/path2" {
+		t.Errorf("The volume container path was set to '%s' instead of '/container/path2'", vol.ContainerPath)
+	}
+}
+
 func TestStepEnvironmentLength(t *testing.T) {
 	s := inittests(t)
 	env := s.Steps[0].Environment
