@@ -139,7 +139,7 @@ type Submission struct {
 	IRODSBase          string          `json:"irods_base"`
 	SubmissionDate     string          `json:"submission_date"`
 	CreateOutputSubdir bool            `json:"create_output_subdir"`
-	OutputDir          string          `json:"output_dir"`
+	OutputDir          string          `json:"output_dir"` //the value parsed out of the JSON. Use OutputDirectory() instead.
 	DataContainers     []DataContainer `json:"data_containers"`
 	Steps              []Step          `json:"steps"`
 	RequestType        string          `json:"request_type"`
@@ -218,45 +218,48 @@ func (s *Submission) Sanitize() {
 	s.Name = sanitize(s.Name)
 }
 
-// Dirname creates a directory name for an analysis. Used when the submission
+// DirectoryName creates a directory name for an analysis. Used when the submission
 // doesn't specify an output directory.  Some types of jobs, for example
 // Foundational API jobs, include a timestamp in the job name, so a timestamp
 // will not be appended to the directory name in those cases.
-func (s *Submission) Dirname() string {
+func (s *Submission) DirectoryName() string {
 	if validName.MatchString(s.Name) {
 		return s.Name
 	}
 	return fmt.Sprintf("%s-%s", s.Name, s.NowDate)
 }
 
-// WorkingDir returns the path to the working directory for an analysis. This
+// WorkingDirectory returns the path to the working directory for an analysis. This
 // value is computed based on values inside the submission, which is why it
 // isn't a field in the Submission struct.
-func (s *Submission) WorkingDir() string {
-	return fmt.Sprintf("%s/", path.Join(s.NFSBase, s.Username, s.Dirname()))
+func (s *Submission) WorkingDirectory() string {
+	return fmt.Sprintf("%s/", path.Join(s.NFSBase, s.Username, s.DirectoryName()))
 }
 
-// CondorLogDir returns the path to the directory containing condor logs on the
+// CondorLogDirectory returns the path to the directory containing condor logs on the
 // submission node. This a computed value, so it isn't in the struct.
-func (s *Submission) CondorLogDir() string {
-	return fmt.Sprintf("%s/", path.Join(cfg.CondorLogPath, s.Username, s.Dirname()))
+func (s *Submission) CondorLogDirectory() string {
+	return fmt.Sprintf("%s/", path.Join(cfg.CondorLogPath, s.Username, s.DirectoryName()))
 }
 
 // IRODSConfig returns the path to iRODS config inside the working directory.
 func (s *Submission) IRODSConfig() string {
-	return path.Join(s.WorkingDir(), "logs", "irods-config")
+	return path.Join(s.WorkingDirectory(), "logs", "irods-config")
 }
 
 // OutputDirectory returns the path to the output directory in iRODS. It's
-// computed, which is why it isn't in the struct.
+// computed, which is why it isn't in the struct. Use this instead of directly
+// accessing the OutputDir field.
 func (s *Submission) OutputDirectory() string {
 	if s.OutputDir == "" {
-		return path.Join(s.IRODSBase, s.Username, "analyses", s.Dirname())
+		return path.Join(s.IRODSBase, s.Username, "analyses", s.DirectoryName())
 	} else if s.OutputDir != "" && s.CreateOutputSubdir {
-		return path.Join(s.OutputDir, s.Dirname())
+		return path.Join(s.OutputDir, s.DirectoryName())
 	} else if s.OutputDir != "" && !s.CreateOutputSubdir {
 		return strings.TrimSuffix(s.OutputDir, "/")
 	}
 	//probably won't ever reach this, but just in case...
-	return path.Join(s.IRODSBase, s.Username, "analyses", s.Dirname())
+	return path.Join(s.IRODSBase, s.Username, "analyses", s.DirectoryName())
 }
+
+// LogDirectory

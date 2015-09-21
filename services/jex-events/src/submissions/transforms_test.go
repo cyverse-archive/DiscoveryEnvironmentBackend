@@ -545,7 +545,7 @@ func TestDirname(t *testing.T) {
 	s := _inittests(t, false)
 	s.NowDate = time.Now().Format(nowfmt)
 	expected := fmt.Sprintf("%s-%s", s.Name, s.NowDate)
-	actual := s.Dirname()
+	actual := s.DirectoryName()
 	if actual != expected {
 		t.Errorf("Dirname() returned '%s' when it should have returned '%s'", actual, expected)
 	}
@@ -554,8 +554,8 @@ func TestDirname(t *testing.T) {
 func TestWorkingDir(t *testing.T) {
 	s := _inittests(t, false)
 	s.NowDate = time.Now().Format(nowfmt)
-	expected := fmt.Sprintf("%s/", path.Join(s.NFSBase, s.Username, s.Dirname()))
-	actual := s.WorkingDir()
+	expected := fmt.Sprintf("%s/", path.Join(s.NFSBase, s.Username, s.DirectoryName()))
+	actual := s.WorkingDirectory()
 	if actual != expected {
 		t.Errorf("WorkingDir() returned '%s' when it should have returned '%s'", actual, expected)
 	}
@@ -564,8 +564,8 @@ func TestWorkingDir(t *testing.T) {
 func TestCondorLogDir(t *testing.T) {
 	s := _inittests(t, false)
 	s.NowDate = time.Now().Format(nowfmt)
-	expected := fmt.Sprintf("%s/", path.Join(c.CondorLogPath, s.Username, s.Dirname()))
-	actual := s.CondorLogDir()
+	expected := fmt.Sprintf("%s/", path.Join(c.CondorLogPath, s.Username, s.DirectoryName()))
+	actual := s.CondorLogDirectory()
 	if actual != expected {
 		t.Errorf("CondorLogDir() returned '%s' when it should have returned '%s'", actual, expected)
 	}
@@ -574,7 +574,7 @@ func TestCondorLogDir(t *testing.T) {
 func TestIRODSConfig(t *testing.T) {
 	s := _inittests(t, false)
 	s.NowDate = time.Now().Format(nowfmt)
-	expected := path.Join(s.WorkingDir(), "logs", "irods-config")
+	expected := path.Join(s.WorkingDirectory(), "logs", "irods-config")
 	actual := s.IRODSConfig()
 	if actual != expected {
 		t.Errorf("IRODSConfig() returned '%s' when it should have returned '%s'", actual, expected)
@@ -584,7 +584,7 @@ func TestIRODSConfig(t *testing.T) {
 func TestOutputDirectory1(t *testing.T) {
 	s := _inittests(t, false)
 	s.OutputDir = ""
-	expected := path.Join(s.IRODSBase, s.Username, "analyses", s.Dirname())
+	expected := path.Join(s.IRODSBase, s.Username, "analyses", s.DirectoryName())
 	actual := s.OutputDirectory()
 	if actual != expected {
 		t.Errorf("OutputDirectory() returned '%s' when it should have returned '%s'", actual, expected)
@@ -593,7 +593,7 @@ func TestOutputDirectory1(t *testing.T) {
 
 func TestOutputDirectory2(t *testing.T) {
 	s := _inittests(t, false)
-	expected := path.Join(s.OutputDir, s.Dirname())
+	expected := path.Join(s.OutputDir, s.DirectoryName())
 	actual := s.OutputDirectory()
 	if actual != expected {
 		t.Errorf("OutputDirectory() returned '%s' when it should have returned '%s'", actual, expected)
