@@ -132,6 +132,42 @@ func (c *Container) VolumesFromOptions(prefix string) string {
 	return strings.TrimSpace(buffer.String())
 }
 
+// NameOption returns a string containing the docker command-line option
+// that sets the container name.
+func (c *Container) NameOption() string {
+	if c.Name != "" {
+		return fmt.Sprintf("--name %s", c.Name)
+	}
+	return ""
+}
+
+// NetworkModeOption returns a string containing the docker command-line option
+// that sets the container network mode.
+func (c *Container) NetworkModeOption() string {
+	if c.NetworkMode != "" {
+		return fmt.Sprintf("--net=%s", c.NetworkMode)
+	}
+	return "--net==bridge"
+}
+
+// CPUSharesOption returns a string containing the docker command-line option
+// that sets the number of cpu shares the container is allotted.
+func (c *Container) CPUSharesOption() string {
+	if c.CPUShares != "" {
+		return fmt.Sprintf("--cpu-shares=%s", c.CPUShares)
+	}
+	return ""
+}
+
+// MemoryLimitOption returns a string containing the docker command-line option
+// that sets the maximum amount of host memory that the container may use.
+func (c *Container) MemoryLimitOption() string {
+	if c.MemoryLimit != "" {
+		return fmt.Sprintf("--memory=%s", c.MemoryLimit)
+	}
+	return ""
+}
+
 // StepComponent is where the settings for a tool in a job step are located.
 type StepComponent struct {
 	Container   Container `json:"container"`

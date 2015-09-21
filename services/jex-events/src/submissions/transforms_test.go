@@ -454,6 +454,42 @@ func TestVolumesFromOptions(t *testing.T) {
 	}
 }
 
+func TestNameOption(t *testing.T) {
+	s := inittests(t)
+	actual := s.Steps[0].Component.Container.NameOption()
+	expected := "--name test-name"
+	if actual != expected {
+		t.Errorf("The container name was '%s' when it should have been '%s'", actual, expected)
+	}
+}
+
+func TestNetworkModeOption(t *testing.T) {
+	s := inittests(t)
+	actual := s.Steps[0].Component.Container.NetworkModeOption()
+	expected := "--net=none"
+	if actual != expected {
+		t.Errorf("The container network mode was '%s' instead of '%s'", actual, expected)
+	}
+}
+
+func TestCPUSharesOption(t *testing.T) {
+	s := inittests(t)
+	actual := s.Steps[0].Component.Container.CPUSharesOption()
+	expected := "--cpu-shares=2048"
+	if actual != expected {
+		t.Errorf("The container cpu shares was '%s' instead of '%s'", actual, expected)
+	}
+}
+
+func TestMemoryLimitOption(t *testing.T) {
+	s := inittests(t)
+	actual := s.Steps[0].Component.Container.MemoryLimitOption()
+	expected := "--memory=2048M"
+	if actual != expected {
+		t.Errorf("The container memory limit was '%s' instead of '%s'", actual, expected)
+	}
+}
+
 func TestDevices(t *testing.T) {
 	s := inittests(t)
 	numdevices := len(s.Steps[0].Component.Container.Devices)
