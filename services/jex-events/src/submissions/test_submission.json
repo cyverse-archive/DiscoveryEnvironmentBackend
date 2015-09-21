@@ -12,6 +12,7 @@
                     "network_mode" : "none",
                     "cpu_shares" : "2048",
                     "memory_limit" : "2048M",
+                    "entrypoint" : "/bin/true",
                     "id":"16fd2a16-3ac6-11e5-a25d-2fa4b0893ef1",
                     "image":{
                         "id":"fc210a84-f7cd-4067-939c-a68ec3e3bd2b",

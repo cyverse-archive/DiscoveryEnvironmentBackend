@@ -199,6 +199,21 @@ func (c *Container) Tag() string {
 	return ""
 }
 
+// ImageOption returns a string with the docker command-line option that sets
+// the container image in it.
+func (c *Container) ImageOption() string {
+	return fmt.Sprintf("%s%s", c.Image.Name, c.Tag())
+}
+
+// EntryPointOption returns a docker command-line option that sets the
+// entrypoint.
+func (c *Container) EntryPointOption() string {
+	if c.EntryPoint != "" {
+		return fmt.Sprintf("--entrypoint=%s", c.EntryPoint)
+	}
+	return ""
+}
+
 // StepComponent is where the settings for a tool in a job step are located.
 type StepComponent struct {
 	Container   Container `json:"container"`
