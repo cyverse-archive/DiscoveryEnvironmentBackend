@@ -8,6 +8,7 @@ import (
 	"logcabin"
 	"os"
 	"path"
+	"strings"
 	"testing"
 	"time"
 )
@@ -577,5 +578,34 @@ func TestIRODSConfig(t *testing.T) {
 	actual := s.IRODSConfig()
 	if actual != expected {
 		t.Errorf("IRODSConfig() returned '%s' when it should have returned '%s'", actual, expected)
+	}
+}
+
+func TestOutputDirectory1(t *testing.T) {
+	s := _inittests(t, false)
+	s.OutputDir = ""
+	expected := path.Join(s.IRODSBase, s.Username, "analyses", s.Dirname())
+	actual := s.OutputDirectory()
+	if actual != expected {
+		t.Errorf("OutputDirectory() returned '%s' when it should have returned '%s'", actual, expected)
+	}
+}
+
+func TestOutputDirectory2(t *testing.T) {
+	s := _inittests(t, false)
+	expected := path.Join(s.OutputDir, s.Dirname())
+	actual := s.OutputDirectory()
+	if actual != expected {
+		t.Errorf("OutputDirectory() returned '%s' when it should have returned '%s'", actual, expected)
+	}
+}
+
+func TestOutputDirectory3(t *testing.T) {
+	s := _inittests(t, false)
+	s.CreateOutputSubdir = false
+	expected := strings.TrimSuffix(s.OutputDir, "/")
+	actual := s.OutputDirectory()
+	if actual != expected {
+		t.Errorf("OutputDirectory() returned '%s' when it should have returned '%s'", actual, expected)
 	}
 }

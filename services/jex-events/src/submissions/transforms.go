@@ -257,5 +257,6 @@ func (s *Submission) OutputDirectory() string {
 	} else if s.OutputDir != "" && !s.CreateOutputSubdir {
 		return strings.TrimSuffix(s.OutputDir, "/")
 	}
+	//probably won't ever reach this, but just in case...
 	return path.Join(s.IRODSBase, s.Username, "analyses", s.Dirname())
 }
