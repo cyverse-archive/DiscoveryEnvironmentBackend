@@ -287,6 +287,24 @@ func (s *Step) EnvOptions() string {
 	return strings.TrimSpace(buffer.String())
 }
 
+// IsBackwardsCompatible returns true if the job submission uses the container
+// image(s) put together to maintain compatibility with non-dockerized versions
+// of the DE.
+func (s *Step) IsBackwardsCompatible() bool {
+	img := s.Component.Container.Image.Name
+	return strings.HasPrefix(img, "discoenv/backwards-compat") ||
+		strings.HasPrefix(img, "gims.iplantcollaborative.org:5000/backwards-compat")
+}
+
+// BackwardsCompatibleOptions returns a string with the options that are needed
+// for the image that provides backwards compatibility with pre-Docker tools.
+func (s *Step) BackwardsCompatibleOptions() string {
+	if s.IsBackwardsCompatible() {
+		return "-v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/"
+	}
+	return ""
+}
+
 // Submission describes a job passed down through the API.
 type Submission struct {
 	Description        string `json:"description"`
