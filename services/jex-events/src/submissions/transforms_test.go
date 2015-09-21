@@ -613,6 +613,28 @@ func TestStepEnvironment2(t *testing.T) {
 	}
 }
 
+func TestEnvOptions(t *testing.T) {
+	s := inittests(t)
+	actual := s.Steps[0].EnvOptions()
+	expected := "--env=\"food=banana\" --env=\"foo=bar\""
+	expected2 := "--env=\"foo=bar\" --env=\"food=banana\""
+	if actual != expected && actual != expected2 {
+		if actual != expected {
+			t.Errorf("EnvOptions() returned '%s' instead of '%s'", actual, expected)
+		}
+		if actual != expected2 {
+			t.Errorf("EnvOptions() returned '%s' instead of '%s'", actual, expected2)
+		}
+	}
+	s.Steps[0].Environment = make(StepEnvironment)
+	actual = s.Steps[0].EnvOptions()
+	expected = ""
+	if actual != expected {
+		t.Errorf("EnvOptions() returned '%s' instead of '%s'", actual, expected)
+	}
+	_inittests(t, false)
+}
+
 func TestStepConfig(t *testing.T) {
 	s := inittests(t)
 	config := s.Steps[0].Config

@@ -277,6 +277,16 @@ type Step struct {
 	Output      []StepOutput    `json:"output"`
 }
 
+// EnvOptions returns a string containing the docker command-line options
+// that set the environment variables listed in the Environment field.
+func (s *Step) EnvOptions() string {
+	var buffer bytes.Buffer
+	for k, v := range s.Environment {
+		buffer.WriteString(fmt.Sprintf("--env=\"%s=%s\" ", k, v))
+	}
+	return strings.TrimSpace(buffer.String())
+}
+
 // Submission describes a job passed down through the API.
 type Submission struct {
 	Description        string `json:"description"`
