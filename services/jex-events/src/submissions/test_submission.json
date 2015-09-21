@@ -14,7 +14,27 @@
                         "url":"https://registry.hub.docker.com/u/discoenv/backwards-compat",
                         "tag":"latest",
                         "name":"gims.iplantcollaborative.org:5000/backwards-compat"
-                    }
+                    },
+                    "container_volumes_from" : [
+                      {
+                        "name":"vf-name1",
+                        "name_prefix":"vf-prefix1",
+                        "tag":"vf-tag1",
+                        "url":"vf-url1",
+                        "read_only":true,
+                        "host_path":"/host/path1",
+                        "container_path":"/container/path1"
+                      },
+                      {
+                        "name":"vf-name2",
+                        "name_prefix":"vf-prefix2",
+                        "tag":"vf-tag2",
+                        "url":"vf-url2",
+                        "read_only":true,
+                        "host_path":"/host/path2",
+                        "container_path":"/container/path2"
+                      }
+                    ]
                 },
                 "type":"executable",
                 "name":"wc_wrapper.sh",

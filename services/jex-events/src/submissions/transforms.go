@@ -28,6 +28,7 @@ type VolumesFrom struct {
 	Tag           string `json:"tag"`
 	Name          string `json:"name"`
 	NamePrefix    string `json:"name_prefix"`
+	URL           string `json:"url"`
 	HostPath      string `json:"host_path"`
 	ContainerPath string `json:"container_path"`
 	ReadOnly      bool   `json:"read_only"`
@@ -43,22 +44,16 @@ type ContainerImage struct {
 
 // Container describes a container used as part of a DE job.
 type Container struct {
-	ID           string         `json:"id"`
-	Volumes      []Volume       `json:"container_volumes"`
-	Devices      []Device       `json:"container_devices"`
-	VolumesFroms []VolumesFrom  `json:"container_volumes_from"`
-	Name         string         `json:"name"`
-	NetworkMode  string         `json:"network_mode"`
-	CPUShares    string         `json:"cpu_shares"`
-	MemoryLimit  string         `json:"memory_limit"`
-	Image        ContainerImage `json:"image"`
-	EntryPoint   string         `json:"entrypoint"`
-}
-
-// DataContainer describes a container that is used by at least one step in an
-// analysis. Has the same format as a VolumesFrom.
-type DataContainer struct {
-	VolumesFrom
+	ID          string         `json:"id"`
+	Volumes     []Volume       `json:"container_volumes"`
+	Devices     []Device       `json:"container_devices"`
+	VolumesFrom []VolumesFrom  `json:"container_volumes_from"`
+	Name        string         `json:"name"`
+	NetworkMode string         `json:"network_mode"`
+	CPUShares   string         `json:"cpu_shares"`
+	MemoryLimit string         `json:"memory_limit"`
+	Image       ContainerImage `json:"image"`
+	EntryPoint  string         `json:"entrypoint"`
 }
 
 // StepComponent is where the settings for a tool in a job step are located.
@@ -126,28 +121,27 @@ type Step struct {
 
 // Submission describes a job passed down through the API.
 type Submission struct {
-	Description        string          `json:"description"`
-	Email              string          `json:"email"`
-	Name               string          `json:"name"`
-	Username           string          `json:"username"`
-	UUID               string          `json:"uuid"`
-	AppID              string          `json:"app_id"`
-	NowDate            string          `json:"now_date"`
-	RunOnNFS           bool            `json:"run-on-nfs"`
-	Type               string          `json:"type"`
-	NFSBase            string          `json:"nfs_base"`
-	IRODSBase          string          `json:"irods_base"`
-	SubmissionDate     string          `json:"submission_date"`
-	CreateOutputSubdir bool            `json:"create_output_subdir"`
-	OutputDir          string          `json:"output_dir"` //the value parsed out of the JSON. Use OutputDirectory() instead.
-	DataContainers     []DataContainer `json:"data_containers"`
-	Steps              []Step          `json:"steps"`
-	RequestType        string          `json:"request_type"`
-	AppDescription     string          `json:"app_description"`
-	WikiURL            string          `json:"wiki_url"`
-	Notify             bool            `json:"notify"`
-	ExecutionTarget    string          `json:"execution_target"`
-	AppName            string          `json:"app_name"`
+	Description        string `json:"description"`
+	Email              string `json:"email"`
+	Name               string `json:"name"`
+	Username           string `json:"username"`
+	UUID               string `json:"uuid"`
+	AppID              string `json:"app_id"`
+	NowDate            string `json:"now_date"`
+	RunOnNFS           bool   `json:"run-on-nfs"`
+	Type               string `json:"type"`
+	NFSBase            string `json:"nfs_base"`
+	IRODSBase          string `json:"irods_base"`
+	SubmissionDate     string `json:"submission_date"`
+	CreateOutputSubdir bool   `json:"create_output_subdir"`
+	OutputDir          string `json:"output_dir"` //the value parsed out of the JSON. Use OutputDirectory() instead.
+	Steps              []Step `json:"steps"`
+	RequestType        string `json:"request_type"`
+	AppDescription     string `json:"app_description"`
+	WikiURL            string `json:"wiki_url"`
+	Notify             bool   `json:"notify"`
+	ExecutionTarget    string `json:"execution_target"`
+	AppName            string `json:"app_name"`
 }
 
 var (
@@ -269,4 +263,14 @@ func (s *Submission) OutputDirectory() string {
 	return path.Join(s.IRODSBase, s.Username, "analyses", s.DirectoryName())
 }
 
-// LogDirectory
+// DataContainers returns a list of VolumesFrom that describe the data
+// containers associated with the job submission.
+func (s *Submission) DataContainers() []VolumesFrom {
+	var vfs []VolumesFrom
+	for _, step := range s.Steps {
+		for _, vf := range step.Component.Container.VolumesFrom {
+			vfs = append(vfs, vf)
+		}
+	}
+	return vfs
+}

@@ -291,6 +291,67 @@ func TestStepContainerImageName(t *testing.T) {
 	}
 }
 
+func TestStepContainerVolumesFrom1(t *testing.T) {
+	s := inittests(t)
+	vfs := s.Steps[0].Component.Container.VolumesFrom
+	vfsLength := len(vfs)
+	if vfsLength != 2 {
+		t.Errorf("The number of VolumesFrom entries was '%d' when it should have been '2'", vfsLength)
+	}
+}
+
+func TestStepContainerVolumesFrom2(t *testing.T) {
+	s := inittests(t)
+	vfs := s.Steps[0].Component.Container.VolumesFrom[0]
+	if vfs.Name != "vf-name1" {
+		t.Errorf("The VolumesFrom name was '%s' when it should have been 'vf-name1'", vfs.Name)
+	}
+	if vfs.NamePrefix != "vf-prefix1" {
+		t.Errorf("The VolumesFrom prefix was '%s' when it should have been 'vf-prefix1'", vfs.NamePrefix)
+	}
+	if vfs.Tag != "vf-tag1" {
+		t.Errorf("The VolumesFrom tag was '%s' when it should have been 'vf-tag1'", vfs.Tag)
+	}
+	if vfs.URL != "vf-url1" {
+		t.Errorf("The VolumesFrom url was '%s' when it should have been 'vf-url1'", vfs.URL)
+	}
+	if vfs.HostPath != "/host/path1" {
+		t.Errorf("The VolumesFrom host path was '%s' when it should have been '/host/path1'", vfs.HostPath)
+	}
+	if vfs.ContainerPath != "/container/path1" {
+		t.Errorf("The VolumesFrom container path was '%s' when it should have been '/container/path1'", vfs.ContainerPath)
+	}
+	if !vfs.ReadOnly {
+		t.Error("The VolumesFrom read-only field was false when it should have been true.")
+	}
+}
+
+func TestStepContainerVolumesFrom3(t *testing.T) {
+	s := inittests(t)
+	vfs := s.Steps[0].Component.Container.VolumesFrom[1]
+	if vfs.Name != "vf-name2" {
+		t.Errorf("The VolumesFrom name was '%s' when it should have been 'vf-name2'", vfs.Name)
+	}
+	if vfs.NamePrefix != "vf-prefix2" {
+		t.Errorf("The VolumesFrom prefix was '%s' when it should have been 'vf-prefix2'", vfs.NamePrefix)
+	}
+	if vfs.Tag != "vf-tag2" {
+		t.Errorf("The VolumesFrom tag was '%s' when it should have been 'vf-tag2'", vfs.Tag)
+	}
+	if vfs.URL != "vf-url2" {
+		t.Errorf("The VolumesFrom url was '%s' when it should have been 'vf-url2'", vfs.URL)
+	}
+	if vfs.HostPath != "/host/path2" {
+		t.Errorf("The VolumesFrom host path was '%s' when it should have been '/host/path2'", vfs.HostPath)
+	}
+	if vfs.ContainerPath != "/container/path2" {
+		t.Errorf("The VolumesFrom container path was '%s' when it should have been '/container/path2'", vfs.ContainerPath)
+	}
+	if !vfs.ReadOnly {
+		t.Error("The VolumesFrom read-only field was false when it should have been true.")
+	}
+}
+
 func TestStepEnvironmentLength(t *testing.T) {
 	s := inittests(t)
 	env := s.Steps[0].Environment
