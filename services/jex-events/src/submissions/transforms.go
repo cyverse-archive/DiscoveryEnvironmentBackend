@@ -120,6 +120,18 @@ func (c *Container) DeviceOptions() string {
 	return strings.TrimSpace(buffer.String())
 }
 
+// VolumesFromOptions returns a string containing the docker command-line options
+// that set all of the defined volumes-from.
+func (c *Container) VolumesFromOptions(prefix string) string {
+	var buffer bytes.Buffer
+	if c.HasVolumesFrom() {
+		for _, vf := range c.VolumesFrom {
+			buffer.WriteString(fmt.Sprintf("--volumes-from=%s-%s ", prefix, vf.NamePrefix))
+		}
+	}
+	return strings.TrimSpace(buffer.String())
+}
+
 // StepComponent is where the settings for a tool in a job step are located.
 type StepComponent struct {
 	Container   Container `json:"container"`

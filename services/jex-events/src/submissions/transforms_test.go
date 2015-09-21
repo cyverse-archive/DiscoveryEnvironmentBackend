@@ -445,6 +445,15 @@ func TestVolumeOptions(t *testing.T) {
 	}
 }
 
+func TestVolumesFromOptions(t *testing.T) {
+	s := inittests(t)
+	actual := s.Steps[0].Component.Container.VolumesFromOptions("test")
+	expected := "--volumes-from=test-vf-prefix1 --volumes-from=test-vf-prefix2"
+	if actual != expected {
+		t.Errorf("The volumes-from options were:\n\t%s\ninstead of:\n\t%s", actual, expected)
+	}
+}
+
 func TestDevices(t *testing.T) {
 	s := inittests(t)
 	numdevices := len(s.Steps[0].Component.Container.Devices)
