@@ -44,6 +44,16 @@
                         "host_path" : "/host/path2",
                         "container_path" : "/container/path2"
                       }
+                    ],
+                    "container_devices" : [
+                      {
+                        "host_path" : "/host/path1",
+                        "container_path" : "/container/path1"
+                      },
+                      {
+                        "host_path" : "/host/path2",
+                        "container_path" : "/container/path2"
+                      }
                     ]
                 },
                 "type":"executable",
