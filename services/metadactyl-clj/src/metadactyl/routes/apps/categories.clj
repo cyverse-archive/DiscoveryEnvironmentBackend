@@ -1,8 +1,8 @@
 (ns metadactyl.routes.apps.categories
-  (:use [metadactyl.routes.domain.app.category]
+  (:use [common-swagger-api.schema]
+        [metadactyl.routes.domain.app.category]
         [metadactyl.routes.params]
-        [metadactyl.user :only [current-user]]
-        [compojure.api.sweet])
+        [metadactyl.user :only [current-user]])
   (:require [clojure-commons.error-codes :as ce]
             [metadactyl.service.apps :as apps]
             [metadactyl.util.coercions :as mc]
@@ -20,7 +20,7 @@
 
   (GET* "/:category-id" [:as {uri :uri}]
         :path-params [category-id :- AppCategoryIdPathParam]
-        :query [params SecuredPagingParamsEmailRequired]
+        :query [params AppListingPagingParams]
         :return AppCategoryAppListing
         :summary "List Apps in a Category"
         :description "This service lists all of the apps within an app category or any of its

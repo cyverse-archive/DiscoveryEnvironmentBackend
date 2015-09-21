@@ -1,5 +1,5 @@
 (ns metadata.routes.domain.comments
-  (:use [compojure.api.sweet :only [describe]]
+  (:use [common-swagger-api.schema :only [describe NonBlankString StandardUserQueryParams]]
         [metadata.routes.domain.common])
   (:require [schema.core :as s])
   (:import [java.util UUID]))
@@ -8,7 +8,7 @@
 (def CommentTextParam (describe NonBlankString "The text of the comment"))
 
 (s/defschema RetractCommentQueryParams
-  (assoc StandardQueryParams
+  (assoc StandardUserQueryParams
     :retracted (describe Boolean
                  "Whether to retract the comment (`true`) or readmit a retraction (`false`)")))
 

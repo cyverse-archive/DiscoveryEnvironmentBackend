@@ -64,7 +64,7 @@
     (valid/user-exists cm user)
     (valid/all-paths-exist cm paths)
     (valid/all-paths-readable cm user paths)
-    (filter #(not (nil? %)) (mapv (partial uuid-for-path cm user) paths))))
+    (remove nil? (mapv (partial uuid-for-path cm user) paths))))
 
 (defn ^Boolean uuid-accessible?
   "Indicates if a data item is readable by a given user.

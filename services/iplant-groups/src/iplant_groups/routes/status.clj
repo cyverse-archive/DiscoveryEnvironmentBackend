@@ -1,5 +1,5 @@
 (ns iplant_groups.routes.status
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [iplant_groups.routes.domain.status])
   (:require [clojure-commons.service :as commons-service]
             [iplant_groups.util.config :as config]

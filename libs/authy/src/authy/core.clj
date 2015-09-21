@@ -52,7 +52,7 @@
                      :socket-timeout timeout})))
 
 (defn get-access-token-for-credentials
-  [oauth-info username password & {:keys [timeout] or {timeout 5000}}]
+  [oauth-info username password & {:keys [timeout] :or {timeout 5000}}]
   (->> (credentials-token-request oauth-info username password timeout)
        (format-token-info)
        (merge oauth-info)

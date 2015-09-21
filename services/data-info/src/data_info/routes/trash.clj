@@ -1,5 +1,5 @@
 (ns data-info.routes.trash
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [data-info.routes.domain.common]
         [data-info.routes.domain.trash])
   (:require [data-info.services.trash :as trash]
@@ -8,7 +8,7 @@
 (defroutes* trash
     (DELETE* "/trash" [:as {uri :uri}]
       :tags ["data"]
-      :query [params SecuredQueryParamsRequired]
+      :query [params StandardUserQueryParams]
       :return Trash
       :summary "Empty Trash"
       :description (str
@@ -17,7 +17,7 @@
 
     (POST* "/deleter" [:as {uri :uri}]
       :tags ["bulk"]
-      :query [params SecuredQueryParamsRequired]
+      :query [params StandardUserQueryParams]
       :body [body (describe Paths "The paths to move to the trash")]
       :return Paths
       :summary "Delete Data Items"
@@ -32,7 +32,7 @@
       :tags ["data-by-id"]
 
       (DELETE* "/" [:as {uri :uri}]
-        :query [params SecuredQueryParamsRequired]
+        :query [params StandardUserQueryParams]
         :return Paths
         :summary "Delete Data Item"
         :description (str
@@ -42,7 +42,7 @@
         (svc/trap uri trash/do-delete-uuid params data-id))
 
       (DELETE* "/children" [:as {uri :uri}]
-        :query [params SecuredQueryParamsRequired]
+        :query [params StandardUserQueryParams]
         :return Paths
         :summary "Delete Data Item Contents"
         :description (str

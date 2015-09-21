@@ -204,15 +204,10 @@
              :path path})))
 
 
-(defn- ownage?
-  [cm user path]
-  (perm/owns? cm user path))
-
-
 (defn user-owns-paths
   [cm user paths]
-  (let [belongs-to? (partial ownage? cm user)]
-    (when-not (every? #(belongs-to? %) paths)
+  (let [belongs-to? (partial perm/owns? cm user)]
+    (when-not (every? belongs-to? paths)
       (throw+ {:error_code error/ERR_NOT_OWNER
                :user user
                :paths (filterv #(not (belongs-to? %)) paths)}))))

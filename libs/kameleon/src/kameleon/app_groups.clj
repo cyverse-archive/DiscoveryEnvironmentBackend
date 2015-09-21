@@ -1,10 +1,11 @@
 (ns kameleon.app-groups
   (:use [kameleon.entities]
         [kameleon.queries :only [add-agave-pipeline-where-clause]]
-        [korma.core]
+        [korma.core :exclude [update]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
-  (:require [kameleon.uuids :refer [uuid]]))
+  (:require [kameleon.uuids :refer [uuid]]
+            [korma.core :as sql]))
 
 (defn get-app-group-hierarchy
   "Gets the app group hierarchy rooted at the node with the given identifier."
@@ -90,7 +91,7 @@
 (defn update-app-category
   "Updates an app category's name in the database."
   [category-id name]
-  (update app_categories (set-fields {:name name}) (where {:id category-id})))
+  (sql/update app_categories (set-fields {:name name}) (where {:id category-id})))
 
 (defn decategorize-category
   "Removes a subcategory from all parent categories in the database."
@@ -100,7 +101,7 @@
 (defn set-root-app-group
   "Sets the root app group for a workspace."
   [workspace-id root-group-id]
-  (update workspace
+  (sql/update workspace
           (set-fields {:root_category_id root-group-id})
           (where      {:id workspace-id})))
 

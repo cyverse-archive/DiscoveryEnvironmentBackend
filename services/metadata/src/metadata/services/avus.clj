@@ -5,7 +5,6 @@
   (:require [clojure.tools.logging :as log]
             [clojure-commons.assertions :as assertions]
             [clojure-commons.error-codes :as error-codes]
-            [medley.core :as medley]
             [metadata.persistence.avu :as persistence]
             [metadata.services.templates :as templates]))
 
@@ -109,7 +108,7 @@
   [data-id]
   (let [templates (:templates (persistence/metadata-template-list data-id))
         format-avu-copies (partial map #(select-keys % [:attr :value :unit]))]
-    (map #(medley/update % :avus format-avu-copies) templates)))
+    (map #(update % :avus format-avu-copies) templates)))
 
 (defn copy-metadata-template-avus
   "Copies Metadata Template AVUs from the data item with data-id to dest-items. When the 'force?'

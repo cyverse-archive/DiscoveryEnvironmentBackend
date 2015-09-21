@@ -1,5 +1,5 @@
 (ns metadata.routes.favorites
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [metadata.routes.domain.common]
         [metadata.routes.domain.favorites])
   (:require [metadata.services.favorites :as fave]
@@ -18,7 +18,7 @@
 
     (DELETE* "/filesystem/:data-id" [:as {uri :uri}]
       :path-params [data-id :- TargetIdPathParam]
-      :query [{:keys [user]} StandardQueryParams]
+      :query [{:keys [user]} StandardUserQueryParams]
       :summary "Unmark a Data Resource as Favorite"
       :description "This endpoint removes a file or folder from the authenticated user's favorites."
       (service/trap uri fave/remove-favorite user data-id))
@@ -31,7 +31,7 @@
      (service/trap uri fave/add-favorite user data-id data-type))
 
    (POST* "/filter" [:as {uri :uri}]
-     :query [{:keys [user]} StandardQueryParams]
+     :query [{:keys [user]} StandardUserQueryParams]
      :body [body (describe DataIdList "The UUIDs for the files and folders to be filtered.")]
      :return
      (describe DataIdList

@@ -1,5 +1,5 @@
 (ns data-info.routes.exists
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [data-info.routes.domain.common]
         [data-info.routes.domain.exists])
   (:require [data-info.services.exists :as exists]
@@ -13,7 +13,7 @@
     :tags ["bulk"]
 
     (POST* "/" [:as {uri :uri}]
-      :query [params SecuredQueryParamsRequired]
+      :query [params StandardUserQueryParams]
       :body [body (describe Paths "The paths to check for existence.")]
       :return (s/either ExistenceResponse ExistenceInfo)
       :summary "File and Folder Existence"

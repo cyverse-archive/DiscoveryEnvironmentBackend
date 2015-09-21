@@ -93,6 +93,18 @@
   :language :clojure
   :archive  false}
 
+ "common-swagger-api"
+ {:type     :library
+  :type-num 15
+  :path     "libs/common-swagger-api"
+  :build    :lein
+  :install  :lein
+  :tarball? false
+  :uberjar? false
+  :install? true
+  :language :clojure
+  :archive? false}
+
  "kameleon"
  {:type     :library
   :type-num 6
@@ -195,6 +207,16 @@
  "iplant-email"
  {:type     :service
   :path     "services/iplant-email"
+  :build    :lein
+  :tarball? false
+  :uberjar? true
+  :install? false
+  :language :clojure
+  :archive? true}
+
+ "iplant-groups"
+ {:type     :service
+  :path     "services/iplant-groups"
   :build    :lein
   :tarball? false
   :uberjar? true

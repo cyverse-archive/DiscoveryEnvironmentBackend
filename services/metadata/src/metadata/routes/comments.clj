@@ -1,5 +1,5 @@
 (ns metadata.routes.comments
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [metadata.routes.domain.common]
         [metadata.routes.domain.comments])
   (:require [metadata.services.comments :as comments]
@@ -43,7 +43,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
     (DELETE* "/:data-id/comments/:comment-id" [:as {uri :uri}]
       :path-params [data-id :- TargetIdPathParam
                     comment-id :- CommentIdPathParam]
-      :query [{:keys [user]} StandardQueryParams]
+      :query [{:keys [user]} StandardUserQueryParams]
       :summary "Delete a Comment"
       :description
       "This endpoint allows an administrative user to delete a comment on a file or folder."
@@ -73,7 +73,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
 
     (POST* "/:app-id/comments" [user :as {body :body uri :uri}]
       :path-params [app-id :- TargetIdPathParam]
-      :query [{:keys [user]} StandardQueryParams]
+      :query [{:keys [user]} StandardUserQueryParams]
       :body [body (describe CommentRequest "The comment to add.")]
       :return CommentResponse
       :summary "Create a Comment"
@@ -98,7 +98,7 @@ This endpoint also allows a user to readmit a comment the user previously retrac
     (DELETE* "/:app-id/comments/:comment-id" [:as {uri :uri}]
       :path-params [app-id :- TargetIdPathParam
                     comment-id :- CommentIdPathParam]
-      :query [{:keys [user]} StandardQueryParams]
+      :query [{:keys [user]} StandardUserQueryParams]
       :summary "Delete an App Comment"
       :description "This endpoint allows an administrative user to delete a comment on an app."
       (service/trap uri comments/delete-app-comment app-id comment-id))

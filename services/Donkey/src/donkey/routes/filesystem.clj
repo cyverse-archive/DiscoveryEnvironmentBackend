@@ -138,6 +138,9 @@
    [#(and (config/filesystem-routes-enabled)
           (config/metadata-routes-enabled))]
 
+    (POST "/filesystem/metadata-csv-parser" [dest :as req]
+      (meta/parse-csv-metadata req))
+
    (POST "/filesystem/:data-id/metadata/copy" [data-id force :as req]
      (controller req meta/do-metadata-copy :params data-id force :body))
 

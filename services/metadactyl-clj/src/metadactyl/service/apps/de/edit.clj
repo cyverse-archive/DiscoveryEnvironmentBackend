@@ -1,6 +1,6 @@
 (ns metadactyl.service.apps.de.edit
   (:use [clojure.string :only [blank?]]
-        [korma.core]
+        [korma.core :exclude [update]]
         [korma.db :only [transaction]]
         [kameleon.app-groups :only [add-app-to-category get-app-subcategory-id]]
         [kameleon.core]

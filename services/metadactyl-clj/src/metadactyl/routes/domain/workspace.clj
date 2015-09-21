@@ -1,5 +1,5 @@
 (ns metadactyl.routes.domain.workspace
-  (:use [ring.swagger.schema :only [describe]]
+  (:use [common-swagger-api.schema :only [describe]]
         [schema.core :only [defschema]])
   (:import [java.util UUID]))
 

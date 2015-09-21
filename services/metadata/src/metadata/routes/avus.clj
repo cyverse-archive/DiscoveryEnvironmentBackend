@@ -1,5 +1,5 @@
 (ns metadata.routes.avus
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [metadata.routes.domain.common]
         [metadata.routes.domain.avus])
   (:require [metadata.services.avus :as avus]
@@ -56,7 +56,7 @@ given data item will be disaccociated with all other Metadata Templates."
     (DELETE* "/:template-id" [:as {uri :uri}]
       :path-params [data-id :- TargetIdPathParam
                     template-id :- TemplateIdPathParam]
-      :query [{:keys [user]} StandardQueryParams]
+      :query [{:keys [user]} StandardUserQueryParams]
       :summary "Remove all Metadata AVUs on a File/Folder"
       :description "Removes all AVUs associated with the given data item and Metadata Template."
       (service/trap uri avus/remove-metadata-template-avus user data-id template-id))
@@ -65,7 +65,7 @@ given data item will be disaccociated with all other Metadata Templates."
       :path-params [data-id :- TargetIdPathParam
                     template-id :- TemplateIdPathParam
                     avu-id :- AvuIdPathParam]
-      :query [{:keys [user]} StandardQueryParams]
+      :query [{:keys [user]} StandardUserQueryParams]
       :summary "Remove a Metadata AVU from a File/Folder"
       :description "Removes the AVU associated with the given ID, data item, and Metadata Template."
       (service/trap uri avus/remove-metadata-template-avu user data-id template-id avu-id))))

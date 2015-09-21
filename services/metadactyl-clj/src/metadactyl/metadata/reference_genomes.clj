@@ -3,7 +3,7 @@
         [kameleon.core]
         [kameleon.entities]
         [kameleon.queries :only [get-user-id]]
-        [korma.core]
+        [korma.core :exclude [update]]
         [korma.db]
         [metadactyl.user :only [current-user]]
         [metadactyl.util.assertions :only [assert-not-nil]]
@@ -11,7 +11,8 @@
         [metadactyl.util.service :only [success-response]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.error-codes :as error-codes]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [korma.core :as sql]))
 
 (defn- reference-genome-base-query
   "The base query used to list reference genomes."
@@ -70,7 +71,7 @@
   "Logically deletes a reference genome by setting its 'deleted' flag to true."
   [reference-genome-id]
   (get-valid-reference-genome reference-genome-id)
-  (update genome_reference (set-fields {:deleted true}) (where {:id reference-genome-id}))
+  (sql/update genome_reference (set-fields {:deleted true}) (where {:id reference-genome-id}))
   nil)
 
 (defn update-reference-genome
@@ -81,7 +82,7 @@
                           (select-keys [:name :path :deleted])
                           (assoc :last_modified_by (get-user-id (:username current-user))
                                  :last_modified_on (sqlfn now)))]
-    (update genome_reference (set-fields update-values) (where {:id reference-genome-id}))
+    (sql/update genome_reference (set-fields update-values) (where {:id reference-genome-id}))
     (get-reference-genome reference-genome-id)))
 
 (defn add-reference-genome

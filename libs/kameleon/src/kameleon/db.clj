@@ -1,5 +1,5 @@
 (ns kameleon.db
-  (:use [korma.core]
+  (:use [korma.core :exclude [update]]
         [korma.db])
   (:require [clj-time.coerce :as tc]
             [clj-time.core :as t]

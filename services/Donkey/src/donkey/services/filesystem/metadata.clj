@@ -16,9 +16,14 @@
             [cheshire.core :as json]
             [clj-http.client :as http]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
+            [donkey.clients.metadata.raw :as metadata-client]
             [donkey.services.filesystem.icat :as icat]
+            [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as validators]
-            [donkey.util.config :as cfg]))
+            [donkey.util.config :as cfg]
+            [donkey.util.service :as service]
+            [ring.middleware.multipart-params :as multipart])
+  (:import [au.com.bytecode.opencsv CSVReader]))
 
 (defn- fix-unit
   "Used to replace the IPCRESERVED unit with an empty string."
@@ -347,3 +352,49 @@
     (validate-map params {:user string?})))
 
 (with-post-hook! #'do-metadata-save (log-func "do-metadata-save"))
+
+(defn- add-metadata-template-avus
+  "Adds or Updates AVUs associated with a Metadata Template for the given user's data item."
+  [cm username path template-id avus]
+  (validators/path-exists cm path)
+  (validators/path-writeable cm username path)
+  (let [{:keys [id type]} (uuids/uuid-for-path cm username path)
+        data-id (uuidify id)
+        data-type (metadata-client/resolve-data-type type)]
+    (metadata-client/set-metadata-template-avus data-id data-type template-id {:avus avus})))
+
+(defn- bulk-add-file-avus
+  [cm username dest-dir template-id attrs [filename values]]
+  (let [path (if (.startsWith filename "/") filename (ft/path-join dest-dir filename))
+        avus (map (partial zipmap [:attr :value :unit]) (map vector attrs values (repeat "")))]
+    (add-metadata-template-avus cm username path template-id avus)
+    {:path path
+     :avus avus}))
+
+(defn- parse-form-metadata-csv
+  [username dest-dir template-id {:keys [stream filename content-type]}]
+  (with-jargon (icat/jargon-cfg) [cm]
+    (validators/user-exists cm username)
+    (let [dest-path (ft/path-join dest-dir filename)
+          stream-reader (java.io.InputStreamReader. stream "UTF-8")
+          csv (mapv (partial mapv string/trim) (.readAll (CSVReader. stream-reader)))
+          attrs (-> csv first rest)
+          metadata (mapv
+                     (partial bulk-add-file-avus cm username dest-dir template-id attrs)
+                     (mapv (juxt first rest) (rest csv)))]
+      {:metadata metadata})))
+
+(defn parse-csv-metadata
+  [{{:keys [user]} :user-info {:keys [dest template-id]} :params :as req}]
+  (let [parser (partial parse-form-metadata-csv user dest (uuidify template-id))
+        {{results "file"} :params} (multipart/multipart-params-request req {:store parser})]
+    (service/success-response results)))
+
+(with-pre-hook! #'parse-csv-metadata
+  (fn [{:keys [user-info params] :as req}]
+    (log-call "parse-csv-metadata" req)
+    (validate-map user-info {:user string?})
+    (validate-map params {:dest string?
+                          :template-id string?})))
+
+(with-post-hook! #'parse-csv-metadata (log-func "parse-csv-metadata"))

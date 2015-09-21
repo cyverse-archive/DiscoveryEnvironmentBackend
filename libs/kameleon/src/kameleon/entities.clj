@@ -1,5 +1,5 @@
 (ns kameleon.entities
-  (:use [korma.core]))
+  (:use [korma.core :exclude [update]]))
 
 (declare users collaborator requestor workspace app_categories apps app_references integration_data
          tools tool_test_data_files output_mapping input_mapping tasks inputs outputs

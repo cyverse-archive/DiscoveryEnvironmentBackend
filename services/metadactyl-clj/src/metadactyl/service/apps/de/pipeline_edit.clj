@@ -1,5 +1,5 @@
 (ns metadactyl.service.apps.de.pipeline-edit
-  (:use [korma.core]
+  (:use [korma.core :exclude [update]]
         [korma.db :only [transaction]]
         [kameleon.core]
         [kameleon.entities]

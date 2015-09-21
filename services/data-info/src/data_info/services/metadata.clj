@@ -170,7 +170,7 @@
    :files keys, with the segregated lists as values."
   [folder-children]
   (zipmap [:folders :files]
-    ((juxt filter remove) #(stat-is-dir? %) folder-children)))
+    ((juxt filter remove) stat-is-dir? folder-children)))
 
 (defn- format-template-avus
   "Takes a Metadata Template map and returns just its :avus list, adding the template ID to each AVU."

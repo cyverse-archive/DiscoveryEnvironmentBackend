@@ -1,7 +1,7 @@
 Metadata
 ---------------------------
 
-The following commands allow the caller to set and get attributes on files and directories in iRODS. iRODS attributes take the form of Attribute Value Unit triples associated with directories and files. Files/directories cannot have multiple AVUs with the same attribute name, so repeated POSTings of an AVU with the same attribute name will overwrite the old value.
+The following commands allow the caller to set and get attributes on files and directories in iRODS. iRODS attributes take the form of Attribute Value Unit triples associated with directories and files. iRODS AVUs are only unique on the full triple, so duplicate AVUs may exist. DE tools do not, in general, use the unit field.
 
 
 Setting Metadata

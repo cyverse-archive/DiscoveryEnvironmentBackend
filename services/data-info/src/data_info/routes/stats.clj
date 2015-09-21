@@ -1,5 +1,5 @@
 (ns data-info.routes.stats
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [data-info.routes.domain.common]
         [data-info.routes.domain.stats])
   (:require [data-info.services.stat :as stat]
@@ -13,7 +13,7 @@
     :tags ["bulk"]
 
     (POST* "/" [:as {uri :uri}]
-      :query [params SecuredQueryParamsRequired]
+      :query [params StandardUserQueryParams]
       :body [body (describe Paths "The paths to gather status information on.")]
       :return (s/either StatResponse StatusInfo)
       :summary "File and Folder Status Information"

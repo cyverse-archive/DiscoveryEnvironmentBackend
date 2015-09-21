@@ -1,5 +1,5 @@
 (ns metadata.persistence.favorites
-  (:use korma.core)
+  (:use [korma.core :exclude [update]])
   (:require [kameleon.db :as db])
   (:import [java.util UUID]))
 

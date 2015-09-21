@@ -1,8 +1,14 @@
 (ns metadactyl.routes.domain.app.category
-  (:use [metadactyl.routes.domain.app]
+  (:use [common-swagger-api.schema :only [->optional-param
+                                          ->required-key
+                                          describe
+                                          PagingParams
+                                          SortFieldDocs
+                                          SortFieldOptionalKey]]
+        [metadactyl.routes.domain.app]
         [metadactyl.routes.params]
-        [compojure.api.sweet :only [describe]]
-        [schema.core :only [defschema optional-key recursive]])
+        [schema.core :only [defschema optional-key recursive enum]])
+  (:require [clojure.set :as sets])
   (:import [java.util UUID]))
 
 (def AppCategoryNameParam (describe String "The App Category's name"))
@@ -15,6 +21,23 @@
         public in the database are returned. If set to 'false', then only app categories that
         are in the user's workspace are returned. If not set, then both public and the user's
         private categories are returned.")}))
+
+(def AppListingValidSortFields
+  (-> (map ->required-key (keys AppListingDetail))
+      (conj :average_rating :user_rating)
+      set
+      (sets/difference #{:app_type
+                         :can_favor
+                         :can_rate
+                         :can_run
+                         :pipeline_eligibility
+                         :rating})))
+
+(defschema AppListingPagingParams
+  (merge SecuredQueryParamsEmailRequired
+    (assoc PagingParams
+      SortFieldOptionalKey
+      (describe (apply enum AppListingValidSortFields) SortFieldDocs))))
 
 (defschema AppCategory
   {:id

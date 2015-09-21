@@ -1,5 +1,5 @@
 (ns data-info.routes.domain.navigation
-  (:use [compojure.api.sweet :only [describe]]
+  (:use [common-swagger-api.schema :only [describe]]
         [data-info.routes.domain.stats])
   (:require [schema.core :as s]))
 

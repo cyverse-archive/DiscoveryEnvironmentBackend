@@ -1,9 +1,9 @@
 (ns metadactyl.app-validation
   (:use [slingshot.slingshot :only [try+ throw+]]
-        [korma.core]
         [kameleon.core]
         [kameleon.entities]
         [kameleon.queries :only [parameter-types-for-tool-type]]
+        [korma.core :exclude [update]]
         [metadactyl.persistence.app-metadata :only [get-app]])
   (:require [clojure.string :as string]))
 

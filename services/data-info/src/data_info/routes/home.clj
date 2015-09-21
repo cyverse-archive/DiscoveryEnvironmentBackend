@@ -1,5 +1,5 @@
 (ns data-info.routes.home
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [data-info.routes.domain.common]
         [data-info.routes.domain.stats])
   (:require [data-info.services.home :as home]
@@ -11,7 +11,7 @@
     :tags ["home"]
 
     (GET* "/" [:as {uri :uri}]
-      :query [params SecuredQueryParamsRequired]
+      :query [params StandardUserQueryParams]
       :return PathIdInfo
       :summary "Get User's Home Dir"
       :description (str

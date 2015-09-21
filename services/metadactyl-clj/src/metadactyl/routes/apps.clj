@@ -1,10 +1,10 @@
 (ns metadactyl.routes.apps
-  (:use [metadactyl.routes.domain.app]
+  (:use [common-swagger-api.schema]
+        [metadactyl.routes.domain.app]
         [metadactyl.routes.domain.app.rating]
         [metadactyl.routes.domain.tool :only [NewToolListing]]
         [metadactyl.routes.params]
-        [metadactyl.user :only [current-user]]
-        [compojure.api.sweet])
+        [metadactyl.user :only [current-user]])
   (:require [clojure-commons.error-codes :as ce]
             [metadactyl.service.apps :as apps]
             [metadactyl.util.service :as service]))

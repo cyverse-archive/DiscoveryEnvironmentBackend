@@ -1,5 +1,8 @@
 (ns metadata.routes.domain.tags
-  (:use [compojure.api.sweet :only [describe]]
+  (:use [common-swagger-api.schema :only [->optional-param
+                                          describe
+                                          NonBlankString
+                                          StandardUserQueryParams]]
         [metadata.routes.domain.common])
   (:require [schema.core :as s])
   (:import [java.util UUID]))
@@ -15,7 +18,7 @@
        "Whether to attach or detach the provided set of tags to the file/folder")}))
 
 (s/defschema TagSuggestQueryParams
-  (merge StandardQueryParams
+  (merge StandardUserQueryParams
     {:contains
      (describe String "The value fragment")
 

@@ -1,5 +1,5 @@
 (ns metadactyl.routes.status
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [metadactyl.routes.domain.status])
   (:require [clojure-commons.service :as commons-service]
             [metadactyl.util.config :as config]

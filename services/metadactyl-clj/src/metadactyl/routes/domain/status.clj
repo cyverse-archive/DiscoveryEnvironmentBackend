@@ -1,6 +1,5 @@
 (ns metadactyl.routes.domain.status
-  (:use [compojure.api.sweet :only [describe]]
-        [metadactyl.routes.params])
+  (:use [common-swagger-api.schema :only [describe NonBlankString]])
   (:require [schema.core :as s]))
 
 (s/defschema StatusResponse

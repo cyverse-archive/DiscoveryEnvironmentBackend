@@ -1,9 +1,10 @@
 (ns kameleon.queries
   (:use [kameleon.core]
         [kameleon.entities]
-        [korma.core]
+        [korma.core :exclude [update]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
+  (:require [korma.core :as sql])
   (:import [java.sql Timestamp]))
 
 (defn- version-table-exists?
@@ -160,9 +161,9 @@
   "Sets the given root-app-group ID in the given workspace, and returns a map of
    the workspace with its new group ID."
   [workspace_id root_app_group_id]
-  (update workspace
-          (set-fields {:root_category_id root_app_group_id})
-          (where {:id workspace_id})))
+  (sql/update workspace
+    (set-fields {:root_category_id root_app_group_id})
+    (where {:id workspace_id})))
 
 (defn parameter-types-for-tool-type
   "Lists the valid parameter types for the tool type with the given identifier."
@@ -319,11 +320,11 @@
 (defn record-logout
   "Records when a user logs out of the DE."
   [username ip-address login-time]
-  (update :logins
-          (set-fields {:logout_time (sqlfn :now)})
-          (where {:user_id                                       (get-user-id username)
-                  :ip_address                                    ip-address})
-          (where {(sqlfn :date_trunc "milliseconds" :login_time) (Timestamp. login-time)})))
+  (sql/update :logins
+    (set-fields {:logout_time (sqlfn :now)})
+    (where {:user_id                                       (get-user-id username)
+            :ip_address                                    ip-address})
+    (where {(sqlfn :date_trunc "milliseconds" :login_time) (Timestamp. login-time)})))
 
 (defn add-agave-pipeline-where-clause
   [query {agave-enabled? :agave-enabled :or {agave-enaled? "false"}}]

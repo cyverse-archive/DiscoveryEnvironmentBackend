@@ -14,7 +14,6 @@
   (fn [{:keys [uri] :as req}]
     (ce/trap uri #(handler req))))
 
-
 (defn as-vector
   "Returns the given parameter inside a vector if it's not a vector already."
   [p]

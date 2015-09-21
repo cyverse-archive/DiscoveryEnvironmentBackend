@@ -1,7 +1,8 @@
 (ns metadata.persistence.templates
   (:use [clojure-commons.core :only [remove-nil-values]]
         [clojure-commons.assertions :only [assert-found]]
-        [korma.core]))
+        [korma.core :exclude [update]])
+  (:require [korma.core :as sql]))
 
 (defn- add-deleted-where-clause
   [query hide-deleted?]
@@ -177,7 +178,7 @@
 
 (defn- update-attribute
   [user attr-id attr]
-  (update :attributes
+  (sql/update :attributes
           (set-fields (prepare-attr-update user attr))
           (where {:id attr-id}))
   (:id (first (select :attributes (where {:id attr-id})))))
@@ -219,7 +220,7 @@
 (defn update-template
   [user template-id {:keys [attributes] :as template}]
   (assert-found (get-metadata-template template-id) "metadata template" template-id)
-  (update :templates
+  (sql/update :templates
           (set-fields (prepare-template-update user template-id template))
           (where {:id template-id}))
   (delete :template_attrs (where {:template_id template-id}))
@@ -236,7 +237,7 @@
 (defn delete-template
   [user template-id]
   (assert-found (get-metadata-template template-id) "metadata template" template-id)
-  (update :templates
+  (sql/update :templates
           (set-fields (prepare-template-deletion user))
           (where {:id template-id}))
   nil)

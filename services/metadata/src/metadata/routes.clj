@@ -2,7 +2,7 @@
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.middleware :only [log-validation-errors]]
         [clojure-commons.query-params :only [wrap-query-params]]
-        [compojure.api.sweet])
+        [common-swagger-api.schema])
   (:require [metadata.routes.avus :as avu-routes]
             [metadata.routes.comments :as comment-routes]
             [metadata.routes.favorites :as favorites-routes]

@@ -1,26 +1,9 @@
 (ns metadactyl.routes.api
   (:use [clojure-commons.middleware :only [log-validation-errors]]
         [clojure-commons.query-params :only [wrap-query-params]]
-        [compojure.api.sweet]
-        [metadactyl.routes.domain.analysis]
-        [metadactyl.routes.domain.analysis.listing]
-        [metadactyl.routes.domain.app]
-        [metadactyl.routes.domain.app.category]
-        [metadactyl.routes.domain.app.element]
-        [metadactyl.routes.domain.app.rating]
-        [metadactyl.routes.domain.callback]
-        [metadactyl.routes.domain.collaborator]
-        [metadactyl.routes.domain.oauth]
-        [metadactyl.routes.domain.pipeline]
-        [metadactyl.routes.domain.reference-genome]
-        [metadactyl.routes.domain.tool]
-        [metadactyl.routes.domain.user]
-        [metadactyl.routes.domain.workspace]
-        [metadactyl.routes.params]
-        [metadactyl.schema.containers]
+        [common-swagger-api.schema]
         [metadactyl.user :only [store-current-user]]
         [ring.middleware keyword-params nested-params]
-        [ring.swagger.json-schema :only [json-type]]
         [ring.util.response :only [redirect]])
   (:require [compojure.route :as route]
             [metadactyl.routes.admin :as admin-routes]
@@ -40,8 +23,6 @@
             [metadactyl.util.config :as config]
             [metadactyl.util.service :as service]
             [service-logging.thread-context :as tc]))
-
-(defmethod json-type schema.core.AnythingSchema [_] {:type "any"})
 
 (defn context-middleware
   [handler]

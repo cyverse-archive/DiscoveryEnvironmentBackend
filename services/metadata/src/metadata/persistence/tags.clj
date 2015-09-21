@@ -1,6 +1,7 @@
 (ns metadata.persistence.tags
-  (:use korma.core)
-  (:require [kameleon.db :as db])
+  (:use [korma.core :exclude [update]])
+  (:require [kameleon.db :as db]
+            [korma.core :as sql])
   (:import [java.util UUID]
            [clojure.lang IPersistentMap ISeq]))
 
@@ -98,7 +99,7 @@
   (let [updates (if (get updates :description :not-found)
                   updates
                   (assoc updates :description ""))]
-    (update :tags
+    (sql/update :tags
       (set-fields updates)
       (where {:id tag-id}))
     (first (select :tags (where {:id tag-id})))))
@@ -175,7 +176,7 @@
      target-id - The UUID of the target having some of its tags removed.
      tag-ids   - the collection tags to detach"
   [detacher target-id tag-ids]
-  (update :attached_tags
+  (sql/update :attached_tags
     (set-fields {:detacher_id detacher
                  :detached_on (sqlfn now)})
     (where {:target_id   target-id

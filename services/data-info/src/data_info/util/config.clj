@@ -239,7 +239,7 @@
 
 (defn- exception-filters
   []
-  (filter #(not (nil? %)) [(icat-password) (icat-user) (irods-password) (irods-user)]))
+  (remove nil? [(icat-password) (icat-user) (irods-password) (irods-user)]))
 
 (def anon-files-base
   (memoize

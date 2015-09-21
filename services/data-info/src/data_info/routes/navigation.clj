@@ -1,5 +1,5 @@
 (ns data-info.routes.navigation
-  (:use [compojure.api.sweet]
+  (:use [common-swagger-api.schema]
         [data-info.routes.domain.common]
         [data-info.routes.domain.navigation]
         [data-info.routes.domain.stats])
@@ -13,7 +13,7 @@
     :tags ["navigation"]
 
     (GET* "/root" [:as {uri :uri}]
-      :query [{:keys [user]} SecuredQueryParamsRequired]
+      :query [{:keys [user]} StandardUserQueryParams]
       :return NavigationRootResponse
       :summary "Root Listing"
       :description (str
@@ -25,7 +25,7 @@
 
     (GET* "/path/:zone/*" [:as {{path :*} :params uri :uri}]
       :path-params [zone :- String]
-      :query [params SecuredQueryParamsRequired]
+      :query [params StandardUserQueryParams]
       :return NavigationResponse
       :no-doc true
       (svc/trap uri dir/do-directory zone path params))
@@ -34,7 +34,7 @@
     (GET* "/path/:zone/:path" [:as {uri :uri}]
       :path-params [zone :- (describe String "The IRODS zone")
                     path :- (describe String "The IRODS path under the zone")]
-      :query [params SecuredQueryParamsRequired]
+      :query [params StandardUserQueryParams]
       :return NavigationResponse
       :summary "Directory List (Non-Recursive)"
       :description (str
