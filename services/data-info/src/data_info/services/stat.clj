@@ -10,7 +10,6 @@
             [clj-jargon.metadata :as meta]
             [clj-jargon.permissions :as perm]
             [clj-jargon.users :as users]
-            [clojure-commons.error-codes :refer [ERR_DOES_NOT_EXIST ERR_NOT_A_USER ERR_NOT_READABLE]]
             [clojure-commons.file-utils :as ft]
             [clojure-commons.validators :as cv]
             [data-info.util.config :as cfg]
@@ -23,14 +22,9 @@
 (defn- get-types
   "Gets all of the filetypes associated with path."
   [cm user path]
-  (when-not (info/exists? cm path)
-    (throw+ {:error_code ERR_DOES_NOT_EXIST :path path}))
-  (when-not (users/user-exists? cm user)
-    (throw+ {:error_code ERR_NOT_A_USER :user user}))
-  (when-not (perm/is-readable? cm user path)
-    (throw+ {:error_code ERR_NOT_READABLE
-             :user       user
-             :path       path}))
+  (validators/path-exists cm path)
+  (validators/user-exists cm user)
+  (validators/path-readable cm user path)
   (let [path-types (meta/get-attribute cm path (cfg/type-detect-type-attribute))]
     (log/info "Retrieved types" path-types "from" path "for" (str user "."))
     (or (:value (first path-types) ""))))
