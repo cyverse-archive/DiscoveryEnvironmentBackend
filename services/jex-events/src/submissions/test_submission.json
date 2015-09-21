@@ -54,7 +54,8 @@
                         "host_path" : "/host/path2",
                         "container_path" : "/container/path2"
                       }
-                    ]
+                    ],
+                    "working_directory" : "/work"
                 },
                 "type":"executable",
                 "name":"wc_wrapper.sh",

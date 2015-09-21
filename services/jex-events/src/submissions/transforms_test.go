@@ -398,6 +398,14 @@ func TestStepContainerDevices(t *testing.T) {
 	}
 }
 
+func TestStepContainerWorkingDirectory(t *testing.T) {
+	s := inittests(t)
+	w := s.Steps[0].Component.Container.WorkingDir
+	if w != "/work" {
+		t.Errorf("The working directory for the container was '%s' instead of '/work'", w)
+	}
+}
+
 func TestStepEnvironmentLength(t *testing.T) {
 	s := inittests(t)
 	env := s.Steps[0].Environment
