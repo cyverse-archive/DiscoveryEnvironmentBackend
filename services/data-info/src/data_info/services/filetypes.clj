@@ -39,7 +39,8 @@
     (validators/user-exists cm user)
     (validators/user-owns-path cm user path)
 
-    (delete-metadata cm path (cfg/type-detect-type-attribute))
+    (if (attribute? cm path (cfg/type-detect-type-attribute))
+      (delete-metadata cm path (cfg/type-detect-type-attribute)))
     {:path path
      :type ""
      :user user}))
