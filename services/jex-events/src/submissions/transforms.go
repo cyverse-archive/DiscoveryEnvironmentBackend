@@ -8,6 +8,7 @@ import (
 	"log"
 	"path"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 )
@@ -231,6 +232,25 @@ type StepParam struct {
 	Order int    `json:"order"`
 }
 
+// ByOrder implements the sort interface for a []StepParam based on the Order
+// field.
+type ByOrder []StepParam
+
+// Len returns the number of elements in a ByOrder
+func (o ByOrder) Len() int {
+	return len(o)
+}
+
+// Swap swaps two positions in a []StepParam
+func (o ByOrder) Swap(i, j int) {
+	o[i], o[j] = o[j], o[i]
+}
+
+// Less returns true if position i is less than position j.
+func (o ByOrder) Less(i, j int) bool {
+	return o[i].Order < o[j].Order
+}
+
 // StepEnvironment defines the environment variables that should be set for a
 // step
 type StepEnvironment map[string]string
@@ -261,6 +281,16 @@ type StepConfig struct {
 	Params []StepParam  `json:"params"`
 	Input  []StepInput  `json:"input"`
 	Output []StepOutput `json:"output"`
+}
+
+// Parameters returns the StepParams associated with a Step in the correct order.
+// Use this to get the list of Params rather than accessing the field directory.
+func (c *StepConfig) Parameters() []StepParam {
+	sort.Sort(ByOrder(c.Params))
+	for _, p := range c.Params {
+		p.Value = quote(p.Value)
+	}
+	return c.Params
 }
 
 // Step describes a single step in a job. All jobs contain multiple steps.
@@ -341,6 +371,17 @@ func (s *Step) CommandLine(uuid string) string {
 		}
 	}
 	return strings.Join(cmdLine, " ")
+}
+
+// Arguments returns a string that contains all of the fields that go into the
+// command in the iplant.sh file. Combines the output of CommandLine() with
+// the formatted params from the Config.
+func (s *Step) Arguments(uuid string) string {
+	var buffer bytes.Buffer
+	for _, p := range s.Config.Parameters() {
+		buffer.WriteString(fmt.Sprintf("%s %s ", p.Name, p.Value))
+	}
+	return strings.TrimSpace(fmt.Sprintf("%s %s", s.CommandLine(uuid), buffer.String()))
 }
 
 // Submission describes a job passed down through the API.

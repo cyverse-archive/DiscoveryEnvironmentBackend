@@ -104,13 +104,13 @@
                     {
                         "id":"e7721c78-56c9-41ac-8ff5-8d46093f1fb1",
                         "name":"param0",
-                        "order":1,
+                        "order":2,
                         "value":"wc_out.txt"
                     },
                     {
                         "id":"2f58fce9-8183-4ab5-97c4-970592d1c35a",
                         "name":"param1",
-                        "order":2,
+                        "order":1,
                         "value":"Acer-tree.txt"
                     }
                 ]

@@ -691,6 +691,16 @@ func TestCommandLine(t *testing.T) {
 	}
 }
 
+func TestArguments(t *testing.T) {
+	s := inittests(t)
+	actual := s.Steps[0].Arguments("foo")
+	expected := `run --rm -e IPLANT_USER -e IPLANT_EXECUTION_ID -v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/ -v $(pwd):/work -v /host/path1:/container/path1 -v /container/path2 --device=/host/path1:/container/path1 --device=/host/path2:/container/path2 --volumes-from=foo-vf-prefix1 --volumes-from=foo-vf-prefix2 --name test-name -w /work --memory=2048M --cpu-shares=2048 --net=none --entrypoint=/bin/true gims.iplantcollaborative.org:5000/backwards-compat:test /usr/local3/bin/wc_tool-1.00/wc_wrapper.sh param1 Acer-tree.txt param0 wc_out.txt`
+	if actual != expected {
+		t.Errorf("Arguments() returned:\n\t%s\ninstead of:\n\t%s", actual, expected)
+	}
+	_inittests(t, false)
+}
+
 func TestStepConfig(t *testing.T) {
 	s := inittests(t)
 	config := s.Steps[0].Config
@@ -871,8 +881,8 @@ func TestConfigParams0Name(t *testing.T) {
 func TestConfigParams0Order(t *testing.T) {
 	s := inittests(t)
 	params := s.Steps[0].Config.Params[0]
-	if params.Order != 1 {
-		t.Errorf("The param order was '%d' when it should have been '1'", params.Order)
+	if params.Order != 2 {
+		t.Errorf("The param order was '%d' when it should have been '2'", params.Order)
 	}
 }
 
@@ -903,8 +913,8 @@ func TestConfigParams1Name(t *testing.T) {
 func TestConfigParams1Order(t *testing.T) {
 	s := inittests(t)
 	params := s.Steps[0].Config.Params[1]
-	if params.Order != 2 {
-		t.Errorf("The param order was '%d' when it should have been '2'", params.Order)
+	if params.Order != 1 {
+		t.Errorf("The param order was '%d' when it should have been '1'", params.Order)
 	}
 }
 
