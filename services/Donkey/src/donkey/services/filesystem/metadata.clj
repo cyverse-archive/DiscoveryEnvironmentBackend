@@ -415,8 +415,9 @@
     (validators/user-exists cm user)
     (validators/path-exists cm src)
     (validators/path-readable cm user src)
-    (parse-metadata-csv
-      cm user dest (uuidify template-id) (url/url-decode separator) (input-stream cm src))))
+    (service/success-response
+      (parse-metadata-csv
+        cm user dest (uuidify template-id) (url/url-decode separator) (input-stream cm src)))))
 
 (with-pre-hook! #'parse-src-file-csv-metadata
   (fn [user-info params]
