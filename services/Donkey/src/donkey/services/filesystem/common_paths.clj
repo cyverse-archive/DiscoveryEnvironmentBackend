@@ -44,16 +44,6 @@
 
 (defn valid-path? [path-to-check] (valid/good-string? path-to-check))
 
-
-(defn- sharing?
-  [abs]
-  (= (ft/rm-last-slash (cfg/irods-home))
-     (ft/rm-last-slash abs)))
-
-
-(defn- community? [abs] (= (cfg/fs-community-data) abs))
-
-
 (defn base-trash-path
   []
   (item/trash-base-dir (cfg/irods-zone) (cfg/irods-user)))
@@ -63,23 +53,26 @@
   [user]
   (ft/path-join (base-trash-path) user))
 
-
-(defn- user-trash-dir?
-  [user path-to-check]
-  (= (ft/rm-last-slash path-to-check) (ft/rm-last-slash (user-trash-path user))))
-
-
 (defn in-trash?
   [user fpath]
   (.startsWith fpath (user-trash-path user)))
 
+(defn- dir-equal?
+  [path comparison]
+  (apply = (map ft/rm-last-slash [path comparison])))
+
+(defn- user-trash-dir?
+  [user abs]
+  (dir-equal? abs (user-trash-path user)))
+(defn- sharing? [abs] (dir-equal? abs (cfg/irods-home)))
+(defn- community? [abs] (dir-equal? abs (cfg/fs-community-data)))
 
 (defn id->label
   "Generates a label given a listing ID (read as absolute path)."
   [user id]
   (cond
     (user-trash-dir? user id)             "Trash"
-    (sharing? (ft/add-trailing-slash id)) "Shared With Me"
+    (sharing? id)                         "Shared With Me"
     (community? id)                       "Community Data"
     :else                                 (ft/basename id)))
 
