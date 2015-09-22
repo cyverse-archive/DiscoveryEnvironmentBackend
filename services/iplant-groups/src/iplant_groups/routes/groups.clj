@@ -37,7 +37,7 @@
 
     (DELETE* "/" [:as {:keys [uri]}]
           :query       [params StandardUserQueryParams]
-          :return      Group
+          :return      GroupStub
           :summary     "Delete Group"
           :description "This endpoint allows deleting a group if the current user has permissions to do so."
           (service/trap uri groups/delete-group group-id params))

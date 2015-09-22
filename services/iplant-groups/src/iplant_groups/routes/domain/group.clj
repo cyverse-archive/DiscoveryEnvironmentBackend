@@ -1,5 +1,5 @@
 (ns iplant_groups.routes.domain.group
-  (:use [common-swagger-api.schema :only [describe]])
+  (:use [common-swagger-api.schema :only [describe ->optional-param]])
   (:require [iplant_groups.routes.domain.params :as params]
             [iplant_groups.routes.domain.subject :as subject]
             [schema.core :as s]))
@@ -30,6 +30,13 @@
 
    :id
    (describe String "The group ID.")))
+
+(s/defschema GroupStub
+  (-> Group
+    (->optional-param :name)
+    (->optional-param :type)
+    (->optional-param :id)
+    (->optional-param :id_index)))
 
 (s/defschema GroupDetail
   {(s/optional-key :attribute_names)

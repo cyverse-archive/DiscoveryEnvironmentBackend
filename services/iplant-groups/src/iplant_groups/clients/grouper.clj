@@ -140,17 +140,17 @@
 ;; Group delete
 
 (defn- format-group-delete-request
-  [username group-name]
+  [username group-id]
   (-> {:WsRestGroupDeleteRequest
        {:actAsSubjectLookup (act-as-subject-lookup username)
         :wsGroupLookups [
-         {:groupName group-name}]}}
+         {:uuid group-id}]}}
       (json/encode)))
 
 (defn delete-group
-  [username group-name]
+  [username group-id]
   (with-trap [default-error-handler]
-    (->> {:body         (format-group-delete-request username group-name)
+    (->> {:body         (format-group-delete-request username group-id)
           :basic-auth   (auth-params)
           :content-type content-type
           :as           :json}
