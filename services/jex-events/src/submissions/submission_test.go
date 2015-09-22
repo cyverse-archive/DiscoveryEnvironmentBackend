@@ -329,3 +329,31 @@ func TestOutputs(t *testing.T) {
 		t.Errorf("Number of outputs was %d instead of %d", actual, expected)
 	}
 }
+
+func TestExcludeArguments(t *testing.T) {
+	s := inittests(t)
+	actual := s.ExcludeArguments()
+	expected := "--exclude foo,bar,baz,blippy"
+	if actual != expected {
+		t.Errorf("ExcludeArguments() returned:\n\t%sinstead of:\n\t%s", actual, expected)
+	}
+	s.Steps[0].Config.Inputs[0].Retain = false
+	actual = s.ExcludeArguments()
+	expected = "--exclude Acer-tree.txt,foo,bar,baz,blippy"
+	if actual != expected {
+		t.Errorf("ExcludeArguments() returned:\n\t%sinstead of:\n\t%s", actual, expected)
+	}
+	s.Steps[0].Config.Outputs[1].Retain = false
+	actual = s.ExcludeArguments()
+	expected = "--exclude Acer-tree.txt,$(pwd)/logs/,foo,bar,baz,blippy"
+	if actual != expected {
+		t.Errorf("ExcludeArguments() returned:\n\t%sinstead of:\n\t%s", actual, expected)
+	}
+	s.ArchiveLogs = false
+	actual = s.ExcludeArguments()
+	expected = "--exclude Acer-tree.txt,$(pwd)/logs/,foo,bar,baz,blippy,logs"
+	if actual != expected {
+		t.Errorf("ExcludeArguments() returned:\n\t%sinstead of:\n\t%s", actual, expected)
+	}
+	_inittests(t, false)
+}

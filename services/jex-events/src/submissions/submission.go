@@ -222,6 +222,26 @@ func (s *Submission) Outputs() []StepOutput {
 
 // ExcludeArguments returns a string containing the command-line settings for
 // porklock that tell it which files to skip.
-// func (s *Submission) ExcludeArguments() string {
-//
-// }
+func (s *Submission) ExcludeArguments() string {
+	var paths []string
+	for _, input := range s.Inputs() {
+		if !input.Retain {
+			paths = append(paths, input.Source())
+		}
+	}
+	for _, output := range s.Outputs() {
+		if !output.Retain {
+			paths = append(paths, output.Source())
+		}
+	}
+	for _, filter := range strings.Split(cfg.FilterFiles, ",") {
+		paths = append(paths, filter)
+	}
+	if !s.ArchiveLogs {
+		paths = append(paths, "logs")
+	}
+	if len(paths) > 0 {
+		return fmt.Sprintf("--exclude %s", strings.Join(paths, ","))
+	}
+	return ""
+}

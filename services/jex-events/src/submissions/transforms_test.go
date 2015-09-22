@@ -34,6 +34,7 @@ func _inittests(t *testing.T, memoize bool) *Submission {
 		c.IRODSBase = "/path/to/irodsbase"
 		c.CondorLogPath = "/path/to/logs"
 		c.PorklockTag = "test"
+		c.FilterFiles = "foo,bar,baz,blippy"
 		Init(c, l)
 		data, err := JSONData()
 		if err != nil {
