@@ -298,9 +298,9 @@ type Step struct {
 	Component   StepComponent
 	Config      StepConfig
 	Type        string          `json:"type"`
-	Stdin       string          `json:"stdin"`
-	Stdout      string          `json:"stdout"`
-	Stderr      string          `json:"stderr"`
+	StdinPath   string          `json:"stdin"`
+	StdoutPath  string          `json:"stdout"`
+	StderrPath  string          `json:"stderr"`
 	LogFile     string          `json:"log-file"`
 	Environment StepEnvironment `json:"environment"`
 	Input       []StepInput     `json:"input"`
@@ -382,6 +382,35 @@ func (s *Step) Arguments(uuid string) string {
 		buffer.WriteString(fmt.Sprintf("%s %s ", p.Name, p.Value))
 	}
 	return strings.TrimSpace(fmt.Sprintf("%s %s", s.CommandLine(uuid), buffer.String()))
+}
+
+// Stdin returns the a quoted version of s.StdinPath or an empty string if it's
+// not set.
+func (s *Step) Stdin() string {
+	if s.StdinPath != "" {
+		return quote(s.StdinPath)
+	}
+	return s.StdinPath
+}
+
+// Stdout returns the quoted version of s.StdoutPath or a default value located in
+// the logs directory of the working directory. 'suffix' is appended to the
+// filename in the logs directory, but only if s.StdoutPath isn't set.
+func (s *Step) Stdout(suffix string) string {
+	if s.StdoutPath != "" {
+		return quote(s.StdoutPath)
+	}
+	return path.Join("logs", fmt.Sprintf("%s%s", "condor-stdout-", suffix))
+}
+
+// Stderr returns the quoted version of s.StderrPath or a default value located in
+// the logs directory of the working directory. 'suffix' is appended to the
+// filename in the logs directory, but only if s.StderrPath isn't set.
+func (s *Step) Stderr(suffix string) string {
+	if s.StderrPath != "" {
+		return quote(s.StderrPath)
+	}
+	return path.Join("logs", fmt.Sprintf("%s%s", "condor-stderr-", suffix))
 }
 
 // Submission describes a job passed down through the API.

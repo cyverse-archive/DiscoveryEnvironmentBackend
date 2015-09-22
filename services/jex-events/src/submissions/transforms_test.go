@@ -196,28 +196,79 @@ func TestStepType(t *testing.T) {
 	}
 }
 
+func TestStepStdinPath(t *testing.T) {
+	s := inittests(t)
+	step := s.Steps[0]
+	if step.StdinPath != "/path/to/stdin" {
+		t.Errorf("The step's path to stdin was '%s' instead of '/path/to/stdin'", step.StdinPath)
+	}
+}
+
+func TestStepStdoutPath(t *testing.T) {
+	s := inittests(t)
+	step := s.Steps[0]
+	if step.StdoutPath != "/path/to/stdout" {
+		t.Errorf("The step's path to stdout was '%s' instead of '/path/to/stdout'", step.StdoutPath)
+	}
+}
+
+func TestStepStderrPath(t *testing.T) {
+	s := inittests(t)
+	step := s.Steps[0]
+	if step.StderrPath != "/path/to/stderr" {
+		t.Errorf("The step's path to stderr was '%s' instead of '/path/to/stderr'", step.StderrPath)
+	}
+}
+
 func TestStepStdin(t *testing.T) {
 	s := inittests(t)
 	step := s.Steps[0]
-	if step.Stdin != "/path/to/stdin" {
-		t.Errorf("The step's path to stdin was '%s' instead of '/path/to/stdin'", step.Stdin)
+	actual := step.Stdin()
+	expected := "'/path/to/stdin'"
+	if actual != expected {
+		t.Errorf("Stdin() returned '%s' instead of '%s'", actual, expected)
 	}
+	step.StdinPath = ""
+	actual = step.Stdin()
+	expected = ""
+	if actual != expected {
+		t.Errorf("Stdin() returned '%s' instead of '%s'", actual, expected)
+	}
+	_inittests(t, false)
 }
 
 func TestStepStdout(t *testing.T) {
 	s := inittests(t)
 	step := s.Steps[0]
-	if step.Stdout != "/path/to/stdout" {
-		t.Errorf("The step's path to stdout was '%s' instead of '/path/to/stdout'", step.Stdout)
+	actual := step.Stdout("foo")
+	expected := "'/path/to/stdout'"
+	if actual != expected {
+		t.Errorf("Stdout() returned '%s' instead of '%s'", actual, expected)
 	}
+	step.StdoutPath = ""
+	actual = step.Stdout("foo")
+	expected = "logs/condor-stdout-foo"
+	if actual != expected {
+		t.Errorf("Stdout() returned '%s' instead of '%s'", actual, expected)
+	}
+	_inittests(t, false)
 }
 
 func TestStepStderr(t *testing.T) {
 	s := inittests(t)
 	step := s.Steps[0]
-	if step.Stderr != "/path/to/stderr" {
-		t.Errorf("The step's path to stderr was '%s' instead of '/path/to/stderr'", step.Stderr)
+	actual := step.Stderr("foo")
+	expected := "'/path/to/stderr'"
+	if actual != expected {
+		t.Errorf("Stderr() returned '%s' instead of '%s'", actual, expected)
 	}
+	step.StderrPath = ""
+	actual = step.Stderr("foo")
+	expected = "logs/condor-stderr-foo"
+	if actual != expected {
+		t.Errorf("Stderr() returned '%s' instead of '%s'", actual, expected)
+	}
+	_inittests(t, false)
 }
 
 func TestStepComponentType(t *testing.T) {
