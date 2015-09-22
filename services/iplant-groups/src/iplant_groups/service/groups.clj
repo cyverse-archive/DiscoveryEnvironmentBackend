@@ -22,3 +22,9 @@
   [{:keys [type name description display_extension]} {:keys [user]}]
   (let [group (grouper/add-group user type name display_extension description)]
     (fmt/format-group-with-detail group)))
+
+(defn delete-group
+  [group-id {:keys [user]}]
+  (if-let [group (grouper/get-group user group-id)]
+    (fmt/format-group (grouper/delete-group user (:name group)))
+    (service/not-found "group" group-id)))

@@ -137,6 +137,30 @@
          (first)
          (:wsGroup))))
 
+;; Group delete
+
+(defn- format-group-delete-request
+  [username group-name]
+  (-> {:WsRestGroupDeleteRequest
+       {:actAsSubjectLookup (act-as-subject-lookup username)
+        :wsGroupLookups [
+         {:groupName group-name}]}}
+      (json/encode)))
+
+(defn delete-group
+  [username group-name]
+  (with-trap [default-error-handler]
+    (->> {:body         (format-group-delete-request username group-name)
+          :basic-auth   (auth-params)
+          :content-type content-type
+          :as           :json}
+         (http/post (grouper-uri "groups"))
+         (:body)
+         (:WsGroupDeleteResults)
+         (:results)
+         (first)
+         (:wsGroup))))
+
 ;; Group membership listings.
 
 (defn- group-membership-listing-error-handler
