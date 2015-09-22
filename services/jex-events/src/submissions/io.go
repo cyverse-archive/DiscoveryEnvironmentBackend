@@ -51,6 +51,17 @@ func (i *StepInput) LogPath(parent, suffix string) string {
 	return path.Join(parent, "logs", fmt.Sprintf("logs-condor-%s", i.Identifier(suffix)))
 }
 
+// Source returns the path to the local filename of the input file.
+func (i *StepInput) Source() string {
+	value := path.Base(i.Value)
+	if i.Multiplicity == "collection" {
+		if !strings.HasSuffix(value, "/") {
+			return fmt.Sprintf("%s/", value)
+		}
+	}
+	return value
+}
+
 // Arguments returns the porklock settings needed for the input operation.
 func (i *StepInput) Arguments(username string, metadata []FileMetadata) string {
 	args := "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:%s get --user %s --source %s --config irods-config %s"
@@ -101,4 +112,18 @@ func (o *StepOutput) Arguments(username, dest string) string {
 	src := quote(o.Name)
 	d := quote(dest)
 	return fmt.Sprintf(args, tag, username, src, d)
+}
+
+// Source returns the path to the local filename for the output file.
+func (o *StepOutput) Source() string {
+	value := o.Name
+	if o.Multiplicity == "collection" {
+		if !path.IsAbs(value) {
+			value = fmt.Sprintf("$(pwd)/%s", value)
+		}
+		if !strings.HasSuffix(value, "/") {
+			value = fmt.Sprintf("%s/", value)
+		}
+	}
+	return value
 }

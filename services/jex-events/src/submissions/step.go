@@ -154,9 +154,9 @@ func (s *Step) LogPath(parent, suffix string) string {
 
 // StepConfig is where configuration settings for a job step are located.
 type StepConfig struct {
-	Params []StepParam  `json:"params"`
-	Input  []StepInput  `json:"input"`
-	Output []StepOutput `json:"output"`
+	Params  []StepParam  `json:"params"`
+	Inputs  []StepInput  `json:"input"`
+	Outputs []StepOutput `json:"output"`
 }
 
 // Parameters returns the StepParams associated with a Step in the correct order.

@@ -309,3 +309,23 @@ func TestSubmissionFileMetadataArguments(t *testing.T) {
 		t.Errorf("FileMetadataArguments() returned %s instead of %s", actual, expected)
 	}
 }
+
+func TestInputs(t *testing.T) {
+	s := inittests(t)
+	inputs := s.Inputs()
+	actual := len(inputs)
+	expected := 1
+	if actual != expected {
+		t.Errorf("Number of inputs was %d instead of %d", actual, expected)
+	}
+}
+
+func TestOutputs(t *testing.T) {
+	s := inittests(t)
+	outputs := s.Outputs()
+	actual := len(outputs)
+	expected := 2
+	if actual != expected {
+		t.Errorf("Number of outputs was %d instead of %d", actual, expected)
+	}
+}

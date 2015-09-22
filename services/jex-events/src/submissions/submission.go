@@ -43,6 +43,7 @@ func (m MetadataArgs) FileMetadataArguments() string {
 // Submission describes a job passed down through the API.
 type Submission struct {
 	Description        string         `json:"description"`
+	ArchiveLogs        bool           `json:"archive_logs"`
 	Email              string         `json:"email"`
 	Name               string         `json:"name"`
 	Username           string         `json:"username"`
@@ -84,21 +85,19 @@ func Init(c *configurate.Configuration, l *log.Logger) {
 func New() *Submission {
 	n := time.Now().Format(nowfmt)
 	return &Submission{
-		NowDate: n,
+		NowDate:     n,
+		ArchiveLogs: true,
 	}
 }
 
 // NewFromData creates a new submission and populates it by parsing the passed
 // in []byte as JSON.
 func NewFromData(data []byte) (*Submission, error) {
-	n := time.Now().Format(nowfmt)
-	s := &Submission{
-		NowDate:        n,
-		SubmissionDate: n,
-		RunOnNFS:       cfg.RunOnNFS,
-		NFSBase:        cfg.NFSBase,
-		IRODSBase:      cfg.IRODSBase,
-	}
+	s := New()
+	s.SubmissionDate = s.NowDate
+	s.RunOnNFS = cfg.RunOnNFS
+	s.NFSBase = cfg.NFSBase
+	s.IRODSBase = cfg.IRODSBase
 	err := json.Unmarshal(data, s)
 	if err != nil {
 		return nil, err
@@ -196,3 +195,33 @@ func (s *Submission) DataContainers() []VolumesFrom {
 	}
 	return vfs
 }
+
+// Inputs returns all of the StepInputs associated with the submission,
+// regardless of what step they're associated with.
+func (s *Submission) Inputs() []StepInput {
+	var inputs []StepInput
+	for _, step := range s.Steps {
+		for _, input := range step.Config.Inputs {
+			inputs = append(inputs, input)
+		}
+	}
+	return inputs
+}
+
+// Outputs returns all of the StepOutputs associated with the submission,
+// regardless of what step they're associated with.
+func (s *Submission) Outputs() []StepOutput {
+	var outputs []StepOutput
+	for _, step := range s.Steps {
+		for _, output := range step.Config.Outputs {
+			outputs = append(outputs, output)
+		}
+	}
+	return outputs
+}
+
+// ExcludeArguments returns a string containing the command-line settings for
+// porklock that tell it which files to skip.
+// func (s *Submission) ExcludeArguments() string {
+//
+// }
