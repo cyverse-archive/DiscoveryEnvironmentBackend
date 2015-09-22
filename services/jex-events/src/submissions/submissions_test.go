@@ -1,6 +1,12 @@
 package submissions
 
-import "testing"
+import (
+	"fmt"
+	"path"
+	"strings"
+	"testing"
+	"time"
+)
 
 func TestNFSBase(t *testing.T) {
 	s := inittests(t)
@@ -118,5 +124,188 @@ func TestAppName(t *testing.T) {
 	s := inittests(t)
 	if s.AppName != "Word Count" {
 		t.Errorf("app_name was '%s' instead of 'Word Count'", s.AppName)
+	}
+}
+
+func TestDirname(t *testing.T) {
+	s := _inittests(t, false)
+	s.NowDate = time.Now().Format(nowfmt)
+	expected := fmt.Sprintf("%s-%s", s.Name, s.NowDate)
+	actual := s.DirectoryName()
+	if actual != expected {
+		t.Errorf("Dirname() returned '%s' when it should have returned '%s'", actual, expected)
+	}
+}
+
+func TestWorkingDir(t *testing.T) {
+	s := _inittests(t, false)
+	s.NowDate = time.Now().Format(nowfmt)
+	expected := fmt.Sprintf("%s/", path.Join(s.NFSBase, s.Username, s.DirectoryName()))
+	actual := s.WorkingDirectory()
+	if actual != expected {
+		t.Errorf("WorkingDir() returned '%s' when it should have returned '%s'", actual, expected)
+	}
+}
+
+func TestCondorLogDir(t *testing.T) {
+	s := _inittests(t, false)
+	s.NowDate = time.Now().Format(nowfmt)
+	expected := fmt.Sprintf("%s/", path.Join(c.CondorLogPath, s.Username, s.DirectoryName()))
+	actual := s.CondorLogDirectory()
+	if actual != expected {
+		t.Errorf("CondorLogDir() returned '%s' when it should have returned '%s'", actual, expected)
+	}
+}
+
+func TestIRODSConfig(t *testing.T) {
+	s := _inittests(t, false)
+	s.NowDate = time.Now().Format(nowfmt)
+	expected := path.Join(s.WorkingDirectory(), "logs", "irods-config")
+	actual := s.IRODSConfig()
+	if actual != expected {
+		t.Errorf("IRODSConfig() returned '%s' when it should have returned '%s'", actual, expected)
+	}
+}
+
+func TestOutputDirectory1(t *testing.T) {
+	s := _inittests(t, false)
+	s.OutputDir = ""
+	expected := path.Join(s.IRODSBase, s.Username, "analyses", s.DirectoryName())
+	actual := s.OutputDirectory()
+	if actual != expected {
+		t.Errorf("OutputDirectory() returned '%s' when it should have returned '%s'", actual, expected)
+	}
+}
+
+func TestOutputDirectory2(t *testing.T) {
+	s := _inittests(t, false)
+	expected := path.Join(s.OutputDir, s.DirectoryName())
+	actual := s.OutputDirectory()
+	if actual != expected {
+		t.Errorf("OutputDirectory() returned '%s' when it should have returned '%s'", actual, expected)
+	}
+}
+
+func TestOutputDirectory3(t *testing.T) {
+	s := _inittests(t, false)
+	s.CreateOutputSubdir = false
+	expected := strings.TrimSuffix(s.OutputDir, "/")
+	actual := s.OutputDirectory()
+	if actual != expected {
+		t.Errorf("OutputDirectory() returned '%s' when it should have returned '%s'", actual, expected)
+	}
+}
+
+func TestDataContainers(t *testing.T) {
+	s := inittests(t)
+	dc := s.DataContainers()
+	dclen := len(dc)
+	if dclen != 2 {
+		t.Errorf("The number of data containers was '%d' instead of 2", dclen)
+	}
+
+	vfs := dc[0]
+	if vfs.Name != "vf-name1" {
+		t.Errorf("The VolumesFrom name was '%s' when it should have been 'vf-name1'", vfs.Name)
+	}
+	if vfs.NamePrefix != "vf-prefix1" {
+		t.Errorf("The VolumesFrom prefix was '%s' when it should have been 'vf-prefix1'", vfs.NamePrefix)
+	}
+	if vfs.Tag != "vf-tag1" {
+		t.Errorf("The VolumesFrom tag was '%s' when it should have been 'vf-tag1'", vfs.Tag)
+	}
+	if vfs.URL != "vf-url1" {
+		t.Errorf("The VolumesFrom url was '%s' when it should have been 'vf-url1'", vfs.URL)
+	}
+	if vfs.HostPath != "/host/path1" {
+		t.Errorf("The VolumesFrom host path was '%s' when it should have been '/host/path1'", vfs.HostPath)
+	}
+	if vfs.ContainerPath != "/container/path1" {
+		t.Errorf("The VolumesFrom container path was '%s' when it should have been '/container/path1'", vfs.ContainerPath)
+	}
+	if !vfs.ReadOnly {
+		t.Error("The VolumesFrom read-only field was false when it should have been true.")
+	}
+
+	vfs = dc[1]
+	if vfs.Name != "vf-name2" {
+		t.Errorf("The VolumesFrom name was '%s' when it should have been 'vf-name2'", vfs.Name)
+	}
+	if vfs.NamePrefix != "vf-prefix2" {
+		t.Errorf("The VolumesFrom prefix was '%s' when it should have been 'vf-prefix2'", vfs.NamePrefix)
+	}
+	if vfs.Tag != "vf-tag2" {
+		t.Errorf("The VolumesFrom tag was '%s' when it should have been 'vf-tag2'", vfs.Tag)
+	}
+	if vfs.URL != "vf-url2" {
+		t.Errorf("The VolumesFrom url was '%s' when it should have been 'vf-url2'", vfs.URL)
+	}
+	if vfs.HostPath != "/host/path2" {
+		t.Errorf("The VolumesFrom host path was '%s' when it should have been '/host/path2'", vfs.HostPath)
+	}
+	if vfs.ContainerPath != "/container/path2" {
+		t.Errorf("The VolumesFrom container path was '%s' when it should have been '/container/path2'", vfs.ContainerPath)
+	}
+	if !vfs.ReadOnly {
+		t.Error("The VolumesFrom read-only field was false when it should have been true.")
+	}
+}
+
+func TestFileMetadata(t *testing.T) {
+	s := inittests(t)
+	fm := s.FileMetadata
+	actual := fm[0].Attribute
+	expected := "attr1"
+	if actual != expected {
+		t.Errorf("Attribute was %s instead of %s", actual, expected)
+	}
+	actual = fm[0].Value
+	expected = "value1"
+	if actual != expected {
+		t.Errorf("Value was %s instead of %s", actual, expected)
+	}
+	actual = fm[0].Unit
+	expected = "unit1"
+	if actual != expected {
+		t.Errorf("Unit was %s instead of %s", actual, expected)
+	}
+	actual = fm[1].Attribute
+	expected = "attr2"
+	if actual != expected {
+		t.Errorf("Attribute was %s instead of %s", actual, expected)
+	}
+	actual = fm[1].Value
+	expected = "value2"
+	if actual != expected {
+		t.Errorf("Value was %s instead of %s", actual, expected)
+	}
+	actual = fm[1].Unit
+	expected = "unit2"
+	if actual != expected {
+		t.Errorf("Unit was %s instead of %s", actual, expected)
+	}
+}
+
+func TestFileMetadataArgument(t *testing.T) {
+	s := inittests(t)
+	fm := s.FileMetadata
+	actual := fm[0].Argument()
+	expected := "-m 'attr1,value1,unit1'"
+	if actual != expected {
+		t.Errorf("Argument() returned %s instead of %s", actual, expected)
+	}
+	actual = fm[1].Argument()
+	expected = "-m 'attr2,value2,unit2'"
+	if actual != expected {
+		t.Errorf("Argument() returned %s instead of %s", actual, expected)
+	}
+}
+
+func TestSubmissionFileMetadataArguments(t *testing.T) {
+	s := inittests(t)
+	actual := s.FileMetadataArguments()
+	expected := "-m 'attr1,value1,unit1' -m 'attr2,value2,unit2'"
+	if actual != expected {
+		t.Errorf("FileMetadataArguments() returned %s instead of %s", actual, expected)
 	}
 }
