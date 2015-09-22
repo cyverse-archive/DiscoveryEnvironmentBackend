@@ -19,6 +19,6 @@
     {:members (mapv #(fmt/format-subject attribute-names %) subjects)}))
 
 (defn add-group
-  [{:keys [type name description display-extension]} {:keys [user]}]
-  (let [group (grouper/add-group user type name display-extension description)]
+  [{:keys [type name description display_extension]} {:keys [user]}]
+  (let [group (grouper/add-group user type name display_extension description)]
     (fmt/format-group-with-detail group)))
