@@ -276,28 +276,28 @@ func (i *StepInput) IRODSPath() string {
 	return i.Value
 }
 
-// LogFilename returns a string containing the input job's log filename in the
+// Identifier returns a string containing the input job's identifier in the
 // format "input-<suffix>"
-func (i *StepInput) LogFilename(suffix string) string {
+func (i *StepInput) Identifier(suffix string) string {
 	return fmt.Sprintf("input-%s", suffix)
 }
 
 // Stdout returns a string containing the path to the input job's stdout file.
 // It should be a relative path in the format "logs/logs-stdout-<LogFilename(suffix)>"
 func (i *StepInput) Stdout(suffix string) string {
-	return path.Join("logs", fmt.Sprintf("logs-stdout-%s", i.LogFilename(suffix)))
+	return path.Join("logs", fmt.Sprintf("logs-stdout-%s", i.Identifier(suffix)))
 }
 
 // Stderr returns a string containing the path to the input job's stderr file.
 // It should be a relative path in the format "logs/logs-stderr-<LogFilename(suffix)>"
 func (i *StepInput) Stderr(suffix string) string {
-	return path.Join("logs", fmt.Sprintf("logs-stderr-%s", i.LogFilename(suffix)))
+	return path.Join("logs", fmt.Sprintf("logs-stderr-%s", i.Identifier(suffix)))
 }
 
 // LogPath returns the path to the Condor log file for the input job. The returned
 // path will be in the format "<parent>/logs/logs-condor-<LogFilename(suffix)>"
 func (i *StepInput) LogPath(parent, suffix string) string {
-	return path.Join(parent, "logs", fmt.Sprintf("logs-condor-%s", i.LogFilename(suffix)))
+	return path.Join(parent, "logs", fmt.Sprintf("logs-condor-%s", i.Identifier(suffix)))
 }
 
 // StepOutput describes a single output for a job step.

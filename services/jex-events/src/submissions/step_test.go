@@ -314,13 +314,13 @@ func TestInputIRODSPath(t *testing.T) {
 	_inittests(t, false)
 }
 
-func TestInputLogFilename(t *testing.T) {
+func TestInputIdentifier(t *testing.T) {
 	s := inittests(t)
 	input := s.Steps[0].Config.Input[0]
-	actual := input.LogFilename("0-0")
+	actual := input.Identifier("0-0")
 	expected := "input-0-0"
 	if actual != expected {
-		t.Errorf("LogFilename() returned %s instead of %s", actual, expected)
+		t.Errorf("Identifier() returned %s instead of %s", actual, expected)
 	}
 }
 
