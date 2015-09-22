@@ -458,29 +458,44 @@ func (s *Step) LogPath(parent, suffix string) string {
 	return path.Join(parent, "logs", fmt.Sprintf("condor-log-%s", suffix))
 }
 
+// FileMetadata describes a unit of metadata that should get associated with
+// all of the files associated with the job submission.
+type FileMetadata struct {
+	Attribute string `json:"attr"`
+	Value     string `json:"value"`
+	Unit      string `json:"unit"`
+}
+
+// Argument returns a string containing the command-line settings for the
+// file transfer tool.
+func (m *FileMetadata) Argument() string {
+	return fmt.Sprintf("-m '%s,%s,%s'", m.Attribute, m.Value, m.Unit)
+}
+
 // Submission describes a job passed down through the API.
 type Submission struct {
-	Description        string `json:"description"`
-	Email              string `json:"email"`
-	Name               string `json:"name"`
-	Username           string `json:"username"`
-	UUID               string `json:"uuid"`
-	AppID              string `json:"app_id"`
-	NowDate            string `json:"now_date"`
-	RunOnNFS           bool   `json:"run-on-nfs"`
-	Type               string `json:"type"`
-	NFSBase            string `json:"nfs_base"`
-	IRODSBase          string `json:"irods_base"`
-	SubmissionDate     string `json:"submission_date"`
-	CreateOutputSubdir bool   `json:"create_output_subdir"`
-	OutputDir          string `json:"output_dir"` //the value parsed out of the JSON. Use OutputDirectory() instead.
-	Steps              []Step `json:"steps"`
-	RequestType        string `json:"request_type"`
-	AppDescription     string `json:"app_description"`
-	WikiURL            string `json:"wiki_url"`
-	Notify             bool   `json:"notify"`
-	ExecutionTarget    string `json:"execution_target"`
-	AppName            string `json:"app_name"`
+	Description        string         `json:"description"`
+	Email              string         `json:"email"`
+	Name               string         `json:"name"`
+	Username           string         `json:"username"`
+	UUID               string         `json:"uuid"`
+	AppID              string         `json:"app_id"`
+	NowDate            string         `json:"now_date"`
+	RunOnNFS           bool           `json:"run-on-nfs"`
+	Type               string         `json:"type"`
+	NFSBase            string         `json:"nfs_base"`
+	IRODSBase          string         `json:"irods_base"`
+	SubmissionDate     string         `json:"submission_date"`
+	FileMetadata       []FileMetadata `json:"file-metadata"`
+	CreateOutputSubdir bool           `json:"create_output_subdir"`
+	OutputDir          string         `json:"output_dir"` //the value parsed out of the JSON. Use OutputDirectory() instead.
+	Steps              []Step         `json:"steps"`
+	RequestType        string         `json:"request_type"`
+	AppDescription     string         `json:"app_description"`
+	WikiURL            string         `json:"wiki_url"`
+	Notify             bool           `json:"notify"`
+	ExecutionTarget    string         `json:"execution_target"`
+	AppName            string         `json:"app_name"`
 }
 
 var (
@@ -612,4 +627,15 @@ func (s *Submission) DataContainers() []VolumesFrom {
 		}
 	}
 	return vfs
+}
+
+// FileMetadataArguments returns a string containing the command-line arguments
+// for porklock that sets all of the metadata triples.
+func (s *Submission) FileMetadataArguments() string {
+	var buffer bytes.Buffer
+	for _, fm := range s.FileMetadata {
+		buffer.WriteString(fm.Argument())
+		buffer.WriteString(" ")
+	}
+	return strings.TrimSpace(buffer.String())
 }

@@ -1247,3 +1247,62 @@ func TestDataContainers(t *testing.T) {
 		t.Error("The VolumesFrom read-only field was false when it should have been true.")
 	}
 }
+
+func TestStepFileMetadata(t *testing.T) {
+	s := inittests(t)
+	fm := s.FileMetadata
+	actual := fm[0].Attribute
+	expected := "attr1"
+	if actual != expected {
+		t.Errorf("Attribute was %s instead of %s", actual, expected)
+	}
+	actual = fm[0].Value
+	expected = "value1"
+	if actual != expected {
+		t.Errorf("Value was %s instead of %s", actual, expected)
+	}
+	actual = fm[0].Unit
+	expected = "unit1"
+	if actual != expected {
+		t.Errorf("Unit was %s instead of %s", actual, expected)
+	}
+	actual = fm[1].Attribute
+	expected = "attr2"
+	if actual != expected {
+		t.Errorf("Attribute was %s instead of %s", actual, expected)
+	}
+	actual = fm[1].Value
+	expected = "value2"
+	if actual != expected {
+		t.Errorf("Value was %s instead of %s", actual, expected)
+	}
+	actual = fm[1].Unit
+	expected = "unit2"
+	if actual != expected {
+		t.Errorf("Unit was %s instead of %s", actual, expected)
+	}
+}
+
+func TestStepFileMetadataArgument(t *testing.T) {
+	s := inittests(t)
+	fm := s.FileMetadata
+	actual := fm[0].Argument()
+	expected := "-m 'attr1,value1,unit1'"
+	if actual != expected {
+		t.Errorf("Argument() returned %s instead of %s", actual, expected)
+	}
+	actual = fm[1].Argument()
+	expected = "-m 'attr2,value2,unit2'"
+	if actual != expected {
+		t.Errorf("Argument() returned %s instead of %s", actual, expected)
+	}
+}
+
+func TestSubmissionFileMetadataArugments(t *testing.T) {
+	s := inittests(t)
+	actual := s.FileMetadataArguments()
+	expected := "-m 'attr1,value1,unit1' -m 'attr2,value2,unit2'"
+	if actual != expected {
+		t.Errorf("FileMetadataArguments() returned %s instead of %s", actual, expected)
+	}
+}

@@ -122,6 +122,18 @@
             "type":"condor"
         }
     ],
+    "file-metadata" : [
+      {
+        "attr" : "attr1",
+        "value" : "value1",
+        "unit" : "unit1"
+      },
+      {
+        "attr" : "attr2",
+        "value" : "value2",
+        "unit" : "unit2"
+      }
+    ],
     "create_output_subdir":true,
     "request_type":"submit",
     "app_description":"this is an app description",
