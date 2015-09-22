@@ -6,6 +6,7 @@
         [donkey.services.filesystem.validators]
         [kameleon.uuids :only [uuidify]]
         [clj-jargon.init :only [with-jargon]]
+        [clj-jargon.item-ops :only [input-stream]]
         [clj-jargon.metadata]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [try+ throw+]])
@@ -374,22 +375,28 @@
     {:path path
      :avus avus}))
 
-(defn- parse-form-metadata-csv
-  [username dest-dir template-id {:keys [stream filename content-type]}]
+(defn- parse-metadata-csv
+  [cm username dest-dir template-id separator stream]
+  (let [stream-reader (java.io.InputStreamReader. stream "UTF-8")
+        csv (mapv (partial mapv string/trim) (.readAll (CSVReader. stream-reader (.charAt separator 0))))
+        attrs (-> csv first rest)
+        metadata (mapv
+                   (partial bulk-add-file-avus cm username dest-dir template-id attrs)
+                   (mapv (juxt first rest) (rest csv)))]
+    {:metadata metadata}))
+
+(defn- parse-form-csv-metadata
+  [username dest-dir template-id separator {:keys [stream filename content-type]}]
   (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm username)
-    (let [dest-path (ft/path-join dest-dir filename)
-          stream-reader (java.io.InputStreamReader. stream "UTF-8")
-          csv (mapv (partial mapv string/trim) (.readAll (CSVReader. stream-reader)))
-          attrs (-> csv first rest)
-          metadata (mapv
-                     (partial bulk-add-file-avus cm username dest-dir template-id attrs)
-                     (mapv (juxt first rest) (rest csv)))]
-      {:metadata metadata})))
+    (parse-metadata-csv cm username dest-dir template-id separator stream)))
 
 (defn parse-csv-metadata
-  [{{:keys [user]} :user-info {:keys [dest template-id]} :params :as req}]
-  (let [parser (partial parse-form-metadata-csv user dest (uuidify template-id))
+  [{{:keys [user]} :user-info
+    {:keys [dest template-id separator] :or {separator "%2C"}} :params
+    :as req}]
+  (let [parser (partial parse-form-csv-metadata
+                 user dest (uuidify template-id) (url/url-decode separator))
         {{results "file"} :params} (multipart/multipart-params-request req {:store parser})]
     (service/success-response results)))
 
@@ -401,3 +408,22 @@
                           :template-id string?})))
 
 (with-post-hook! #'parse-csv-metadata (log-func "parse-csv-metadata"))
+
+(defn parse-src-file-csv-metadata
+  [{:keys [user]} {:keys [src dest template-id separator] :or {separator "%2C"}}]
+  (with-jargon (icat/jargon-cfg) [cm]
+    (validators/user-exists cm user)
+    (validators/path-exists cm src)
+    (validators/path-readable cm user src)
+    (parse-metadata-csv
+      cm user dest (uuidify template-id) (url/url-decode separator) (input-stream cm src))))
+
+(with-pre-hook! #'parse-src-file-csv-metadata
+  (fn [user-info params]
+    (log-call "parse-src-file-csv-metadata" user-info params)
+    (validate-map user-info {:user string?})
+    (validate-map params {:src string?
+                          :dest string?
+                          :template-id string?})))
+
+(with-post-hook! #'parse-src-file-csv-metadata (log-func "parse-src-file-csv-metadata"))
