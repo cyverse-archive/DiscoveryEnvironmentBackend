@@ -106,6 +106,37 @@
          (:groupResults)
          (first))))
 
+;; Group add/update
+
+(defn- format-group-add-update-request
+  [update? username type name display-extension description]
+  (-> {:WsRestGroupSaveRequest
+       {:actAsSubjectLookup (act-as-subject-lookup username)
+        :wsGroupToSaves [
+         {:wsGroup
+          {:name name
+           :description description
+           :displayExtension display-extension
+           :typeOfGroup type}
+          :saveMode (if update? "UPDATE" "INSERT")}
+        ]
+        :includeGroupDetail "T"}}
+      (json/encode)))
+
+(defn add-group
+  [username type name display-extension description]
+  (with-trap [default-error-handler]
+    (->> {:body         (format-group-add-update-request false username type name display-extension description)
+          :basic-auth   (auth-params)
+          :content-type content-type
+          :as           :json}
+         (http/post (grouper-uri "groups"))
+         (:body)
+         (:WsGroupSaveResults)
+         (:results)
+         (first)
+         (:wsGroup))))
+
 ;; Group membership listings.
 
 (defn- group-membership-listing-error-handler

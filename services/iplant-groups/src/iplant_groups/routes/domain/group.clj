@@ -4,13 +4,21 @@
             [iplant_groups.routes.domain.subject :as subject]
             [schema.core :as s]))
 
-(s/defschema Group
-  {(s/optional-key :description)
+(s/defschema BaseGroup
+  {:name
+   (describe String "The internal group name.")
+
+   :type
+   (describe String "The group type name.")
+
+   (s/optional-key :description)
    (describe String "A brief description of the group.")
 
    (s/optional-key :display_extension)
-   (describe String "The displayable group name extension.")
+   (describe String "The displayable group name extension.")})
 
+(s/defschema Group
+  (assoc BaseGroup
    (s/optional-key :display_name)
    (describe String "The displayable group name.")
 
@@ -20,14 +28,8 @@
    :id_index
    (describe String "The sequential ID index number.")
 
-   :name
-   (describe String "The internal group name.")
-
-   :type
-   (describe String "The group type name.")
-
    :id
-   (describe String "The group ID.")})
+   (describe String "The group ID.")))
 
 (s/defschema GroupDetail
   {(s/optional-key :attribute_names)

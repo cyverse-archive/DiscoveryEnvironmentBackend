@@ -16,6 +16,14 @@
         folder in the system."
         (service/trap uri groups/group-search params))
 
+  (POST* "/" [:as {:keys [uri]}]
+        :return      GroupWithDetail
+        :query       [params StandardUserQueryParams]
+        :body        [body (describe BaseGroup "The group to add.")]
+        :summary     "Add Group"
+        :description "This endpoint allows adding a new group."
+        (service/trap uri groups/add-group body params))
+
   (GET* "/:group-id" [:as {:keys [uri]}]
         :path-params [group-id :- GroupIdPathParam]
         :query       [params StandardUserQueryParams]
