@@ -304,7 +304,7 @@ func TestFileMetadataArgument(t *testing.T) {
 func TestSubmissionFileMetadataArguments(t *testing.T) {
 	s := inittests(t)
 	actual := MetadataArgs(s.FileMetadata).FileMetadataArguments()
-	expected := "-m 'attr1,value1,unit1' -m 'attr2,value2,unit2'"
+	expected := "-m 'attr1,value1,unit1' -m 'attr2,value2,unit2' -m 'ipc-analysis-id,c7f05682-23c8-4182-b9a2-e09650a5f49b,UUID' -m 'ipc-execution-id,07b04ce2-7757-4b21-9e15-0b4c2f44be26,UUID'"
 	if actual != expected {
 		t.Errorf("FileMetadataArguments() returned %s instead of %s", actual, expected)
 	}
@@ -361,25 +361,6 @@ func TestExcludeArguments(t *testing.T) {
 func TestAddRequiredMetadata(t *testing.T) {
 	s := inittests(t)
 	found := false
-	for _, md := range s.FileMetadata {
-		if md.Attribute == "ipc-analysis-id" {
-			found = true
-		}
-	}
-	if found {
-		t.Errorf("ipc-analysis-id was in the file metadata before AddRequiredMetadata() was called")
-	}
-	found = false
-	for _, md := range s.FileMetadata {
-		if md.Attribute == "ipc-execution-id" {
-			found = true
-		}
-	}
-	if found {
-		t.Errorf("ipc-execution-id was in the file metadata before AddRequiredMetadata() was called")
-	}
-	s.AddRequiredMetadata()
-	found = false
 	var a FileMetadata
 	for _, md := range s.FileMetadata {
 		if md.Attribute == "ipc-analysis-id" {

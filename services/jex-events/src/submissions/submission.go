@@ -104,6 +104,7 @@ func NewFromData(data []byte) (*Submission, error) {
 		return nil, err
 	}
 	s.Sanitize()
+	s.AddRequiredMetadata()
 	return s, err
 }
 
