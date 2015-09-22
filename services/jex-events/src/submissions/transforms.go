@@ -277,7 +277,7 @@ func (i *StepInput) IRODSPath() string {
 }
 
 // LogFilename returns a string containing the input job's log filename in the
-// format "log-input-<suffix>"
+// format "input-<suffix>"
 func (i *StepInput) LogFilename(suffix string) string {
 	return fmt.Sprintf("input-%s", suffix)
 }
