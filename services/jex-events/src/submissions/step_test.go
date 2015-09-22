@@ -354,6 +354,16 @@ func TestInputLogPath(t *testing.T) {
 	}
 }
 
+func TestInputArguments(t *testing.T) {
+	s := inittests(t)
+	input := s.Steps[0].Config.Input[0]
+	actual := input.Arguments("testuser", s.FileMetadata)
+	expected := "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:test get --user testuser --source '/iplant/home/wregglej/Acer-tree.txt' --config irods-config -m 'attr1,value1,unit1' -m 'attr2,value2,unit2'"
+	if actual != expected {
+		t.Errorf("Arguments() returned:\n\t%s\ninstead of:\n\t%s", actual, expected)
+	}
+}
+
 func TestConfigOutput0Multiplicity(t *testing.T) {
 	s := inittests(t)
 	output := s.Steps[0].Config.Output[0]
@@ -439,6 +449,56 @@ func TestConfigOutput1Type(t *testing.T) {
 	output := s.Steps[0].Config.Output[1]
 	if output.Type != "File" {
 		t.Errorf("The output type was '%s' when it should have been 'File'", output.Type)
+	}
+}
+
+func TestOutputIdentifier(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[0]
+	actual := output.Identifier("0-0")
+	expected := "output-0-0"
+	if actual != expected {
+		t.Errorf("Identifier() returned %s instead of %s", actual, expected)
+	}
+}
+
+func TestOutputStdout(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[0]
+	actual := output.Stdout("0-0")
+	expected := "logs/logs-stdout-output-0-0"
+	if actual != expected {
+		t.Errorf("StepOutput.Stdout() returned %s instead of %s", actual, expected)
+	}
+}
+
+func TestOutputStderr(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[0]
+	actual := output.Stderr("0-0")
+	expected := "logs/logs-stderr-output-0-0"
+	if actual != expected {
+		t.Errorf("StepOuput.Stderr() returned %s instead of %s", actual, expected)
+	}
+}
+
+func TestOutputLogPath(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[0]
+	actual := output.LogPath("parent", "0-0")
+	expected := "parent/logs/logs-condor-output-0-0"
+	if actual != expected {
+		t.Errorf("StepOutput.LogPath() returned %s instead of %s", actual, expected)
+	}
+}
+
+func TestOutputArguments(t *testing.T) {
+	s := inittests(t)
+	output := s.Steps[0].Config.Output[0]
+	actual := output.Arguments("testuser", "/irods/dest/")
+	expected := "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:test put --user testuser --source 'wc_out.txt' --destination '/irods/dest/' --config logs/irods-config"
+	if actual != expected {
+		t.Errorf("Arguments returned:\n\t%s\ninstead of:\n\t%s", actual, expected)
 	}
 }
 

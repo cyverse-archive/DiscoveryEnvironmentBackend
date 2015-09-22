@@ -303,7 +303,7 @@ func TestFileMetadataArgument(t *testing.T) {
 
 func TestSubmissionFileMetadataArguments(t *testing.T) {
 	s := inittests(t)
-	actual := s.FileMetadataArguments()
+	actual := MetadataArgs(s.FileMetadata).FileMetadataArguments()
 	expected := "-m 'attr1,value1,unit1' -m 'attr2,value2,unit2'"
 	if actual != expected {
 		t.Errorf("FileMetadataArguments() returned %s instead of %s", actual, expected)

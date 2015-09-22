@@ -283,21 +283,30 @@ func (i *StepInput) Identifier(suffix string) string {
 }
 
 // Stdout returns a string containing the path to the input job's stdout file.
-// It should be a relative path in the format "logs/logs-stdout-<LogFilename(suffix)>"
+// It should be a relative path in the format "logs/logs-stdout-<i.Identifier(suffix)>"
 func (i *StepInput) Stdout(suffix string) string {
 	return path.Join("logs", fmt.Sprintf("logs-stdout-%s", i.Identifier(suffix)))
 }
 
 // Stderr returns a string containing the path to the input job's stderr file.
-// It should be a relative path in the format "logs/logs-stderr-<LogFilename(suffix)>"
+// It should be a relative path in the format "logs/logs-stderr-<i.Identifier(suffix)>"
 func (i *StepInput) Stderr(suffix string) string {
 	return path.Join("logs", fmt.Sprintf("logs-stderr-%s", i.Identifier(suffix)))
 }
 
 // LogPath returns the path to the Condor log file for the input job. The returned
-// path will be in the format "<parent>/logs/logs-condor-<LogFilename(suffix)>"
+// path will be in the format "<parent>/logs/logs-condor-<i.Identifier(suffix)>"
 func (i *StepInput) LogPath(parent, suffix string) string {
 	return path.Join(parent, "logs", fmt.Sprintf("logs-condor-%s", i.Identifier(suffix)))
+}
+
+// Arguments returns the porklock settings needed for the input operation.
+func (i *StepInput) Arguments(username string, metadata []FileMetadata) string {
+	args := "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:%s get --user %s --source %s --config irods-config %s"
+	tag := cfg.PorklockTag
+	path := quote(i.IRODSPath())
+	metadataArgs := MetadataArgs(metadata).FileMetadataArguments()
+	return fmt.Sprintf(args, tag, username, path, metadataArgs)
 }
 
 // StepOutput describes a single output for a job step.
@@ -308,6 +317,39 @@ type StepOutput struct {
 	QualID       string `json:"qual-id"`
 	Retain       bool   `json:"retain"`
 	Type         string `json:"type"`
+}
+
+// Identifier returns a string with the output step's identifier. It's in the
+// format "output-<suffix>".
+func (o *StepOutput) Identifier(suffix string) string {
+	return fmt.Sprintf("output-%s", suffix)
+}
+
+// Stdout returns the path to the output operation's stdout log. It's in the
+// format "logs/logs-stdout-<o.Identifier(suffix)>"
+func (o *StepOutput) Stdout(suffix string) string {
+	return path.Join("logs", fmt.Sprintf("logs-stdout-%s", o.Identifier(suffix)))
+}
+
+// Stderr returns the path to the output operation's stderr log. It's in the
+// format "logs/logs-stderr-<o.Identifier(suffix)>."
+func (o *StepOutput) Stderr(suffix string) string {
+	return path.Join("logs", fmt.Sprintf("logs-stderr-%s", o.Identifier(suffix)))
+}
+
+// LogPath returns the path to the output operation's condor log file. It's in
+// the format "<parent>/logs/logs-condor-<o.Identifier(suffix)>"
+func (o *StepOutput) LogPath(parent, suffix string) string {
+	return path.Join(parent, "logs", fmt.Sprintf("logs-condor-%s", o.Identifier(suffix)))
+}
+
+// Arguments returns the porklock settings needed for output operation.
+func (o *StepOutput) Arguments(username, dest string) string {
+	args := "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:%s put --user %s --source %s --destination %s --config logs/irods-config"
+	tag := cfg.PorklockTag
+	src := quote(o.Name)
+	d := quote(dest)
+	return fmt.Sprintf(args, tag, username, src, d)
 }
 
 // StepConfig is where configuration settings for a job step are located.
@@ -472,6 +514,20 @@ func (m *FileMetadata) Argument() string {
 	return fmt.Sprintf("-m '%s,%s,%s'", m.Attribute, m.Value, m.Unit)
 }
 
+// MetadataArgs is a list of FileMetadata
+type MetadataArgs []FileMetadata
+
+// FileMetadataArguments returns a string containing the command-line arguments
+// for porklock that sets all of the metadata triples.
+func (m MetadataArgs) FileMetadataArguments() string {
+	var buffer bytes.Buffer
+	for _, fm := range m {
+		buffer.WriteString(fm.Argument())
+		buffer.WriteString(" ")
+	}
+	return strings.TrimSpace(buffer.String())
+}
+
 // Submission describes a job passed down through the API.
 type Submission struct {
 	Description        string         `json:"description"`
@@ -627,15 +683,4 @@ func (s *Submission) DataContainers() []VolumesFrom {
 		}
 	}
 	return vfs
-}
-
-// FileMetadataArguments returns a string containing the command-line arguments
-// for porklock that sets all of the metadata triples.
-func (s *Submission) FileMetadataArguments() string {
-	var buffer bytes.Buffer
-	for _, fm := range s.FileMetadata {
-		buffer.WriteString(fm.Argument())
-		buffer.WriteString(" ")
-	}
-	return strings.TrimSpace(buffer.String())
 }
