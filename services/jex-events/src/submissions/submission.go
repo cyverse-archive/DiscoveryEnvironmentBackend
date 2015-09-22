@@ -245,3 +245,39 @@ func (s *Submission) ExcludeArguments() string {
 	}
 	return ""
 }
+
+// AddRequiredMetadata adds any required AVUs that are required but are missing
+// from Submission.FileMetadata. This should be called after both of the New*()
+// functions and after the Submission has been initialized from JSON.
+func (s *Submission) AddRequiredMetadata() {
+	foundAnalysis := false
+	foundExecution := false
+	for _, md := range s.FileMetadata {
+		if md.Attribute == "ipc-analysis-id" {
+			foundAnalysis = true
+		}
+		if md.Attribute == "ipc-execution-id" {
+			foundExecution = true
+		}
+	}
+	if !foundAnalysis {
+		s.FileMetadata = append(
+			s.FileMetadata,
+			FileMetadata{
+				Attribute: "ipc-analysis-id",
+				Value:     s.AppID,
+				Unit:      "UUID",
+			},
+		)
+	}
+	if !foundExecution {
+		s.FileMetadata = append(
+			s.FileMetadata,
+			FileMetadata{
+				Attribute: "ipc-execution-id",
+				Value:     s.UUID,
+				Unit:      "UUID",
+			},
+		)
+	}
+}

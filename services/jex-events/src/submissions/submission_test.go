@@ -357,3 +357,64 @@ func TestExcludeArguments(t *testing.T) {
 	}
 	_inittests(t, false)
 }
+
+func TestAddRequiredMetadata(t *testing.T) {
+	s := inittests(t)
+	found := false
+	for _, md := range s.FileMetadata {
+		if md.Attribute == "ipc-analysis-id" {
+			found = true
+		}
+	}
+	if found {
+		t.Errorf("ipc-analysis-id was in the file metadata before AddRequiredMetadata() was called")
+	}
+	found = false
+	for _, md := range s.FileMetadata {
+		if md.Attribute == "ipc-execution-id" {
+			found = true
+		}
+	}
+	if found {
+		t.Errorf("ipc-execution-id was in the file metadata before AddRequiredMetadata() was called")
+	}
+	s.AddRequiredMetadata()
+	found = false
+	var a FileMetadata
+	for _, md := range s.FileMetadata {
+		if md.Attribute == "ipc-analysis-id" {
+			found = true
+			a = md
+		}
+	}
+	if !found {
+		t.Errorf("ipc-analysis-id was not in the file metadata before AddRequiredMetadata() was called")
+	}
+	if found {
+		if a.Value != s.AppID {
+			t.Errorf("Value was set to %s instead of %s", a.Value, s.AppID)
+		}
+		if a.Unit != "UUID" {
+			t.Errorf("Unit was set to %s instead of %s", a.Unit, "UUID")
+		}
+	}
+	found = false
+	var e FileMetadata
+	for _, md := range s.FileMetadata {
+		if md.Attribute == "ipc-execution-id" {
+			found = true
+			e = md
+		}
+	}
+	if !found {
+		t.Errorf("ipc-execution-id was not in the file metadata before AddRequiredMetadata() was called")
+	}
+	if found {
+		if e.Value != s.UUID {
+			t.Errorf("Value was set to %s instead of %s", e.Value, s.UUID)
+		}
+		if e.Unit != "UUID" {
+			t.Errorf("Unit was set to %s instead of %s", e.Unit, "UUID")
+		}
+	}
+}
