@@ -413,6 +413,17 @@ func (s *Step) Stderr(suffix string) string {
 	return path.Join("logs", fmt.Sprintf("%s%s", "condor-stderr-", suffix))
 }
 
+// LogPath uses the value of step.LogFile and params to generate a path to a
+// log file. If Step.LogFile isn't empty, it's placed inside the directory
+// specified by parent. If it is empty, a path like
+// "<parent>/logs/condor-log-<suffix>" is returned.
+func (s *Step) LogPath(parent, suffix string) string {
+	if s.LogFile != "" {
+		return path.Join(parent, s.LogFile)
+	}
+	return path.Join(parent, "logs", fmt.Sprintf("condor-log-%s", suffix))
+}
+
 // Submission describes a job passed down through the API.
 type Submission struct {
 	Description        string `json:"description"`

@@ -118,6 +118,7 @@
             "stdin" : "/path/to/stdin",
             "stdout" : "/path/to/stdout",
             "stderr" : "/path/to/stderr",
+            "log-file" : "log-file-name",
             "type":"condor"
         }
     ],

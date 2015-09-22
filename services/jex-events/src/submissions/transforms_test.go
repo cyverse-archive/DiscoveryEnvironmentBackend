@@ -271,6 +271,23 @@ func TestStepStderr(t *testing.T) {
 	_inittests(t, false)
 }
 
+func TestLogPath(t *testing.T) {
+	s := inittests(t)
+	step := s.Steps[0]
+	actual := step.LogPath("parent", "suffix")
+	expected := "parent/log-file-name"
+	if actual != expected {
+		t.Errorf("LogPath() returned '%s' instead of '%s'", actual, expected)
+	}
+	step.LogFile = ""
+	actual = step.LogPath("parent", "suffix")
+	expected = "parent/logs/condor-log-suffix"
+	if actual != expected {
+		t.Errorf("LogPath() returned '%s' instead of '%s'", actual, expected)
+	}
+	_inittests(t, false)
+}
+
 func TestStepComponentType(t *testing.T) {
 	s := inittests(t)
 	step := s.Steps[0]
