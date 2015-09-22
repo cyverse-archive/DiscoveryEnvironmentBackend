@@ -209,10 +209,13 @@
    performed."
   [user force? src-id dest-ids]
   (with-jargon (icat/jargon-cfg) [cm]
-    (transaction
-      (let [{src-path :src dest-paths :paths :as results} (copy-metadata-template-avus
-                                                            cm user force? src-id dest-ids)
-            irods-avus (list-path-metadata cm src-path)]
+    (let [src-path (:path (uuids/path-for-uuid cm user src-id))
+          dest-paths (set (map #(ft/rm-last-slash (:path %)) (uuids/paths-for-uuids user dest-ids)))
+          irods-avus (list-path-metadata cm src-path)
+          attrs (set (map :attr irods-avus))]
+      (if-not force?
+        (validate-batch-add-attrs cm dest-paths attrs))
+      (let [results (copy-metadata-template-avus cm user force? src-id dest-ids)]
         (doseq [path dest-paths]
           (metadata-batch-add-to-path cm path irods-avus))
         results))))
