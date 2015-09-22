@@ -842,6 +842,64 @@ func TestConfigInputValue(t *testing.T) {
 	}
 }
 
+func TestInputIRODSPath(t *testing.T) {
+	s := inittests(t)
+	input := s.Steps[0].Config.Input[0]
+	actual := input.IRODSPath()
+	expected := "/iplant/home/wregglej/Acer-tree.txt"
+	if actual != expected {
+		t.Errorf("IRODSPath() returned '%s' instead of '%s'", actual, expected)
+	}
+	input.Value = "/iplant/home/wregglej/Acer-tree"
+	input.Multiplicity = "collection"
+	actual = input.IRODSPath()
+	expected = "/iplant/home/wregglej/Acer-tree/"
+	if actual != expected {
+		t.Errorf("IRODSPath() returned '%s' instead of '%s'", actual, expected)
+	}
+	_inittests(t, false)
+}
+
+func TestInputLogFilename(t *testing.T) {
+	s := inittests(t)
+	input := s.Steps[0].Config.Input[0]
+	actual := input.LogFilename("0-0")
+	expected := "input-0-0"
+	if actual != expected {
+		t.Errorf("LogFilename() returned %s instead of %s", actual, expected)
+	}
+}
+
+func TestInputStdout(t *testing.T) {
+	s := inittests(t)
+	input := s.Steps[0].Config.Input[0]
+	actual := input.Stdout("0-0")
+	expected := "logs/logs-stdout-input-0-0"
+	if actual != expected {
+		t.Errorf("StepInput.Stdout() returned %s instead of %s", actual, expected)
+	}
+}
+
+func TestInputStderr(t *testing.T) {
+	s := inittests(t)
+	input := s.Steps[0].Config.Input[0]
+	actual := input.Stderr("0-0")
+	expected := "logs/logs-stderr-input-0-0"
+	if actual != expected {
+		t.Errorf("StepInput.Stderr() returned %s instead of %s", actual, expected)
+	}
+}
+
+func TestInputLogPath(t *testing.T) {
+	s := inittests(t)
+	input := s.Steps[0].Config.Input[0]
+	actual := input.LogPath("parent", "0-0")
+	expected := "parent/logs/logs-condor-input-0-0"
+	if actual != expected {
+		t.Errorf("StepInput.LogPath() returned %s instead of %s", actual, expected)
+	}
+}
+
 func TestConfigOutput0Multiplicity(t *testing.T) {
 	s := inittests(t)
 	output := s.Steps[0].Config.Output[0]
