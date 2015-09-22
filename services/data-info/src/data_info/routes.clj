@@ -7,6 +7,7 @@
   (:require [compojure.route :as route]
             [data-info.routes.data :as data-routes]
             [data-info.routes.exists :as exists-routes]
+            [data-info.routes.filetypes :as filetypes-routes]
             [data-info.routes.users :as users-routes]
             [data-info.routes.home :as home-routes]
             [data-info.routes.navigation :as navigation-routes]
@@ -34,6 +35,7 @@
             {:name "data", :description "Data Operations"}
             {:name "bulk", :description "Bulk Operations"}
             {:name "navigation", :description "Navigation"}
+            {:name "filetypes", :description "File Type Metadata"}
             {:name "home", :description "User Home Directories"}]})
   (middlewares
     [tc/add-user-to-context
@@ -46,6 +48,7 @@
     status-routes/status
     data-routes/data-operations
     exists-routes/existence-marker
+    filetypes-routes/filetypes-operations
     users-routes/permissions-gatherer
     home-routes/home
     navigation-routes/navigation

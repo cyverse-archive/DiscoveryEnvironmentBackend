@@ -204,6 +204,24 @@
                    :body (json/encode body)}]
       (http/post (str url) req-map)))
 
+(defn get-type-list
+    "Uses the data-info file-types endpoint to produce a list of acceptable types."
+    []
+    (let [url (url/url (cfg/data-info-base-url) "file-types")
+          req-map {:content-type :json}]
+      (http/get (str url) req-map)))
+
+(defn set-file-type
+    "Uses the data-info set-type endpoint to change the type of a file."
+    [params body]
+    (with-jargon (icat/jargon-cfg) [cm]
+      (let [path-uuid (:id (uuids/uuid-for-path cm (:user params) (:path body)))
+            url (url/url (cfg/data-info-base-url) "data" path-uuid "type")
+            req-map {:query-params (select-keys params [:user])
+                     :content-type :json
+                     :body (json/encode (select-keys body [:type]))}]
+        (http/put (str url) req-map))))
+
 (defn gen-output-dir
   "Either obtains or creates a default output directory using a specified base name."
   [base]

@@ -5,7 +5,7 @@
         [donkey.auth.user-attributes]
         [donkey.util])
   (:require [donkey.util.config :as config]
-            [donkey.services.filesystem.garnish.controllers :as garnish]
+            [donkey.clients.data-info :as data]
             [donkey.clients.saved-searches :as saved]))
 
 (defn secured-data-routes
@@ -14,17 +14,11 @@
   (optional-routes
    [config/data-routes-enabled]
 
-   (GET "/filetypes/type" [:as {:keys [params]}]
-        (garnish/get-types params))
+   (POST "/filetypes/type" [:as req]
+      (controller req data/set-file-type :params :body))
 
-   (POST "/filetypes/type" [:as {:keys [body params]}]
-         (garnish/add-type body params))
-
-   (DELETE "/filetypes/type" [:as {:keys [params]}]
-           (garnish/delete-type params))
-
-   (GET "/filetypes/type-list" []
-        (garnish/get-type-list))
+   (GET "/filetypes/type-list" [:as req]
+      (controller req data/get-type-list))
 
    (POST "/share" [:as req]
          (share req))

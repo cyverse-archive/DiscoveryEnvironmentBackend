@@ -1,6 +1,7 @@
 (ns data-info.routes.domain.common
   (:use [common-swagger-api.schema :only [describe NonBlankString]])
-  (:require [schema.core :as s])
+  (:require [heuristomancer.core :as hm]
+            [schema.core :as s])
   (:import [java.util UUID]))
 
 (defn get-error-code-block
@@ -12,3 +13,5 @@
 (s/defschema Paths
   {:paths (describe [NonBlankString] "A list of IRODS paths")})
 
+(def ValidInfoTypesEnum (apply s/enum (hm/supported-formats)))
+(def ValidInfoTypesEnumPlusBlank (apply s/enum (conj (hm/supported-formats) "")))

@@ -59,8 +59,6 @@
     :path
     :size})
 
-(def ValidInfoTypesEnum (apply s/enum (info/supported-formats)))
-
 (s/defschema FolderListingParams
   (merge
     StandardUserQueryParams
