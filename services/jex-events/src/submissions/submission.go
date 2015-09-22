@@ -54,6 +54,7 @@ type Submission struct {
 	Type               string         `json:"type"`
 	NFSBase            string         `json:"nfs_base"`
 	IRODSBase          string         `json:"irods_base"`
+	SkipParentMetadata bool           `json:"skip-parent-meta"`
 	SubmissionDate     string         `json:"submission_date"`
 	FileMetadata       []FileMetadata `json:"file-metadata"`
 	CreateOutputSubdir bool           `json:"create_output_subdir"`
@@ -280,4 +281,20 @@ func (s *Submission) AddRequiredMetadata() {
 			},
 		)
 	}
+}
+
+// FinalOutputArguments returns a string containing the arguments passed to
+// porklock for the final output operation, which transfers all files back into
+// iRODS.
+func (s *Submission) FinalOutputArguments() string {
+	tmpl := "run --rm -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:%s put --user %s --config irods-config --destination %s %s %s"
+	username := s.Username
+	dest := quote(s.OutputDirectory())
+	metadataArgs := MetadataArgs(s.FileMetadata).FileMetadataArguments()
+	excludeArgs := s.ExcludeArguments()
+	args := fmt.Sprintf(tmpl, cfg.PorklockTag, username, dest, metadataArgs, excludeArgs)
+	if s.SkipParentMetadata {
+		args = fmt.Sprintf("%s --skip-parent-meta", args)
+	}
+	return args
 }

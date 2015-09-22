@@ -417,4 +417,23 @@ func TestAddRequiredMetadata(t *testing.T) {
 			t.Errorf("Unit was set to %s instead of %s", e.Unit, "UUID")
 		}
 	}
+	_inittests(t, false)
+}
+
+func TestFinalOutputArguments(t *testing.T) {
+	s := inittests(t)
+	s.AddRequiredMetadata()
+	actual := s.FinalOutputArguments()
+	outputdir := s.OutputDirectory()
+	expected := fmt.Sprintf("run --rm -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:test put --user wregglej_this_is_a_test --config irods-config --destination '%s' -m 'attr1,value1,unit1' -m 'attr2,value2,unit2' -m 'ipc-analysis-id,c7f05682-23c8-4182-b9a2-e09650a5f49b,UUID' -m 'ipc-execution-id,07b04ce2-7757-4b21-9e15-0b4c2f44be26,UUID' --exclude foo,bar,baz,blippy", outputdir)
+	if actual != expected {
+		t.Errorf("FinalOutputArguments() returned:\n\t%s\ninstead of:\n\t%s", actual, expected)
+	}
+	s.SkipParentMetadata = true
+	actual = s.FinalOutputArguments()
+	expected = fmt.Sprintf("run --rm -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:test put --user wregglej_this_is_a_test --config irods-config --destination '%s' -m 'attr1,value1,unit1' -m 'attr2,value2,unit2' -m 'ipc-analysis-id,c7f05682-23c8-4182-b9a2-e09650a5f49b,UUID' -m 'ipc-execution-id,07b04ce2-7757-4b21-9e15-0b4c2f44be26,UUID' --exclude foo,bar,baz,blippy --skip-parent-meta", outputdir)
+	if actual != expected {
+		t.Errorf("FinalOutputArguments() returned:\n\t%s\ninstead of:\n\t%s", actual, expected)
+	}
+	_inittests(t, false)
 }
