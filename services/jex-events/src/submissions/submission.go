@@ -66,6 +66,8 @@ type Submission struct {
 	Notify             bool           `json:"notify"`
 	ExecutionTarget    string         `json:"execution_target"`
 	AppName            string         `json:"app_name"`
+	RequestDisk        string         `json:"request_disk"` //untested for now
+	Group              string         `json:"group"`        //untested for now
 }
 
 var (
@@ -88,6 +90,7 @@ func New() *Submission {
 	return &Submission{
 		NowDate:     n,
 		ArchiveLogs: true,
+		RequestDisk: cfg.RequestDisk,
 	}
 }
 
