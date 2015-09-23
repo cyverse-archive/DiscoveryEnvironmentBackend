@@ -118,6 +118,7 @@
            :description description
            :displayExtension display-extension
            :typeOfGroup type}
+          :wsGroupLookup {:groupName name}
           :saveMode (if update? "UPDATE" "INSERT")}
         ]
         :includeGroupDetail "T"}}
