@@ -1,5 +1,5 @@
 (ns iplant_groups.routes.domain.folder
-  (:use [common-swagger-api.schema :only [describe]])
+  (:use [common-swagger-api.schema :only [describe ->optional-param]])
   (:require [iplant_groups.routes.domain.params :as params]
             [schema.core :as s]))
 
@@ -26,6 +26,12 @@
 
    :id
    (describe String "The folder ID.")))
+
+(s/defschema FolderStub
+  (-> Folder
+    (->optional-param :name)
+    (->optional-param :id)
+    (->optional-param :id_index)))
 
 (s/defschema FolderList
   {:folders (describe [Folder] "The list of folders in the result set.")})

@@ -275,6 +275,30 @@
          (first)
          (:wsStem))))
 
+;; Folder delete
+
+(defn- format-folder-delete-request
+  [username folder-id]
+  (-> {:WsRestStemDeleteRequest
+       {:actAsSubjectLookup (act-as-subject-lookup username)
+        :wsStemLookups [
+         {:uuid folder-id}]}}
+      (json/encode)))
+
+(defn delete-folder
+  [username folder-id]
+  (with-trap [default-error-handler]
+    (->> {:body         (format-folder-delete-request username folder-id)
+          :basic-auth   (auth-params)
+          :content-type content-type
+          :as           :json}
+         (http/post (grouper-uri "stems"))
+         (:body)
+         (:WsStemDeleteResults)
+         (:results)
+         (first)
+         (:wsStem))))
+
 ;; Subject search.
 
 (defn- format-subject-search-request

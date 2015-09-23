@@ -30,4 +30,11 @@
           :return      Folder
           :summary     "Get Folder Information"
           :description "This endpoint allows callers to get information about a single folder."
-          (service/trap uri folders/get-folder folder-id params))))
+          (service/trap uri folders/get-folder folder-id params))
+
+    (DELETE* "/" [:as {:keys [uri]}]
+          :query       [params StandardUserQueryParams]
+          :return      FolderStub
+          :summary     "Delete Folder"
+          :description "This endpoint allows deleting a folder if the current user has permissions to do so."
+          (service/trap uri folders/delete-folder folder-id params))))

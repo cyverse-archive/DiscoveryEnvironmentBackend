@@ -17,3 +17,7 @@
   [{:keys [name description display_extension]} {:keys [user]}]
   (let [folder (grouper/add-folder user name display_extension description)]
     (fmt/format-folder folder)))
+
+(defn delete-folder
+  [folder-id {:keys [user]}]
+  (fmt/format-folder (grouper/delete-folder user folder-id)))
