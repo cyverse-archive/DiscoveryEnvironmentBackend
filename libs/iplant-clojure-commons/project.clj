@@ -5,6 +5,7 @@
             :url "http://iplantcollaborative.org/sites/default/files/iPLANT-LICENSE.txt"}
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/tools.logging "0.3.1"]
+                 [buddy/buddy-sign "0.7.0"]
                  [cheshire "5.5.0"]
                  [clj-http "2.0.0"]
                  [clj-time "0.11.0"]
