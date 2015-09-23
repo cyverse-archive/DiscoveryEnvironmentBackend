@@ -13,15 +13,6 @@
   [& components]
   (str (apply curl/url (config/coge-base-url) components)))
 
-(defn- coge-params
-  ([user]
-     (coge-params user {}))
-  ([user additional-params]
-     (assoc additional-params
-       :use_jwt  1
-       :username (:shortUsername user)
-       :token    (jwt/generate-jwt user))))
-
 (defn- default-error-handler
   [error-code {:keys [body] :as response}]
   (log/warn "CoGe request failed:" response)
@@ -59,6 +50,6 @@
   (with-trap [default-error-handler]
     (let [request-url (coge-url "genomes")]
       (:body (http/put request-url {:body         (genome-viewer-url-request paths)
-                                    :query-params (coge-params current-user)
+                                    :headers      (jwt/add-auth-header current-user)
                                     :content-type :json
                                     :as           :json})))))

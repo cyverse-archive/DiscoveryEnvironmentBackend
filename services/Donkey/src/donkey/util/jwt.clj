@@ -30,3 +30,12 @@
      (generate-jwt current-user))
   ([user]
      ((jwt-generator) (jwt-user-from-donkey-user user))))
+
+(defn add-auth-header
+  ([]
+     (add-auth-header current-user {}))
+  ([user]
+     (add-auth-header user {}))
+  ([user headers]
+     (assoc headers
+       :X-Iplant-De-Jwt (generate-jwt user))))
