@@ -41,3 +41,58 @@ queue
 	}
 	return buffer.String(), err
 }
+
+type scriptable struct {
+	Submission
+	DC []VolumesFrom
+}
+
+// GenerateIplantScript returns a string (or error) containing the contents
+// of what should go into the iplant.sh script that is executed by the HTCondor
+// job out on the cluster.
+func GenerateIplantScript(submission *Submission) (string, error) {
+	s := scriptable{
+		Submission: *submission,
+		DC:         submission.DataContainers(),
+	}
+
+	tmpl := `
+#!/bin/bash
+set -x
+readonly IPLANT_USER={{.Username}}
+export IPLANT_USER
+readonly IPLANT_EXECUTION_ID={{.UUID}}
+export IPLANT_EXECUTION_ID
+export SCRIPT_LOCATION=${BASH_SOURCE}
+EXITSTATUS=0
+if [ -e /data2 ]; then ls /data2; fi
+mkdir -p logs
+if [ ! "$?" -eq "0"]; then
+	EXITSTATUS=1
+	exit $EXITSTATUS
+fi
+ls -al > logs/de-transfer-trigger.log
+if [ ! "$?" -eq "0"]; then
+	EXITSTATUS=1
+	exit $EXITSTATUS
+fi
+if [ -e "iplant.sh" ]; then
+	mv iplant.sh logs/
+fi
+if [ -e "iplant.cmd" ]; then
+	mv iplant.cmd logs/
+fi
+{{range .DC}}docker pull {{.Name}}:{{.Tag}}
+{{end}}
+`
+	t, err := template.New("iplant_script").Parse(tmpl)
+	if err != nil {
+		return "", err
+	}
+	var buffer bytes.Buffer
+	err = t.Execute(&buffer, s)
+	if err != nil {
+		return "", err
+	}
+	return buffer.String(), err
+}

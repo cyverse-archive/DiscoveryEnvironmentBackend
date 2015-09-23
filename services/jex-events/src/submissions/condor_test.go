@@ -62,5 +62,6 @@ queue
 	if actual != expected {
 		t.Errorf("GenerateCondorSubmit() returned:\n\n%s\n\ninstead of:\n\n%s", actual, expected)
 	}
-
+	//fmt.Println(GenerateIplantScript(s))
+	_inittests(t, false)
 }
