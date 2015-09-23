@@ -9,18 +9,22 @@
     :dynamic true}
   current-user nil)
 
+;; TODO: fix common name retrieval when we add it as an attribute to CAS.
 (defn user-from-attributes
   "Creates a map of values from user attributes stored in the request by
    validate-cas-proxy-ticket."
   [{:keys [user-attributes]}]
   (log/trace user-attributes)
-  {:username      (str (get user-attributes "uid") "@" (cfg/uid-domain)),
-   :password      (get user-attributes "password"),
-   :email         (get user-attributes "email"),
-   :shortUsername (get user-attributes "uid")
-   :firstName     (get user-attributes "firstName")
-   :lastName      (get user-attributes "lastName")
-   :principal     (get user-attributes "principal")})
+  (let [first-name (get user-attributes "firstName")
+        last-name  (get user-attributes "lastName")]
+    {:username      (str (get user-attributes "uid") "@" (cfg/uid-domain)),
+     :password      (get user-attributes "password"),
+     :email         (get user-attributes "email"),
+     :shortUsername (get user-attributes "uid")
+     :firstName     first-name
+     :lastName      last-name
+     :commonName    (str first-name " " last-name)
+     :principal     (get user-attributes "principal")}))
 
 (defn fake-user-from-attributes
   "Creates a real map of fake values for a user base on environment variables."
@@ -30,7 +34,8 @@
    :email         (System/getenv "IPLANT_CAS_EMAIL")
    :shortUsername (System/getenv "IPLANT_CAS_SHORT")
    :firstName     (System/getenv "IPLANT_CAS_FIRST")
-   :lastName      (System/getenv "IPLANT_CAS_LAST")})
+   :lastName      (System/getenv "IPLANT_CAS_LAST")
+   :commonName    (System/getenv "IPLANT_CAS_COMMON")})
 
 (defn store-current-admin-user
   "Authenticates the user using validate-cas-group-membership and binds current-user to a map that

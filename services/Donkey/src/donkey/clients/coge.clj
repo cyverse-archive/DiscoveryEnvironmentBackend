@@ -1,25 +1,24 @@
 (ns donkey.clients.coge
-  (:use [donkey.auth.user-attributes :only [current-user get-proxy-ticket]]
+  (:use [donkey.auth.user-attributes :only [current-user]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
             [clj-http.client :as http]
             [clojure.tools.logging :as log]
             [clojure-commons.error-codes :as ce]
-            [donkey.util.config :as config]))
+            [donkey.util.config :as config]
+            [donkey.util.jwt :as jwt]))
 
 (defn- coge-url
   [& components]
   (str (apply curl/url (config/coge-base-url) components)))
 
-(defn- coge-params
-  ([request-url]
-     (coge-params request-url {}))
-  ([request-url existing-params]
-     (assoc existing-params
-       :username (:shortUsername current-user)
-       :token    (get-proxy-ticket request-url)
-       :use_cas  1)))
+(defn- coge-auth-header
+  ([user]
+     (coge-auth-header user {}))
+  ([user headers]
+     (assoc headers
+       :X-IPlant-DE-JWT (jwt/generate-jwt user))))
 
 (defn- default-error-handler
   [error-code {:keys [body] :as response}]
@@ -58,6 +57,6 @@
   (with-trap [default-error-handler]
     (let [request-url (coge-url "genomes")]
       (:body (http/put request-url {:body         (genome-viewer-url-request paths)
-                                    :query-params (coge-params request-url)
+                                    :headers      (coge-auth-header current-user)
                                     :content-type :json
                                     :as           :json})))))

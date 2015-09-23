@@ -403,6 +403,31 @@
   [props config-valid configs data-routes-enabled]
   "donkey.infosquito.es-url")
 
+(cc/defprop-str jwt-private-signing-key
+  "The path to the private key used for signing JWT assertions."
+  [props config-valid configs]
+  "donkey.jwt.signing-key.private")
+
+(cc/defprop-str jwt-private-signing-key-password
+  "The password used to access the private key used for signing JWT assertions."
+  [props config-valid configs]
+  "donkey.jwt.signing-key.password")
+
+(cc/defprop-str jwt-public-signing-key
+  "The path to the public key used to validate JWT assertions."
+  [props config-valid configs]
+  "donkey.jwt.signing-key.public")
+
+(cc/defprop-str jwt-signing-algorithm
+  "The algorithm used to sign JWT assertions."
+  [props config-valid configs]
+  "donkey.jwt.signing-key.algorithm")
+
+(cc/defprop-int jwt-validity-window-end
+  "The number of seconds before newly created JWT assertions expire."
+  [props config-valid configs]
+  "donkey.jwt.validity-window.end")
+
 (cc/defprop-str coge-base-url
   "The base URL for CoGe services."
   [props config-valid configs coge-enabled]
@@ -497,14 +522,13 @@
   (filter #(not (nil? %))
           [(icat-password) (icat-user) (irods-pass) (irods-user)]))
 
-(defn- oauth-settings
-  [api-name api-key api-secret token-uri redirect-uri refresh-window]
-  {:api-name       api-name
-   :client-key     api-key
-   :client-secret  api-secret
-   :token-uri      token-uri
-   :redirect-uri   redirect-uri
-   :refresh-window (* refresh-window 60 1000)})
+(defn jwt-opts
+  []
+  {:private-key-path     (jwt-private-signing-key)
+   :private-key-password (jwt-private-signing-key-password)
+   :public-key-path      (jwt-public-signing-key)
+   :alg                  (keyword (jwt-signing-algorithm))
+   :validity-window-end  (jwt-validity-window-end)})
 
 (defn log-environment
   []
