@@ -18,14 +18,6 @@
 
 (def validator (jwt/validator opts))
 
-(defn- user-from-jwt
-  [jwt]
-  {:user        (:sub jwt)
-   :email       (:email jwt)
-   :given-name  (:given_name jwt)
-   :family-name (:family_name jwt)
-   :common-name (:name jwt)})
-
 (deftest jwt-test
-  (is (= user (user-from-jwt (validator (generator user))))
+  (is (= user (jwt/user-from-assertion (validator (generator user))))
       "Can validate a generated assertion."))

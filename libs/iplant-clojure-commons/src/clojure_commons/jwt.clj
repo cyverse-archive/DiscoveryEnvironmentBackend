@@ -29,3 +29,11 @@
   (let [public-key (keys/public-key public-key-path)]
     (fn [assertion]
       (jws/unsign assertion public-key {:alg alg}))))
+
+(defn user-from-assertion
+  [jwt]
+  {:user        (:sub jwt)
+   :email       (:email jwt)
+   :given-name  (:given_name jwt)
+   :family-name (:family_name jwt)
+   :common-name (:name jwt)})
