@@ -18,7 +18,7 @@
      (coge-auth-header user {}))
   ([user headers]
      (assoc headers
-       :X-IPlant-DE-JWT (jwt/generate-jwt user))))
+       :X-Iplant-De-Jwt (jwt/generate-jwt user))))
 
 (defn- default-error-handler
   [error-code {:keys [body] :as response}]
