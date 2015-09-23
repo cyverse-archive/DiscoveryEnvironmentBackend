@@ -20,4 +20,4 @@
   [body]
   (let [paths (:paths (decode-json body))]
     (share-paths paths)
-    {:coge_genome_url (:site_link (log/spy :warn (coge/get-genome-viewer-url paths)))}))
+    {:coge_genome_url (:site_url (coge/get-genome-viewer-url paths))}))
