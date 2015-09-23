@@ -10,7 +10,7 @@
 
 (defn- jwt-user-from-donkey-user
   [donkey-user]
-  {:user        (:username donkey-user)
+  {:user        (:shortUsername donkey-user)
    :email       (:email donkey-user)
    :given-name  (:firstName donkey-user)
    :family-name (:lastName donkey-user)
@@ -18,11 +18,12 @@
 
 (defn- donkey-user-from-jwt-user
   [jwt-user]
-  {:username   (:user jwt-user)
-   :email      (:email jwt-user)
-   :firstName  (:given-name jwt-user)
-   :lastName   (:family-name jwt-user)
-   :commonName (:common-name jwt-user)})
+  {:shortUsername (:user jwt-user)
+   :username      (:str (:user jwt-user) "@" (config/uid-domain))
+   :email         (:email jwt-user)
+   :firstName     (:given-name jwt-user)
+   :lastName      (:family-name jwt-user)
+   :commonName    (:common-name jwt-user)})
 
 (defn generate-jwt
   ([]
