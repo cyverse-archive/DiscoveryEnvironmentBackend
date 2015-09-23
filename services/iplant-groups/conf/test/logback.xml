@@ -1,0 +1,21 @@
+<configuration scan="true" debug="false">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d %-5level [%thread] %logger: %msg%n</pattern>
+        </encoder>
+    </appender>
+
+
+  <logger name="iplant_groups" level="DEBUG" />
+  <!-- Configuration Logging -->
+  <logger name="clojure-commons.config" level="INFO"/>
+  <!-- Request Logging -->
+  <logger name="AccessLogger" level="INFO" />
+
+  <!-- Service Call Trace Message Logging -->
+  <logger name="trace" level="TRACE" />
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+</configuration>
