@@ -16,19 +16,35 @@
         folder in the system."
         (service/trap uri groups/group-search params))
 
-  (GET* "/:group-id" [:as {:keys [uri]}]
-        :path-params [group-id :- GroupIdPathParam]
-        :query       [params StandardUserQueryParams]
+  (POST* "/" [:as {:keys [uri]}]
         :return      GroupWithDetail
-        :summary     "Get Group Information"
-        :description "This endpoint allows callers to get detailed information about a single
-        group."
-        (service/trap uri groups/get-group group-id params))
-
-  (GET* "/:group-id/members" [:as {:keys [uri]}]
-        :path-params [group-id :- GroupIdPathParam]
         :query       [params StandardUserQueryParams]
-        :return      GroupMembers
-        :summary     "List Group Members"
-        :description "This endpoint allows callers to list the members of a single group."
-        (service/trap uri groups/get-group-members group-id params)))
+        :body        [body (describe BaseGroup "The group to add.")]
+        :summary     "Add Group"
+        :description "This endpoint allows adding a new group."
+        (service/trap uri groups/add-group body params))
+
+  (context* "/:group-id" []
+    :path-params [group-id :- GroupIdPathParam]
+
+    (GET* "/" [:as {:keys [uri]}]
+          :query       [params StandardUserQueryParams]
+          :return      GroupWithDetail
+          :summary     "Get Group Information"
+          :description "This endpoint allows callers to get detailed information about a single
+          group."
+          (service/trap uri groups/get-group group-id params))
+
+    (DELETE* "/" [:as {:keys [uri]}]
+          :query       [params StandardUserQueryParams]
+          :return      GroupStub
+          :summary     "Delete Group"
+          :description "This endpoint allows deleting a group if the current user has permissions to do so."
+          (service/trap uri groups/delete-group group-id params))
+
+    (GET* "/members" [:as {:keys [uri]}]
+          :query       [params StandardUserQueryParams]
+          :return      GroupMembers
+          :summary     "List Group Members"
+          :description "This endpoint allows callers to list the members of a single group."
+          (service/trap uri groups/get-group-members group-id params))))

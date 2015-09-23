@@ -14,10 +14,20 @@
         that are visible to the given user will be listed."
         (service/trap uri folders/folder-search params))
 
-  (GET* "/:folder-id" [:as {:keys [uri]}]
-        :path-params [folder-id :- FolderIdPathParam]
-        :query       [params StandardUserQueryParams]
+  (POST* "/" [:as {:keys [uri]}]
         :return      Folder
-        :summary     "Get Folder Information"
-        :description "This endpoint allows callers to get information about a single folder."
-        (service/trap uri folders/get-folder folder-id params)))
+        :query       [params StandardUserQueryParams]
+        :body        [body (describe BaseFolder "The folder to add.")]
+        :summary     "Add Folder"
+        :description "This endpoint allows adding a new folder."
+        (service/trap uri folders/add-folder body params))
+
+  (context* "/:folder-id" []
+    :path-params [folder-id :- FolderIdPathParam]
+
+    (GET* "/" [:as {:keys [uri]}]
+          :query       [params StandardUserQueryParams]
+          :return      Folder
+          :summary     "Get Folder Information"
+          :description "This endpoint allows callers to get information about a single folder."
+          (service/trap uri folders/get-folder folder-id params))))

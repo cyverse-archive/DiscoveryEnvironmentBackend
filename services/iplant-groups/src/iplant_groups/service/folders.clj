@@ -12,3 +12,8 @@
   (if-let [folder (grouper/get-folder user folder-id)]
     (fmt/format-folder folder)
     (service/not-found "folder" folder-id)))
+
+(defn add-folder
+  [{:keys [name description display_extension]} {:keys [user]}]
+  (let [folder (grouper/add-folder user name display_extension description)]
+    (fmt/format-folder folder)))

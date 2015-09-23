@@ -106,6 +106,62 @@
          (:groupResults)
          (first))))
 
+;; Group add/update
+
+(defn- format-group-add-update-request
+  [update? username type name display-extension description]
+  (-> {:WsRestGroupSaveRequest
+       {:actAsSubjectLookup (act-as-subject-lookup username)
+        :wsGroupToSaves [
+         {:wsGroup
+          {:name name
+           :description description
+           :displayExtension display-extension
+           :typeOfGroup type}
+          :wsGroupLookup {:groupName name}
+          :saveMode (if update? "UPDATE" "INSERT")}
+        ]
+        :includeGroupDetail "T"}}
+      (json/encode)))
+
+(defn add-group
+  [username type name display-extension description]
+  (with-trap [default-error-handler]
+    (->> {:body         (format-group-add-update-request false username type name display-extension description)
+          :basic-auth   (auth-params)
+          :content-type content-type
+          :as           :json}
+         (http/post (grouper-uri "groups"))
+         (:body)
+         (:WsGroupSaveResults)
+         (:results)
+         (first)
+         (:wsGroup))))
+
+;; Group delete
+
+(defn- format-group-delete-request
+  [username group-id]
+  (-> {:WsRestGroupDeleteRequest
+       {:actAsSubjectLookup (act-as-subject-lookup username)
+        :wsGroupLookups [
+         {:uuid group-id}]}}
+      (json/encode)))
+
+(defn delete-group
+  [username group-id]
+  (with-trap [default-error-handler]
+    (->> {:body         (format-group-delete-request username group-id)
+          :basic-auth   (auth-params)
+          :content-type content-type
+          :as           :json}
+         (http/post (grouper-uri "groups"))
+         (:body)
+         (:WsGroupDeleteResults)
+         (:results)
+         (first)
+         (:wsGroup))))
+
 ;; Group membership listings.
 
 (defn- group-membership-listing-error-handler
@@ -162,12 +218,14 @@
          (:WsFindStemsResults)
          (:stemResults))))
 
+;; Folder retrieval.
+
 (defn- folder-retrieval-query-filter
   [folder-id]
   {:stemUuid            folder-id
    :stemQueryFilterType "FIND_BY_STEM_UUID"})
 
-(defn format-folder-retrieval-request
+(defn- format-folder-retrieval-request
   [username folder-id]
   (-> {:WsRestFindStemsRequest
        {:actAsSubjectLookup (act-as-subject-lookup username)
@@ -186,6 +244,36 @@
          (:WsFindStemsResults)
          (:stemResults)
          (first))))
+
+;; Folder add.
+
+(defn- format-folder-add-update-request
+  [update? username name display-extension description]
+  (-> {:WsRestStemSaveRequest
+       {:actAsSubjectLookup (act-as-subject-lookup username)
+        :wsStemToSaves [
+         {:wsStem
+          {:name name
+           :description description
+           :displayExtension display-extension}
+          :wsStemLookup {:stemName name}
+          :saveMode (if update? "UPDATE" "INSERT")}
+        ]}}
+      (json/encode)))
+
+(defn add-folder
+  [username name display-extension description]
+  (with-trap [default-error-handler]
+    (->> {:body         (format-folder-add-update-request false username name display-extension description)
+          :basic-auth   (auth-params)
+          :content-type content-type
+          :as           :json}
+         (http/post (grouper-uri "stems"))
+         (:body)
+         (:WsStemSaveResults)
+         (:results)
+         (first)
+         (:wsStem))))
 
 ;; Subject search.
 

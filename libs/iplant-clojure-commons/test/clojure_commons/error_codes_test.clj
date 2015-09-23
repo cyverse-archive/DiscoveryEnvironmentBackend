@@ -5,20 +5,14 @@
 
 (def ^:private err-obj {:foo "bar"})
 
-(defn- expected-err-obj
-  ([]
-     (assoc err-obj :status "failure"))
-  ([action]
-     (assoc err-obj :status "failure" :action action)))
-
 (deftest err-resp-test
   (is (= 500 (:status (err-resp err-obj)))
       "err-resp status with one argument")
-  (is (= (expected-err-obj) (cheshire/decode (:body (err-resp err-obj)) true))
+  (is (= err-obj (cheshire/decode (:body (err-resp err-obj)) true))
       "err-resp body with one argument")
   (is (= 500 (:status (err-resp "baz" err-obj)))
       "err-resp status with two arguments")
-  (is (= (expected-err-obj "baz") (cheshire/decode (:body (err-resp "baz" err-obj)) true))
+  (is (= err-obj (cheshire/decode (:body (err-resp "baz" err-obj)) true))
       "err-resp body with two arguments"))
 
 (defn complete-success-resp
@@ -29,9 +23,7 @@
 (defn expected-success-resp
   [action s]
   {:status 200
-   :body   (cond (map? s)          (cheshire/encode (assoc s
-                                                      :status "success"
-                                                      :action action))
+   :body   (cond (map? s)          (cheshire/encode s)
                  (not (string? s)) (str s)
                  :else             s)})
 
