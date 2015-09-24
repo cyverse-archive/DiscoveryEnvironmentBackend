@@ -100,9 +100,7 @@
   (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user store-current-user)]
     (f routes
        config/cas-server
-       config/server-name
-       config/pgt-callback-base
-       config/pgt-callback-path)))
+       config/server-name)))
 
 (defn cas-store-admin-user
   [routes]
@@ -111,9 +109,7 @@
       config/cas-server
       config/server-name
       config/group-attr-name
-      config/get-allowed-groups
-      config/pgt-callback-base
-      config/pgt-callback-path)))
+      config/get-allowed-groups)))
 
 
 (defn- wrap-user-info

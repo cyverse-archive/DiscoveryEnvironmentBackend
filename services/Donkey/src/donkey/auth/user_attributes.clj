@@ -40,25 +40,23 @@
 (defn store-current-admin-user
   "Authenticates the user using validate-cas-group-membership and binds current-user to a map that
    is built from the user attributes that validate-cas-proxy-ticket stores in the request."
-  [handler cas-server-fn server-name-fn group-attr-name-fn allowed-groups-fn
-   pgt-callback-base-fn pgt-callback-path-fn]
+  [handler cas-server-fn server-name-fn group-attr-name-fn allowed-groups-fn]
   (cas/validate-cas-group-membership
     (fn [request]
       (binding [current-user (user-from-attributes request)]
         (handler request)))
-    cas-server-fn server-name-fn group-attr-name-fn allowed-groups-fn
-    pgt-callback-base-fn pgt-callback-path-fn))
+    cas-server-fn server-name-fn group-attr-name-fn allowed-groups-fn))
 
 (defn store-current-user
   "Authenticates the user using validate-cas-proxy-ticket and binds
    current-user to a map that is built from the user attributes that
    validate-cas-proxy-ticket stores in the request."
-  [handler cas-server-fn server-name-fn pgt-callback-base-fn pgt-callback-path-fn]
+  [handler cas-server-fn server-name-fn]
   (cas/validate-cas-proxy-ticket
    (fn [request]
      (binding [current-user (user-from-attributes request)]
        (handler request)))
-   cas-server-fn server-name-fn pgt-callback-base-fn pgt-callback-path-fn))
+   cas-server-fn server-name-fn))
 
 (defn fake-store-current-user
   "Fake storage of a user"

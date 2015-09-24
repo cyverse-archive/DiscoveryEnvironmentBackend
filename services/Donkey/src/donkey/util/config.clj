@@ -39,16 +39,6 @@
   [props config-valid configs]
   "donkey.cas.cas-server")
 
-(cc/defprop-str pgt-callback-base
-  "The base URL to use for proxy granting ticket callbacks from the CAS server."
-  [props config-valid configs]
-  "donkey.cas.pgt-callback-base")
-
-(cc/defprop-str pgt-callback-path
-  "The URL path to use for proxy granting ticket callbacks from the CAS server."
-  [props config-valid configs]
-  "donkey.cas.pgt-callback-path")
-
 (cc/defprop-str server-name
   "The name of the local server."
   [props config-valid configs]
