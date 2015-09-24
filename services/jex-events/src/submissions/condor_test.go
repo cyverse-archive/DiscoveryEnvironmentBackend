@@ -1,7 +1,6 @@
 package submissions
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 )
@@ -146,6 +145,8 @@ if [ ! "$?" -eq "0"]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
+docker rm vf-prefix1-07b04ce2-7757-4b21-9e15-0b4c2f44be26
+docker rm vf-prefix2-07b04ce2-7757-4b21-9e15-0b4c2f44be26
 
 hostname
 ps aux
@@ -163,7 +164,7 @@ exit $EXITSTATUS
 	}
 	for idx, e := range expected {
 		if actual[idx] != e {
-			fmt.Printf("Actual:\n%s\nExpected:\n%s\n", actual[idx], e)
+			t.Errorf("\nActual:\n%s\nExpected:\n%s\n", actual[idx], e)
 		}
 	}
 	_inittests(t, false)

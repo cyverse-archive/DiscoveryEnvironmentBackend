@@ -113,7 +113,8 @@ if [ ! "$?" -eq "0"]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
-
+{{range .DataContainers}}docker rm {{.NamePrefix}}-{{$uuid}}
+{{end}}
 hostname
 ps aux
 echo -----
