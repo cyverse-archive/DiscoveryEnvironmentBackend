@@ -359,39 +359,82 @@
 
 (defn- add-metadata-template-avus
   "Adds or Updates AVUs associated with a Metadata Template for the given user's data item."
-  [cm username path template-id avus]
+  [cm user path template-id avus]
   (validators/path-exists cm path)
-  (validators/path-writeable cm username path)
-  (let [{:keys [id type]} (uuids/uuid-for-path cm username path)
+  (validators/path-writeable cm user path)
+  (let [{:keys [id type]} (uuids/uuid-for-path cm user path)
         data-id (uuidify id)
         data-type (metadata-client/resolve-data-type type)]
     (metadata-client/set-metadata-template-avus data-id data-type template-id {:avus avus})))
 
 (defn- bulk-add-file-avus
-  [cm username dest-dir template-id attrs [filename values]]
-  (let [path (if (.startsWith filename "/") filename (ft/path-join dest-dir filename))
-        avus (map (partial zipmap [:attr :value :unit]) (map vector attrs values (repeat "")))]
-    (add-metadata-template-avus cm username path template-id avus)
+  "Applies metadata from a list of attributes and values to the given path.
+   If an AVU's attribute is found in the given template-attrs map, then that AVU is stored in the
+   metadata db; all other AVUs are stored in IRODS."
+  [cm user dest-dir template-id template-attrs attrs path values]
+  (let [avus (map (partial zipmap [:attr :value :unit]) (map vector attrs values (repeat "")))
+        template-attr? #(contains? template-attrs (:attr %))
+        [template-avus irods-avus] ((juxt filter remove) template-attr? avus)]
+    (when-not (empty? template-avus)
+      (add-metadata-template-avus cm user path template-id template-avus))
+    (when-not (empty? irods-avus)
+      (authorized-avus irods-avus)
+      (metadata-batch-add-to-path cm path irods-avus))
     {:path path
-     :avus avus}))
+     :template-avus template-avus
+     :irods-avus irods-avus}))
+
+(defn- parse-template-attrs
+  "Fetches Metadata Template attributes from the metadata service if given a template-id UUID.
+   Returns a map with the attribute names as keys, or nil."
+  [template-id]
+  (when template-id
+    (->> (metadata-client/get-template template-id)
+         :body
+         service/decode-json
+         :attributes
+         (group-by :name))))
+
+(defn- format-csv-metadata-filename
+  [dest-dir filename]
+  (ft/rm-last-slash
+    (if (.startsWith filename "/")
+      filename
+      (ft/path-join dest-dir filename))))
+
+(defn- bulk-add-avus
+  "Applies metadata from a list of attributes and filename/values to those files found under
+   dest-dir."
+  [cm user dest-dir template-id template-attrs attrs csv-filename-values]
+  (let [format-path (partial format-csv-metadata-filename dest-dir)
+        paths (map (comp format-path first) csv-filename-values)
+        values (map rest csv-filename-values)]
+    (validators/all-paths-exist cm paths)
+    (validators/all-paths-writeable cm user paths)
+  (mapv (partial bulk-add-file-avus cm user dest-dir template-id template-attrs attrs)
+    paths values)))
 
 (defn- parse-metadata-csv
-  [cm username dest-dir template-id separator stream]
+  "Parses filenames and metadata to apply from a CSV file input stream.
+   If a template-id is provided, then AVUs with template attributes are stored in the metadata db,
+   and all other AVUs are stored in IRODS."
+  [cm user dest-dir template-id separator stream]
   (let [stream-reader (java.io.InputStreamReader. stream "UTF-8")
         csv (mapv (partial mapv string/trim) (.readAll (CSVReader. stream-reader (.charAt separator 0))))
         attrs (-> csv first rest)
-        metadata (mapv
-                   (partial bulk-add-file-avus cm username dest-dir template-id attrs)
-                   (mapv (juxt first rest) (rest csv)))]
-    {:metadata metadata}))
+        csv-filename-values (rest csv)
+        template-attrs (parse-template-attrs template-id)]
+    {:metadata
+     (bulk-add-avus cm user dest-dir template-id template-attrs attrs csv-filename-values)}))
 
 (defn- parse-form-csv-metadata
-  [username dest-dir template-id separator {:keys [stream filename content-type]}]
+  [user dest-dir template-id separator {:keys [stream filename content-type]}]
   (with-jargon (icat/jargon-cfg) [cm]
-    (validators/user-exists cm username)
-    (parse-metadata-csv cm username dest-dir template-id separator stream)))
+    (validators/user-exists cm user)
+    (parse-metadata-csv cm user dest-dir template-id separator stream)))
 
 (defn parse-csv-metadata
+  "Parses filenames and metadata to apply from a CSV file posted in a multipart form request"
   [{{:keys [user]} :user-info
     {:keys [dest template-id separator] :or {separator "%2C"}} :params
     :as req}]
@@ -404,12 +447,12 @@
   (fn [{:keys [user-info params] :as req}]
     (log-call "parse-csv-metadata" req)
     (validate-map user-info {:user string?})
-    (validate-map params {:dest string?
-                          :template-id string?})))
+    (validate-map params {:dest string?})))
 
 (with-post-hook! #'parse-csv-metadata (log-func "parse-csv-metadata"))
 
 (defn parse-src-file-csv-metadata
+  "Parses filenames and metadata to apply from a source CSV file in the data store"
   [{:keys [user]} {:keys [src dest template-id separator] :or {separator "%2C"}}]
   (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
@@ -424,7 +467,6 @@
     (log-call "parse-src-file-csv-metadata" user-info params)
     (validate-map user-info {:user string?})
     (validate-map params {:src string?
-                          :dest string?
-                          :template-id string?})))
+                          :dest string?})))
 
 (with-post-hook! #'parse-src-file-csv-metadata (log-func "parse-src-file-csv-metadata"))
