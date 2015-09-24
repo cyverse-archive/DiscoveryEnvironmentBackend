@@ -9,5 +9,8 @@
   []
   (optional-routes
     [config/coge-enabled]
+    (GET "/coge/genomes" [:as {:keys [params]}]
+         (success-response (search-genomes params)))
+
     (POST "/coge/genomes/load" [:as {:keys [body]}]
           (success-response (get-genome-viewer-url body)))))

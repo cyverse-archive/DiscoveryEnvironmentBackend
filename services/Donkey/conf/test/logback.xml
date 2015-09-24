@@ -16,7 +16,10 @@
   <!-- Service Call Trace Message Logging -->
   <Logger name="trace" level="TRACE" />
 
+  <!-- Uncomment to enable HTTP client debugging. -->
+  <!--
   <logger name="org.apache.http" level="DEBUG" />
+  -->
 
   <root level="INFO">
     <appender-ref ref="CONSOLE"/>

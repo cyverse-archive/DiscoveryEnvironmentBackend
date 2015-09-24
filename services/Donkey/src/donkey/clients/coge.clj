@@ -30,6 +30,14 @@
     (catch (comp number? :status) server-error#
       (~handle-error ce/ERR_REQUEST_FAILED server-error#))))
 
+(defn search-genomes
+  "Searches for genomes in CoGe."
+  [search-term]
+  (with-trap [default-error-handler]
+    (:body (http/get (coge-url "genomes" "search" search-term)
+                     {:headers (jwt/add-auth-header current-user)
+                      :as      :json}))))
+
 (def test-organism-id 38378)
 
 (defn- genome-viewer-url-request
@@ -48,8 +56,8 @@
   "Sends a request for a genome viewer URL to the COGE service."
   [paths]
   (with-trap [default-error-handler]
-    (let [request-url (coge-url "genomes")]
-      (:body (http/put request-url {:body         (genome-viewer-url-request paths)
-                                    :headers      (jwt/add-auth-header current-user)
-                                    :content-type :json
-                                    :as           :json})))))
+    (:body (http/put (coge-url "genomes")
+                     {:body         (genome-viewer-url-request paths)
+                      :headers      (jwt/add-auth-header current-user)
+                      :content-type :json
+                      :as           :json}))))
