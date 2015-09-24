@@ -63,7 +63,7 @@ func TestStepStdout(t *testing.T) {
 	s := inittests(t)
 	step := s.Steps[0]
 	actual := step.Stdout("foo")
-	expected := "'/path/to/stdout'"
+	expected := "/path/to/stdout"
 	if actual != expected {
 		t.Errorf("Stdout() returned '%s' instead of '%s'", actual, expected)
 	}
@@ -80,7 +80,7 @@ func TestStepStderr(t *testing.T) {
 	s := inittests(t)
 	step := s.Steps[0]
 	actual := step.Stderr("foo")
-	expected := "'/path/to/stderr'"
+	expected := "/path/to/stderr"
 	if actual != expected {
 		t.Errorf("Stderr() returned '%s' instead of '%s'", actual, expected)
 	}
@@ -216,7 +216,7 @@ func TestCommandLine(t *testing.T) {
 func TestArguments(t *testing.T) {
 	s := inittests(t)
 	actual := s.Steps[0].Arguments("foo")
-	expected := `run --rm -e IPLANT_USER -e IPLANT_EXECUTION_ID -v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/ -v $(pwd):/work -v /host/path1:/container/path1 -v /container/path2 --device=/host/path1:/container/path1 --device=/host/path2:/container/path2 --volumes-from=foo-vf-prefix1 --volumes-from=foo-vf-prefix2 --name test-name -w /work --memory=2048M --cpu-shares=2048 --net=none --entrypoint=/bin/true gims.iplantcollaborative.org:5000/backwards-compat:test /usr/local3/bin/wc_tool-1.00/wc_wrapper.sh param1 Acer-tree.txt param0 wc_out.txt`
+	expected := `run --rm -e IPLANT_USER -e IPLANT_EXECUTION_ID -v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/ -v $(pwd):/work -v /host/path1:/container/path1 -v /container/path2 --device=/host/path1:/container/path1 --device=/host/path2:/container/path2 --volumes-from=foo-vf-prefix1 --volumes-from=foo-vf-prefix2 --name test-name -w /work --memory=2048M --cpu-shares=2048 --net=none --entrypoint=/bin/true gims.iplantcollaborative.org:5000/backwards-compat:test /usr/local3/bin/wc_tool-1.00/wc_wrapper.sh param1 'Acer-tree.txt' param0 'wc_out.txt'`
 	if actual != expected {
 		t.Errorf("Arguments() returned:\n\t%s\ninstead of:\n\t%s", actual, expected)
 	}

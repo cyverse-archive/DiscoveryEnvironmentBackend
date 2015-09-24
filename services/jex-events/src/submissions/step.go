@@ -107,7 +107,7 @@ func (s *Step) CommandLine(uuid string) string {
 func (s *Step) Arguments(uuid string) string {
 	var buffer bytes.Buffer
 	for _, p := range s.Config.Parameters() {
-		buffer.WriteString(fmt.Sprintf("%s %s ", p.Name, p.Value))
+		buffer.WriteString(fmt.Sprintf("%s %s ", p.Name, quote(p.Value)))
 	}
 	return strings.TrimSpace(fmt.Sprintf("%s %s", s.CommandLine(uuid), buffer.String()))
 }
@@ -126,7 +126,7 @@ func (s *Step) Stdin() string {
 // filename in the logs directory, but only if s.StdoutPath isn't set.
 func (s *Step) Stdout(suffix string) string {
 	if s.StdoutPath != "" {
-		return quote(s.StdoutPath)
+		return s.StdoutPath
 	}
 	return path.Join("logs", fmt.Sprintf("%s%s", "condor-stdout-", suffix))
 }
@@ -136,7 +136,7 @@ func (s *Step) Stdout(suffix string) string {
 // filename in the logs directory, but only if s.StderrPath isn't set.
 func (s *Step) Stderr(suffix string) string {
 	if s.StderrPath != "" {
-		return quote(s.StderrPath)
+		return s.StderrPath
 	}
 	return path.Join("logs", fmt.Sprintf("%s%s", "condor-stderr-", suffix))
 }
