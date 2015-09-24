@@ -1,6 +1,7 @@
 package submissions
 
 import (
+	"bytes"
 	"fmt"
 	"path"
 	"strings"
@@ -447,4 +448,30 @@ func TestFinalOutputArguments(t *testing.T) {
 		t.Errorf("FinalOutputArguments() returned:\n\t%s\ninstead of:\n\t%s", actual, expected)
 	}
 	_inittests(t, false)
+}
+
+func TestExtractJobID(t *testing.T) {
+	testData := []byte(`1000 job(s) submitted to cluster (100000000.0000).`)
+	actual := extractJobID(testData)
+	expected := []byte("100000000.0000")
+	if !bytes.Equal(actual, expected) {
+		t.Errorf("extractJobID found %s instead of %s", actual, expected)
+	}
+
+	testData = []byte(`asdfadsfadsfadsfa1000 job(s) submitted to cluster (100000000.0000)asdfadsfadsfasdfadsfadsfadsfadsfadsf`)
+	actual = extractJobID(testData)
+	expected = []byte("100000000.0000")
+	if !bytes.Equal(actual, expected) {
+		t.Errorf("extractJobID found %s instead of %s", actual, expected)
+	}
+
+	testData = []byte(`asdfadsfadsfadsfa
+adsfadsfadsfadsfadsfasdfadsfadsfadsfadsfdsa1000 job(s) submitted to cluster (100000000)asdfadsfadsfasdfadsfadsfadsfadsfadsf
+asdfadsfasdfadsfdsfsdsfdsafds`)
+	actual = extractJobID(testData)
+	expected = []byte("100000000")
+	if !bytes.Equal(actual, expected) {
+		t.Errorf("extractJobID found %s instead of %s", actual, expected)
+	}
+
 }
