@@ -40,9 +40,29 @@
           :description "This endpoint allows deleting a folder if the current user has permissions to do so."
           (service/trap uri folders/delete-folder folder-id params))
 
-    (GET* "/privileges" [:as {:keys [uri]}]
-          :query       [params StandardUserQueryParams]
-          :return      FolderPrivileges
-          :summary     "List Folder Privileges"
-          :description "This endpoint allows callers to list the privileges visible to the current user of a single folder."
-          (service/trap uri folders/get-folder-privileges folder-id params))))
+    (context* "/privileges" []
+
+      (GET* "/" [:as {:keys [uri]}]
+            :query       [params StandardUserQueryParams]
+            :return      FolderPrivileges
+            :summary     "List Folder Privileges"
+            :description "This endpoint allows callers to list the privileges visible to the current user of a single folder."
+            (service/trap uri folders/get-folder-privileges folder-id params))
+
+      (context* "/:subject-id/:privilege-name" []
+        :path-params [subject-id :- NonBlankString
+                      privilege-name :- NonBlankString]
+
+        (PUT* "/" [:as {:keys [uri]}]
+              :query       [params StandardUserQueryParams]
+              :return      Privilege
+              :summary     "Add Folder Privilege"
+              :description "This endpoint allows callers to add a specific privilege for a specific subject to a specific folder."
+              (service/trap uri folders/add-folder-privilege folder-id subject-id privilege-name params))
+
+        (DELETE* "/" [:as {:keys [uri]}]
+              :query       [params StandardUserQueryParams]
+              :return      Privilege
+              :summary     "Remove Folder Privilege"
+              :description "This endpoint allows callers to remove a specific privilege for a specific subject to a specific folder."
+              (service/trap uri folders/remove-folder-privilege folder-id subject-id privilege-name params))))))

@@ -23,6 +23,16 @@
   (let [folder (grouper/add-folder user name display_extension description)]
     (fmt/format-folder folder)))
 
+(defn add-folder-privilege
+  [folder-id subject-id privilege-name {:keys [user]}]
+  (let [[privilege attribute-names] (grouper/add-folder-privileges user folder-id subject-id [privilege-name])]
+    (fmt/format-privilege attribute-names privilege :wsSubject)))
+
+(defn remove-folder-privilege
+  [folder-id subject-id privilege-name {:keys [user]}]
+  (let [[privilege attribute-names] (grouper/remove-folder-privileges user folder-id subject-id [privilege-name])]
+    (fmt/format-privilege attribute-names privilege :wsSubject)))
+
 (defn delete-folder
   [folder-id {:keys [user]}]
   (fmt/format-folder (grouper/delete-folder user folder-id)))
