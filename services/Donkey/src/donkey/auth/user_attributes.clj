@@ -1,5 +1,6 @@
 (ns donkey.auth.user-attributes
-  (:require [clojure.tools.logging :as log]
+  (:require [cheshire.core :as cheshire]
+            [clojure.tools.logging :as log]
             [clj-cas.cas-proxy-auth :as cas]
             [donkey.util.config :as cfg]))
 
@@ -37,26 +38,68 @@
    :lastName      (System/getenv "IPLANT_CAS_LAST")
    :commonName    (System/getenv "IPLANT_CAS_COMMON")})
 
+(defn wrap-current-user
+  "Generates a Ring handler function that stores user information in current-user."
+  [handler user-info-fn]
+  (fn [request]
+    (binding [current-user (user-info-fn request)]
+      (handler request))))
+
+(defn- no-authentication-provided
+  "Returns a response indicating that no authentication information was found in the request."
+  []
+  {:status  401
+   :headers {"WWW-Authenticate" "Custom"}
+   :body    (cheshire/encode {:reason "No authentication information found in request."})})
+
+(defn- find-auth-handler
+  "Finds an authentication handler for a request."
+  [request phs]
+  (->> (remove (fn [[token-fn _]] (nil? (token-fn request))) phs)
+       (first)
+       (second)))
+
+(defn- wrap-auth-selection
+  "Generates a ring handler function that selects the authentication method based on predicates."
+  [handler phs]
+  (log/spy phs)
+  (fn [request]
+    (if-let [auth-handler (log/spy :warn (find-auth-handler request phs))]
+      (auth-handler request)
+      (no-authentication-provided))))
+
+(defn- get-cas-ticket
+  "Extracts a CAS ticket from the request, returning nil if none is found."
+  [request]
+  (get (:query-params request) "proxyToken"))
+
+(defn- get-jwt-assertion
+  "Extracts a JWT assertion from the request, returning nil if none is found."
+  [request]
+  (get (:headers request) "X-Iplant-De-Jwt"))
+
+(defn- wrap-cas-admin-auth
+  [handler]
+  (-> (wrap-current-user handler user-from-attributes)
+      (cas/validate-cas-group-membership
+       get-cas-ticket cfg/cas-server cfg/server-name cfg/group-attr-name cfg/allowed-groups)))
+
+(defn- wrap-cas-auth
+  [handler]
+  (-> (wrap-current-user handler user-from-attributes)
+      (cas/validate-cas-proxy-ticket get-cas-ticket cfg/cas-server cfg/server-name)))
+
 (defn store-current-admin-user
-  "Authenticates the user using validate-cas-group-membership and binds current-user to a map that
-   is built from the user attributes that validate-cas-proxy-ticket stores in the request."
-  [handler cas-server-fn server-name-fn group-attr-name-fn allowed-groups-fn]
-  (cas/validate-cas-group-membership
-    (fn [request]
-      (binding [current-user (user-from-attributes request)]
-        (handler request)))
-    cas-server-fn server-name-fn group-attr-name-fn allowed-groups-fn))
+  "Authenticates the user, verifies that the user has administrative privileges and stores the user
+   information in current-user."
+  [handler]
+  (wrap-auth-selection handler [[get-cas-ticket (wrap-cas-admin-auth handler)]]))
 
 (defn store-current-user
-  "Authenticates the user using validate-cas-proxy-ticket and binds
-   current-user to a map that is built from the user attributes that
-   validate-cas-proxy-ticket stores in the request."
-  [handler cas-server-fn server-name-fn]
-  (cas/validate-cas-proxy-ticket
-   (fn [request]
-     (binding [current-user (user-from-attributes request)]
-       (handler request)))
-   cas-server-fn server-name-fn))
+  "Authenticates the user using validate-cas-proxy-ticket and binds current-user to a map that is
+   built from the user attributes that validate-cas-proxy-ticket stores in the request."
+  [handler]
+  (wrap-auth-selection handler [[get-cas-ticket (wrap-cas-auth handler)]]))
 
 (defn fake-store-current-user
   "Fake storage of a user"
