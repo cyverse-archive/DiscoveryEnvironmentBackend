@@ -251,6 +251,36 @@ func TestDataContainers(t *testing.T) {
 	}
 }
 
+func TestContainerImages(t *testing.T) {
+	s := inittests(t)
+	ci := s.ContainerImages()
+	actuallen := len(ci)
+	expectedlen := 1
+	if actuallen != expectedlen {
+		t.Errorf("ContainerImages() return %d ContainerImages instead of %d", actuallen, expectedlen)
+	}
+	actual := ci[0].ID
+	expected := "fc210a84-f7cd-4067-939c-a68ec3e3bd2b"
+	if actual != expected {
+		t.Errorf("ID was %s instead of %s", actual, expected)
+	}
+	actual = ci[0].Name
+	expected = "gims.iplantcollaborative.org:5000/backwards-compat"
+	if actual != expected {
+		t.Errorf("Name was %s instead of %s", actual, expected)
+	}
+	actual = ci[0].Tag
+	expected = "latest"
+	if actual != expected {
+		t.Errorf("Tag was %s instead of %s", actual, expected)
+	}
+	actual = ci[0].URL
+	expected = "https://registry.hub.docker.com/u/discoenv/backwards-compat"
+	if actual != expected {
+		t.Errorf("URL was %s instead of %s", actual, expected)
+	}
+}
+
 func TestFileMetadata(t *testing.T) {
 	s := inittests(t)
 	fm := s.FileMetadata

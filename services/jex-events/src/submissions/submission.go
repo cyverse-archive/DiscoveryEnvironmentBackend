@@ -201,6 +201,16 @@ func (s *Submission) DataContainers() []VolumesFrom {
 	return vfs
 }
 
+// ContainerImages returns a []ContainerImage of all of the images associated
+// with this submission.
+func (s *Submission) ContainerImages() []ContainerImage {
+	var ci []ContainerImage
+	for _, step := range s.Steps {
+		ci = append(ci, step.Component.Container.Image)
+	}
+	return ci
+}
+
 // Inputs returns all of the StepInputs associated with the submission,
 // regardless of what step they're associated with.
 func (s *Submission) Inputs() []StepInput {
