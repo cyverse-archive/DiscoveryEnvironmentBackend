@@ -1,5 +1,5 @@
 (ns donkey.util.jwt
-  (:use [donkey.auth.user-attributes :only [current-user]])
+  (:use [slingshot.slingshot :only [try+]])
   (:require [clojure-commons.jwt :as jwt]
             [donkey.util.config :as config]))
 
@@ -8,7 +8,12 @@
    (fn []
      (jwt/generator (config/jwt-opts)))))
 
-(defn- jwt-user-from-donkey-user
+(def ^:private jwt-validator
+  (memoize
+   (fn []
+     (jwt/validator (config/jwt-opts)))))
+
+(defn jwt-user-from-donkey-user
   [donkey-user]
   {:user        (:shortUsername donkey-user)
    :email       (:email donkey-user)
@@ -16,7 +21,7 @@
    :family-name (:lastName donkey-user)
    :common-name (:commonName donkey-user)})
 
-(defn- donkey-user-from-jwt-user
+(defn donkey-user-from-jwt-user
   [jwt-user]
   {:shortUsername (:user jwt-user)
    :username      (:str (:user jwt-user) "@" (config/uid-domain))
@@ -26,16 +31,33 @@
    :commonName    (:common-name jwt-user)})
 
 (defn generate-jwt
-  ([]
-     (generate-jwt current-user))
-  ([user]
-     ((jwt-generator) (jwt-user-from-donkey-user user))))
+  [user]
+  ((jwt-generator) (jwt-user-from-donkey-user user)))
 
 (defn add-auth-header
-  ([]
-     (add-auth-header current-user {}))
   ([user]
      (add-auth-header user {}))
   ([user headers]
      (assoc headers
        :X-Iplant-De-Jwt (generate-jwt user))))
+
+(defn- validate-group-membership
+  [handler allowed-groups-fn]
+  (fn [request]
+    (let [allowed-groups (allowed-groups-fn)
+          actual-groups  (get-in request [:jwt-claims :org.iplantc.de:entitlement] [])]
+      (if (some (partial contains? (set allowed-groups)) actual-groups)
+        (handler request)
+        {:status 401}))))
+
+(defn validate-jwt-assertion
+  [handler assertion-fn]
+  (fn [request]
+    (if-let [assertion (assertion-fn request)]
+      (handler (assoc request :jwt-claims (jwt-validator assertion)))
+      {:status 401})))
+
+(defn validate-jwt-group-membership
+  [handler assertion-fn allowed-groups-fn]
+  (-> (validate-group-membership handler allowed-groups-fn)
+      (validate-jwt-assertion assertion-fn)))

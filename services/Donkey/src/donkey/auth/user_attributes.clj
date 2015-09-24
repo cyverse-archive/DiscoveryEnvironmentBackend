@@ -2,7 +2,8 @@
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
             [clj-cas.cas-proxy-auth :as cas]
-            [donkey.util.config :as cfg]))
+            [donkey.util.config :as cfg]
+            [donkey.util.jwt :as jwt]))
 
 
 (def
@@ -26,6 +27,11 @@
      :lastName      last-name
      :commonName    (str first-name " " last-name)
      :principal     (get user-attributes "principal")}))
+
+(defn user-from-jwt-claims
+  "Creates a map of values from JWT claims stored in the request."
+  [{:keys [jwt-claims]}]
+  (jwt/donkey-user-from-jwt-user jwt-claims))
 
 (defn fake-user-from-attributes
   "Creates a real map of fake values for a user base on environment variables."
@@ -89,17 +95,29 @@
   (-> (wrap-current-user handler user-from-attributes)
       (cas/validate-cas-proxy-ticket get-cas-ticket cfg/cas-server cfg/server-name)))
 
+(defn- wrap-jwt-admin-auth
+  [handler]
+  (-> (wrap-current-user handler user-from-jwt-claims)
+      (jwt/validate-jwt-group-membership get-jwt-assertion cfg/allowed-groups)))
+
+(defn- wrap-jwt-auth
+  [handler]
+  (-> (wrap-current-user handler user-from-jwt-claims)
+      (jwt/validate-jwt-assertion get-jwt-assertion)))
+
 (defn store-current-admin-user
   "Authenticates the user, verifies that the user has administrative privileges and stores the user
    information in current-user."
   [handler]
-  (wrap-auth-selection handler [[get-cas-ticket (wrap-cas-admin-auth handler)]]))
+  (wrap-auth-selection handler [[get-cas-ticket    (wrap-cas-admin-auth handler)]
+                                [get-jwt-assertion (wrap-jwt-admin-auth handler)]]))
 
 (defn store-current-user
   "Authenticates the user using validate-cas-proxy-ticket and binds current-user to a map that is
    built from the user attributes that validate-cas-proxy-ticket stores in the request."
   [handler]
-  (wrap-auth-selection handler [[get-cas-ticket (wrap-cas-auth handler)]]))
+  (wrap-auth-selection handler [[get-cas-ticket    (wrap-cas-auth handler)]
+                                [get-jwt-assertion (wrap-jwt-auth handler)]]))
 
 (defn fake-store-current-user
   "Fake storage of a user"
