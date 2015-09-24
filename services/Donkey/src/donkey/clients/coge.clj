@@ -1,5 +1,6 @@
 (ns donkey.clients.coge
-  (:use [donkey.auth.user-attributes :only [current-user]]
+  (:use [clojure-commons.core :only [remove-nil-values]]
+        [donkey.auth.user-attributes :only [current-user]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
@@ -37,6 +38,30 @@
     (:body (http/get (coge-url "genomes" "search" search-term)
                      {:headers (jwt/add-auth-header current-user)
                       :as      :json}))))
+
+(def export-fasta-job-type  "export_fasta")
+(def export-fasta-dest-type "irods")
+
+(defn- export-fasta-request
+  "Builds the request to export the FastA file for a genome into iRODS."
+  [user genome-id {:keys [notify overwrite destination]}]
+  (cheshire/encode
+   {:type       export-fasta-job-type
+    :parameters (remove-nil-values
+                 {:genome_id genome-id
+                  :dest_type export-fasta-dest-type
+                  :overwrite (if overwrite 1 0)
+                  :email     (when notify (:email user))})}))
+
+(defn export-fasta
+  "Submits a job to CoGe to export the FastA file for a genome into iRODS."
+  [genome-id opts]
+  (with-trap [default-error-handler]
+    (:body (http/put (coge-url "jobs")
+                     {:headers      (jwt/add-auth-header current-user)
+                      :body         (export-fasta-request current-user genome-id opts)
+                      :content-type :json
+                      :as           :json}))))
 
 (def test-organism-id 38378)
 

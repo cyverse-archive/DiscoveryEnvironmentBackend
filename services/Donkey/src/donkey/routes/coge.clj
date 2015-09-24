@@ -12,5 +12,8 @@
     (GET "/coge/genomes" [:as {:keys [params]}]
          (success-response (search-genomes params)))
 
+    (POST "/coge/genomes/:genome-id/export-fasta" [genome-id :as {:keys [params]}]
+          (success-response (export-fasta genome-id params)))
+
     (POST "/coge/genomes/load" [:as {:keys [body]}]
           (success-response (get-genome-viewer-url body)))))

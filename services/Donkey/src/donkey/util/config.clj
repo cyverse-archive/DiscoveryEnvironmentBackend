@@ -423,6 +423,11 @@
   [props config-valid configs coge-enabled]
   "donkey.coge.base-url")
 
+(cc/defprop-str coge-data-folder-name
+  "The name of the coge data folder in each user's home folder."
+  [props config-valid configs coge-enabled]
+  "donkey.coge.data-folder-name")
+
 (cc/defprop-str coge-user
   "The COGE user that needs file sharing permissions for genome viewer services."
   [props config-valid configs coge-enabled]
