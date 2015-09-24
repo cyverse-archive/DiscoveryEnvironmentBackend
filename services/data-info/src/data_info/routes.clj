@@ -1,8 +1,8 @@
 (ns data-info.routes
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
-        [clojure-commons.middleware :only [log-validation-errors]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [common-swagger-api.schema]
+        [service-logging.middleware :only [log-validation-errors]]
         [ring.util.response :only [redirect]])
   (:require [compojure.route :as route]
             [data-info.routes.data :as data-routes]

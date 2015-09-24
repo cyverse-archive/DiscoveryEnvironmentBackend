@@ -1,5 +1,5 @@
 (ns metadactyl.routes.api
-  (:use [clojure-commons.middleware :only [log-validation-errors]]
+  (:use [service-logging.middleware :only [log-validation-errors]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [common-swagger-api.schema]
         [metadactyl.user :only [store-current-user]]

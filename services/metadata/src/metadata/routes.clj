@@ -1,7 +1,7 @@
 (ns metadata.routes
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
-        [clojure-commons.middleware :only [log-validation-errors]]
         [clojure-commons.query-params :only [wrap-query-params]]
+        [service-logging.middleware :only [log-validation-errors]]
         [common-swagger-api.schema])
   (:require [metadata.routes.avus :as avu-routes]
             [metadata.routes.comments :as comment-routes]

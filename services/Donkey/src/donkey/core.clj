@@ -2,8 +2,8 @@
   (:gen-class)
   (:use [clojure.java.io :only [file]]
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
-        [clojure-commons.middleware :only [wrap-log-requests]]
         [clojure-commons.query-params :only [wrap-query-params]]
+        [service-logging.middleware :only [wrap-logging]]
         [compojure.core]
         [ring.middleware.keyword-params]
         [donkey.routes.admin]
@@ -116,27 +116,16 @@
 
 (def secured-handler-no-context
   (-> (delayed-handler secured-routes-no-context)
-    util/trap-handler
-    wrap-log-requests
-    wrap-user-info
     (auth-store-user)))
 
 
 (def secured-handler
   (-> (delayed-handler secured-routes)
-    util/trap-handler
-    wrap-log-requests
-    wrap-user-info
     (auth-store-user)))
-
 
 (def admin-handler
   (-> (delayed-handler admin-routes)
-    util/trap-handler
-    wrap-log-requests
-    wrap-user-info
     (auth-store-admin-user)))
-
 
 (defn donkey-routes
   []
@@ -222,10 +211,12 @@
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler routes-fn)
-    wrap-keyword-params
-    wrap-lcase-params
-    wrap-query-params
-    (tc/wrap-thread-context svc-info)))
+      wrap-logging
+      util/trap-handler
+      wrap-user-info
+      wrap-keyword-params
+      wrap-lcase-params
+      wrap-query-params))
 
 (def app
   (site-handler donkey-routes))
