@@ -5,28 +5,28 @@
             [iplant_groups.routes.domain.folder :as folder]
             [schema.core :as s]))
 
-(s/defschema BasePrivilege
+(s/defschema Privilege
   {:type
    (describe String "The general type of privilege.")
 
    :name
    (describe String "The privilege name, under the type")
 
-   :allowed
+   (s/optional-key :allowed)
    (describe Boolean "Whether the privilege is marked allowed.")
 
-   :revokable
+   (s/optional-key :revokable)
    (describe Boolean "Whether the privilege is marked revokable.")
 
    :subject
    (describe subject/Subject "The subject/user with the privilege.")})
 
 (s/defschema GroupPrivilege
-  (assoc BasePrivilege
+  (assoc Privilege
          :group (describe group/Group "The group the permission applies to.")))
 
 (s/defschema FolderPrivilege
-  (assoc BasePrivilege
+  (assoc Privilege
          :folder (describe folder/Folder "The folder the permission applies to.")))
 
 (s/defschema GroupPrivileges

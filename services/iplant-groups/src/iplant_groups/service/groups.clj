@@ -28,6 +28,16 @@
   (let [group (grouper/add-group user type name display_extension description)]
     (fmt/format-group-with-detail group)))
 
+(defn add-group-privilege
+  [group-id subject-id privilege-name {:keys [user]}]
+  (let [[privilege attribute-names] (grouper/add-group-privileges user group-id subject-id [privilege-name])]
+    (fmt/format-privilege attribute-names privilege :wsSubject)))
+
+(defn remove-group-privilege
+  [group-id subject-id privilege-name {:keys [user]}]
+  (let [[privilege attribute-names] (grouper/remove-group-privileges user group-id subject-id [privilege-name])]
+    (fmt/format-privilege attribute-names privilege :wsSubject)))
+
 (defn delete-group
   [group-id {:keys [user]}]
   (fmt/format-group (grouper/delete-group user group-id)))

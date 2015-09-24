@@ -100,12 +100,14 @@
            (remove-vals empty?)))))
 
 (defn format-privilege
-  [attribute-names privilege]
-  (->> {:name      (:privilegeName privilege)
-        :type      (:privilegeType privilege)
-        :allowed   (string-to-boolean (:allowed privilege))
-        :revokable (string-to-boolean (:revokable privilege))
-        :group     (format-group (:wsGroup privilege))
-        :folder    (format-folder (:wsStem privilege))
-        :subject   (format-subject attribute-names (:ownerSubject privilege))}
-       (remove-vals nil?)))
+  ([attribute-names privilege subject-key]
+   (->> {:name      (:privilegeName privilege)
+         :type      (:privilegeType privilege)
+         :allowed   (string-to-boolean (:allowed privilege))
+         :revokable (string-to-boolean (:revokable privilege))
+         :group     (format-group (:wsGroup privilege))
+         :folder    (format-folder (:wsStem privilege))
+         :subject   (format-subject attribute-names (subject-key privilege))}
+        (remove-vals nil?)))
+  ([attribute-names privilege]
+   (format-privilege attribute-names privilege :ownerSubject)))

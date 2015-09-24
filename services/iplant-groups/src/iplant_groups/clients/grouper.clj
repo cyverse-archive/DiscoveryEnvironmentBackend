@@ -308,20 +308,24 @@
          (first)
          (:wsStem))))
 
-;; Group/folder privileges
+;; Get group/folder privileges
 
 ;; This is only available as a Lite request; ActAsSubject works differently.
 (defn- format-group-folder-privileges-lookup-request
-  [username group? group-or-folder-id]
-  (-> {:WsRestGetGrouperPrivilegesLiteRequest
-       {:actAsSubjectId username
-        (if group? :groupUuid :stemUuid) group-or-folder-id}}
-      (json/encode)))
+  [entity-type username group-or-folder-id]
+  (if-let [uuid-key (get {:group :groupUuid
+                          :folder :stemUuid}
+                         entity-type)]
+    (-> {:WsRestGetGrouperPrivilegesLiteRequest
+         {:actAsSubjectId username
+          uuid-key group-or-folder-id}}
+        (json/encode))
+    (throw+ {:error_code ce/ERR_BAD_REQUEST :entity-type entity-type})))
 
 (defn- get-group-folder-privileges
-  [username group? group-or-folder-id]
+  [entity-type username group-or-folder-id]
   (with-trap [default-error-handler]
-    (let [response (->> {:body         (format-group-folder-privileges-lookup-request username group? group-or-folder-id)
+    (let [response (->> {:body         (format-group-folder-privileges-lookup-request entity-type username group-or-folder-id)
                          :basic-auth   (auth-params)
                          :content-type content-type
                          :as           :json}
@@ -332,11 +336,74 @@
 
 (defn get-group-privileges
   [username group-id]
-  (get-group-folder-privileges username true group-id))
+  (get-group-folder-privileges :group username group-id))
 
 (defn get-folder-privileges
   [username folder-id]
-  (get-group-folder-privileges username false folder-id))
+  (get-group-folder-privileges :folder username folder-id))
+
+;; Add/remove group/folder privileges
+
+(defn- format-group-folder-privileges-add-remove-request
+  [entity-lookup allowed? username subject-id privilege-names]
+  (-> {:WsRestAssignGrouperPrivilegesRequest
+       (assoc entity-lookup
+         :actAsSubjectLookup (act-as-subject-lookup username)
+         :clientVersion "v2_2_000"
+         :privilegeNames privilege-names
+         :allowed (if allowed? "T" "F")
+         :wsSubjectLookups [{:subjectId subject-id}])}
+      (json/encode)))
+
+(defn- format-group-privileges-add-remove-request
+  [allowed? username group-id subject-id privilege-names]
+  (format-group-folder-privileges-add-remove-request
+    {:wsGroupLookup {:uuid group-id}}
+    allowed? username subject-id privilege-names))
+
+(defn- format-folder-privileges-add-remove-request
+  [allowed? username folder-id subject-id privilege-names]
+  (format-group-folder-privileges-add-remove-request
+    {:wsStemLookup {:uuid folder-id}}
+    allowed? username subject-id privilege-names))
+
+(defn- add-remove-group-folder-privileges
+  [request-body]
+  (with-trap [default-error-handler]
+    (let [response (->> {:body         request-body
+                         :basic-auth   (auth-params)
+                         :content-type content-type
+                         :as           :json}
+                        (http/post (grouper-uri "grouperPrivileges"))
+                        (:body)
+                        (:WsAssignGrouperPrivilegesResults))]
+      [(first (:results response)) (:subjectAttributeNames response)])))
+
+(defn- add-remove-group-privileges
+  [allowed? username group-id subject-id privilege-names]
+  (add-remove-group-folder-privileges
+    (format-group-privileges-add-remove-request allowed? username group-id subject-id privilege-names)))
+
+(defn- add-remove-folder-privileges
+  [allowed? username folder-id subject-id privilege-names]
+  (add-remove-group-folder-privileges
+    (format-folder-privileges-add-remove-request allowed? username folder-id subject-id privilege-names)))
+
+(defn add-group-privileges
+  [username group-id subject-id privilege-names]
+  (add-remove-group-privileges true username group-id subject-id privilege-names))
+
+(defn remove-group-privileges
+  [username group-id subject-id privilege-names]
+  (add-remove-group-privileges false username group-id subject-id privilege-names))
+
+(defn add-folder-privileges
+  [username folder-id subject-id privilege-names]
+  (add-remove-folder-privileges true username folder-id subject-id privilege-names))
+
+(defn remove-folder-privileges
+  [username folder-id subject-id privilege-names]
+  (add-remove-folder-privileges false username folder-id subject-id privilege-names))
 
 ;; Subject search.
 
