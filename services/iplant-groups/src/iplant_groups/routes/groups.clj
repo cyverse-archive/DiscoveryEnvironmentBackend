@@ -1,6 +1,7 @@
 (ns iplant_groups.routes.groups
   (:use [common-swagger-api.schema]
         [iplant_groups.routes.domain.group]
+        [iplant_groups.routes.domain.privileges]
         [iplant_groups.routes.domain.params])
   (:require [iplant_groups.service.groups :as groups]
             [iplant_groups.util.service :as service]))
@@ -41,6 +42,13 @@
           :summary     "Delete Group"
           :description "This endpoint allows deleting a group if the current user has permissions to do so."
           (service/trap uri groups/delete-group group-id params))
+
+    (GET* "/privileges" [:as {:keys [uri]}]
+          :query       [params StandardUserQueryParams]
+          :return      GroupPrivileges
+          :summary     "List Group Privileges"
+          :description "This endpoint allows callers to list the privileges visible to the current user of a single group."
+          (service/trap uri groups/get-group-privileges group-id params))
 
     (GET* "/members" [:as {:keys [uri]}]
           :query       [params StandardUserQueryParams]

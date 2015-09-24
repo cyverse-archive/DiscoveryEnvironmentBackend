@@ -70,14 +70,15 @@
 
 (defn format-folder
   [folder]
-  (->> {:description       (:description folder)
-        :display_extension (:displayExtension folder)
-        :display_name      (:displayName folder)
-        :extension         (:extension folder)
-        :id_index          (:idIndex folder)
-        :name              (:name folder)
-        :id                (:uuid folder)}
-       (remove-vals nil?)))
+  (when-not (nil? folder)
+    (->> {:description       (:description folder)
+          :display_extension (:displayExtension folder)
+          :display_name      (:displayName folder)
+          :extension         (:extension folder)
+          :id_index          (:idIndex folder)
+          :name              (:name folder)
+          :id                (:uuid folder)}
+         (remove-vals nil?))))
 
 (defn format-subject
   [attribute-names subject]
@@ -97,3 +98,14 @@
             :source_id         (:sourceId subject)}
            (remove-vals nil?)
            (remove-vals empty?)))))
+
+(defn format-privilege
+  [attribute-names privilege]
+  (->> {:name      (:privilegeName privilege)
+        :type      (:privilegeType privilege)
+        :allowed   (string-to-boolean (:allowed privilege))
+        :revokable (string-to-boolean (:revokable privilege))
+        :group     (format-group (:wsGroup privilege))
+        :folder    (format-folder (:wsStem privilege))
+        :subject   (format-subject attribute-names (:ownerSubject privilege))}
+       (remove-vals nil?)))

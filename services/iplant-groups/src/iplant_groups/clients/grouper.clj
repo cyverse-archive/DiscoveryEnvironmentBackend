@@ -299,6 +299,36 @@
          (first)
          (:wsStem))))
 
+;; Group/folder privileges
+
+;; This is only available as a Lite request; ActAsSubject works differently.
+(defn- format-group-folder-privileges-lookup-request
+  [username group? group-or-folder-id]
+  (-> {:WsRestGetGrouperPrivilegesLiteRequest
+       {:actAsSubjectId username
+        (if group? :groupUuid :stemUuid) group-or-folder-id}}
+      (json/encode)))
+
+(defn- get-group-folder-privileges
+  [username group? group-or-folder-id]
+  (with-trap [default-error-handler]
+    (let [response (->> {:body         (format-group-folder-privileges-lookup-request username group? group-or-folder-id)
+                         :basic-auth   (auth-params)
+                         :content-type content-type
+                         :as           :json}
+                        (http/post (grouper-uri "grouperPrivileges"))
+                        (:body)
+                        (:WsGetGrouperPrivilegesLiteResult))]
+      [(:privilegeResults response) (:subjectAttributeNames response)])))
+
+(defn get-group-privileges
+  [username group-id]
+  (get-group-folder-privileges username true group-id))
+
+(defn get-folder-privileges
+  [username folder-id]
+  (get-group-folder-privileges username false folder-id))
+
 ;; Subject search.
 
 (defn- format-subject-search-request
