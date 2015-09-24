@@ -247,6 +247,15 @@
 
 ;; Folder add.
 
+(defn- folder-forbidden-error-handler
+  [result-key folder-id error-code {:keys [body] :as response}]
+  (log/warn "Grouper request failed:" response)
+  (let [body    (service/parse-json body)
+        get-grc (fn [m] (-> m result-key :results first :resultMetadata :resultCode))]
+    (if (and (= error-code ce/ERR_REQUEST_FAILED) (= (get-grc body) "INSUFFICIENT_PRIVILEGES"))
+      (service/forbidden "folder" folder-id)
+      (throw+ (build-error-object error-code body)))))
+
 (defn- format-folder-add-update-request
   [update? username name display-extension description]
   (-> {:WsRestStemSaveRequest
@@ -263,7 +272,7 @@
 
 (defn add-folder
   [username name display-extension description]
-  (with-trap [default-error-handler]
+  (with-trap [(partial folder-forbidden-error-handler :WsStemSaveResults name)]
     (->> {:body         (format-folder-add-update-request false username name display-extension description)
           :basic-auth   (auth-params)
           :content-type content-type
@@ -277,15 +286,6 @@
 
 ;; Folder delete
 
-(defn- folder-delete-error-handler
-  [folder-id error-code {:keys [body] :as response}]
-  (log/warn "Grouper request failed:" response)
-  (let [body    (service/parse-json body)
-        get-grc (fn [m] (-> m :WsStemDeleteResults :results first :resultMetadata :resultCode))]
-    (if (and (= error-code ce/ERR_REQUEST_FAILED) (= (get-grc body) "INSUFFICIENT_PRIVILEGES"))
-      (service/forbidden "folder" folder-id)
-      (throw+ (build-error-object error-code body)))))
-
 (defn- format-folder-delete-request
   [username folder-id]
   (-> {:WsRestStemDeleteRequest
@@ -296,7 +296,7 @@
 
 (defn delete-folder
   [username folder-id]
-  (with-trap [(partial folder-delete-error-handler folder-id)]
+  (with-trap [(partial folder-forbidden-error-handler :WsStemDeleteResults folder-id)]
     (->> {:body         (format-folder-delete-request username folder-id)
           :basic-auth   (auth-params)
           :content-type content-type
