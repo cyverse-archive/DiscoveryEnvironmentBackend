@@ -277,6 +277,15 @@
 
 ;; Folder delete
 
+(defn- folder-delete-error-handler
+  [folder-id error-code {:keys [body] :as response}]
+  (log/warn "Grouper request failed:" response)
+  (let [body    (service/parse-json body)
+        get-grc (fn [m] (-> m :WsStemDeleteResults :results first :resultMetadata :resultCode))]
+    (if (and (= error-code ce/ERR_REQUEST_FAILED) (= (get-grc body) "INSUFFICIENT_PRIVILEGES"))
+      (service/forbidden "folder" folder-id)
+      (throw+ (build-error-object error-code body)))))
+
 (defn- format-folder-delete-request
   [username folder-id]
   (-> {:WsRestStemDeleteRequest
@@ -287,7 +296,7 @@
 
 (defn delete-folder
   [username folder-id]
-  (with-trap [default-error-handler]
+  (with-trap [(partial folder-delete-error-handler folder-id)]
     (->> {:body         (format-folder-delete-request username folder-id)
           :basic-auth   (auth-params)
           :content-type content-type

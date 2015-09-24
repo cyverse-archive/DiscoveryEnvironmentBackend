@@ -33,6 +33,7 @@
 (deferr ERR_REQUEST_FAILED)
 (deferr ERR_UNCHECKED_EXCEPTION)
 (deferr ERR_NOT_OWNER)
+(deferr ERR_FORBIDDEN)
 (deferr ERR_INVALID_COPY)
 (deferr ERR_INVALID_URL)
 (deferr ERR_TICKET_EXISTS)
@@ -59,6 +60,7 @@
    ERR_MISSING_QUERY_PARAMETER            400
    ERR_NOT_AUTHORIZED                     401
    ERR_NOT_OWNER                          403
+   ERR_FORBIDDEN                          403
    ERR_NOT_FOUND                          404
    ERR_NOT_UNIQUE                         400
    ERR_CONFLICTING_QUERY_PARAMETER_VALUES 409
