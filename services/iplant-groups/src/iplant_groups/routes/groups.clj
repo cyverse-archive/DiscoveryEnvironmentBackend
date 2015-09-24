@@ -53,19 +53,19 @@
 
       (context* "/:subject-id/:privilege-name" []
         :path-params [subject-id :- NonBlankString
-                          privilege-name :- NonBlankString]
+                      privilege-name :- NonBlankString]
 
         (PUT* "/" [:as {:keys [uri]}]
               :query       [params StandardUserQueryParams]
               :return      Privilege
-              :summary     "Add Group Privileges"
+              :summary     "Add Group Privilege"
               :description "This endpoint allows callers to add a specific privilege for a specific subject to a specific group."
               (service/trap uri groups/add-group-privilege group-id subject-id privilege-name params))
 
         (DELETE* "/" [:as {:keys [uri]}]
               :query       [params StandardUserQueryParams]
               :return      Privilege
-              :summary     "Remove Group Privileges"
+              :summary     "Remove Group Privilege"
               :description "This endpoint allows callers to remove a specific privilege for a specific subject to a specific group."
               (service/trap uri groups/remove-group-privilege group-id subject-id privilege-name params))))
 
