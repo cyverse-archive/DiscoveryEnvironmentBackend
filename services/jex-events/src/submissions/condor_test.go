@@ -1,6 +1,7 @@
 package submissions
 
 import (
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -182,6 +183,55 @@ func TestCreateSubmissionDirectory(t *testing.T) {
 	_, err = os.Stat(dir)
 	if err != nil {
 		t.Error(err)
+	}
+	parent := path.Join(cfg.CondorLogPath, s.Username)
+	err = os.RemoveAll(parent)
+	if err != nil {
+		t.Error(err)
+	}
+	_inittests(t, false)
+}
+
+func TestCreateSubmissionFiles(t *testing.T) {
+	s := inittests(t)
+	cfg.CondorLogPath = ""
+	dir, err := CreateSubmissionDirectory(s)
+	if err != nil {
+		t.Error(err)
+	}
+	cmd, sh, err := CreateSubmissionFiles(dir, s)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = os.Stat(cmd)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = os.Stat(sh)
+	if err != nil {
+		t.Error(err)
+	}
+	cmdexpected, err := GenerateCondorSubmit(s)
+	if err != nil {
+		t.Error(err)
+	}
+	cmdtxt, err := ioutil.ReadFile(cmd)
+	if err != nil {
+		t.Error(err)
+	}
+	shexpected, err := GenerateIplantScript(s)
+	if err != nil {
+		t.Error(err)
+	}
+	shtxt, err := ioutil.ReadFile(sh)
+	if err != nil {
+		t.Error(err)
+	}
+	if string(shtxt) != shexpected {
+		t.Error("The iplant.sh that was generated is different from the iplant.sh in the file")
+	}
+	if string(cmdtxt) != cmdexpected {
+		t.Error("The iplant.cmd that was generated is different from the iplant.cmd in the file")
 	}
 	parent := path.Join(cfg.CondorLogPath, s.Username)
 	err = os.RemoveAll(parent)
