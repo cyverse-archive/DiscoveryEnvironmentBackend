@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"regexp"
 	"text/template"
 )
@@ -193,6 +194,12 @@ func CondorSubmit(cmdPath, shPath string, s *Submission) (string, error) {
 	csPath, err := exec.LookPath("condor_submit")
 	if err != nil {
 		return "", err
+	}
+	if !path.IsAbs(csPath) {
+		csPath, err = filepath.Abs(csPath)
+		if err != nil {
+			return "", err
+		}
 	}
 	cmd := exec.Command(csPath, cmdPath)
 	cmd.Dir = path.Dir(cmdPath)
