@@ -15,10 +15,6 @@
             [schema.core :as s]
             [service-logging.thread-context :as tc]))
 
-(defn context-middleware
-  [handler]
-  (tc/wrap-thread-context handler config/svc-info))
-
 (defapi app
   (swagger-ui config/docs-uri)
   (swagger-docs
@@ -41,7 +37,6 @@
      wrap-lcase-params
      params/wrap-keyword-params
      service/req-logger
-     context-middleware
      log-validation-errors]
     status-routes/status
     avu-routes/avus

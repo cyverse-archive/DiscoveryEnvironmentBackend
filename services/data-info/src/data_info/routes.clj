@@ -20,10 +20,6 @@
             [ring.middleware.keyword-params :as params]
             [service-logging.thread-context :as tc]))
 
-(defn context-middleware
-  [handler]
-  (tc/wrap-thread-context handler config/svc-info))
-
 (defapi app
   (swagger-ui config/docs-uri)
   (swagger-docs
@@ -43,7 +39,6 @@
      wrap-lcase-params
      params/wrap-keyword-params
      util/req-logger
-     context-middleware
      log-validation-errors]
     status-routes/status
     data-routes/data-operations

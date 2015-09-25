@@ -24,10 +24,6 @@
             [metadactyl.util.service :as service]
             [service-logging.thread-context :as tc]))
 
-(defn context-middleware
-  [handler]
-  (tc/wrap-thread-context handler config/svc-info))
-
 (defapi app
   (swagger-ui config/docs-uri)
   (swagger-docs
@@ -58,7 +54,6 @@
   (middlewares
     [wrap-keyword-params
      wrap-query-params
-     context-middleware
      log-validation-errors]
     (context* "/" []
       :tags ["service-info"]
@@ -70,7 +65,6 @@
     [wrap-keyword-params
      wrap-query-params
      tc/add-user-to-context
-     context-middleware
      log-validation-errors
      store-current-user]
     (context* "/apps/categories" []

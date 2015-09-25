@@ -24,7 +24,6 @@
   (middlewares
    [wrap-keyword-params
     wrap-query-params
-    (tc/wrap-thread-context config/svc-info)
     log-validation-errors]
    (context* "/" []
     :tags ["service-info"]

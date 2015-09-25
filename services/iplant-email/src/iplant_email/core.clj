@@ -50,8 +50,7 @@
 
 (defn site-handler [routes]
   (-> routes
-    jb/parse-json-body
-    (tc/wrap-thread-context svc-info)))
+    jb/parse-json-body))
 
 (defn -main
   [& args]
