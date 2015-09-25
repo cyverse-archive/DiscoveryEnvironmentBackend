@@ -146,7 +146,7 @@ exit $EXITSTATUS
 // CreateSubmissionDirectory creates a directory for a submission and returns the path to it as a string.
 func CreateSubmissionDirectory(s *Submission) (string, error) {
 	dirPath := s.CondorLogDirectory()
-	err := os.Mkdir(dirPath, 0755)
+	err := os.MkdirAll(dirPath, 0755)
 	if err != nil {
 		return "", err
 	}

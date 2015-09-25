@@ -1,6 +1,8 @@
 package submissions
 
 import (
+	"os"
+	"path"
 	"strings"
 	"testing"
 )
@@ -21,8 +23,8 @@ error = script-error.log
 request_disk = 0
 +IpcUuid = "07b04ce2-7757-4b21-9e15-0b4c2f44be26""
 +IpcJobId = "generated_script"
-+IpcUsername = "wregglej_this_is_a_test"
-concurrency_limits = "wregglej_this_is_a_test"
++IpcUsername = "test_this_is_a_test"
+concurrency_limits = "test_this_is_a_test"
 +IpcExe = "wc_wrapper.sh"
 +IpcExePath = "/usr/local3/bin/wc_tool-1.00"
 should_transfer_files = YES
@@ -50,9 +52,9 @@ error = script-error.log
 request_disk = 0
 +IpcUuid = "07b04ce2-7757-4b21-9e15-0b4c2f44be26""
 +IpcJobId = "generated_script"
-+IpcUsername = "wregglej_this_is_a_test"
-+AccountingGroup = "foo.wregglej_this_is_a_test"
-concurrency_limits = "wregglej_this_is_a_test"
++IpcUsername = "test_this_is_a_test"
++AccountingGroup = "foo.test_this_is_a_test"
+concurrency_limits = "test_this_is_a_test"
 +IpcExe = "wc_wrapper.sh"
 +IpcExePath = "/usr/local3/bin/wc_tool-1.00"
 should_transfer_files = YES
@@ -81,7 +83,7 @@ func TestGenerateIplantScript(t *testing.T) {
 
 set -x
 
-readonly IPLANT_USER=wregglej_this_is_a_test
+readonly IPLANT_USER=test_this_is_a_test
 export IPLANT_USER
 readonly IPLANT_EXECUTION_ID=07b04ce2-7757-4b21-9e15-0b4c2f44be26
 export IPLANT_EXECUTION_ID
@@ -128,7 +130,7 @@ if [ ! "$?" -eq "0"]; then
 	exit $EXITSTATUS
 fi
 
-docker run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:test get --user wregglej_this_is_a_test --source '/iplant/home/wregglej/Acer-tree.txt' --config irods-config -m 'attr1,value1,unit1' -m 'attr2,value2,unit2' -m 'ipc-analysis-id,c7f05682-23c8-4182-b9a2-e09650a5f49b,UUID' -m 'ipc-execution-id,07b04ce2-7757-4b21-9e15-0b4c2f44be26,UUID' >1 logs/logs-stdout-input-0 >2 logs/logs-stderr-input-0
+docker run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:test get --user test_this_is_a_test --source '/iplant/home/wregglej/Acer-tree.txt' --config irods-config -m 'attr1,value1,unit1' -m 'attr2,value2,unit2' -m 'ipc-analysis-id,c7f05682-23c8-4182-b9a2-e09650a5f49b,UUID' -m 'ipc-execution-id,07b04ce2-7757-4b21-9e15-0b4c2f44be26,UUID' >1 logs/logs-stdout-input-0 >2 logs/logs-stderr-input-0
 if [ ! "$?" -eq "0"]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
@@ -140,7 +142,7 @@ if [ ! "$?" -eq "0"]; then
 	exit $EXITSTATUS
 fi
 
-docker run --rm -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:test put --user wregglej_this_is_a_test --config irods-config --destination '/iplant/home/wregglej/analyses/Word_Count_analysis1-2015-09-17-21-42-20.9/Word_Count_analysis1__-test' -m 'attr1,value1,unit1' -m 'attr2,value2,unit2' -m 'ipc-analysis-id,c7f05682-23c8-4182-b9a2-e09650a5f49b,UUID' -m 'ipc-execution-id,07b04ce2-7757-4b21-9e15-0b4c2f44be26,UUID' --exclude foo,bar,baz,blippy >1 logs/logs-stdout-output >2 logs/logs-stderr-output
+docker run --rm -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:test put --user test_this_is_a_test --config irods-config --destination '/iplant/home/wregglej/analyses/Word_Count_analysis1-2015-09-17-21-42-20.9/Word_Count_analysis1__-test' -m 'attr1,value1,unit1' -m 'attr2,value2,unit2' -m 'ipc-analysis-id,c7f05682-23c8-4182-b9a2-e09650a5f49b,UUID' -m 'ipc-execution-id,07b04ce2-7757-4b21-9e15-0b4c2f44be26,UUID' --exclude foo,bar,baz,blippy >1 logs/logs-stdout-output >2 logs/logs-stderr-output
 if [ ! "$?" -eq "0"]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
@@ -166,6 +168,25 @@ exit $EXITSTATUS
 		if actual[idx] != e {
 			t.Errorf("\nActual:\n%s\nExpected:\n%s\n", actual[idx], e)
 		}
+	}
+	_inittests(t, false)
+}
+
+func TestCreateSubmissionDirectory(t *testing.T) {
+	s := inittests(t)
+	cfg.CondorLogPath = ""
+	dir, err := CreateSubmissionDirectory(s)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = os.Stat(dir)
+	if err != nil {
+		t.Error(err)
+	}
+	parent := path.Join(cfg.CondorLogPath, s.Username)
+	err = os.RemoveAll(parent)
+	if err != nil {
+		t.Error(err)
 	}
 	_inittests(t, false)
 }
