@@ -2,7 +2,7 @@
   (:use [slingshot.slingshot :only [try+ throw+]] )
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [clojure.data.json :as json]
+            [cheshire.core :as cheshire]
             [service-logging.thread-context :as tc]))
 
 (defn flatten-map
@@ -23,7 +23,9 @@
   [request]
   (dissoc request
           :body
-          :user-info))
+          :user-info
+          :compojure.api.middleware/options
+          :ring.swagger.middleware/data))
 
 (defn- clean-response
   [response]
@@ -33,13 +35,13 @@
 (defn log-request
   [{:keys [request-method uri] :as request}]
   (let [method (string/upper-case (name request-method))]
-    (tc/with-logging-context {:request (json/write-str (clean-request request))}
+    (tc/with-logging-context {:request (cheshire/encode (clean-request request))}
                              (log/log 'AccessLogger :info nil (str method " " uri)))))
 
 (defn log-response
   ([level throwable {:keys [request-method uri]} response]
    (let [method (string/upper-case (name request-method))]
-     (tc/with-logging-context {:response (json/write-str (clean-response (assoc response
+     (tc/with-logging-context {:response (cheshire/encode (clean-response (assoc response
                                                                            :uri uri
                                                                            :request-method request-method)))}
                               (log/log 'AccessLogger level throwable (str method " " uri)))))
@@ -50,31 +52,26 @@
 
 (defn wrap-logging
   "Logs incoming requests and their responses with the 'AccessLogger' logger.
-   Neither the request nor the response bodies are logged."
+
+    If the response map contains a `throwable` key, the value will be given to
+    the logger as an exception/throwable. Also, if the `throwable` key is not nil,
+    it is assumed that there will also be an `exception` key in the response map.
+    The `throwable` and `exception` keys are not logged nor passed with the response."
   [handler]
   (fn [request]
     (log-request request)
-    (let [response (handler request)]
-      (log-response request response)
-      response)))
+    (let [{:keys [throwable exception] :as response} (handler request)]
+      (if (nil? throwable)
+               (log-response request response)
+               (tc/with-logging-context {:exception (cheshire/encode exception)}
+                                        (log-response :error throwable request (dissoc response
+                                                                                       :throwable
+                                                                                       :exception))))
+      (dissoc response
+              :throwable
+              :exception))))
 
-(defn wrap-log-requests
-  "Logs incoming requests with the 'AccessLogger' logger.
-   The request body is not logged."
-  [handler]
-  (fn [request]
-    (log-request request)
-    (handler request)))
-
-(defn wrap-log-responses
-  "Logs responses with the 'AccessLogger' logger.
-   The reponse body is not logged."
-  [handler]
-  (fn [request]
-    (let [response (handler request)]
-      (log-response request response)
-      response)))
-
+; FIXME Replace usages of this function with compojure api validation exception handlers
 (defn log-validation-errors
   [handler]
   (fn [request]
