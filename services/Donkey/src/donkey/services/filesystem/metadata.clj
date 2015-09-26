@@ -405,41 +405,47 @@
 (defn- bulk-add-avus
   "Applies metadata from a list of attributes and filename/values to those files found under
    dest-dir."
-  [cm user dest-dir template-id template-attrs attrs csv-filename-values]
+  [cm user dest-dir force? template-id template-attrs attrs csv-filename-values]
   (let [format-path (partial format-csv-metadata-filename dest-dir)
         paths (map (comp format-path first) csv-filename-values)
-        values (map rest csv-filename-values)]
+        value-lists (map rest csv-filename-values)
+        irods-attrs (clojure.set/difference (set attrs) (set (keys template-attrs)))]
     (validators/all-paths-exist cm paths)
     (validators/all-paths-writeable cm user paths)
+    (if-not force?
+      (validate-batch-add-attrs cm paths irods-attrs))
   (mapv (partial bulk-add-file-avus cm user dest-dir template-id template-attrs attrs)
-    paths values)))
+    paths value-lists)))
 
 (defn- parse-metadata-csv
   "Parses filenames and metadata to apply from a CSV file input stream.
    If a template-id is provided, then AVUs with template attributes are stored in the metadata db,
    and all other AVUs are stored in IRODS."
-  [cm user dest-dir template-id separator stream]
+  [cm user dest-dir force? template-id separator stream]
   (let [stream-reader (java.io.InputStreamReader. stream "UTF-8")
         csv (mapv (partial mapv string/trim) (.readAll (CSVReader. stream-reader (.charAt separator 0))))
         attrs (-> csv first rest)
         csv-filename-values (rest csv)
         template-attrs (parse-template-attrs template-id)]
     {:metadata
-     (bulk-add-avus cm user dest-dir template-id template-attrs attrs csv-filename-values)}))
+     (bulk-add-avus cm user dest-dir force? template-id template-attrs attrs csv-filename-values)}))
 
 (defn- parse-form-csv-metadata
-  [user dest-dir template-id separator {:keys [stream filename content-type]}]
+  [user dest-dir force? template-id separator {:keys [stream filename content-type]}]
   (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
-    (parse-metadata-csv cm user dest-dir template-id separator stream)))
+    (parse-metadata-csv cm user dest-dir force? template-id separator stream)))
 
 (defn parse-csv-metadata
   "Parses filenames and metadata to apply from a CSV file posted in a multipart form request"
   [{{:keys [user]} :user-info
-    {:keys [dest template-id separator] :or {separator "%2C"}} :params
+    {:keys [dest force template-id separator] :or {separator "%2C"}} :params
     :as req}]
   (let [parser (partial parse-form-csv-metadata
-                 user dest (uuidify template-id) (url/url-decode separator))
+                 user dest
+                 (Boolean/parseBoolean force)
+                 (uuidify template-id)
+                 (url/url-decode separator))
         {{results "file"} :params} (multipart/multipart-params-request req {:store parser})]
     (service/success-response results)))
 
@@ -453,14 +459,17 @@
 
 (defn parse-src-file-csv-metadata
   "Parses filenames and metadata to apply from a source CSV file in the data store"
-  [{:keys [user]} {:keys [src dest template-id separator] :or {separator "%2C"}}]
+  [{:keys [user]} {:keys [src dest force template-id separator] :or {separator "%2C"}}]
   (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (validators/path-exists cm src)
     (validators/path-readable cm user src)
     (service/success-response
-      (parse-metadata-csv
-        cm user dest (uuidify template-id) (url/url-decode separator) (input-stream cm src)))))
+      (parse-metadata-csv cm user dest
+        (Boolean/parseBoolean force)
+        (uuidify template-id)
+        (url/url-decode separator)
+        (input-stream cm src)))))
 
 (with-pre-hook! #'parse-src-file-csv-metadata
   (fn [user-info params]

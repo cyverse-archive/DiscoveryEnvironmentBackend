@@ -564,6 +564,9 @@ Adding Batch Metadata to Multiple Paths from a CSV File
 These endpoints will parse a CSV/TSV file where the first column is absolute or relative paths to
 files in the data store, the remaining columns are metadata, attributes are listed in the first row,
 and filenames and attribute values are listed in the remaining rows.
+If a `template-id` parameter is provided, then any parsed AVUs with attributes that match the given
+template's attributes will be added as template AVUs, otherwise all other AVUs will be added as
+IRODS metadata AVUs.
 
 __URL Path__: /secured/filesystem/metadata/csv-form-parser
 
@@ -571,23 +574,26 @@ __URL Path__: /secured/filesystem/metadata/csv-parser
 
 __HTTP Method__: POST
 
-__Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER, ERR_BAD_OR_MISSING_FIELD
+__Error Codes__: ERR_NOT_READABLE, ERR_NOT_WRITEABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER, ERR_BAD_OR_MISSING_FIELD, ERR_NOT_UNIQUE
 
 __Request Query Parameters__:
 
-* proxyToken - A valid CAS ticket.
-* dest - The folder path to look under for files listed in the CSV file.
-* src - Required only for the `/secured/filesystem/metadata/csv-parser` endpoint. Path to the CSV source file in IRODS.
-* template-id - (optional) The UUID of the Metadata Template with which to associate the parsed metadata.
-* separator - (optional) URL encoded separator character to use for parsing the CSV/TSV file. Comma (%2C) by default.
+Parameter | Required | Description
+----------|----------|------------
+proxyToken | Yes | A valid CAS ticket.
+dest | Yes | The folder path to look under for files listed in the CSV file.
+src | Yes/No | Required only for the `/secured/filesystem/metadata/csv-parser` endpoint. Path to the CSV source file in IRODS.
+force | No | If omitted or set to `false`, then existing IRODS AVUs will be checked for attributes matching those parsed from the CSV file. If a match is found, then an `ERR_NOT_UNIQUE` is returned and metadata is not saved.
+template-id | No | The UUID of the Metadata Template with which to associate the parsed metadata.
+separator | No | URL encoded separator character to use for parsing the CSV/TSV file. Comma (%2C) by default.
 
 __Request File Format__:
 
-filename | organization_address_postal_code | organization_address_department | organization_address_institution | organism_name | test-attr-1 | test-attr-2 | test-attr-3
----|---|---|---|---|---|---|---
-library1/fake.1.fastq.gz | 85719 | BIO5 | iPlant | fake-1 | test-val-1 | test-val-2 | test-val-3
-/iplant/home/ipcuser/folder_2/library2/fake.2.fastq.gz | 85719 | BIO5 | iPlant | fake-2 | test-val-1 | test-val-2 | test-val-3
-library1 | 85719 | BIO5 | iPlant | lib-1 | test-val-1 | test-val-2 | test-val-3
+filename | template_item | template_postal_code | template_department | template_institution | test-attr-1 | test-attr-2 | test-attr-3
+---------|---|---|---|---|---|---|---
+library1/fake.1.fastq.gz | fake-1 | 85719 | BIO5 | iPlant | test-val-1 | test-val-2 | test-val-3
+/iplant/home/ipcuser/folder_2/library2/fake.2.fastq.gz | fake-2 | 85719 | BIO5 | iPlant | test-val-1 | test-val-2 | test-val-3
+library1 | lib-1 | 85719 | BIO5 | iPlant | test-val-1 | test-val-2 | test-val-3
 
 __Response__:
 
@@ -598,23 +604,23 @@ __Response__:
             "path": "/iplant/home/ipcuser/folder_1/library1/fake.1.fastq.gz",
             "template-avus": [
                 {
-                    "attr": "organization_address_postal_code",
+                    "attr": "template_item",
+                    "value": "fake-1",
+                    "unit": ""
+                },
+                {
+                    "attr": "template_postal_code",
                     "value": "85719",
                     "unit": ""
                 },
                 {
-                    "attr": "organization_address_department",
+                    "attr": "template_department",
                     "value": "BIO5",
                     "unit": ""
                 },
                 {
-                    "attr": "organization_address_institution",
-                    "value": "iPlant Collab",
-                    "unit": ""
-                },
-                {
-                    "attr": "organism_name",
-                    "value": "fake-1",
+                    "attr": "template_institution",
+                    "value": "iPlant",
                     "unit": ""
                 }
             ],
@@ -637,26 +643,26 @@ __Response__:
             ]
         },
         {
-            "path": "/iplant/home/psarando/ipcuser/folder_2/library2/fake.2.fastq.gz",
+            "path": "/iplant/home/ipcuser/folder_2/library2/fake.2.fastq.gz",
             "template-avus": [
                 {
-                    "attr": "organization_address_postal_code",
+                    "attr": "template_item",
+                    "value": "fake-2",
+                    "unit": ""
+                },
+                {
+                    "attr": "template_postal_code",
                     "value": "85719",
                     "unit": ""
                 },
                 {
-                    "attr": "organization_address_department",
+                    "attr": "template_department",
                     "value": "BIO5",
                     "unit": ""
                 },
                 {
-                    "attr": "organization_address_institution",
-                    "value": "iPlant Collab",
-                    "unit": ""
-                },
-                {
-                    "attr": "organism_name",
-                    "value": "fake-2",
+                    "attr": "template_institution",
+                    "value": "iPlant",
                     "unit": ""
                 }
             ],
@@ -682,23 +688,23 @@ __Response__:
             "path": "/iplant/home/ipcuser/folder_1/library1",
             "template-avus": [
                 {
-                    "attr": "organization_address_postal_code",
+                    "attr": "template_item",
+                    "value": "lib-1",
+                    "unit": ""
+                },
+                {
+                    "attr": "template_postal_code",
                     "value": "85719",
                     "unit": ""
                 },
                 {
-                    "attr": "organization_address_department",
+                    "attr": "template_department",
                     "value": "BIO5",
                     "unit": ""
                 },
                 {
-                    "attr": "organization_address_institution",
-                    "value": "iPlant Collab",
-                    "unit": ""
-                },
-                {
-                    "attr": "organism_name",
-                    "value": "lib-1",
+                    "attr": "template_institution",
+                    "value": "iPlant",
                     "unit": ""
                 }
             ],
