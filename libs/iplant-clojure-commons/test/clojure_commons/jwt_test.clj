@@ -8,7 +8,7 @@
            :family-name "Test"
            :common-name "Ipc Test"})
 
-(def opts {:after                300
+(def opts {:validity-window-end  300
            :public-key-path      "test-resources/public-key.pem"
            :private-key-path     "test-resources/private-key.pem"
            :private-key-password "testkey"

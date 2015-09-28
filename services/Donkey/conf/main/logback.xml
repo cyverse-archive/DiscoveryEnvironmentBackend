@@ -11,9 +11,6 @@
   </appender>
 
 
-  <Logger name="donkey" level="debug" />
-  <!-- Configuration Logging -->
-  <Logger name="clojure-commons.config" level="INFO" />
   <!-- Request Logging -->
   <Logger name="AccessLogger" level="INFO" />
   <!-- Jargon Logging -->

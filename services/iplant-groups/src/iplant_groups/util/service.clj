@@ -21,6 +21,12 @@
            :description desc
            :id          id}))
 
+(defn forbidden
+  [desc id]
+  (throw+ {:error_code  ce/ERR_FORBIDDEN
+           :description desc
+           :id          id}))
+
 (defn trap
   "Traps a service call, automatically calling success-response on the result."
   [action func & args]

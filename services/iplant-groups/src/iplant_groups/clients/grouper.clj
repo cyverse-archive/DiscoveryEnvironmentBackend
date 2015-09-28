@@ -247,6 +247,15 @@
 
 ;; Folder add.
 
+(defn- folder-forbidden-error-handler
+  [result-key folder-id error-code {:keys [body] :as response}]
+  (log/warn "Grouper request failed:" response)
+  (let [body    (service/parse-json body)
+        get-grc (fn [m] (-> m result-key :results first :resultMetadata :resultCode))]
+    (if (and (= error-code ce/ERR_REQUEST_FAILED) (= (get-grc body) "INSUFFICIENT_PRIVILEGES"))
+      (service/forbidden "folder" folder-id)
+      (throw+ (build-error-object error-code body)))))
+
 (defn- format-folder-add-update-request
   [update? username name display-extension description]
   (-> {:WsRestStemSaveRequest
@@ -263,7 +272,7 @@
 
 (defn add-folder
   [username name display-extension description]
-  (with-trap [default-error-handler]
+  (with-trap [(partial folder-forbidden-error-handler :WsStemSaveResults name)]
     (->> {:body         (format-folder-add-update-request false username name display-extension description)
           :basic-auth   (auth-params)
           :content-type content-type
@@ -274,6 +283,127 @@
          (:results)
          (first)
          (:wsStem))))
+
+;; Folder delete
+
+(defn- format-folder-delete-request
+  [username folder-id]
+  (-> {:WsRestStemDeleteRequest
+       {:actAsSubjectLookup (act-as-subject-lookup username)
+        :wsStemLookups [
+         {:uuid folder-id}]}}
+      (json/encode)))
+
+(defn delete-folder
+  [username folder-id]
+  (with-trap [(partial folder-forbidden-error-handler :WsStemDeleteResults folder-id)]
+    (->> {:body         (format-folder-delete-request username folder-id)
+          :basic-auth   (auth-params)
+          :content-type content-type
+          :as           :json}
+         (http/post (grouper-uri "stems"))
+         (:body)
+         (:WsStemDeleteResults)
+         (:results)
+         (first)
+         (:wsStem))))
+
+;; Get group/folder privileges
+
+;; This is only available as a Lite request; ActAsSubject works differently.
+(defn- format-group-folder-privileges-lookup-request
+  [entity-type username group-or-folder-id]
+  (if-let [uuid-key (get {:group :groupUuid
+                          :folder :stemUuid}
+                         entity-type)]
+    (-> {:WsRestGetGrouperPrivilegesLiteRequest
+         {:actAsSubjectId username
+          uuid-key group-or-folder-id}}
+        (json/encode))
+    (throw+ {:error_code ce/ERR_BAD_REQUEST :entity-type entity-type})))
+
+(defn- get-group-folder-privileges
+  [entity-type username group-or-folder-id]
+  (with-trap [default-error-handler]
+    (let [response (->> {:body         (format-group-folder-privileges-lookup-request entity-type username group-or-folder-id)
+                         :basic-auth   (auth-params)
+                         :content-type content-type
+                         :as           :json}
+                        (http/post (grouper-uri "grouperPrivileges"))
+                        (:body)
+                        (:WsGetGrouperPrivilegesLiteResult))]
+      [(:privilegeResults response) (:subjectAttributeNames response)])))
+
+(defn get-group-privileges
+  [username group-id]
+  (get-group-folder-privileges :group username group-id))
+
+(defn get-folder-privileges
+  [username folder-id]
+  (get-group-folder-privileges :folder username folder-id))
+
+;; Add/remove group/folder privileges
+
+(defn- format-group-folder-privileges-add-remove-request
+  [entity-lookup allowed? username subject-id privilege-names]
+  (-> {:WsRestAssignGrouperPrivilegesRequest
+       (assoc entity-lookup
+         :actAsSubjectLookup (act-as-subject-lookup username)
+         :clientVersion "v2_2_000"
+         :privilegeNames privilege-names
+         :allowed (if allowed? "T" "F")
+         :wsSubjectLookups [{:subjectId subject-id}])}
+      (json/encode)))
+
+(defn- format-group-privileges-add-remove-request
+  [allowed? username group-id subject-id privilege-names]
+  (format-group-folder-privileges-add-remove-request
+    {:wsGroupLookup {:uuid group-id}}
+    allowed? username subject-id privilege-names))
+
+(defn- format-folder-privileges-add-remove-request
+  [allowed? username folder-id subject-id privilege-names]
+  (format-group-folder-privileges-add-remove-request
+    {:wsStemLookup {:uuid folder-id}}
+    allowed? username subject-id privilege-names))
+
+(defn- add-remove-group-folder-privileges
+  [request-body]
+  (with-trap [default-error-handler]
+    (let [response (->> {:body         request-body
+                         :basic-auth   (auth-params)
+                         :content-type content-type
+                         :as           :json}
+                        (http/post (grouper-uri "grouperPrivileges"))
+                        (:body)
+                        (:WsAssignGrouperPrivilegesResults))]
+      [(first (:results response)) (:subjectAttributeNames response)])))
+
+(defn- add-remove-group-privileges
+  [allowed? username group-id subject-id privilege-names]
+  (add-remove-group-folder-privileges
+    (format-group-privileges-add-remove-request allowed? username group-id subject-id privilege-names)))
+
+(defn- add-remove-folder-privileges
+  [allowed? username folder-id subject-id privilege-names]
+  (add-remove-group-folder-privileges
+    (format-folder-privileges-add-remove-request allowed? username folder-id subject-id privilege-names)))
+
+(defn add-group-privileges
+  [username group-id subject-id privilege-names]
+  (add-remove-group-privileges true username group-id subject-id privilege-names))
+
+(defn remove-group-privileges
+  [username group-id subject-id privilege-names]
+  (add-remove-group-privileges false username group-id subject-id privilege-names))
+
+(defn add-folder-privileges
+  [username folder-id subject-id privilege-names]
+  (add-remove-folder-privileges true username folder-id subject-id privilege-names))
+
+(defn remove-folder-privileges
+  [username folder-id subject-id privilege-names]
+  (add-remove-folder-privileges false username folder-id subject-id privilege-names))
 
 ;; Subject search.
 

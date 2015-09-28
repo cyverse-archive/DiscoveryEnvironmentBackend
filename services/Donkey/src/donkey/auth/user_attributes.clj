@@ -1,7 +1,9 @@
 (ns donkey.auth.user-attributes
-  (:require [clojure.tools.logging :as log]
+  (:require [cheshire.core :as cheshire]
+            [clojure.tools.logging :as log]
             [clj-cas.cas-proxy-auth :as cas]
-            [donkey.util.config :as cfg]))
+            [donkey.util.config :as cfg]
+            [donkey.util.jwt :as jwt]))
 
 
 (def
@@ -9,18 +11,27 @@
     :dynamic true}
   current-user nil)
 
+;; TODO: fix common name retrieval when we add it as an attribute to CAS.
 (defn user-from-attributes
   "Creates a map of values from user attributes stored in the request by
    validate-cas-proxy-ticket."
   [{:keys [user-attributes]}]
   (log/trace user-attributes)
-  {:username      (str (get user-attributes "uid") "@" (cfg/uid-domain)),
-   :password      (get user-attributes "password"),
-   :email         (get user-attributes "email"),
-   :shortUsername (get user-attributes "uid")
-   :firstName     (get user-attributes "firstName")
-   :lastName      (get user-attributes "lastName")
-   :principal     (get user-attributes "principal")})
+  (let [first-name (get user-attributes "firstName")
+        last-name  (get user-attributes "lastName")]
+    {:username      (str (get user-attributes "uid") "@" (cfg/uid-domain)),
+     :password      (get user-attributes "password"),
+     :email         (get user-attributes "email"),
+     :shortUsername (get user-attributes "uid")
+     :firstName     first-name
+     :lastName      last-name
+     :commonName    (str first-name " " last-name)
+     :principal     (get user-attributes "principal")}))
+
+(defn user-from-jwt-claims
+  "Creates a map of values from JWT claims stored in the request."
+  [{:keys [jwt-claims]}]
+  (jwt/donkey-user-from-jwt-user jwt-claims))
 
 (defn fake-user-from-attributes
   "Creates a real map of fake values for a user base on environment variables."
@@ -30,30 +41,83 @@
    :email         (System/getenv "IPLANT_CAS_EMAIL")
    :shortUsername (System/getenv "IPLANT_CAS_SHORT")
    :firstName     (System/getenv "IPLANT_CAS_FIRST")
-   :lastName      (System/getenv "IPLANT_CAS_LAST")})
+   :lastName      (System/getenv "IPLANT_CAS_LAST")
+   :commonName    (System/getenv "IPLANT_CAS_COMMON")})
+
+(defn wrap-current-user
+  "Generates a Ring handler function that stores user information in current-user."
+  [handler user-info-fn]
+  (fn [request]
+    (binding [current-user (user-info-fn request)]
+      (handler request))))
+
+(defn- no-authentication-provided
+  "Returns a response indicating that no authentication information was found in the request."
+  []
+  {:status  401
+   :headers {"WWW-Authenticate" "Custom"}
+   :body    (cheshire/encode {:reason "No authentication information found in request."})})
+
+(defn- find-auth-handler
+  "Finds an authentication handler for a request."
+  [request phs]
+  (->> (remove (fn [[token-fn _]] (nil? (token-fn request))) phs)
+       (first)
+       (second)))
+
+(defn- wrap-auth-selection
+  "Generates a ring handler function that selects the authentication method based on predicates."
+  [handler phs]
+  (log/spy phs)
+  (fn [request]
+    (if-let [auth-handler (log/spy :warn (find-auth-handler request phs))]
+      (auth-handler request)
+      (no-authentication-provided))))
+
+(defn- get-cas-ticket
+  "Extracts a CAS ticket from the request, returning nil if none is found."
+  [request]
+  (get (:query-params request) "proxyToken"))
+
+(defn- get-jwt-assertion
+  "Extracts a JWT assertion from the request, returning nil if none is found."
+  [request]
+  (get (:headers request) "X-Iplant-De-Jwt"))
+
+(defn- wrap-cas-admin-auth
+  [handler]
+  (-> (wrap-current-user handler user-from-attributes)
+      (cas/validate-cas-group-membership
+       get-cas-ticket cfg/cas-server cfg/server-name cfg/group-attr-name cfg/allowed-groups)))
+
+(defn- wrap-cas-auth
+  [handler]
+  (-> (wrap-current-user handler user-from-attributes)
+      (cas/validate-cas-proxy-ticket get-cas-ticket cfg/cas-server cfg/server-name)))
+
+(defn- wrap-jwt-admin-auth
+  [handler]
+  (-> (wrap-current-user handler user-from-jwt-claims)
+      (jwt/validate-jwt-group-membership get-jwt-assertion cfg/allowed-groups)))
+
+(defn- wrap-jwt-auth
+  [handler]
+  (-> (wrap-current-user handler user-from-jwt-claims)
+      (jwt/validate-jwt-assertion get-jwt-assertion)))
 
 (defn store-current-admin-user
-  "Authenticates the user using validate-cas-group-membership and binds current-user to a map that
-   is built from the user attributes that validate-cas-proxy-ticket stores in the request."
-  [handler cas-server-fn server-name-fn group-attr-name-fn allowed-groups-fn
-   pgt-callback-base-fn pgt-callback-path-fn]
-  (cas/validate-cas-group-membership
-    (fn [request]
-      (binding [current-user (user-from-attributes request)]
-        (handler request)))
-    cas-server-fn server-name-fn group-attr-name-fn allowed-groups-fn
-    pgt-callback-base-fn pgt-callback-path-fn))
+  "Authenticates the user, verifies that the user has administrative privileges and stores the user
+   information in current-user."
+  [handler]
+  (wrap-auth-selection handler [[get-cas-ticket    (wrap-cas-admin-auth handler)]
+                                [get-jwt-assertion (wrap-jwt-admin-auth handler)]]))
 
 (defn store-current-user
-  "Authenticates the user using validate-cas-proxy-ticket and binds
-   current-user to a map that is built from the user attributes that
-   validate-cas-proxy-ticket stores in the request."
-  [handler cas-server-fn server-name-fn pgt-callback-base-fn pgt-callback-path-fn]
-  (cas/validate-cas-proxy-ticket
-   (fn [request]
-     (binding [current-user (user-from-attributes request)]
-       (handler request)))
-   cas-server-fn server-name-fn pgt-callback-base-fn pgt-callback-path-fn))
+  "Authenticates the user using validate-cas-proxy-ticket and binds current-user to a map that is
+   built from the user attributes that validate-cas-proxy-ticket stores in the request."
+  [handler]
+  (wrap-auth-selection handler [[get-cas-ticket    (wrap-cas-auth handler)]
+                                [get-jwt-assertion (wrap-jwt-auth handler)]]))
 
 (defn fake-store-current-user
   "Fake storage of a user"

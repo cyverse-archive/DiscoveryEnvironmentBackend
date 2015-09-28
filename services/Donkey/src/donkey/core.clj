@@ -95,26 +95,15 @@
     (admin-tool-routes)
     (route/not-found (unrecognized-path-response))))
 
-(defn cas-store-user
+(defn auth-store-user
   [routes]
   (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user store-current-user)]
-    (f routes
-       config/cas-server
-       config/server-name
-       config/pgt-callback-base
-       config/pgt-callback-path)))
+    (f routes)))
 
-(defn cas-store-admin-user
+(defn auth-store-admin-user
   [routes]
   (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user store-current-admin-user)]
-    (f routes
-      config/cas-server
-      config/server-name
-      config/group-attr-name
-      config/get-allowed-groups
-      config/pgt-callback-base
-      config/pgt-callback-path)))
-
+    (f routes)))
 
 (defn- wrap-user-info
   [handler]
@@ -130,7 +119,7 @@
     util/trap-handler
     wrap-log-requests
     wrap-user-info
-    (cas-store-user)))
+    (auth-store-user)))
 
 
 (def secured-handler
@@ -138,7 +127,7 @@
     util/trap-handler
     wrap-log-requests
     wrap-user-info
-    (cas-store-user)))
+    (auth-store-user)))
 
 
 (def admin-handler
@@ -146,7 +135,7 @@
     util/trap-handler
     wrap-log-requests
     wrap-user-info
-    (cas-store-admin-user)))
+    (auth-store-admin-user)))
 
 
 (defn donkey-routes

@@ -5,11 +5,11 @@
             [clj-time.core :as time]))
 
 (defn- build-assertion
-  [after {:keys [user email given-name family-name common-name]}]
+  [validity-window-end {:keys [user email given-name family-name common-name]}]
   (let [now (time/now)]
     (remove-vals nil?
                  {:sub         user
-                  :exp         (time/plus now (time/seconds after))
+                  :exp         (time/plus now (time/seconds validity-window-end))
                   :iat         now
                   :email       email
                   :given_name  given-name
@@ -17,10 +17,10 @@
                   :name        common-name})))
 
 (defn generator
-  [{:keys [after private-key-path private-key-password alg]}]
+  [{:keys [validity-window-end private-key-path private-key-password alg]}]
   (let [private-key (keys/private-key private-key-path private-key-password)]
     (fn [user]
-      (jws/sign (build-assertion after user)
+      (jws/sign (build-assertion validity-window-end user)
                 private-key
                 {:alg alg}))))
 

@@ -99,8 +99,8 @@
 
 (defn- handle-authentication
   "Handles the authentication for a request."
-  [handler validator server-name request]
-  (let [ticket (get (:query-params request) "proxyToken")]
+  [handler ticket-fn validator server-name request]
+  (let [ticket (ticket-fn request)]
     (log/debug (str "validating proxy ticket: " ticket))
     (let [assertion (get-assertion ticket validator server-name)]
       (if (nil? assertion)
@@ -113,12 +113,12 @@
     (str (apply curl/url (map #(string/replace % #"^/|/$" "") components)))))
 
 (defn validate-cas-proxy-ticket
-  "Authenticates a CAS proxy ticket that has been sent to the service in a
-   query string parameter called, proxyToken.  If the proxy ticket can be
-   validated then the request is passed to the handler.  Otherwise, the
-   handler responds with HTTP status code 401."
-  [handler cas-server-fn server-name-fn & [proxy-callback-base-fn proxy-callback-path-fn]]
-  (let [callback-base-fn (or proxy-callback-base-fn (constantly nil))
+  "Authenticates a CAS proxy ticket.  If the proxy ticket can be validated then the request
+   is passed to the handler.  Otherwise, the handler responds with HTTP status code 401."
+  [handler ticket-fn cas-server-fn server-name-fn
+   & [proxy-callback-base-fn proxy-callback-path-fn]]
+  (let [ticket-fn        (or ticket-fn (constantly nil))
+        callback-base-fn (or proxy-callback-base-fn (constantly nil))
         callback-path-fn (or proxy-callback-path-fn (constantly nil))
         callback-url-fn  #(build-url (callback-base-fn) (callback-path-fn))
         pgt-storage      (delay (build-pgt-storage (callback-url-fn)))
@@ -126,19 +126,18 @@
     (fn [request]
       (if (= (callback-path-fn) (:uri request))
         (handle-proxy-callback @pgt-storage request)
-        (handle-authentication handler @validator (server-name-fn) request)))))
+        (handle-authentication handler ticket-fn @validator (server-name-fn) request)))))
 
 (defn validate-cas-group-membership
-  "This is a convenience function that produces a handler that validates a
-   CAS ticket, extracts the group membership information from a user
-   attribute and verifies that the user belongs to one of the groups
-   that are permitted to access the resource."
-  [handler cas-server-fn server-name-fn attr-name-fn allowed-groups-fn
+  "This is a convenience function that produces a handler that validates a CAS ticket, extracts
+   the group membership information from a user attribute and verifies that the user belongs to
+   one of the groups that are permitted to access the resource."
+  [handler ticket-fn cas-server-fn server-name-fn attr-name-fn allowed-groups-fn
    & [proxy-callback-url-fn proxy-callback-path-fn]]
   (-> handler
     (validate-group-membership allowed-groups-fn)
     (extract-groups-from-user-attributes attr-name-fn)
-    (validate-cas-proxy-ticket cas-server-fn server-name-fn proxy-callback-url-fn
+    (validate-cas-proxy-ticket ticket-fn cas-server-fn server-name-fn proxy-callback-url-fn
                                proxy-callback-path-fn)))
 
 (defn get-proxy-ticket
