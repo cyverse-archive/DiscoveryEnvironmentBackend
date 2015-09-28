@@ -173,6 +173,8 @@
     (catch [:type ::cx/invalid-cfg] {:keys [error]} (invalid-cfg-response error))
     (catch [:type :invalid-argument] {:keys [reason arg val]} (invalid-arg-response arg val reason))
     (catch [:type :ring.swagger.schema/validation] {:keys [error]} (validation-error-response error))
+    (catch [:type :compojure.api.exception/request-validation] {:keys [error]} (validation-error-response error))
+    (catch [:type :compojure.api.exception/response-validation] {:keys [error]} (validation-error-response error))
     (catch Object e
       (log/error (format-exception (:throwable &throw-context)))
       (err-resp action (unchecked &throw-context)))))
