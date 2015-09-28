@@ -112,14 +112,15 @@
   (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user store-current-admin-user)]
     (f handler)))
 
-;FIXME Check for null user
 (defn- wrap-user-info
   [handler]
   (fn [request]
     (let [user-info (transform/add-current-user-to-map {})
           request   (assoc request :user-info user-info)]
-      (tc/with-logging-context {:user-info (cheshire/encode user-info)}
-        (handler request)))))
+      (if (nil? (:user user-info))
+        (handler request)
+        (tc/with-logging-context {:user-info (cheshire/encode user-info)}
+                                 (handler request))))))
 
 
 (def secured-handler-no-context
