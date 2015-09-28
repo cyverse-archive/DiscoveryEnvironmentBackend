@@ -90,10 +90,15 @@ func parameterPreview(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(submissions.PreviewableStepParam(params.P).String()))
 }
 
-// func stopHandler(w http.ResponseWriter, r *http.Request) {
-//   vars := mux.Vars(request)
-//   uuid := vars["uuid"]
-// }
+func stopHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	uuid := vars["uuid"]
+	_, err := submissions.CondorRm(uuid)
+	if err != nil {
+		RespondWithError("Error running 'condor_rm' for job:\n%s", err, w)
+		return
+	}
+}
 
 // Init initializes the configuration and the logger.
 func Init(c *configurate.Configuration, l *log.Logger) {
@@ -106,12 +111,8 @@ func Init(c *configurate.Configuration, l *log.Logger) {
 func Start(c *configurate.Configuration, l *log.Logger) {
 	Init(c, l)
 	router := mux.NewRouter()
-
 	router.HandleFunc("/", rootHandler).Methods("GET")
-
 	router.HandleFunc("/", submissionHandler).Methods("POST")
-
 	router.HandleFunc("/arg-preview", parameterPreview).Methods("POST")
-
-	// router.HandleFunc("/stop/{uuid}", stopHandler).Methods("DELETE")
+	router.HandleFunc("/stop/{uuid}", stopHandler).Methods("DELETE")
 }

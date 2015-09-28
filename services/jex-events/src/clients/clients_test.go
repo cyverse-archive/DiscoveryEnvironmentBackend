@@ -2,11 +2,13 @@ package clients
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"model"
 	"net/http"
-	"net/http/httptest"
 	"testing"
+
+	"github.com/facebookgo/freeport"
+	"github.com/gorilla/mux"
 )
 
 func TestNewJEXEventsClient(t *testing.T) {
@@ -35,25 +37,36 @@ func TestJobRecord(t *testing.T) {
 		AppID:        "c7f05682-23c8-4182-b9a2-e09650a5f49b",
 		InvocationID: "00000000-0000-0000-0000-000000000000",
 	}
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+	r := mux.NewRouter()
+	r.HandleFunc("/jobs/{uuid}", func(w http.ResponseWriter, r *http.Request) {
 		data, err := json.Marshal(expected)
 		if err != nil {
 			t.Error(err)
 		}
 		w.Write(data)
-	}))
-	defer server.Close()
+	})
 
-	response, err := http.Get(server.URL)
+	p, err := freeport.Get()
 	if err != nil {
 		t.Error(err)
+		t.Fail()
 	}
-	data, err := ioutil.ReadAll(response.Body)
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%d", p),
+		Handler: r,
+	}
+
+	go server.ListenAndServe() //evil, evil, evil
+
+	url := fmt.Sprintf("http://127.0.0.1:%d", p)
+	cl, err := NewJEXEventsClient(url)
 	if err != nil {
 		t.Error(err)
+		t.Fail()
 	}
-	var actual model.JobRecord
-	err = json.Unmarshal(data, &actual)
+
+	actual, err := cl.JobRecord("00000000-0000-0000-0000-000000000000")
 	if err != nil {
 		t.Error(err)
 	}

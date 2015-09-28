@@ -8,12 +8,16 @@ import (
 	"io/ioutil"
 	"log"
 	"logcabin"
+	"model"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path"
 	"submissions"
 	"testing"
+
+	"github.com/facebookgo/freeport"
+	"github.com/gorilla/mux"
 )
 
 func JSONData() ([]byte, error) {
@@ -134,5 +138,61 @@ func TestParameterPreviewHandler(t *testing.T) {
 	expected := "param1 'Acer-tree.txt' param0 'wc_out.txt'"
 	if actual != expected {
 		t.Errorf("parameterPreview returned:\n%s\ninstead of:\n%s\n", actual, expected)
+	}
+}
+
+func TestStopHandler(t *testing.T) {
+	jr := &model.JobRecord{
+		CondorID:     "10000",
+		Submitter:    "test_this_is_a_test",
+		AppID:        "c7f05682-23c8-4182-b9a2-e09650a5f49b",
+		InvocationID: "00000000-0000-0000-0000-000000000000",
+	}
+	r := mux.NewRouter()
+	r.HandleFunc("/jobs/{uuid}", func(w http.ResponseWriter, r *http.Request) {
+		data, err := json.Marshal(jr)
+		if err != nil {
+			t.Error(err)
+		}
+		w.Write(data)
+	})
+	p, err := freeport.Get()
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%d", p),
+		Handler: r,
+	}
+	go server.ListenAndServe() //evil, evil, evil
+
+	c.JEXEvents = fmt.Sprintf("http://127.0.0.1:%d", p)
+	inittests(t)
+	r2 := mux.NewRouter()
+	r2.HandleFunc("/stop/{uuid}", stopHandler)
+	p2, err := freeport.Get()
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	server2 := &http.Server{
+		Addr:    fmt.Sprintf(":%d", p2),
+		Handler: r2,
+	}
+	go server2.ListenAndServe() //even more evil, evil, evil
+	delete := fmt.Sprintf("http://127.0.0.1:%d/stop/%s", p2, jr.InvocationID)
+	request, err := http.NewRequest("DELETE", delete, nil)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	if response.StatusCode != 200 {
+		t.Errorf("stopHandler returned a status code of %d", response.StatusCode)
 	}
 }

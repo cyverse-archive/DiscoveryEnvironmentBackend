@@ -2,6 +2,8 @@ package submissions
 
 import (
 	"bytes"
+	"clients"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -212,4 +214,39 @@ func CondorSubmit(cmdPath, shPath string, s *Submission) (string, error) {
 		return "", err
 	}
 	return string(extractJobID(output)), err
+}
+
+// CondorRm stops the job specified by UUID.
+func CondorRm(uuid string) (string, error) {
+	crPath, err := exec.LookPath("condor_rm")
+	if err != nil {
+		return "", err
+	}
+	if !path.IsAbs(crPath) {
+		crPath, err = filepath.Abs(crPath)
+		if err != nil {
+			return "", err
+		}
+	}
+	cl, err := clients.NewJEXEventsClient(cfg.JEXEvents)
+	if err != nil {
+		return "", err
+	}
+	jr, err := cl.JobRecord(uuid)
+	if err != nil {
+		return "", err
+	}
+	if jr.CondorID == "" {
+		return "", errors.New("CondorID was blank")
+	}
+	cmd := exec.Command(crPath, jr.CondorID)
+	cmd.Env = []string{
+		fmt.Sprintf("PATH=%s", cfg.Path),
+		fmt.Sprintf("CONDOR_CONFIG=%s", cfg.CondorConfig),
+	}
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	return string(output), err
 }
