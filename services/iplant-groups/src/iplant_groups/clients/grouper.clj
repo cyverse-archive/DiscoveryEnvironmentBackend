@@ -114,10 +114,10 @@
        {:actAsSubjectLookup (act-as-subject-lookup username)
         :wsGroupToSaves [
          {:wsGroup
-          {:name name
-           :description description
-           :displayExtension display-extension
-           :typeOfGroup type}
+          (remove-vals nil? {:name name
+                             :description description
+                             :displayExtension display-extension
+                             :typeOfGroup type})
           :wsGroupLookup group-lookup
           :saveMode (if update? "UPDATE" "INSERT")}
         ]
