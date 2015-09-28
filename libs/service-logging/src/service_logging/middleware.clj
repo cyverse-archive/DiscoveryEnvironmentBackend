@@ -79,4 +79,10 @@
       (handler request)
       (catch [:type :ring.swagger.schema/validation] {:keys [error]}
         (log/error (:throwable &throw-context) error)
+        (throw+))
+      (catch [:type :compojure.api.exception/request-validation] {:keys [error]}
+        (log/error (:throwable &throw-context) error)
+        (throw+))
+      (catch [:type :compojure.api.exception/response-validation] {:keys [error]}
+        (log/error (:throwable &throw-context) error)
         (throw+)))))
