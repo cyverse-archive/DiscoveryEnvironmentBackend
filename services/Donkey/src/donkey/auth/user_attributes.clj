@@ -1,7 +1,9 @@
 (ns donkey.auth.user-attributes
+  (:use [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
             [clj-cas.cas-proxy-auth :as cas]
+            [clojure-commons.exception :as cx]
             [donkey.util.config :as cfg]
             [donkey.util.jwt :as jwt]))
 
@@ -51,13 +53,6 @@
     (binding [current-user (user-info-fn request)]
       (handler request))))
 
-(defn- no-authentication-provided
-  "Returns a response indicating that no authentication information was found in the request."
-  []
-  {:status  401
-   :headers {"WWW-Authenticate" "Custom"}
-   :body    (cheshire/encode {:reason "No authentication information found in request."})})
-
 (defn- find-auth-handler
   "Finds an authentication handler for a request."
   [request phs]
@@ -72,7 +67,8 @@
   (fn [request]
     (if-let [auth-handler (log/spy :warn (find-auth-handler request phs))]
       (auth-handler request)
-      (no-authentication-provided))))
+      (throw+ {:type ::cx/authentication-not-found
+               :error "No authentication information found in request."}))))
 
 (defn- get-cas-ticket
   "Extracts a CAS ticket from the request, returning nil if none is found."

@@ -1,8 +1,14 @@
 (ns clojure-commons.exception
-  (:use [ring.util.response :only [content-type]])
   (:require [clojure-commons.error-codes :as ec]
             [cheshire.core :as cheshire]
+            [ring.util.response :as header]
             [ring.util.http-response :as resp]))
+
+(defn- embedErrorInfo
+  [throwable exception response]
+  (assoc response
+    :throwable throwable
+    :exception exception))
 
 (defn as-de-exception-handler
   "Wraps a compojure-api exception handler function and performs
@@ -18,12 +24,24 @@
     (let [response (error-handler error error-type request)
           exception {:error_code error-code
                      :reason (get-in response [:body :errors])}]
-      (content-type
-        (assoc response
-          :body (cheshire/encode exception)
-          :throwable error
-          :exception exception)
+      (header/content-type
+        (embedErrorInfo error
+                        exception
+                        (assoc response
+                          :body (cheshire/encode exception)))
         "application/json; charset=utf-8"))))
+
+(defn authentication-not-found-handler
+  [error data _]
+  (resp/unauthorized
+    (let [exception {:error_code ec/ERR_NOT_AUTHORIZED
+                     :reason (:error data)}]
+      (header/header
+        (embedErrorInfo error
+                        exception
+                        (resp/unauthorized (cheshire/encode exception)))
+        "WWW-Authenticate"
+        "Custom"))))
 
 (defn invalid-cfg-handler
   [_ error-type _]
@@ -32,19 +50,14 @@
 (defn unchecked-handler
   [error error-type _]
   (cond
-    (ec/error? error-type) (assoc (resp/internal-server-error (cheshire/encode error-type))
-                             :throwable error
-                             :exception error-type)
+    (ec/error? error-type) (embedErrorInfo error
+                                           error-type
+                                           (resp/internal-server-error (cheshire/encode error-type)))
 
     (instance? Object error) (let [exception {:error_code ec/ERR_UNCHECKED_EXCEPTION
                                               :reason (:message error-type)}]
-                               (assoc (resp/internal-server-error (cheshire/encode exception))
-                                 :throwable error
-                                 :exception exception))))
-
-
-
-
-
+                               (embedErrorInfo error
+                                               exception
+                                               (resp/internal-server-error (cheshire/encode exception))))))
 
 

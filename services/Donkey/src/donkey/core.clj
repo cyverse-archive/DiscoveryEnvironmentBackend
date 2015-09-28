@@ -4,9 +4,6 @@
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [service-logging.middleware :only [wrap-logging]]
-        [clojure-commons.exception :only [as-de-exception-handler
-                                          invalid-cfg-handler
-                                          unchecked-handler]]
         [compojure.core]
         [compojure.api.middleware :only [wrap-exceptions]]
         [ring.middleware.keyword-params]
@@ -35,6 +32,7 @@
   (:require [compojure.route :as route]
             [cheshire.core :as cheshire]
             [compojure.api.exception :as ex]
+            [clojure-commons.exception :as cx]
             [clojure-commons.error-codes :as ec]
             [ring.adapter.jetty :as jetty]
             [donkey.util.config :as config]
@@ -218,10 +216,11 @@
    :service "donkey"})
 
 (def exception-handlers
-  {:handlers {::ex/request-validation (as-de-exception-handler ex/request-validation-handler ec/ERR_ILLEGAL_ARGUMENT)
-              :invalid-configuration (as-de-exception-handler invalid-cfg-handler ec/ERR_CONFIG_INVALID)
-              ::ex/response-validation (as-de-exception-handler ex/response-validation-handler ec/ERR_SCHEMA_VALIDATION)
-              ::ex/default unchecked-handler}})
+  {:handlers {::ex/request-validation (cx/as-de-exception-handler ex/request-validation-handler ec/ERR_ILLEGAL_ARGUMENT)
+              ::ex/response-validation (cx/as-de-exception-handler ex/response-validation-handler ec/ERR_SCHEMA_VALIDATION)
+              ::cx/invalid-cfg (as-de-exception-handler cx/invalid-cfg-handler ec/ERR_CONFIG_INVALID)
+              ::cx/authentication-not-found cx/authentication-not-found-handler
+              ::ex/default cx/unchecked-handler}})
 
 (defn site-handler
   [routes-fn]
