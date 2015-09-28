@@ -279,23 +279,35 @@
       (throw+ (build-error-object error-code body)))))
 
 (defn- format-folder-add-update-request
-  [update? username name display-extension description]
+  [stem-lookup update? username name display-extension description]
   (-> {:WsRestStemSaveRequest
        {:actAsSubjectLookup (act-as-subject-lookup username)
         :wsStemToSaves [
          {:wsStem
-          {:name name
-           :description description
-           :displayExtension display-extension}
-          :wsStemLookup {:stemName name}
+          (remove-vals nil? {:name name
+                             :description description
+                             :displayExtension display-extension})
+          :wsStemLookup stem-lookup
           :saveMode (if update? "UPDATE" "INSERT")}
         ]}}
       (json/encode)))
 
-(defn add-folder
+(defn- format-folder-add-request
   [username name display-extension description]
+  (format-folder-add-update-request
+    {:stemName name}
+    false username name display-extension description))
+
+(defn- format-folder-update-request
+  [username uuid name display-extension description]
+  (format-folder-add-update-request
+    {:uuid uuid}
+    true username name display-extension description))
+
+(defn- add-update-folder
+  [request-body name]
   (with-trap [(partial folder-forbidden-error-handler :WsStemSaveResults name)]
-    (->> {:body         (format-folder-add-update-request false username name display-extension description)
+    (->> {:body         request-body
           :basic-auth   (auth-params)
           :content-type content-type
           :as           :json}
@@ -305,6 +317,16 @@
          (:results)
          (first)
          (:wsStem))))
+
+(defn add-folder
+  [username name display-extension description]
+  (add-update-folder
+    (format-folder-add-request username name display-extension description) name))
+
+(defn update-folder
+  [username uuid name display-extension description]
+  (add-update-folder
+    (format-folder-update-request username uuid name display-extension description) uuid))
 
 ;; Folder delete
 

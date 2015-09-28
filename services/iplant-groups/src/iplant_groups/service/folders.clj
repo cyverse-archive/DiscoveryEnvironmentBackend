@@ -33,6 +33,11 @@
   (let [[privilege attribute-names] (grouper/remove-folder-privileges user folder-id subject-id [privilege-name])]
     (fmt/format-privilege attribute-names privilege :wsSubject)))
 
+(defn update-folder
+  [folder-id {:keys [name description display_extension]} {:keys [user]}]
+  (let [folder (grouper/update-folder user folder-id name display_extension description)]
+    (fmt/format-folder folder)))
+
 (defn delete-folder
   [folder-id {:keys [user]}]
   (fmt/format-folder (grouper/delete-folder user folder-id)))

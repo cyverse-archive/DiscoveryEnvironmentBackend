@@ -33,6 +33,14 @@
           :description "This endpoint allows callers to get information about a single folder."
           (service/trap uri folders/get-folder folder-id params))
 
+    (PUT* "/" [:as {:keys [uri]}]
+        :return      Folder
+        :query       [params StandardUserQueryParams]
+        :body        [body (describe FolderUpdate "The folder information to update.")]
+        :summary     "Update Folder"
+        :description "This endpoint allows callers to update folder information."
+        (service/trap uri folders/update-folder folder-id body params))
+    
     (DELETE* "/" [:as {:keys [uri]}]
           :query       [params StandardUserQueryParams]
           :return      FolderStub
