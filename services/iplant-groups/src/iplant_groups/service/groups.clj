@@ -38,6 +38,11 @@
   (let [[privilege attribute-names] (grouper/remove-group-privileges user group-id subject-id [privilege-name])]
     (fmt/format-privilege attribute-names privilege :wsSubject)))
 
+(defn update-group
+  [group-id {:keys [name description display_extension]} {:keys [user]}]
+  (let [group (grouper/update-group user group-id name display_extension description)]
+    (fmt/format-group-with-detail group)))
+
 (defn delete-group
   [group-id {:keys [user]}]
   (fmt/format-group (grouper/delete-group user group-id)))

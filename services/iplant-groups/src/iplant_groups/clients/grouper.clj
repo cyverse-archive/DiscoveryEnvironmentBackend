@@ -109,7 +109,7 @@
 ;; Group add/update
 
 (defn- format-group-add-update-request
-  [update? username type name display-extension description]
+  [group-lookup update? username type name display-extension description]
   (-> {:WsRestGroupSaveRequest
        {:actAsSubjectLookup (act-as-subject-lookup username)
         :wsGroupToSaves [
@@ -118,16 +118,28 @@
            :description description
            :displayExtension display-extension
            :typeOfGroup type}
-          :wsGroupLookup {:groupName name}
+          :wsGroupLookup group-lookup
           :saveMode (if update? "UPDATE" "INSERT")}
         ]
         :includeGroupDetail "T"}}
       (json/encode)))
 
-(defn add-group
+(defn- format-group-add-request
   [username type name display-extension description]
+  (format-group-add-update-request
+    {:groupName name}
+    false username type name display-extension description))
+
+(defn- format-group-update-request
+  [username uuid name display-extension description]
+  (format-group-add-update-request
+    {:uuid uuid}
+    true username nil name display-extension description)) ;; nil is for 'type' which we shouldn't change for now
+
+(defn- add-update-group
+  [request-body]
   (with-trap [default-error-handler]
-    (->> {:body         (format-group-add-update-request false username type name display-extension description)
+    (->> {:body         request-body
           :basic-auth   (auth-params)
           :content-type content-type
           :as           :json}
@@ -137,6 +149,16 @@
          (:results)
          (first)
          (:wsGroup))))
+
+(defn add-group
+  [username type name display-extension description]
+  (add-update-group
+    (format-group-add-request username type name display-extension description)))
+
+(defn update-group
+  [username uuid name display-extension description]
+  (add-update-group
+    (format-group-update-request username uuid name display-extension description)))
 
 ;; Group delete
 

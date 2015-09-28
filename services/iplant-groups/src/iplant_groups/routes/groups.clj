@@ -36,6 +36,14 @@
           group."
           (service/trap uri groups/get-group group-id params))
 
+    (PUT* "/" [:as {:keys [uri]}]
+          :return      GroupWithDetail
+          :query       [params StandardUserQueryParams]
+          :body        [body (describe GroupUpdate "The group information to update.")]
+          :summary     "Update Group"
+          :description "This endpoint allows callers to update group information."
+          (service/trap uri groups/update-group group-id body params))
+
     (DELETE* "/" [:as {:keys [uri]}]
           :query       [params StandardUserQueryParams]
           :return      GroupStub
