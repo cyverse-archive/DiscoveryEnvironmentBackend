@@ -218,7 +218,7 @@
 (def exception-handlers
   {:handlers {::ex/request-validation (cx/as-de-exception-handler ex/request-validation-handler ec/ERR_ILLEGAL_ARGUMENT)
               ::ex/response-validation (cx/as-de-exception-handler ex/response-validation-handler ec/ERR_SCHEMA_VALIDATION)
-              ::cx/invalid-cfg (as-de-exception-handler cx/invalid-cfg-handler ec/ERR_CONFIG_INVALID)
+              ::cx/invalid-cfg cx/invalid-cfg-handler
               ::cx/authentication-not-found cx/authentication-not-found-handler
               ::ex/default cx/unchecked-handler}})
 

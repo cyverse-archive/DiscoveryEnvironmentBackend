@@ -21,7 +21,7 @@
   "Sends the search request to Elastic Search.
 
    Throws:
-     :invalid-configuration - This is thrown if there is a problem with elasticsearch
+     ::cx/invalid-cfg - This is thrown if there is a problem with elasticsearch
      :invalid-query - This is thrown if the query string is invalid."
   [type query from size sort]
   (log/debug "sending query" query)

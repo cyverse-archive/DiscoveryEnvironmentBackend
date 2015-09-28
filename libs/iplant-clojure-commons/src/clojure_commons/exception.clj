@@ -44,8 +44,12 @@
         "Custom"))))
 
 (defn invalid-cfg-handler
-  [_ error-type _]
-  (resp/internal-server-error {:errors (:reason error-type)}))
+  [error error-type _]
+  (let [exception {:error_code ec/ERR_CONFIG_INVALID
+                   :reason (:error error-type)}]
+    (embedErrorInfo error
+                    exception
+                    (resp/internal-server-error (cheshire/encode exception)))))
 
 (defn unchecked-handler
   [error error-type _]

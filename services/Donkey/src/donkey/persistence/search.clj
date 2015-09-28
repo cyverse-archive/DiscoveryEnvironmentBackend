@@ -5,14 +5,15 @@
             [clojurewerkz.elastisch.rest.document :as doc]
             [clojurewerkz.elastisch.rest.response :as resp]
             [slingshot.slingshot :refer [try+ throw+]]
-            [donkey.util.config :as cfg])
+            [donkey.util.config :as cfg]
+            [clojure-commons.exception :as cx])
   (:import [java.net ConnectException]
            [java.util UUID]
            [clojure.lang IPersistentMap ISeq]))
 
 
-(def ^:private es-uninitialized {:type   :invalid-configuration
-                                 :reason "elasticsearch has not been initialized"})
+(def ^:private es-uninitialized {:type   ::cx/invalid-cfg
+                                 :error "elasticsearch has not been initialized"})
 
 
 (defn- connect
@@ -20,7 +21,8 @@
   (try+
     (es/connect (cfg/es-url))
     (catch ConnectException _
-      (throw+ {:type :invalid-configuration :reason "cannot connect to elasticsearch"}))))
+      (throw+ {:type ::cx/invalid-cfg
+               :error "cannot connect to elasticsearch"}))))
 
 
 (defn index-tag
@@ -30,7 +32,7 @@
      tag - the tag document to insert.
 
    Throws:
-     :invalid-configuration - This is thrown if there is a problem with elasticsearch"
+     ::cx/invalid-cfg - This is thrown if there is a problem with elasticsearch"
   [^IPersistentMap tag]
   (try+
     (doc/create (connect) "data" "tag" tag :id (:id tag))
@@ -46,7 +48,7 @@
      updates - a map containing the updated values.
 
    Throws:
-     :invalid-configuration - This is thrown if there is a problem with elasticsearch"
+     ::cx/invalid-cfg - This is thrown if there is a problem with elasticsearch"
   [^UUID tag-id ^IPersistentMap updates]
   (try+
     (let [script "ctx._source.value = value;
@@ -65,7 +67,7 @@
      targets - a list of the current targets docs.
 
    Throws:
-     :invalid-configuration - This is thrown if there is a problem with elasticsearch"
+     ::cx/invalid-cfg - This is thrown if there is a problem with elasticsearch"
   [^UUID tag-id ^ISeq targets]
   (try+
     (let [script "ctx._source.targets = targets"
@@ -82,7 +84,7 @@
      tag-id - the id of the tag document to remove.
 
    Throws:
-     :invalid-configuration - This is thrown if there is a problem with elasticsearch"
+     ::cx/invalid-cfg - This is thrown if there is a problem with elasticsearch"
   [^UUID tag-id]
   (try+
     (doc/delete (connect) "data" "tag" (str tag-id))
@@ -173,7 +175,7 @@
      It returns the elastisch formatted search results.
 
    Throws:
-     :invalid-configuration - This is thrown if there is a problem with elasticsearch
+     ::cx/invalid-cfg - This is thrown if there is a problem with elasticsearch
      :invalid-query - This is thrown if the query string is invalid."
   [^ISeq types ^IPersistentMap query ^IPersistentMap sort ^Integer from ^Integer size]
   (try+
