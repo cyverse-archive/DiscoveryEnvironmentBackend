@@ -1,7 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"flag"
+	"fmt"
+	"log"
+	"os/user"
+	"path/filepath"
+	"strings"
 )
 
 var (
@@ -19,5 +25,37 @@ func init() {
 	flag.Parse()
 }
 
+func homeParameterFile() string {
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return filepath.Join(usr.HomeDir, ".make-jwt")
+}
+
+func loadParameterFile(path string) {
+	f, err := os.Open(path)
+	if err == os.ErrNotExist {
+		return
+	}
+	if err != nil {
+		log.Warn(err)
+	}
+
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for (scanner.Scan()) {
+		strs := strings.SplitN(Scanner.Text(), "\\s*=\\s*", 2)
+	}
+}
+
+func loadParameterFiles() {
+	loadParameterFile(homeParameterFile())
+	loadParameterFile(".make-jwt")
+}
+
 func main() {
+	loadParameterFiles()
 }
