@@ -195,3 +195,15 @@ func (o ByOrder) Swap(i, j int) {
 func (o ByOrder) Less(i, j int) bool {
 	return o[i].Order < o[j].Order
 }
+
+// PreviewableStepParam is a list of StepParams that can be returned as a string
+// that previews the command-line for a submission.
+type PreviewableStepParam []StepParam
+
+func (p PreviewableStepParam) String() string {
+	var buffer bytes.Buffer
+	for _, param := range p {
+		buffer.WriteString(fmt.Sprintf("%s %s ", param.Name, quote(param.Value)))
+	}
+	return strings.TrimSpace(buffer.String())
+}
