@@ -104,8 +104,7 @@
       wrap-keyword-params
       wrap-nested-params
       wrap-params
-      wrap-stacktrace
-      (tc/wrap-thread-context svc-info)))
+      wrap-stacktrace))
 
 (def app
   (site-handler kifshare-routes))

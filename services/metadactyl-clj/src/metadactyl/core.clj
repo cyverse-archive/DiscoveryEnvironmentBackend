@@ -63,15 +63,16 @@
 
 (defn -main
   [& args]
-  (require 'metadactyl.routes.api)
-  (let [app (eval 'metadactyl.routes.api/app)
-        {:keys [options arguments errors summary]} (ccli/handle-args config/svc-info args cli-options)]
-    (when-not (fs/exists? (:config options))
-      (ccli/exit 1 (str "The config file does not exist.")))
-    (when-not (fs/readable? (:config options))
-      (ccli/exit 1 "The config file is not readable."))
-    (load-config-from-file (:config options))
-    (tasks/set-logging-context! config/svc-info)
-    (tasks/schedule-tasks)
-    (log/warn "Listening on" (config/listen-port))
-    (jetty/run-jetty app {:port (config/listen-port)})))
+  (tc/with-logging-context config/svc-info
+    (require 'metadactyl.routes.api)
+    (let [app (eval 'metadactyl.routes.api/app)
+          {:keys [options arguments errors summary]} (ccli/handle-args config/svc-info args cli-options)]
+      (when-not (fs/exists? (:config options))
+        (ccli/exit 1 (str "The config file does not exist.")))
+      (when-not (fs/readable? (:config options))
+        (ccli/exit 1 "The config file is not readable."))
+      (load-config-from-file (:config options))
+      (tasks/set-logging-context! config/svc-info)
+      (tasks/schedule-tasks)
+      (log/warn "Listening on" (config/listen-port))
+      (jetty/run-jetty app {:port (config/listen-port)}))))

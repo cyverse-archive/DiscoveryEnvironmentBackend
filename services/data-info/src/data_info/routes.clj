@@ -1,8 +1,8 @@
 (ns data-info.routes
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
-        [clojure-commons.middleware :only [log-validation-errors]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [common-swagger-api.schema]
+        [service-logging.middleware :only [log-validation-errors]]
         [ring.util.response :only [redirect]])
   (:require [compojure.route :as route]
             [data-info.routes.data :as data-routes]
@@ -19,10 +19,6 @@
             [data-info.util.service :as svc]
             [ring.middleware.keyword-params :as params]
             [service-logging.thread-context :as tc]))
-
-(defn context-middleware
-  [handler]
-  (tc/wrap-thread-context handler config/svc-info))
 
 (defapi app
   (swagger-ui config/docs-uri)
@@ -43,7 +39,6 @@
      wrap-lcase-params
      params/wrap-keyword-params
      util/req-logger
-     context-middleware
      log-validation-errors]
     status-routes/status
     data-routes/data-operations

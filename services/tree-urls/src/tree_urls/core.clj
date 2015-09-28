@@ -73,8 +73,7 @@
       (wrap-logging)
       (wrap-json-body)
       (wrap-json-response)
-      (wrap-exception)
-      (tc/wrap-thread-context svc-info)))
+      (wrap-exception)))
 
 (defn -main
   [& args]

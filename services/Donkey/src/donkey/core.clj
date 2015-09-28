@@ -2,9 +2,13 @@
   (:gen-class)
   (:use [clojure.java.io :only [file]]
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
-        [clojure-commons.middleware :only [wrap-log-requests]]
         [clojure-commons.query-params :only [wrap-query-params]]
+        [service-logging.middleware :only [wrap-logging]]
+        [clojure-commons.exception :only [as-de-exception-handler
+                                          invalid-cfg-handler
+                                          unchecked-handler]]
         [compojure.core]
+        [compojure.api.middleware :only [wrap-exceptions]]
         [ring.middleware.keyword-params]
         [donkey.routes.admin]
         [donkey.routes.callbacks]
@@ -29,6 +33,9 @@
         [donkey.util.service]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [compojure.route :as route]
+            [cheshire.core :as cheshire]
+            [compojure.api.exception :as ex]
+            [clojure-commons.error-codes :as ec]
             [ring.adapter.jetty :as jetty]
             [donkey.util.config :as config]
             [clojure.tools.nrepl.server :as nrepl]
@@ -96,47 +103,38 @@
     (route/not-found (unrecognized-path-response))))
 
 (defn auth-store-user
-  [routes]
+  [handler]
   (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user store-current-user)]
-    (f routes)))
+    (f handler)))
 
 (defn auth-store-admin-user
-  [routes]
+  [handler]
   (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user store-current-admin-user)]
-    (f routes)))
+    (f handler)))
 
 (defn- wrap-user-info
   [handler]
   (fn [request]
     (let [user-info (transform/add-current-user-to-map {})
           request   (assoc request :user-info user-info)]
-      (tc/with-logging-context user-info
-        (handler request)))))
+      (if (nil? (:user user-info))
+        (handler request)
+        (tc/with-logging-context {:user-info (cheshire/encode user-info)}
+                                 (handler request))))))
 
 
 (def secured-handler-no-context
   (-> (delayed-handler secured-routes-no-context)
-    util/trap-handler
-    wrap-log-requests
-    wrap-user-info
     (auth-store-user)))
 
 
 (def secured-handler
   (-> (delayed-handler secured-routes)
-    util/trap-handler
-    wrap-log-requests
-    wrap-user-info
     (auth-store-user)))
-
 
 (def admin-handler
   (-> (delayed-handler admin-routes)
-    util/trap-handler
-    wrap-log-requests
-    wrap-user-info
     (auth-store-admin-user)))
-
 
 (defn donkey-routes
   []
@@ -219,13 +217,21 @@
    :art-id "donkey"
    :service "donkey"})
 
+(def exception-handlers
+  {:handlers {::ex/request-validation (as-de-exception-handler ex/request-validation-handler ec/ERR_ILLEGAL_ARGUMENT)
+              :invalid-configuration (as-de-exception-handler invalid-cfg-handler ec/ERR_CONFIG_INVALID)
+              ::ex/response-validation (as-de-exception-handler ex/response-validation-handler ec/ERR_SCHEMA_VALIDATION)
+              ::ex/default unchecked-handler}})
+
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler routes-fn)
-    wrap-keyword-params
-    wrap-lcase-params
-    wrap-query-params
-    (tc/wrap-thread-context svc-info)))
+      (wrap-exceptions exception-handlers)
+      wrap-logging
+      wrap-user-info
+      wrap-keyword-params
+      wrap-lcase-params
+      wrap-query-params))
 
 (def app
   (site-handler donkey-routes))

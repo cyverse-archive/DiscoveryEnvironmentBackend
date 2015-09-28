@@ -49,6 +49,7 @@
 (deferr ERR_TEMPORARILY_MOVED)
 (deferr ERR_REQUEST_BODY_TOO_LARGE)
 (deferr ERR_CONFLICTING_QUERY_PARAMETER_VALUES)
+(deferr ERR_SCHEMA_VALIDATION)
 
 
 (def ^:private http-status-for

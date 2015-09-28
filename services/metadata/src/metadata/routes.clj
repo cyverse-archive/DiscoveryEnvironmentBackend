@@ -1,7 +1,7 @@
 (ns metadata.routes
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
-        [clojure-commons.middleware :only [log-validation-errors]]
         [clojure-commons.query-params :only [wrap-query-params]]
+        [service-logging.middleware :only [log-validation-errors]]
         [common-swagger-api.schema])
   (:require [metadata.routes.avus :as avu-routes]
             [metadata.routes.comments :as comment-routes]
@@ -14,10 +14,6 @@
             [ring.middleware.keyword-params :as params]
             [schema.core :as s]
             [service-logging.thread-context :as tc]))
-
-(defn context-middleware
-  [handler]
-  (tc/wrap-thread-context handler config/svc-info))
 
 (defapi app
   (swagger-ui config/docs-uri)
@@ -41,7 +37,6 @@
      wrap-lcase-params
      params/wrap-keyword-params
      service/req-logger
-     context-middleware
      log-validation-errors]
     status-routes/status
     avu-routes/avus

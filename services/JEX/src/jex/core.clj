@@ -76,8 +76,7 @@
   (-> routes
       req-logger
       jb/parse-json-body
-      wrap-errors
-      (tc/wrap-thread-context svc-info)))
+      wrap-errors))
 
 (defn cli-options
   []
