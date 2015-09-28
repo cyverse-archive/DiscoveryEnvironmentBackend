@@ -72,7 +72,7 @@ func submissionHandler(w http.ResponseWriter, r *http.Request) {
 
 // params is what a command-line preview is parsed into.
 type paramslist struct {
-	p []submissions.StepParam
+	P []submissions.StepParam `json:"params"`
 }
 
 func parameterPreview(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +87,7 @@ func parameterPreview(w http.ResponseWriter, r *http.Request) {
 		RespondWithError("Error unmarshalling request body:\n%s", err, w)
 		return
 	}
-	w.Write([]byte(submissions.PreviewableStepParam(params.p).String()))
+	w.Write([]byte(submissions.PreviewableStepParam(params.P).String()))
 }
 
 // func stopHandler(w http.ResponseWriter, r *http.Request) {
