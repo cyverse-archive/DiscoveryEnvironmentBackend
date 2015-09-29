@@ -134,7 +134,9 @@
    :art-id "donkey"
    :service "donkey"})
 
-(defroutes secured-routes-no-context*
+(defn secured-routes-no-context
+  []
+  (util/flagged-routes
     (app-category-routes)
     (apps-routes)
     (app-comment-routes)
@@ -142,9 +144,11 @@
     (coge-routes)
     (reference-genomes-routes)
     (tool-routes)
-    (route/not-found (unrecognized-path-response)))
+    (route/not-found (unrecognized-path-response))))
 
-(defroutes secured-routes*
+(defn secured-routes
+  []
+  (util/flagged-routes
     (secured-notification-routes)
     (secured-metadata-routes)
     (secured-pref-routes)
@@ -161,9 +165,11 @@
     (secured-favorites-routes)
     (secured-tag-routes)
     (data-comment-routes)
-    (route/not-found (unrecognized-path-response)))
+    (route/not-found (unrecognized-path-response))))
 
-(defroutes admin-routes*
+(defn admin-routes
+  []
+  (util/flagged-routes
     (secured-admin-routes)
     (admin-data-comment-routes)
     (admin-category-routes)
@@ -173,40 +179,42 @@
     (admin-notification-routes)
     (admin-reference-genomes-routes)
     (admin-tool-routes)
-    (route/not-found (unrecognized-path-response)))
+    (route/not-found (unrecognized-path-response))))
 
-(defroutes unsecured-routes*
+(defn unsecured-routes
+  []
+  (util/flagged-routes
     (unsecured-misc-routes)
     (unsecured-notification-routes)
     (unsecured-tree-viewer-routes)
-    (unsecured-callback-routes))
+    (unsecured-callback-routes)))
 
 (def admin-handler
-  (-> admin-routes*
-      (wrap-routes wrap-exceptions  cx/exception-handlers)
-      (wrap-routes wrap-logging)
-      (wrap-routes validate-current-user)
+  (-> (delayed-handler admin-routes)
+      (wrap-routes authenticate-user)
       (wrap-routes wrap-user-info)
-      (wrap-routes authenticate-user)))
+      (wrap-routes validate-current-user)
+      (wrap-routes wrap-logging)
+      (wrap-routes wrap-exceptions  cx/exception-handlers)))
 
 (def secured-routes-handler
-  (-> secured-routes*
-      (wrap-routes wrap-exceptions  cx/exception-handlers)
-      (wrap-routes wrap-logging)
+  (-> (delayed-handler secured-routes)
+      (wrap-routes authenticate-user)
       (wrap-routes wrap-user-info)
-      (wrap-routes authenticate-user)))
+      (wrap-routes wrap-logging)
+      (wrap-routes wrap-exceptions  cx/exception-handlers)))
 
 (def secured-routes-no-context-handler
-  (-> secured-routes-no-context*
-      (wrap-routes wrap-exceptions  cx/exception-handlers)
-      (wrap-routes wrap-logging)
+  (-> (delayed-handler secured-routes-no-context)
+      (wrap-routes authenticate-user)
       (wrap-routes wrap-user-info)
-      (wrap-routes authenticate-user)))
+      (wrap-routes wrap-logging)
+      (wrap-routes wrap-exceptions  cx/exception-handlers)))
 
 (def unsecured-routes-handler
-  (-> unsecured-routes*
-      (wrap-routes wrap-exceptions cx/exception-handlers)
-      (wrap-routes wrap-logging)))
+  (-> (delayed-handler unsecured-routes)
+      (wrap-routes wrap-logging)
+      (wrap-routes wrap-exceptions cx/exception-handlers)))
 
 (defn donkey-routes
   []
