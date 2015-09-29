@@ -2,7 +2,6 @@
   "DE app metadata services."
   (:use [clojure.java.io :only [reader]]
         [clojure-commons.client :only [build-url]]
-        [clojure-commons.validators]
         [kameleon.app-groups :only [add-app-to-category
                                     decategorize-app
                                     get-app-subcategory-id

@@ -1,6 +1,6 @@
 (ns clojure-commons.validators
-  (:use [slingshot.slingshot :only [try+ throw+]]
-        [clojure-commons.error-codes])
+  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:require [clojure-commons.exception :as cx])
   (:import [clojure.lang IPersistentMap]))
 
 
@@ -42,14 +42,12 @@
 
 (defn- throw-missing-fields
   [fields]
-  (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-           :fields     fields}))
+  (throw+ {:type ::cx/missing-request-field, :fields fields}))
 
 
 (defn- throw-bad-fields
   [fields]
-  (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-           :fields     (keys fields)}))
+  (throw+ {:type ::cx/bad-request-field, :fields (keys fields)}))
 
 
 (defn validate-map
@@ -63,19 +61,19 @@
      (validate-field field-name field-value (comp not nil?)))
   ([field-name field-value valid?]
      (when-not (valid? field-value)
-       (throw+ {:error_code ERR_BAD_OR_MISSING_FIELD
-                :field      field-name
-                :value      field-value}))))
+       (throw+ {:type  ::cx/bad-request-field
+                :field field-name
+                :value field-value}))))
 
 
 (defn- throw-missing-params
   [params]
-  (throw+ {:error_code ERR_MISSING_QUERY_PARAMETER :parameters params}))
+  (throw+ {:type ::cx/missing-query-params, :parameters params}))
 
 
 (defn- throw-bad-params
   [params]
-  (throw+ {:error_code ERR_BAD_QUERY_PARAMETER :parameters params}))
+  (throw+ {:type ::cx/bad-query-params, :parameters params}))
 
 
 (defn validate-query-params

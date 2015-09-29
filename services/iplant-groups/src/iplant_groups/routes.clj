@@ -1,5 +1,5 @@
 (ns iplant_groups.routes
-  (:use [clojure-commons.middleware :only [log-validation-errors]]
+  (:use [service-logging.middleware :only [log-validation-errors]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [common-swagger-api.schema]
         [iplant_groups.routes.domain.group]
@@ -24,7 +24,6 @@
   (middlewares
    [wrap-keyword-params
     wrap-query-params
-    (tc/wrap-thread-context config/svc-info)
     log-validation-errors]
    (context* "/" []
     :tags ["service-info"]

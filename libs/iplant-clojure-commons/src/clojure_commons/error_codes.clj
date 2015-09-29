@@ -49,6 +49,7 @@
 (deferr ERR_TEMPORARILY_MOVED)
 (deferr ERR_REQUEST_BODY_TOO_LARGE)
 (deferr ERR_CONFLICTING_QUERY_PARAMETER_VALUES)
+(deferr ERR_SCHEMA_VALIDATION)
 
 
 (def ^:private http-status-for
@@ -168,9 +169,10 @@
       (log/error (format-exception (:throwable &throw-context)))
       (err-resp action (:object &throw-context)))
     (catch clj-http-error? o o)
-    (catch [:type :invalid-configuration] {:keys [reason]} (invalid-cfg-response reason))
     (catch [:type :invalid-argument] {:keys [reason arg val]} (invalid-arg-response arg val reason))
     (catch [:type :ring.swagger.schema/validation] {:keys [error]} (validation-error-response error))
+    (catch [:type :compojure.api.exception/request-validation] {:keys [error]} (validation-error-response error))
+    (catch [:type :compojure.api.exception/response-validation] {:keys [error]} (validation-error-response error))
     (catch Object e
       (log/error (format-exception (:throwable &throw-context)))
       (err-resp action (unchecked &throw-context)))))

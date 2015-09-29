@@ -31,6 +31,11 @@
    :id
    (describe String "The group ID.")))
 
+(s/defschema GroupUpdate
+  (-> BaseGroup
+    (->optional-param :name)
+    (dissoc :type)))
+
 (s/defschema GroupStub
   (-> Group
     (->optional-param :name)

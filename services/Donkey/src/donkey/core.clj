@@ -2,9 +2,10 @@
   (:gen-class)
   (:use [clojure.java.io :only [file]]
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
-        [clojure-commons.middleware :only [wrap-log-requests]]
         [clojure-commons.query-params :only [wrap-query-params]]
+        [service-logging.middleware :only [wrap-logging]]
         [compojure.core]
+        [compojure.api.middleware :only [wrap-exceptions]]
         [ring.middleware.keyword-params]
         [donkey.routes.admin]
         [donkey.routes.callbacks]
@@ -29,6 +30,8 @@
         [donkey.util.service]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [compojure.route :as route]
+            [cheshire.core :as cheshire]
+            [clojure-commons.exception :as cx]
             [ring.adapter.jetty :as jetty]
             [donkey.util.config :as config]
             [clojure.tools.nrepl.server :as nrepl]
@@ -46,109 +49,20 @@
     (let [handler ((memoize routes-fn))]
       (handler req))))
 
-(defn secured-routes-no-context
-  []
-  (util/flagged-routes
-    (app-category-routes)
-    (apps-routes)
-    (app-comment-routes)
-    (analysis-routes)
-    (coge-routes)
-    (reference-genomes-routes)
-    (tool-routes)
-    (route/not-found (unrecognized-path-response))))
-
-
-(defn secured-routes
-  []
-  (util/flagged-routes
-    (secured-notification-routes)
-    (secured-metadata-routes)
-    (secured-pref-routes)
-    (secured-collaborator-routes)
-    (secured-user-info-routes)
-    (secured-tree-viewer-routes)
-    (secured-data-routes)
-    (secured-session-routes)
-    (secured-fileio-routes)
-    (secured-filesystem-routes)
-    (secured-filesystem-metadata-routes)
-    (secured-search-routes)
-    (secured-oauth-routes)
-    (secured-favorites-routes)
-    (secured-tag-routes)
-    (data-comment-routes)
-    (route/not-found (unrecognized-path-response))))
-
-
-(defn admin-routes
-  []
-  (util/flagged-routes
-    (secured-admin-routes)
-    (admin-data-comment-routes)
-    (admin-category-routes)
-    (admin-apps-routes)
-    (admin-app-comment-routes)
-    (admin-filesystem-metadata-routes)
-    (admin-notification-routes)
-    (admin-reference-genomes-routes)
-    (admin-tool-routes)
-    (route/not-found (unrecognized-path-response))))
-
-(defn auth-store-user
-  [routes]
-  (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user store-current-user)]
-    (f routes)))
-
-(defn auth-store-admin-user
-  [routes]
-  (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user store-current-admin-user)]
-    (f routes)))
+(defn authenticate-user
+  [handler]
+  (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user authenticate-current-user)]
+    (f handler)))
 
 (defn- wrap-user-info
   [handler]
   (fn [request]
     (let [user-info (transform/add-current-user-to-map {})
           request   (assoc request :user-info user-info)]
-      (tc/with-logging-context user-info
-        (handler request)))))
-
-
-(def secured-handler-no-context
-  (-> (delayed-handler secured-routes-no-context)
-    util/trap-handler
-    wrap-log-requests
-    wrap-user-info
-    (auth-store-user)))
-
-
-(def secured-handler
-  (-> (delayed-handler secured-routes)
-    util/trap-handler
-    wrap-log-requests
-    wrap-user-info
-    (auth-store-user)))
-
-
-(def admin-handler
-  (-> (delayed-handler admin-routes)
-    util/trap-handler
-    wrap-log-requests
-    wrap-user-info
-    (auth-store-admin-user)))
-
-
-(defn donkey-routes
-  []
-  (util/flagged-routes
-    (unsecured-misc-routes)
-    (unsecured-notification-routes)
-    (unsecured-tree-viewer-routes)
-    (unsecured-callback-routes)
-    (context "/admin" [] admin-handler)
-    (context "/secured" [] secured-handler)
-    secured-handler-no-context))
-
+      (if (nil? (:user user-info))
+        (handler request)
+        (tc/with-logging-context {:user-info (cheshire/encode user-info)}
+                                 (handler request))))))
 
 (defn- start-nrepl
   []
@@ -219,13 +133,102 @@
    :art-id "donkey"
    :service "donkey"})
 
+(defn secured-routes-no-context
+  []
+  (util/flagged-routes
+    (app-category-routes)
+    (apps-routes)
+    (app-comment-routes)
+    (analysis-routes)
+    (coge-routes)
+    (reference-genomes-routes)
+    (tool-routes)
+    (route/not-found (unrecognized-path-response))))
+
+(defn secured-routes
+  []
+  (util/flagged-routes
+    (secured-notification-routes)
+    (secured-metadata-routes)
+    (secured-pref-routes)
+    (secured-collaborator-routes)
+    (secured-user-info-routes)
+    (secured-tree-viewer-routes)
+    (secured-data-routes)
+    (secured-session-routes)
+    (secured-fileio-routes)
+    (secured-filesystem-routes)
+    (secured-filesystem-metadata-routes)
+    (secured-search-routes)
+    (secured-oauth-routes)
+    (secured-favorites-routes)
+    (secured-tag-routes)
+    (data-comment-routes)
+    (route/not-found (unrecognized-path-response))))
+
+(defn admin-routes
+  []
+  (util/flagged-routes
+    (secured-admin-routes)
+    (admin-data-comment-routes)
+    (admin-category-routes)
+    (admin-apps-routes)
+    (admin-app-comment-routes)
+    (admin-filesystem-metadata-routes)
+    (admin-notification-routes)
+    (admin-reference-genomes-routes)
+    (admin-tool-routes)
+    (route/not-found (unrecognized-path-response))))
+
+(defn unsecured-routes
+  []
+  (util/flagged-routes
+    (unsecured-misc-routes)
+    (unsecured-notification-routes)
+    (unsecured-tree-viewer-routes)
+    (unsecured-callback-routes)))
+
+(def admin-handler
+  (-> (delayed-handler admin-routes)
+      (wrap-exceptions cx/exception-handlers)
+      wrap-logging
+      validate-current-user
+      wrap-user-info
+      authenticate-user))
+
+(def secured-routes-handler
+  (-> (delayed-handler secured-routes)
+      (wrap-exceptions cx/exception-handlers)
+      wrap-logging
+      wrap-user-info
+      authenticate-user))
+
+(def secured-routes-no-context-handler
+  (-> (delayed-handler secured-routes-no-context)
+      (wrap-exceptions cx/exception-handlers)
+      wrap-logging
+      wrap-user-info
+      authenticate-user))
+
+(def unsecured-routes-handler
+  (-> (delayed-handler unsecured-routes)
+      (wrap-exceptions cx/exception-handlers)
+      wrap-logging))
+
+(defn donkey-routes
+  []
+  (util/flagged-routes
+    unsecured-routes-handler
+    (context "/admin" [] admin-handler)
+    (context "/secured" [] secured-routes-handler)
+    secured-routes-no-context-handler))
+
 (defn site-handler
   [routes-fn]
   (-> (delayed-handler routes-fn)
-    wrap-keyword-params
-    wrap-lcase-params
-    wrap-query-params
-    (tc/wrap-thread-context svc-info)))
+      wrap-keyword-params
+      wrap-lcase-params
+      wrap-query-params))
 
 (def app
   (site-handler donkey-routes))

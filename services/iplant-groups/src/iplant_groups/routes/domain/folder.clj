@@ -27,6 +27,10 @@
    :id
    (describe String "The folder ID.")))
 
+(s/defschema FolderUpdate
+  (-> BaseFolder
+    (->optional-param :name)))
+
 (s/defschema FolderStub
   (-> Folder
     (->optional-param :name)

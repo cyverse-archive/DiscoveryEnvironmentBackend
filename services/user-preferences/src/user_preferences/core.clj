@@ -82,8 +82,7 @@
       (wrap-json-body)
       (wrap-json-response)
       (wrap-exception)
-      (wrap-user)
-      (tc/wrap-thread-context svc-info)))
+      (wrap-user)))
 
 (defn -main
   [& args]

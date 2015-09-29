@@ -109,25 +109,37 @@
 ;; Group add/update
 
 (defn- format-group-add-update-request
-  [update? username type name display-extension description]
+  [group-lookup update? username type name display-extension description]
   (-> {:WsRestGroupSaveRequest
        {:actAsSubjectLookup (act-as-subject-lookup username)
         :wsGroupToSaves [
          {:wsGroup
-          {:name name
-           :description description
-           :displayExtension display-extension
-           :typeOfGroup type}
-          :wsGroupLookup {:groupName name}
+          (remove-vals nil? {:name name
+                             :description description
+                             :displayExtension display-extension
+                             :typeOfGroup type})
+          :wsGroupLookup group-lookup
           :saveMode (if update? "UPDATE" "INSERT")}
         ]
         :includeGroupDetail "T"}}
       (json/encode)))
 
-(defn add-group
+(defn- format-group-add-request
   [username type name display-extension description]
+  (format-group-add-update-request
+    {:groupName name}
+    false username type name display-extension description))
+
+(defn- format-group-update-request
+  [username uuid name display-extension description]
+  (format-group-add-update-request
+    {:uuid uuid}
+    true username nil name display-extension description)) ;; nil is for 'type' which we shouldn't change for now
+
+(defn- add-update-group
+  [request-body]
   (with-trap [default-error-handler]
-    (->> {:body         (format-group-add-update-request false username type name display-extension description)
+    (->> {:body         request-body
           :basic-auth   (auth-params)
           :content-type content-type
           :as           :json}
@@ -137,6 +149,16 @@
          (:results)
          (first)
          (:wsGroup))))
+
+(defn add-group
+  [username type name display-extension description]
+  (add-update-group
+    (format-group-add-request username type name display-extension description)))
+
+(defn update-group
+  [username uuid name display-extension description]
+  (add-update-group
+    (format-group-update-request username uuid name display-extension description)))
 
 ;; Group delete
 
@@ -257,23 +279,35 @@
       (throw+ (build-error-object error-code body)))))
 
 (defn- format-folder-add-update-request
-  [update? username name display-extension description]
+  [stem-lookup update? username name display-extension description]
   (-> {:WsRestStemSaveRequest
        {:actAsSubjectLookup (act-as-subject-lookup username)
         :wsStemToSaves [
          {:wsStem
-          {:name name
-           :description description
-           :displayExtension display-extension}
-          :wsStemLookup {:stemName name}
+          (remove-vals nil? {:name name
+                             :description description
+                             :displayExtension display-extension})
+          :wsStemLookup stem-lookup
           :saveMode (if update? "UPDATE" "INSERT")}
         ]}}
       (json/encode)))
 
-(defn add-folder
+(defn- format-folder-add-request
   [username name display-extension description]
+  (format-folder-add-update-request
+    {:stemName name}
+    false username name display-extension description))
+
+(defn- format-folder-update-request
+  [username uuid name display-extension description]
+  (format-folder-add-update-request
+    {:uuid uuid}
+    true username name display-extension description))
+
+(defn- add-update-folder
+  [request-body name]
   (with-trap [(partial folder-forbidden-error-handler :WsStemSaveResults name)]
-    (->> {:body         (format-folder-add-update-request false username name display-extension description)
+    (->> {:body         request-body
           :basic-auth   (auth-params)
           :content-type content-type
           :as           :json}
@@ -283,6 +317,16 @@
          (:results)
          (first)
          (:wsStem))))
+
+(defn add-folder
+  [username name display-extension description]
+  (add-update-folder
+    (format-folder-add-request username name display-extension description) name))
+
+(defn update-folder
+  [username uuid name display-extension description]
+  (add-update-folder
+    (format-folder-update-request username uuid name display-extension description) uuid))
 
 ;; Folder delete
 

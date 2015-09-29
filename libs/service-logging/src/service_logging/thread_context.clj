@@ -1,7 +1,6 @@
 (ns service-logging.thread-context
   (:import [org.slf4j MDC]))
 
-
 (defn set-context!
   "set-context! puts the data from the context-map into the current thread's
   context."
@@ -31,14 +30,6 @@
          (if ctx#
            (MDC/setContextMap ctx#)
            (clear-context!))))))
-
-(defn wrap-thread-context
-  "wrap-thread-context is a ring handler that puts the data in the context-map
-  into the request thread's ThreadContext."
-  [handler context-map]
-  (fn [request]
-    (with-logging-context context-map
-      (handler request))))
 
 (defn add-user-to-context
   "add-user-to-context is a ring handler that adds the user value from the query

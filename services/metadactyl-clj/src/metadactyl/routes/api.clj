@@ -1,5 +1,5 @@
 (ns metadactyl.routes.api
-  (:use [clojure-commons.middleware :only [log-validation-errors]]
+  (:use [service-logging.middleware :only [log-validation-errors]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [common-swagger-api.schema]
         [metadactyl.user :only [store-current-user]]
@@ -23,10 +23,6 @@
             [metadactyl.util.config :as config]
             [metadactyl.util.service :as service]
             [service-logging.thread-context :as tc]))
-
-(defn context-middleware
-  [handler]
-  (tc/wrap-thread-context handler config/svc-info))
 
 (defapi app
   (swagger-ui config/docs-uri)
@@ -58,7 +54,6 @@
   (middlewares
     [wrap-keyword-params
      wrap-query-params
-     context-middleware
      log-validation-errors]
     (context* "/" []
       :tags ["service-info"]
@@ -70,7 +65,6 @@
     [wrap-keyword-params
      wrap-query-params
      tc/add-user-to-context
-     context-middleware
      log-validation-errors
      store-current-user]
     (context* "/apps/categories" []
