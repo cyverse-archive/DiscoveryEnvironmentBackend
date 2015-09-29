@@ -2,13 +2,20 @@ package main
 
 import (
 	"configs"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strconv"
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 var (
@@ -73,7 +80,7 @@ func loadParameterFile(path string) {
 		} else if *paramName == "name" {
 			name = paramValue
 		} else {
-			log.Printf("Unrecognized parameter name: %s\n", *paramName)
+			log.Printf("unrecognized parameter name: %s\n", *paramName)
 		}
 	}
 }
@@ -83,8 +90,96 @@ func loadParameterFiles() {
 	loadParameterFile(".make-jwt")
 }
 
+func loadSigningKey() (*rsa.PrivateKey, error) {
+
+	// Verify that we have a key path.
+	if keyPath == nil || *keyPath == "" {
+		return nil, fmt.Errorf("missing required parameter: key-path")
+	}
+
+	// Read the key file.
+	pemData, err := ioutil.ReadFile(*keyPath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read private key file: %s", err)
+	}
+
+	// Extract the PEM-encoded data block.
+	block, _ := pem.Decode(pemData)
+	if block == nil {
+		return nil, fmt.Errorf("bad private key data: not PEM-encoded")
+	}
+	if got, want := block.Type, "RSA PRIVATE KEY"; got != want {
+		return nil, fmt.Errorf("unknown key type %q: expected %q", got, want)
+	}
+
+	// Get the key bytes.
+	keyBytes := []byte(nil)
+	if x509.IsEncryptedPEMBlock(block) {
+
+		// We need the password if the key is encrypted.
+		if keyPassword == nil || *keyPassword == "" {
+			return nil, fmt.Errorf("no password provided for private key")
+		}
+
+		// Decrypt the data block.
+		keyBytes, err = x509.DecryptPEMBlock(block, []byte(*keyPassword))
+		if err != nil {
+			return nil, fmt.Errorf("unable to decrypt private key: %s", err)
+		}
+	} else {
+		keyBytes = block.Bytes
+	}
+
+	// Decode the private key.
+	privateKey, err := x509.ParsePKCS1PrivateKey(keyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("bad private key: %s", err)
+	}
+
+	return privateKey, nil
+}
+
+func generateToken(key *rsa.PrivateKey) (string, error) {
+	token := jwt.New(jwt.SigningMethodRS256)
+
+	// Add the claims to the token.
+	if username != nil && *username != "" {
+		token.Claims["sub"] = *username
+	}
+	if email != nil && *email != "" {
+		token.Claims["email"] = *email
+	}
+	if givenName != nil && *givenName != "" {
+		token.Claims["given_name"] = *givenName
+	}
+	if familyName != nil && *familyName != "" {
+		token.Claims["family_name"] = *familyName
+	}
+	if name != nil && *name != "" {
+		token.Claims["name"] = *name
+	}
+
+	// Set the token expiration time.
+	duration := time.Duration(*tokenLifetime) * time.Second
+	token.Claims["exp"] = time.Now().Add(duration).Unix()
+
+	// Sign and encode the token.
+	return token.SignedString(key)
+}
+
 func main() {
 	loadParameterFiles()
-	fmt.Printf("key path: %s\n", *keyPath)
-	fmt.Printf("key pass: %s\n", *keyPassword)
+
+	// Load the signing key.
+	signingKey, err := loadSigningKey()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Generate and print the token.
+	token, err := generateToken(signingKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Print(token)
 }
