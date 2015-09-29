@@ -36,6 +36,7 @@
 (defn log-request
   [{:keys [request-method uri] :as request}]
   (let [method (string/upper-case (name request-method))]
+    (log/log :debug "Unencoded request: " request)
     (tc/with-logging-context {:request (cheshire/encode (clean-request request))}
                              (log/log 'AccessLogger :info nil (str method " " uri)))))
 
