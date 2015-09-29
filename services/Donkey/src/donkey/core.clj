@@ -40,8 +40,8 @@
             [donkey.services.filesystem.icat :as icat]
             [donkey.util :as util]
             [donkey.util.transformers :as transform]
+            [clojure.tools.logging :as log]
             [service-logging.thread-context :as tc]))
-
 
 (defn delayed-handler
   [routes-fn]
@@ -59,6 +59,7 @@
   (fn [request]
     (let [user-info (transform/add-current-user-to-map {})
           request   (assoc request :user-info user-info)]
+      (log/log 'AccessLogger :trace nil "entering wrap-user-info")
       (if (nil? (:user user-info))
         (handler request)
         (tc/with-logging-context {:user-info (cheshire/encode user-info)}

@@ -65,6 +65,7 @@
   [phs]
   (log/spy phs)
   (fn [request]
+    (log/log 'AccessLogger :trace nil "entering donkey.auth.user-attributes/wrap-auth-selection")
     (if-let [auth-handler (find-auth-handler request phs)]
       (auth-handler request)
       (throw+ {:type ::cx/authentication-not-found
