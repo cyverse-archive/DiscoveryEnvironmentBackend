@@ -33,7 +33,7 @@ concurrency_limits = "{{.Username}}"
 {{with $x := index .Steps 0}}+IpcExe = "{{$x.Component.Name}}"{{end}}
 {{with $x := index .Steps 0}}+IpcExePath = "{{$x.Component.Location}}"{{end}}
 should_transfer_files = YES
-transfer_input_files = iplant.sh,irods-config.iplant.cmd
+transfer_input_files = iplant.sh,irods-config,iplant.cmd
 transfer_output_files = logs/de-transfer-trigger.log,logs/output-last-stdout,logs/output-last-stderr
 when_to_transfer_output = ON_EXIT_OR_EVICT
 notification = NEVER
