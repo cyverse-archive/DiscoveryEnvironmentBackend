@@ -2,6 +2,12 @@
 	"version": 0,
 	"dependencies": [
 		{
+			"importpath": "github.com/codegangsta/negroni",
+			"repository": "https://github.com/codegangsta/negroni",
+			"revision": "c7477ad8e330bef55bf1ebe300cf8aa67c492d1b",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/facebookgo/freeport",
 			"repository": "https://github.com/facebookgo/freeport",
 			"revision": "d4adf43b75b9357dc7775f033e807a3411591522",
