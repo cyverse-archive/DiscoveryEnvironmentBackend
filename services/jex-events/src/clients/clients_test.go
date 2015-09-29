@@ -39,7 +39,7 @@ func TestJobRecord(t *testing.T) {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/jobs/{uuid}", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/invocations/{uuid}", func(w http.ResponseWriter, r *http.Request) {
 		data, err := json.Marshal(expected)
 		if err != nil {
 			t.Error(err)

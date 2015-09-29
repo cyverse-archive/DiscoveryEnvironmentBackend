@@ -24,17 +24,18 @@ rank = mips
 arguments = "iplant.sh"
 output = script-output.log
 error = script-error.log
+log = condor.log
 request_disk = {{.RequestDisk}}
-+IpcUuid = "{{.UUID}}""
++IpcUuid = "{{.UUID}}"
 +IpcJobId = "generated_script"
 +IpcUsername = "{{.Username}}"{{if .Group}}
 +AccountingGroup = "{{.Group}}.{{.Username}}"{{end}}
-concurrency_limits = "{{.Username}}"
+concurrency_limits = {{.Username}}
 {{with $x := index .Steps 0}}+IpcExe = "{{$x.Component.Name}}"{{end}}
 {{with $x := index .Steps 0}}+IpcExePath = "{{$x.Component.Location}}"{{end}}
 should_transfer_files = YES
 transfer_input_files = iplant.sh,irods-config,iplant.cmd
-transfer_output_files = logs/de-transfer-trigger.log,logs/output-last-stdout,logs/output-last-stderr
+transfer_output_files = logs/de-transfer-trigger.log,logs/logs-stdout-output,logs/logs-stderr-output
 when_to_transfer_output = ON_EXIT_OR_EVICT
 notification = NEVER
 queue
@@ -76,14 +77,14 @@ if [ -e /data2 ]; then ls /data2; fi
 
 mkdir -p logs
 
-if [ ! "$?" -eq "0"]; then
+if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
 
 ls -al > logs/de-transfer-trigger.log
 
-if [ ! "$?" -eq "0"]; then
+if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
@@ -100,25 +101,25 @@ fi
 {{end}}{{range .ContainerImages}}docker pull {{.Name}}:{{.Tag}}
 {{end}}
 {{range .DataContainers}}docker create {{if or .HostPath .ContainerPath}}-v {{end}}{{if .HostPath}}{{.HostPath}}:{{end}}{{.ContainerPath}}{{if .ReadOnly}}:ro{{end}} --name {{.NamePrefix}}-{{$uuid}} {{.Name}}:{{.Tag}}
-if [ ! "$?" -eq "0"]; then
+if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
 
-{{end}}{{range $i, $s := .Inputs}}{{$idstr := printf "%d" $i}}docker {{.Arguments $.Username $.FileMetadata}} >1 {{.Stdout $idstr}} >2 {{.Stderr $idstr}}
-if [ ! "$?" -eq "0"]; then
+{{end}}{{range $i, $s := .Inputs}}{{$idstr := printf "%d" $i}}docker {{.Arguments $.Username $.FileMetadata}} 1> {{.Stdout $idstr}} 2> {{.Stderr $idstr}}
+if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
 {{end}}
-{{range $i, $s := .Steps}}{{$idstr := printf "%d" $i}}docker {{.Arguments $uuid}} >1 {{.Stdout $idstr}} >2 {{.Stderr $idstr}}
-if [ ! "$?" -eq "0"]; then
+{{range $i, $s := .Steps}}{{$idstr := printf "%d" $i}}docker {{.Arguments $uuid}} 1> {{.Stdout $idstr}} 2> {{.Stderr $idstr}}
+if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
 {{end}}
-docker {{.FinalOutputArguments}} >1 logs/logs-stdout-output >2 logs/logs-stderr-output
-if [ ! "$?" -eq "0"]; then
+docker {{.FinalOutputArguments}} 1> logs/logs-stdout-output 2> logs/logs-stderr-output
+if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
@@ -130,7 +131,7 @@ echo -----
 for i in $(ls logs); do
     echo logs/$i
     cat logs/$i
-    echo -----\
+    echo -----
 done
 exit $EXITSTATUS
 `
@@ -171,6 +172,9 @@ porklock.irods-resc = {{.IRODSResc}}
 // CreateSubmissionDirectory creates a directory for a submission and returns the path to it as a string.
 func CreateSubmissionDirectory(s *Submission) (string, error) {
 	dirPath := s.CondorLogDirectory()
+	if path.Base(dirPath) != "logs" {
+		dirPath = path.Join(dirPath, "logs")
+	}
 	err := os.MkdirAll(dirPath, 0755)
 	if err != nil {
 		return "", err
@@ -210,7 +214,7 @@ func CreateSubmissionFiles(dir string, s *Submission, cfg *configurate.Configura
 }
 
 func extractJobID(output []byte) []byte {
-	extractor := regexp.MustCompile(`submitted to cluster \(((\d+\.?)+)\)`)
+	extractor := regexp.MustCompile(`submitted to cluster ((\d+)+)`)
 	matches := extractor.FindAllSubmatch(output, -1)
 	var thematch []byte
 	if len(matches) > 0 {
@@ -244,12 +248,14 @@ func CondorSubmit(cmdPath, shPath string, s *Submission) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	logger.Printf("Output of condor_submit:\n%s\n", output)
 	return string(extractJobID(output)), err
 }
 
 // CondorRm stops the job specified by UUID.
 func CondorRm(uuid string) (string, error) {
 	crPath, err := exec.LookPath("condor_rm")
+	logger.Printf("condor_rm found at %s", crPath)
 	if err != nil {
 		return "", err
 	}
@@ -263,20 +269,26 @@ func CondorRm(uuid string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	logger.Printf("Created a jex-events client for %s", cfg.JEXEvents)
 	jr, err := cl.JobRecord(uuid)
 	if err != nil {
+		logger.Print(err)
 		return "", err
 	}
 	if jr.CondorID == "" {
 		return "", errors.New("CondorID was blank")
 	}
+	logger.Printf("CondorID %s was found for job %s\n", jr.CondorID, uuid)
+
 	cmd := exec.Command(crPath, jr.CondorID)
 	cmd.Env = []string{
 		fmt.Sprintf("PATH=%s", cfg.Path),
 		fmt.Sprintf("CONDOR_CONFIG=%s", cfg.CondorConfig),
 	}
 	output, err := cmd.CombinedOutput()
+	logger.Printf("condor_rm output for job %s:\n%s\n", jr.CondorID, string(output))
 	if err != nil {
+		logger.Print(err)
 		return "", err
 	}
 	return string(output), err

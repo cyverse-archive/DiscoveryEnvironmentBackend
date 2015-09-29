@@ -451,22 +451,22 @@ func TestFinalOutputArguments(t *testing.T) {
 }
 
 func TestExtractJobID(t *testing.T) {
-	testData := []byte(`1000 job(s) submitted to cluster (100000000.0000).`)
+	testData := []byte(`1000 job(s) submitted to cluster 100000000.0000.`)
 	actual := extractJobID(testData)
-	expected := []byte("100000000.0000")
+	expected := []byte("100000000")
 	if !bytes.Equal(actual, expected) {
 		t.Errorf("extractJobID found %s instead of %s", actual, expected)
 	}
 
-	testData = []byte(`asdfadsfadsfadsfa1000 job(s) submitted to cluster (100000000.0000)asdfadsfadsfasdfadsfadsfadsfadsfadsf`)
+	testData = []byte(`asdfadsfadsfadsfa1000 job(s) submitted to cluster 100000000.0000asdfadsfadsfasdfadsfadsfadsfadsfadsf`)
 	actual = extractJobID(testData)
-	expected = []byte("100000000.0000")
+	expected = []byte("100000000")
 	if !bytes.Equal(actual, expected) {
 		t.Errorf("extractJobID found %s instead of %s", actual, expected)
 	}
 
 	testData = []byte(`asdfadsfadsfadsfa
-adsfadsfadsfadsfadsfasdfadsfadsfadsfadsfdsa1000 job(s) submitted to cluster (100000000)asdfadsfadsfasdfadsfadsfadsfadsfadsf
+adsfadsfadsfadsfadsfasdfadsfadsfadsfadsfdsa1000 job(s) submitted to cluster 100000000asdfadsfadsfasdfadsfadsfadsfadsfadsf
 asdfadsfasdfadsfdsfsdsfdsafds`)
 	actual = extractJobID(testData)
 	expected = []byte("100000000")

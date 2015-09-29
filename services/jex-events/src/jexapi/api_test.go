@@ -74,10 +74,26 @@ func TestRootHandler(t *testing.T) {
 }
 
 func TestSubmissionHandler(t *testing.T) {
+	r := mux.NewRouter()
+	r.HandleFunc("/jobs", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte{})
+	})
+	p, err := freeport.Get()
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	s := &http.Server{
+		Addr:    fmt.Sprintf(":%d", p),
+		Handler: r,
+	}
+	go s.ListenAndServe() //evil, evil, evil
+
+	c.JEXEvents = fmt.Sprintf("http://127.0.0.1:%d", p)
+
 	inittests(t)
 	server := httptest.NewServer(http.HandlerFunc(submissionHandler))
 	defer server.Close()
-
 	data, err := JSONData()
 	if err != nil {
 		t.Error(err)
@@ -148,7 +164,7 @@ func TestStopHandler(t *testing.T) {
 		InvocationID: "00000000-0000-0000-0000-000000000000",
 	}
 	r := mux.NewRouter()
-	r.HandleFunc("/jobs/{uuid}", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/invocations/{uuid}", func(w http.ResponseWriter, r *http.Request) {
 		data, err := json.Marshal(jr)
 		if err != nil {
 			t.Error(err)

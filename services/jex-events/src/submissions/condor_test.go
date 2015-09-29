@@ -20,16 +20,17 @@ rank = mips
 arguments = "iplant.sh"
 output = script-output.log
 error = script-error.log
+log = condor.log
 request_disk = 0
-+IpcUuid = "07b04ce2-7757-4b21-9e15-0b4c2f44be26""
++IpcUuid = "07b04ce2-7757-4b21-9e15-0b4c2f44be26"
 +IpcJobId = "generated_script"
 +IpcUsername = "test_this_is_a_test"
-concurrency_limits = "test_this_is_a_test"
+concurrency_limits = test_this_is_a_test
 +IpcExe = "wc_wrapper.sh"
 +IpcExePath = "/usr/local3/bin/wc_tool-1.00"
 should_transfer_files = YES
 transfer_input_files = iplant.sh,irods-config,iplant.cmd
-transfer_output_files = logs/de-transfer-trigger.log,logs/output-last-stdout,logs/output-last-stderr
+transfer_output_files = logs/de-transfer-trigger.log,logs/logs-stdout-output,logs/logs-stderr-output
 when_to_transfer_output = ON_EXIT_OR_EVICT
 notification = NEVER
 queue
@@ -48,17 +49,18 @@ rank = mips
 arguments = "iplant.sh"
 output = script-output.log
 error = script-error.log
+log = condor.log
 request_disk = 0
-+IpcUuid = "07b04ce2-7757-4b21-9e15-0b4c2f44be26""
++IpcUuid = "07b04ce2-7757-4b21-9e15-0b4c2f44be26"
 +IpcJobId = "generated_script"
 +IpcUsername = "test_this_is_a_test"
 +AccountingGroup = "foo.test_this_is_a_test"
-concurrency_limits = "test_this_is_a_test"
+concurrency_limits = test_this_is_a_test
 +IpcExe = "wc_wrapper.sh"
 +IpcExePath = "/usr/local3/bin/wc_tool-1.00"
 should_transfer_files = YES
 transfer_input_files = iplant.sh,irods-config,iplant.cmd
-transfer_output_files = logs/de-transfer-trigger.log,logs/output-last-stdout,logs/output-last-stderr
+transfer_output_files = logs/de-transfer-trigger.log,logs/logs-stdout-output,logs/logs-stderr-output
 when_to_transfer_output = ON_EXIT_OR_EVICT
 notification = NEVER
 queue
@@ -93,14 +95,14 @@ if [ -e /data2 ]; then ls /data2; fi
 
 mkdir -p logs
 
-if [ ! "$?" -eq "0"]; then
+if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
 
 ls -al > logs/de-transfer-trigger.log
 
-if [ ! "$?" -eq "0"]; then
+if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
@@ -118,31 +120,31 @@ docker pull vf-name2:vf-tag2
 docker pull gims.iplantcollaborative.org:5000/backwards-compat:latest
 
 docker create -v /host/path1:/container/path1:ro --name vf-prefix1-07b04ce2-7757-4b21-9e15-0b4c2f44be26 vf-name1:vf-tag1
-if [ ! "$?" -eq "0"]; then
+if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
 
 docker create -v /host/path2:/container/path2:ro --name vf-prefix2-07b04ce2-7757-4b21-9e15-0b4c2f44be26 vf-name2:vf-tag2
-if [ ! "$?" -eq "0"]; then
+if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
 
-docker run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:test get --user test_this_is_a_test --source '/iplant/home/wregglej/Acer-tree.txt' --config irods-config -m 'attr1,value1,unit1' -m 'attr2,value2,unit2' -m 'ipc-analysis-id,c7f05682-23c8-4182-b9a2-e09650a5f49b,UUID' -m 'ipc-execution-id,07b04ce2-7757-4b21-9e15-0b4c2f44be26,UUID' >1 logs/logs-stdout-input-0 >2 logs/logs-stderr-input-0
-if [ ! "$?" -eq "0"]; then
+docker run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:test get --user test_this_is_a_test --source '/iplant/home/wregglej/Acer-tree.txt' --config irods-config -m 'attr1,value1,unit1' -m 'attr2,value2,unit2' -m 'ipc-analysis-id,c7f05682-23c8-4182-b9a2-e09650a5f49b,UUID' -m 'ipc-execution-id,07b04ce2-7757-4b21-9e15-0b4c2f44be26,UUID' 1> logs/logs-stdout-input-0 2> logs/logs-stderr-input-0
+if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
 
-docker run --rm -e IPLANT_USER -e IPLANT_EXECUTION_ID -v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/ -v $(pwd):/work -v /host/path1:/container/path1 -v /container/path2 --device=/host/path1:/container/path1 --device=/host/path2:/container/path2 --volumes-from=07b04ce2-7757-4b21-9e15-0b4c2f44be26-vf-prefix1 --volumes-from=07b04ce2-7757-4b21-9e15-0b4c2f44be26-vf-prefix2 --name test-name -w /work --memory=2048M --cpu-shares=2048 --net=none --entrypoint=/bin/true gims.iplantcollaborative.org:5000/backwards-compat:test /usr/local3/bin/wc_tool-1.00/wc_wrapper.sh param1 'Acer-tree.txt' param0 'wc_out.txt' >1 /path/to/stdout >2 /path/to/stderr
-if [ ! "$?" -eq "0"]; then
+docker run --rm -e IPLANT_USER -e IPLANT_EXECUTION_ID -v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/ -v $(pwd):/work -v /host/path1:/container/path1 -v /container/path2 --device=/host/path1:/container/path1 --device=/host/path2:/container/path2 --volumes-from=07b04ce2-7757-4b21-9e15-0b4c2f44be26-vf-prefix1 --volumes-from=07b04ce2-7757-4b21-9e15-0b4c2f44be26-vf-prefix2 --name test-name -w /work --memory=2048M --cpu-shares=2048 --net=none --entrypoint=/bin/true gims.iplantcollaborative.org:5000/backwards-compat:test /usr/local3/bin/wc_tool-1.00/wc_wrapper.sh param1 'Acer-tree.txt' param0 'wc_out.txt' 1> /path/to/stdout 2> /path/to/stderr
+if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
 
-docker run --rm -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:test put --user test_this_is_a_test --config irods-config --destination '/iplant/home/wregglej/analyses/Word_Count_analysis1-2015-09-17-21-42-20.9/Word_Count_analysis1__-test' -m 'attr1,value1,unit1' -m 'attr2,value2,unit2' -m 'ipc-analysis-id,c7f05682-23c8-4182-b9a2-e09650a5f49b,UUID' -m 'ipc-execution-id,07b04ce2-7757-4b21-9e15-0b4c2f44be26,UUID' --exclude foo,bar,baz,blippy >1 logs/logs-stdout-output >2 logs/logs-stderr-output
-if [ ! "$?" -eq "0"]; then
+docker run --rm -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:test put --user test_this_is_a_test --config irods-config --destination '/iplant/home/wregglej/analyses/Word_Count_analysis1-2015-09-17-21-42-20.9/Word_Count_analysis1__-test' -m 'attr1,value1,unit1' -m 'attr2,value2,unit2' -m 'ipc-analysis-id,c7f05682-23c8-4182-b9a2-e09650a5f49b,UUID' -m 'ipc-execution-id,07b04ce2-7757-4b21-9e15-0b4c2f44be26,UUID' --exclude foo,bar,baz,blippy 1> logs/logs-stdout-output 2> logs/logs-stderr-output
+if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
 fi
@@ -155,7 +157,7 @@ echo -----
 for i in $(ls logs); do
     echo logs/$i
     cat logs/$i
-    echo -----\
+    echo -----
 done
 exit $EXITSTATUS
 `, "\n")

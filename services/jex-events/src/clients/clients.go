@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"model"
 	"net/http"
 	"net/url"
@@ -27,11 +28,12 @@ func NewJEXEventsClient(serviceURL string) (*JEXEventsClient, error) {
 
 // JobRecord returns a JobRecord associated with the uuid that's passed in.
 func (j *JEXEventsClient) JobRecord(uuid string) (*model.JobRecord, error) {
-	requestPath := path.Join(j.URL.Path, "jobs", uuid)
+	requestPath := path.Join(j.URL.Path, "invocations", uuid)
 	if !strings.HasPrefix(requestPath, "/") {
 		requestPath = fmt.Sprintf("/%s", requestPath)
 	}
 	requestURL := fmt.Sprintf("%s://%s%s", j.URL.Scheme, j.URL.Host, requestPath)
+	log.Printf("JobRecord URL: %s\n", requestURL)
 	response, err := http.Get(requestURL)
 	if err != nil {
 		return nil, err
@@ -40,6 +42,7 @@ func (j *JEXEventsClient) JobRecord(uuid string) (*model.JobRecord, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("Data was:\n%s", string(data))
 	var jr model.JobRecord
 	err = json.Unmarshal(data, &jr)
 	if err != nil {

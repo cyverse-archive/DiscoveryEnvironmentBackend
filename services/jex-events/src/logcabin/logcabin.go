@@ -65,11 +65,12 @@ func New() *Lincoln {
 // the Logger implementation provided by negroni.
 func (l *Lincoln) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	start := time.Now()
-	l.Printf("=> %s %s %v", r.Method, r.URL.Path, start)
+	l.Printf("Request %s %s %s %v", r.RemoteAddr, r.Method, r.URL.Path, start)
 	next(w, r)
 	res := w.(negroni.ResponseWriter)
 	l.Printf(
-		"<= %s %s %v %v %s %v",
+		"Response %s %s %s %v %v %s %v",
+		r.RemoteAddr,
 		r.Method,
 		r.URL.Path,
 		start,

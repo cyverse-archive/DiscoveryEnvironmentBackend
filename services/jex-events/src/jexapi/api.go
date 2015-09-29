@@ -1,12 +1,17 @@
 package jexapi
 
 import (
+	"bytes"
 	"configurate"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"logcabin"
+	"model"
 	"net/http"
+	"path"
+	"strings"
 	"submissions"
 
 	"github.com/gorilla/mux"
@@ -57,6 +62,7 @@ func submissionHandler(w http.ResponseWriter, r *http.Request) {
 		RespondWithError("Error submitting job:\n%s", err, w)
 		return
 	}
+	logger.Printf("Condor job id is %s\n", id)
 	m := make(map[string]string)
 	m["sub_id"] = id
 	marshalled, err := json.Marshal(m)
@@ -68,6 +74,38 @@ func submissionHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Printf("Error writing marshalled response:\n%s\n", err)
 	}
+	requestURL := path.Join(cfg.JEXEvents, "jobs")
+	if strings.HasSuffix(cfg.JEXEvents, "/") {
+		requestURL = fmt.Sprintf("%s%s", cfg.JEXEvents, "jobs")
+	} else {
+		requestURL = fmt.Sprintf("%s/%s", cfg.JEXEvents, "jobs")
+	}
+	record := &model.JobRecord{
+		CondorID:     id,
+		AppID:        s.AppID,
+		InvocationID: s.UUID,
+		Submitter:    s.Username,
+	}
+	postBody, err := json.Marshal(record)
+	if err != nil {
+		log.Print(err)
+	}
+	logger.Printf(
+		"Pushing to jex-events:\n\tCondorID: %s\n\tUsername: %s\n\tAppID: %s\n\tInvocationID: %s\n",
+		record.CondorID,
+		record.Submitter,
+		record.AppID,
+		record.InvocationID,
+	)
+	response, err := http.Post(requestURL, "application/json", bytes.NewBuffer(postBody))
+	if err != nil {
+		log.Print(err)
+	}
+	respBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Print(err)
+	}
+	logger.Printf("jex-events responded with a job id of %s\n", string(respBody))
 }
 
 // params is what a command-line preview is parsed into.

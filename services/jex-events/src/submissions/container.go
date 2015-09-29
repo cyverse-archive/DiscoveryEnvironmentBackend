@@ -141,7 +141,7 @@ func (c *Container) NetworkModeOption() string {
 	if c.NetworkMode != "" {
 		return fmt.Sprintf("--net=%s", c.NetworkMode)
 	}
-	return "--net==bridge"
+	return "--net=bridge"
 }
 
 // CPUSharesOption returns a string containing the docker command-line option
