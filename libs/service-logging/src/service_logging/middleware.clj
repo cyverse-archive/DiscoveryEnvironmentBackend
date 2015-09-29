@@ -26,7 +26,9 @@
           :user-info
           :user-attributes
           :compojure.api.middleware/options
-          :ring.swagger.middleware/data))
+          :ring.swagger.middleware/data
+          :route-middleware
+          :route-handler))
 
 (defn- clean-response
   [response]
