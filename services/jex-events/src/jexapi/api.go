@@ -108,11 +108,12 @@ func Init(c *configurate.Configuration, l *log.Logger) {
 
 // Start initializes the http api for the JEX and gets it listening on the
 // configured port
-func Start(c *configurate.Configuration, l *log.Logger) {
+func Start(c *configurate.Configuration, l *log.Logger) *mux.Router {
 	Init(c, l)
 	router := mux.NewRouter()
 	router.HandleFunc("/", rootHandler).Methods("GET")
 	router.HandleFunc("/", submissionHandler).Methods("POST")
 	router.HandleFunc("/arg-preview", parameterPreview).Methods("POST")
 	router.HandleFunc("/stop/{uuid}", stopHandler).Methods("DELETE")
+	return router
 }

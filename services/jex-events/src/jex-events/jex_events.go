@@ -5,6 +5,7 @@ import (
 	"events"
 	"flag"
 	"fmt"
+	"launcher"
 	"log"
 	"logcabin"
 	"monitor"
@@ -22,7 +23,7 @@ var (
 )
 
 func init() {
-	logger = log.New(logcabin.LoggerFunc(logcabin.LogWriter), "", log.Lshortfile)
+	logger = logcabin.New()
 	flag.Parse()
 }
 
@@ -45,45 +46,40 @@ func main() {
 		AppVersion()
 		os.Exit(0)
 	}
-
-	validModes := []string{"monitor", "events"}
+	validModes := []string{"monitor", "events", "launcher"}
 	foundMode := false
-
 	for _, v := range validModes {
 		if v == *mode {
 			foundMode = true
 		}
 	}
-
 	if !foundMode {
 		fmt.Printf("Invalid mode: %s\n", *mode)
 		flag.PrintDefaults()
 		os.Exit(-1)
 	}
-
 	if *cfgPath == "" {
 		fmt.Println("Error: --config must be set.")
 		flag.PrintDefaults()
 		os.Exit(-1)
 	}
-
 	cfg, err := configurate.New(*cfgPath, logger)
 	if err != nil {
 		logger.Print(err)
 		os.Exit(-1)
 	}
-
 	logger.Println("Done reading config.")
 	if !cfg.Valid() {
 		logger.Println("Something is wrong with the config file.")
 		os.Exit(-1)
 	}
-
 	switch *mode {
 	case "events":
 		events.Run(cfg, logger)
 	case "monitor":
 		monitor.Run(cfg, logger)
+	case "launcher":
+		launcher.Run(cfg, logger)
 	default:
 		fmt.Println("Bad mode! Bad! Look what you did!")
 		flag.PrintDefaults()
