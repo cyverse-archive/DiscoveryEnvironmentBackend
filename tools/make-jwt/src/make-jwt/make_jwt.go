@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -27,6 +28,7 @@ var (
 	givenName     = flag.String("given-name", "", "given name to place in the token")
 	familyName    = flag.String("family-name", "", "family name to place in the token")
 	name          = flag.String("name", "", "name to place in the token")
+	entitlement   = flag.String("entitlement", "", "comma-separated list of groups")
 )
 
 func init() {
@@ -79,6 +81,8 @@ func loadParameterFile(path string) {
 			familyName = paramValue
 		} else if *paramName == "name" {
 			name = paramValue
+		} else if *paramName == "entitlement" {
+			entitlement = paramValue
 		} else {
 			log.Printf("unrecognized parameter name: %s\n", *paramName)
 		}
@@ -157,6 +161,9 @@ func generateToken(key *rsa.PrivateKey) (string, error) {
 	}
 	if name != nil && *name != "" {
 		token.Claims["name"] = *name
+	}
+	if entitlement != nil && *entitlement != "" {
+		token.Claims["entitlement"] = regexp.MustCompile(",").Split(*entitlement, -1)
 	}
 
 	// Set the token expiration time.
