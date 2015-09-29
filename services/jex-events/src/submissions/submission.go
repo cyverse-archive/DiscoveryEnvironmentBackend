@@ -12,6 +12,20 @@ import (
 	"time"
 )
 
+var (
+	nowfmt    = "2006-01-02-15-04-05.000"                       // appears in file and directory names.
+	validName = regexp.MustCompile(`-\d{4}(?:-\d{2}){5}\.\d+$`) // this isn't included in the Dirname() function so it isn't re-evaluated a lot
+	quoteStr  = regexp.MustCompile(`^''|''$`)
+	cfg       *configurate.Configuration
+	logger    *log.Logger
+)
+
+// Init intializes the package. Call this first.
+func Init(c *configurate.Configuration, l *log.Logger) {
+	cfg = c
+	logger = l
+}
+
 // FileMetadata describes a unit of metadata that should get associated with
 // all of the files associated with the job submission.
 type FileMetadata struct {
@@ -68,20 +82,6 @@ type Submission struct {
 	AppName            string         `json:"app_name"`
 	RequestDisk        string         `json:"request_disk"` //untested for now
 	Group              string         `json:"group"`        //untested for now
-}
-
-var (
-	nowfmt    = "2006-01-02-15-04-05.000"                       // appears in file and directory names.
-	validName = regexp.MustCompile(`-\d{4}(?:-\d{2}){5}\.\d+$`) // this isn't included in the Dirname() function so it isn't re-evaluated a lot
-	quoteStr  = regexp.MustCompile(`^''|''$`)
-	cfg       *configurate.Configuration
-	logger    *log.Logger
-)
-
-// Init intializes the package. Call this first.
-func Init(c *configurate.Configuration, l *log.Logger) {
-	cfg = c
-	logger = l
 }
 
 // New returns a pointer to a newly instantiated Submission with NowDate set.
