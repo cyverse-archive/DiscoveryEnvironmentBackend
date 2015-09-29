@@ -24,11 +24,15 @@
 (defn donkey-user-from-jwt-user
   [jwt-user]
   {:shortUsername (:user jwt-user)
-   :username      (:str (:user jwt-user) "@" (config/uid-domain))
+   :username      (str (:user jwt-user) "@" (config/uid-domain))
    :email         (:email jwt-user)
    :firstName     (:given-name jwt-user)
    :lastName      (:family-name jwt-user)
    :commonName    (:common-name jwt-user)})
+
+(defn donkey-user-from-jwt-claims
+  [jwt-claims]
+  (donkey-user-from-jwt-user (jwt/user-from-assertion jwt-claims)))
 
 (defn generate-jwt
   [user]
@@ -54,7 +58,7 @@
   [handler assertion-fn]
   (fn [request]
     (if-let [assertion (assertion-fn request)]
-      (handler (assoc request :jwt-claims (jwt-validator assertion)))
+      (handler (assoc request :jwt-claims ((jwt-validator) assertion)))
       {:status 401})))
 
 (defn validate-jwt-group-membership

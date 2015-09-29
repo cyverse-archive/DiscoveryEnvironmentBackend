@@ -33,7 +33,7 @@
 (defn user-from-jwt-claims
   "Creates a map of values from JWT claims stored in the request."
   [{:keys [jwt-claims]}]
-  (jwt/donkey-user-from-jwt-user jwt-claims))
+  (jwt/donkey-user-from-jwt-claims jwt-claims))
 
 (defn fake-user-from-attributes
   "Creates a real map of fake values for a user base on environment variables."
@@ -65,7 +65,7 @@
   [phs]
   (log/spy phs)
   (fn [request]
-    (if-let [auth-handler (log/spy :warn (find-auth-handler request phs))]
+    (if-let [auth-handler (find-auth-handler request phs)]
       (auth-handler request)
       (throw+ {:type ::cx/authentication-not-found
                :error "No authentication information found in request."}))))
@@ -78,7 +78,7 @@
 (defn- get-jwt-assertion
   "Extracts a JWT assertion from the request, returning nil if none is found."
   [request]
-  (get (:headers request) "X-Iplant-De-Jwt"))
+  (get (:headers request) "x-iplant-de-jwt"))
 
 (defn- wrap-cas-auth
   [handler]
@@ -102,8 +102,11 @@
 (defn validate-current-user
   "Verifies that the user belongs to one of the groups that are permitted to access the resource."
   [handler]
-  (wrap-auth-selection [[get-cas-ticket    (cas/validate-group-membership handler cfg/allowed-groups)]
-                        [get-jwt-assertion (jwt/validate-jwt-group-membership handler get-jwt-assertion cfg/allowed-groups)]]))
+  (wrap-auth-selection
+   [[get-cas-ticket    (cas/validate-group-membership handler cfg/allowed-groups)]
+    [get-jwt-assertion (jwt/validate-jwt-group-membership handler
+                                                          get-jwt-assertion
+                                                          cfg/allowed-groups)]]))
 
 (defn fake-store-current-user
   "Fake storage of a user"
