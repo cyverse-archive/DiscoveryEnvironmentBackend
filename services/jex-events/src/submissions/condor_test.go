@@ -14,8 +14,7 @@ func TestGenerateCondorSubmit(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	expected := `
-universe = vanilla
+	expected := `universe = vanilla
 executable = /bin/bash
 rank = mips
 arguments = "iplant.sh"
@@ -43,8 +42,7 @@ queue
 	if err != nil {
 		t.Error(err)
 	}
-	expected = `
-universe = vanilla
+	expected = `universe = vanilla
 executable = /bin/bash
 rank = mips
 arguments = "iplant.sh"
@@ -199,7 +197,7 @@ func TestCreateSubmissionFiles(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	cmd, sh, err := CreateSubmissionFiles(dir, s)
+	cmd, sh, err := CreateSubmissionFiles(dir, s, cfg)
 	if err != nil {
 		t.Error(err)
 	}
@@ -208,6 +206,11 @@ func TestCreateSubmissionFiles(t *testing.T) {
 		t.Error(err)
 	}
 	_, err = os.Stat(sh)
+	if err != nil {
+		t.Error(err)
+	}
+	irodsPath := path.Join(path.Dir(cmd), "irods-config")
+	_, err = os.Stat(irodsPath)
 	if err != nil {
 		t.Error(err)
 	}
@@ -231,7 +234,7 @@ func TestCondorSubmit(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	cmd, sh, err := CreateSubmissionFiles(dir, s)
+	cmd, sh, err := CreateSubmissionFiles(dir, s, cfg)
 	if err != nil {
 		t.Error(err)
 	}

@@ -3,6 +3,7 @@ package submissions
 import (
 	"bytes"
 	"clients"
+	"configurate"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -17,8 +18,7 @@ import (
 // GenerateCondorSubmit returns a string (or error) containing the contents
 // of what should go into an HTCondor submission file.
 func GenerateCondorSubmit(submission *Submission) (string, error) {
-	tmpl := `
-universe = vanilla
+	tmpl := `universe = vanilla
 executable = /bin/bash
 rank = mips
 arguments = "iplant.sh"
@@ -146,6 +146,28 @@ exit $EXITSTATUS
 	return buffer.String(), err
 }
 
+// GenerateIRODSConfig returns the contents of the irods-config file as a string.
+func GenerateIRODSConfig(cfg *configurate.Configuration) (string, error) {
+	tmpl := `porklock.irods-host = {{.IRODSHost}}
+porklock.irods-port = {{.IRODSPort}}
+porklock.irods-user = {{.IRODSUser}}
+porklock.irods-pass = {{.IRODSPass}}
+porklock.irods-home = {{.IRODSBase}}
+porklock.irods-zone = {{.IRODSZone}}
+porklock.irods-resc = {{.IRODSResc}}
+`
+	t, err := template.New("irods_config").Parse(tmpl)
+	if err != nil {
+		return "", err
+	}
+	var buffer bytes.Buffer
+	err = t.Execute(&buffer, cfg)
+	if err != nil {
+		return "", err
+	}
+	return buffer.String(), err
+}
+
 // CreateSubmissionDirectory creates a directory for a submission and returns the path to it as a string.
 func CreateSubmissionDirectory(s *Submission) (string, error) {
 	dirPath := s.CondorLogDirectory()
@@ -159,7 +181,7 @@ func CreateSubmissionDirectory(s *Submission) (string, error) {
 // CreateSubmissionFiles creates the iplant.cmd and iplant.sh files inside the
 // directory designated by 'dir'. The return values are the path to the iplant.cmd
 // file, the path to the iplant.sh file, and any errors, in that order.
-func CreateSubmissionFiles(dir string, s *Submission) (string, string, error) {
+func CreateSubmissionFiles(dir string, s *Submission, cfg *configurate.Configuration) (string, string, error) {
 	cmdContents, err := GenerateCondorSubmit(s)
 	if err != nil {
 		return "", "", err
@@ -168,13 +190,22 @@ func CreateSubmissionFiles(dir string, s *Submission) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
+	irodsContents, err := GenerateIRODSConfig(cfg)
+	if err != nil {
+		return "", "", err
+	}
 	cmdPath := path.Join(dir, "iplant.cmd")
 	shPath := path.Join(dir, "iplant.sh")
+	irodsPath := path.Join(dir, "irods-config")
 	err = ioutil.WriteFile(cmdPath, []byte(cmdContents), 0644)
 	if err != nil {
 		return "", "", nil
 	}
 	err = ioutil.WriteFile(shPath, []byte(shContents), 0644)
+	if err != nil {
+		return cmdPath, "", nil
+	}
+	err = ioutil.WriteFile(irodsPath, []byte(irodsContents), 0644)
 	return cmdPath, shPath, err
 }
 

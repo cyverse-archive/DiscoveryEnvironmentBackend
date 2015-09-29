@@ -47,7 +47,7 @@ func submissionHandler(w http.ResponseWriter, r *http.Request) {
 		RespondWithError("Error creating submission directory:\n%s", err, w)
 		return
 	}
-	cmd, sh, err := submissions.CreateSubmissionFiles(sdir, s)
+	cmd, sh, err := submissions.CreateSubmissionFiles(sdir, s, cfg)
 	if err != nil {
 		RespondWithError("Error creating submission files:\n%s", err, w)
 		return

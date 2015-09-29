@@ -31,6 +31,12 @@ func _inittests(t *testing.T, memoize bool) *Submission {
 		c.RunOnNFS = true
 		c.NFSBase = "/path/to/base"
 		c.IRODSBase = "/path/to/irodsbase"
+		c.IRODSHost = "hostname"
+		c.IRODSPort = "1247"
+		c.IRODSUser = "user"
+		c.IRODSPass = "pass"
+		c.IRODSZone = "test"
+		c.IRODSResc = ""
 		c.CondorLogPath = "/path/to/logs"
 		c.PorklockTag = "test"
 		c.FilterFiles = "foo,bar,baz,blippy"
