@@ -2,6 +2,9 @@ package logcabin
 
 import (
 	"encoding/json"
+	"log"
+	"logcabin"
+	"net/http"
 	"os"
 	"time"
 )
@@ -45,4 +48,32 @@ func LogWriter(logbuf []byte) (n int, err error) {
 	}
 	j = append(j, []byte("\n")...)
 	return os.Stdout.Write(j)
+}
+
+// Lincoln is a logger for jex-events.
+type Lincoln struct {
+	*log.Logger
+}
+
+// New returns a pointer to a newly initialized Lincoln.
+func New() *Lincoln {
+	return &Lincoln{log.New(logcabin.LoggerFunc(logcabin.LogWriter), "", log.Lshortfile)}
+}
+
+// ServeHTTP implements the negroni middleware interface. This is adapted from
+// the Logger implementation provided by negroni.
+func (l *Lincoln) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	start := time.Now()
+	l.Printf("=> %s %s %v", r.Method, r.URL.Path, start)
+	next(w, r)
+	l.Printf(
+		"<= %s %s %v %v %s %v",
+		r.Method,
+		r.URL.Path,
+		start,
+		rw.Status(),
+		http.StatusText(rw.Status()),
+		time.Since(start),
+	)
+
 }
