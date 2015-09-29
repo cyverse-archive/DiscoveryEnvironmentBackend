@@ -211,7 +211,7 @@
   [user force? src-id dest-ids]
   (with-jargon (icat/jargon-cfg) [cm]
     (let [src-path (:path (uuids/path-for-uuid cm user src-id))
-          dest-paths (set (map #(ft/rm-last-slash (:path %)) (uuids/paths-for-uuids user dest-ids)))
+          dest-paths (set (map #(ft/rm-last-slash (:path %)) (uuids/paths-for-uuids cm user dest-ids)))
           irods-avus (list-path-metadata cm src-path)
           attrs (set (map :attr irods-avus))]
       (if-not force?
