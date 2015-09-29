@@ -13,7 +13,7 @@ import (
 
 var (
 	cfgPath = flag.String("config", "", "Path to the config value. Required.")
-	mode    = flag.String("mode", "", "One of 'monitor' or 'events'. Required.")
+	mode    = flag.String("mode", "", "One of 'monitor', 'events', or 'launcher'. Required.")
 	version = flag.Bool("version", false, "Print the version information")
 	gitref  string
 	appver  string
