@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"logcabin"
 	"os"
 )
 
@@ -50,12 +50,12 @@ type Configuration struct {
 	RequestDisk        string
 	RoutingKey         string
 	RunOnNFS           bool
-	logger             *log.Logger
+	logger             *logcabin.Lincoln
 }
 
 // New reads JSON from 'path' and returns a pointer to a Configuration
 // instance. Hopefully.
-func New(path string, logger *log.Logger) (*Configuration, error) {
+func New(path string, logger *logcabin.Lincoln) (*Configuration, error) {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
 		return nil, err

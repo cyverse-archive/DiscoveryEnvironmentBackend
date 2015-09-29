@@ -4,7 +4,7 @@ import (
 	"configurate"
 	"encoding/json"
 	"fmt"
-	"log"
+	"logcabin"
 	"math/rand"
 	"messaging"
 	"os"
@@ -16,7 +16,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var logger *log.Logger
+var logger *logcabin.Lincoln
 
 // MsgHandler functions will accept msgs from a Delivery channel and report
 // error on the error channel.
@@ -278,7 +278,7 @@ func EventHandler(deliveries <-chan amqp.Delivery, d *Databaser, postURL string,
 // Run puts jex-events in 'events' mode where it listens for events
 // on an AMQP exchange, places them into a database, and provides an HTTP
 // API on top.
-func Run(config *configurate.Configuration, l *log.Logger) {
+func Run(config *configurate.Configuration, l *logcabin.Lincoln) {
 	logger = l
 	logger.Println("Configuring database connection...")
 	messaging.Init(logger)

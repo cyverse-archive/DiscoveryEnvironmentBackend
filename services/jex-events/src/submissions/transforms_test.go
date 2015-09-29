@@ -3,7 +3,6 @@ package submissions
 import (
 	"configurate"
 	"io/ioutil"
-	"log"
 	"logcabin"
 	"os"
 	"testing"
@@ -24,7 +23,7 @@ func JSONData() ([]byte, error) {
 var (
 	s *Submission
 	c = &configurate.Configuration{}
-	l = log.New(logcabin.LoggerFunc(logcabin.LogWriter), "", log.Lshortfile)
+	l = logcabin.New()
 )
 
 func _inittests(t *testing.T, memoize bool) *Submission {

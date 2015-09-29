@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"logcabin"
 	"net/http"
 	"submissions"
 
@@ -14,7 +14,7 @@ import (
 
 var (
 	cfg    *configurate.Configuration
-	logger *log.Logger
+	logger *logcabin.Lincoln
 )
 
 // RespondWithError logs the error to stdout/stderr using msgTmpl as the template.
@@ -101,14 +101,14 @@ func stopHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Init initializes the configuration and the logger.
-func Init(c *configurate.Configuration, l *log.Logger) {
+func Init(c *configurate.Configuration, l *logcabin.Lincoln) {
 	cfg = c
 	logger = l
 }
 
 // Start initializes the http api for the JEX and gets it listening on the
 // configured port
-func Start(c *configurate.Configuration, l *log.Logger) *mux.Router {
+func Start(c *configurate.Configuration, l *logcabin.Lincoln) *mux.Router {
 	Init(c, l)
 	router := mux.NewRouter()
 	router.HandleFunc("/", rootHandler).Methods("GET")

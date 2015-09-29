@@ -37,7 +37,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"logcabin"
 	"math/rand"
 	"messaging"
 	"os"
@@ -55,7 +55,7 @@ var (
 	gitref  string
 	appver  string
 	builtby string
-	logger  *log.Logger
+	logger  *logcabin.Lincoln
 )
 
 // TombstonePath is the path to the tombstone file.
@@ -584,7 +584,7 @@ func Version() {
 // Run takes in a configuration and a logger and runs jex-events in 'monitor'
 // mode. It watches the configured event_log path for changes and ships to
 // another service via AMQP.
-func Run(cfg *configurate.Configuration, l *log.Logger) {
+func Run(cfg *configurate.Configuration, l *logcabin.Lincoln) {
 	logger = l
 	messaging.Init(logger)
 	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))

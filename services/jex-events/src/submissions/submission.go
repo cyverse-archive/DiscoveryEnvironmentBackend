@@ -5,7 +5,7 @@ import (
 	"configurate"
 	"encoding/json"
 	"fmt"
-	"log"
+	"logcabin"
 	"path"
 	"regexp"
 	"strings"
@@ -17,11 +17,11 @@ var (
 	validName = regexp.MustCompile(`-\d{4}(?:-\d{2}){5}\.\d+$`) // this isn't included in the Dirname() function so it isn't re-evaluated a lot
 	quoteStr  = regexp.MustCompile(`^''|''$`)
 	cfg       *configurate.Configuration
-	logger    *log.Logger
+	logger    *logcabin.Lincoln
 )
 
 // Init intializes the package. Call this first.
-func Init(c *configurate.Configuration, l *log.Logger) {
+func Init(c *configurate.Configuration, l *logcabin.Lincoln) {
 	cfg = c
 	logger = l
 }

@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"launcher"
-	"log"
 	"logcabin"
 	"monitor"
 	"os"
@@ -19,7 +18,7 @@ var (
 	gitref  string
 	appver  string
 	builtby string
-	logger  *log.Logger
+	logger  *logcabin.Lincoln
 )
 
 func init() {

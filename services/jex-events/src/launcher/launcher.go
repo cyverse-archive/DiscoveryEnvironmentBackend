@@ -18,8 +18,8 @@ func Run(config *configurate.Configuration, l *logcabin.Lincoln) {
 	router := jexapi.Start(config, l)
 	n := negroni.New(l)
 	n.UseHandler(router)
-	port := configurate.JEXListenPort
-	logger.Printf("launcher listening on port %s", port)
+	port := config.JEXListenPort
+	l.Printf("launcher listening on port %s", port)
 	if !strings.HasPrefix(port, ":") {
 		port = fmt.Sprintf(":%s", port)
 	}

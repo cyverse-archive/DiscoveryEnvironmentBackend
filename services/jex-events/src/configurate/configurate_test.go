@@ -3,6 +3,7 @@ package configurate
 import (
 	"bytes"
 	"log"
+	"logcabin"
 	"testing"
 )
 
@@ -10,7 +11,8 @@ func configurator() (*Configuration, error) {
 	path := "test_config.json"
 	var logbuf bytes.Buffer
 	logger := log.New(&logbuf, "", log.Lshortfile)
-	return New(path, logger)
+	l := &logcabin.Lincoln{logger}
+	return New(path, l)
 }
 
 func TestNew(t *testing.T) {

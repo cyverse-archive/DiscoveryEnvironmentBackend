@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"logcabin"
 	"model"
 	"net/http"
@@ -34,7 +33,7 @@ func JSONData() ([]byte, error) {
 
 var (
 	c = &configurate.Configuration{}
-	l = log.New(logcabin.LoggerFunc(logcabin.LogWriter), "", log.Lshortfile)
+	l = logcabin.New()
 )
 
 func inittests(t *testing.T) {

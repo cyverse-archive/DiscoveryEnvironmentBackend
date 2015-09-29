@@ -2,15 +2,15 @@ package messaging
 
 import (
 	"configurate"
-	"log"
+	"logcabin"
 
 	"github.com/streadway/amqp"
 )
 
-var logger *log.Logger
+var logger *logcabin.Lincoln
 
 //Init initializes the messaging package.
-func Init(l *log.Logger) {
+func Init(l *logcabin.Lincoln) {
 	logger = l
 }
 

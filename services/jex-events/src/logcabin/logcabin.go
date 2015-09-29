@@ -3,10 +3,11 @@ package logcabin
 import (
 	"encoding/json"
 	"log"
-	"logcabin"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/codegangsta/negroni"
 )
 
 // LoggerFunc adapts a function so it can be used as an io.Writer.
@@ -57,7 +58,7 @@ type Lincoln struct {
 
 // New returns a pointer to a newly initialized Lincoln.
 func New() *Lincoln {
-	return &Lincoln{log.New(logcabin.LoggerFunc(logcabin.LogWriter), "", log.Lshortfile)}
+	return &Lincoln{log.New(LoggerFunc(LogWriter), "", log.Lshortfile)}
 }
 
 // ServeHTTP implements the negroni middleware interface. This is adapted from
@@ -66,13 +67,14 @@ func (l *Lincoln) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Ha
 	start := time.Now()
 	l.Printf("=> %s %s %v", r.Method, r.URL.Path, start)
 	next(w, r)
+	res := w.(negroni.ResponseWriter)
 	l.Printf(
 		"<= %s %s %v %v %s %v",
 		r.Method,
 		r.URL.Path,
 		start,
-		rw.Status(),
-		http.StatusText(rw.Status()),
+		res.Status(),
+		http.StatusText(res.Status()),
 		time.Since(start),
 	)
 
