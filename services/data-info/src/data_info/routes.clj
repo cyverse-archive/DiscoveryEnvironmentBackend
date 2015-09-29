@@ -2,9 +2,11 @@
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [common-swagger-api.schema]
+        [compojure.api.middleware :only [wrap-exceptions]]
         [service-logging.middleware :only [log-validation-errors]]
         [ring.util.response :only [redirect]])
   (:require [compojure.route :as route]
+            [clojure-commons.exception :as cx]
             [data-info.routes.data :as data-routes]
             [data-info.routes.exists :as exists-routes]
             [data-info.routes.filetypes :as filetypes-routes]
@@ -38,6 +40,7 @@
      wrap-query-params
      wrap-lcase-params
      params/wrap-keyword-params
+     (wrap-exceptions cx/exception-handlers)
      util/req-logger
      log-validation-errors]
     status-routes/status

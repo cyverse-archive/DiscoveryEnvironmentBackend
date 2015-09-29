@@ -31,9 +31,7 @@
         [slingshot.slingshot :only [try+ throw+]])
   (:require [compojure.route :as route]
             [cheshire.core :as cheshire]
-            [compojure.api.exception :as ex]
             [clojure-commons.exception :as cx]
-            [clojure-commons.error-codes :as ec]
             [ring.adapter.jetty :as jetty]
             [donkey.util.config :as config]
             [clojure.tools.nrepl.server :as nrepl]
@@ -135,13 +133,6 @@
    :art-id "donkey"
    :service "donkey"})
 
-(def exception-handlers
-  {:handlers {::ex/request-validation (cx/as-de-exception-handler ex/request-validation-handler ec/ERR_ILLEGAL_ARGUMENT)
-              ::ex/response-validation (cx/as-de-exception-handler ex/response-validation-handler ec/ERR_SCHEMA_VALIDATION)
-              ::cx/invalid-cfg cx/invalid-cfg-handler
-              ::cx/authentication-not-found cx/authentication-not-found-handler
-              ::ex/default cx/unchecked-handler}})
-
 (defn secured-routes-no-context
   []
   (util/flagged-routes
@@ -199,7 +190,7 @@
 
 (def admin-handler
   (-> (delayed-handler admin-routes)
-      (wrap-exceptions exception-handlers)
+      (wrap-exceptions cx/exception-handlers)
       wrap-logging
       validate-current-user
       wrap-user-info
@@ -207,21 +198,21 @@
 
 (def secured-routes-handler
   (-> (delayed-handler secured-routes)
-      (wrap-exceptions exception-handlers)
+      (wrap-exceptions cx/exception-handlers)
       wrap-logging
       wrap-user-info
       authenticate-user))
 
 (def secured-routes-no-context-handler
   (-> (delayed-handler secured-routes-no-context)
-      (wrap-exceptions exception-handlers)
+      (wrap-exceptions cx/exception-handlers)
       wrap-logging
       wrap-user-info
       authenticate-user))
 
 (def unsecured-routes-handler
   (-> (delayed-handler unsecured-routes)
-      (wrap-exceptions exception-handlers)
+      (wrap-exceptions cx/exception-handlers)
       wrap-logging))
 
 (defn donkey-routes

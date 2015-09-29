@@ -1,6 +1,7 @@
 (ns clojure-commons.exception
   (:require [clojure-commons.error-codes :as ec]
             [cheshire.core :as cheshire]
+            [compojure.api.exception :as ex]
             [ring.util.response :as header]
             [ring.util.http-response :as resp]))
 
@@ -51,6 +52,34 @@
                     exception
                     (resp/internal-server-error (cheshire/encode exception)))))
 
+(defn missing-request-field-handler
+  [error error-type _]
+  (let [exception {:error_code ec/ERR_BAD_OR_MISSING_FIELD
+                   :fields (:fields error-type)}]
+    (embedErrorInfo error
+                    exception
+                    (resp/bad-request (cheshire/encode exception)))))
+
+(defn bad-request-field-handler
+  [error error-type _]
+  (missing-request-field-handler error error-type _))
+
+(defn missing-query-params-handler
+  [error error-type _]
+  (let [exception {:error_code ec/ERR_MISSING_QUERY_PARAMETER
+                   :parameters (:parameters error-type)}]
+    (embedErrorInfo error
+                    exception
+                    (resp/bad-request (cheshire/encode exception)))))
+
+(defn bad-query-params-handler
+  [error error-type _]
+  (let [exception {:error_code ec/ERR_BAD_QUERY_PARAMETER
+                   :parameters (:parameters error-type)}]
+    (embedErrorInfo error
+                    exception
+                    (resp/bad-request (cheshire/encode exception)))))
+
 (defn unchecked-handler
   [error error-type _]
   (cond
@@ -64,4 +93,13 @@
                                                exception
                                                (resp/internal-server-error (cheshire/encode exception))))))
 
-
+(def exception-handlers
+  {:handlers {::ex/request-validation (as-de-exception-handler ex/request-validation-handler ec/ERR_ILLEGAL_ARGUMENT)
+              ::ex/response-validation (as-de-exception-handler ex/response-validation-handler ec/ERR_SCHEMA_VALIDATION)
+              ::invalid-cfg invalid-cfg-handler
+              ::authentication-not-found authentication-not-found-handler
+              ::missing-request-field missing-request-field-handler
+              ::bad-request-field bad-request-field-handler
+              ::missing-query-params missing-query-params-handler
+              ::bad-query-params bad-query-params-handler
+              ::ex/default unchecked-handler}})
