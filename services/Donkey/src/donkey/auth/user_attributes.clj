@@ -62,7 +62,7 @@
 
 (defn- wrap-auth-selection
   "Generates a ring handler function that selects the authentication method based on predicates."
-  [handler phs]
+  [phs]
   (log/spy phs)
   (fn [request]
     (if-let [auth-handler (log/spy :warn (find-auth-handler request phs))]
@@ -80,40 +80,30 @@
   [request]
   (get (:headers request) "X-Iplant-De-Jwt"))
 
-(defn- wrap-cas-admin-auth
-  [handler]
-  (-> (wrap-current-user handler user-from-attributes)
-      (cas/validate-cas-group-membership
-       get-cas-ticket cfg/cas-server cfg/server-name cfg/group-attr-name cfg/allowed-groups)))
-
 (defn- wrap-cas-auth
   [handler]
   (-> (wrap-current-user handler user-from-attributes)
-      (cas/validate-cas-proxy-ticket get-cas-ticket cfg/cas-server cfg/server-name)))
-
-(defn- wrap-jwt-admin-auth
-  [handler]
-  (-> (wrap-current-user handler user-from-jwt-claims)
-      (jwt/validate-jwt-group-membership get-jwt-assertion cfg/allowed-groups)))
+      (cas/extract-groups-from-user-attributes cfg/group-attr-name)
+      (cas/validate-cas-proxy-ticket
+        get-cas-ticket cfg/cas-server cfg/server-name)))
 
 (defn- wrap-jwt-auth
   [handler]
   (-> (wrap-current-user handler user-from-jwt-claims)
       (jwt/validate-jwt-assertion get-jwt-assertion)))
 
-(defn store-current-admin-user
-  "Authenticates the user, verifies that the user has administrative privileges and stores the user
-   information in current-user."
-  [handler]
-  (wrap-auth-selection handler [[get-cas-ticket    (wrap-cas-admin-auth handler)]
-                                [get-jwt-assertion (wrap-jwt-admin-auth handler)]]))
-
-(defn store-current-user
+(defn authenticate-current-user
   "Authenticates the user using validate-cas-proxy-ticket and binds current-user to a map that is
    built from the user attributes that validate-cas-proxy-ticket stores in the request."
   [handler]
-  (wrap-auth-selection handler [[get-cas-ticket    (wrap-cas-auth handler)]
-                                [get-jwt-assertion (wrap-jwt-auth handler)]]))
+  (wrap-auth-selection [[get-cas-ticket    (wrap-cas-auth handler)]
+                        [get-jwt-assertion (wrap-jwt-auth handler)]]))
+
+(defn validate-current-user
+  "Verifies that the user belongs to one of the groups that are permitted to access the resource."
+  [handler]
+  (wrap-auth-selection [[get-cas-ticket    (cas/validate-group-membership handler cfg/allowed-groups)]
+                        [get-jwt-assertion (jwt/validate-jwt-group-membership handler get-jwt-assertion cfg/allowed-groups)]]))
 
 (defn fake-store-current-user
   "Fake storage of a user"
@@ -122,11 +112,6 @@
     (log/info "Storing current user from IPLANT_CAS_* env vars.")
     (binding [current-user (fake-user-from-attributes req)]
       (handler req))))
-
-(defn get-proxy-ticket
-  "Obtains a CAS proxy ticket for authentication to another service."
-  [url]
-  (cas/get-proxy-ticket (:principal current-user) url))
 
 (defmacro with-user
   "Performs a task with the given user information bound to current-user. This macro is used

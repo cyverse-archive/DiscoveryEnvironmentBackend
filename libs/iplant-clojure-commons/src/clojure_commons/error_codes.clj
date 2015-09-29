@@ -1,7 +1,6 @@
 (ns clojure-commons.error-codes
   (:use [slingshot.slingshot :only [try+]])
   (:require [clojure.tools.logging :as log]
-            [clojure-commons.exception :as cx]
             [cheshire.core :as cheshire]
             [clojure.string :as string])
   (:import [java.io PrintWriter
@@ -170,7 +169,6 @@
       (log/error (format-exception (:throwable &throw-context)))
       (err-resp action (:object &throw-context)))
     (catch clj-http-error? o o)
-    (catch [:type ::cx/invalid-cfg] {:keys [error]} (invalid-cfg-response error))
     (catch [:type :invalid-argument] {:keys [reason arg val]} (invalid-arg-response arg val reason))
     (catch [:type :ring.swagger.schema/validation] {:keys [error]} (validation-error-response error))
     (catch [:type :compojure.api.exception/request-validation] {:keys [error]} (validation-error-response error))

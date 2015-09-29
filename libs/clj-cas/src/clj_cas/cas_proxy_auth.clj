@@ -113,8 +113,8 @@
     (str (apply curl/url (map #(string/replace % #"^/|/$" "") components)))))
 
 (defn validate-cas-proxy-ticket
-  "Authenticates a CAS proxy ticket.  If the proxy ticket can be validated then the request
-   is passed to the handler.  Otherwise, the handler responds with HTTP status code 401."
+  "Authenticates a CAS proxy ticket. If the proxy ticket can be validated then the request
+   is passed to the handler. Otherwise, the handler responds with HTTP status code 401."
   [handler ticket-fn cas-server-fn server-name-fn
    & [proxy-callback-base-fn proxy-callback-path-fn]]
   (let [ticket-fn        (or ticket-fn (constantly nil))
@@ -127,18 +127,6 @@
       (if (= (callback-path-fn) (:uri request))
         (handle-proxy-callback @pgt-storage request)
         (handle-authentication handler ticket-fn @validator (server-name-fn) request)))))
-
-(defn validate-cas-group-membership
-  "This is a convenience function that produces a handler that validates a CAS ticket, extracts
-   the group membership information from a user attribute and verifies that the user belongs to
-   one of the groups that are permitted to access the resource."
-  [handler ticket-fn cas-server-fn server-name-fn attr-name-fn allowed-groups-fn
-   & [proxy-callback-url-fn proxy-callback-path-fn]]
-  (-> handler
-    (validate-group-membership allowed-groups-fn)
-    (extract-groups-from-user-attributes attr-name-fn)
-    (validate-cas-proxy-ticket ticket-fn cas-server-fn server-name-fn proxy-callback-url-fn
-                               proxy-callback-path-fn)))
 
 (defn get-proxy-ticket
   "Obtains a proxy ticket that can be used to authenticate to other CAS-secured services."

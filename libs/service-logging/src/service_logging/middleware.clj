@@ -24,6 +24,7 @@
   (dissoc request
           :body
           :user-info
+          :user-attributes
           :compojure.api.middleware/options
           :ring.swagger.middleware/data))
 
