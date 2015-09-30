@@ -1,11 +1,11 @@
 (ns clojure-commons.progress
   (:require [clj-time.core :as ct])
   (:import [clojure.lang IFn]
-           [org.joda.time PeriodType]
-           [org.joda.time.format PeriodFormatterBuilder]))
+           [org.joda.time PeriodType Interval]
+           [org.joda.time.format PeriodFormatterBuilder PeriodFormatter]))
 
 
-(def ^:private period-formatter
+(def ^:private ^PeriodFormatter period-formatter
   (-> (PeriodFormatterBuilder.)
       (.appendDays)
       (.appendSuffix " day", " days")

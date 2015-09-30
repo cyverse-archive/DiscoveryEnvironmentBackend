@@ -29,7 +29,7 @@
       (getContextClassLoader)
       (getResourceAsStream (file filepath))))
 
-(defn- find-config-file
+(defn- ^String find-config-file
   "Finds a configuration file, which may in tghe classpath or in the 'resources'
    subdirectory of the current working directory."
   [file-name]
