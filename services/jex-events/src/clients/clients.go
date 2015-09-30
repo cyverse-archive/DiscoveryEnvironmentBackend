@@ -38,6 +38,9 @@ func (j *JEXEventsClient) JobRecord(uuid string) (*model.JobRecord, error) {
 	if err != nil {
 		return nil, err
 	}
+	if response.StatusCode != 200 {
+		return nil, fmt.Errorf("A status code of %d was returned by jex-events", response.StatusCode)
+	}
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
