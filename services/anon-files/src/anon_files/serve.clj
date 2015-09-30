@@ -54,7 +54,7 @@
 
 (defn multiple-ranges?
   "Returns true if the header field specifies multiple ranges."
-  [header]
+  [^String header]
   (not= (.indexOf header ",") -1))
 
 (defn extract-byte-ranges
