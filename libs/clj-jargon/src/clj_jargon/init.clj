@@ -15,9 +15,9 @@
 (def ^:dynamic curr-with-jargon-index nil)
 
 (defn clean-return
-  [cm retval]
+  [{^IRODSFileSystem cm-proxy :proxy} retval]
   (log/debug curr-with-jargon-index "- cleaning up and returning a plain value")
-  (.close (:proxy cm))
+  (.close cm-proxy)
   retval)
 
 (defn dirty-return
@@ -26,7 +26,7 @@
   retval)
 
 (defn proxy-input-stream
-  [cm istream]
+  [{^IRODSFileSystem cm-proxy :proxy} ^InputStream istream]
   (let [with-jargon-index curr-with-jargon-index]
     (proxy [InputStream] []
       (available [] (.available istream))
@@ -37,11 +37,11 @@
         ([b] (.read istream b))
         ([b off len] (.read istream b off len)))
       (reset [] (.reset istream))
-      (skip [] (.skip istream))
+      (skip [n] (.skip istream n))
       (close []
         (log/debug with-jargon-index "- closing the proxy input stream")
         (.close istream)
-        (.close (:proxy cm))))))
+        (.close cm-proxy)))))
 
 (defn proxy-input-stream-return
   [cm retval]
@@ -66,10 +66,10 @@
   "Throws:
      org.irods.jargon.core.exception.JargonException - This is thrown when if fails to connect to iRODS
      ERR_NOT_A_USER                                  - If the client-user isn't a known iRODS user"
-  [cfg client-user]
+  [{^IRODSFileSystem cm-proxy :proxy :as cfg} client-user]
   (try+
     (let [acnt (account cfg client-user)
-          aof  (.getIRODSAccessObjectFactory (:proxy cfg))]
+          aof  (.getIRODSAccessObjectFactory cm-proxy)]
       (assoc cfg
         :irodsAccount        acnt
         :accessObjectFactory aof
@@ -77,7 +77,7 @@
         :dataObjectAO        (.getDataObjectAO aof acnt)
         :userAO              (.getUserAO aof acnt)
         :userGroupAO         (.getUserGroupAO aof acnt)
-        :fileFactory         (.getIRODSFileFactory (:proxy cfg) acnt)
+        :fileFactory         (.getIRODSFileFactory cm-proxy acnt)
         :fileSystemAO        (.getIRODSFileSystemAO aof acnt)
         :lister              (.getCollectionAndDataObjectListAndSearchAO aof acnt)
         :quotaAO             (.getQuotaAO aof acnt)
@@ -183,7 +183,7 @@
                  :else                           (dirty-return retval#)))
              (catch Object o1#
                (try+
-                 (.close (:proxy ~cm-sym))
+                 (let [^IRODSFileSystem proxy-cm# (:proxy ~cm-sym)] (.close proxy-cm#))
                  (catch Object o2#))
                (throw+))))))))
 
@@ -192,7 +192,7 @@
   [msg]
   `(log/warn (Exception. "forcing a stack trace") ~msg))
 
-(def default-proxy-ctor
+(def ^IRODSFileSystem default-proxy-ctor
   "This is the default constructor for creating an iRODS proxy."
   #(IRODSFileSystem/instance))
 

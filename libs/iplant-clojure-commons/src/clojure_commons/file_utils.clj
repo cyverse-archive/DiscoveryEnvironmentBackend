@@ -1,17 +1,20 @@
 (ns clojure-commons.file-utils
-  (:use [clojure.java.io :only [file]]
-        [clojure.string :only [join split]])
   (:require [clj-time.core :as time]
             [clj-time.format :as time-format]
             [clojure.string :as string]
+            [clojure.java.io :as io]
             [me.raynes.fs :as fs])
   (:import [java.io File]))
+
+(defn- ^File file
+  [& args]
+  (apply io/file args))
 
 (def ^:dynamic *max-temp-dir-attempts*
   "The maximum number of times to attempt to create a temporary directory."
   10)
 
-(defn path-join
+(defn ^String path-join
   "Joins paths together and returns the resulting path as a string. nil and empty strings are
    silently discarded.
 
@@ -26,17 +29,17 @@
       ""
       (str (apply file paths')))))
 
-(defn rm-last-slash
+(defn ^String rm-last-slash
   "Returns a new version of 'path' with the last slash removed.
 
    Parameters:
      path - String containing a path.
 
    Returns: New version of 'path' with the trailing slash removed."
-  [path]
+  [^String path]
   (when path (.replaceAll path "/$" "")))
 
-(defn basename
+(defn ^String basename
   "Returns the basename of 'path'.
 
    This works by calling getName() on a java.io.File instance. It's prefered
@@ -47,10 +50,10 @@
 
    Returns:
      String containing the basename of path."
-  [path]
+  [^String path]
   (.getName (file path)))
 
-(defn dirname
+(defn ^String dirname
   "Returns the dirname of 'path'.
 
    This works by calling getParent() on a java.io.File instance.
@@ -60,52 +63,52 @@
 
    Returns:
      String containing the dirname of path."
-  [path]
+  [^String path]
   (when path (.getParent (file path))))
 
-(defn add-trailing-slash
+(defn ^String add-trailing-slash
   "Adds a trailing slash to 'input-string' if it doesn't already have one."
-  [input-string]
+  [^String input-string]
   (if-not (.endsWith input-string "/")
     (str input-string "/")
     input-string))
 
-(defn normalize-path
+(defn ^String normalize-path
   "Normalizes a file path on Unix systems by eliminating '.' and '..' from it.
    No attempts are made to resolve symbolic links."
-  [file-path]
-  (loop [dest [] src (split file-path #"/")]
+  [^String file-path]
+  (loop [dest [] src (string/split file-path #"/")]
     (if (empty? src)
-      (join "/" dest)
+      (string/join "/" dest)
       (let [curr (first src)]
         (cond (= curr ".") (recur dest (rest src))
               (= curr "..") (recur (vec (butlast dest)) (rest src))
               :else (recur (conj dest curr) (rest src)))))))
 
-(defn abs-path
+(defn ^String abs-path
   "Converts a path to an absolute path."
-  [file-path]
+  [^String file-path]
   (normalize-path (.getAbsolutePath (file file-path))))
 
-(defn abs-path?
+(defn ^Boolean abs-path?
   "Returns true if the path passed in is an absolute path."
-  [file-path]
+  [^String file-path]
   (.isAbsolute (file file-path)))
 
-(defn file?
+(defn ^Boolean file?
   "Tests whether the path is a file."
-  [file-path]
+  [^String file-path]
   (.isFile (file file-path)))
 
-(defn dir?
+(defn ^Boolean dir?
   "Tests whether the path is a directory."
-  [file-path]
+  [^String file-path]
   (.isDirectory (file file-path)))
 
-(defn exists?
+(defn ^Boolean exists?
   "Tests whether the given paths exist on the filesystem."
   [& filepaths]
-  (every? #(.exists %) (map file filepaths)))
+  (every? (fn [^File f] (.exists f)) (map file filepaths)))
 
 (defn rec-delete
   "Recursively deletes all files in a directory structure rooted at the given
@@ -113,7 +116,7 @@
    shouldn't be a problem, however, because a directory structure that is deep
    enough to cause a stack overflow will probably create a path that is too
    long for the OS to support."
-  [f]
+  [^File f]
   (when (.isDirectory f)
     (dorun (map rec-delete (.listFiles f))))
   (.delete f))
@@ -123,16 +126,16 @@
   [name-fn]
   (loop [idx 0]
     (if-not (>= idx *max-temp-dir-attempts*)
-      (let [f (name-fn idx)]
+      (let [^File f (name-fn idx)]
         (if (.mkdir f) f (recur (inc idx))))
       nil)))
 
-(defn temp-dir
+(defn ^File temp-dir
   "Creates a temporary directory.  This function is used by the with-temp-dir
    macro to create the temporary directory."
   ([prefix err-fn]
      (temp-dir prefix (file (System/getProperty "user.dir")) err-fn))
-  ([prefix parent err-fn]
+  ([prefix ^File parent err-fn]
      (let [base          (str prefix (System/currentTimeMillis) "-")
            temp-dir-file (fn [idx] (file parent (str base idx)))
            temp-dir      (mk-temp-dir temp-dir-file)]
@@ -151,7 +154,7 @@
    maximum number of times to try to create the temporary directory.  The
    default value of this variable is 10."
   [sym prefix err-fn & body]
-  `(let [~sym (temp-dir ~prefix ~err-fn)]
+  `(let [^File ~sym (temp-dir ~prefix ~err-fn)]
      (try
        (.delete ~sym)
        (.mkdir ~sym)
@@ -170,7 +173,7 @@
    the maximum number of times to try to create the temporary directory  The
    default value of this variable is 10."
   [sym parent prefix err-fn & body]
-  `(let [~sym (temp-dir ~prefix ~parent ~err-fn)]
+  `(let [^File ~sym (temp-dir ~prefix ~parent ~err-fn)]
      (try
        (.delete ~sym)
        (.mkdir ~sym)

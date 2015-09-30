@@ -91,7 +91,7 @@
   (edn/read-string (slurp (fs/normalized (fs/expand-home cfg-path)))))
 
 (defn load-cfg-file
-  [cfg-path]
+  [^String cfg-path]
   (cond
    (.endsWith cfg-path ".properties")
    (load-properties cfg-path)
