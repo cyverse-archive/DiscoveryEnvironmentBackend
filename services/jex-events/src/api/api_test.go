@@ -14,6 +14,7 @@ import (
 	"path"
 	"submissions"
 	"testing"
+	"time"
 
 	"github.com/facebookgo/freeport"
 	"github.com/gorilla/mux"
@@ -180,8 +181,8 @@ func TestStopHandler(t *testing.T) {
 		Addr:    fmt.Sprintf(":%d", p),
 		Handler: r,
 	}
-	go server.ListenAndServe() //evil, evil, evil
-
+	go server.ListenAndServe()
+	time.Sleep(1000 * time.Millisecond)
 	c.JEXEvents = fmt.Sprintf("http://127.0.0.1:%d", p)
 	inittests(t)
 	r2 := mux.NewRouter()
@@ -196,6 +197,7 @@ func TestStopHandler(t *testing.T) {
 		Handler: r2,
 	}
 	go server2.ListenAndServe() //even more evil, evil, evil
+	time.Sleep(1000 * time.Millisecond)
 	delete := fmt.Sprintf("http://127.0.0.1:%d/stop/%s", p2, jr.InvocationID)
 	request, err := http.NewRequest("DELETE", delete, nil)
 	if err != nil {
