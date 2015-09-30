@@ -7,7 +7,7 @@ if [ -z "$DOCKER_USER" ]; then
 fi
 
 if [ -z "$DOCKER_REPO" ]; then
-	DOCKER_REPO=jex-events
+	DOCKER_REPO=jex
 fi
 
 VERSION=$(cat version | sed -e 's/^ *//' -e 's/ *$//')
@@ -17,8 +17,8 @@ docker run --rm  \
 	-e "VERSION=$VERISON" \
 	-e "GIT_COMMIT=$(git rev-parse HEAD)" \
 	-e "BUILD_USER=$(whoami)" \
-	-v $(pwd):/jex-events \
-	-w /jex-events \
+	-v $(pwd):/jex \
+	-w /jex \
 	$DOCKER_USER/buildenv:latest \
 	gb build --ldflags "-X main.appver=$VERSION -X main.gitref=$GIT_COMMIT -X main.builtby=$BUILD_USER"
 docker build --rm -t "$DOCKER_USER/$DOCKER_REPO:dev" .
