@@ -1,0 +1,11 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/dgrijalva/jwt-go",
+			"repository": "https://github.com/dgrijalva/jwt-go",
+			"revision": "f62f64ea222e5e6d6d86421b5507b0862a3ebf7f",
+			"branch": "master"
+		}
+	]
+}
