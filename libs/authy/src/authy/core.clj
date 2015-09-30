@@ -111,7 +111,7 @@
 (defn token-expiring?
   ([{:keys [refresh-window] :or {refresh-window default-refresh-window} :as token-info}]
      (token-expiring? token-info refresh-window))
-  ([{:keys [expires-at]} window]
+  ([{:keys [^Timestamp expires-at]} window]
      (let [last-valid-time (Timestamp. (+ (System/currentTimeMillis) window))]
        (neg? (.compareTo expires-at last-valid-time)))))
 
