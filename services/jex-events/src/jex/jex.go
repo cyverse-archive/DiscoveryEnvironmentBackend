@@ -13,7 +13,7 @@ import (
 
 var (
 	cfgPath = flag.String("config", "", "Path to the config value. Required.")
-	mode    = flag.String("mode", "", "One of 'monitor', 'events', or 'launcher'. Required.")
+	mode    = flag.String("mode", "", "One of 'monitor', 'manager', or 'launcher'. Required.")
 	version = flag.Bool("version", false, "Print the version information")
 	gitref  string
 	appver  string
@@ -45,7 +45,7 @@ func main() {
 		AppVersion()
 		os.Exit(0)
 	}
-	validModes := []string{"monitor", "events", "launcher"}
+	validModes := []string{"monitor", "manager", "launcher"}
 	foundMode := false
 	for _, v := range validModes {
 		if v == *mode {
@@ -73,7 +73,7 @@ func main() {
 		os.Exit(-1)
 	}
 	switch *mode {
-	case "events":
+	case "manager":
 		manager.Run(cfg, logger)
 	case "monitor":
 		monitor.Run(cfg, logger)
