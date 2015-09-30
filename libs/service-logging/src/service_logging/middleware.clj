@@ -26,7 +26,9 @@
           :user-info
           :user-attributes
           :compojure.api.middleware/options
-          :ring.swagger.middleware/data))
+          :ring.swagger.middleware/data
+          :route-middleware
+          :route-handler))
 
 (defn- clean-response
   [response]
@@ -36,12 +38,15 @@
 (defn log-request
   [{:keys [request-method uri] :as request}]
   (let [method (string/upper-case (name request-method))]
+    (log/log 'AccessLogger :trace nil "entering service-logging.middleware/log-request")
+    (log/log :debug "Unencoded request: " request)
     (tc/with-logging-context {:request (cheshire/encode (clean-request request))}
                              (log/log 'AccessLogger :info nil (str method " " uri)))))
 
 (defn log-response
   ([level throwable {:keys [request-method uri]} response]
    (let [method (string/upper-case (name request-method))]
+     (log/log 'AccessLogger :trace nil "entering service-logging.middleware/log-response")
      (tc/with-logging-context {:response (cheshire/encode (clean-response (assoc response
                                                                            :uri uri
                                                                            :request-method request-method)))}

@@ -40,8 +40,8 @@
             [donkey.services.filesystem.icat :as icat]
             [donkey.util :as util]
             [donkey.util.transformers :as transform]
+            [clojure.tools.logging :as log]
             [service-logging.thread-context :as tc]))
-
 
 (defn delayed-handler
   [routes-fn]
@@ -49,16 +49,12 @@
     (let [handler ((memoize routes-fn))]
       (handler req))))
 
-(defn authenticate-user
-  [handler]
-  (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user authenticate-current-user)]
-    (f handler)))
-
 (defn- wrap-user-info
   [handler]
   (fn [request]
     (let [user-info (transform/add-current-user-to-map {})
           request   (assoc request :user-info user-info)]
+      (log/log 'AccessLogger :trace nil "entering wrap-user-info")
       (if (nil? (:user user-info))
         (handler request)
         (tc/with-logging-context {:user-info (cheshire/encode user-info)}
@@ -190,30 +186,30 @@
 
 (def admin-handler
   (-> (delayed-handler admin-routes)
-      (wrap-exceptions cx/exception-handlers)
-      wrap-logging
-      validate-current-user
-      wrap-user-info
-      authenticate-user))
+      (wrap-routes authenticate-current-user)
+      (wrap-routes wrap-user-info)
+      (wrap-routes validate-current-user)
+      (wrap-routes wrap-logging)
+      (wrap-routes wrap-exceptions  cx/exception-handlers)))
 
 (def secured-routes-handler
   (-> (delayed-handler secured-routes)
-      (wrap-exceptions cx/exception-handlers)
-      wrap-logging
-      wrap-user-info
-      authenticate-user))
+      (wrap-routes authenticate-current-user)
+      (wrap-routes wrap-user-info)
+      (wrap-routes wrap-logging)
+      (wrap-routes wrap-exceptions  cx/exception-handlers)))
 
 (def secured-routes-no-context-handler
   (-> (delayed-handler secured-routes-no-context)
-      (wrap-exceptions cx/exception-handlers)
-      wrap-logging
-      wrap-user-info
-      authenticate-user))
+      (wrap-routes authenticate-current-user)
+      (wrap-routes wrap-user-info)
+      (wrap-routes wrap-logging)
+      (wrap-routes wrap-exceptions  cx/exception-handlers)))
 
 (def unsecured-routes-handler
   (-> (delayed-handler unsecured-routes)
-      (wrap-exceptions cx/exception-handlers)
-      wrap-logging))
+      (wrap-routes wrap-logging)
+      (wrap-routes wrap-exceptions cx/exception-handlers)))
 
 (defn donkey-routes
   []
