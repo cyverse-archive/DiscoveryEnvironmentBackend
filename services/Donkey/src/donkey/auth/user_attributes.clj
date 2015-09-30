@@ -71,6 +71,11 @@
       (throw+ {:type ::cx/authentication-not-found
                :error "No authentication information found in request."}))))
 
+(defn- get-fake-auth
+  "Returns a non-nil value if we're using fake authentication."
+  [_]
+  (System/getenv "IPLANT_CAS_FAKE"))
+
 (defn- get-cas-ticket
   "Extracts a CAS ticket from the request, returning nil if none is found."
   [request]
@@ -80,6 +85,10 @@
   "Extracts a JWT assertion from the request, returning nil if none is found."
   [request]
   (get (:headers request) "x-iplant-de-jwt"))
+
+(defn- wrap-fake-auth
+  [handler]
+  (wrap-current-user handler fake-user-from-attributes))
 
 (defn- wrap-cas-auth
   [handler]
@@ -97,14 +106,16 @@
   "Authenticates the user using validate-cas-proxy-ticket and binds current-user to a map that is
    built from the user attributes that validate-cas-proxy-ticket stores in the request."
   [handler]
-  (wrap-auth-selection [[get-cas-ticket    (wrap-cas-auth handler)]
+  (wrap-auth-selection [[get-fake-auth     (wrap-fake-auth handler)]
+                        [get-cas-ticket    (wrap-cas-auth handler)]
                         [get-jwt-assertion (wrap-jwt-auth handler)]]))
 
 (defn validate-current-user
   "Verifies that the user belongs to one of the groups that are permitted to access the resource."
   [handler]
   (wrap-auth-selection
-   [[get-cas-ticket    (cas/validate-group-membership handler cfg/allowed-groups)]
+   [[get-fake-auth     handler]
+    [get-cas-ticket    (cas/validate-group-membership handler cfg/allowed-groups)]
     [get-jwt-assertion (jwt/validate-jwt-group-membership handler
                                                           get-jwt-assertion
                                                           cfg/allowed-groups)]]))

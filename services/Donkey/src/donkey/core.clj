@@ -49,11 +49,6 @@
     (let [handler ((memoize routes-fn))]
       (handler req))))
 
-(defn authenticate-user
-  [handler]
-  (let [f (if (System/getenv "IPLANT_CAS_FAKE") fake-store-current-user authenticate-current-user)]
-    (f handler)))
-
 (defn- wrap-user-info
   [handler]
   (fn [request]
@@ -191,7 +186,7 @@
 
 (def admin-handler
   (-> (delayed-handler admin-routes)
-      (wrap-routes authenticate-user)
+      (wrap-routes authenticate-current-user)
       (wrap-routes wrap-user-info)
       (wrap-routes validate-current-user)
       (wrap-routes wrap-logging)
@@ -199,14 +194,14 @@
 
 (def secured-routes-handler
   (-> (delayed-handler secured-routes)
-      (wrap-routes authenticate-user)
+      (wrap-routes authenticate-current-user)
       (wrap-routes wrap-user-info)
       (wrap-routes wrap-logging)
       (wrap-routes wrap-exceptions  cx/exception-handlers)))
 
 (def secured-routes-no-context-handler
   (-> (delayed-handler secured-routes-no-context)
-      (wrap-routes authenticate-user)
+      (wrap-routes authenticate-current-user)
       (wrap-routes wrap-user-info)
       (wrap-routes wrap-logging)
       (wrap-routes wrap-exceptions  cx/exception-handlers)))
