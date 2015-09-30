@@ -1,4 +1,5 @@
 (ns clojure-commons.exception
+  (:use [slingshot.slingshot :only [get-throw-context]])
   (:require [clojure-commons.error-codes :as ec]
             [cheshire.core :as cheshire]
             [compojure.api.exception :as ex]
@@ -10,6 +11,12 @@
   (assoc response
     :throwable throwable
     :exception exception))
+
+(defn- clj-http-error?
+  [error]
+  (some->> (get-throw-context error)
+           (:object)
+           ((every-pred :status :headers :body))))
 
 (defn as-de-exception-handler
   "Wraps a compojure-api exception handler function and performs
@@ -83,23 +90,37 @@
 (defn unchecked-handler
   [error error-type _]
   (cond
-    (ec/error? error-type) (embedErrorInfo error
-                                           error-type
-                                           (resp/internal-server-error (cheshire/encode error-type)))
+   (ec/error? error-type)
+   (embedErrorInfo error
+                   error-type
+                   (resp/internal-server-error (cheshire/encode error-type)))
 
-    (instance? Object error) (let [exception {:error_code ec/ERR_UNCHECKED_EXCEPTION
-                                              :reason (:message error-type)}]
-                               (embedErrorInfo error
-                                               exception
-                                               (resp/internal-server-error (cheshire/encode exception))))))
+   (clj-http-error? error)
+   (embedErrorInfo error
+                   {:error_code ec/ERR_REQUEST_FAILED}
+                   (:object (get-throw-context error)))
+
+   (instance? Object error)
+   (let [exception {:error_code ec/ERR_UNCHECKED_EXCEPTION
+                    :reason (:message error-type)}]
+     (embedErrorInfo error
+                     exception
+                     (resp/internal-server-error (cheshire/encode exception))))))
+
+(def handle-request-validation-errors
+  (as-de-exception-handler ex/request-validation-handler ec/ERR_ILLEGAL_ARGUMENT))
+
+(def handle-response-validation-errors
+  (as-de-exception-handler ex/response-validation-handler ec/ERR_SCHEMA_VALIDATION))
 
 (def exception-handlers
-  {:handlers {::ex/request-validation (as-de-exception-handler ex/request-validation-handler ec/ERR_ILLEGAL_ARGUMENT)
-              ::ex/response-validation (as-de-exception-handler ex/response-validation-handler ec/ERR_SCHEMA_VALIDATION)
-              ::invalid-cfg invalid-cfg-handler
-              ::authentication-not-found authentication-not-found-handler
-              ::missing-request-field missing-request-field-handler
-              ::bad-request-field bad-request-field-handler
-              ::missing-query-params missing-query-params-handler
-              ::bad-query-params bad-query-params-handler
-              ::ex/default unchecked-handler}})
+  {:handlers
+   {::ex/request-validation    handle-request-validation-errors
+    ::ex/response-validation   handle-response-validation-errors
+    ::invalid-cfg              invalid-cfg-handler
+    ::authentication-not-found authentication-not-found-handler
+    ::missing-request-field    missing-request-field-handler
+    ::bad-request-field        bad-request-field-handler
+    ::missing-query-params     missing-query-params-handler
+    ::bad-query-params         bad-query-params-handler
+    ::ex/default               unchecked-handler}})
