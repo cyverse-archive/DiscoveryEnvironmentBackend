@@ -1,4 +1,4 @@
-package events
+package manager
 
 import (
 	"database/sql"

@@ -2,11 +2,11 @@ package main
 
 import (
 	"configurate"
-	"events"
 	"flag"
 	"fmt"
 	"launcher"
 	"logcabin"
+	"manager"
 	"monitor"
 	"os"
 )
@@ -74,7 +74,7 @@ func main() {
 	}
 	switch *mode {
 	case "events":
-		events.Run(cfg, logger)
+		manager.Run(cfg, logger)
 	case "monitor":
 		monitor.Run(cfg, logger)
 	case "launcher":
