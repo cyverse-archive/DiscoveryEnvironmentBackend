@@ -8,25 +8,25 @@
 (def IPCSYSTEM "ipc-system-avu")
 
 
-(defn super-user?
-  [username]
+(defn ^Boolean super-user?
+  [^String username]
   (.equals username (cfg/irods-user)))
 
-(defn user-home-dir
-  [user]
+(defn ^String user-home-dir
+  [^String user]
   (ft/path-join (cfg/irods-home) user))
 
 
-(defn base-trash-path
+(defn ^String base-trash-path
   []
   (item/trash-base-dir (cfg/irods-zone) (cfg/irods-user)))
 
 
-(defn user-trash-path
-  [user]
+(defn ^String user-trash-path
+  [^String user]
   (ft/path-join (base-trash-path) user))
 
 
-(defn in-trash?
-  [user fpath]
+(defn ^Boolean in-trash?
+  [^String user ^String fpath]
   (.startsWith fpath (base-trash-path)))

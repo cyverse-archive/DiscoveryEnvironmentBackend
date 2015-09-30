@@ -15,7 +15,9 @@
             [data-info.util.logging :as dul]
             [data-info.services.directory :as directory]
             [data-info.services.uuids :as uuids]
-            [data-info.util.validators :as validators]))
+            [data-info.util.validators :as validators])
+  (:import [org.irods.jargon.core.pub IRODSFileSystemAO]
+           [org.irods.jargon.core.pub.io IRODSFile]))
 
 (def alphanums (concat (range 48 58) (range 65 91) (range 97 123)))
 
@@ -50,7 +52,7 @@
           (throw+ {:error_code ERR_NOT_AUTHORIZED
                    :paths (filterv home-matcher paths)}))
 
-        (doseq [p paths]
+        (doseq [^String p paths]
           (log/debug "path" p)
           (log/debug "readable?" user (owns? cm user p))
 
@@ -85,10 +87,10 @@
       (delete-paths user paths))))
 
 (defn- list-in-dir
-  [cm fixed-path]
+  [{^IRODSFileSystemAO cm-ao :fileSystemAO :as cm} fixed-path]
   (let [ffilter (proxy [java.io.FileFilter] [] (accept [stuff] true))]
     (.getListInDirWithFileFilter
-      (:fileSystemAO cm)
+      cm-ao
       (file cm fixed-path)
       ffilter)))
 
@@ -98,7 +100,7 @@
   (with-jargon (cfg/jargon-cfg) [cm]
     (validators/user-exists cm user)
     (let [trash-dir  (paths/user-trash-path user)
-          trash-list (mapv #(.getAbsolutePath %) (list-in-dir cm (ft/rm-last-slash trash-dir)))]
+          trash-list (mapv (fn [^IRODSFile file] (.getAbsolutePath file)) (list-in-dir cm (ft/rm-last-slash trash-dir)))]
       (doseq [trash-path trash-list]
         (delete cm trash-path true))
       {:trash trash-dir
