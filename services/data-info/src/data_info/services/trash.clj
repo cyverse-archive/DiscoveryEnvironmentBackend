@@ -106,6 +106,80 @@
       {:trash trash-dir
        :paths trash-list})))
 
+(defn- trash-origin-path
+  [cm user p]
+  (if (attribute? cm p "ipc-trash-origin")
+    (:value (first (get-attribute cm p "ipc-trash-origin")))
+    (ft/path-join (paths/user-home-dir user) (ft/basename p))))
+
+(defn- restore-to-homedir?
+  [cm p]
+  (not (attribute? cm p "ipc-trash-origin")))
+
+(defn- restoration-path
+  [cm user path]
+  (let [user-home   (paths/user-home-dir user)
+        origin-path (trash-origin-path cm user path)
+        inc-path    #(str origin-path "." %)]
+    (if-not (exists? cm origin-path)
+      origin-path
+      (loop [attempts 0]
+        (if (exists? cm (inc-path attempts))
+          (recur (inc attempts))
+          (inc-path attempts))))))
+
+(defn- restore-parent-dirs
+  [cm user path]
+  (log/warn "restore-parent-dirs" (ft/dirname path))
+
+  (when-not (exists? cm (ft/dirname path))
+    (mkdirs cm (ft/dirname path))
+    (log/warn "Created " (ft/dirname path))
+
+    (loop [parent (ft/dirname path)]
+      (log/warn "restoring path" parent)
+      (log/warn "user parent path" user)
+
+      (when (and (not= parent (paths/user-home-dir user)) (not (owns? cm user parent)))
+        (log/warn (str "Restoring ownership of parent dir: " parent))
+        (set-owner cm parent user)
+        (recur (ft/dirname parent))))))
+
+(defn- restore-path
+  [{:keys [user paths user-trash]}]
+  (with-jargon (cfg/jargon-cfg) [cm]
+    (let [paths (mapv ft/rm-last-slash paths)]
+      (validators/user-exists cm user)
+      (validators/all-paths-exist cm paths)
+      (validators/all-paths-writeable cm user paths)
+
+      (let [retval (atom (hash-map))]
+        (doseq [path paths]
+          (let [fully-restored      (ft/rm-last-slash (restoration-path cm user path))
+                restored-to-homedir (restore-to-homedir? cm path)]
+            (log/warn "Restoring " path " to " fully-restored)
+
+            (validators/path-not-exists cm fully-restored)
+            (log/warn fully-restored " does not exist. That's good.")
+
+            (restore-parent-dirs cm user fully-restored)
+            (log/warn "Done restoring parent dirs for " fully-restored)
+
+            (validators/path-writeable cm user (ft/dirname fully-restored))
+            (log/warn fully-restored "is writeable. That's good.")
+
+            (log/warn "Moving " path " to " fully-restored)
+            (validators/path-not-exists cm fully-restored)
+
+            (log/warn fully-restored " does not exist. That's good.")
+            (move cm path fully-restored :user user :admin-users (cfg/irods-admins))
+            (log/warn "Done moving " path " to " fully-restored)
+
+            (reset! retval
+                    (assoc @retval path {:restored-path fully-restored
+                                         :partial-restore restored-to-homedir}))))
+        {:restored @retval}))))
+
 (defn do-delete
   [{user :user} {paths :paths}]
   (delete-paths user paths))
@@ -157,3 +231,19 @@
 (with-pre-hook! #'do-delete-trash
   (fn [params]
     (dul/log-call "do-delete-trash" params)))
+
+(defn do-restore
+  [{user :user} {paths :paths}]
+  (let [trash (paths/user-trash-path user)
+        paths (if (seq paths) paths (directory/get-paths-in-folder user trash))]
+    (restore-path
+      {:user  user
+       :paths paths
+       :user-trash trash})))
+
+(with-post-hook! #'do-restore (dul/log-func "do-restore"))
+
+(with-pre-hook! #'do-restore
+  (fn [params body]
+    (dul/log-call "do-restore" params body)
+    (validators/validate-num-paths-under-paths (:user params) (:paths body))))
