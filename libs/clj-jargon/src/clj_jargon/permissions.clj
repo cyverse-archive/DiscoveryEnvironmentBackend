@@ -9,7 +9,14 @@
             [clojure.string :as string]
             [clj-jargon.item-info :as item])
   (:import [org.irods.jargon.core.protovalues FilePermissionEnum]
-           [org.irods.jargon.core.query RodsGenQueryEnum]))
+           [org.irods.jargon.core.pub IRODSFileSystemAO
+                                      DataObjectAO
+                                      CollectionAO
+                                      CollectionAndDataObjectListAndSearchAO]
+           [org.irods.jargon.core.pub.io IRODSFile]
+           [org.irods.jargon.core.query IRODSQueryResultRow
+                                        RodsGenQueryEnum
+                                        CollectionAndDataObjectListingEntry]))
 
 (declare permissions)
 
@@ -44,10 +51,10 @@
     read-perm  :read
                nil))
 (defmethod fmt-perm Long
-  [access-type-id]
+  [^Long access-type-id]
   (fmt-perm (FilePermissionEnum/valueOf access-type-id)))
 (defmethod fmt-perm String
-  [access-type-id]
+  [^String access-type-id]
   (fmt-perm (Long/parseLong access-type-id)))
 
 (defn- log-last
@@ -97,7 +104,7 @@
   (->> (conj (set (user-groups cm user)) user)
        (map #(collection-perms-rs cm % coll-path))
        (apply concat)
-       (map #(.getColumnsAsList %))
+       (map (fn [^IRODSQueryResultRow rs] (.getColumnsAsList rs)))
        (map #(FilePermissionEnum/valueOf (Integer/parseInt (first %))))
        (set)))
 
@@ -108,7 +115,7 @@
        (map (partial username->id cm))
        (map #(dataobject-perms-rs cm % data-path))
        (apply concat)
-       (map #(.getColumnsAsList %))
+       (map (fn [^IRODSQueryResultRow rs] (.getColumnsAsList rs)))
        (map #(FilePermissionEnum/valueOf (Integer/parseInt (first %))))
        (set)))
 
@@ -236,28 +243,24 @@
       (mapv perm-user->map (ll/user-collection-perms cm path')))))
 
 (defn set-dataobj-perms
-  [cm user fpath read? write? own?]
+  [{^DataObjectAO dataobj :dataObjectAO zone :zone} user fpath read? write? own?]
   (validate-path-lengths fpath)
 
-  (let [dataobj (:dataObjectAO cm)
-        zone    (:zone cm)]
-    (.removeAccessPermissionsForUserInAdminMode dataobj zone fpath user)
-    (cond
-      own?   (.setAccessPermissionOwnInAdminMode dataobj zone fpath user)
-      write? (.setAccessPermissionWriteInAdminMode dataobj zone fpath user)
-      read?  (.setAccessPermissionReadInAdminMode dataobj zone fpath user))))
+  (.removeAccessPermissionsForUserInAdminMode dataobj zone fpath user)
+  (cond
+    own?   (.setAccessPermissionOwnInAdminMode dataobj zone fpath user)
+    write? (.setAccessPermissionWriteInAdminMode dataobj zone fpath user)
+    read?  (.setAccessPermissionReadInAdminMode dataobj zone fpath user)))
 
 (defn set-coll-perms
-  [cm user fpath read? write? own? recursive?]
+  [{^CollectionAO coll :collectionAO zone :zone} user fpath read? write? own? recursive?]
   (validate-path-lengths fpath)
-  (let [coll    (:collectionAO cm)
-        zone    (:zone cm)]
-    (.removeAccessPermissionForUserAsAdmin coll zone fpath user recursive?)
+  (.removeAccessPermissionForUserAsAdmin coll zone fpath user recursive?)
 
-    (cond
-      own?   (.setAccessPermissionOwnAsAdmin coll zone fpath user recursive?)
-      write? (.setAccessPermissionWriteAsAdmin coll zone fpath user recursive?)
-      read?  (.setAccessPermissionReadAsAdmin coll zone fpath user recursive?))))
+  (cond
+    own?   (.setAccessPermissionOwnAsAdmin coll zone fpath user recursive?)
+    write? (.setAccessPermissionWriteAsAdmin coll zone fpath user recursive?)
+    read?  (.setAccessPermissionReadAsAdmin coll zone fpath user recursive?)))
 
 (defn set-permissions
   ([cm user fpath read? write? own?]
@@ -282,10 +285,9 @@
       (set-permissions cm user fpath read? write? own? recursive?))))
 
 (defn one-user-to-rule-them-all?
-  [cm user]
-  (let [lister      (:lister cm)
-        subdirs     (.listCollectionsUnderPathWithPermissions lister (ft/rm-last-slash (:home cm)) 0)
-        accessible? (fn [u d] (some #(= (.getUserName %) u) (.getUserFilePermission d)))]
+  [{^CollectionAndDataObjectListAndSearchAO lister :lister :as cm} user]
+  (let [subdirs     (.listCollectionsUnderPathWithPermissions lister (ft/rm-last-slash (:home cm)) 0)
+        accessible? (fn [u ^CollectionAndDataObjectListingEntry d] (some #(= (.getUserName %) u) (.getUserFilePermission d)))]
     (every? (partial accessible? user) subdirs)))
 
 (defn set-owner
@@ -295,14 +297,17 @@
       cm - The iRODS context map
       path - The path whose owner is being set.
       owner - The username of the user who will be the owner of 'path'."
-  [cm path owner]
+  [{^DataObjectAO data-ao :dataObjectAO
+    ^CollectionAO collection-ao :collectionAO
+    zone :zone
+    :as cm} path owner]
   (validate-path-lengths path)
   (cond
    (item/is-file? cm path)
-   (.setAccessPermissionOwn (:dataObjectAO cm) (:zone cm) path owner)
+   (.setAccessPermissionOwn data-ao zone path owner)
 
    (item/is-dir? cm path)
-   (.setAccessPermissionOwn (:collectionAO cm) (:zone cm) path owner true)))
+   (.setAccessPermissionOwn collection-ao zone path owner true)))
 
 (defn set-inherits
   "Sets the inheritance attribute of a collection to true.
@@ -310,23 +315,23 @@
     Parameters:
       cm - The iRODS context map
       path - The path being altered."
-  [cm path]
+  [{^CollectionAO collection-ao :collectionAO zone :zone :as cm} path]
   (validate-path-lengths path)
   (if (item/is-dir? cm path)
-    (.setAccessPermissionInherit (:collectionAO cm) (:zone cm) path false)))
+    (.setAccessPermissionInherit collection-ao zone path false)))
 
-(defn permissions-inherited?
+(defn ^Boolean permissions-inherited?
   "Determines whether the inheritance attribute of a collection is true.
 
     Parameters:
       cm - The iRODS context map
       path - The path being checked."
-  [cm path]
+  [{^CollectionAO collection-ao :collectionAO :as cm} path]
   (validate-path-lengths path)
   (when (item/is-dir? cm path)
-    (.isCollectionSetForPermissionInheritance (:collectionAO cm) path)))
+    (.isCollectionSetForPermissionInheritance collection-ao path)))
 
-(defn is-writeable?
+(defn ^Boolean is-writeable?
   "Returns true if 'user' can write to 'path'.
 
     Parameters:
@@ -348,7 +353,7 @@
    :else
    false))
 
-(defn is-readable?
+(defn ^Boolean is-readable?
   "Returns true if 'user' can read 'path'.
 
     Parameters:
@@ -370,7 +375,7 @@
    :else
    false))
 
-(defn paths-writeable?
+(defn ^Boolean paths-writeable?
   "Returns true if all of the paths in 'paths' are writeable by 'user'.
 
     Parameters:
@@ -428,14 +433,14 @@
    Throws:
      FileNotFoundException - This is thrown if parent-path is not in iRODS.
      See validate-path-lengths for path-related exceptions."
-  [cm parent-path & flags]
+  [{^IRODSFileSystemAO cm-ao :fileSystemAO :as cm} parent-path & flags]
   (validate-path-lengths parent-path)
   (mapv
     #(try+
        (ft/path-join parent-path %1)
        (catch Object _
          (when-not (contains? (set flags) :ignore-child-exns) (throw+))))
-    (.getListInDir (:fileSystemAO cm) (item/file cm parent-path))))
+    (.getListInDir cm-ao (item/file cm parent-path))))
 
 (defn contains-accessible-obj?
   [cm user dpath]
@@ -508,7 +513,7 @@
                   (make-file-accessible cm dst user admin-users))}})
 
 (defn fix-perms
-  [cm src dst user admin-users skip-source-perms?]
+  [cm ^IRODSFile src ^IRODSFile dst user admin-users skip-source-perms?]
   (let [src-dir       (ft/dirname src)
         dst-dir       (ft/dirname dst)]
     (when-not (= src-dir dst-dir)
@@ -548,20 +553,23 @@
     fmt-perm))
 
 (defn remove-permissions
-  [cm user fpath]
+  [{^DataObjectAO data-ao :dataObjectAO
+    ^CollectionAO collection-ao :collectionAO
+    zone :zone
+    :as cm} user fpath]
   (validate-path-lengths fpath)
   (cond
    (item/is-file? cm fpath)
    (.removeAccessPermissionsForUserInAdminMode
-     (:dataObjectAO cm)
-     (:zone cm)
+     data-ao
+     zone
      fpath
      user)
 
    (item/is-dir? cm fpath)
    (.removeAccessPermissionForUserAsAdmin
-     (:collectionAO cm)
-     (:zone cm)
+     collection-ao
+     zone
      fpath
      user
      true)))
@@ -580,20 +588,23 @@
     false))
 
 (defn remove-access-permissions
-  [cm user abs-path]
+  [{^DataObjectAO data-ao :dataObjectAO
+    ^CollectionAO collection-ao :collectionAO
+    zone :zone
+    :as cm} user abs-path]
   (validate-path-lengths abs-path)
   (cond
    (item/is-file? cm abs-path)
    (.removeAccessPermissionsForUserInAdminMode
-     (:dataObjectAO cm)
-     (:zone cm)
+     data-ao
+     zone
      abs-path
      user)
 
    (item/is-dir? cm abs-path)
    (.removeAccessPermissionForUserAsAdmin
-     (:collectionAO cm)
-     (:zone cm)
+     collection-ao
+     zone
      abs-path
      user
      false)))

@@ -5,30 +5,42 @@
             [slingshot.slingshot :refer [throw+ try+]]
             [clojure-commons.error-codes :refer [ERR_NOT_WRITEABLE]])
   (:import [org.irods.jargon.core.exception CatNoAccessException]
-           [org.irods.jargon.core.pub.domain AvuData]
-           [org.irods.jargon.core.query IRODSGenQueryBuilder]
-           [org.irods.jargon.core.query QueryConditionOperators]
-           [org.irods.jargon.core.query RodsGenQueryEnum]
-           [org.irods.jargon.core.query AVUQueryElement]
-           [org.irods.jargon.core.query AVUQueryElement$AVUQueryPart]
-           [org.irods.jargon.core.query AVUQueryOperatorEnum]))
+           [org.irods.jargon.core.pub DataObjectAO
+                                      CollectionAO
+                                      IRODSGenQueryExecutor]
+           [org.irods.jargon.core.pub.domain AvuData
+                                             Collection]
+           [org.irods.jargon.core.query IRODSGenQueryBuilder
+                                        IRODSQueryResultRow
+                                        QueryConditionOperators
+                                        RodsGenQueryEnum
+                                        AVUQueryElement
+                                        AVUQueryElement$AVUQueryPart
+                                        AVUQueryOperatorEnum
+                                        MetaDataAndDomainData]))
 
 (defn map2avu
   "Converts an avu map into an AvuData instance."
   [avu-map]
   (AvuData/instance (:attr avu-map) (:value avu-map) (:unit avu-map)))
 
+(defn- avu2map
+  [^MetaDataAndDomainData avu]
+  (hash-map :attr  (.getAvuAttribute avu)
+            :value (.getAvuValue avu)
+            :unit  (.getAvuUnit avu)))
+
 (defn get-metadata
   "Returns all of the metadata associated with a path."
-  [cm dir-path]
+  [{^DataObjectAO data-ao :dataObjectAO
+    ^CollectionAO collection-ao :collectionAO
+    :as cm}
+   ^String dir-path]
   (validate-path-lengths dir-path)
-  (mapv
-    #(hash-map :attr  (.getAvuAttribute %1)
-               :value (.getAvuValue %1)
-               :unit  (.getAvuUnit %1))
+  (mapv avu2map
     (if (is-dir? cm dir-path)
-      (.findMetadataValuesForCollection (:collectionAO cm) dir-path)
-      (.findMetadataValuesForDataObject (:dataObjectAO cm) dir-path))))
+      (.findMetadataValuesForCollection collection-ao dir-path)
+      (.findMetadataValuesForDataObject data-ao dir-path))))
 
 (defn get-attribute
   "Returns a list of avu maps for set of attributes associated with dir-path"
@@ -73,14 +85,41 @@
       count
       pos?)))
 
+(defmulti add-avu
+          (fn [ao-obj dir-path avu] (type ao-obj)))
+(defmethod add-avu CollectionAO
+  [^CollectionAO ao-obj ^String dir-path ^AvuData avu]
+  (.addAVUMetadata ao-obj dir-path avu))
+(defmethod add-avu DataObjectAO
+  [^DataObjectAO ao-obj ^String dir-path ^AvuData avu]
+  (.addAVUMetadata ao-obj dir-path avu))
+
+(defmulti modify-avu
+          (fn [ao-obj dir-path old-avu avu] (type ao-obj)))
+(defmethod modify-avu CollectionAO
+  [^CollectionAO ao-obj ^String dir-path ^AvuData old-avu ^AvuData avu]
+  (.modifyAVUMetadata ao-obj dir-path old-avu avu))
+(defmethod modify-avu DataObjectAO
+  [^DataObjectAO ao-obj ^String dir-path ^AvuData old-avu ^AvuData avu]
+  (.modifyAVUMetadata ao-obj dir-path old-avu avu))
+
+(defmulti delete-avu
+          (fn [ao-obj dir-path avu] (type ao-obj)))
+(defmethod delete-avu CollectionAO
+  [^CollectionAO ao-obj ^String dir-path ^AvuData avu]
+  (.deleteAVUMetadata ao-obj dir-path avu))
+(defmethod delete-avu DataObjectAO
+  [^DataObjectAO ao-obj ^String dir-path ^AvuData avu]
+  (.deleteAVUMetadata ao-obj dir-path avu))
+
 (defn add-metadata
   [cm dir-path attr value unit]
   (validate-path-lengths dir-path)
   (try+
     (let [ao-obj (if (is-dir? cm dir-path)
-                   (:collectionAO cm)
-                   (:dataObjectAO cm))]
-      (.addAVUMetadata ao-obj dir-path (AvuData/instance attr value unit)))
+                     (:collectionAO cm)
+                     (:dataObjectAO cm))]
+      (add-avu ao-obj dir-path (AvuData/instance attr value unit)))
     (catch CatNoAccessException _
       (throw+ {:error_code ERR_NOT_WRITEABLE :path dir-path}))))
 
@@ -94,9 +133,9 @@
                  (:collectionAO cm)
                  (:dataObjectAO cm))]
     (if (zero? (count (get-attribute cm dir-path attr)))
-      (.addAVUMetadata ao-obj dir-path avu)
+      (add-avu ao-obj dir-path avu)
       (let [old-avu (map2avu (first (get-attribute cm dir-path attr)))]
-        (.modifyAVUMetadata ao-obj dir-path old-avu avu)))))
+        (modify-avu ao-obj dir-path old-avu avu)))))
 
 (defn- delete-meta
   [cm dir-path attr-func]
@@ -104,9 +143,9 @@
   (let [fattr  (first (attr-func))
         avu    (map2avu fattr)
         ao-obj (if (is-dir? cm dir-path)
-                 (:collectionAO cm)
+                   (:collectionAO cm)
                    (:dataObjectAO cm))]
-    (.deleteAVUMetadata ao-obj dir-path avu)))
+    (delete-avu ao-obj dir-path avu)))
 
 (defn delete-metadata
   ([cm dir-path attr]
@@ -120,9 +159,9 @@
   (let [ao (if (is-dir? cm dir-path) (:collectionAO cm) (:dataObjectAO cm))]
     (doseq [avu-map avu-maps]
       (when (attr-value? cm dir-path (:attr avu-map) (:value avu-map))
-        (.deleteAVUMetadata ao dir-path (map2avu avu-map))))))
+        (delete-avu ao dir-path (map2avu avu-map))))))
 
-(defn- op->constant
+(defn- ^QueryConditionOperators op->constant
   [op]
   (or ({:between         QueryConditionOperators/BETWEEN
         :=               QueryConditionOperators/EQUAL
@@ -145,7 +184,7 @@
       (throw (Exception. (str "unknown operator: " op)))))
 
 (defn- build-file-avu-query
-  [name op value]
+  [^String name op value]
   (-> (IRODSGenQueryBuilder. true nil)
       (.addSelectAsGenQueryValue RodsGenQueryEnum/COL_COLL_NAME)
       (.addSelectAsGenQueryValue RodsGenQueryEnum/COL_DATA_NAME)
@@ -157,7 +196,7 @@
       (.exportIRODSQueryFromBuilder 50000)))
 
 (defn- build-file-attr-query
-  [name]
+  [^String name]
   (-> (IRODSGenQueryBuilder. true nil)
       (.addSelectAsGenQueryValue RodsGenQueryEnum/COL_COLL_NAME)
       (.addSelectAsGenQueryValue RodsGenQueryEnum/COL_DATA_NAME)
@@ -166,17 +205,21 @@
       (.exportIRODSQueryFromBuilder 50000)))
 
 
+(defn- format-result
+  [^IRODSQueryResultRow rr]
+  (string/join "/" (.getColumnsAsList rr)))
+
 (defn list-files-with-attr
-  [cm attr]
+  [{^IRODSGenQueryExecutor executor :executor} attr]
   (let [query (build-file-attr-query attr)
-        rs    (.executeIRODSQueryAndCloseResult (:executor cm) query 0)]
-    (map #(string/join "/" (.getColumnsAsList %)) (.getResults rs))))
+        rs    (.executeIRODSQueryAndCloseResult executor query 0)]
+    (map format-result (.getResults rs))))
 
 (defn list-files-with-avu
-  [cm name op value]
+  [{^IRODSGenQueryExecutor executor :executor} name op value]
   (let [query    (build-file-avu-query name op value)
-        rs       (.executeIRODSQueryAndCloseResult (:executor cm) query 0)]
-    (map #(string/join "/" (.getColumnsAsList %)) (.getResults rs))))
+        rs       (.executeIRODSQueryAndCloseResult executor query 0)]
+    (map format-result (.getResults rs))))
 
 (def ^:private file-avu-query-columns
   {:name  RodsGenQueryEnum/COL_META_DATA_ATTR_NAME
@@ -201,12 +244,12 @@
    value. For example, to search for AVUs named 'foo', the AVU specification would simply be
    {:name \"foo\"}. Unrecognized keys in the AVU specification are currently ignored and conditions
    are not added for null values."
-  [cols builder avu-spec]
+  [cols ^IRODSGenQueryBuilder builder avu-spec]
   (->> (remove (comp nil? last) avu-spec)
        (map (fn [[k v]] [(cols k) v]))
        (remove (comp nil? first))
        (map
-        (fn [[col v]]
+        (fn [[^RodsGenQueryEnum col ^String v]]
           (.addConditionAsGenQueryField builder col QueryConditionOperators/EQUAL v)))
        (dorun)))
 
@@ -261,9 +304,9 @@
    :name, :value, and :unit elements of the AVU specification.  The format-row parameter is a
    function that can be used to format each row in the result set.  The single parameter to this
    function is an instance of IRODSQueryResultRow."
-  [select-columns condition-columns format-row cm path avu-spec]
+  [select-columns condition-columns format-row {^IRODSGenQueryExecutor executor :executor} path avu-spec]
   (let [query (build-subtree-query-from-avu-spec select-columns condition-columns path avu-spec)]
-    (->> (.executeIRODSQueryAndCloseResult (:executor cm) query 0)
+    (->> (.executeIRODSQueryAndCloseResult executor query 0)
          (.getResults)
          (mapv format-row))))
 
@@ -287,7 +330,7 @@
   (partial list-items-in-tree-with-attr
            [RodsGenQueryEnum/COL_COLL_NAME RodsGenQueryEnum/COL_DATA_NAME]
            file-avu-query-columns
-           #(string/join "/" (.getColumnsAsList %))))
+           format-result))
 
 (def list-collections-in-tree-with-attr
   "Lists the paths to directories in a subtree given the path to the root of the subtree and an
@@ -309,7 +352,7 @@
   (partial list-items-in-tree-with-attr
            [RodsGenQueryEnum/COL_COLL_NAME]
            dir-avu-query-columns
-           #(str (first (.getColumnsAsList %)))))
+           (fn [^IRODSQueryResultRow rr] (str (first (.getColumnsAsList rr))))))
 
 (defn list-everything-in-tree-with-attr
   "Lists the paths to both files and directories in a subtree given the path to the root of the
@@ -334,7 +377,7 @@
 
 (defn get-avus-by-collection
   "Returns AVUs associated with a collection that have the given attribute and value."
-  [cm file-path attr units]
+  [{^CollectionAO collection-ao :collectionAO} file-path attr units]
   (let [query [(AVUQueryElement/instanceForValueQuery
                 AVUQueryElement$AVUQueryPart/UNITS
                 AVUQueryOperatorEnum/EQUAL
@@ -343,15 +386,15 @@
                 AVUQueryElement$AVUQueryPart/ATTRIBUTE
                 AVUQueryOperatorEnum/EQUAL
                 attr)]]
-    (mapv
-     #(hash-map
-       :attr  (.getAvuAttribute %1)
-       :value (.getAvuValue %1)
-       :unit  (.getAvuUnit %1))
-     (.findMetadataValuesByMetadataQueryForCollection (:collectionAO cm) query file-path))))
+    (mapv avu2map
+     (.findMetadataValuesByMetadataQueryForCollection collection-ao query file-path))))
+
+(defn- get-coll-name
+  [^Collection coll]
+  (.getCollectionName coll))
 
 (defn list-collections-with-attr-units
-  [cm attr units]
+  [{^CollectionAO collection-ao :collectionAO} attr units]
   (let [query [(AVUQueryElement/instanceForValueQuery
                 AVUQueryElement$AVUQueryPart/UNITS
                 AVUQueryOperatorEnum/EQUAL
@@ -360,12 +403,11 @@
                 AVUQueryElement$AVUQueryPart/ATTRIBUTE
                 AVUQueryOperatorEnum/EQUAL
                 attr)]]
-    (mapv
-     #(.getCollectionName %)
-     (.findDomainByMetadataQuery (:collectionAO cm) query))))
+    (mapv get-coll-name
+     (.findDomainByMetadataQuery collection-ao query))))
 
 (defn list-collections-with-attr-value
-  [cm attr value]
+  [{^CollectionAO collection-ao :collectionAO} attr value]
   (let [query [(AVUQueryElement/instanceForValueQuery
                 AVUQueryElement$AVUQueryPart/VALUE
                 AVUQueryOperatorEnum/EQUAL
@@ -374,9 +416,8 @@
                 AVUQueryElement$AVUQueryPart/ATTRIBUTE
                 AVUQueryOperatorEnum/EQUAL
                 attr)]]
-    (mapv
-     #(.getCollectionName %)
-     (.findDomainByMetadataQuery (:collectionAO cm) query))))
+    (mapv get-coll-name
+     (.findDomainByMetadataQuery collection-ao query))))
 
 
 (defn list-everything-with-attr-value

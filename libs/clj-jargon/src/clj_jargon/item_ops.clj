@@ -9,24 +9,30 @@
             [clj-jargon.item-info :as info])
   (:import [org.irods.jargon.core.exception CatNoAccessException]
            [org.irods.jargon.core.packinstr DataObjInp$OpenFlags]
-           [org.irods.jargon.core.pub DataTransferOperations IRODSFileSystemAO] ; needed for cursive type navigation
-           [org.irods.jargon.core.pub.io IRODSFileReader PackingIrodsInputStream
-              PackingIrodsOutputStream]
+           [org.irods.jargon.core.pub DataTransferOperations
+                                      IRODSFileSystemAO
+                                      IRODSAccessObjectFactory]
+           [org.irods.jargon.core.pub.io IRODSFileReader
+                                         PackingIrodsInputStream
+                                         PackingIrodsOutputStream
+                                         IRODSFileInputStream
+                                         IRODSFileFactory]
            [org.irods.jargon.core.transfer TransferStatusCallbackListener
               TransferStatusCallbackListener$FileStatusCallbackResponse
               TransferStatusCallbackListener$CallbackResponse
-              DefaultTransferControlBlock]))
+              DefaultTransferControlBlock]
+           [java.io InputStream OutputStream]))
 
 (defn mkdir
-  [cm dir-path]
+  [{^IRODSFileSystemAO cm-ao :fileSystemAO :as cm} ^String dir-path]
   (validate-full-dirpath dir-path)
   (validate-path-lengths dir-path)
-  (.mkdir (:fileSystemAO cm) (info/file cm dir-path) false))
+  (.mkdir cm-ao (info/file cm dir-path) false))
 
 
 ;; bad Exit conditions:  parent Is file, or reaches zone level
 (defn- mkdirs-unvalidated
-  [cm dir-path]
+  [{^IRODSFileSystemAO cm-ao :fileSystemAO :as cm} ^String dir-path]
   (log/trace "mkdirs-unvalidated dir-path =" dir-path)
   (let [parent (ft/rm-last-slash (ft/dirname dir-path))]
     (if (info/exists? cm parent)
@@ -34,16 +40,16 @@
                 (= "/" (ft/dirname parent)))
         (throw+ {:error_code ERR_NOT_A_FOLDER :path parent}))
       (mkdirs-unvalidated cm parent))
-    (.mkdir (:fileSystemAO cm) (info/file cm dir-path) false)))
+    (.mkdir cm-ao (info/file cm dir-path) false)))
 
 
 (defn mkdirs
-  [cm dir-path]
+  [{^IRODSFileSystemAO cm-ao :fileSystemAO :as cm} dir-path]
   (validate-full-dirpath dir-path)
   (validate-path-lengths dir-path)
 
   ; iRODS always returns success even when it fails to create a directory recursively.
-  #_(.mkdir (:fileSystemAO cm) (file cm dir-path) true)
+  #_(.mkdir cm-ao (file cm dir-path) true)
 
   ; Here is a work around until this bug is fixed in iRODS.
   (mkdirs-unvalidated cm dir-path))
@@ -54,8 +60,8 @@
    (delete cm a-path false))
   ([cm a-path force?]
    (validate-path-lengths a-path)
-   (let [fileSystemAO (:fileSystemAO cm)
-         resource     (info/file cm a-path)]
+   (let [^IRODSFileSystemAO fileSystemAO (:fileSystemAO cm)
+                            resource     (info/file cm a-path)]
      (if (and (:use-trash cm) (false? force?))
        (if (info/is-dir? cm a-path)
          (.directoryDeleteNoForce fileSystemAO resource)
@@ -79,9 +85,9 @@
                             skip-source-perms? false}}]
   (validate-path-lengths source)
   (validate-path-lengths dest)
-  (let [fileSystemAO (:fileSystemAO cm)
-        src          (info/file cm source)
-        dst          (info/file cm dest)]
+  (let [^IRODSFileSystemAO fileSystemAO (:fileSystemAO cm)
+                           src          (info/file cm source)
+                           dst          (info/file cm dest)]
     (if (info/is-file? cm source)
       (.renameFile fileSystemAO src dst)
       (.renameDirectory fileSystemAO src dst))
@@ -100,30 +106,31 @@
 (defn- output-stream
   "Returns an FileOutputStream for a file in iRODS pointed to by 'output-path'. If the file exists,
    it will be truncated."
-  [cm output-path]
+  [{^IRODSFileFactory file-factory :fileFactory :as cm} output-path]
   (PackingIrodsOutputStream.
-   (.instanceIRODSFileOutputStream (:fileFactory cm)
+   (.instanceIRODSFileOutputStream file-factory
                                    (info/file cm output-path)
                                    DataObjInp$OpenFlags/WRITE_TRUNCATE)))
 
 
-(defn input-stream
+(defn ^IRODSFileInputStream input-stream
   "Returns a FileInputStream for a file in iRODS pointed to by 'input-path'"
-  [cm input-path]
+  [{^IRODSFileFactory file-factory :fileFactory :as cm} input-path]
   (validate-path-lengths input-path)
   (PackingIrodsInputStream.
-   (.instanceIRODSFileInputStream (:fileFactory cm) (info/file cm input-path))))
+   (.instanceIRODSFileInputStream file-factory (info/file cm input-path))))
 
 
 (defn read-file
-  [cm fpath buffer]
+  [{^IRODSFileFactory file-factory :fileFactory :as cm} fpath buffer]
   (validate-path-lengths fpath)
-  (.read (IRODSFileReader. (info/file cm fpath) (:fileFactory cm)) buffer))
+  (.read (IRODSFileReader. (info/file cm fpath) file-factory) buffer))
 
 
-(defn data-transfer-obj
-  [cm]
-  (.getDataTransferOperations (:accessObjectFactory cm) (:irodsAccount cm)))
+(defn ^DataTransferOperations data-transfer-obj
+  [{^IRODSAccessObjectFactory ao-factory    :accessObjectFactory
+                              irods-account :irodsAccount}]
+  (.getDataTransferOperations ao-factory irods-account))
 
 (defn copy
   [cm source dest]
@@ -135,9 +142,9 @@
     (.copy dto source res dest nil nil)))
 
 (defn copy-stream
-  [cm istream user dest-path]
+  [cm ^InputStream istream user dest-path]
   (validate-path-lengths dest-path)
-  (let [ostream (output-stream cm dest-path)]
+  (let [^OutputStream ostream (output-stream cm dest-path)]
     (try
       (io/copy istream ostream)
       (finally

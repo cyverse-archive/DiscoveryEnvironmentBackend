@@ -5,13 +5,16 @@
         [clj-jargon.item-info :only [file is-dir?]]
         [clj-jargon.item-ops :only [input-stream]])
   (:require [clojure-commons.file-utils :as ft])
-  (:import [org.irods.jargon.ticket.packinstr TicketInp] 
+  (:import [org.irods.jargon.core.pub IRODSAccessObjectFactory]
+           [org.irods.jargon.ticket.packinstr TicketInp] 
            [org.irods.jargon.ticket.packinstr TicketCreateModeEnum] 
-           [org.irods.jargon.ticket TicketServiceFactoryImpl]
-           [org.irods.jargon.ticket TicketAdminServiceImpl]
-           [org.irods.jargon.ticket TicketClientSupport]))
+           [org.irods.jargon.ticket TicketServiceFactoryImpl
+                                    TicketAdminService
+                                    TicketAdminServiceImpl
+                                    TicketClientSupport
+                                    Ticket]))
 
-(defn ticket-admin-service
+(defn ^TicketAdminService ticket-admin-service
   "Creates an instance of TicketAdminService, which provides
    access to utility methods for performing operations on tickets.
    Probably doesn't need to be called directly."
@@ -22,7 +25,7 @@
 (defn set-ticket-options
   "Sets the optional settings for a ticket, such as the expiration date
    and the uses limit."
-  [ticket-id tas
+  [ticket-id ^TicketAdminService tas
    {:keys [byte-write-limit expiry file-write-limit uses-limit]}]
   (when byte-write-limit
     (.setTicketByteWriteLimit tas ticket-id byte-write-limit))
@@ -57,7 +60,7 @@
   [cm user ticket-id]
   (.isTicketInUse (ticket-admin-service cm user) ticket-id))
 
-(defn ticket-by-id
+(defn ^Ticket ticket-by-id
   "Looks up the ticket by the provided ticket-id string and
    returns an instance of Ticket."
   [cm user ticket-id]
@@ -66,7 +69,7 @@
     ticket-id))
 
 (defn ticket-obj->map
-  [ticket]
+  [^Ticket ticket]
   {:ticket-id        (.getTicketString ticket)
    :path             (.getIrodsAbsolutePath ticket)
    :byte-write-limit (str (.getWriteByteLimit ticket))
@@ -89,20 +92,21 @@
       (mapv ticket-obj->map (.listAllTicketsForGivenDataObject tas path 0)))))
 
 (defn ticket-expired?
-  [ticket-obj]
+  [^Ticket ticket-obj]
   (if (.getExpireTime ticket-obj)
     (.. (java.util.Date.) (after (.getExpireTime ticket-obj)))
     false))
 
 (defn ticket-used-up?
-  [ticket-obj]
+  [^Ticket ticket-obj]
   (> (.getUsesCount ticket-obj) (.getUsesLimit ticket-obj)))
 
 (defn init-ticket-session
-  [cm ticket-id]
-  (.. (:accessObjectFactory cm)
+  [{^IRODSAccessObjectFactory ao-factory    :accessObjectFactory
+                              irods-account :irodsAccount} ticket-id]
+  (.. ao-factory
     getIrodsSession
-    (currentConnection (:irodsAccount cm))
+    (currentConnection irods-account)
     (irodsFunction
       (TicketInp/instanceForSetSessionWithTicket ticket-id))))
 

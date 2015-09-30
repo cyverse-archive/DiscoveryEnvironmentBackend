@@ -1,17 +1,21 @@
 (ns clj-jargon.spec-query
   (:import [org.irods.jargon.core.exception DataNotFoundException JargonException]
+           [org.irods.jargon.core.pub IRODSAccessObjectFactory
+                                      SpecificQueryAO]
            [org.irods.jargon.core.pub.domain SpecificQueryDefinition]
-           [org.irods.jargon.core.query SpecificQuery]))
+           [org.irods.jargon.core.query SpecificQuery
+                                        IRODSQueryResultRow]))
 
-(defn- get-query-ao
+(defn- ^SpecificQueryAO get-query-ao
   "Gets the specific query AO for the current iRODS session."
-  [cm]
-  (.getSpecificQueryAO (:accessObjectFactory cm) (:irodsAccount cm)))
+  [{^IRODSAccessObjectFactory ao-factory    :accessObjectFactory
+                              irods-account :irodsAccount}]
+  (.getSpecificQueryAO ao-factory irods-account))
 
 (defn- define-query
   "Defines a specific query in iRODS. This function ignores exceptions thrown by Jargon because
    Jargon will throw an exception if the query already exists."
-  [query-ao [alias query]]
+  [^SpecificQueryAO query-ao [alias query]]
   (try
     (.addSpecificQuery query-ao (SpecificQueryDefinition. alias query))
     (catch JargonException _)))
@@ -23,7 +27,7 @@
 
 (defn- delete-query
   "Deletes a specific query in iRODS."
-  [query-ao [alias query]]
+  [^SpecificQueryAO query-ao [alias query]]
   (.removeSpecificQuery query-ao (SpecificQueryDefinition. alias query)))
 
 (defn delete-specific-queries
@@ -32,11 +36,11 @@
   (dorun (map (partial delete-query (get-query-ao cm))  queries)))
 
 (defn query-specifically
-  [cm query-ao query-inst limit]
+  [cm ^SpecificQueryAO query-ao ^SpecificQuery query-inst limit]
   (try
     (->> (.executeSpecificQueryUsingAlias query-ao query-inst limit)
       (.getResults)
-      (map #(vec (.getColumnsAsList %))))
+      (map (fn [^IRODSQueryResultRow rs] (vec (.getColumnsAsList rs)))))
     (catch DataNotFoundException _ [])))
 
 (defn- get-specific-query-page
