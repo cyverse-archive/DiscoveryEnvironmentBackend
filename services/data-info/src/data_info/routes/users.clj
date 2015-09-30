@@ -18,6 +18,8 @@
       :summary "File and Folder Permissions Information"
       :description (str
 "This endpoint allows the caller to get user permissions information about many files and folders at once."
+" The authenticated user must be the owner of these files, and that user's permissions, as well as the permissions of administrative users, are filtered out."
+" The owner permissions are found in the normal stat return, e.g. from /stat-gatherer."
 (get-error-code-block
   "ERR_NOT_A_USER, ERR_DOES_NOT_EXIST, ERR_NOT_OWNER, ERR_NOT_READABLE"))
       (svc/trap uri users/do-user-permissions params body))))
