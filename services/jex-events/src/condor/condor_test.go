@@ -301,7 +301,7 @@ func TestCondorSubmit(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	actual, err := CondorSubmit(cmd, sh, s)
+	actual, err := Submit(cmd, sh, s)
 	if err != nil {
 		t.Error(err)
 	}

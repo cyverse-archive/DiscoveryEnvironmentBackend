@@ -56,7 +56,7 @@ func submissionHandler(w http.ResponseWriter, r *http.Request) {
 		RespondWithError("Error creating submission files:\n%s", err, w)
 		return
 	}
-	id, err := condor.CondorSubmit(cmd, sh, s)
+	id, err := condor.Submit(cmd, sh, s)
 	if err != nil {
 		RespondWithError("Error submitting job:\n%s", err, w)
 		return
@@ -134,7 +134,7 @@ func parameterPreview(w http.ResponseWriter, r *http.Request) {
 func stopHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	uuid := vars["uuid"]
-	_, err := condor.CondorRm(uuid)
+	_, err := condor.Rm(uuid)
 	if err != nil {
 		RespondWithError("Error running 'condor_rm' for job:\n%s", err, w)
 		return

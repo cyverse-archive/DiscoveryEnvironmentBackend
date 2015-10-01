@@ -218,9 +218,9 @@ func CreateSubmissionFiles(dir string, s *model.Job) (string, string, error) {
 	return cmdPath, shPath, err
 }
 
-// CondorSubmit temporarily changes the working directory to the path designated
+// Submit temporarily changes the working directory to the path designated
 // by dir and runs condor_submit inside it.
-func CondorSubmit(cmdPath, shPath string, s *model.Job) (string, error) {
+func Submit(cmdPath, shPath string, s *model.Job) (string, error) {
 	csPath, err := exec.LookPath("condor_submit")
 	if err != nil {
 		return "", err
@@ -246,8 +246,8 @@ func CondorSubmit(cmdPath, shPath string, s *model.Job) (string, error) {
 	return string(model.ExtractJobID(output)), err
 }
 
-// CondorRm stops the job specified by UUID.
-func CondorRm(uuid string) (string, error) {
+// Rm stops the job specified by UUID.
+func Rm(uuid string) (string, error) {
 	crPath, err := exec.LookPath("condor_rm")
 	logger.Printf("condor_rm found at %s", crPath)
 	if err != nil {
