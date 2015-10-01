@@ -1,4 +1,4 @@
-FROM ubuntu:14.04
+FROM postgres:9.5
 
 ADD https://everdene.iplantcollaborative.org/jenkins/job/databases-dev/lastSuccessfulBuild/artifact/databases/de-database-schema/database.tar.gz /
 ADD https://everdene.iplantcollaborative.org/jenkins/job/databases-dev/lastSuccessfulBuild/artifact/databases/jex-db/jex-db.tar.gz /

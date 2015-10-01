@@ -3,22 +3,5 @@
 set -x
 set -e
 
-
-env
-
-PGHOST="$POSTGRES_PORT_5432_TCP_ADDR"
-PGPORT="$POSTGRES_PORT_5432_TCP_PORT"
-PGADMIN="postgres"
-PGADMINPASS="$POSTGRES_ENV_POSTGRES_PASSWORD"
-
-cat << EOF >> ~/.pgpass
-$PGHOST:$PGPORT:*:postgres:$PGADMINPASS
-$PGHOST:$PGPORT:*:de:notprod
-EOF
-
-chmod 0600 ~/.pgpass
-
-psql -h $PGHOST -p $PGPORT -U $PGADMIN -c "CREATE ROLE de WITH PASSWORD 'notprod' LOGIN;"
-psql -h $PGHOST -p $PGPORT -U $PGADMIN -c "CREATE DATABASE jex WITH OWNER de;"
-
-java -jar /facepalm-standalone.jar -m init -A $PGADMIN -U de -d jex -h $PGHOST -p $PGPORT -f /jex-db.tar.gz
+psql -h 127.0.0.1 -U $POSTGRES_USER -d postgres -c "CREATE DATABASE jex WITH OWNER $POSTGRES_USER;"
+java -jar /facepalm-standalone.jar -m init -A $POSTGRES_USER -U $POSTGRES_USER -h 127.0.0.1 -d jex -f /jex-db.tar.gz

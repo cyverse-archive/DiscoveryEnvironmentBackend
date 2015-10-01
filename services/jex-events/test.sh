@@ -3,10 +3,10 @@
 set -e
 set -x
 
-if [ $(docker ps | grep jexdb | wc -l) -eq 0]; then
+if [ $(docker ps | grep jexdb | wc -l) -eq 0 ]; then
     echo "Can't find a container named 'jexdb'. Going to try and create it..."
 
-    if [ $(docker images | grep 'unittest-jexdb:dev' | wc -l) -eq 0 ]; then
+    if [ $(docker images | grep dev | grep unittest-jexdb | wc -l) -eq 0 ]; then
         echo "Please run create-image.sh in docker/jex-db-loader/"
         exit 1
     fi
@@ -15,4 +15,4 @@ if [ $(docker ps | grep jexdb | wc -l) -eq 0]; then
     sleep 5
 fi
 
-JEXDB="postgres://de:notprod@$(docker inspect -f '{{.NetworkSettings.IPAddress}}' jexdb):5432/jex?sslmode=disable" gb test -test.v
+docker run --rm --link jexdb:jexdb -v $(pwd):/jex -w /jex discoenv/buildenv ./dbtest.sh

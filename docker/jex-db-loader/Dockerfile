@@ -1,8 +1,11 @@
-FROM discoenv/facepalm:dev
+FROM discoenv/facepalm:wregglej
 
+ADD setup-pg-hbaconf.sh /docker-entrypoint-initdb.d/
 COPY setup-dev-database.sh /bin/setup-dev-database.sh
 COPY update-dev-database.sh /bin/update-dev-database.sh
+COPY pgpass /root/.pgpass
+RUN chmod 0600 /root/.pgpass
 
-ENTRYPOINT ["/bin/bash"]
-
-CMD ["/bin/setup-dev-database.sh"]
+ENV POSTGRES_PASSWORD=notprod POSTGRES_USER=de
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["postgres"]
