@@ -408,6 +408,11 @@
   [props config-valid configs]
   "donkey.jwt.signing-key.public")
 
+(cc/defprop-str jwt-accepted-keys-dir
+  "The path to the directory containing public signing keys for JWT assertions."
+  [props config-valid configs]
+  "donkey.jwt.accepted-keys.dir")
+
 (cc/defprop-str jwt-signing-algorithm
   "The algorithm used to sign JWT assertions."
   [props config-valid configs]
@@ -523,6 +528,7 @@
    :private-key-password (jwt-private-signing-key-password)
    :public-key-path      (jwt-public-signing-key)
    :alg                  (keyword (jwt-signing-algorithm))
+   :accepted-keys-dir    (jwt-accepted-keys-dir)
    :validity-window-end  (jwt-validity-window-end)})
 
 (defn log-environment

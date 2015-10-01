@@ -1,6 +1,8 @@
 (ns donkey.util.jwt
-  (:use [slingshot.slingshot :only [try+]])
-  (:require [clojure-commons.jwt :as jwt]
+  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:require [clojure-commons.error-codes :as ce]
+            [clojure-commons.jwt :as jwt]
+            [clojure-commons.response :as resp]
             [donkey.util.config :as config]))
 
 (def ^:private jwt-generator
@@ -45,23 +47,21 @@
      (assoc headers
        :X-Iplant-De-Jwt (generate-jwt user))))
 
-(defn- validate-group-membership
+(defn validate-group-membership
   [handler allowed-groups-fn]
   (fn [request]
     (let [allowed-groups (allowed-groups-fn)
           actual-groups  (get-in request [:jwt-claims :org.iplantc.de:entitlement] [])]
       (if (some (partial contains? (set allowed-groups)) actual-groups)
         (handler request)
-        {:status 401}))))
+        (resp/forbidden "You are not in one of the admin groups.")))))
 
 (defn validate-jwt-assertion
   [handler assertion-fn]
   (fn [request]
-    (if-let [assertion (assertion-fn request)]
-      (handler (assoc request :jwt-claims ((jwt-validator) assertion)))
-      {:status 401})))
-
-(defn validate-jwt-group-membership
-  [handler assertion-fn allowed-groups-fn]
-  (-> (validate-group-membership handler allowed-groups-fn)
-      (validate-jwt-assertion assertion-fn)))
+    (try+
+      (if-let [assertion (assertion-fn request)]
+        (handler (assoc request :jwt-claims ((jwt-validator) assertion)))
+        (resp/unauthorized "Custom JWT header not found."))
+      (catch [:type :validation] _
+          (resp/forbidden (.getMessage (:throwable &throw-context)))))))
