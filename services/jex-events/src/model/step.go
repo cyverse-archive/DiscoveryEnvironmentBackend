@@ -1,4 +1,4 @@
-package submissions
+package model
 
 import (
 	"bytes"

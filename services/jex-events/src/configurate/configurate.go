@@ -8,6 +8,11 @@ import (
 	"os"
 )
 
+var (
+	//Config is the global configuration
+	Config *Configuration
+)
+
 // Configuration instance contain config values for jex-events.
 type Configuration struct {
 	AMQPURI            string
@@ -53,31 +58,32 @@ type Configuration struct {
 	logger             *logcabin.Lincoln
 }
 
-// New reads JSON from 'path' and returns a pointer to a Configuration
+// Init reads JSON from 'path' and returns a pointer to a Configuration
 // instance. Hopefully.
-func New(path string, logger *logcabin.Lincoln) (*Configuration, error) {
+func Init(path string, logger *logcabin.Lincoln) error {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if fileInfo.IsDir() {
-		return nil, fmt.Errorf("%s is a directory", path)
+		return fmt.Errorf("%s is a directory", path)
 	}
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	fileData, err := ioutil.ReadAll(file)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	var config Configuration
 	err = json.Unmarshal(fileData, &config)
-	config.logger = logger
 	if err != nil {
-		return &config, err
+		return err
 	}
-	return &config, nil
+	config.logger = logger
+	Config = &config
+	return nil
 }
 
 // Valid returns true if the configuration settings contain valid values.

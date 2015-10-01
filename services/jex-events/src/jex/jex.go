@@ -62,23 +62,23 @@ func main() {
 		flag.PrintDefaults()
 		os.Exit(-1)
 	}
-	cfg, err := configurate.New(*cfgPath, logger)
+	err := configurate.Init(*cfgPath, logger)
 	if err != nil {
 		logger.Print(err)
 		os.Exit(-1)
 	}
 	logger.Println("Done reading config.")
-	if !cfg.Valid() {
+	if !configurate.Config.Valid() {
 		logger.Println("Something is wrong with the config file.")
 		os.Exit(-1)
 	}
 	switch *mode {
 	case "manager":
-		manager.Run(cfg, logger)
+		manager.Run(configurate.Config, logger)
 	case "monitor":
-		monitor.Run(cfg, logger)
+		monitor.Run(configurate.Config, logger)
 	case "launcher":
-		launcher.Run(cfg, logger)
+		launcher.Run(configurate.Config, logger)
 	default:
 		fmt.Println("Bad mode! Bad! Look what you did!")
 		flag.PrintDefaults()

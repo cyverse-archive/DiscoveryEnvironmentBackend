@@ -31,7 +31,7 @@ func TestNewJEXEventsClient(t *testing.T) {
 }
 
 func TestJobRecord(t *testing.T) {
-	expected := &model.JobRecord{
+	expected := &model.Job{
 		CondorID:     "10000",
 		Submitter:    "test_this_is_a_test",
 		AppID:        "c7f05682-23c8-4182-b9a2-e09650a5f49b",

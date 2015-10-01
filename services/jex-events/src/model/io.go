@@ -1,6 +1,7 @@
-package submissions
+package model
 
 import (
+	"configurate"
 	"fmt"
 	"path"
 	"strings"
@@ -65,7 +66,7 @@ func (i *StepInput) Source() string {
 // Arguments returns the porklock settings needed for the input operation.
 func (i *StepInput) Arguments(username string, metadata []FileMetadata) string {
 	args := "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:%s get --user %s --source %s --config irods-config %s"
-	tag := cfg.PorklockTag
+	tag := configurate.Config.PorklockTag
 	path := quote(i.IRODSPath())
 	metadataArgs := MetadataArgs(metadata).FileMetadataArguments()
 	return fmt.Sprintf(args, tag, username, path, metadataArgs)
@@ -108,7 +109,7 @@ func (o *StepOutput) LogPath(parent, suffix string) string {
 // Arguments returns the porklock settings needed for output operation.
 func (o *StepOutput) Arguments(username, dest string) string {
 	args := "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:%s put --user %s --source %s --destination %s --config logs/irods-config"
-	tag := cfg.PorklockTag
+	tag := configurate.Config.PorklockTag
 	src := quote(o.Name)
 	d := quote(dest)
 	return fmt.Sprintf(args, tag, username, src, d)

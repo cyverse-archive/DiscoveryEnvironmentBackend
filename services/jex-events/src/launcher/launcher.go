@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"logcabin"
 	"strings"
-	"submissions"
 
 	"github.com/codegangsta/negroni"
 )
@@ -14,7 +13,7 @@ import (
 // Run starts up the JEX in 'launcher' mode, which launches jobs in response
 // to job requests that come through the HTTP/JSON API.
 func Run(config *configurate.Configuration, l *logcabin.Lincoln) {
-	submissions.Init(config, l)
+	//model.Init(config, l)
 	router := jexapi.Start(config, l)
 	n := negroni.New(l)
 	n.UseHandler(router)

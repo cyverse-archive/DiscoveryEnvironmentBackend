@@ -7,17 +7,22 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"logcabin"
+	"model"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
-	"regexp"
 	"text/template"
+)
+
+var (
+	logger = logcabin.New()
 )
 
 // GenerateCondorSubmit returns a string (or error) containing the contents
 // of what should go into an HTCondor submission file.
-func GenerateCondorSubmit(submission *Submission) (string, error) {
+func GenerateCondorSubmit(submission *model.Job) (string, error) {
 	tmpl := `universe = vanilla
 executable = /bin/bash
 rank = mips
@@ -26,11 +31,11 @@ output = script-output.log
 error = script-error.log
 log = condor.log
 request_disk = {{.RequestDisk}}
-+IpcUuid = "{{.UUID}}"
++IpcUuid = "{{.InvocationID}}"
 +IpcJobId = "generated_script"
-+IpcUsername = "{{.Username}}"{{if .Group}}
-+AccountingGroup = "{{.Group}}.{{.Username}}"{{end}}
-concurrency_limits = {{.Username}}
++IpcUsername = "{{.Submitter}}"{{if .Group}}
++AccountingGroup = "{{.Group}}.{{.Submitter}}"{{end}}
+concurrency_limits = {{.Submitter}}
 {{with $x := index .Steps 0}}+IpcExe = "{{$x.Component.Name}}"{{end}}
 {{with $x := index .Steps 0}}+IpcExePath = "{{$x.Component.Location}}"{{end}}
 should_transfer_files = YES
@@ -53,22 +58,22 @@ queue
 }
 
 type scriptable struct {
-	Submission
-	DC []VolumesFrom
-	CI []ContainerImage
+	model.Job
+	DC []model.VolumesFrom
+	CI []model.ContainerImage
 }
 
 // GenerateIplantScript returns a string (or error) containing the contents
 // of what should go into the iplant.sh script that is executed by the HTCondor
 // job out on the cluster.
-func GenerateIplantScript(submission *Submission) (string, error) {
-	tmpl := `{{$uuid := .UUID}}#!/bin/bash
+func GenerateIplantScript(submission *model.Job) (string, error) {
+	tmpl := `{{$uuid := .InvocationID}}#!/bin/bash
 
 set -x
 
-readonly IPLANT_USER={{.Username}}
+readonly IPLANT_USER={{.Submitter}}
 export IPLANT_USER
-readonly IPLANT_EXECUTION_ID={{.UUID}}
+readonly IPLANT_EXECUTION_ID={{.InvocationID}}
 export IPLANT_EXECUTION_ID
 export SCRIPT_LOCATION=${BASH_SOURCE}
 EXITSTATUS=0
@@ -106,7 +111,7 @@ if [ ! "$?" -eq "0" ]; then
 	exit $EXITSTATUS
 fi
 
-{{end}}{{range $i, $s := .Inputs}}{{$idstr := printf "%d" $i}}docker {{.Arguments $.Username $.FileMetadata}} 1> {{.Stdout $idstr}} 2> {{.Stderr $idstr}}
+{{end}}{{range $i, $s := .Inputs}}{{$idstr := printf "%d" $i}}docker {{.Arguments $.Submitter $.FileMetadata}} 1> {{.Stdout $idstr}} 2> {{.Stderr $idstr}}
 if [ ! "$?" -eq "0" ]; then
 	EXITSTATUS=1
 	exit $EXITSTATUS
@@ -148,7 +153,7 @@ exit $EXITSTATUS
 }
 
 // GenerateIRODSConfig returns the contents of the irods-config file as a string.
-func GenerateIRODSConfig(cfg *configurate.Configuration) (string, error) {
+func GenerateIRODSConfig() (string, error) {
 	tmpl := `porklock.irods-host = {{.IRODSHost}}
 porklock.irods-port = {{.IRODSPort}}
 porklock.irods-user = {{.IRODSUser}}
@@ -162,7 +167,7 @@ porklock.irods-resc = {{.IRODSResc}}
 		return "", err
 	}
 	var buffer bytes.Buffer
-	err = t.Execute(&buffer, cfg)
+	err = t.Execute(&buffer, configurate.Config)
 	if err != nil {
 		return "", err
 	}
@@ -170,7 +175,7 @@ porklock.irods-resc = {{.IRODSResc}}
 }
 
 // CreateSubmissionDirectory creates a directory for a submission and returns the path to it as a string.
-func CreateSubmissionDirectory(s *Submission) (string, error) {
+func CreateSubmissionDirectory(s *model.Job) (string, error) {
 	dirPath := s.CondorLogDirectory()
 	if path.Base(dirPath) != "logs" {
 		dirPath = path.Join(dirPath, "logs")
@@ -185,7 +190,7 @@ func CreateSubmissionDirectory(s *Submission) (string, error) {
 // CreateSubmissionFiles creates the iplant.cmd and iplant.sh files inside the
 // directory designated by 'dir'. The return values are the path to the iplant.cmd
 // file, the path to the iplant.sh file, and any errors, in that order.
-func CreateSubmissionFiles(dir string, s *Submission, cfg *configurate.Configuration) (string, string, error) {
+func CreateSubmissionFiles(dir string, s *model.Job) (string, string, error) {
 	cmdContents, err := GenerateCondorSubmit(s)
 	if err != nil {
 		return "", "", err
@@ -194,7 +199,7 @@ func CreateSubmissionFiles(dir string, s *Submission, cfg *configurate.Configura
 	if err != nil {
 		return "", "", err
 	}
-	irodsContents, err := GenerateIRODSConfig(cfg)
+	irodsContents, err := GenerateIRODSConfig()
 	if err != nil {
 		return "", "", err
 	}
@@ -213,21 +218,9 @@ func CreateSubmissionFiles(dir string, s *Submission, cfg *configurate.Configura
 	return cmdPath, shPath, err
 }
 
-func extractJobID(output []byte) []byte {
-	extractor := regexp.MustCompile(`submitted to cluster ((\d+)+)`)
-	matches := extractor.FindAllSubmatch(output, -1)
-	var thematch []byte
-	if len(matches) > 0 {
-		if len(matches[0]) > 1 {
-			thematch = matches[0][1]
-		}
-	}
-	return thematch
-}
-
 // CondorSubmit temporarily changes the working directory to the path designated
 // by dir and runs condor_submit inside it.
-func CondorSubmit(cmdPath, shPath string, s *Submission) (string, error) {
+func CondorSubmit(cmdPath, shPath string, s *model.Job) (string, error) {
 	csPath, err := exec.LookPath("condor_submit")
 	if err != nil {
 		return "", err
@@ -241,15 +234,16 @@ func CondorSubmit(cmdPath, shPath string, s *Submission) (string, error) {
 	cmd := exec.Command(csPath, cmdPath)
 	cmd.Dir = path.Dir(cmdPath)
 	cmd.Env = []string{
-		fmt.Sprintf("PATH=%s", cfg.Path),
-		fmt.Sprintf("CONDOR_CONFIG=%s", cfg.CondorConfig),
+		fmt.Sprintf("PATH=%s", configurate.Config.Path),
+		fmt.Sprintf("CONDOR_CONFIG=%s", configurate.Config.CondorConfig),
 	}
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
 	}
 	logger.Printf("Output of condor_submit:\n%s\n", output)
-	return string(extractJobID(output)), err
+	logger.Printf("Extracted ID: %s\n", string(model.ExtractJobID(output)))
+	return string(model.ExtractJobID(output)), err
 }
 
 // CondorRm stops the job specified by UUID.
@@ -265,11 +259,11 @@ func CondorRm(uuid string) (string, error) {
 			return "", err
 		}
 	}
-	cl, err := clients.NewJEXEventsClient(cfg.JEXEvents)
+	cl, err := clients.NewJEXEventsClient(configurate.Config.JEXEvents)
 	if err != nil {
 		return "", err
 	}
-	logger.Printf("Created a jex-events client for %s", cfg.JEXEvents)
+	logger.Printf("Created a jex-events client for %s", configurate.Config.JEXEvents)
 	jr, err := cl.JobRecord(uuid)
 	if err != nil {
 		logger.Print(err)
@@ -282,8 +276,8 @@ func CondorRm(uuid string) (string, error) {
 
 	cmd := exec.Command(crPath, jr.CondorID)
 	cmd.Env = []string{
-		fmt.Sprintf("PATH=%s", cfg.Path),
-		fmt.Sprintf("CONDOR_CONFIG=%s", cfg.CondorConfig),
+		fmt.Sprintf("PATH=%s", configurate.Config.Path),
+		fmt.Sprintf("CONDOR_CONFIG=%s", configurate.Config.CondorConfig),
 	}
 	output, err := cmd.CombinedOutput()
 	logger.Printf("condor_rm output for job %s:\n%s\n", jr.CondorID, string(output))

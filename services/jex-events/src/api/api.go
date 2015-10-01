@@ -18,8 +18,7 @@ import (
 )
 
 var (
-	cfg    *configurate.Configuration
-	logger *logcabin.Lincoln
+	logger = logcabin.New()
 )
 
 // RespondWithError logs the error to stdout/stderr using msgTmpl as the template.
@@ -42,7 +41,7 @@ func submissionHandler(w http.ResponseWriter, r *http.Request) {
 		RespondWithError("Error reading body:\n%s", err, w)
 		return
 	}
-	s, err := submissions.NewFromData(b)
+	s, err := model.NewFromData(b)
 	if err != nil {
 		RespondWithError("Error initializing submission:\n%s", err, w)
 		return
@@ -52,7 +51,7 @@ func submissionHandler(w http.ResponseWriter, r *http.Request) {
 		RespondWithError("Error creating submission directory:\n%s", err, w)
 		return
 	}
-	cmd, sh, err := submissions.CreateSubmissionFiles(sdir, s, cfg)
+	cmd, sh, err := submissions.CreateSubmissionFiles(sdir, s)
 	if err != nil {
 		RespondWithError("Error creating submission files:\n%s", err, w)
 		return
@@ -74,17 +73,17 @@ func submissionHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Printf("Error writing marshalled response:\n%s\n", err)
 	}
-	requestURL := path.Join(cfg.JEXEvents, "jobs")
-	if strings.HasSuffix(cfg.JEXEvents, "/") {
-		requestURL = fmt.Sprintf("%s%s", cfg.JEXEvents, "jobs")
+	requestURL := path.Join(configurate.Config.JEXEvents, "jobs")
+	if strings.HasSuffix(configurate.Config.JEXEvents, "/") {
+		requestURL = fmt.Sprintf("%s%s", configurate.Config.JEXEvents, "jobs")
 	} else {
-		requestURL = fmt.Sprintf("%s/%s", cfg.JEXEvents, "jobs")
+		requestURL = fmt.Sprintf("%s/%s", configurate.Config.JEXEvents, "jobs")
 	}
-	record := &model.JobRecord{
+	record := &model.Job{
 		CondorID:     id,
 		AppID:        s.AppID,
-		InvocationID: s.UUID,
-		Submitter:    s.Username,
+		InvocationID: s.InvocationID,
+		Submitter:    s.Submitter,
 	}
 	postBody, err := json.Marshal(record)
 	if err != nil {
@@ -101,16 +100,20 @@ func submissionHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(err)
 	}
-	respBody, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Print(err)
+	if response.StatusCode != 200 {
+		log.Printf("POST to %s returned %d", requestURL, response.StatusCode)
+	} else {
+		respBody, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			log.Print(err)
+		}
+		logger.Printf("jex-events responded with a job id of %s\n", string(respBody))
 	}
-	logger.Printf("jex-events responded with a job id of %s\n", string(respBody))
 }
 
 // params is what a command-line preview is parsed into.
 type paramslist struct {
-	P []submissions.StepParam `json:"params"`
+	P []model.StepParam `json:"params"`
 }
 
 func parameterPreview(w http.ResponseWriter, r *http.Request) {
@@ -125,7 +128,7 @@ func parameterPreview(w http.ResponseWriter, r *http.Request) {
 		RespondWithError("Error unmarshalling request body:\n%s", err, w)
 		return
 	}
-	w.Write([]byte(submissions.PreviewableStepParam(params.P).String()))
+	w.Write([]byte(model.PreviewableStepParam(params.P).String()))
 }
 
 func stopHandler(w http.ResponseWriter, r *http.Request) {
@@ -138,16 +141,9 @@ func stopHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Init initializes the configuration and the logger.
-func Init(c *configurate.Configuration, l *logcabin.Lincoln) {
-	cfg = c
-	logger = l
-}
-
 // Start initializes the http api for the JEX and gets it listening on the
 // configured port
 func Start(c *configurate.Configuration, l *logcabin.Lincoln) *mux.Router {
-	Init(c, l)
 	router := mux.NewRouter()
 	router.HandleFunc("/", rootHandler).Methods("GET")
 	router.HandleFunc("/", submissionHandler).Methods("POST")

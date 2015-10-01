@@ -12,7 +12,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"path"
-	"submissions"
 	"testing"
 	"time"
 
@@ -21,7 +20,7 @@ import (
 )
 
 func JSONData() ([]byte, error) {
-	f, err := os.Open("../submissions/test_submission.json")
+	f, err := os.Open("../test/test_submission.json")
 	if err != nil {
 		return nil, err
 	}
@@ -33,25 +32,23 @@ func JSONData() ([]byte, error) {
 }
 
 var (
-	c = &configurate.Configuration{}
 	l = logcabin.New()
 )
 
 func inittests(t *testing.T) {
-	c.RunOnNFS = true
-	c.NFSBase = "/path/to/base"
-	c.IRODSBase = "/path/to/irodsbase"
-	c.CondorLogPath = ""
-	c.PorklockTag = "test"
-	c.FilterFiles = "foo,bar,baz,blippy"
-	c.RequestDisk = "0"
-	submissions.Init(c, l)
-	PATH := fmt.Sprintf("../submissions/:%s", os.Getenv("PATH"))
+	configurate.Init("../test/test_config.json", l)
+	configurate.Config.RunOnNFS = true
+	configurate.Config.NFSBase = "/path/to/base"
+	configurate.Config.IRODSBase = "/path/to/irodsbase"
+	configurate.Config.CondorLogPath = ""
+	configurate.Config.PorklockTag = "test"
+	configurate.Config.FilterFiles = "foo,bar,baz,blippy"
+	configurate.Config.RequestDisk = "0"
+	PATH := fmt.Sprintf("../test/:%s", os.Getenv("PATH"))
 	err := os.Setenv("PATH", PATH)
 	if err != nil {
 		t.Error(err)
 	}
-	Init(c, l)
 }
 
 func TestRootHandler(t *testing.T) {
@@ -75,6 +72,9 @@ func TestRootHandler(t *testing.T) {
 }
 
 func TestSubmissionHandler(t *testing.T) {
+	inittests(t)
+
+	//Start up a fake jex events for the handler to communicate with.
 	r := mux.NewRouter()
 	r.HandleFunc("/jobs", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte{})
@@ -90,9 +90,9 @@ func TestSubmissionHandler(t *testing.T) {
 	}
 	go s.ListenAndServe() //evil, evil, evil
 
-	c.JEXEvents = fmt.Sprintf("http://127.0.0.1:%d", p)
+	configurate.Config.JEXEvents = fmt.Sprintf("http://127.0.0.1:%d", p)
+	time.Sleep(1000 * time.Millisecond) //Wait for the fake jex-events to start.
 
-	inittests(t)
 	server := httptest.NewServer(http.HandlerFunc(submissionHandler))
 	defer server.Close()
 	data, err := JSONData()
@@ -114,7 +114,7 @@ func TestSubmissionHandler(t *testing.T) {
 	if actual != expected {
 		t.Errorf("submissionHandler returned:\n%s\ninstead of:\n%s\n", actual, expected)
 	}
-	parent := path.Join(cfg.CondorLogPath, "test_this_is_a_test")
+	parent := path.Join(configurate.Config.CondorLogPath, "test_this_is_a_test")
 	err = os.RemoveAll(parent)
 	if err != nil {
 		t.Error(err)
@@ -130,11 +130,11 @@ func TestParameterPreviewHandler(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	s, err := submissions.NewFromData(data)
+	s, err := model.NewFromData(data)
 	if err != nil {
 		t.Error(err)
 	}
-	postMap := make(map[string][]submissions.StepParam)
+	postMap := make(map[string][]model.StepParam)
 	postMap["params"] = s.Steps[0].Config.Parameters()
 	postData, err := json.Marshal(postMap)
 	if err != nil {
@@ -158,7 +158,8 @@ func TestParameterPreviewHandler(t *testing.T) {
 }
 
 func TestStopHandler(t *testing.T) {
-	jr := &model.JobRecord{
+	//Start up a fake jex-events
+	jr := &model.Job{
 		CondorID:     "10000",
 		Submitter:    "test_this_is_a_test",
 		AppID:        "c7f05682-23c8-4182-b9a2-e09650a5f49b",
@@ -182,9 +183,10 @@ func TestStopHandler(t *testing.T) {
 		Handler: r,
 	}
 	go server.ListenAndServe()
-	time.Sleep(1000 * time.Millisecond)
-	c.JEXEvents = fmt.Sprintf("http://127.0.0.1:%d", p)
-	inittests(t)
+	time.Sleep(1000 * time.Millisecond) //wait for fake jex-events to start
+	configurate.Config.JEXEvents = fmt.Sprintf("http://127.0.0.1:%d", p)
+
+	// have to start up a server for stop handler in order to extract the uuid
 	r2 := mux.NewRouter()
 	r2.HandleFunc("/stop/{uuid}", stopHandler)
 	p2, err := freeport.Get()
@@ -198,6 +200,7 @@ func TestStopHandler(t *testing.T) {
 	}
 	go server2.ListenAndServe() //even more evil, evil, evil
 	time.Sleep(1000 * time.Millisecond)
+
 	delete := fmt.Sprintf("http://127.0.0.1:%d/stop/%s", p2, jr.InvocationID)
 	request, err := http.NewRequest("DELETE", delete, nil)
 	if err != nil {

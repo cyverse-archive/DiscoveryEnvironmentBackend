@@ -8,11 +8,11 @@ import (
 )
 
 func configurator() (*Configuration, error) {
-	path := "test_config.json"
+	path := "../test/test_config.json"
 	var logbuf bytes.Buffer
 	logger := log.New(&logbuf, "", log.Lshortfile)
 	l := &logcabin.Lincoln{logger}
-	return New(path, l)
+	return Config, Init(path, l)
 }
 
 func TestNew(t *testing.T) {

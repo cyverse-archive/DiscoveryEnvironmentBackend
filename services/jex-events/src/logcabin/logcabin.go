@@ -56,9 +56,16 @@ type Lincoln struct {
 	*log.Logger
 }
 
+var (
+	logger *Lincoln
+)
+
 // New returns a pointer to a newly initialized Lincoln.
 func New() *Lincoln {
-	return &Lincoln{log.New(LoggerFunc(LogWriter), "", log.Lshortfile)}
+	if logger == nil {
+		logger = &Lincoln{log.New(LoggerFunc(LogWriter), "", log.Lshortfile)}
+	}
+	return logger
 }
 
 // ServeHTTP implements the negroni middleware interface. This is adapted from

@@ -1,13 +1,144 @@
-package submissions
+package model
 
 import (
 	"bytes"
+	"configurate"
 	"fmt"
+	"io/ioutil"
+	"logcabin"
+	"os"
 	"path"
 	"strings"
 	"testing"
 	"time"
 )
+
+func JSONData() ([]byte, error) {
+	f, err := os.Open("../test/test_submission.json")
+	if err != nil {
+		return nil, err
+	}
+	c, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+	return c, err
+}
+
+var (
+	s *Job
+	l = logcabin.New()
+)
+
+func _inittests(t *testing.T, memoize bool) *Job {
+	if s == nil || !memoize {
+		configurate.Init("../test/test_config.json", l)
+		configurate.Config.RunOnNFS = true
+		configurate.Config.NFSBase = "/path/to/base"
+		configurate.Config.IRODSBase = "/path/to/irodsbase"
+		configurate.Config.IRODSHost = "hostname"
+		configurate.Config.IRODSPort = "1247"
+		configurate.Config.IRODSUser = "user"
+		configurate.Config.IRODSPass = "pass"
+		configurate.Config.IRODSZone = "test"
+		configurate.Config.IRODSResc = ""
+		configurate.Config.CondorLogPath = "/path/to/logs"
+		configurate.Config.PorklockTag = "test"
+		configurate.Config.FilterFiles = "foo,bar,baz,blippy"
+		configurate.Config.RequestDisk = "0"
+		data, err := JSONData()
+		if err != nil {
+			t.Error(err)
+			t.Fail()
+		}
+		s, err = NewFromData(data)
+		if err != nil {
+			t.Error(err)
+			t.Fail()
+		}
+	}
+	return s
+}
+
+func inittests(t *testing.T) *Job {
+	return _inittests(t, true)
+}
+
+func TestJSONParsing(t *testing.T) {
+	inittests(t)
+}
+
+func TestNaivelyQuote(t *testing.T) {
+	test1 := naivelyquote("foo")
+	test2 := naivelyquote("'foo'")
+	test3 := naivelyquote("foo'oo")
+	test4 := naivelyquote("'foo'oo'")
+	test5 := naivelyquote("foo''oo")
+	test6 := naivelyquote("'foo''oo'")
+	test7 := naivelyquote("f'oo'oo")
+	test8 := naivelyquote("'f'oo'oo'")
+
+	if test1 != "'foo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo'", test1)
+	}
+	if test2 != "'''foo'''" {
+		t.Errorf("naivelyquote returned %s instead of '''foo'''", test2)
+	}
+	if test3 != "'foo''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo''oo'", test3)
+	}
+	if test4 != "'''foo''oo'''" {
+		t.Errorf("naivelyquote returned %s instead of '''foo''oo'''", test4)
+	}
+	if test5 != "'foo''''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo''''oo'", test5)
+	}
+	if test6 != "'''foo''''oo'''" {
+		t.Errorf("naivelyquote returned %s instead of '''foo''''oo'''", test6)
+	}
+	if test7 != "'f''oo''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'f''oo''oo'", test7)
+	}
+	if test8 != "'''f''oo''oo'''" {
+		t.Errorf("naivelyquote returned %s instead of '''f''oo''oo'''", test8)
+	}
+}
+
+func TestQuote(t *testing.T) {
+	test1 := quote("foo")
+	test2 := quote("'foo'")
+	test3 := quote("foo'oo")
+	test4 := quote("'foo'oo'")
+	test5 := quote("foo''oo")
+	test6 := quote("'foo''oo'")
+	test7 := quote("f'oo'oo")
+	test8 := quote("'f'oo'oo'")
+
+	if test1 != "'foo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo'", test1)
+	}
+	if test2 != "'foo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo'", test2)
+	}
+	if test3 != "'foo''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo''oo'", test3)
+	}
+	if test4 != "'foo''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo''oo'", test4)
+	}
+	if test5 != "'foo''''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo''''oo'", test5)
+	}
+	if test6 != "'foo''''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'foo''''oo'", test6)
+	}
+	if test7 != "'f''oo''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'f''oo''oo'", test7)
+	}
+	if test8 != "'f''oo''oo'" {
+		t.Errorf("naivelyquote returned %s instead of 'f''oo''oo'", test8)
+	}
+}
 
 func TestNFSBase(t *testing.T) {
 	s := inittests(t)
@@ -53,8 +184,8 @@ func TestName(t *testing.T) {
 
 func TestUsername(t *testing.T) {
 	s := inittests(t)
-	if s.Username != "test_this_is_a_test" {
-		t.Errorf("The username was '%s' instead of 'test_this_is_a_test'", s.Username)
+	if s.Submitter != "test_this_is_a_test" {
+		t.Errorf("The username was '%s' instead of 'test_this_is_a_test'", s.Submitter)
 	}
 }
 
@@ -102,8 +233,8 @@ func TestWikiURL(t *testing.T) {
 
 func TestUUID(t *testing.T) {
 	s := inittests(t)
-	if s.UUID != "07b04ce2-7757-4b21-9e15-0b4c2f44be26" {
-		t.Errorf("uuid was '%s' instead of '07b04ce2-7757-4b21-9e15-0b4c2f44be26'", s.UUID)
+	if s.InvocationID != "07b04ce2-7757-4b21-9e15-0b4c2f44be26" {
+		t.Errorf("uuid was '%s' instead of '07b04ce2-7757-4b21-9e15-0b4c2f44be26'", s.InvocationID)
 	}
 }
 
@@ -141,7 +272,7 @@ func TestDirname(t *testing.T) {
 func TestWorkingDir(t *testing.T) {
 	s := _inittests(t, false)
 	s.NowDate = time.Now().Format(nowfmt)
-	expected := fmt.Sprintf("%s/", path.Join(s.NFSBase, s.Username, s.DirectoryName()))
+	expected := fmt.Sprintf("%s/", path.Join(s.NFSBase, s.Submitter, s.DirectoryName()))
 	actual := s.WorkingDirectory()
 	if actual != expected {
 		t.Errorf("WorkingDir() returned '%s' when it should have returned '%s'", actual, expected)
@@ -151,7 +282,7 @@ func TestWorkingDir(t *testing.T) {
 func TestCondorLogDir(t *testing.T) {
 	s := _inittests(t, false)
 	s.NowDate = time.Now().Format(nowfmt)
-	expected := fmt.Sprintf("%s/", path.Join(c.CondorLogPath, s.Username, s.DirectoryName()))
+	expected := fmt.Sprintf("%s/", path.Join(configurate.Config.CondorLogPath, s.Submitter, s.DirectoryName()))
 	actual := s.CondorLogDirectory()
 	if actual != expected {
 		t.Errorf("CondorLogDir() returned '%s' when it should have returned '%s'", actual, expected)
@@ -171,7 +302,7 @@ func TestIRODSConfig(t *testing.T) {
 func TestOutputDirectory1(t *testing.T) {
 	s := _inittests(t, false)
 	s.OutputDir = ""
-	expected := path.Join(s.IRODSBase, s.Username, "analyses", s.DirectoryName())
+	expected := path.Join(s.IRODSBase, s.Submitter, "analyses", s.DirectoryName())
 	actual := s.OutputDirectory()
 	if actual != expected {
 		t.Errorf("OutputDirectory() returned '%s' when it should have returned '%s'", actual, expected)
@@ -422,8 +553,8 @@ func TestAddRequiredMetadata(t *testing.T) {
 		t.Errorf("ipc-execution-id was not in the file metadata before AddRequiredMetadata() was called")
 	}
 	if found {
-		if e.Value != s.UUID {
-			t.Errorf("Value was set to %s instead of %s", e.Value, s.UUID)
+		if e.Value != s.InvocationID {
+			t.Errorf("Value was set to %s instead of %s", e.Value, s.InvocationID)
 		}
 		if e.Unit != "UUID" {
 			t.Errorf("Unit was set to %s instead of %s", e.Unit, "UUID")
@@ -452,14 +583,14 @@ func TestFinalOutputArguments(t *testing.T) {
 
 func TestExtractJobID(t *testing.T) {
 	testData := []byte(`1000 job(s) submitted to cluster 100000000.0000.`)
-	actual := extractJobID(testData)
+	actual := ExtractJobID(testData)
 	expected := []byte("100000000")
 	if !bytes.Equal(actual, expected) {
 		t.Errorf("extractJobID found %s instead of %s", actual, expected)
 	}
 
 	testData = []byte(`asdfadsfadsfadsfa1000 job(s) submitted to cluster 100000000.0000asdfadsfadsfasdfadsfadsfadsfadsfadsf`)
-	actual = extractJobID(testData)
+	actual = ExtractJobID(testData)
 	expected = []byte("100000000")
 	if !bytes.Equal(actual, expected) {
 		t.Errorf("extractJobID found %s instead of %s", actual, expected)
@@ -468,7 +599,7 @@ func TestExtractJobID(t *testing.T) {
 	testData = []byte(`asdfadsfadsfadsfa
 adsfadsfadsfadsfadsfasdfadsfadsfadsfadsfdsa1000 job(s) submitted to cluster 100000000asdfadsfadsfasdfadsfadsfadsfadsfadsf
 asdfadsfasdfadsfdsfsdsfdsafds`)
-	actual = extractJobID(testData)
+	actual = ExtractJobID(testData)
 	expected = []byte("100000000")
 	if !bytes.Equal(actual, expected) {
 		t.Errorf("extractJobID found %s instead of %s", actual, expected)

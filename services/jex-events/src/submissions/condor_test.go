@@ -1,12 +1,72 @@
 package submissions
 
 import (
+	"configurate"
 	"fmt"
+	"io/ioutil"
+	"logcabin"
+	"model"
 	"os"
 	"path"
 	"strings"
 	"testing"
 )
+
+func JSONData() ([]byte, error) {
+	f, err := os.Open("../test/test_submission.json")
+	if err != nil {
+		return nil, err
+	}
+	c, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+	return c, err
+}
+
+var (
+	s *model.Job
+	l = logcabin.New()
+)
+
+func _inittests(t *testing.T, memoize bool) *model.Job {
+	if s == nil || !memoize {
+		configurate.Init("../test/test_config.json", l)
+		configurate.Config.RunOnNFS = true
+		configurate.Config.NFSBase = "/path/to/base"
+		configurate.Config.IRODSBase = "/path/to/irodsbase"
+		configurate.Config.IRODSHost = "hostname"
+		configurate.Config.IRODSPort = "1247"
+		configurate.Config.IRODSUser = "user"
+		configurate.Config.IRODSPass = "pass"
+		configurate.Config.IRODSZone = "test"
+		configurate.Config.IRODSResc = ""
+		configurate.Config.CondorLogPath = "/path/to/logs"
+		configurate.Config.PorklockTag = "test"
+		configurate.Config.FilterFiles = "foo,bar,baz,blippy"
+		configurate.Config.RequestDisk = "0"
+		data, err := JSONData()
+		if err != nil {
+			t.Error(err)
+			t.Fail()
+		}
+		s, err = model.NewFromData(data)
+		if err != nil {
+			t.Error(err)
+			t.Fail()
+		}
+		PATH := fmt.Sprintf("../test/:%s", os.Getenv("PATH"))
+		err = os.Setenv("PATH", PATH)
+		if err != nil {
+			t.Error(err)
+		}
+	}
+	return s
+}
+
+func inittests(t *testing.T) *model.Job {
+	return _inittests(t, true)
+}
 
 func TestGenerateCondorSubmit(t *testing.T) {
 	s := inittests(t)
@@ -74,7 +134,7 @@ queue
 func TestGenerateIplantScript(t *testing.T) {
 	s := inittests(t)
 	s.NowDate = "test"
-	s.Steps[0].Environment = StepEnvironment{}
+	s.Steps[0].Environment = model.StepEnvironment{}
 	str, err := GenerateIplantScript(s)
 	if err != nil {
 		t.Error(err)
@@ -164,10 +224,11 @@ exit $EXITSTATUS
 	if len(actual) != len(expected) {
 		t.Errorf("GenerateIplantScript() returned %d lines rather than %d", len(actual), len(expected))
 		t.Fail()
-	}
-	for idx, e := range expected {
-		if actual[idx] != e {
-			t.Errorf("\nActual:\n%s\nExpected:\n%s\n", actual[idx], e)
+	} else {
+		for idx, e := range expected {
+			if actual[idx] != e {
+				t.Errorf("\nActual:\n%s\nExpected:\n%s\n", actual[idx], e)
+			}
 		}
 	}
 	_inittests(t, false)
@@ -175,7 +236,7 @@ exit $EXITSTATUS
 
 func TestCreateSubmissionDirectory(t *testing.T) {
 	s := inittests(t)
-	cfg.CondorLogPath = ""
+	configurate.Config.CondorLogPath = ""
 	dir, err := CreateSubmissionDirectory(s)
 	if err != nil {
 		t.Error(err)
@@ -184,7 +245,7 @@ func TestCreateSubmissionDirectory(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	parent := path.Join(cfg.CondorLogPath, s.Username)
+	parent := path.Join(configurate.Config.CondorLogPath, s.Submitter)
 	err = os.RemoveAll(parent)
 	if err != nil {
 		t.Error(err)
@@ -194,12 +255,12 @@ func TestCreateSubmissionDirectory(t *testing.T) {
 
 func TestCreateSubmissionFiles(t *testing.T) {
 	s := inittests(t)
-	cfg.CondorLogPath = ""
+	configurate.Config.CondorLogPath = ""
 	dir, err := CreateSubmissionDirectory(s)
 	if err != nil {
 		t.Error(err)
 	}
-	cmd, sh, err := CreateSubmissionFiles(dir, s, cfg)
+	cmd, sh, err := CreateSubmissionFiles(dir, s)
 	if err != nil {
 		t.Error(err)
 	}
@@ -216,7 +277,7 @@ func TestCreateSubmissionFiles(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	parent := path.Join(cfg.CondorLogPath, s.Username)
+	parent := path.Join(configurate.Config.CondorLogPath, s.Submitter)
 	err = os.RemoveAll(parent)
 	if err != nil {
 		t.Error(err)
@@ -231,12 +292,12 @@ func TestCondorSubmit(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	cfg.CondorLogPath = ""
+	configurate.Config.CondorLogPath = ""
 	dir, err := CreateSubmissionDirectory(s)
 	if err != nil {
 		t.Error(err)
 	}
-	cmd, sh, err := CreateSubmissionFiles(dir, s, cfg)
+	cmd, sh, err := CreateSubmissionFiles(dir, s)
 	if err != nil {
 		t.Error(err)
 	}
@@ -248,7 +309,7 @@ func TestCondorSubmit(t *testing.T) {
 	if actual != expected {
 		t.Errorf("CondorSubmit() returned %s instead of %s", actual, expected)
 	}
-	parent := path.Join(cfg.CondorLogPath, s.Username)
+	parent := path.Join(configurate.Config.CondorLogPath, s.Submitter)
 	err = os.RemoveAll(parent)
 	if err != nil {
 		t.Error(err)

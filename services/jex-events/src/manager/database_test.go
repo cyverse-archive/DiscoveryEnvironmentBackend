@@ -48,7 +48,7 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 	completed := time.Now()
 	condorID := "999"
 	invID := uuid.New()
-	jr := &model.JobRecord{
+	jr := &model.Job{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		CondorID:      condorID,
@@ -147,7 +147,7 @@ func TestInsertGetUpdateDeleteRecord(t *testing.T) {
 
 // TestStringifyUUID tests the FixAppID function.
 func TestStringifyUUID(t *testing.T) {
-	jr := &model.JobRecord{}
+	jr := &model.Job{}
 	jr.AppID = stringifyUUID(nil)
 	if jr.AppID != "" {
 		t.Errorf("AppID was not an empty string after call to FixAppID: %s", jr.AppID)
@@ -232,7 +232,7 @@ func TestCRUDCondorRawEvents(t *testing.T) {
 	submitted := time.Now()
 	started := time.Now()
 	completed := time.Now()
-	jr := &model.JobRecord{
+	jr := &model.Job{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,
@@ -314,7 +314,7 @@ func TestCRUDCondorJobEvent(t *testing.T) {
 	submitted := time.Now()
 	started := time.Now()
 	completed := time.Now()
-	jr := &model.JobRecord{
+	jr := &model.Job{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,
@@ -433,7 +433,7 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 	submitted := time.Now()
 	started := time.Now()
 	completed := time.Now()
-	jr := &model.JobRecord{
+	jr := &model.Job{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,
@@ -555,7 +555,7 @@ func TestCondorJobStopRequest(t *testing.T) {
 	submitted := time.Now()
 	started := time.Now()
 	completed := time.Now()
-	jr := &model.JobRecord{
+	jr := &model.Job{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,
@@ -643,7 +643,7 @@ func TestCRUDJobDeps(t *testing.T) {
 	submitted := time.Now()
 	started := time.Now()
 	completed := time.Now()
-	jr1 := &model.JobRecord{
+	jr1 := &model.Job{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,
@@ -661,7 +661,7 @@ func TestCRUDJobDeps(t *testing.T) {
 		t.Fail()
 	}
 	jr1.ID = jobID
-	jr2 := &model.JobRecord{
+	jr2 := &model.Job{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,
@@ -679,7 +679,7 @@ func TestCRUDJobDeps(t *testing.T) {
 		t.Fail()
 	}
 	jr2.ID = job2ID
-	jr3 := &model.JobRecord{
+	jr3 := &model.Job{
 		BatchID:       "",
 		Submitter:     "unit_tests",
 		DateSubmitted: submitted,

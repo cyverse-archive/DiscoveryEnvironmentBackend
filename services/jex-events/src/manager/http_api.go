@@ -271,7 +271,7 @@ func (h *HTTPAPI) JobHTTPPost(writer http.ResponseWriter, request *http.Request)
 		return
 	}
 	LogAPIMsg(request, fmt.Sprintf("%s", string(bytes)))
-	var parsed model.JobRecord
+	var parsed model.Job
 	err = json.Unmarshal(bytes, &parsed)
 	if err != nil {
 		WriteRequestError(writer, err.Error())

@@ -63,8 +63,8 @@ func epochizeTime(timestamp *time.Time) *time.Time {
 	return timestamp
 }
 
-// InsertJob adds a new model.JobRecord to the database.
-func (d *Databaser) InsertJob(jr *model.JobRecord) (string, error) {
+// InsertJob adds a new model.Job to the database.
+func (d *Databaser) InsertJob(jr *model.Job) (string, error) {
 	query := `
 	INSERT INTO jobs (
 		batch_id,
@@ -112,13 +112,13 @@ func (d *Databaser) InsertJob(jr *model.JobRecord) (string, error) {
 	return id, err
 }
 
-// AddJob add a new model.JobRecord to the database in a more friendly way than
+// AddJob add a new model.Job to the database in a more friendly way than
 // InsertJob. Only adds the job if it doesn't already exist.
 // Uses InsertJob under the hood. Used for new jobs.
-func (d *Databaser) AddJob(condorID string) (*model.JobRecord, error) {
+func (d *Databaser) AddJob(condorID string) (*model.Job, error) {
 	job, err := d.GetJobByCondorID(condorID)
 	if err == sql.ErrNoRows {
-		jr := &model.JobRecord{
+		jr := &model.Job{
 			CondorID: condorID,
 		}
 		id, err := d.InsertJob(jr)
@@ -214,7 +214,7 @@ func upsertJobStmt() string {
 }
 
 // Attempts to perform a job upsert.
-func attemptJobUpsert(stmt *sql.Stmt, jr *model.JobRecord) (sql.Result, error) {
+func attemptJobUpsert(stmt *sql.Stmt, jr *model.Job) (sql.Result, error) {
 	return stmt.Exec(
 		nilify(&jr.BatchID),
 		jr.Submitter,
@@ -231,15 +231,15 @@ func attemptJobUpsert(stmt *sql.Stmt, jr *model.JobRecord) (sql.Result, error) {
 }
 
 // Retrieves an upserted job.
-func getUpsertedJob(tx *sql.Tx, condorID string) (*model.JobRecord, error) {
+func getUpsertedJob(tx *sql.Tx, condorID string) (*model.Job, error) {
 	row := tx.QueryRow(_jobByCondorIDQuery, condorID)
 	return jobRecordFromRow(row)
 }
 
 // UpsertJob updates a job if it already exists, otherwise it inserts a new job
 // into the database.
-func (d *Databaser) UpsertJob(jr *model.JobRecord) (*model.JobRecord, error) {
-	var updatedJr *model.JobRecord
+func (d *Databaser) UpsertJob(jr *model.Job) (*model.Job, error) {
+	var updatedJr *model.Job
 
 	// This needs to be done inside a transaction.
 	tx, err := d.db.Begin()
@@ -298,7 +298,7 @@ func (d *Databaser) UpsertJob(jr *model.JobRecord) (*model.JobRecord, error) {
 	return updatedJr, nil
 }
 
-// DeleteJob removes a model.JobRecord from the database.
+// DeleteJob removes a model.Job from the database.
 func (d *Databaser) DeleteJob(uuid string) error {
 	query := `DELETE FROM jobs WHERE id = cast($1 as uuid)`
 	_, err := d.db.Exec(query, uuid)
@@ -309,8 +309,8 @@ func (d *Databaser) DeleteJob(uuid string) error {
 }
 
 // jobRecordFromRow converts a row from a result set to a job record
-func jobRecordFromRow(row *sql.Row) (*model.JobRecord, error) {
-	jr := &model.JobRecord{}
+func jobRecordFromRow(row *sql.Row) (*model.Job, error) {
+	jr := &model.Job{}
 
 	// Workaround for nullable UUID fields in the database.
 	var batchid interface{}
@@ -345,8 +345,8 @@ func jobRecordFromRow(row *sql.Row) (*model.JobRecord, error) {
 	return jr, err
 }
 
-// GetJob returns a model.JobRecord from the database.
-func (d *Databaser) GetJob(uuid string) (*model.JobRecord, error) {
+// GetJob returns a model.Job from the database.
+func (d *Databaser) GetJob(uuid string) (*model.Job, error) {
 	query := `
 	SELECT cast(id as varchar),
 				 batch_id,
@@ -367,14 +367,14 @@ func (d *Databaser) GetJob(uuid string) (*model.JobRecord, error) {
 	return jobRecordFromRow(row)
 }
 
-// GetJobByCondorID returns a model.JobRecord from the database.
-func (d *Databaser) GetJobByCondorID(condorID string) (*model.JobRecord, error) {
+// GetJobByCondorID returns a model.Job from the database.
+func (d *Databaser) GetJobByCondorID(condorID string) (*model.Job, error) {
 	row := d.db.QueryRow(_jobByCondorIDQuery, condorID)
 	return jobRecordFromRow(row)
 }
 
-// GetJobByInvocationID returns a model.JobRecord from the database.
-func (d *Databaser) GetJobByInvocationID(invocationID string) (*model.JobRecord, error) {
+// GetJobByInvocationID returns a model.Job from the database.
+func (d *Databaser) GetJobByInvocationID(invocationID string) (*model.Job, error) {
 	query := `
 	SELECT cast(id as varchar),
 	       batch_id,
@@ -396,7 +396,7 @@ func (d *Databaser) GetJobByInvocationID(invocationID string) (*model.JobRecord,
 }
 
 // UpdateJob updates a job instance in the database
-func (d *Databaser) UpdateJob(jr *model.JobRecord) (*model.JobRecord, error) {
+func (d *Databaser) UpdateJob(jr *model.Job) (*model.Job, error) {
 	query := `
 	UPDATE jobs
 		SET batch_id = cast($1 as uuid),
@@ -1081,9 +1081,9 @@ func (d *Databaser) InsertCondorJobDep(jd *model.CondorJobDep) error {
 	return nil
 }
 
-// GetPredecessors will return a []model.JobRecord containing the model.JobRecords for jobs
+// GetPredecessors will return a []model.Job containing the model.Jobs for jobs
 // that are predecessors of the job whose ID is passed in.
-func (d *Databaser) GetPredecessors(successor string) ([]model.JobRecord, error) {
+func (d *Databaser) GetPredecessors(successor string) ([]model.Job, error) {
 	query := `
 	SELECT successor_id,
 	       predecessor_id
@@ -1094,7 +1094,7 @@ func (d *Databaser) GetPredecessors(successor string) ([]model.JobRecord, error)
 	if err != nil {
 		return nil, err
 	}
-	var retval []model.JobRecord
+	var retval []model.Job
 	for rows.Next() {
 		var successorID string
 		var predecessorID string
@@ -1111,9 +1111,9 @@ func (d *Databaser) GetPredecessors(successor string) ([]model.JobRecord, error)
 	return retval, nil
 }
 
-// GetSuccessors returns a []model.JobRecord of all jobs that are successors of the
+// GetSuccessors returns a []model.Job of all jobs that are successors of the
 // job whose ID is passed into the function.
-func (d *Databaser) GetSuccessors(predecessor string) ([]model.JobRecord, error) {
+func (d *Databaser) GetSuccessors(predecessor string) ([]model.Job, error) {
 	query := `
 	SELECT successor_id,
 	       predecessor_id
@@ -1124,7 +1124,7 @@ func (d *Databaser) GetSuccessors(predecessor string) ([]model.JobRecord, error)
 	if err != nil {
 		return nil, err
 	}
-	var retval []model.JobRecord
+	var retval []model.Job
 	for rows.Next() {
 		var successorID string
 		var predecessorID string

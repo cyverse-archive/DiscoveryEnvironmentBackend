@@ -1,7 +1,8 @@
-package submissions
+package model
 
 import (
 	"bytes"
+	"configurate"
 	"fmt"
 	"strings"
 )
@@ -186,7 +187,7 @@ func (c *Container) IsDEImage() bool {
 // has the Tag field set.
 func (c *Container) Tag() string {
 	if c.IsDEImage() {
-		return fmt.Sprintf(":%s", cfg.PorklockTag)
+		return fmt.Sprintf(":%s", configurate.Config.PorklockTag)
 	} else if c.Image.Tag != "" {
 		return fmt.Sprintf(":%s", c.Image.Tag)
 	}
