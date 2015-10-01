@@ -145,6 +145,10 @@ func loadSigningKey() (*rsa.PrivateKey, error) {
 	return privateKey, nil
 }
 
+func getEntitlement() []string {
+	return regexp.MustCompile(",").Split(*entitlement, -1)
+}
+
 func generateToken(key *rsa.PrivateKey) (string, error) {
 	token := jwt.New(jwt.SigningMethodRS256)
 
@@ -165,7 +169,7 @@ func generateToken(key *rsa.PrivateKey) (string, error) {
 		token.Claims["name"] = *name
 	}
 	if *entitlement != "" {
-		token.Claims["entitlement"] = regexp.MustCompile(",").Split(*entitlement, -1)
+		token.Claims["org.iplantc.de:entitlement"] = getEntitlement()
 	}
 
 	// Set the token expiration time.
