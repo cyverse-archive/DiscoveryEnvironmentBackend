@@ -16,6 +16,7 @@
                   :exclusions [commons-logging]]
                  [me.raynes/fs "1.4.6"]
                  [medley "0.7.0"]
+                 [metosin/compojure-api "0.23.1"]
                  [slingshot "0.12.2"]
                  [trptcolin/versioneer "0.2.0"]]
   :profiles {:test {:resource-paths ["resources" "test-resources"]}})
