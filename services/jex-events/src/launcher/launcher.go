@@ -14,7 +14,7 @@ import (
 // to job requests that come through the HTTP/JSON API.
 func Run(config *configurate.Configuration, l *logcabin.Lincoln) {
 	//model.Init(config, l)
-	router := jexapi.Start(config, l)
+	router := api.Start(config, l)
 	n := negroni.New(l)
 	n.UseHandler(router)
 	port := config.JEXListenPort

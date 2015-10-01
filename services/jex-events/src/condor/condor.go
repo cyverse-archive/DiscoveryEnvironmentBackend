@@ -1,4 +1,4 @@
-package submissions
+package condor
 
 import (
 	"bytes"

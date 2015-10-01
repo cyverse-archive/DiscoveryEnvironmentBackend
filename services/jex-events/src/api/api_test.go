@@ -1,4 +1,4 @@
-package jexapi
+package api
 
 import (
 	"bytes"

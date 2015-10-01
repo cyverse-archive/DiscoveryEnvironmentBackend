@@ -1,7 +1,8 @@
-package jexapi
+package api
 
 import (
 	"bytes"
+	"condor"
 	"configurate"
 	"encoding/json"
 	"fmt"
@@ -12,7 +13,6 @@ import (
 	"net/http"
 	"path"
 	"strings"
-	"submissions"
 
 	"github.com/gorilla/mux"
 )
@@ -46,17 +46,17 @@ func submissionHandler(w http.ResponseWriter, r *http.Request) {
 		RespondWithError("Error initializing submission:\n%s", err, w)
 		return
 	}
-	sdir, err := submissions.CreateSubmissionDirectory(s)
+	sdir, err := condor.CreateSubmissionDirectory(s)
 	if err != nil {
 		RespondWithError("Error creating submission directory:\n%s", err, w)
 		return
 	}
-	cmd, sh, err := submissions.CreateSubmissionFiles(sdir, s)
+	cmd, sh, err := condor.CreateSubmissionFiles(sdir, s)
 	if err != nil {
 		RespondWithError("Error creating submission files:\n%s", err, w)
 		return
 	}
-	id, err := submissions.CondorSubmit(cmd, sh, s)
+	id, err := condor.CondorSubmit(cmd, sh, s)
 	if err != nil {
 		RespondWithError("Error submitting job:\n%s", err, w)
 		return
@@ -134,7 +134,7 @@ func parameterPreview(w http.ResponseWriter, r *http.Request) {
 func stopHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	uuid := vars["uuid"]
-	_, err := submissions.CondorRm(uuid)
+	_, err := condor.CondorRm(uuid)
 	if err != nil {
 		RespondWithError("Error running 'condor_rm' for job:\n%s", err, w)
 		return
