@@ -6,6 +6,7 @@ import (
 	"model"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/facebookgo/freeport"
 	"github.com/gorilla/mux"
@@ -58,6 +59,7 @@ func TestJobRecord(t *testing.T) {
 	}
 
 	go server.ListenAndServe() //evil, evil, evil
+	time.Sleep(1000 * time.Millisecond)
 
 	url := fmt.Sprintf("http://127.0.0.1:%d", p)
 	cl, err := NewJEXEventsClient(url)
