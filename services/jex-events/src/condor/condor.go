@@ -13,7 +13,11 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strings"
 	"text/template"
+
+	"github.com/codegangsta/negroni"
+	"github.com/gorilla/mux"
 )
 
 var (
@@ -286,4 +290,20 @@ func Rm(uuid string) (string, error) {
 		return "", err
 	}
 	return string(output), err
+}
+
+//Run launches the condor job launcher.
+func Run() {
+	router := mux.NewRouter()
+	router.HandleFunc("/", rootHandler).Methods("GET")
+	router.HandleFunc("/", submissionHandler).Methods("POST")
+	router.HandleFunc("/stop/{uuid}", stopHandler).Methods("DELETE")
+	n := negroni.New(logger)
+	n.UseHandler(router)
+	port := configurate.Config.JEXListenPort
+	logger.Printf("launcher listening on port %s", port)
+	if !strings.HasPrefix(port, ":") {
+		port = fmt.Sprintf(":%s", port)
+	}
+	n.Run(port)
 }

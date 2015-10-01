@@ -1,4 +1,4 @@
-package api
+package condor
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"logcabin"
 	"model"
 	"net/http"
 	"net/http/httptest"
@@ -18,38 +17,6 @@ import (
 	"github.com/facebookgo/freeport"
 	"github.com/gorilla/mux"
 )
-
-func JSONData() ([]byte, error) {
-	f, err := os.Open("../test/test_submission.json")
-	if err != nil {
-		return nil, err
-	}
-	c, err := ioutil.ReadAll(f)
-	if err != nil {
-		return nil, err
-	}
-	return c, err
-}
-
-var (
-	l = logcabin.New()
-)
-
-func inittests(t *testing.T) {
-	configurate.Init("../test/test_config.json", l)
-	configurate.Config.RunOnNFS = true
-	configurate.Config.NFSBase = "/path/to/base"
-	configurate.Config.IRODSBase = "/path/to/irodsbase"
-	configurate.Config.CondorLogPath = ""
-	configurate.Config.PorklockTag = "test"
-	configurate.Config.FilterFiles = "foo,bar,baz,blippy"
-	configurate.Config.RequestDisk = "0"
-	PATH := fmt.Sprintf("../test/:%s", os.Getenv("PATH"))
-	err := os.Setenv("PATH", PATH)
-	if err != nil {
-		t.Error(err)
-	}
-}
 
 func TestRootHandler(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(rootHandler))
