@@ -2,8 +2,10 @@ package manager
 
 import (
 	"errors"
+	"math/rand"
 	"model"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -239,6 +241,7 @@ func TestCRUDCondorRawEvents(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
+		CondorID:      strconv.Itoa(rand.Int()),
 	}
 	newUUID, err := d.InsertJob(jr)
 	if err != nil {
@@ -321,6 +324,7 @@ func TestCRUDCondorJobEvent(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
+		CondorID:      strconv.Itoa(rand.Int()),
 	}
 	jobID, err := d.InsertJob(jr)
 	if err != nil {
@@ -440,6 +444,7 @@ func TestCRUDLastCondorJobEvent(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
+		CondorID:      strconv.Itoa(rand.Int()),
 	}
 	jobID, err := d.InsertJob(jr)
 	if err != nil {
@@ -562,6 +567,7 @@ func TestCondorJobStopRequest(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
+		CondorID:      strconv.Itoa(rand.Int()),
 	}
 	newUUID, err := d.InsertJob(jr)
 	if err != nil {
@@ -650,6 +656,7 @@ func TestCRUDJobDeps(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
+		CondorID:      strconv.Itoa(rand.Int()),
 	}
 	jobID, err := d.InsertJob(jr1)
 	if err != nil {
@@ -668,6 +675,7 @@ func TestCRUDJobDeps(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
+		CondorID:      strconv.Itoa(rand.Int()),
 	}
 	job2ID, err := d.InsertJob(jr2)
 	if err != nil {
@@ -686,6 +694,7 @@ func TestCRUDJobDeps(t *testing.T) {
 		DateStarted:   started,
 		DateCompleted: completed,
 		AppID:         uuid.New(),
+		CondorID:      strconv.Itoa(rand.Int()),
 	}
 	job3ID, err := d.InsertJob(jr3)
 	if err != nil {
