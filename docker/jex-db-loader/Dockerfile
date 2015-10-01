@@ -1,4 +1,4 @@
-FROM discoenv/facepalm:wregglej
+FROM discoenv/facepalm:dev
 
 ADD setup-pg-hbaconf.sh /docker-entrypoint-initdb.d/
 COPY setup-dev-database.sh /bin/setup-dev-database.sh
