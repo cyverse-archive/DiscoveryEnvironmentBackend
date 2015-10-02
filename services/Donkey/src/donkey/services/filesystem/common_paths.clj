@@ -34,7 +34,7 @@
   `(trace-log "result" ~func-name ~*ns* [~@result]))
 
 (defn super-user?
-  [username]
+  [^String username]
   (.equals username (cfg/irods-user)))
 
 (defn user-home-dir
@@ -54,7 +54,7 @@
   (ft/path-join (base-trash-path) user))
 
 (defn in-trash?
-  [user fpath]
+  [user ^String fpath]
   (.startsWith fpath (user-trash-path user)))
 
 (defn- dir-equal?

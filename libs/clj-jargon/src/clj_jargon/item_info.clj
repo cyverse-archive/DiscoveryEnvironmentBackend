@@ -1,8 +1,17 @@
 (ns clj-jargon.item-info
   (:use [clj-jargon.validations])
   (:require [clojure-commons.file-utils :as ft])
-  (:import [org.irods.jargon.core.pub.domain ObjStat$SpecColType]
-           [org.irods.jargon.core.query CollectionAndDataObjectListingEntry$ObjectType]))
+  (:import [org.irods.jargon.core.pub.domain ObjStat$SpecColType
+                                             Collection
+                                             DataObject
+                                             Quota]
+           [org.irods.jargon.core.query CollectionAndDataObjectListingEntry$ObjectType]
+           [org.irods.jargon.core.pub IRODSFileSystemAO
+                                      DataObjectAO
+                                      CollectionAO
+                                      QuotaAO]
+           [org.irods.jargon.core.pub.io IRODSFile
+                                         IRODSFileFactory]))
 
 (def collection-type CollectionAndDataObjectListingEntry$ObjectType/COLLECTION)
 (def dataobject-type CollectionAndDataObjectListingEntry$ObjectType/DATA_OBJECT)
@@ -21,7 +30,7 @@
   (ft/path-join "/" zone "trash" "home" user))
 
 
-(defn file
+(defn ^IRODSFile file
   "Returns an instance of IRODSFile representing 'path'. Note that path
     can point to either a file or a directory.
 
@@ -29,22 +38,22 @@
       path - String containing a path.
 
     Returns: An instance of IRODSFile representing 'path'."
-  [cm path]
+  [{^IRODSFileFactory file-factory :fileFactory} ^String path]
   (validate-path-lengths path)
-  (.instanceIRODSFile (:fileFactory cm) path))
+  (.instanceIRODSFile file-factory path))
 
-(defn exists?
+(defn ^Boolean exists?
   "Returns true if 'path' exists in iRODS and false otherwise.
 
     Parameters:
       path - String containing a path.
 
     Returns: true if the path exists in iRODS and false otherwise."
-  [cm path]
+  [cm ^String path]
   (validate-path-lengths path)
   (.exists (file cm path)))
 
-(defn paths-exist?
+(defn ^Boolean paths-exist?
   "Returns true if the paths exist in iRODS.
 
     Parameters:
@@ -55,23 +64,23 @@
   (doseq [p paths] (validate-path-lengths p))
   (zero? (count (filter #(not (exists? cm %)) paths))))
 
-(defn jargon-type-check
-  [cm check-type path]
-  (= check-type (.getObjectType (.getObjStat (:fileSystemAO cm) path))))
+(defn ^Boolean jargon-type-check
+  [{^IRODSFileSystemAO cm-ao :fileSystemAO} check-type ^String path]
+  (= check-type (.getObjectType (.getObjStat cm-ao path))))
 
-(defn is-file?
+(defn ^Boolean is-file?
   "Returns true if the path is a file in iRODS, false otherwise."
-  [cm path]
+  [cm ^String path]
   (validate-path-lengths path)
   (jargon-type-check cm dataobject-type path))
 
-(defn is-dir?
+(defn ^Boolean is-dir?
   "Returns true if the path is a directory in iRODS, false otherwise."
-  [cm path]
+  [cm ^String path]
   (validate-path-lengths path)
   (jargon-type-check cm collection-type path))
 
-(defn is-linked-dir?
+(defn ^Boolean is-linked-dir?
   "Indicates whether or not a directory (collection) is actually a link to a
    directory (linked collection).
 
@@ -82,30 +91,30 @@
    Returns:
      It returns true if the path points to a linked directory, otherwise it
      returns false."
-  [cm path]
+  [{^IRODSFileFactory file-factory :fileFactory} ^String path]
   (validate-path-lengths path)
   (= ObjStat$SpecColType/LINKED_COLL
-     (.. (:fileFactory cm)
+     (.. file-factory
        (instanceIRODSFile (ft/rm-last-slash path))
        initializeObjStatForFile
        getSpecColType)))
 
-(defn data-object
+(defn ^DataObject data-object
   "Returns an instance of DataObject represeting 'path'."
-  [cm path]
+  [{^DataObjectAO data-ao :dataObjectAO} ^String path]
   (validate-path-lengths path)
-  (.findByAbsolutePath (:dataObjectAO cm) path))
+  (.findByAbsolutePath data-ao path))
 
-(defn collection
+(defn ^Collection collection
   "Returns an instance of Collection (the Jargon version) representing
     a directory in iRODS."
-  [cm path]
+  [{^CollectionAO collection-ao :collectionAO} ^String path]
   (validate-path-lengths path)
-  (.findByAbsolutePath (:collectionAO cm) (ft/rm-last-slash path)))
+  (.findByAbsolutePath collection-ao (ft/rm-last-slash path)))
 
 (defn lastmod-date
   "Returns the date that the file/directory was last modified."
-  [cm path]
+  [cm ^String path]
   (validate-path-lengths path)
   (cond
     (is-dir? cm path)  (str (long (.getTime (.getModifiedAt (collection cm path)))))
@@ -114,7 +123,7 @@
 
 (defn created-date
   "Returns the date that the file/directory was created."
-  [cm path]
+  [cm ^String path]
   (validate-path-lengths path)
   (cond
     (is-dir? cm path)  (str (long (.. (collection cm path) getCreatedAt getTime)))
@@ -123,7 +132,7 @@
 
 (defn- dir-stat
   "Returns status information for a directory."
-  [cm path]
+  [cm ^String path]
   (validate-path-lengths path)
   (let [coll (collection cm path)]
     {:id            path
@@ -134,7 +143,7 @@
 
 (defn- file-stat
   "Returns status information for a file."
-  [cm path]
+  [cm ^String path]
   (validate-path-lengths path)
   (let [data-obj (data-object cm path)]
     {:id            path
@@ -147,7 +156,7 @@
 
 (defn stat
   "Returns status information for a path."
-  [cm path]
+  [cm ^String path]
   (validate-path-lengths path)
   (cond
    (is-dir? cm path)  (dir-stat cm path)
@@ -156,12 +165,12 @@
 
 (defn file-size
   "Returns the size of the file in bytes."
-  [cm path]
+  [cm ^String path]
   (validate-path-lengths path)
   (.getDataSize (data-object cm path)))
 
 (defn quota-map
-  [quota-entry]
+  [^Quota quota-entry]
   (hash-map
     :resource (.getResourceName quota-entry)
     :zone     (.getZoneName quota-entry)
@@ -171,5 +180,5 @@
     :over     (str (.getQuotaOver quota-entry))))
 
 (defn quota
-  [cm user]
-  (mapv quota-map (.listQuotaForAUser (:quotaAO cm) user)))
+  [{^QuotaAO quota-ao :quotaAO} ^String user]
+  (mapv quota-map (.listQuotaForAUser quota-ao user)))

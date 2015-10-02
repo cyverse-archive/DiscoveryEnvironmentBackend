@@ -195,6 +195,17 @@
                    :content-type :json}]
       (http/delete (str url) req-map)))
 
+(defn restore-files
+    "Uses the data-info restorer endpoint to restore many or all paths."
+    ([params]
+     (restore-files params {}))
+    ([params body]
+     (let [url (url/url (cfg/data-info-base-url) "/restorer")
+           req-map {:query-params (select-keys params [:user])
+                    :content-type :json
+                    :body         (json/encode body)}]
+       (http/post (str url) req-map))))
+
 (defn collect-permissions
     "Uses the data-info permissions-gatherer endpoint to query user permissions for a set of files/folders."
     [params body]

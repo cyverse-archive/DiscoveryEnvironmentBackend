@@ -1,6 +1,8 @@
 (ns clj-jargon.paging
-  (:import [org.irods.jargon.core.pub.io FileIOOperations]
-           [org.irods.jargon.core.pub.io FileIOOperations$SeekWhenceType]))
+  (:import [org.irods.jargon.core.pub.io FileIOOperations
+                                         FileIOOperations$SeekWhenceType
+                                         IRODSRandomAccessFile
+                                         IRODSFileFactory]))
 
 (def SEEK-CURRENT (FileIOOperations$SeekWhenceType/SEEK_CURRENT))
 (def SEEK-START (FileIOOperations$SeekWhenceType/SEEK_START))
@@ -10,9 +12,9 @@
   [buffer]
   (apply str (map char buffer)))
 
-(defn random-access-file
-  [cm filepath]
-  (.instanceIRODSRandomAccessFile (:fileFactory cm) filepath))
+(defn ^IRODSRandomAccessFile random-access-file
+  [{^IRODSFileFactory file-factory :fileFactory} ^String filepath]
+  (.instanceIRODSRandomAccessFile file-factory filepath))
 
 (defn file-length-bytes
   [cm filepath]
@@ -41,7 +43,7 @@
 (defn overwrite-at-position
   [cm filepath position update]
   (let [access-file  (random-access-file cm filepath)
-        update-bytes (.getBytes update)
+        ^bytes update-bytes (.getBytes update)
         read-buffer  (byte-array (count update-bytes))]
     (doto access-file
       (.seek position SEEK-CURRENT)

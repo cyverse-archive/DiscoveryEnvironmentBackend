@@ -20,7 +20,8 @@
   (:import [java.security MessageDigest DigestInputStream]
            [org.forester.io.parsers.util ParserUtils PhylogenyParserException]
            [org.forester.io.writers PhylogenyWriter]
-           [org.forester.phylogeny PhylogenyMethods]))
+           [org.forester.phylogeny PhylogenyMethods Phylogeny]
+           [java.io File]))
 
 (defn- metaurl-for
   "Builds the meta-URL for to use when saving tree files the database.  The SHA1 hash
@@ -52,7 +53,7 @@
 
 (defn- get-tree-viewer-url
   "Obtains a tree viewer URL for a single tree file."
-  [f]
+  [^File f]
   (log/debug "obtaining a tree viewer URL for" (.getName f))
   (let [label     (string/replace (.getName f) #"[.]tre$" "")
         multipart [{:name "name"       :content label}
@@ -106,19 +107,19 @@
 
 (defn- save-tree-file
   "Saves a tree file in the local file system."
-  [dir index tree]
-  (let [writer    (PhylogenyWriter/createPhylogenyWriter)
-        tree-name (.getName tree)
-        file-name (if (string/blank? tree-name)
-                    (str "tree_" index ".tre")
-                    (str tree-name ".tre"))
-        out-file  (file dir file-name)]
+  [dir index ^Phylogeny tree]
+  (let [^PhylogenyWriter writer    (PhylogenyWriter/createPhylogenyWriter)
+                         tree-name (.getName tree)
+                         file-name (if (string/blank? tree-name)
+                                     (str "tree_" index ".tre")
+                                     (str tree-name ".tre"))
+                         out-file  (file dir file-name)]
     (.toNewHampshire writer tree false true out-file)
     out-file))
 
 (defn- extract-trees-from-other
   "Extracts trees from all supported formats except for NeXML."
-  [dir infile]
+  [dir ^File infile]
   (let [parser (ParserUtils/createParserDependingFileContents infile false)
         trees  (seq (PhylogenyMethods/readPhylogenies parser infile))]
     (mapv (partial save-tree-file dir) (range) trees)))

@@ -155,7 +155,7 @@
 
 (defn format-exception
   "Formats the exception as a string."
-  [exception]
+  [^Throwable exception]
   (let [string-writer (StringWriter.)
         print-writer  (PrintWriter. string-writer)]
     (.printStackTrace exception print-writer)

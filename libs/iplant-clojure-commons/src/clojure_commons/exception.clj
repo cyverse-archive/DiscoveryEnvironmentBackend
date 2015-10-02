@@ -48,6 +48,17 @@
         "WWW-Authenticate"
         "Custom"))))
 
+(defn forbidden-handler
+  [error data _]
+  (let [exception {:error_code ec/ERR_FORBIDDEN
+                   :reason     (:error data)}]
+    (header/header
+     (embed-error-info error
+                       exception
+                       (resp/forbidden (cheshire/encode exception)))
+     "WWW-Authenticate"
+     "Custom")))
+
 (defn invalid-cfg-handler
   [error error-type _]
   (let [exception {:error_code ec/ERR_CONFIG_INVALID
@@ -65,8 +76,8 @@
                       (resp/bad-request (cheshire/encode exception)))))
 
 (defn bad-request-field-handler
-  [error error-type _]
-  (missing-request-field-handler error error-type _))
+  [error error-data request]
+  (missing-request-field-handler error error-data request))
 
 (defn missing-query-params-handler
   [error error-type _]
@@ -98,6 +109,13 @@
                        {:error_code ec/ERR_REQUEST_FAILED}
                        error-obj)
 
+      (instance? Exception error)
+      (let [exception {:error_code ec/ERR_UNCHECKED_EXCEPTION
+                       :reason (.toString error)}]
+        (embed-error-info error
+                          exception
+                          (resp/internal-server-error (cheshire/encode exception))))
+
      (instance? Object error)
      (let [exception {:error_code ec/ERR_UNCHECKED_EXCEPTION
                       :reason (:message error-type)}]
@@ -117,6 +135,7 @@
     ::ex/response-validation   handle-response-validation-errors
     ::invalid-cfg              invalid-cfg-handler
     ::authentication-not-found authentication-not-found-handler
+    ::forbidden                forbidden-handler
     ::missing-request-field    missing-request-field-handler
     ::bad-request-field        bad-request-field-handler
     ::missing-query-params     missing-query-params-handler

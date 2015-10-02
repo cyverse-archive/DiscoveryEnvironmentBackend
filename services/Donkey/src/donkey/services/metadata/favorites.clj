@@ -18,7 +18,7 @@
 
 
 (defn- user-col->api-col
-  [col]
+  [^String col]
   (if col
     (case (.toUpperCase col)
       "NAME"         :base-name
@@ -31,7 +31,7 @@
 
 
 (defn- user-order->api-order
-  [order]
+  [^String order]
   (if order
     (case (.toUpperCase order)
       "ASC"  :asc

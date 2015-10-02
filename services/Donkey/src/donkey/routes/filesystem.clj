@@ -17,7 +17,6 @@
             [donkey.services.filesystem.sharing :as sharing]
             [donkey.services.filesystem.stat :as stat]
             [donkey.services.filesystem.tickets :as ticket]
-            [donkey.services.filesystem.trash :as trash]
             [donkey.services.filesystem.updown :as ud]))
 
 (defn secured-filesystem-routes
@@ -105,10 +104,10 @@
       (controller req data/collect-permissions :params :body))
 
     (POST "/filesystem/restore" [:as req]
-      (controller req trash/do-restore :params :body))
+      (controller req data/restore-files :params :body))
 
     (POST "/filesystem/restore-all" [:as req]
-      (controller req trash/do-restore-all :params))
+      (controller req data/restore-files :params))
 
     (POST "/filesystem/tickets" [:as req]
       (controller req ticket/do-add-tickets :params :body))

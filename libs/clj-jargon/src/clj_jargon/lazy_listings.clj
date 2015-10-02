@@ -1,6 +1,8 @@
 (ns clj-jargon.lazy-listings
   (:require [clj-jargon.spec-query :as sq]
-            [clojure-commons.file-utils :as ft]))
+            [clojure-commons.file-utils :as ft])
+  (:import  [org.irods.jargon.core.pub.domain IRODSDomainObject]
+            [org.irods.jargon.core.pub CollectionAndDataObjectListAndSearchAO]))
 
 (defn user-collection-perms
   "Lists the users and their permissions that have access to a collection."
@@ -18,7 +20,7 @@
   "Gets the next offset from a page of results, returning zero if the page is the last page in
    the result set."
   [page]
-  (let [entry (last page)]
+  (let [^IRODSDomainObject entry (last page)]
     (if-not (or (empty? page) (.isLastResult entry))
       (.getCount entry)
       0)))
@@ -37,13 +39,13 @@
 
 (defn list-subdirs-in
   "Returns a lazy listing of the subdirectories in the directory at the given path."
-  [cm dir-path]
-  (lazy-listing #(.listCollectionsUnderPathWithPermissions (:lister cm) dir-path %)))
+  [{^CollectionAndDataObjectListAndSearchAO lister :lister} dir-path]
+  (lazy-listing #(.listCollectionsUnderPathWithPermissions lister dir-path %)))
 
 (defn list-files-in
   "Returns a lazy listing of the files in the directory at the given path."
-  [cm dir-path]
-  (lazy-listing #(.listDataObjectsUnderPathWithPermissions (:lister cm) dir-path %)))
+  [{^CollectionAndDataObjectListAndSearchAO lister :lister} dir-path]
+  (lazy-listing #(.listDataObjectsUnderPathWithPermissions lister dir-path %)))
 
 (defn paged-list-entries
   "Returns a paged directory listing."

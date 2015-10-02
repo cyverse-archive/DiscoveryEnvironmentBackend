@@ -44,49 +44,51 @@ func homeParameterFile() string {
 	return filepath.Join(usr.HomeDir, ".make-jwt")
 }
 
-func loadParameterFile(path string) {
+func loadParameterFile(path string) error {
 
 	// Open the parameter file.
 	paramFile, err := configs.NewParamFile(path)
 	if os.IsNotExist(err) {
-		return
+		return nil
 	}
 	if err != nil {
-		log.Println(err)
-		return
+		return fmt.Errorf("unable to open config file: %s: %s", path, err)
 	}
 	defer paramFile.Close()
 
 	// Load individual parameters from the file.
 	for paramFile.NextParam() {
 		paramName, paramValue := paramFile.ExtractParam()
-		if *paramName == "lifetime" {
+		switch *paramName {
+		case "lifetime":
 			lifetime, err := strconv.Atoi(*paramValue)
 			if err != nil {
 				log.Printf("Invalid token lifetime: %s\n", *paramValue)
 			} else {
 				tokenLifetime = &lifetime
 			}
-		} else if *paramName == "key-path" {
+		case "key-path":
 			keyPath = paramValue
-		} else if *paramName == "key-pass" {
+		case "key-pass":
 			keyPassword = paramValue
-		} else if *paramName == "username" {
+		case "username":
 			username = paramValue
-		} else if *paramName == "email" {
+		case "email":
 			email = paramValue
-		} else if *paramName == "given-name" {
+		case "given-name":
 			givenName = paramValue
-		} else if *paramName == "family-name" {
+		case "family-name":
 			familyName = paramValue
-		} else if *paramName == "name" {
+		case "name":
 			name = paramValue
-		} else if *paramName == "entitlement" {
+		case "entitlement":
 			entitlement = paramValue
-		} else {
+		default:
 			log.Printf("unrecognized parameter name: %s\n", *paramName)
 		}
 	}
+
+	return nil
 }
 
 func loadParameterFiles() {
@@ -97,7 +99,7 @@ func loadParameterFiles() {
 func loadSigningKey() (*rsa.PrivateKey, error) {
 
 	// Verify that we have a key path.
-	if keyPath == nil || *keyPath == "" {
+	if *keyPath == "" {
 		return nil, fmt.Errorf("missing required parameter: key-path")
 	}
 
@@ -121,7 +123,7 @@ func loadSigningKey() (*rsa.PrivateKey, error) {
 	if x509.IsEncryptedPEMBlock(block) {
 
 		// We need the password if the key is encrypted.
-		if keyPassword == nil || *keyPassword == "" {
+		if *keyPassword == "" {
 			return nil, fmt.Errorf("no password provided for private key")
 		}
 
@@ -143,27 +145,31 @@ func loadSigningKey() (*rsa.PrivateKey, error) {
 	return privateKey, nil
 }
 
+func getEntitlement() []string {
+	return regexp.MustCompile(",").Split(*entitlement, -1)
+}
+
 func generateToken(key *rsa.PrivateKey) (string, error) {
 	token := jwt.New(jwt.SigningMethodRS256)
 
 	// Add the claims to the token.
-	if username != nil && *username != "" {
+	if *username != "" {
 		token.Claims["sub"] = *username
 	}
-	if email != nil && *email != "" {
+	if *email != "" {
 		token.Claims["email"] = *email
 	}
-	if givenName != nil && *givenName != "" {
+	if *givenName != "" {
 		token.Claims["given_name"] = *givenName
 	}
-	if familyName != nil && *familyName != "" {
+	if *familyName != "" {
 		token.Claims["family_name"] = *familyName
 	}
-	if name != nil && *name != "" {
+	if *name != "" {
 		token.Claims["name"] = *name
 	}
-	if entitlement != nil && *entitlement != "" {
-		token.Claims["entitlement"] = regexp.MustCompile(",").Split(*entitlement, -1)
+	if *entitlement != "" {
+		token.Claims["org.iplantc.de:entitlement"] = getEntitlement()
 	}
 
 	// Set the token expiration time.

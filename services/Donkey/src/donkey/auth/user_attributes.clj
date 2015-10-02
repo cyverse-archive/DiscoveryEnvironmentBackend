@@ -1,7 +1,7 @@
 (ns donkey.auth.user-attributes
-  (:use [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
+            [clojure-commons.response :as resp]
             [clj-cas.cas-proxy-auth :as cas]
             [clojure-commons.exception :as cx]
             [donkey.util.config :as cfg]
@@ -68,8 +68,7 @@
     (log/log 'AccessLogger :trace nil "entering donkey.auth.user-attributes/wrap-auth-selection")
     (if-let [auth-handler (find-auth-handler request phs)]
       (auth-handler request)
-      (throw+ {:type ::cx/authentication-not-found
-               :error "No authentication information found in request."}))))
+      (resp/unauthorized "No authentication information found in request."))))
 
 (defn- get-fake-auth
   "Returns a non-nil value if we're using fake authentication."
@@ -116,9 +115,7 @@
   (wrap-auth-selection
    [[get-fake-auth     handler]
     [get-cas-ticket    (cas/validate-group-membership handler cfg/allowed-groups)]
-    [get-jwt-assertion (jwt/validate-jwt-group-membership handler
-                                                          get-jwt-assertion
-                                                          cfg/allowed-groups)]]))
+    [get-jwt-assertion (jwt/validate-group-membership handler cfg/allowed-groups)]]))
 
 (defn fake-store-current-user
   "Fake storage of a user"

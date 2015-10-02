@@ -24,7 +24,8 @@
             [donkey.util.config :as cfg]
             [donkey.util.service :as service]
             [ring.middleware.multipart-params :as multipart])
-  (:import [au.com.bytecode.opencsv CSVReader]))
+  (:import [au.com.bytecode.opencsv CSVReader]
+           [java.io InputStream]))
 
 (defn- fix-unit
   "Used to replace the IPCRESERVED unit with an empty string."
@@ -396,7 +397,7 @@
          (group-by :name))))
 
 (defn- format-csv-metadata-filename
-  [dest-dir filename]
+  [dest-dir ^String filename]
   (ft/rm-last-slash
     (if (.startsWith filename "/")
       filename
@@ -421,7 +422,7 @@
   "Parses filenames and metadata to apply from a CSV file input stream.
    If a template-id is provided, then AVUs with template attributes are stored in the metadata db,
    and all other AVUs are stored in IRODS."
-  [cm user dest-dir force? template-id separator stream]
+  [cm user dest-dir force? template-id ^String separator ^InputStream stream]
   (let [stream-reader (java.io.InputStreamReader. stream "UTF-8")
         csv (mapv (partial mapv string/trim) (.readAll (CSVReader. stream-reader (.charAt separator 0))))
         attrs (-> csv first rest)

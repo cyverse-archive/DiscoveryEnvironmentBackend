@@ -3,16 +3,17 @@
   (:require [cemerick.url :as curl]
             [clojure.string :as string]
             [clojure.tools.logging :as log])
-  (:import [org.jasig.cas.client.proxy ProxyGrantingTicketStorageImpl]
-           [org.jasig.cas.client.validation Cas20ProxyTicketValidator TicketValidationException]))
+  (:import [org.jasig.cas.client.proxy ProxyGrantingTicketStorage ProxyGrantingTicketStorageImpl]
+           [org.jasig.cas.client.validation Cas20ProxyTicketValidator TicketValidationException Assertion]
+           [org.jasig.cas.client.authentication AttributePrincipal]))
 
-(defn- build-pgt-storage
+(defn- ^ProxyGrantingTicketStorage build-pgt-storage
   "Builds the object used to store proxy granting tickets."
   [callback-url]
   (when callback-url
     (ProxyGrantingTicketStorageImpl.)))
 
-(defn- build-validator
+(defn- ^Cas20ProxyTicketValidator build-validator
   "Builds the service ticket validator."
   [cas-server callback-url pgt-storage]
   (if (and callback-url pgt-storage)
@@ -23,9 +24,9 @@
     (doto (Cas20ProxyTicketValidator. cas-server)
       (.setAcceptAnyProxy true))))
 
-(defn- get-assertion
+(defn- ^Assertion get-assertion
   "Gets a security assertion from the CAS server."
-  [proxy-ticket validator server-name]
+  [proxy-ticket ^Cas20ProxyTicketValidator validator server-name]
   (when-not (blank? proxy-ticket)
     (try (.validate validator proxy-ticket server-name)
          (catch TicketValidationException e
@@ -33,7 +34,7 @@
 
 (defn- build-attr-map
   "Builds a map containing the user's attributes"
-  [principal]
+  [^AttributePrincipal principal]
   (assoc
     (into {} (.getAttributes principal))
     "uid"       (.getName principal)
@@ -82,7 +83,7 @@
        "<casClient:proxySuccess xmlns:casClient=\"http://www.yale.edu/tp/casClient\" />"))
 
 (defn- store-pgt
-  [pgt-storage pgt-iou pgt-id]
+  [^ProxyGrantingTicketStorage pgt-storage pgt-iou pgt-id]
   (.save pgt-storage pgt-iou pgt-id)
   {:status       200
    :content-type "application/xml"
@@ -130,7 +131,7 @@
 
 (defn get-proxy-ticket
   "Obtains a proxy ticket that can be used to authenticate to other CAS-secured services."
-  [principal url]
+  [^AttributePrincipal principal ^String url]
   (log/warn "obtaining a proxy ticket for " principal " for service " url)
   (when (and principal url)
     (.getProxyTicketFor principal url)))
