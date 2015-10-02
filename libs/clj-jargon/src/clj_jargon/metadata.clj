@@ -85,6 +85,14 @@
       count
       pos?)))
 
+(defn contains-avu?
+  "Returns a truthy value if path has metadata that has an attribute, value, and unit that matches
+  the given attr, val, and unit."
+  ([cm path attr val unit]
+    (contains-avu? (set (get-metadata cm path)) attr val unit))
+  ([metadata attr val unit]
+    (contains? metadata {:attr attr, :value val, :unit unit})))
+
 (defmulti add-avu
           (fn [ao-obj dir-path avu] (type ao-obj)))
 (defmethod add-avu CollectionAO

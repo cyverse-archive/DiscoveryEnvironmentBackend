@@ -174,12 +174,12 @@
   "Adds metadata to the given path. If the destination path already has an AVU with the same attr
    and value as one from the given avus list, that AVU is not added."
   [cm path avus]
-  (loop [avus-current (get-metadata cm path)
+  (loop [avus-current (set (get-metadata cm path))
          avus-to-add  avus]
     (when-not (empty? avus-to-add)
       (let [{:keys [attr value] :as avu} (first avus-to-add)
             new-unit (reserved-unit avu)]
-        (if-not (attr-value? avus-current attr value)
+        (when-not (contains-avu? avus-current attr value new-unit)
           (add-metadata cm path attr value new-unit))
         (recur (conj avus-current {:attr attr :value value :unit new-unit}) (rest avus-to-add))))))
 
@@ -372,8 +372,8 @@
   "Applies metadata from a list of attributes and values to the given path.
    If an AVU's attribute is found in the given template-attrs map, then that AVU is stored in the
    metadata db; all other AVUs are stored in IRODS."
-  [cm user dest-dir template-id template-attrs attrs path values]
-  (let [avus (map (partial zipmap [:attr :value :unit]) (map vector attrs values (repeat "")))
+  [cm user dest-dir template-id template-attrs attrs units path values]
+  (let [avus (map (partial zipmap [:attr :value :unit]) (map vector attrs values units))
         template-attr? #(contains? template-attrs (:attr %))
         [template-avus irods-avus] ((juxt filter remove) template-attr? avus)]
     (when-not (empty? template-avus)
@@ -406,7 +406,7 @@
 (defn- bulk-add-avus
   "Applies metadata from a list of attributes and filename/values to those files found under
    dest-dir."
-  [cm user dest-dir force? template-id template-attrs attrs csv-filename-values]
+  [cm user dest-dir force? template-id template-attrs attrs units csv-filename-values]
   (let [format-path (partial format-csv-metadata-filename dest-dir)
         paths (map (comp format-path first) csv-filename-values)
         value-lists (map rest csv-filename-values)
@@ -415,8 +415,13 @@
     (validators/all-paths-writeable cm user paths)
     (if-not force?
       (validate-batch-add-attrs cm paths irods-attrs))
-  (mapv (partial bulk-add-file-avus cm user dest-dir template-id template-attrs attrs)
+  (mapv (partial bulk-add-file-avus cm user dest-dir template-id template-attrs attrs units)
     paths value-lists)))
+
+(defn- split-attrs-units
+  [csv-col-header]
+  (let [[_ attr _ unit] (re-matches #"([^(]+)( \(([^)]+)\))?" csv-col-header)]
+    [attr (if unit unit "")]))
 
 (defn- parse-metadata-csv
   "Parses filenames and metadata to apply from a CSV file input stream.
@@ -425,11 +430,12 @@
   [cm user dest-dir force? template-id ^String separator ^InputStream stream]
   (let [stream-reader (java.io.InputStreamReader. stream "UTF-8")
         csv (mapv (partial mapv string/trim) (.readAll (CSVReader. stream-reader (.charAt separator 0))))
-        attrs (-> csv first rest)
+        attrs-units (map split-attrs-units (-> csv first rest))
+        [attrs units] ((juxt (partial map first) (partial map second)) attrs-units)
         csv-filename-values (rest csv)
         template-attrs (parse-template-attrs template-id)]
     {:metadata
-     (bulk-add-avus cm user dest-dir force? template-id template-attrs attrs csv-filename-values)}))
+     (bulk-add-avus cm user dest-dir force? template-id template-attrs attrs units csv-filename-values)}))
 
 (defn- parse-form-csv-metadata
   [user dest-dir force? template-id separator {:keys [stream filename content-type]}]
