@@ -57,7 +57,7 @@ func TestSubmissionHandler(t *testing.T) {
 	}
 	go s.ListenAndServe() //evil, evil, evil
 
-	configurate.Config.JEXEvents = fmt.Sprintf("http://127.0.0.1:%d", p)
+	configurate.C.Set("condor.jex_events", fmt.Sprintf("http://127.0.0.1:%d", p))
 	time.Sleep(1000 * time.Millisecond) //Wait for the fake jex-events to start.
 
 	server := httptest.NewServer(http.HandlerFunc(submissionHandler))
@@ -81,7 +81,11 @@ func TestSubmissionHandler(t *testing.T) {
 	if actual != expected {
 		t.Errorf("submissionHandler returned:\n%s\ninstead of:\n%s\n", actual, expected)
 	}
-	parent := path.Join(configurate.Config.CondorLogPath, "test_this_is_a_test")
+	logPath, err := configurate.C.String("condor.log_path")
+	if err != nil {
+		logPath = ""
+	}
+	parent := path.Join(logPath, "test_this_is_a_test")
 	err = os.RemoveAll(parent)
 	if err != nil {
 		t.Error(err)
@@ -151,7 +155,7 @@ func TestStopHandler(t *testing.T) {
 	}
 	go server.ListenAndServe()
 	time.Sleep(1000 * time.Millisecond) //wait for fake jex-events to start
-	configurate.Config.JEXEvents = fmt.Sprintf("http://127.0.0.1:%d", p)
+	configurate.C.Set("condor.jex_events", fmt.Sprintf("http://127.0.0.1:%d", p))
 
 	// have to start up a server for stop handler in order to extract the uuid
 	r2 := mux.NewRouter()

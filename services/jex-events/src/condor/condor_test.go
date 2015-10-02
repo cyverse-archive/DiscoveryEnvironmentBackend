@@ -31,20 +31,20 @@ var (
 
 func _inittests(t *testing.T, memoize bool) *model.Job {
 	if s == nil || !memoize {
-		configurate.Init("../test/test_config.json", l)
-		configurate.Config.RunOnNFS = true
-		configurate.Config.NFSBase = "/path/to/base"
-		configurate.Config.IRODSBase = "/path/to/irodsbase"
-		configurate.Config.IRODSHost = "hostname"
-		configurate.Config.IRODSPort = "1247"
-		configurate.Config.IRODSUser = "user"
-		configurate.Config.IRODSPass = "pass"
-		configurate.Config.IRODSZone = "test"
-		configurate.Config.IRODSResc = ""
-		configurate.Config.CondorLogPath = "/path/to/logs"
-		configurate.Config.PorklockTag = "test"
-		configurate.Config.FilterFiles = "foo,bar,baz,blippy"
-		configurate.Config.RequestDisk = "0"
+		configurate.Init("../test/test_config.yaml")
+		configurate.C.Set("condor.run_on_nfs", true)
+		configurate.C.Set("condor.nfs_base", "/path/to/base")
+		configurate.C.Set("irods.base", "/path/to/irodsbase")
+		configurate.C.Set("irods.host", "hostname")
+		configurate.C.Set("irods.port", "1247")
+		configurate.C.Set("irods.user", "user")
+		configurate.C.Set("irods.pass", "pass")
+		configurate.C.Set("irods.zone", "test")
+		configurate.C.Set("irods.resc", "")
+		configurate.C.Set("condor.log_path", "/path/to/logs")
+		configurate.C.Set("condor.porklock_tag", "test")
+		configurate.C.Set("condor.filter_files", "foo,bar,baz,blippy")
+		configurate.C.Set("condor.request_disk", "0")
 		data, err := JSONData()
 		if err != nil {
 			t.Error(err)
@@ -236,7 +236,7 @@ exit $EXITSTATUS
 
 func TestCreateSubmissionDirectory(t *testing.T) {
 	s := inittests(t)
-	configurate.Config.CondorLogPath = ""
+	configurate.C.Set("condor.log_path", "")
 	dir, err := CreateSubmissionDirectory(s)
 	if err != nil {
 		t.Error(err)
@@ -245,7 +245,11 @@ func TestCreateSubmissionDirectory(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	parent := path.Join(configurate.Config.CondorLogPath, s.Submitter)
+	logPath, err := configurate.C.String("condor.log_path")
+	if err != nil {
+		t.Error(err)
+	}
+	parent := path.Join(logPath, s.Submitter)
 	err = os.RemoveAll(parent)
 	if err != nil {
 		t.Error(err)
@@ -255,7 +259,7 @@ func TestCreateSubmissionDirectory(t *testing.T) {
 
 func TestCreateSubmissionFiles(t *testing.T) {
 	s := inittests(t)
-	configurate.Config.CondorLogPath = ""
+	configurate.C.Set("condor.log_path", "")
 	dir, err := CreateSubmissionDirectory(s)
 	if err != nil {
 		t.Error(err)
@@ -277,7 +281,11 @@ func TestCreateSubmissionFiles(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	parent := path.Join(configurate.Config.CondorLogPath, s.Submitter)
+	logPath, err := configurate.C.String("condor.log_path")
+	if err != nil {
+		t.Error(err)
+	}
+	parent := path.Join(logPath, s.Submitter)
 	err = os.RemoveAll(parent)
 	if err != nil {
 		t.Error(err)
@@ -292,7 +300,7 @@ func TestCondorSubmit(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	configurate.Config.CondorLogPath = ""
+	configurate.C.Set("condor.log_path", "")
 	dir, err := CreateSubmissionDirectory(s)
 	if err != nil {
 		t.Error(err)
@@ -309,7 +317,11 @@ func TestCondorSubmit(t *testing.T) {
 	if actual != expected {
 		t.Errorf("CondorSubmit() returned %s instead of %s", actual, expected)
 	}
-	parent := path.Join(configurate.Config.CondorLogPath, s.Submitter)
+	logPath, err := configurate.C.String("condor.log_path")
+	if err != nil {
+		t.Error(err)
+	}
+	parent := path.Join(logPath, s.Submitter)
 	err = os.RemoveAll(parent)
 	if err != nil {
 		t.Error(err)

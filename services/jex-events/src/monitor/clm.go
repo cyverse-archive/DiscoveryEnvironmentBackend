@@ -584,16 +584,21 @@ func Version() {
 // Run takes in a configuration and a logger and runs jex-events in 'monitor'
 // mode. It watches the configured event_log path for changes and ships to
 // another service via AMQP.
-func Run(cfg *configurate.Configuration, l *logcabin.Lincoln) {
-	logger = l
+func Run() {
 	messaging.Init(logger)
 	randomizer := rand.New(rand.NewSource(time.Now().UnixNano()))
 	errChan := make(chan messaging.ConnectionError)
-	pub := messaging.NewAMQPPublisher(cfg)
+	amqpcfg, err := configurate.C.Get("amqp.events")
+	if err != nil {
+		logger.Fatal(err)
+	}
+	pub, err := messaging.NewAMQPPublisher(amqpcfg)
+	if err != nil {
+		logger.Fatal(err)
+	}
 	messaging.SetupReconnection(errChan, reconnect)
 
 	// Handle badness with AMQP at startup.
-	var err error
 	for {
 		logger.Println("Attempting AMQP connection...")
 		err = pub.Connect(errChan)
@@ -622,10 +627,13 @@ func Run(cfg *configurate.Configuration, l *logcabin.Lincoln) {
 	} else {
 		tombstone = nil
 	}
-
-	logDir := filepath.Dir(cfg.EventLog)
+	eventLogPath, err := configurate.C.String("monitor.event_log")
+	if err != nil {
+		logger.Fatal(err)
+	}
+	logDir := filepath.Dir(eventLogPath)
 	logger.Printf("Log directory: %s\n", logDir)
-	logFilename := filepath.Base(cfg.EventLog)
+	logFilename := filepath.Base(eventLogPath)
 	logger.Printf("Log filename: %s\n", logFilename)
 
 	// Now we need to find all of the rotated out log files and parse them for
@@ -689,7 +697,7 @@ func Run(cfg *configurate.Configuration, l *logcabin.Lincoln) {
 		logger.Println("Beginning event log monitor goroutine.")
 		// get the ball rolling...
 		changeDetected <- 1
-		err = Path(cfg.EventLog, d, changeDetected)
+		err = Path(eventLogPath, d, changeDetected)
 		if err != nil {
 			logger.Println(err)
 		}
@@ -715,7 +723,7 @@ func Run(cfg *configurate.Configuration, l *logcabin.Lincoln) {
 				// If the path to the file is different from the configured file the the
 				// log likely rolled over.
 				pathFromTombstone := oldLogs.PathFromInode(tombstone.Inode)
-				if pathFromTombstone != "" && pathFromTombstone != cfg.EventLog {
+				if pathFromTombstone != "" && pathFromTombstone != eventLogPath {
 					oldInfo, err := os.Stat(pathFromTombstone)
 					if err != nil {
 						logger.Println(err)
@@ -738,8 +746,8 @@ func Run(cfg *configurate.Configuration, l *logcabin.Lincoln) {
 				startPos = 0
 			}
 
-			logger.Printf("Parsing %s starting at position %d\n", cfg.EventLog, startPos)
-			startPos, err = ParseEventFile(cfg.EventLog, startPos, pub, true)
+			logger.Printf("Parsing %s starting at position %d\n", eventLogPath, startPos)
+			startPos, err = ParseEventFile(eventLogPath, startPos, pub, true)
 			if err != nil {
 				logger.Println(err)
 			}

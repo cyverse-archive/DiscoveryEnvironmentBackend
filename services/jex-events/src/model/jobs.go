@@ -88,22 +88,36 @@ type Job struct {
 // New returns a pointer to a newly instantiated Job with NowDate set.
 func New() *Job {
 	n := time.Now().Format(nowfmt)
+	rq, err := configurate.C.String("condor.request_disk")
+	if err != nil {
+		rq = ""
+	}
 	return &Job{
 		NowDate:     n,
 		ArchiveLogs: true,
-		RequestDisk: configurate.Config.RequestDisk,
+		RequestDisk: rq,
 	}
 }
 
 // NewFromData creates a new submission and populates it by parsing the passed
 // in []byte as JSON.
 func NewFromData(data []byte) (*Job, error) {
+	var err error
 	s := New()
 	s.SubmissionDate = s.NowDate
-	s.RunOnNFS = configurate.Config.RunOnNFS
-	s.NFSBase = configurate.Config.NFSBase
-	s.IRODSBase = configurate.Config.IRODSBase
-	err := json.Unmarshal(data, s)
+	s.RunOnNFS, err = configurate.C.Bool("condor.run_on_nfs")
+	if err != nil {
+		return nil, err
+	}
+	s.NFSBase, err = configurate.C.String("condor.nfs_base")
+	if err != nil {
+		return nil, err
+	}
+	s.IRODSBase, err = configurate.C.String("irods.base")
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(data, s)
 	if err != nil {
 		return nil, err
 	}
@@ -152,14 +166,11 @@ func (s *Job) WorkingDirectory() string {
 // CondorLogDirectory returns the path to the directory containing condor logs on the
 // submission node. This a computed value, so it isn't in the struct.
 func (s *Job) CondorLogDirectory() string {
-	return fmt.Sprintf(
-		"%s/",
-		path.Join(
-			configurate.Config.CondorLogPath,
-			s.Submitter,
-			s.DirectoryName(),
-		),
-	)
+	logPath, err := configurate.C.String("condor.log_path")
+	if err != nil {
+		logPath = ""
+	}
+	return fmt.Sprintf("%s/", path.Join(logPath, s.Submitter, s.DirectoryName()))
 }
 
 // IRODSConfig returns the path to iRODS config inside the working directory.
@@ -242,7 +253,11 @@ func (s *Job) ExcludeArguments() string {
 			paths = append(paths, output.Source())
 		}
 	}
-	for _, filter := range strings.Split(configurate.Config.FilterFiles, ",") {
+	filterFiles, err := configurate.C.String("condor.filter_files")
+	if err != nil {
+		filterFiles = ""
+	}
+	for _, filter := range strings.Split(filterFiles, ",") {
 		paths = append(paths, filter)
 	}
 	if !s.ArchiveLogs {
@@ -299,9 +314,13 @@ func (s *Job) FinalOutputArguments() string {
 	dest := quote(s.OutputDirectory())
 	metadataArgs := MetadataArgs(s.FileMetadata).FileMetadataArguments()
 	excludeArgs := s.ExcludeArguments()
+	tag, err := configurate.C.String("condor.porklock_tag")
+	if err != nil {
+		tag = ""
+	}
 	args := fmt.Sprintf(
 		tmpl,
-		configurate.Config.PorklockTag,
+		tag,
 		username,
 		dest,
 		metadataArgs,

@@ -4,7 +4,6 @@ import (
 	"configurate"
 	"flag"
 	"fmt"
-	"launcher"
 	"logcabin"
 	"manager"
 	"monitor"
@@ -13,7 +12,7 @@ import (
 
 var (
 	cfgPath = flag.String("config", "", "Path to the config value. Required.")
-	mode    = flag.String("mode", "", "One of 'monitor', 'manager', or 'launcher'. Required.")
+	mode    = flag.String("mode", "", "One of 'monitor', 'manager'. Required.")
 	version = flag.Bool("version", false, "Print the version information")
 	gitref  string
 	appver  string
@@ -45,7 +44,7 @@ func main() {
 		AppVersion()
 		os.Exit(0)
 	}
-	validModes := []string{"monitor", "manager", "launcher"}
+	validModes := []string{"monitor", "manager"}
 	foundMode := false
 	for _, v := range validModes {
 		if v == *mode {
@@ -62,23 +61,21 @@ func main() {
 		flag.PrintDefaults()
 		os.Exit(-1)
 	}
-	err := configurate.Init(*cfgPath, logger)
+	err := configurate.Init(*cfgPath)
 	if err != nil {
 		logger.Print(err)
 		os.Exit(-1)
 	}
 	logger.Println("Done reading config.")
-	if !configurate.Config.Valid() {
-		logger.Println("Something is wrong with the config file.")
-		os.Exit(-1)
-	}
+	// if !configurate.Config.Valid() {
+	// 	logger.Println("Something is wrong with the config file.")
+	// 	os.Exit(-1)
+	// }
 	switch *mode {
 	case "manager":
-		manager.Run(configurate.Config, logger)
+		manager.Run(configurate.C, logger)
 	case "monitor":
-		monitor.Run(configurate.Config, logger)
-	case "launcher":
-		launcher.Run(configurate.Config, logger)
+		monitor.Run()
 	default:
 		fmt.Println("Bad mode! Bad! Look what you did!")
 		flag.PrintDefaults()

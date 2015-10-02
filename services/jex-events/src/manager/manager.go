@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/olebedev/config"
 	"github.com/streadway/amqp"
 )
 
@@ -278,11 +279,28 @@ func EventHandler(deliveries <-chan amqp.Delivery, d *Databaser, postURL string,
 // Run puts jex-events in 'events' mode where it listens for events
 // on an AMQP exchange, places them into a database, and provides an HTTP
 // API on top.
-func Run(config *configurate.Configuration, l *logcabin.Lincoln) {
+func Run(config *config.Config, l *logcabin.Lincoln) {
 	logger = l
 	logger.Println("Configuring database connection...")
 	messaging.Init(logger)
-	databaser, err := NewDatabaser(config.DBURI)
+	uri, err := configurate.C.String("manager.db_uri")
+	if err != nil {
+		logger.Fatal(err)
+	}
+	amqpcfg, err := configurate.C.Get("amqp.events")
+	if err != nil {
+		logger.Fatal(err)
+	}
+	eventURL, err := configurate.C.String("manager.event_url")
+	if err != nil {
+		logger.Fatal(err)
+	}
+	jexURL, err := configurate.C.String("manager.condor_mode_url")
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	databaser, err := NewDatabaser(uri)
 	if err != nil {
 		logger.Print(err)
 		os.Exit(-1)
@@ -290,7 +308,11 @@ func Run(config *configurate.Configuration, l *logcabin.Lincoln) {
 	logger.Println("Done configuring database connection.")
 
 	connErrChan := make(chan messaging.ConnectionError)
-	consumer := messaging.NewAMQPConsumer(config)
+
+	consumer, err := messaging.NewAMQPConsumer(amqpcfg)
+	if err != nil {
+		logger.Fatal(err)
+	}
 	messaging.SetupReconnection(connErrChan, reconnect)
 	logger.Print("Setting up HTTP")
 	SetupHTTP(config, databaser)
@@ -315,5 +337,5 @@ func Run(config *configurate.Configuration, l *logcabin.Lincoln) {
 	}
 
 	// The actual logic for events mode occurs here.
-	EventHandler(deliveries, databaser, config.EventURL, config.JEXURL)
+	EventHandler(deliveries, databaser, eventURL, jexURL)
 }

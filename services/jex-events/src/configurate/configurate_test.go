@@ -1,38 +1,30 @@
 package configurate
 
-import (
-	"bytes"
-	"log"
-	"logcabin"
-	"testing"
-)
+import "testing"
 
-func configurator() (*Configuration, error) {
-	path := "../test/test_config.json"
-	var logbuf bytes.Buffer
-	logger := log.New(&logbuf, "", log.Lshortfile)
-	l := &logcabin.Lincoln{logger}
-	return Config, Init(path, l)
+func configurator() error {
+	path := "../test/test_config.yaml"
+	return Init(path)
 }
 
 func TestNew(t *testing.T) {
-	cfg, err := configurator()
+	err := configurator()
 	if err != nil {
 		t.Error(err)
 		t.Fail()
 	}
-	if cfg == nil {
+	if C == nil {
 		t.Errorf("configurate.New() returned nil")
 	}
 }
 
-func TestValid(t *testing.T) {
-	cfg, err := configurator()
-	if err != nil {
-		t.Error(err)
-		t.Fail()
-	}
-	if !cfg.Valid() {
-		t.Errorf("configurate.Valid() return false")
-	}
-}
+// func TestValid(t *testing.T) {
+// 	cfg, err := configurator()
+// 	if err != nil {
+// 		t.Error(err)
+// 		t.Fail()
+// 	}
+// 	if !cfg.Valid() {
+// 		t.Errorf("configurate.Valid() return false")
+// 	}
+// }

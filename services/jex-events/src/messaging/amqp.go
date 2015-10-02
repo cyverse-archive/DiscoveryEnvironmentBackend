@@ -1,13 +1,13 @@
 package messaging
 
 import (
-	"configurate"
 	"logcabin"
 
+	"github.com/olebedev/config"
 	"github.com/streadway/amqp"
 )
 
-var logger *logcabin.Lincoln
+var logger = logcabin.New()
 
 //Init initializes the messaging package.
 func Init(l *logcabin.Lincoln) {
@@ -25,6 +25,51 @@ type jexamqp struct {
 	ExchangeNoWait     bool
 	connection         *amqp.Connection
 	channel            *amqp.Channel
+}
+
+func new(cfg *config.Config) (*jexamqp, error) {
+	uri, err := cfg.String("uri")
+	if err != nil {
+		return nil, err
+	}
+	name, err := cfg.String("exchange.name")
+	if err != nil {
+		return nil, err
+	}
+	etype, err := cfg.String("exchange.type")
+	if err != nil {
+		return nil, err
+	}
+	durable, err := cfg.Bool("exchange.durable")
+	if err != nil {
+		return nil, err
+	}
+	autod, err := cfg.Bool("exchange.autodelete")
+	if err != nil {
+		return nil, err
+	}
+	internal, err := cfg.Bool("exchange.internal")
+	if err != nil {
+		return nil, err
+	}
+	nowait, err := cfg.Bool("exchange.NoWait")
+	if err != nil {
+		return nil, err
+	}
+	rkey, err := cfg.String("routing_key")
+	if err != nil {
+		return nil, err
+	}
+	return &jexamqp{
+		URI:                uri,
+		ExchangeName:       name,
+		ExchangeType:       etype,
+		ExchangeDurable:    durable,
+		ExchangeAutodelete: autod,
+		ExchangeInternal:   internal,
+		ExchangeNoWait:     nowait,
+		RoutingKey:         rkey,
+	}, nil
 }
 
 // AMQPPublisher contains the state information for a connection to an AMQP
@@ -48,20 +93,13 @@ type AMQPConsumer struct {
 
 // NewAMQPPublisher creates a new instance of AMQPPublisher and returns a
 // pointer to it. The connection is not established at this point.
-func NewAMQPPublisher(cfg *configurate.Configuration) *AMQPPublisher {
-	logger.Println(cfg.AMQPURI)
-	return &AMQPPublisher{
-		jexamqp: jexamqp{
-			URI:                cfg.AMQPURI,
-			ExchangeName:       cfg.ExchangeName,
-			ExchangeType:       cfg.ExchangeType,
-			ExchangeDurable:    cfg.ExchangeDurable,
-			ExchangeAutodelete: cfg.ExchangeAutodelete,
-			ExchangeInternal:   cfg.ExchangeInternal,
-			ExchangeNoWait:     cfg.ExchangeNoWait,
-			RoutingKey:         cfg.RoutingKey,
-		},
+func NewAMQPPublisher(cfg *config.Config) (*AMQPPublisher, error) {
+	logger.Println(cfg.String("uri"))
+	j, err := new(cfg)
+	if err != nil {
+		return nil, err
 	}
+	return &AMQPPublisher{jexamqp: *j}, nil
 }
 
 // PublishString sends the body off to the configured AMQP exchange.
@@ -200,26 +238,49 @@ func (p *AMQPPublisher) Close() {
 
 // NewAMQPConsumer creates a new instance of AMQPConsumer and returns a
 // pointer to it. The connection is not established at this point.
-func NewAMQPConsumer(cfg *configurate.Configuration) *AMQPConsumer {
-	return &AMQPConsumer{
-		jexamqp: jexamqp{
-			ExchangeName:       cfg.ExchangeName,
-			ExchangeType:       cfg.ExchangeType,
-			RoutingKey:         cfg.RoutingKey,
-			ExchangeDurable:    cfg.ExchangeDurable,
-			ExchangeAutodelete: cfg.ExchangeAutodelete,
-			ExchangeInternal:   cfg.ExchangeInternal,
-			ExchangeNoWait:     cfg.ExchangeNoWait,
-			URI:                cfg.AMQPURI,
-		},
-		QueueName:       cfg.QueueName,
-		QueueBindingKey: cfg.QueueBindingKey,
-		QueueDurable:    cfg.QueueDurable,
-		QueueAutodelete: cfg.QueueAutodelete,
-		QueueExclusive:  cfg.QueueExclusive,
-		QueueNoWait:     cfg.QueueNoWait,
-		ConsumerTag:     cfg.ConsumerTag,
+func NewAMQPConsumer(cfg *config.Config) (*AMQPConsumer, error) {
+	j, err := new(cfg)
+	if err != nil {
+		return nil, err
 	}
+	qname, err := cfg.String("queue.name")
+	if err != nil {
+		return nil, err
+	}
+	bindingKey, err := cfg.String("queue.binding_key")
+	if err != nil {
+		return nil, err
+	}
+	durable, err := cfg.Bool("queue.durable")
+	if err != nil {
+		return nil, err
+	}
+	autod, err := cfg.Bool("queue.auto_delete")
+	if err != nil {
+		return nil, err
+	}
+	exclusive, err := cfg.Bool("queue.exclusive")
+	if err != nil {
+		return nil, err
+	}
+	noWait, err := cfg.Bool("queue.no_wait")
+	if err != nil {
+		return nil, err
+	}
+	consumerTag, err := cfg.String("consumer_tag")
+	if err != nil {
+		return nil, err
+	}
+	return &AMQPConsumer{
+		jexamqp:         *j,
+		QueueName:       qname,
+		QueueBindingKey: bindingKey,
+		QueueDurable:    durable,
+		QueueAutodelete: autod,
+		QueueExclusive:  exclusive,
+		QueueNoWait:     noWait,
+		ConsumerTag:     consumerTag,
+	}, nil
 }
 
 // ConnectionError is used to send error channels to goroutines.

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/olebedev/config"
 	"github.com/pborman/uuid"
 )
 
@@ -333,10 +334,14 @@ func formatPort(port string) string {
 // SetupHTTP configures a new HTTPAPI instance, registers handlers, and fires
 // off a goroutinge that listens for requests. Should probably only be called
 // once.
-func SetupHTTP(config *configurate.Configuration, d *Databaser) {
+func SetupHTTP(config *config.Config, d *Databaser) {
 	go func() {
 		api := HTTPAPI{
 			d: d,
+		}
+		port, err := configurate.C.String("manager.listen_port")
+		if err != nil {
+			logger.Fatal(err)
 		}
 		http.HandleFunc("/jobs/", api.RouteJobRequests)
 		http.HandleFunc("/jobs", api.RouteJobRequests)
@@ -344,7 +349,7 @@ func SetupHTTP(config *configurate.Configuration, d *Databaser) {
 		http.HandleFunc("/invocations", api.RouteInvocationRequests)
 		http.HandleFunc("/last-events/", api.RouteLastEventRequests)
 		http.HandleFunc("/last-events", api.RouteLastEventRequests)
-		logger.Printf("Listening for HTTP requests on %s", config.HTTPListenPort)
-		logger.Fatal(http.ListenAndServe(formatPort(config.HTTPListenPort), nil))
+		logger.Printf("Listening for HTTP requests on %s", port)
+		logger.Fatal(http.ListenAndServe(formatPort(port), nil))
 	}()
 }

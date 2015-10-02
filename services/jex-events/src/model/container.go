@@ -186,8 +186,12 @@ func (c *Container) IsDEImage() bool {
 // tag will be prefixed with a ':' unless the image is neither a DE image nor
 // has the Tag field set.
 func (c *Container) Tag() string {
+	tag, err := configurate.C.String("condor.porklock_tag")
+	if err != nil {
+		tag = ""
+	}
 	if c.IsDEImage() {
-		return fmt.Sprintf(":%s", configurate.Config.PorklockTag)
+		return fmt.Sprintf(":%s", tag)
 	} else if c.Image.Tag != "" {
 		return fmt.Sprintf(":%s", c.Image.Tag)
 	}

@@ -156,6 +156,16 @@ exit $EXITSTATUS
 	return buffer.String(), err
 }
 
+type irodsconfig struct {
+	IRODSHost string
+	IRODSPort string
+	IRODSUser string
+	IRODSPass string
+	IRODSBase string
+	IRODSZone string
+	IRODSResc string
+}
+
 // GenerateIRODSConfig returns the contents of the irods-config file as a string.
 func GenerateIRODSConfig() (string, error) {
 	tmpl := `porklock.irods-host = {{.IRODSHost}}
@@ -170,8 +180,40 @@ porklock.irods-resc = {{.IRODSResc}}
 	if err != nil {
 		return "", err
 	}
+	irodsHost, err := configurate.C.String("irods.host")
+	if err != nil {
+		return "", err
+	}
+	irodsPort, err := configurate.C.String("irods.port")
+	if err != nil {
+		return "", err
+	}
+	irodsUser, err := configurate.C.String("irods.user")
+	if err != nil {
+		return "", err
+	}
+	irodsPass, err := configurate.C.String("irods.pass")
+	if err != nil {
+		return "", err
+	}
+	irodsBase, err := configurate.C.String("irods.base")
+	if err != nil {
+		return "", err
+	}
+	irodsResc, err := configurate.C.String("irods.resc")
+	if err != nil {
+		return "", err
+	}
+	c := &irodsconfig{
+		IRODSHost: irodsHost,
+		IRODSPort: irodsPort,
+		IRODSUser: irodsUser,
+		IRODSPass: irodsPass,
+		IRODSBase: irodsBase,
+		IRODSResc: irodsResc,
+	}
 	var buffer bytes.Buffer
-	err = t.Execute(&buffer, configurate.Config)
+	err = t.Execute(&buffer, c)
 	if err != nil {
 		return "", err
 	}
@@ -237,9 +279,17 @@ func Submit(cmdPath, shPath string, s *model.Job) (string, error) {
 	}
 	cmd := exec.Command(csPath, cmdPath)
 	cmd.Dir = path.Dir(cmdPath)
+	pathEnv, err := configurate.C.String("condor.path_env_var")
+	if err != nil {
+		pathEnv = ""
+	}
+	condorCfg, err := configurate.C.String("condor.condor_config")
+	if err != nil {
+		condorCfg = ""
+	}
 	cmd.Env = []string{
-		fmt.Sprintf("PATH=%s", configurate.Config.Path),
-		fmt.Sprintf("CONDOR_CONFIG=%s", configurate.Config.CondorConfig),
+		fmt.Sprintf("PATH=%s", pathEnv),
+		fmt.Sprintf("CONDOR_CONFIG=%s", condorCfg),
 	}
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -263,11 +313,15 @@ func Rm(uuid string) (string, error) {
 			return "", err
 		}
 	}
-	cl, err := clients.NewJEXEventsClient(configurate.Config.JEXEvents)
+	jexEvents, err := configurate.C.String("condor.jex_events")
+	if err != nil {
+		jexEvents = ""
+	}
+	cl, err := clients.NewJEXEventsClient(jexEvents)
 	if err != nil {
 		return "", err
 	}
-	logger.Printf("Created a jex-events client for %s", configurate.Config.JEXEvents)
+	logger.Printf("Created a jex-events client for %s", jexEvents)
 	jr, err := cl.JobRecord(uuid)
 	if err != nil {
 		logger.Print(err)
@@ -278,10 +332,18 @@ func Rm(uuid string) (string, error) {
 	}
 	logger.Printf("CondorID %s was found for job %s\n", jr.CondorID, uuid)
 
+	pathEnv, err := configurate.C.String("condor.path_env_var")
+	if err != nil {
+		pathEnv = ""
+	}
+	condorConfig, err := configurate.C.String("condor.condor_config")
+	if err != nil {
+		condorConfig = ""
+	}
 	cmd := exec.Command(crPath, jr.CondorID)
 	cmd.Env = []string{
-		fmt.Sprintf("PATH=%s", configurate.Config.Path),
-		fmt.Sprintf("CONDOR_CONFIG=%s", configurate.Config.CondorConfig),
+		fmt.Sprintf("PATH=%s", pathEnv),
+		fmt.Sprintf("CONDOR_CONFIG=%s", condorConfig),
 	}
 	output, err := cmd.CombinedOutput()
 	logger.Printf("condor_rm output for job %s:\n%s\n", jr.CondorID, string(output))
@@ -300,7 +362,10 @@ func Run() {
 	router.HandleFunc("/stop/{uuid}", stopHandler).Methods("DELETE")
 	n := negroni.New(logger)
 	n.UseHandler(router)
-	port := configurate.Config.JEXListenPort
+	port, err := configurate.C.String("condor.listen_port")
+	if err != nil {
+		port = ""
+	}
 	logger.Printf("launcher listening on port %s", port)
 	if !strings.HasPrefix(port, ":") {
 		port = fmt.Sprintf(":%s", port)

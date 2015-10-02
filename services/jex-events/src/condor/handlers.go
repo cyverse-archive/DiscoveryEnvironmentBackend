@@ -58,11 +58,15 @@ func submissionHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Printf("Error writing marshalled response:\n%s\n", err)
 	}
-	requestURL := path.Join(configurate.Config.JEXEvents, "jobs")
-	if strings.HasSuffix(configurate.Config.JEXEvents, "/") {
-		requestURL = fmt.Sprintf("%s%s", configurate.Config.JEXEvents, "jobs")
+	jexEvents, err := configurate.C.String("condor.jex_events")
+	if err != nil {
+		jexEvents = ""
+	}
+	requestURL := path.Join(jexEvents, "jobs")
+	if strings.HasSuffix(jexEvents, "/") {
+		requestURL = fmt.Sprintf("%s%s", jexEvents, "jobs")
 	} else {
-		requestURL = fmt.Sprintf("%s/%s", configurate.Config.JEXEvents, "jobs")
+		requestURL = fmt.Sprintf("%s/%s", jexEvents, "jobs")
 	}
 	record := &model.Job{
 		CondorID:     id,

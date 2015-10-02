@@ -1,0 +1,51 @@
+amqp:
+  events:
+    uri: amqp://wut:wut@wut.iplantc.org:31333/
+    routing_key: condor.events
+    consumer_tag: tag
+    exchange:
+      name: condor_events
+      type: fanout
+      durable: true
+      autodelete: false
+      internal: false
+      nowait: false
+    queue:
+      name: condor_events
+      binding_key: condor_events_binding_key
+      durable: true
+      autodelete: false
+      internal: false
+      exclusive: false
+      nowait: false
+
+manager:
+  listen_port: 31331
+  db_uri: postgres://wut:wut@wut.iplantc.org:5432/wut?sslmode=disable
+  event_url: http://event.url.org
+  condor_mode_url: http://condor_mode_url.org
+
+monitor:
+  event_log: /path/to/event/log
+
+irods:
+  base: /iplant/home
+  user: wut
+  pass: wut
+  host: wut.iplantc.org
+  port: 1247
+  zone: iplant
+  resc: ""
+
+condor:
+  porklock_tag: dev
+  nfs_base: /condor01/dev-scratch/
+  listen_port: 31330
+  log_path: /tmp/
+  filter_files: output-last-stderr
+  run_on_nfs: false
+  request_disk: 0
+  batch_group: batch_processing
+  jex_events: http://wut.iplantc.org:31358/
+  condor_config: /etc/condor/condor_config
+  path_env_var: /usr/bin/:/usr/local/bin/:/bin/
