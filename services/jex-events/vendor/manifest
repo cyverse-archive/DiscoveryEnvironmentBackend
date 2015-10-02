@@ -8,24 +8,6 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "github.com/dmcgowan/msgpack",
-			"repository": "https://github.com/dmcgowan/msgpack",
-			"revision": "b2a415181d61dad392b5e98e65b0cf7d73e606e7",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/docker/libchan",
-			"repository": "https://github.com/docker/libchan",
-			"revision": "a21c8f158a682120e34248f2fd7999ba2893a563",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/docker/spdystream",
-			"repository": "https://github.com/docker/spdystream",
-			"revision": "b2c3287865f3ad6aa22821ddb7b4692b896ac207",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/facebookgo/freeport",
 			"repository": "https://github.com/facebookgo/freeport",
 			"revision": "d4adf43b75b9357dc7775f033e807a3411591522",
@@ -50,6 +32,12 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/olebedev/config",
+			"repository": "https://github.com/olebedev/config",
+			"revision": "ed583f7fafbccbd73013b0379ab29943ab0da34b",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/pborman/uuid",
 			"repository": "https://github.com/pborman/uuid",
 			"revision": "ca53cad383cad2479bbba7f7a1a05797ec1386e4",
@@ -66,6 +54,12 @@
 			"repository": "https://gopkg.in/natefinch/lumberjack.v2",
 			"revision": "20b71e5b60d756d3d2f80def009790325acc2b23",
 			"branch": "v2.0"
+		},
+		{
+			"importpath": "gopkg.in/yaml.v2",
+			"repository": "https://gopkg.in/yaml.v2",
+			"revision": "53feefa2559fb8dfa8d81baad31be332c97d6c77",
+			"branch": "v2"
 		}
 	]
 }
