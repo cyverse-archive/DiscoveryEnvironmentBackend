@@ -78,11 +78,7 @@
 
 (defn- list-conversions
   []
-  (filter
-   #(re-seq #"^c.*_[0-9]{10}\.clj$" (fu/basename %1))
-   (map
-    str
-    (.listFiles (fs/file "conversions")))))
+  (map str (fs/find-files "conversions" #"^c.*_[0-9]{10}\.clj$")))
 
 (defn- load-conversions
   [cv-list]
