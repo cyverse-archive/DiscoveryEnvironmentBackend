@@ -1,23 +1,24 @@
 package condor
 
 import (
+	"api"
 	"bytes"
 	"clients"
 	"configurate"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"logcabin"
 	"model"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
-	"strings"
 	"text/template"
 
-	"github.com/codegangsta/negroni"
-	"github.com/gorilla/mux"
+	"github.com/streadway/amqp"
 )
 
 var (
@@ -356,19 +357,35 @@ func Rm(uuid string) (string, error) {
 
 //Run launches the condor job launcher.
 func Run() {
-	router := mux.NewRouter()
-	router.HandleFunc("/", rootHandler).Methods("GET")
-	router.HandleFunc("/", submissionHandler).Methods("POST")
-	router.HandleFunc("/stop/{uuid}", stopHandler).Methods("DELETE")
-	n := negroni.New(logger)
-	n.UseHandler(router)
-	port, err := configurate.C.String("condor.listen_port")
+	// router := mux.NewRouter()
+	// router.HandleFunc("/", rootHandler).Methods("GET")
+	// router.HandleFunc("/", submissionHandler).Methods("POST")
+	// router.HandleFunc("/stop/{uuid}", stopHandler).Methods("DELETE")
+	// n := negroni.New(logger)
+	// n.UseHandler(router)
+	// port, err := configurate.C.String("condor.listen_port")
+	// if err != nil {
+	// 	port = ""
+	// }
+	// logger.Printf("launcher listening on port %s", port)
+	// if !strings.HasPrefix(port, ":") {
+	// 	port = fmt.Sprintf(":%s", port)
+	// }
+	// n.Run(port)
+	consumer, err := MessageConsumer()
 	if err != nil {
-		port = ""
+		log.Fatal(err)
 	}
-	logger.Printf("launcher listening on port %s", port)
-	if !strings.HasPrefix(port, ":") {
-		port = fmt.Sprintf(":%s", port)
-	}
-	n.Run(port)
+	consumer.Run(func(d amqp.Delivery) {
+		body := d.Body
+		d.Ack(false)
+		req := api.JobRequest{}
+		err := json.Unmarshal(body, &req)
+		if err != nil {
+			logger.Print(err)
+			logger.Print(string(body[:]))
+			return
+		}
+		logger.Printf("command: %s\tcondorid: %s\n", req.Command, req.Job.CondorID)
+	})
 }

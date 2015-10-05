@@ -1,6 +1,7 @@
 package main
 
 import (
+	"condor"
 	"configurate"
 	"flag"
 	"fmt"
@@ -12,7 +13,7 @@ import (
 
 var (
 	cfgPath = flag.String("config", "", "Path to the config value. Required.")
-	mode    = flag.String("mode", "", "One of 'monitor', 'manager'. Required.")
+	mode    = flag.String("mode", "", "One of 'monitor', 'manager', or 'condor-launcher'. Required.")
 	version = flag.Bool("version", false, "Print the version information")
 	gitref  string
 	appver  string
@@ -44,7 +45,7 @@ func main() {
 		AppVersion()
 		os.Exit(0)
 	}
-	validModes := []string{"monitor", "manager"}
+	validModes := []string{"monitor", "manager", "condor-launcher"}
 	foundMode := false
 	for _, v := range validModes {
 		if v == *mode {
@@ -76,6 +77,8 @@ func main() {
 		manager.Run(configurate.C, logger)
 	case "monitor":
 		monitor.Run()
+	case "condor-launcher":
+		condor.Run()
 	default:
 		fmt.Println("Bad mode! Bad! Look what you did!")
 		flag.PrintDefaults()

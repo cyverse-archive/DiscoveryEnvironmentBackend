@@ -52,11 +52,11 @@ func new(cfg *config.Config) (*jexamqp, error) {
 	if err != nil {
 		return nil, err
 	}
-	nowait, err := cfg.Bool("exchange.NoWait")
+	nowait, err := cfg.Bool("exchange.nowait")
 	if err != nil {
 		return nil, err
 	}
-	rkey, err := cfg.String("routing_key")
+	rkey, err := cfg.String("routingkey")
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,9 @@ func (j *jexamqp) finishconnection(errorChannel chan ConnectionError) {
 	msg := ConnectionError{
 		Channel: errors,
 	}
-	errorChannel <- msg // triggers the reconnection logic
+	go func() {
+		errorChannel <- msg // triggers the reconnection logic
+	}()
 }
 
 // Connect will attempt to connect to the AMQP broker, create/use the configured
@@ -189,6 +191,10 @@ func (p *AMQPPublisher) Connect(errorChannel chan ConnectionError) error {
 // Connect sets up a connection to an AMQP exchange
 func (c *AMQPConsumer) Connect(errorChannel chan ConnectionError) (<-chan amqp.Delivery, error) {
 	err := c.connect()
+	if err != nil {
+		logger.Print(err)
+		return nil, err
+	}
 	logger.Printf("Setting up the %s queue...\n", c.QueueName)
 	queue, err := c.channel.QueueDeclare(
 		c.QueueName,
@@ -247,7 +253,7 @@ func NewAMQPConsumer(cfg *config.Config) (*AMQPConsumer, error) {
 	if err != nil {
 		return nil, err
 	}
-	bindingKey, err := cfg.String("queue.binding_key")
+	bindingKey, err := cfg.String("queue.bindingkey")
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +261,7 @@ func NewAMQPConsumer(cfg *config.Config) (*AMQPConsumer, error) {
 	if err != nil {
 		return nil, err
 	}
-	autod, err := cfg.Bool("queue.auto_delete")
+	autod, err := cfg.Bool("queue.autodelete")
 	if err != nil {
 		return nil, err
 	}
@@ -263,11 +269,11 @@ func NewAMQPConsumer(cfg *config.Config) (*AMQPConsumer, error) {
 	if err != nil {
 		return nil, err
 	}
-	noWait, err := cfg.Bool("queue.no_wait")
+	noWait, err := cfg.Bool("queue.nowait")
 	if err != nil {
 		return nil, err
 	}
-	consumerTag, err := cfg.String("consumer_tag")
+	consumerTag, err := cfg.String("consumertag")
 	if err != nil {
 		return nil, err
 	}
