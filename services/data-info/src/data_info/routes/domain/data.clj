@@ -89,3 +89,11 @@
 
      (s/optional-key :attachment)
      (describe Boolean "Download file contents as attachment.")}))
+
+(s/defschema ChunkReturn
+  {:path       (describe NonBlankString "The file path")
+   :user       (describe NonBlankString "The requesting user.")
+   :start      (describe NonBlankString "The start location for the read.")
+   :chunk-size (describe NonBlankString "The size of the read.")
+   :file-size  (describe NonBlankString "The file's total size.")
+   :chunk      (describe String "The read result.")})
