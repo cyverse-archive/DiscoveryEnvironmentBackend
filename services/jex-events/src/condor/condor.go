@@ -359,6 +359,10 @@ func Run() {
 	}
 	client := messaging.NewClient(uri)
 	defer client.Close()
+	err = client.SetupPublishing(api.JobsExchange)
+	if err != nil {
+		log.Fatal(err)
+	}
 	client.AddConsumer(api.JobsExchange, "condor_launches", api.LaunchesKey, func(d amqp.Delivery) {
 		body := d.Body
 		d.Ack(false)

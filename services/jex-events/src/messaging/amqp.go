@@ -30,6 +30,11 @@ type consumer struct {
 	handler  MessageHandler
 }
 
+type publisher struct {
+	exchange string
+	channel  *amqp.Channel
+}
+
 // Client encapsulates the information needed to interact via AMQP.
 type Client struct {
 	uri             string
@@ -37,6 +42,7 @@ type Client struct {
 	aggregationChan chan aggregationMessage
 	errors          chan *amqp.Error
 	consumers       []*consumer
+	publisher       *publisher
 }
 
 // NewClient returns a new *Client. It will block until the connection succeeds.
@@ -162,5 +168,51 @@ func (c *Client) initconsumer(cs *consumer) error {
 			}
 		}
 	}()
+	return err
+}
+
+// SetupPublishing initializes the publishing functionality of the client.
+// Call this before calling Publish.
+func (c *Client) SetupPublishing(exchange string) error {
+	channel, err := c.connection.Channel()
+	if err != nil {
+		return err
+	}
+	err = channel.ExchangeDeclare(
+		exchange, //name
+		"topic",  //kind
+		true,     //durable
+		false,    //auto-delete
+		false,    //internal
+		false,    //no-wait
+		nil,      //args
+	)
+	if err != nil {
+		return err
+	}
+	p := &publisher{
+		exchange: exchange,
+		channel:  channel,
+	}
+	c.publisher = p
+	return err
+}
+
+// Publish sends a message to the configured exchange with a routing key set to
+// the value of 'key'.
+func (c *Client) Publish(key string, body []byte) error {
+	msg := amqp.Publishing{
+		DeliveryMode: amqp.Persistent,
+		Timestamp:    time.Now(),
+		ContentType:  "text/plain",
+		Body:         body,
+	}
+	err := c.publisher.channel.Publish(
+		c.publisher.exchange,
+		key,
+		false, //mandatory
+		false, //immediate
+		msg,
+	)
 	return err
 }
