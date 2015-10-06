@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"path"
 	"time"
+
+	"github.com/streadway/amqp"
 )
 
 // JobStatus contains the actual status of a job, as required by the /de-job
@@ -82,6 +84,101 @@ func (p *PostEventHandler) ShouldUpdateLastEvents(event *Event) bool {
 		return true
 	default:
 		return false
+	}
+}
+
+// HandleMessage handles a received message from the AMQP exchange.
+func (p *PostEventHandler) HandleMessage(delivery amqp.Delivery) {
+	body := delivery.Body
+	delivery.Ack(false) //We're not doing batch deliveries, which is what the false means
+	var event Event
+	err := json.Unmarshal(body, &event)
+	if err != nil {
+		logger.Print(err)
+		logger.Print(string(body[:]))
+		return
+	}
+
+	// parse the body of the event that came from the amqp broker.
+	event.Parse()
+	logger.Println(event.String())
+
+	// adds the job to the database, but only if it doesn't already exist.
+	job, err := p.DB.AddJob(event.CondorID)
+	if err != nil {
+		logger.Printf("Error adding job: %s", err)
+		return
+	}
+
+	// make sure the exit code is set so that it gets updated in upcoming steps.
+	job.ExitCode = event.ExitCode
+
+	// set the invocation id, but only if it's not set and the event actually
+	// has a value to update it with.
+	if job.InvocationID == "" && event.InvocationID != "" {
+		job.InvocationID = event.InvocationID
+		logger.Printf("Setting InvocationID to %s", job.InvocationID)
+	} else {
+		logger.Printf("Setting the InvocationID was not necessary")
+	}
+
+	// we're expecting an exit code of 0 for successful runs. HT jobs may have
+	// more than one failure.
+	if job.ExitCode != 0 {
+		job.FailureCount = job.FailureCount + 1
+	}
+
+	// update the job with any additional information
+	job, err = p.DB.UpdateJob(job) // Need to make sure the exit code gets stored.
+	if err != nil {
+		logger.Printf("Error updating job")
+	}
+
+	// update the parsed event object with info returned from the database.
+	event.CondorID = job.CondorID
+	event.InvocationID = job.InvocationID
+	event.AppID = job.AppID
+	event.User = job.Submitter
+
+	// don't add the event to the database if it's already there.
+	exists, err := p.DB.DoesCondorJobEventExist(event.Hash)
+	if err != nil {
+		logger.Printf("Error checking for job event existence by checksum: %s", event.Hash)
+		return
+	}
+	if exists {
+		logger.Printf("An event with a hash of %s already exists in the database, skipping", event.Hash)
+		return
+	}
+
+	// send event updates upstream to Donkey
+	err = p.Route(&event)
+	if err != nil {
+		logger.Printf("Error sending event upstream: %s", err)
+	}
+
+	// store the unparsed (raw), event information in the database.
+	rawEventID, err := p.DB.AddCondorRawEvent(event.Event, job.ID)
+	if err != nil {
+		logger.Printf("Error adding raw event: %s", err)
+		return
+	}
+	ce, err := p.DB.GetCondorEventByNumber(event.EventNumber)
+	if err != nil {
+		logger.Printf("Error getting condor event: %s", err)
+		return
+	}
+	jobEventID, err := p.DB.AddCondorJobEvent(job.ID, ce.ID, rawEventID, event.Hash)
+	if err != nil {
+		logger.Printf("Error adding job event: %s", err)
+		return
+	}
+	if p.ShouldUpdateLastEvents(&event) {
+		_, err = p.DB.UpsertLastCondorJobEvent(jobEventID, job.ID)
+		if err != nil {
+			logger.Printf("Error upserting last condor job event: %s", err)
+			return
+		}
 	}
 }
 

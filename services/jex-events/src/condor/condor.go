@@ -353,11 +353,13 @@ func stop(s *model.Job) (string, error) {
 
 //Run launches the condor job launcher.
 func Run() {
-	consumer, err := messaging.MessageConsumer()
+	uri, err := configurate.C.String("amqp.uri")
 	if err != nil {
 		log.Fatal(err)
 	}
-	consumer.Run(func(d amqp.Delivery) {
+	client := messaging.NewClient(uri)
+	defer client.Close()
+	client.AddConsumer(api.JobsExchange, "condor_launches", api.LaunchesKey, func(d amqp.Delivery) {
 		body := d.Body
 		d.Ack(false)
 		req := api.JobRequest{}
@@ -382,4 +384,5 @@ func Run() {
 			log.Printf("Output of the stop for %s:\n%s", req.Job.CondorID, output)
 		}
 	})
+	client.Listen()
 }

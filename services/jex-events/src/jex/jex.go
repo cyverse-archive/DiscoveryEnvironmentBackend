@@ -7,13 +7,12 @@ import (
 	"fmt"
 	"logcabin"
 	"manager"
-	"monitor"
 	"os"
 )
 
 var (
 	cfgPath = flag.String("config", "", "Path to the config value. Required.")
-	mode    = flag.String("mode", "", "One of 'monitor', 'manager', or 'condor-launcher'. Required.")
+	mode    = flag.String("mode", "", "One of 'manager', or 'condor-launcher'. Required.")
 	version = flag.Bool("version", false, "Print the version information")
 	gitref  string
 	appver  string
@@ -45,7 +44,7 @@ func main() {
 		AppVersion()
 		os.Exit(0)
 	}
-	validModes := []string{"monitor", "manager", "condor-launcher"}
+	validModes := []string{"manager", "condor-launcher"}
 	foundMode := false
 	for _, v := range validModes {
 		if v == *mode {
@@ -75,8 +74,6 @@ func main() {
 	switch *mode {
 	case "manager":
 		manager.Run(configurate.C, logger)
-	case "monitor":
-		monitor.Run()
 	case "condor-launcher":
 		condor.Run()
 	default:

@@ -20,8 +20,24 @@ const (
 
 var (
 	logger = logcabin.New()
+
 	//LaunchCommand is the string used in LaunchCo
 	LaunchCommand = "LAUNCH"
+
+	//JobsExchange is the name of the exchange that job related info is passed around.
+	JobsExchange = "jobs"
+
+	//LaunchesKey is the routing/binding key for job launch request messages.
+	LaunchesKey = "jobs.launches"
+
+	//UpdatesKey is the routing/binding key for job update messages.
+	UpdatesKey = "jobs.updates"
+
+	//StopsKey is the routing/binding key for job stop request messages.
+	StopsKey = "jobs.stops"
+
+	//CommandsKey is the routing/binding key for job command messages.
+	CommandsKey = "jobs.commands"
 )
 
 // JobRequest is a generic request type for job related requests.

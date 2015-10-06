@@ -1,42 +1,13 @@
 amqp:
-  events:
-    uri: amqp://guest:guest@192.168.99.100:5672/
-    routingkey: condor.events
-    consumertag: tag
-    exchange:
-      name: condor_events
-      type: fanout
-      durable: true
-      autodelete: false
-      internal: false
-      nowait: false
-    queue:
-      name: condor_events
-      bindingkey: condor_events_binding_key
-      durable: true
-      autodelete: false
-      internal: false
-      exclusive: false
-      nowait: false
-  condor:
-    uri: amqp://guest:guest@192.168.99.100:5672/
-    routingkey: jobs.launch.condor
-    consumertag: tag
-    exchange:
-      name: job_launches
-      type: topic
-      durable: true
-      autodelete: false
-      internal: false
-      nowait: false
-    queue:
-      name: condor_job_launcher
-      bindingkey: jobs.launch.condor
-      durable: true
-      autodelete: false
-      internal: false
-      exclusive: false
-      nowait: false
+  uri: amqp://guest:guest@192.168.99.100:5672/
+  exchange:
+    name: jobs
+    type: topic
+    durable: true
+    autodelete: false
+    internal: false
+    exclusive: false
+    nowait: false
 
 manager:
   listen_port: 31331
@@ -57,6 +28,9 @@ irods:
   resc: ""
 
 condor:
+  amqp:
+    launches_queue:
+      name: condor_launchers
   porklock_tag: dev
   nfs_base: /condor01/dev-scratch/
   listen_port: 31330
