@@ -3,6 +3,8 @@ Reading a chunk of a file
 
 __URL Path__: /secured/filesystem/read-chunk
 
+This endpoint delegates to data-info's /data/:data-id/chunks/:position/:size, after looking up the UUID corresponding to the path it was passed.
+
 __HTTP Method__: POST
 
 __Error Codes___: ERR_DOES_NOT_EXIST, ERR_NOT_READABLE, ERR_NOT_A_USER
