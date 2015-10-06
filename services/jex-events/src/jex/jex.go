@@ -73,7 +73,7 @@ func main() {
 	// }
 	switch *mode {
 	case "manager":
-		manager.Run(configurate.C, logger)
+		manager.Run()
 	case "condor-launcher":
 		condor.Run()
 	default:

@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/olebedev/config"
 	"github.com/streadway/amqp"
 )
 
@@ -155,8 +154,7 @@ func (e *Event) Parse() {
 // Run puts jex-events in 'events' mode where it listens for events
 // on an AMQP exchange, places them into a database, and provides an HTTP
 // API on top.
-func Run(config *config.Config, l *logcabin.Lincoln) {
-	logger = l
+func Run() {
 	logger.Println("Configuring database connection...")
 	messaging.Init(logger)
 	uri, err := configurate.C.String("manager.db_uri")
