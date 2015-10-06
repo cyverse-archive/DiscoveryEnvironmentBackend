@@ -440,27 +440,18 @@
            (merge {:image (tool-image-info tool-uuid)})
            filter-returns))))
 
-(defn update-settings-field
-  [tool-uuid field-kw new-value]
-  (let [id (uuidify tool-uuid)]
-    (when (tool-has-settings? id)
-      (let [settings-id (tool-settings-uuid id)]
-        (select-keys (modify-settings settings-id {field-kw new-value}) [field-kw])))))
-
-(defn update-device-field
-  [tool-uuid device-uuid field-kw new-value]
-  (let [id (uuidify tool-uuid)]
-    (when (tool-has-settings? id)
-      (let [settings-id (tool-settings-uuid id)]
-        (when (and (device? device-uuid)
-                   (settings-has-device? settings-id device-uuid))
-          (select-keys (modify-device settings-id device-uuid {field-kw new-value}) [field-kw]))))))
-
 (defn get-settings-field
   [tool-uuid field-kw]
   (when (tool-has-settings? tool-uuid)
     (let [settings (tool-settings tool-uuid)]
       {field-kw (field-kw settings)})))
+
+(defn update-settings-field
+  [tool-id field-kw new-value]
+  (when (tool-has-settings? tool-id)
+    (let [settings-id (tool-settings-uuid tool-id)]
+      (modify-settings settings-id {field-kw new-value})
+      (get-settings-field tool-id field-kw))))
 
 (defn tool-device-info
   "Returns a container's device information based on the tool UUID."
@@ -493,14 +484,14 @@
   (let [fields (tool-device tool-uuid device-uuid)]
     (or (select-keys fields [field-kw]) nil)))
 
-(defn update-volume-field
-  [tool-uuid volume-uuid field-kw new-value]
-  (let [id (uuidify tool-uuid)]
-    (when (tool-has-settings? id)
-      (let [settings-id (tool-settings-uuid id)]
-        (when (and (volume? volume-uuid)
-                   (settings-has-volume? settings-id volume-uuid))
-          (select-keys (modify-volume settings-id volume-uuid {field-kw new-value}) [field-kw]))))))
+(defn update-device-field
+  [tool-id device-id field-kw new-value]
+  (when (tool-has-settings? tool-id)
+    (let [settings-id (tool-settings-uuid tool-id)]
+      (when (and (device? device-id)
+                 (settings-has-device? settings-id device-id))
+        (modify-device settings-id device-id {field-kw new-value})
+        (device-field tool-id device-id field-kw)))))
 
 (defn tool-volume
   "Returns a map with info about a particular volume associated with the tool's container."
@@ -525,6 +516,15 @@
   [tool-uuid volume-uuid field-kw]
   (let [fields (tool-volume tool-uuid volume-uuid)]
     (or (select-keys fields [field-kw]) nil)))
+
+(defn update-volume-field
+  [tool-id volume-id field-kw new-value]
+  (when (tool-has-settings? tool-id)
+    (let [settings-id (tool-settings-uuid tool-id)]
+      (when (and (volume? volume-id)
+                 (settings-has-volume? settings-id volume-id))
+        (modify-volume settings-id volume-id {field-kw new-value})
+        (volume-field tool-id volume-id field-kw)))))
 
 (defn tool-volumes-from
   "Returns a map with info about a particular container from which the tool's container will mount volumes."

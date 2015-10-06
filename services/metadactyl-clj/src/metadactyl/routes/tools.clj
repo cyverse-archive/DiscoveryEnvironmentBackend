@@ -6,8 +6,7 @@
         [metadactyl.routes.domain.tool]
         [metadactyl.routes.params]
         [metadactyl.tools :only [add-tools get-tool search-tools update-tool]]
-        [metadactyl.user :only [current-user]]
-        [metadactyl.util.service])
+        [metadactyl.user :only [current-user]])
   (:require [clojure-commons.error-codes :as ce]
             [metadactyl.util.service :as service]
             [compojure.route :as route]))
@@ -24,8 +23,8 @@
   `(fn []
      (let [retval# ~@funccall]
        (if (nil? retval#)
-         (not-found-response (str "A container for " ~tool-id " was not found."))
-         (success-response retval#)))))
+         (service/not-found-response (str "A container for " ~tool-id " was not found."))
+         (service/success-response retval#)))))
 
 (defroutes* container-images
   (GET* "/" [:as {uri :uri}]
