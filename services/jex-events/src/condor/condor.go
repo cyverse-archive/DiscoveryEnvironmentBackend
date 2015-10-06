@@ -3,14 +3,13 @@ package condor
 import (
 	"api"
 	"bytes"
-	"clients"
 	"configurate"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"logcabin"
+	"messaging"
 	"model"
 	"os"
 	"os/exec"
@@ -265,9 +264,7 @@ func CreateSubmissionFiles(dir string, s *model.Job) (string, string, error) {
 	return cmdPath, shPath, err
 }
 
-// Submit temporarily changes the working directory to the path designated
-// by dir and runs condor_submit inside it.
-func Submit(cmdPath, shPath string, s *model.Job) (string, error) {
+func submit(cmdPath, shPath string, s *model.Job) (string, error) {
 	csPath, err := exec.LookPath("condor_submit")
 	if err != nil {
 		return "", err
@@ -301,8 +298,27 @@ func Submit(cmdPath, shPath string, s *model.Job) (string, error) {
 	return string(model.ExtractJobID(output)), err
 }
 
-// Rm stops the job specified by UUID.
-func Rm(uuid string) (string, error) {
+func launch(s *model.Job) (string, error) {
+	sdir, err := CreateSubmissionDirectory(s)
+	if err != nil {
+		log.Printf("Error creating submission directory:\n%s\n", err)
+		return "", err
+	}
+	cmd, sh, err := CreateSubmissionFiles(sdir, s)
+	if err != nil {
+		log.Printf("Error creating submission files:\n%s", err)
+		return "", err
+	}
+	id, err := submit(cmd, sh, s)
+	if err != nil {
+		log.Printf("Error submitting job:\n%s", err)
+		return "", err
+	}
+	logger.Printf("Condor job id is %s\n", id)
+	return id, err
+}
+
+func stop(s *model.Job) (string, error) {
 	crPath, err := exec.LookPath("condor_rm")
 	logger.Printf("condor_rm found at %s", crPath)
 	if err != nil {
@@ -314,25 +330,6 @@ func Rm(uuid string) (string, error) {
 			return "", err
 		}
 	}
-	jexEvents, err := configurate.C.String("condor.jex_events")
-	if err != nil {
-		jexEvents = ""
-	}
-	cl, err := clients.NewJEXEventsClient(jexEvents)
-	if err != nil {
-		return "", err
-	}
-	logger.Printf("Created a jex-events client for %s", jexEvents)
-	jr, err := cl.JobRecord(uuid)
-	if err != nil {
-		logger.Print(err)
-		return "", err
-	}
-	if jr.CondorID == "" {
-		return "", errors.New("CondorID was blank")
-	}
-	logger.Printf("CondorID %s was found for job %s\n", jr.CondorID, uuid)
-
 	pathEnv, err := configurate.C.String("condor.path_env_var")
 	if err != nil {
 		pathEnv = ""
@@ -341,15 +338,14 @@ func Rm(uuid string) (string, error) {
 	if err != nil {
 		condorConfig = ""
 	}
-	cmd := exec.Command(crPath, jr.CondorID)
+	cmd := exec.Command(crPath, s.CondorID)
 	cmd.Env = []string{
 		fmt.Sprintf("PATH=%s", pathEnv),
 		fmt.Sprintf("CONDOR_CONFIG=%s", condorConfig),
 	}
 	output, err := cmd.CombinedOutput()
-	logger.Printf("condor_rm output for job %s:\n%s\n", jr.CondorID, string(output))
+	logger.Printf("condor_rm output for job %s:\n%s\n", s.CondorID, string(output))
 	if err != nil {
-		logger.Print(err)
 		return "", err
 	}
 	return string(output), err
@@ -357,22 +353,7 @@ func Rm(uuid string) (string, error) {
 
 //Run launches the condor job launcher.
 func Run() {
-	// router := mux.NewRouter()
-	// router.HandleFunc("/", rootHandler).Methods("GET")
-	// router.HandleFunc("/", submissionHandler).Methods("POST")
-	// router.HandleFunc("/stop/{uuid}", stopHandler).Methods("DELETE")
-	// n := negroni.New(logger)
-	// n.UseHandler(router)
-	// port, err := configurate.C.String("condor.listen_port")
-	// if err != nil {
-	// 	port = ""
-	// }
-	// logger.Printf("launcher listening on port %s", port)
-	// if !strings.HasPrefix(port, ":") {
-	// 	port = fmt.Sprintf(":%s", port)
-	// }
-	// n.Run(port)
-	consumer, err := MessageConsumer()
+	consumer, err := messaging.MessageConsumer()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -386,6 +367,19 @@ func Run() {
 			logger.Print(string(body[:]))
 			return
 		}
-		logger.Printf("command: %s\tcondorid: %s\n", req.Command, req.Job.CondorID)
+		switch req.Command {
+		case api.Launch:
+			jobID, err := launch(req.Job)
+			if err != nil {
+				log.Print(err)
+			}
+			log.Printf("Launched Condor ID %s", jobID)
+		case api.Stop:
+			output, err := stop(req.Job)
+			if err != nil {
+				log.Print(err)
+			}
+			log.Printf("Output of the stop for %s:\n%s", req.Job.CondorID, output)
+		}
 	})
 }

@@ -1,8 +1,8 @@
 amqp:
   events:
-    uri: amqp://wut:wut@wut.iplantc.org:31333/
-    routing_key: condor.events
-    consumer_tag: tag
+    uri: amqp://guest:guest@192.168.99.100:5672/
+    routingkey: condor.events
+    consumertag: tag
     exchange:
       name: condor_events
       type: fanout
@@ -12,7 +12,26 @@ amqp:
       nowait: false
     queue:
       name: condor_events
-      binding_key: condor_events_binding_key
+      bindingkey: condor_events_binding_key
+      durable: true
+      autodelete: false
+      internal: false
+      exclusive: false
+      nowait: false
+  condor:
+    uri: amqp://guest:guest@192.168.99.100:5672/
+    routingkey: jobs.launch.condor
+    consumertag: tag
+    exchange:
+      name: job_launches
+      type: topic
+      durable: true
+      autodelete: false
+      internal: false
+      nowait: false
+    queue:
+      name: condor_job_launcher
+      bindingkey: jobs.launch.condor
       durable: true
       autodelete: false
       internal: false

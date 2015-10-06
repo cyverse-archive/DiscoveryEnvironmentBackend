@@ -309,7 +309,7 @@ func TestCondorSubmit(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	actual, err := Submit(cmd, sh, s)
+	actual, err := submit(cmd, sh, s)
 	if err != nil {
 		t.Error(err)
 	}
@@ -325,5 +325,55 @@ func TestCondorSubmit(t *testing.T) {
 	err = os.RemoveAll(parent)
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestLaunch(t *testing.T) {
+	inittests(t)
+
+	data, err := JSONData()
+	if err != nil {
+		t.Error(err)
+	}
+	j, err := model.NewFromData(data)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	actual, err := launch(j)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	expected := "10000"
+	if actual != expected {
+		t.Errorf("launch returned:\n%s\ninstead of:\n%s\n", actual, expected)
+	}
+	logPath, err := configurate.C.String("condor.log_path")
+	if err != nil {
+		logPath = ""
+	}
+	parent := path.Join(logPath, "test_this_is_a_test")
+	err = os.RemoveAll(parent)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestStop(t *testing.T) {
+	//Start up a fake jex-events
+	jr := &model.Job{
+		CondorID:     "10000",
+		Submitter:    "test_this_is_a_test",
+		AppID:        "c7f05682-23c8-4182-b9a2-e09650a5f49b",
+		InvocationID: "00000000-0000-0000-0000-000000000000",
+	}
+	actual, err := stop(jr)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	if actual == "" {
+		t.Errorf("stop returned an empty string")
 	}
 }

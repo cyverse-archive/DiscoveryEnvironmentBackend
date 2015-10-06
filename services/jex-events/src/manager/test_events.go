@@ -92,3 +92,39 @@ ReceivedBytes = 801816.0
 		fmt.Printf("InvocationID is set to %s and not %s", e.InvocationID, "995f0ee0-8a8d-44e3-a3bb-a2f58210c65e")
 	}
 }
+
+// func TestParameterPreviewHandler(t *testing.T) {
+// 	inittests(t)
+// 	server := httptest.NewServer(http.HandlerFunc(parameterPreview))
+// 	defer server.Close()
+//
+// 	data, err := JSONData()
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	s, err := model.NewFromData(data)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	postMap := make(map[string][]model.StepParam)
+// 	postMap["params"] = s.Steps[0].Config.Parameters()
+// 	postData, err := json.Marshal(postMap)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	buf := bytes.NewBuffer(postData)
+// 	response, err := http.Post(server.URL, "application/json", buf)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	msg, err := ioutil.ReadAll(response.Body)
+// 	response.Body.Close()
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	actual := string(msg)
+// 	expected := "param1 'Acer-tree.txt' param0 'wc_out.txt'"
+// 	if actual != expected {
+// 		t.Errorf("parameterPreview returned:\n%s\ninstead of:\n%s\n", actual, expected)
+// 	}
+// }

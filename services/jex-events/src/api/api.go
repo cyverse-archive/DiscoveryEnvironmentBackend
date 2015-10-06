@@ -7,14 +7,27 @@ import (
 	"net/http"
 )
 
+//Command is tells the receiver of a JobRequest which action to perform
+type Command int
+
+const (
+	//Launch tells the receiver of a JobRequest to launch the job
+	Launch Command = iota
+
+	//Stop tells the receiver of a JobRequest to stop a job
+	Stop
+)
+
 var (
 	logger = logcabin.New()
+	//LaunchCommand is the string used in LaunchCo
+	LaunchCommand = "LAUNCH"
 )
 
 // JobRequest is a generic request type for job related requests.
 type JobRequest struct {
 	Job     *model.Job
-	Command string
+	Command Command
 	Version int
 }
 
@@ -23,7 +36,7 @@ type JobRequest struct {
 func NewStopRequest(j *model.Job) *JobRequest {
 	return &JobRequest{
 		Job:     j,
-		Command: "STOP",
+		Command: Stop,
 		Version: 0,
 	}
 }
@@ -33,7 +46,7 @@ func NewStopRequest(j *model.Job) *JobRequest {
 func NewLaunchRequest(j *model.Job) *JobRequest {
 	return &JobRequest{
 		Job:     j,
-		Command: "LAUNCH",
+		Command: Launch,
 		Version: 0,
 	}
 }
