@@ -2,6 +2,8 @@ Moving Files and/or Directories
 --------------
 __URL Path__: /secured/filesystem/move
 
+This endpoint delegates to data-info's /mover endpoint.
+
 __HTTP Method__: POST
 
 __Error codes__: ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_TOO_MANY_PATHS, ERR_NOT_A_USER
@@ -29,7 +31,7 @@ __Response__:
 
     {
         "dest":"/tempZone/home/rods/test",
-        "paths":[
+        "sources":[
             "/tempZone/home/rods/test1"
         ]
     }
@@ -45,6 +47,8 @@ Moving all items in a Directory
 --------------
 
 __URL Path__: /secured/filesystem/move-contents
+
+This endpoint delegates to data-info's /data/:data-id/children/dir endpoint, after looking up the source's UUID.
 
 __HTTP Method__: POST
 
@@ -69,7 +73,7 @@ __Response__:
 
     {
         "dest":"/tempZone/home/rods/test",
-        "paths":[
+        "sources":[
             "/tempZone/home/rods/test1/test2",
             "/tempZone/home/rods/test1/test3"
         ]
