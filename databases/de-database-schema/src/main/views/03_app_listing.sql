@@ -7,6 +7,7 @@ SET search_path = public, pg_catalog;
 CREATE VIEW app_listing AS
     SELECT apps.id,
            apps."name",
+           lower(apps."name") AS lower_case_name,
            apps.description,
            integration.integrator_name,
            integration.integrator_email,

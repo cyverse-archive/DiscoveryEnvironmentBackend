@@ -21,7 +21,7 @@
               TransferStatusCallbackListener$FileStatusCallbackResponse
               TransferStatusCallbackListener$CallbackResponse
               DefaultTransferControlBlock]
-           [java.io InputStream OutputStream]))
+           [java.io Closeable]))
 
 (defn mkdir
   [{^IRODSFileSystemAO cm-ao :fileSystemAO :as cm} ^String dir-path]
@@ -142,9 +142,9 @@
     (.copy dto source res dest nil nil)))
 
 (defn copy-stream
-  [cm ^InputStream istream user dest-path]
+  [cm ^Closeable istream user dest-path]
   (validate-path-lengths dest-path)
-  (let [^OutputStream ostream (output-stream cm dest-path)]
+  (let [^Closeable ostream (output-stream cm dest-path)]
     (try
       (io/copy istream ostream)
       (finally

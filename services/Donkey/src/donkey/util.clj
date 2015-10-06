@@ -27,9 +27,6 @@
 
 (defn- pre-process-request
   [req & {:keys [slurp?] :or {slurp? false}}]
-  (if-not (contains? (:params req) :proxytoken)
-      (throw+ {:error_code "ERR_MISSING_PARAM"
-               :param "proxyToken"}))
   (let [req (assoc req :params (add-current-user-to-map (:params req)))]
     (if slurp?
       (assoc req :body (parse-body (slurp (:body req))))

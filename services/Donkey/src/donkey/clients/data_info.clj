@@ -77,6 +77,15 @@
   [^String user ^String dir]
   (cr/ensure-created user dir))
 
+(defn read-chunk
+  "Uses the data-info read-chunk endpoint."
+  [params body]
+  (let [path-uuid (uuid-for-path (:user params) (:path body))
+        url (url/url (cfg/data-info-base-url) "data" path-uuid "chunks" (:position body) (:chunk-size body))
+        req-map {:query-params (select-keys params [:user])
+                 :content-type :json}]
+    (http/get (str url) req-map)))
+
 (defn create-dirs
   [params body]
   (let [url     (url/url (cfg/data-info-base-url) "data" "directories")

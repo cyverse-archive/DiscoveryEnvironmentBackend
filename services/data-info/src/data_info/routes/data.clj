@@ -7,8 +7,10 @@
             [data-info.services.rename :as rename]
             [data-info.services.metadata :as meta]
             [data-info.services.entry :as entry]
+            [data-info.services.page-file :as page-file]
             [clojure-commons.error-codes :as ce]
-            [data-info.util.service :as svc]))
+            [data-info.util.service :as svc]
+            [schema.core :as s]))
 
 (defroutes* data-operations
 
@@ -112,6 +114,18 @@ for the requesting user."
   (get-error-code-block
     "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
         (svc/trap uri rename/do-move-uuid-contents params body data-id))
+
+      (GET* "/chunks/:position/:size" [:as {uri :uri}]
+        :query [params StandardUserQueryParams]
+        :path-params [position :- s/Int
+                      size     :- s/Int]
+        :return ChunkReturn
+        :summary "Get File Chunk"
+        :description (str
+  "Gets the chunk of the file of the specified position and size."
+  (get-error-code-block
+    "ERR_DOES_NOT_EXIST, ERR_NOT_A_FILE, ERR_NOT_READABLE, ERR_NOT_A_USER"))
+        (svc/trap uri page-file/do-read-chunk params data-id position size))
 
       (POST* "/metadata/save" [:as {uri :uri}]
         :query [params StandardUserQueryParams]
