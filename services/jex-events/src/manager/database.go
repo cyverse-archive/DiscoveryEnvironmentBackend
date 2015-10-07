@@ -1029,6 +1029,37 @@ func (d *Databaser) GetCondorJobStopRequest(uuid string) (*model.CondorJobStopRe
 	return jr, nil
 }
 
+// GetStopRequestByInvID returns a stop request record after looking it up by
+// the Job's invocationID.
+func (d *Databaser) GetStopRequestByInvID(invID string) (*model.CondorJobStopRequest, error) {
+	query := `
+	SELECT s.id id,
+				 s.job_id job_id,
+				 s.username username,
+				 s.date_requested date_requested,
+				 s.reason reason
+		FROM condor_job_stop_requests s,
+		     jobs j
+	 WHERE s.job_id = j.id
+	   AND j.invocation_id = cast($1 as uuid)
+	`
+	record := &model.CondorJobStopRequest{}
+	err := d.db.QueryRow(
+		query,
+		invID,
+	).Scan(
+		&record.ID,
+		&record.JobID,
+		&record.Username,
+		&record.DateRequested,
+		&record.Reason,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return record, nil
+}
+
 // UpdateCondorJobStopRequest updates the record of a job stop request.
 func (d *Databaser) UpdateCondorJobStopRequest(jr *model.CondorJobStopRequest) (*model.CondorJobStopRequest, error) {
 	query := `
