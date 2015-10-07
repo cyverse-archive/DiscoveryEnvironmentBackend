@@ -4,9 +4,9 @@
         [metadactyl.routes.domain.analysis.listing]
         [metadactyl.routes.domain.app]
         [metadactyl.routes.params]
-        [metadactyl.user :only [current-user]])
-  (:require [clojure-commons.error-codes :as ce]
-            [metadactyl.json :as json]
+        [metadactyl.user :only [current-user]]
+        [ring.util.http-response :only [ok]])
+  (:require [metadactyl.json :as json]
             [metadactyl.service.apps :as apps]
             [metadactyl.util.coercions :as coercions]
             [metadactyl.util.service :as service]))
@@ -45,35 +45,35 @@
           :return      AnalysisUpdateResponse
           :summary     "Update an Analysis"
           :description       "This service allows an analysis name or description to be updated."
-          (service/coerced-trap uri AnalysisUpdateResponse
+          (service/coerced-trap nil AnalysisUpdateResponse
                                 apps/update-job current-user analysis-id body))
 
-  (DELETE* "/:analysis-id" [:as {:keys [uri]}]
+  (DELETE* "/:analysis-id" []
            :path-params [analysis-id :- AnalysisIdPathParam]
            :query       [params SecuredQueryParams]
            :summary     "Delete an Analysis"
            :description       "This service marks an analysis as deleted in the DE database."
-           (service/trap uri apps/delete-job current-user analysis-id))
+           (ok (apps/delete-job current-user analysis-id)))
 
-  (POST* "/shredder" [:as {:keys [uri]}]
+  (POST* "/shredder" []
          :query   [params SecuredQueryParams]
          :body    [body AnalysisShredderRequest]
          :summary "Delete Multiple Analyses"
          :description   "This service allows the caller to mark one or more analyses as deleted
          in the apps database."
-         (service/trap uri apps/delete-jobs current-user body))
+         (ok (apps/delete-jobs current-user body)))
 
-  (GET* "/:analysis-id/parameters" [:as {:keys [uri]}]
+  (GET* "/:analysis-id/parameters" []
         :path-params [analysis-id :- AnalysisIdPathParam]
         :query       [params SecuredQueryParams]
         :return      AnalysisParameters
         :summary     "Display the parameters used in an analysis."
         :description       "This service returns a list of parameter values used in a previously
         executed analysis."
-        (service/coerced-trap uri AnalysisParameters
+        (service/coerced-trap nil AnalysisParameters
                               apps/get-parameter-values current-user analysis-id))
 
-  (GET* "/:analysis-id/relaunch-info" [:as {:keys [uri]}]
+  (GET* "/:analysis-id/relaunch-info" []
         :path-params [analysis-id :- AnalysisIdPathParam]
         :query       [params SecuredQueryParams]
         :return      AppJobView
@@ -81,21 +81,21 @@
         :description       "This service allows the Discovery Environment user interface to obtain an
         app description that can be used to relaunch a previously submitted job, possibly with
         modified parameter values."
-        (service/coerced-trap uri AppJobView
+        (service/coerced-trap nil AppJobView
                               apps/get-job-relaunch-info current-user analysis-id))
 
-  (POST* "/:analysis-id/stop" [:as {:keys [uri]}]
+  (POST* "/:analysis-id/stop" []
          :path-params [analysis-id :- AnalysisIdPathParam]
          :query       [params SecuredQueryParams]
          :return      StopAnalysisResponse
          :summary     "Stop a running analysis."
          :description       "This service allows DE users to stop running analyses."
-         (service/coerced-trap uri StopAnalysisResponse apps/stop-job current-user analysis-id))
+         (service/coerced-trap nil StopAnalysisResponse apps/stop-job current-user analysis-id))
 
-  (GET* "/:analysis-id/steps" [:as {:keys [uri]}]
+  (GET* "/:analysis-id/steps" []
         :path-params [analysis-id :- AnalysisIdPathParam]
         :query       [params SecuredQueryParams]
         :return      AnalysisStepList
         :summary     "Display the steps of an analysis."
         :description "This service returns a list of steps in an analysis."
-        (service/trap uri apps/list-job-steps current-user analysis-id)))
+        (ok (apps/list-job-steps current-user analysis-id))))

@@ -18,5 +18,6 @@
                  [medley "0.7.0"]
                  [metosin/compojure-api "0.23.1"]
                  [slingshot "0.12.2"]
-                 [trptcolin/versioneer "0.2.0"]]
+                 [trptcolin/versioneer "0.2.0"]
+                 [org.iplantc/service-logging "5.0.0"]]
   :profiles {:test {:resource-paths ["resources" "test-resources"]}})

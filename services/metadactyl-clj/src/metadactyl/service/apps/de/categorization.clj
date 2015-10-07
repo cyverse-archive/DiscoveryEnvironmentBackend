@@ -4,8 +4,7 @@
         [kameleon.app-groups]
         [kameleon.entities]
         [metadactyl.validation]
-        [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as error-codes]))
+        [slingshot.slingshot :only [throw+]]))
 
 (defn- categorize-app
   "Associates an app with an app category."
@@ -19,9 +18,10 @@
   [app-id path]
   (let [app (get-app-by-id app-id)]
     (when (nil? app)
-      (throw+ {:error_code error-codes/ERR_NOT_FOUND
+      (throw+ {:type :clojure-commons.exception/not-found
                :app-id     app-id
-               :path       path}))))
+               :path       path
+               :error (str "Could not locate app with ID: " app-id)}))))
 
 (defn- load-category
   [category-id]
@@ -31,18 +31,21 @@
   [path category-id]
   (let [category (load-category category-id)]
     (when (nil? category)
-      (throw+ {:error_code error-codes/ERR_NOT_FOUND
-               :path       path}))
+      (throw+ {:type   :clojure-commons.exception/not-found
+               :path path
+               :error (str "Could not locate app category with ID: " category-id)}))
+
     (when (seq (:app_categories category))
-      (throw+ {:error_code error-codes/ERR_BAD_OR_MISSING_FIELD
-               :reason     (str "category " category-id " contains subcategories")
-               :path       path}))))
+      (throw+ {:type   :clojure-commons.exception/missing-request-field
+               :error  (str "category " category-id " contains subcategories")
+               :path path}))))
 
 (defn- validate-category-ids
   [category-ids path]
   (when (zero? (count category-ids))
-    (throw+ {:error_code error-codes/ERR_BAD_OR_MISSING_FIELD
-             :path       path}))
+    (throw+ {:type   :clojure-commons.exception/missing-request-field
+             :error  (str "Missing category ids")
+             :path path}))
   (dorun (map (partial validate-category-id path) category-ids)))
 
 (defn- validate-category

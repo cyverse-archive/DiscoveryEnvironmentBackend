@@ -8,10 +8,8 @@
         [metadactyl.user :only [current-user]]
         [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.conversions :only [date->timestamp]]
-        [metadactyl.util.service :only [success-response]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as error-codes]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [korma.core :as sql]))
 
 (defn- reference-genome-base-query
@@ -55,7 +53,7 @@
    (list-reference-genomes nil))
   ([params]
    (let [reference-genomes (get-reference-genomes params)]
-     (success-response {:genomes reference-genomes}))))
+     {:genomes reference-genomes})))
 
 (defn- get-valid-reference-genome
   [reference-genome-id]
@@ -65,7 +63,7 @@
 (defn get-reference-genome
   "Gets a reference genome by its ID."
   [reference-genome-id]
-  (success-response (get-valid-reference-genome reference-genome-id)))
+  (get-valid-reference-genome reference-genome-id))
 
 (defn delete-reference-genome
   "Logically deletes a reference genome by setting its 'deleted' flag to true."
@@ -111,8 +109,8 @@
   "Validates a single field in a reference genome."
   [genome field]
   (when (blank? (genome field))
-    (throw+ {:error_code error-codes/ERR_BAD_OR_MISSING_FIELD
-             field "empty required field"
+    (throw+ {:type       :clojure-commons.exception/missing-request-field
+             :error      "empty required field"
              :genome genome})))
 
 (defn- validate-username
@@ -120,8 +118,8 @@
   [genome field]
   (let [username (genome field)]
     (when-not (or (= "<public>" username) (re-find #"@" username))
-      (throw+ {:error_code error-codes/ERR_BAD_OR_MISSING_FIELD
-               field "username not fully qualified"
+      (throw+ {:type       :clojure-commons.exception/missing-request-field
+               :error      "username not fully qualified"
                :genome genome}))))
 
 (defn- validate-reference-genome

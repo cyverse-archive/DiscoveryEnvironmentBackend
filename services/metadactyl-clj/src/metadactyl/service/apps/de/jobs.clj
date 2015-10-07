@@ -9,7 +9,6 @@
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as ce]
             [kameleon.db :as db]
             [metadactyl.clients.jex :as jex]
             [metadactyl.clients.jex-events :as jex-events]
@@ -38,9 +37,11 @@
   [job]
   (try+
    (jex/submit-job (pre-process-jex-submission job))
+   ; FIXME: Should we let this error ripple up? Not catch it?
    (catch Object _
      (log/error (:throwable &throw-context) "job submission failed")
-     (throw+ {:error_code ce/ERR_REQUEST_FAILED}))))
+     (throw+ {:type :clojure-commons.exception/request-failed
+              :error "job submission failed"}))))
 
 (defn- store-submitted-job
   "Saves information about a job in the database."

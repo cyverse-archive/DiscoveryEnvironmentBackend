@@ -2,8 +2,6 @@
   (:use [kameleon.uuids :only [uuidify]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.string :as string]
-            [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as ce]
             [me.raynes.fs :as fs]
             [metadactyl.service.apps.de.jobs.util :as util]
             [metadactyl.util.config :as config]))
@@ -54,8 +52,8 @@
 
 (defn- missing-output-filename
   [{step-id :step_id id :id}]
-  (throw+ {:error_code ce/ERR_BAD_REQUEST
-           :reason     (str "no filename found for output " id " in step " step-id)}))
+  (throw+ {:type  :clojure-commons.exception/bad-request-field
+           :error (str "no filename found for output " id " in step " step-id)}))
 
 (defn- get-output-filename
   "Obtains the name of an output filename from either the app config or the default values

@@ -6,9 +6,7 @@
         [metadactyl.user :only [load-user]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
         [slingshot.slingshot :only [throw+]])
-  (:require [cheshire.core :as cheshire]
-            [clojure.string :as string]
-            [clojure-commons.error-codes :as error-codes]
+  (:require [clojure.string :as string]
             [kameleon.queries :as queries]
             [metadactyl.clients.notifications :as cn]
             [metadactyl.util.params :as params])
@@ -22,7 +20,7 @@
   [m & ks]
   (let [v (first (remove string/blank? (map m ks)))]
     (when (nil? v)
-      (throw+ {:error_code    error-codes/ERR_BAD_OR_MISSING_FIELD
+      (throw+ {:type :clojure-commons.exception/missing-request-field
                :accepted_keys ks}))
     v))
 
@@ -31,8 +29,8 @@
   [architecture]
   (let [id (:id (first (select tool_architectures (where {:name architecture}))))]
     (when (nil? id)
-      (throw+ {:error_code error-codes/ERR_NOT_FOUND
-               :name architecture}))
+      (throw+ {:type :clojure-commons.exception/not-found
+               :error (str "Could not locate ID for the architecture name: " architecture)}))
     id))
 
 (defn- status-code-subselect
@@ -78,8 +76,8 @@
   [uuid]
   (let [req (queries/get-tool-request-details uuid)]
     (when (nil? req)
-      (throw+ {:error_code error-codes/ERR_NOT_FOUND
-               :id   (string/upper-case (.toString uuid))}))
+      (throw+ {:type :clojure-commons.exception/not-found
+               :error (str "Could not locate tool with the following id: " (string/upper-case (.toString uuid)))}))
     req))
 
 (defn- get-most-recent-status
@@ -96,8 +94,8 @@
                         (order :trs.date_assigned :DESC)
                         (limit 1)))]
     (when (nil? status)
-      (throw+ {:error_code error-codes/ERR_MISSING_DEPENDENCY
-               :message "no status found for tool request"
+      (throw+ {:type :clojure-commons.exception/failed-dependency
+               :error "no status found for tool request"
                :id (string/upper-case (.toString uuid))}))
     status))
 

@@ -10,9 +10,7 @@
         [clojure.string :only [upper-case]]
         [korma.core :exclude [update]]
         [korma.db :only [transaction]])
-  (:require [clojure-commons.error-codes :as cc-errs]
-            [metadactyl.persistence.app-metadata :as persistence]
-            [metadactyl.util.service :as service]))
+  (:require [metadactyl.persistence.app-metadata :as persistence]))
 
 (defn- add-search-where-clauses
   "Adds where clauses to a base tool search query to restrict results to tools that contain the
@@ -61,18 +59,16 @@
 (defn search-tools
   "Obtains a listing of tools for the tool search service."
   [params]
-  (service/success-response
-    {:tools
+  {:tools
      (map remove-nil-vals
-       (select (tool-listing-base-query params)))}))
+       (select (tool-listing-base-query params)))})
 
 (defn get-tool
   "Obtains a tool by ID."
   [tool-id]
   (->> (first (select (tool-listing-base-query) (where {:tools.id tool-id})))
        (assert-not-nil [:tool-id tool-id])
-       remove-nil-vals
-       service/success-response))
+       remove-nil-vals))
 
 (defn get-tools-by-id
   "Obtains a listing of tools for the given list of IDs."
@@ -93,7 +89,7 @@
   [{:keys [tools]}]
   (transaction
     (let [tool-ids (doall (map add-new-tool tools))]
-      (service/success-response {:tool_ids tool-ids}))))
+      {:tool_ids tool-ids})))
 
 (defn update-tool
   [{:keys [id] :as tool}]
