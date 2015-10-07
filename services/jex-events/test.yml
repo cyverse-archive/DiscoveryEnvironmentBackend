@@ -14,4 +14,4 @@ test:
     volumes:
       - .:/jex
     working_dir: /jex
-    command: ./dbtest.sh
+    command: gb test -test.v

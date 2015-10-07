@@ -2,6 +2,7 @@ package manager
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"model"
 	"os"
@@ -13,10 +14,11 @@ import (
 )
 
 func ConnString() (string, error) {
-	connString := os.Getenv("JEXDB")
+	connString := os.Getenv("JEXDB_PORT_5432_TCP_ADDR")
 	if connString == "" {
-		return connString, errors.New("empty JEXDB string")
+		return connString, errors.New("empty JEXDB_PORT_5432_TCP_ADDR string")
 	}
+	connString = fmt.Sprintf("postgres://de:notprod@%s:5432/jex?sslmode=disable", connString)
 	return connString, nil
 }
 
