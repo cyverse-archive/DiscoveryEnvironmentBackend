@@ -30,13 +30,3 @@
          (if ctx#
            (MDC/setContextMap ctx#)
            (clear-context!))))))
-
-(defn add-user-to-context
-  "add-user-to-context is a ring handler that adds the user value from the query
-  string into the context with a key of 'user'. The query params need to be parsed first."
-  [handler]
-  (fn [request]
-    (let [q-params (:query-params request)]
-      (if (contains? q-params "user")
-        (set-context! {:user (get (:query-params request) "user")}))
-      (handler request))))

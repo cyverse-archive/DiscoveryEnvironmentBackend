@@ -71,6 +71,19 @@
   [handler]
   (fn [request]
     (log-request request)
+    (let [response (handler request)]
+      (log-response request response)
+      response)))
+
+(defn wrap-response-logging
+  "Logs incoming requests and their responses with the 'AccessLogger' logger.
+
+    If the response map contains a `throwable` key, the value will be given to
+    the logger as an exception/throwable. Also, if the `throwable` key is not nil,
+    it is assumed that there will also be an `exception` key in the response map.
+    The `throwable` and `exception` keys are not logged nor passed with the response."
+  [handler]
+  (fn [request]
     (let [{:keys [throwable exception] :as response} (handler request)]
       (if (nil? throwable)
                (log-response request response)
