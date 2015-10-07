@@ -8,6 +8,7 @@
             [data-info.services.metadata :as meta]
             [data-info.services.entry :as entry]
             [data-info.services.page-file :as page-file]
+            [data-info.services.page-tabular :as page-tabular]
             [clojure-commons.error-codes :as ce]
             [data-info.util.service :as svc]
             [schema.core :as s]))
@@ -117,8 +118,8 @@ for the requesting user."
 
       (GET* "/chunks/:position/:size" [:as {uri :uri}]
         :query [params StandardUserQueryParams]
-        :path-params [position :- s/Int
-                      size     :- s/Int]
+        :path-params [position :- (describe s/Int "The position to read from.")
+                      size     :- (describe s/Int "The read length.")]
         :return ChunkReturn
         :summary "Get File Chunk"
         :description (str
@@ -126,6 +127,19 @@ for the requesting user."
   (get-error-code-block
     "ERR_DOES_NOT_EXIST, ERR_NOT_A_FILE, ERR_NOT_READABLE, ERR_NOT_A_USER"))
         (svc/trap uri page-file/do-read-chunk params data-id position size))
+
+      (GET* "/chunks-tabular/:separator/:page/:size" [:as {uri :uri}]
+        :query [params StandardUserQueryParams]
+        :path-params [separator :- (describe s/Str "The separator value to use, url-encoded. %09 is the value for tab.")
+                      page      :- (describe s/Int "The page of the results to get, relative to the page size.")
+                      size      :- (describe s/Int "The page size to attempt. This will not be exact, because partial lines will not be provided.")]
+        :return (s/either TabularChunkDoc TabularChunkReturn)
+        :summary "Get Tabular File Chunk"
+        :description (str
+  "Gets the specified page of the tabular file, with a page size roughly corresponding to the provided size. The size is not precisely guaranteed, because partial lines cannot be correctly parsed."
+  (get-error-code-block
+    "ERR_DOES_NOT_EXIST, ERR_NOT_A_FILE, ERR_NOT_READABLE, ERR_NOT_A_USER, ERR_INVALID_PAGE, ERR_PAGE_NOT_POS, ERR_CHUNK_TOO_SMALL"))
+        (svc/trap uri page-tabular/do-read-csv-chunk params data-id separator page size))
 
       (POST* "/metadata/save" [:as {uri :uri}]
         :query [params StandardUserQueryParams]

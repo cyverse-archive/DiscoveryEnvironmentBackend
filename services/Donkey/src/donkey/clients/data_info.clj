@@ -86,6 +86,15 @@
                  :content-type :json}]
     (http/get (str url) req-map)))
 
+(defn read-tabular-chunk
+  "Uses the data-info read-tabular-chunk endpoint."
+  [params body]
+  (let [path-uuid (uuid-for-path (:user params) (:path body))
+        url (url/url (cfg/data-info-base-url) "data" path-uuid "chunks-tabular" (:separator body) (:page body) (:chunk-size body))
+        req-map {:query-params (select-keys params [:user])
+                 :content-type :json}]
+    (http/get (str url) req-map)))
+
 (defn create-dirs
   [params body]
   (let [url     (url/url (cfg/data-info-base-url) "data" "directories")

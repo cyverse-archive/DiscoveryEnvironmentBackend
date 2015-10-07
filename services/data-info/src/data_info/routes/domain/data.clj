@@ -97,3 +97,23 @@
    :chunk-size (describe NonBlankString "The size of the read.")
    :file-size  (describe NonBlankString "The file's total size.")
    :chunk      (describe String "The read result.")})
+
+(s/defschema CSVEntry
+  {(describe s/Keyword "The column number.")
+   (describe String "The column data.")})
+
+(s/defschema CSVDoc
+  {:a-string-quoted-column-number (describe String "The column data.")})
+
+(s/defschema TabularChunkReturn
+  (-> ChunkReturn
+    (dissoc :start :chunk)
+    (assoc :page (describe NonBlankString "The page number.")
+           :number-pages (describe NonBlankString "The total number of pages")
+           :max-cols (describe NonBlankString "The maximum number of columns present.")
+           :csv (describe [CSVEntry] "The tabular data result.")))) 
+
+(s/defschema TabularChunkDoc
+  (-> TabularChunkReturn
+    (dissoc :csv)
+    (assoc :csv (describe [CSVDoc] "The tabular data result."))))
