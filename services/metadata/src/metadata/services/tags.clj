@@ -2,6 +2,7 @@
   (:use [kameleon.db :only [millis-from-timestamp]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.set :as set]
+            [clojure.string :as string]
             [clojure-commons.error-codes :as error]
             [metadata.persistence.tags :as db])
   (:import [java.util UUID]
@@ -58,11 +59,13 @@
    Returns:
      The new tag."
   [^String owner ^IPersistentMap {:keys [value description]}]
-  (if (empty? (db/get-tags-by-value owner value))
-    (format-tag (db/insert-user-tag owner value description))
-    (throw+ {:error_code error/ERR_NOT_UNIQUE
-             :user owner
-             :value value})))
+  (let [value (string/trim value)
+        description (string/trim description)]
+    (if (empty? (db/get-tags-by-value owner value))
+      (format-tag (db/insert-user-tag owner value description))
+      (throw+ {:error_code error/ERR_NOT_UNIQUE
+               :user owner
+               :value value}))))
 
 
 (defn ^IPersistentMap delete-user-tag
