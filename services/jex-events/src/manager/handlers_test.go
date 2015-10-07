@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"logcabin"
 	"messaging"
 	"model"
@@ -138,7 +137,6 @@ func TestCommandsHandle(t *testing.T) {
 	if job.InvocationID != s.InvocationID {
 		t.Error("InvocationID's didn't match")
 	}
-	log.Printf(fmt.Sprintf("-----------------------------------------------------%s\n", job.Submitter))
 	if job.Submitter != s.Submitter {
 		t.Error("Submitters didn't match")
 	}

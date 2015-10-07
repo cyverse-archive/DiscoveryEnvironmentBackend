@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"messaging"
 	"model"
 	"net/http"
@@ -416,16 +415,16 @@ func (s *StopsHandler) Handle(delivery amqp.Delivery) {
 	newStop := api.NewStopRequest()
 	err := json.Unmarshal(delivery.Body, newStop)
 	if err != nil {
-		log.Print(err)
+		logger.Print(err)
 		return
 	}
-	log.Printf("Received stop request for %s\n", newStop.InvocationID)
+	logger.Printf("Received stop request for %s\n", newStop.InvocationID)
 	job, err := s.db.GetJobByInvocationID(newStop.InvocationID)
 	if err != nil {
-		log.Print(err)
+		logger.Print(err)
 		return
 	}
-	log.Printf("Found job record %s for stop request on %s\n", job.ID, newStop.InvocationID)
+	logger.Printf("Found job record %s for stop request on %s\n", job.ID, newStop.InvocationID)
 	dbStopRequest := &model.CondorJobStopRequest{
 		JobID:         job.ID,
 		Username:      newStop.Username,

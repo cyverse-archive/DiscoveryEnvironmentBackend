@@ -15,4 +15,6 @@ test:
     volumes:
       - .:/jex
     working_dir: /jex
+    environment:
+      - SUPPRESS_LOGGING=1
     command: gb test -test.v
