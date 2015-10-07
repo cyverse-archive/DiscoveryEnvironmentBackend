@@ -1,4 +1,4 @@
-package condor
+package condorlauncher
 
 import (
 	"api"
