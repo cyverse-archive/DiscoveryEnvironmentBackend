@@ -5,7 +5,7 @@ COPY setup-dev-database.sh /bin/setup-dev-database.sh
 COPY update-dev-database.sh /bin/update-dev-database.sh
 COPY pgpass /root/.pgpass
 RUN chmod 0600 /root/.pgpass
-
-ENV POSTGRES_PASSWORD=notprod POSTGRES_USER=de
+RUN mkdir /data
+ENV POSTGRES_PASSWORD=notprod POSTGRES_USER=de PGDATA=/data
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["postgres"]
