@@ -1,6 +1,7 @@
 (ns donkey.util.jwt
   (:use [slingshot.slingshot :only [try+ throw+]])
-  (:require [clojure-commons.error-codes :as ce]
+  (:require [clojure.string :as string]
+            [clojure-commons.error-codes :as ce]
             [clojure-commons.jwt :as jwt]
             [clojure-commons.response :as resp]
             [donkey.util.config :as config]))
@@ -56,12 +57,24 @@
         (handler request)
         (resp/forbidden "You are not in one of the admin groups.")))))
 
+(def ^:private required-fields #{:user :email})
+
+(defn- validate-claims
+  [claims]
+  (let [user    (jwt/user-from-assertion claims)
+        missing (into [] (filter (comp string/blank? user) required-fields))]
+    (when (seq missing)
+      (throw (ex-info (str "Missing required JWT fields: " missing)
+                      {:type :validation :cause :missing-fields})))))
+
 (defn validate-jwt-assertion
   [handler assertion-fn]
   (fn [request]
     (try+
       (if-let [assertion (assertion-fn request)]
-        (handler (assoc request :jwt-claims ((jwt-validator) assertion)))
+        (let [claims ((jwt-validator) assertion)]
+          (validate-claims claims)
+          (handler (assoc request :jwt-claims claims)))
         (resp/unauthorized "Custom JWT header not found."))
       (catch [:type :validation] _
-          (resp/forbidden (.getMessage (:throwable &throw-context)))))))
+        (resp/forbidden (.getMessage (:throwable &throw-context)))))))
