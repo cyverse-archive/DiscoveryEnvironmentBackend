@@ -1,7 +1,7 @@
 package main
 
 import (
-	"condor"
+	"condorlauncher"
 	"configurate"
 	"flag"
 	"fmt"
@@ -75,7 +75,7 @@ func main() {
 	case "manager":
 		manager.Run()
 	case "condor-launcher":
-		condor.Run()
+		condorlauncher.Run()
 	default:
 		fmt.Println("Bad mode! Bad! Look what you did!")
 		flag.PrintDefaults()
