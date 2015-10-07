@@ -15,7 +15,7 @@
   [ks m]
   (let [v (first (remove blank? (map m ks)))]
     (when (blank? v)
-      (throw+ {:type :clojure-commons.exception/bad-request-field
+      (throw+ {:type   :clojure-commons.exception/bad-request-field
                :params ks}))
     v))
 

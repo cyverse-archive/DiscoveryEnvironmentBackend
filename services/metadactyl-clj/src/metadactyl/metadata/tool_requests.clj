@@ -29,7 +29,7 @@
   [architecture]
   (let [id (:id (first (select tool_architectures (where {:name architecture}))))]
     (when (nil? id)
-      (throw+ {:type :clojure-commons.exception/not-found
+      (throw+ {:type  :clojure-commons.exception/not-found
                :error (str "Could not locate ID for the architecture name: " architecture)}))
     id))
 

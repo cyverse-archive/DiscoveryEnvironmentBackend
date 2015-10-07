@@ -95,12 +95,11 @@
   "add-user-to-context is a ring handler that adds the user value from the query
   string into the context with a key of 'user'. The query params need to be parsed first."
   [handler]
-  (fn [request]
-    (let [q-params (:query-params request)]
-      (if (contains? q-params "user")
-        (tc/with-logging-context (assoc-in {} [:user-info :user](get (:query-params request) "user"))
-                              (handler request))
-        (handler request)))))
+  (fn [{:keys [query-params] :as request}]
+    (if (contains? query-params "user")
+      (tc/with-logging-context (assoc-in {} [:user-info :user](get query-params "user"))
+                               (handler request))
+      (handler request))))
 
 ; FIXME Replace usages of this function with compojure api validation exception handlers
 (defn log-validation-errors

@@ -4,8 +4,7 @@
         [ring.util.http-response :only [ok]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
-            [clojure-commons.assertions :as ca]
-            [metadactyl.util.coercions :as mc]))
+            [clojure-commons.assertions :as ca]))
 
 (defn unrecognized-path-response
   "Builds the response to send for an unrecognized service path."
@@ -21,14 +20,8 @@
       (cheshire/decode body true)
       (cheshire/decode-stream (reader body) true))
     (catch Exception e
-      (throw+ {:type :clojure-commons.exception/invalid-json
-               :error     (str e)}))))
-
-(defn coerced-trap
-  "Traps a service call, automatically coercing the output and calling success-response
-   on the result."
-  [_ schema func & args]
-  (ok (mc/coerce! schema (apply func args))))
+      (throw+ {:type  :clojure-commons.exception/invalid-json
+               :error (str e)}))))
 
 (def not-found ca/not-found)
 (def not-owner ca/not-owner)

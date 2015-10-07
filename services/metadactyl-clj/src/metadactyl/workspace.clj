@@ -11,8 +11,8 @@
   ([username]
      (if-let [workspace (fetch-workspace-by-user-id (get-existing-user-id username))]
        workspace
-       (throw+ {:type    :clojure-commons.exception/not-found
-                :message "Workspace for user not found."
+       (throw+ {:type     :clojure-commons.exception/not-found
+                :message  "Workspace for user not found."
                 :username username}))))
 
 (defn get-optional-workspace

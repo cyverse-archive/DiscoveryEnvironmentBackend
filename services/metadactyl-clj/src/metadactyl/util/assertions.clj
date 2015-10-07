@@ -11,7 +11,7 @@
   [[id-field id] & body]
   `(let [res# (do ~@body)]
      (if (nil? res#)
-       (throw+ {:type :clojure-commons.exception/not-found
-                :error (str "The item with the following ID could not be found: " ~id)
+       (throw+ {:type     :clojure-commons.exception/not-found
+                :error    (str "The item with the following ID could not be found: " ~id)
                 ~id-field (str ~id)})
        res#)))

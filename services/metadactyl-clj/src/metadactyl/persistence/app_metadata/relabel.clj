@@ -17,9 +17,9 @@
   [app-id]
   (let [tasks (get-tasks-for-app app-id)]
     (when (not= 1 (count tasks))
-      (throw+ {:type :clojure-commons.exception/illegal-argument
-               :error     :NOT_SINGLE_STEP_APP
-               ::step_count (count tasks)}))
+      (throw+ {:type       :clojure-commons.exception/illegal-argument
+               :error      :NOT_SINGLE_STEP_APP
+               :step_count (count tasks)}))
     (first tasks)))
 
 (defn- get-parameter-group-in-task

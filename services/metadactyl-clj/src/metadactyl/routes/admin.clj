@@ -14,8 +14,7 @@
         [metadactyl.util.coercions :only [coerce!]]
         [ring.util.http-response :only [ok]])
   (:require [metadactyl.service.apps :as apps]
-            [metadactyl.util.config :as config]
-            [metadactyl.util.service :as service]))
+            [metadactyl.util.config :as config]))
 
 (defroutes* admin-tool-requests
   (GET* "/" []
@@ -83,10 +82,10 @@
           <b>Note</b>: Although this endpoint accepts all App Group and Parameter fields within the
           'groups' array, only their 'description', 'label', and 'display' (only in parameter
           arguments) fields will be processed and updated by this endpoint."
-          (service/coerced-trap nil AppDetails
-                                apps/admin-update-app current-user (assoc body :id app-id)))
+          (ok (coerce! AppDetails
+                (apps/admin-update-app current-user (assoc body :id app-id)))))
 
-  (PATCH* "/:app-id/documentation" [:as {body :body}]
+  (PATCH* "/:app-id/documentation" []
           :path-params [app-id :- AppIdPathParam]
           :query [params SecuredQueryParams]
           :body [body (describe AppDocumentationRequest "The App Documentation Request.")]
@@ -94,18 +93,18 @@
           :summary "Update App Documentation"
           :description "This service is used by DE administrators to update documentation for a single
           App"
-          (service/coerced-trap nil AppDocumentation
-                                apps/admin-edit-app-docs current-user app-id body))
+          (ok (coerce! AppDocumentation
+                (apps/admin-edit-app-docs current-user app-id body))))
 
-  (POST* "/:app-id/documentation" [:as {uri :uri body :body}]
+  (POST* "/:app-id/documentation" []
          :path-params [app-id :- AppIdPathParam]
          :query [params SecuredQueryParams]
          :body [body (describe AppDocumentationRequest "The App Documentation Request.")]
          :return AppDocumentation
          :summary "Add App Documentation"
          :description "This service is used by DE administrators to add documentation for a single App"
-         (service/coerced-trap uri AppDocumentation
-                               apps/admin-add-app-docs current-user app-id body)))
+         (ok (coerce! AppDocumentation
+                  (apps/admin-add-app-docs current-user app-id body)))))
 
 (defroutes* admin-categories
   (GET* "/" []

@@ -147,5 +147,5 @@
     (cond
       (= elm-type "all")               (list-all params)
       (contains? listing-fns elm-type) ((listing-fns elm-type) params)
-      :else                            (throw+ {:type ::unrecognized_workflow_component_type
-                                                :name elm-type})))
+      :else (throw+ {:type ::unrecognized_workflow_component_type
+                     :name elm-type})))

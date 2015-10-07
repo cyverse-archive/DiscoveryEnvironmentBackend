@@ -28,7 +28,7 @@
    (data-info/get-file-stats user paths)
    (catch Object _
      (log/error (:throwable &throw-context) "job submission failed")
-     (throw+ {:type :clojure-commons.exception/request-failed
+     (throw+ {:type  :clojure-commons.exception/request-failed
               :error "Could not lookup info types of inputs"}))))
 
 (defn- load-path-list-stats
@@ -54,20 +54,20 @@
 (defn- max-path-list-size-exceeded
   [max-size path actual-size]
   (throw+
-   {:type       :clojure-commons.exception/illegal-argument
-    :error      (str "HT Analysis Path List file exceeds maximum size of " max-size " bytes.")
-    :path path
-    :file-size actual-size}))
+    {:type      :clojure-commons.exception/illegal-argument
+     :error     (str "HT Analysis Path List file exceeds maximum size of " max-size " bytes.")
+     :path      path
+     :file-size actual-size}))
 
 (defn- max-batch-paths-exceeded
   [max-paths first-list-path first-list-count]
   (throw+
-   {:type :clojure-commons.exception/illegal-argument
-    :error    (str "The HT Analysis Path List exceeds the maximum of "
-                   max-paths
-                   " allowed paths.")
-    :path       first-list-path
-    :path-count first-list-count}))
+    {:type       :clojure-commons.exception/illegal-argument
+     :error      (str "The HT Analysis Path List exceeds the maximum of "
+                      max-paths
+                      " allowed paths.")
+     :path       first-list-path
+     :path-count first-list-count}))
 
 (defn- validate-path-list-stats
   [{path :path actual-size :file-size}]
@@ -77,7 +77,7 @@
 (defn- validate-ht-params
   [ht-params]
   (when (some (comp (partial = ap/param-multi-input-type) :type) ht-params)
-    (throw+ {:type :clojure-commons.exception/illegal-argument
+    (throw+ {:type  :clojure-commons.exception/illegal-argument
              :error "HT Analysis Path List files are not supported in multi-file inputs."})))
 
 (defn- validate-path-lists
@@ -87,7 +87,7 @@
     (when (> first-list-count (config/path-list-max-paths))
       (max-batch-paths-exceeded (config/path-list-max-paths) first-list-path first-list-count))
     (when-not (every? (comp (partial = first-list-count) count second) path-lists)
-      (throw+ {:type :clojure-commons.exception/illegal-argument
+      (throw+ {:type  :clojure-commons.exception/illegal-argument
                :error "All HT Analysis Path Lists must have the same number of paths."}))))
 
 (defn- get-path-list-contents
@@ -97,12 +97,12 @@
    (catch [:status 500] {:keys [body]}
      (log/error (:throwable &throw-context) "job submission failed")
      (log/error (slurp body))
-     (throw+ {:type :clojure-commons.exception/request-failed
-              :error    "Could get file contents of path list input"}))
+     (throw+ {:type  :clojure-commons.exception/request-failed
+              :error "Could not get file contents of path list input"}))
    (catch Object _
      (log/error (:throwable &throw-context) "job submission failed")
-     (throw+ {:type :clojure-commons.exception/request-failed
-              :error    "Could get file contents of path list input"}))))
+     (throw+ {:type  :clojure-commons.exception/request-failed
+              :error "Could not get file contents of path list input"}))))
 
 (defn- get-path-list-contents-map
   [user paths]

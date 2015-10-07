@@ -28,7 +28,7 @@
 
 (defn- authorization-redirect
   [server-info username state-info]
-  (throw+ {:type       :clojure-commons.exception/temporary-redirect
+  (throw+ {:type     :clojure-commons.exception/temporary-redirect
            :location (authorization-uri server-info username state-info)}))
 
 (defn- has-access-token

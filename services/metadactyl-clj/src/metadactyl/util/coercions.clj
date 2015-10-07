@@ -27,5 +27,6 @@
   [schema value]
   (let [result (coerce schema value)]
     (if (su/error? result)
-      (throw+ {:type :ring.swagger.schema/validation :error (:error result)})
+      (throw+ {:type  :ring.swagger.schema/validation
+               :error (:error result)})
       result)))

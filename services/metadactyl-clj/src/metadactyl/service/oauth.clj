@@ -20,8 +20,8 @@
   [api-name]
   (if-let [server-info-fn (server-info-fn-for (keyword api-name))]
     (server-info-fn)
-    (throw+ {:type :clojure-commons.exception/bad-request-field
-             :error     (str "unknown API name: " api-name)})))
+    (throw+ {:type  :clojure-commons.exception/bad-request-field
+             :error (str "unknown API name: " api-name)})))
 
 (defn get-access-token
   "Receives an OAuth authorization code and obtains an access token."

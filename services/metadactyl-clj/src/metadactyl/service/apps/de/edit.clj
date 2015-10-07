@@ -160,7 +160,7 @@
     validation-rules :validation_rules
     :as param}]
   (when-not value-type
-    (throw+ {:type :clojure-commons.exception/not-writeable
+    (throw+ {:type  :clojure-commons.exception/not-writeable
              :error "App contains Parameters that cannot be copied or modified at this time."}))
   (let [param (-> param
                   format-file-params
@@ -189,7 +189,7 @@
   (let [app (get-app-details (:id app))
         task (first (:tasks app))]
     (when (empty? task)
-      (throw+ {:type :clojure-commons.exception/not-writeable
+      (throw+ {:type  :clojure-commons.exception/not-writeable
                :error "App contains no steps and cannot be copied or modified."}))
     (remove-nil-vals
       (-> app

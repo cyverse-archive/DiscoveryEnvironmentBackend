@@ -10,8 +10,8 @@
   [job]
   (let [submission (:submission job)]
     (when-not submission
-      (throw+ {:type :clojure-commons.exception/not-found
-               :error     "Job submission values could not be found."}))
+      (throw+ {:type  :clojure-commons.exception/not-found
+               :error "Job submission values could not be found."}))
     (:config (cheshire/decode (.getValue submission) true))))
 
 (defn- load-mapped-params

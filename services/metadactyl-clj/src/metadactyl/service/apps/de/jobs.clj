@@ -37,10 +37,9 @@
   [job]
   (try+
    (jex/submit-job (pre-process-jex-submission job))
-   ; FIXME: Should we let this error ripple up? Not catch it?
    (catch Object _
      (log/error (:throwable &throw-context) "job submission failed")
-     (throw+ {:type :clojure-commons.exception/request-failed
+     (throw+ {:type  :clojure-commons.exception/request-failed
               :error "job submission failed"}))))
 
 (defn- store-submitted-job

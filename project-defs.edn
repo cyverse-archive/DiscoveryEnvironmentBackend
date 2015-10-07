@@ -59,7 +59,7 @@
 
  "service-logging"
  {:type     :library
-  :type-num 12
+  :type-num 4
   :path     "libs/service-logging"
   :build    :lein
   :install  :lein

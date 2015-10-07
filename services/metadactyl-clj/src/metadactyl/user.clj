@@ -15,9 +15,9 @@
   (log/debug user-attributes)
   (let [uid (user-attributes :user)]
     (if (empty? uid)
-      (throw+ {:type :clojure-commons.exception/bad-request-field
+      (throw+ {:type :clojure-commons.exception/not-authorized
                :error "Invalid user credentials provided."
-               :user (dissoc user-attributes :password)}))
+               :user (select-keys user-attributes [:username :shortUsername :first-name :last-name :email])}))
     (-> (select-keys user-attributes [:password :email :first-name :last-name])
         (assoc :username (str uid "@" (uid-domain))
           :shortUsername uid))))

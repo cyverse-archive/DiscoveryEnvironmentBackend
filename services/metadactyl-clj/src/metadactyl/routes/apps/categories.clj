@@ -3,6 +3,7 @@
         [metadactyl.routes.domain.app.category]
         [metadactyl.routes.params]
         [metadactyl.user :only [current-user]]
+        [metadactyl.util.coercions :only [coerce!]]
         [ring.util.http-response :only [ok]])
   (:require [metadactyl.service.apps :as apps]
             [metadactyl.util.service :as service]
@@ -27,7 +28,7 @@
          clicks on a category in the _Apps_ window.
          This endpoint accepts optional URL query parameters to limit and sort Apps,
          which will allow pagination of results."
-        (service/coerced-trap nil AppCategoryAppListing apps/list-apps-in-category current-user
-                              category-id params))
+        (ok (coerce! AppCategoryAppListing
+                 (apps/list-apps-in-category current-user category-id params))))
 
   (route/not-found (service/unrecognized-path-response)))

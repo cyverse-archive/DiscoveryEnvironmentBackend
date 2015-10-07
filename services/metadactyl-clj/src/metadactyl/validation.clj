@@ -187,15 +187,15 @@
   [tool]
   (let [existing-tool (first (select tools (where (select-keys tool [:name :location]))))]
     (when existing-tool
-      (throw+ {:type   :clojure-commons.exception/exists
-               :error  "A Tool with that name and location already exists."
-               :tool tool}))))
+      (throw+ {:type  :clojure-commons.exception/exists
+               :error "A Tool with that name and location already exists."
+               :tool  tool}))))
 
 (defn- verify-app-not-public
   "Verifies that an app has not been made public."
   [app]
   (if (:is_public app)
-    (throw+ {:type :clojure-commons.exception/not-writeable
+    (throw+ {:type  :clojure-commons.exception/not-writeable
              :error (str "Workflow, " (:id app) ", is public and may not be edited")})))
 
 (defn verify-app-ownership
@@ -204,8 +204,8 @@
      (verify-app-ownership current-user app))
   ([user app]
      (when-not (validators/user-owns-app? user app)
-       (throw+ {:type   :clojure-commons.exception/not-owner
-                :error  (str (:shortUsername user) " does not own app " (:id app))
+       (throw+ {:type     :clojure-commons.exception/not-owner
+                :error    (str (:shortUsername user) " does not own app " (:id app))
                 :username (:username user),}))))
 
 (defn verify-app-editable
@@ -220,9 +220,9 @@
   "Verifies that an external app step in a pipeline has all of the required fields."
   [step-number {external-app-id :external_app_id}]
   (when (blank? external-app-id)
-    (throw+ {:type :clojure-commons.exception/missing-request-field
+    (throw+ {:type  :clojure-commons.exception/missing-request-field
              :error (str "pipeline step " step-number " contians neither a task ID nor an "
-                           "external app ID")})))
+                         "external app ID")})))
 
 (defn validate-parameter
   "Ensures that hidden output parameters have a filename defined."
@@ -235,20 +235,20 @@
   (when (and (contains? persistence/param-output-types param-type)
              (blank? default-value)
              (or (not visible) implicit))
-    (throw+ {:type   :clojure-commons.exception/missing-request-field
-             :error  "Hidden output parameters must define a default value."
+    (throw+ {:type      :clojure-commons.exception/missing-request-field
+             :error     "Hidden output parameters must define a default value."
              :parameter parameter})))
 
 (defn validate-pipeline
   "Verifies that a pipeline contains at least 2 steps and at least 1 input->ouput mapping."
   [{:keys [steps mappings]}]
   (when (< (count steps) 2)
-    (throw+ {:type   :clojure-commons.exception/missing-request-field
-             :error  "Cannot save a workflow with less than 2 steps defined."
+    (throw+ {:type  :clojure-commons.exception/missing-request-field
+             :error "Cannot save a workflow with less than 2 steps defined."
              :steps steps}))
   (when (< (count mappings) 1)
-    (throw+ {:type  :clojure-commons.exception/missing-request-field
-             :error "Cannot save a workflow without input->output mappings defined."
+    (throw+ {:type     :clojure-commons.exception/missing-request-field
+             :error    "Cannot save a workflow without input->output mappings defined."
              :mappings mappings})))
 
 (defn get-valid-user-id

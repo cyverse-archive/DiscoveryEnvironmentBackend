@@ -23,7 +23,7 @@
   `(fn []
      (let [retval# ~@funccall]
        (if (nil? retval#)
-         (throw+ {:type :clojure-commons.exception/not-found
+         (throw+ {:type  :clojure-commons.exception/not-found
                   :error (str "A container for " ~tool-id " was not found.")})
          (ok retval#)))))
 
@@ -304,7 +304,7 @@
          :body [body (describe ToolsImportRequest "The Tools to import.")]
          :summary "Add new Tools."
          :description (str "This service adds new Tools to the DE." volumes-from-warning)
-         (add-tools body))
+         (ok (add-tools body)))
 
   (PATCH* "/:tool-id" []
           :path-params [tool-id :- ToolIdParam]
@@ -313,7 +313,7 @@
           :return Tool
           :summary "Update a Tool"
           :description "This service updates a Tool definition in the DE."
-          (update-tool (assoc body :id tool-id)))
+          (ok (update-tool (assoc body :id tool-id))))
 
   (POST* "/:tool-id/container/devices" []
          :path-params [tool-id :- ToolIdParam]
@@ -330,7 +330,7 @@
            :return nil
            :summary "Delete a container device"
            :description "Deletes a device from the tool's container"
-           (delete-tool-device tool-id device-id))
+           (ok (delete-tool-device tool-id device-id)))
 
   (POST* "/:tool-id/container/devices/:device-id/host-path" []
          :path-params [tool-id :- ToolIdParam device-id :- DeviceIdParam]
@@ -450,7 +450,7 @@
                         volumes-from-warning)
          (requester tool-id (add-tool-volumes-from tool-id body)))
 
-  (DELETE* "/:tool-id/container/volumes-from/:volumes-from-id" [:as {uri :uri}]
+  (DELETE* "/:tool-id/container/volumes-from/:volumes-from-id" []
            :path-params [tool-id :- ToolIdParam volumes-from-id :- VolumesFromIdParam]
            :query [params SecuredQueryParams]
            :return nil

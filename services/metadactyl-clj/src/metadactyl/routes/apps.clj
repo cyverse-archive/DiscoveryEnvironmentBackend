@@ -5,19 +5,20 @@
         [metadactyl.routes.domain.tool :only [NewToolListing]]
         [metadactyl.routes.params]
         [metadactyl.user :only [current-user]]
+        [metadactyl.util.coercions :only [coerce!]]
         [ring.util.http-response :only [ok]])
-  (:require [metadactyl.service.apps :as apps]
-            [metadactyl.util.service :as service]))
+  (:require [metadactyl.service.apps :as apps]))
 
 (defroutes* apps
-  (GET* "/" [:as {uri :uri}]
+  (GET* "/" []
         :query [params AppSearchParams]
         :summary "Search Apps"
         :return AppListing
         :description "This service allows users to search for Apps based on a part of the App name or
         description. The response body contains an `apps` array that is in the same format as
         the `apps` array in the /apps/categories/:category-id endpoint response."
-        (service/coerced-trap uri AppListing apps/search-apps current-user params))
+        (ok (coerce! AppListing
+                 (apps/search-apps current-user params))))
 
   (POST* "/" []
          :query [params SecuredQueryParamsRequired]
@@ -58,14 +59,15 @@
          condition."
          (ok (apps/delete-apps current-user body)))
 
-  (GET* "/:app-id" [:as {uri :uri}]
+  (GET* "/:app-id" []
         :path-params [app-id :- AppIdJobViewPathParam]
         :query [params SecuredQueryParams]
         :summary "Obtain an app description."
         :return AppJobView
         :description "This service allows the Discovery Environment user interface to obtain an
         app description that can be used to construct a job submission form."
-        (service/coerced-trap uri AppJobView apps/get-app-job-view current-user app-id))
+        (ok (coerce! AppJobView
+                 (apps/get-app-job-view current-user app-id))))
 
   (DELETE* "/:app-id" []
            :path-params [app-id :- AppIdPathParam]
@@ -118,7 +120,8 @@
         :return AppDetails
         :summary "Get App Details"
         :description "This service is used by the DE to obtain high-level details about a single App"
-        (service/coerced-trap nil AppDetails apps/get-app-details current-user app-id))
+        (ok (coerce! AppDetails
+                 (apps/get-app-details current-user app-id))))
 
   (GET* "/:app-id/documentation" []
         :path-params [app-id :- AppIdJobViewPathParam]
@@ -126,27 +129,28 @@
         :return AppDocumentation
         :summary "Get App Documentation"
         :description "This service is used by the DE to obtain documentation for a single App"
-        (service/coerced-trap nil AppDocumentation apps/get-app-docs current-user app-id))
+        (ok (coerce! AppDocumentation
+                 (apps/get-app-docs current-user app-id))))
 
-  (PATCH* "/:app-id/documentation" [:as {body :body}]
+  (PATCH* "/:app-id/documentation" []
           :path-params [app-id :- AppIdPathParam]
           :query [params SecuredQueryParamsEmailRequired]
           :body [body (describe AppDocumentationRequest "The App Documentation Request.")]
           :return AppDocumentation
           :summary "Update App Documentation"
           :description "This service is used by the DE to update documentation for a single App"
-          (service/coerced-trap nil AppDocumentation
-                                apps/owner-edit-app-docs current-user app-id body))
+          (ok (coerce! AppDocumentation
+                   (apps/owner-edit-app-docs current-user app-id body))))
 
-  (POST* "/:app-id/documentation" [:as {body :body}]
+  (POST* "/:app-id/documentation" []
          :path-params [app-id :- AppIdPathParam]
          :query [params SecuredQueryParamsEmailRequired]
          :body [body (describe AppDocumentationRequest "The App Documentation Request.")]
          :return AppDocumentation
          :summary "Add App Documentation"
          :description "This service is used by the DE to add documentation for a single App"
-         (service/coerced-trap nil AppDocumentation
-                               apps/owner-add-app-docs current-user app-id body))
+         (ok (coerce! AppDocumentation
+                  (apps/owner-add-app-docs current-user app-id body))))
 
   (DELETE* "/:app-id/favorite" []
            :path-params [app-id :- AppIdPathParam]
@@ -215,7 +219,8 @@
         :description "When a pipeline is being created, the UI needs to know what types of files are
         consumed by and what types of files are produced by each App's task in the pipeline. This
         service provides that information."
-        (service/coerced-trap nil AppTaskListing apps/get-app-task-listing current-user app-id))
+        (ok (coerce! AppTaskListing
+                 (apps/get-app-task-listing current-user app-id))))
 
   (GET* "/:app-id/tools" []
         :path-params [app-id :- AppIdJobViewPathParam]
@@ -224,7 +229,8 @@
         :summary "List Tools used by an App"
         :description "This service lists information for all of the tools that are associated with an App.
         This information used to be included in the results of the App listing service."
-        (service/coerced-trap nil NewToolListing apps/get-app-tool-listing current-user app-id))
+        (ok (coerce! NewToolListing
+                 (apps/get-app-tool-listing current-user app-id))))
 
   (GET* "/:app-id/ui" []
         :path-params [app-id :- AppIdPathParam]

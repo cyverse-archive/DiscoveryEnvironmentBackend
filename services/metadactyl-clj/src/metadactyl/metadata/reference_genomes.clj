@@ -109,17 +109,18 @@
   "Validates a single field in a reference genome."
   [genome field]
   (when (blank? (genome field))
-    (throw+ {:type       :clojure-commons.exception/missing-request-field
-             :error      "empty required field"
-             :genome genome})))
+    (throw+ {:type          :clojure-commons.exception/missing-request-field
+             :error         (str "empty required field: " field)
+             :missing-field field
+             :genome        genome})))
 
 (defn- validate-username
   "Validates a username field in a reference genome."
   [genome field]
   (let [username (genome field)]
     (when-not (or (= "<public>" username) (re-find #"@" username))
-      (throw+ {:type       :clojure-commons.exception/missing-request-field
-               :error      "username not fully qualified"
+      (throw+ {:type   :clojure-commons.exception/missing-request-field
+               :error  "username not fully qualified"
                :genome genome}))))
 
 (defn- validate-reference-genome

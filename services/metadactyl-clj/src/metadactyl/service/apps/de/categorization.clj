@@ -18,10 +18,10 @@
   [app-id path]
   (let [app (get-app-by-id app-id)]
     (when (nil? app)
-      (throw+ {:type :clojure-commons.exception/not-found
-               :app-id     app-id
-               :path       path
-               :error (str "Could not locate app with ID: " app-id)}))))
+      (throw+ {:type   :clojure-commons.exception/not-found
+               :app-id app-id
+               :path   path
+               :error  (str "Could not locate app with ID: " app-id)}))))
 
 (defn- load-category
   [category-id]
@@ -31,21 +31,21 @@
   [path category-id]
   (let [category (load-category category-id)]
     (when (nil? category)
-      (throw+ {:type   :clojure-commons.exception/not-found
-               :path path
+      (throw+ {:type  :clojure-commons.exception/not-found
+               :path  path
                :error (str "Could not locate app category with ID: " category-id)}))
 
     (when (seq (:app_categories category))
-      (throw+ {:type   :clojure-commons.exception/missing-request-field
-               :error  (str "category " category-id " contains subcategories")
-               :path path}))))
+      (throw+ {:type  :clojure-commons.exception/missing-request-field
+               :error (str "category " category-id " contains subcategories")
+               :path  path}))))
 
 (defn- validate-category-ids
   [category-ids path]
   (when (zero? (count category-ids))
-    (throw+ {:type   :clojure-commons.exception/missing-request-field
-             :error  (str "Missing category ids")
-             :path path}))
+    (throw+ {:type  :clojure-commons.exception/missing-request-field
+             :error (str "Missing category ids")
+             :path  path}))
   (dorun (map (partial validate-category-id path) category-ids)))
 
 (defn- validate-category

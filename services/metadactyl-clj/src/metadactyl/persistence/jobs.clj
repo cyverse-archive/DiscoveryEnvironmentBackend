@@ -123,8 +123,8 @@
   [{:keys [job-id step-number external-id start-date end-date status job-type app-step-number]}]
   (let [job-type-id (kj/get-job-type-id job-type)]
     (when (nil? job-type-id)
-      (throw+ {:type   :clojure-commons.exception/missing-request-field
-               :error  "Job type id missing"
+      (throw+ {:type     :clojure-commons.exception/missing-request-field
+               :error    "Job type id missing"
                :job-type job-type}))
     (kj/save-job-step
       (remove-nil-values

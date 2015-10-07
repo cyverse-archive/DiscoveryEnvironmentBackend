@@ -116,7 +116,7 @@
   (let [id  (if (string? id) (UUID/fromString id) id)
         req (get-authorization-request id)]
     (when (nil? req)
-      (throw+ {:type  :clojure-commons.exception/not-found
+      (throw+ {:type  :clojure-commons.exception/bad-request-field
                :error (str "authorization request " (str id) " not found")}))
     (when (not= (:username req) username)
       (throw+ {:type  :clojure-commons.exception/bad-request-field

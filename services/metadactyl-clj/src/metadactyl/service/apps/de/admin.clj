@@ -25,41 +25,41 @@
   "Validates the length of an App Category name."
   [name]
   (when (> (count name) max-app-category-name-len)
-    (throw+ {:type   :clojure-commons.exception/illegal-argument
-             :error  "App Category name too long."
-             :name name})))
+    (throw+ {:type  :clojure-commons.exception/illegal-argument
+             :error "App Category name too long."
+             :name  name})))
 
 (defn- validate-subcategory-name
   "Validates that the given subcategory name is available under the given App Category parent ID."
   [parent-id name]
   (when (app-groups/category-contains-subcategory? parent-id name)
-    (throw+ {:type   :clojure-commons.exception/illegal-argument
-             :error  "Parent App Category already contains a subcategory with that name"
+    (throw+ {:type      :clojure-commons.exception/illegal-argument
+             :error     "Parent App Category already contains a subcategory with that name"
              :parent_id parent-id
-             :name name})))
+             :name      name})))
 
 (defn- validate-category-empty
   "Validates that the given App Category contains no Apps directly under it."
   [parent-id]
   (when (app-groups/category-contains-apps? parent-id)
-    (throw+ {:type   :clojure-commons.exception/illegal-argument
-             :error  "Parent App Category already contains Apps"
+    (throw+ {:type      :clojure-commons.exception/illegal-argument
+             :error     "Parent App Category already contains Apps"
              :parent_id parent-id})))
 
 (defn- validate-category-hierarchy-empty
   "Validates that the given App Category and its subcategories contain no Apps."
   [category-id requestor]
   (when (app-groups/category-hierarchy-contains-apps? category-id)
-    (throw+ {:type   :clojure-commons.exception/illegal-argument
-             :error  "App Category, or one of its subcategories, still contain Apps"
+    (throw+ {:type         :clojure-commons.exception/illegal-argument
+             :error        "App Category, or one of its subcategories, still contain Apps"
              :category_id  category-id
              :requested_by requestor})))
 
 (defn- validate-category-not-ancestor-of-parent
   [category-id parent-id]
   (when (app-groups/category-ancestor-of-subcategory? category-id parent-id)
-    (throw+ {:type   :clojure-commons.exception/illegal-argument
-             :error  "App Category is an ancestor of the destination Category"
+    (throw+ {:type        :clojure-commons.exception/illegal-argument
+             :error       "App Category is an ancestor of the destination Category"
              :category_id category-id
              :parent_id   parent-id})))
 
