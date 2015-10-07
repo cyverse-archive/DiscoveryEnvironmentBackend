@@ -44,15 +44,22 @@ var (
 type JobRequest struct {
 	Job     *model.Job
 	Command Command
+	Message string
 	Version int
+}
+
+// StopRequest contains the information needed to stop a job
+type StopRequest struct {
+	Reason       string
+	Username     string
+	Version      int
+	InvocationID string
 }
 
 // NewStopRequest returns a *JobRequest that has been constructed to be a
 // stop request for a running job.
-func NewStopRequest(j *model.Job) *JobRequest {
-	return &JobRequest{
-		Job:     j,
-		Command: Stop,
+func NewStopRequest() *StopRequest {
+	return &StopRequest{
 		Version: 0,
 	}
 }

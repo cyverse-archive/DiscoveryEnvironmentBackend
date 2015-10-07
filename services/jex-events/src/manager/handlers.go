@@ -1,10 +1,14 @@
 package manager
 
 import (
+	"api"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"messaging"
+	"model"
 	"net/http"
 	"net/url"
 	"path"
@@ -348,4 +352,72 @@ func (p *PostEventHandler) Held(event *Event) error {
 func (p *PostEventHandler) Unrouted(event *Event) error {
 	logger.Printf("Event %s is not being forwarded to the user: %s", event.EventNumber, event.Event)
 	return nil
+}
+
+// CommandsHandler accepts deliveries from the jobs exchange sent with the
+// jobs.commands routing key. Messages on that topic are meant to be requests
+// to launch a job, though the purpose of the topic may expand in the future.
+// Right now messages like that get forwarded to the jobs.launches topic.
+type CommandsHandler struct {
+	client *messaging.Client
+}
+
+// NewCommandsHandler returns a newly instantiated *CommandsHandler.
+func NewCommandsHandler(client *messaging.Client) *CommandsHandler {
+	return &CommandsHandler{
+		client: client,
+	}
+}
+
+// Handle is the function that handles deliveries from the jobs.commands topic.
+// All it does is forward them on to the jobs.launches topic.
+func (c *CommandsHandler) Handle(delivery amqp.Delivery) {
+	delivery.Ack(false)
+	err := c.client.Publish(api.LaunchesKey, delivery.Body)
+	if err != nil {
+		logger.Print(err)
+	}
+}
+
+// StopsHandler accepts deliveries from the jobs.stops.* topic of the jobs
+// exchange and stores them in the database. No more, no less.
+type StopsHandler struct {
+	db *Databaser
+}
+
+// NewStopsHandler returns a newly instantiated *StopsHandler.
+func NewStopsHandler(db *Databaser) *StopsHandler {
+	return &StopsHandler{
+		db: db,
+	}
+}
+
+// Handle takes delivery of model.StopsRequests and stores them in the
+// condor_job_stop_requests table of the jex database.
+func (s *StopsHandler) Handle(delivery amqp.Delivery) {
+	delivery.Ack(false)
+	newStop := api.NewStopRequest()
+	err := json.Unmarshal(delivery.Body, newStop)
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	log.Printf("Received stop request for %s\n", newStop.InvocationID)
+	job, err := s.db.GetJobByInvocationID(newStop.InvocationID)
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	log.Printf("Found job record %s for stop request on %s\n", job.ID, newStop.InvocationID)
+	dbStopRequest := &model.CondorJobStopRequest{
+		JobID:         job.ID,
+		Username:      newStop.Username,
+		DateRequested: time.Now(),
+		Reason:        newStop.Reason,
+	}
+	id, err := s.db.InsertCondorJobStopRequest(dbStopRequest)
+	if err != nil {
+		logger.Print(err)
+	}
+	logger.Printf("Added stop request %s for job %s\n", id, newStop.InvocationID)
 }

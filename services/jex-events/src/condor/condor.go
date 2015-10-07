@@ -359,6 +359,8 @@ func Run() {
 	}
 	client := messaging.NewClient(uri)
 	defer client.Close()
+
+	// Accept and handle messages sent out with the jobs.launches routing key.
 	client.AddConsumer(api.JobsExchange, "condor_launches", api.LaunchesKey, func(d amqp.Delivery) {
 		body := d.Body
 		d.Ack(false)

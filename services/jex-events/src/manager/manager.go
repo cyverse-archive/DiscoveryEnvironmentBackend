@@ -179,13 +179,28 @@ func Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	client := messaging.NewClient(muri)
+	defer client.Close()
+
+	// Setup publishing
+	client.SetupPublishing(api.JobsExchange)
+
+	// Accept messages from jobs.updates
 	h := PostEventHandler{
 		PostURL: eventURL,
 		JEXURL:  jexURL,
 		DB:      databaser,
 	}
-	client := messaging.NewClient(muri)
-	defer client.Close()
-	client.AddConsumer(api.JobsExchange, "jex", api.UpdatesKey, h.HandleMessage)
+	client.AddConsumer(api.JobsExchange, "manager", api.UpdatesKey, h.HandleMessage)
+
+	// Accept messages from jobs.commands
+	ch := NewCommandsHandler(client)
+	client.AddConsumer(api.JobsExchange, "manager", api.CommandsKey, ch.Handle)
+
+	// Accept messages from jobs.stops.*
+	sh := NewStopsHandler(databaser)
+	stopsKey := fmt.Sprintf("%s.*", api.StopsKey)
+	client.AddConsumer(api.JobsExchange, "manager", stopsKey, sh.Handle)
+
 	client.Listen()
 }

@@ -11,7 +11,7 @@ amqp:
 
 manager:
   listen_port: 31331
-  db_uri: postgres://wut:wut@wut.iplantc.org:5432/wut?sslmode=disable
+  db_uri: postgres://de:notprod@192.168.99.100:5432/jex?sslmode=disable
   event_url: http://event.url.org
   condor_mode_url: http://condor_mode_url.org
 
