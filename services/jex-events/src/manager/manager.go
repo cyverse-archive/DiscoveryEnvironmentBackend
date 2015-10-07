@@ -194,7 +194,7 @@ func Run() {
 	client.AddConsumer(api.JobsExchange, "manager", api.UpdatesKey, h.HandleMessage)
 
 	// Accept messages from jobs.commands
-	ch := NewCommandsHandler(client)
+	ch := NewCommandsHandler(client, databaser)
 	client.AddConsumer(api.JobsExchange, "manager", api.CommandsKey, ch.Handle)
 
 	// Accept messages from jobs.stops.*

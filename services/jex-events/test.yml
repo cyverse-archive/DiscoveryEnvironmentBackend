@@ -11,6 +11,7 @@ test:
     image: discoenv/buildenv
     links:
       - jex_db:jexdb
+      - jex_rabbit:rabbit
     volumes:
       - .:/jex
     working_dir: /jex

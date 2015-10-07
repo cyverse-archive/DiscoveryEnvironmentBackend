@@ -360,20 +360,37 @@ func (p *PostEventHandler) Unrouted(event *Event) error {
 // Right now messages like that get forwarded to the jobs.launches topic.
 type CommandsHandler struct {
 	client *messaging.Client
+	db     *Databaser
 }
 
 // NewCommandsHandler returns a newly instantiated *CommandsHandler.
-func NewCommandsHandler(client *messaging.Client) *CommandsHandler {
+func NewCommandsHandler(client *messaging.Client, db *Databaser) *CommandsHandler {
 	return &CommandsHandler{
 		client: client,
+		db:     db,
 	}
 }
 
 // Handle is the function that handles deliveries from the jobs.commands topic.
 // All it does is forward them on to the jobs.launches topic.
 func (c *CommandsHandler) Handle(delivery amqp.Delivery) {
+	logger.Println("Received a jobs.commands delivery")
+	body := delivery.Body
 	delivery.Ack(false)
-	err := c.client.Publish(api.LaunchesKey, delivery.Body)
+	cmd := &api.JobRequest{}
+	err := json.Unmarshal(body, cmd)
+	if err != nil {
+		logger.Print(err)
+		return
+	}
+	logger.Printf("Parsed the job request from the delivery. Invocation ID: %s\n", cmd.Job.InvocationID)
+	uuid, err := c.db.InsertJob(cmd.Job)
+	if err != nil {
+		logger.Print(err)
+		return
+	}
+	logger.Printf("Added job with invocation ID %s to database with ID of %s\n", cmd.Job.InvocationID, uuid)
+	err = c.client.Publish(api.LaunchesKey, delivery.Body)
 	if err != nil {
 		logger.Print(err)
 	}
