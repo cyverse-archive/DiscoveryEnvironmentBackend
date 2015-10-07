@@ -1,7 +1,6 @@
 (ns metadactyl.transformers
   (:use [clojure.java.io :only [reader]])
-  (:require [cheshire.core :as cheshire]
-            [clojure.tools.logging :as log]))
+  (:require [cheshire.core :as cheshire]))
 
 (defn add-username-to-json
   "Adds the name of the currently authenticated user to a JSON object in the

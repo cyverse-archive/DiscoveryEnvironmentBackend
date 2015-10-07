@@ -1,7 +1,6 @@
 (ns metadactyl.routes.domain.collaborator
   (:use [common-swagger-api.schema :only [describe]]
-        [schema.core :only [defschema optional-key]])
-  (:import [java.util UUID Date]))
+        [schema.core :only [defschema optional-key]]))
 
 (defschema Collaborator
   {(optional-key :id)          (describe String "The collaborator's ID in Trellis")

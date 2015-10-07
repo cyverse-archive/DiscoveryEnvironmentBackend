@@ -13,11 +13,7 @@
         [metadactyl.util.assertions :only [assert-not-nil]]
         [metadactyl.util.config]
         [metadactyl.util.conversions :only [to-long remove-nil-vals]]
-        [metadactyl.workspace])
-  (:require [cemerick.url :as curl]
-            [cheshire.core :as cheshire]
-            [clojure.tools.logging :as log]
-            [metadactyl.util.service :as service]))
+        [metadactyl.workspace]))
 
 (def my-public-apps-id (uuidify "00000000-0000-0000-0000-000000000000"))
 (def trash-category-id (uuidify "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF"))
