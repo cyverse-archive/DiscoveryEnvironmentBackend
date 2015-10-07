@@ -1,8 +1,9 @@
-package manager
+package main
 
 import (
 	"api"
 	"configurate"
+	"flag"
 	"fmt"
 	"log"
 	"logcabin"
@@ -15,7 +16,18 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var logger = logcabin.New()
+var (
+	logger  = logcabin.New()
+	cfgPath = flag.String("config", "", "Path to the config value. Required.")
+	version = flag.Bool("version", false, "Print the version information")
+	gitref  string
+	appver  string
+	builtby string
+)
+
+func init() {
+	flag.Parse()
+}
 
 // MsgHandler functions will accept msgs from a Delivery channel and report
 // error on the error channel.
@@ -151,10 +163,40 @@ func (e *Event) Parse() {
 	}
 }
 
+// AppVersion prints version information to stdout
+func AppVersion() {
+	if appver != "" {
+		fmt.Printf("App-Version: %s\n", appver)
+	}
+	if gitref != "" {
+		fmt.Printf("Git-Ref: %s\n", gitref)
+	}
+
+	if builtby != "" {
+		fmt.Printf("Built-By: %s\n", builtby)
+	}
+}
+
 // Run puts jex-events in 'events' mode where it listens for events
 // on an AMQP exchange, places them into a database, and provides an HTTP
 // API on top.
-func Run() {
+func main() {
+	if *version {
+		AppVersion()
+		os.Exit(0)
+	}
+	if *cfgPath == "" {
+		fmt.Println("Error: --config must be set.")
+		flag.PrintDefaults()
+		os.Exit(-1)
+	}
+	err := configurate.Init(*cfgPath)
+	if err != nil {
+		logger.Print(err)
+		os.Exit(-1)
+	}
+	logger.Println("Done reading config.")
+
 	logger.Println("Configuring database connection...")
 	messaging.Init(logger)
 	uri, err := configurate.C.String("manager.db_uri")

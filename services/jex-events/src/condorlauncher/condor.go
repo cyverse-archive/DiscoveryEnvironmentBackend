@@ -1,10 +1,11 @@
-package condorlauncher
+package main
 
 import (
 	"api"
 	"bytes"
 	"configurate"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -21,8 +22,17 @@ import (
 )
 
 var (
-	logger = logcabin.New()
+	logger  = logcabin.New()
+	cfgPath = flag.String("config", "", "Path to the config value. Required.")
+	version = flag.Bool("version", false, "Print the version information")
+	gitref  string
+	appver  string
+	builtby string
 )
+
+func init() {
+	flag.Parse()
+}
 
 // GenerateCondorSubmit returns a string (or error) containing the contents
 // of what should go into an HTCondor submission file.
@@ -351,8 +361,37 @@ func stop(s *model.Job) (string, error) {
 	return string(output), err
 }
 
-//Run launches the condor job launcher.
-func Run() {
+// AppVersion prints version information to stdout
+func AppVersion() {
+	if appver != "" {
+		fmt.Printf("App-Version: %s\n", appver)
+	}
+	if gitref != "" {
+		fmt.Printf("Git-Ref: %s\n", gitref)
+	}
+
+	if builtby != "" {
+		fmt.Printf("Built-By: %s\n", builtby)
+	}
+}
+
+func main() {
+	if *version {
+		AppVersion()
+		os.Exit(0)
+	}
+	if *cfgPath == "" {
+		fmt.Println("Error: --config must be set.")
+		flag.PrintDefaults()
+		os.Exit(-1)
+	}
+	err := configurate.Init(*cfgPath)
+	if err != nil {
+		logger.Print(err)
+		os.Exit(-1)
+	}
+	logger.Println("Done reading config.")
+
 	uri, err := configurate.C.String("amqp.uri")
 	if err != nil {
 		log.Fatal(err)

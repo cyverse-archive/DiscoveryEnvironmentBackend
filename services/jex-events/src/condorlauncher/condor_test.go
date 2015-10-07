@@ -1,4 +1,4 @@
-package condorlauncher
+package main
 
 import (
 	"configurate"
