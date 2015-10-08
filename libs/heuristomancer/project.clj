@@ -10,8 +10,4 @@
                  [instaparse "1.4.1"]]
   :plugins [[org.iplantc/lein-iplant-cmdtar "5.0.0"]]
   :aot [heuristomancer.core]
-  :main heuristomancer.core
-  :repositories [["sonatype-nexus-snapshots"
-                  {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
-  :deploy-repositories [["sonatype-nexus-staging"
-                         {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]])
+  :main heuristomancer.core)

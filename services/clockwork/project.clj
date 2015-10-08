@@ -39,8 +39,4 @@
   :profiles {:dev     {:resource-paths ["resources/test"]}
              :uberjar {:aot :all}}
   :main ^:skip-aot clockwork.core
-  :uberjar-exclusions [#"BCKEY.SF"]
-  :repositories [["sonatype-nexus-snapshots"
-                  {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
-  :deploy-repositories [["sonatype-nexus-staging"
-                         {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]])
+  :uberjar-exclusions [#"BCKEY.SF"])

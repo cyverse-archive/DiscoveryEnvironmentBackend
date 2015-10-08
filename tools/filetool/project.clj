@@ -23,8 +23,4 @@
                  [slingshot "0.12.2"]
                  [org.iplantc/clj-jargon "5.0.0"]
                  [org.iplantc/clojure-commons "5.0.0"]
-                 [org.iplantc/common-cli "5.0.0"]]
-  :repositories [["sonatype-nexus-snapshots"
-                  {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
-  :deploy-repositories [["sonatype-nexus-staging"
-                         {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]])
+                 [org.iplantc/common-cli "5.0.0"]])

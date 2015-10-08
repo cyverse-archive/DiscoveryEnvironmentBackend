@@ -58,9 +58,7 @@
          :port 31325
          :auto-reload? false}
   :uberjar-exclusions [#".*[.]SF" #"LICENSE" #"NOTICE"]
-  :repositories [["sonatype-nexus-snapshots"
-                  {:url "https://oss.sonatype.org/content/repositories/snapshots"}]
-                 ["biojava"
+  :repositories [["biojava"
                   {:url "http://www.biojava.org/download/maven"}]
                  ["nexml"
                   {:url "http://nexml-dev.nescent.org/.m2/repository"

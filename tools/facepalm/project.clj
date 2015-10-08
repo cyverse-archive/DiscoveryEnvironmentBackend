@@ -34,8 +34,4 @@
                  [clj-http "1.0.0"]]
   :plugins [[lein-marginalia "0.7.1"]]
   :aot :all
-  :main facepalm.core
-  :repositories [["sonatype-nexus-snapshots"
-                  {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
-  :deploy-repositories [["sonatype-nexus-staging"
-                         {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]])
+  :main facepalm.core)
