@@ -501,11 +501,6 @@
        (cfg/env-setting "TREE_URLS_PORT")
        (tree-urls-base-url)))))
 
-(cc/defprop-str donkey-base-url
-  "The Donkey base URL, which is used to build callback URLs for other DE components."
-  [props config-valid configs]
-  "donkey.base-url")
-
 (def get-allowed-groups
   (memoize
     (fn []
