@@ -124,6 +124,9 @@
 (def not-a-user-handler
   (default-error-handler resp/not-found ec/ERR_NOT_A_USER))
 
+(def not-unique-handler
+  (default-error-handler resp/bad-request ec/ERR_NOT_UNIQUE))
+
 (def request-failed-handler
   (default-error-handler resp/internal-server-error ec/ERR_REQUEST_FAILED))
 
@@ -190,6 +193,7 @@
     ::failed-dependency        failed-dependency-handler
     ::illegal-argument         illegal-argument-handler
     ::not-found                not-found-handler
+    ::not-unique               not-unique-handler
     ::invalid-cfg              invalid-cfg-handler
     ::invalid-json             invalid-json-handler
     ::authentication-not-found authentication-not-found-handler

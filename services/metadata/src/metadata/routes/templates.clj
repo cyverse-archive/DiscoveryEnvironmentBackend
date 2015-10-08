@@ -1,69 +1,69 @@
 (ns metadata.routes.templates
   (:use [common-swagger-api.schema]
         [metadata.routes.domain.common]
-        [metadata.routes.domain.template])
-  (:require [metadata.services.templates :as templates]
-            [metadata.util.service :as service]))
+        [metadata.routes.domain.template]
+        [ring.util.http-response :only [ok]])
+  (:require [metadata.services.templates :as templates]))
 
 (defroutes* templates
   (context* "/templates" []
     :tags ["template-info"]
 
-    (GET* "/" [:as {:keys [uri]}]
+    (GET* "/" []
       :query [params StandardUserQueryParams]
       :return MetadataTemplateList
       :summary "List Metadata Templates"
       :description "This endpoint lists undeleted metadata templates."
-      (service/trap uri templates/list-templates))
+      (ok (templates/list-templates)))
 
-    (GET* "/attr/:attr-id" [:as {:keys [uri]}]
+    (GET* "/attr/:attr-id" []
       :path-params [attr-id :- AttrIdPathParam]
       :query [params StandardUserQueryParams]
       :return MetadataTemplateAttr
       :summary "View a Metadata Attribute"
       :description "This endpoint returns the details of a single metadata attribute."
-      (service/trap uri templates/view-attribute attr-id))
+      (ok (templates/view-attribute attr-id)))
 
-    (GET* "/:template-id" [:as {:keys [uri]}]
+    (GET* "/:template-id" []
       :path-params [template-id :- TemplateIdPathParam]
       :query [params StandardUserQueryParams]
       :return MetadataTemplate
       :summary "View a Metadata Template"
       :description "This endpoint returns the details of a single metadata template."
-      (service/trap uri templates/view-template template-id))))
+      (ok (templates/view-template template-id)))))
 
 (defroutes* admin-templates
   (context* "/admin/templates" []
     :tags ["template-administration"]
 
-    (GET* "/" [:as {:keys [uri]}]
+    (GET* "/" []
       :query [params StandardUserQueryParams]
       :return MetadataTemplateList
       :summary "List Metadata Templates for Administrators"
       :description "This endpoint lists all metadata templates."
-      (service/trap uri templates/admin-list-templates))
+      (ok (templates/admin-list-templates)))
 
-    (POST* "/" [:as {:keys [uri]}]
+    (POST* "/" []
       :query [params StandardUserQueryParams]
       :body [body (describe MetadataTemplateUpdate "The template to add.")]
       :return MetadataTemplate
       :summary "Add a Metadata Template"
       :description "This endpoint allows administrators to add new metadata templates."
-      (service/trap uri templates/add-template params body))
+      (ok (templates/add-template params body)))
 
-    (PUT* "/:template-id" [:as {:keys [uri]}]
+    (PUT* "/:template-id" []
       :path-params [template-id :- TemplateIdPathParam]
       :body [body (describe MetadataTemplateUpdate "The template to update.")]
       :query [params StandardUserQueryParams]
       :return MetadataTemplate
       :summary "Update a Metadata Template"
       :description "This endpoint allows administrators to update existing metadata templates."
-      (service/trap uri templates/update-template params template-id body))
+      (ok (templates/update-template params template-id body)))
 
-    (DELETE* "/:template-id" [:as {:keys [uri]}]
+    (DELETE* "/:template-id" []
       :path-params [template-id :- TemplateIdPathParam]
       :query [params StandardUserQueryParams]
       :summary "Mark a Metadata Template as Deleted"
       :description "This endpoint allows administrators to mark existing metadata templates as
       deleted."
-      (service/trap uri templates/delete-template params template-id))))
+      (ok (templates/delete-template params template-id)))))
