@@ -1,10 +1,9 @@
 (ns notification-agent.notifications
-  (:use [notification-agent.common]
+  (:use [notification-agent.common :only [parse-body parse-uuid string->long valid-email-addr]]
         [notification-agent.config]
         [notification-agent.messages]
         [notification-agent.time])
-  (:require [clojure.string :as string]
-            [clojure.tools.logging :as log]))
+  (:require [clojure.string :as string]))
 
 (defn- validate-long
   "Validates a long integer argument."
@@ -93,7 +92,7 @@
   (let [request (parse-body body)]
     (validate-request request)
     (persist-and-send-msg (add-email-request (request-to-msg request)))
-    (success-resp)))
+    nil))
 
 (defn handle-add-system-notif
   "Handles a system notification request."

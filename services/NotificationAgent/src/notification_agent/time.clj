@@ -3,8 +3,7 @@
        [clj-time.format :only (formatter parse unparse)]
        [notification-agent.common :only [string->long]])
  (:require [clojure.string :as string])
- (:import [org.joda.time DateTime DateTimeZone]
-          [org.joda.time.format DateTimeFormatterBuilder DateTimeParser]))
+ (:import [org.joda.time DateTime]))
 
 (def accepted-timestamp-formats
   ^{:private true
