@@ -2,8 +2,6 @@
   (:use [clojure.java.io :only [reader]]
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
-            [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as ce]
             [clj-time.core :as time])
   (:import [java.io InputStream Reader]
            [java.util UUID]))
@@ -17,33 +15,18 @@
       (cheshire/decode-stream (reader body) true)
       (cheshire/decode body true))
     (catch Throwable t
-      (throw+ {:error_code ce/ERR_INVALID_JSON
-               :defails    (.getMessage t)}))))
+      (throw+ {:type    :clojure-commons.exception/invalid-json
+               :details (.getMessage t)}))))
 
 (defn validate-user
   "Validates the username that was passed in. Returns the username when valid."
   [user]
   (when (nil? user)
-    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-             :param      :user}))
+    (throw+ {:type  :clojure-commons.exception/illegal-argument
+             :param :user}))
   user)
 
-(defn success-resp
-  "Returns an empty success response."
-  ([]
-     (success-resp {}))
-  ([m]
-     {:status       200
-      :body         (if (map? m) (cheshire/encode (assoc m :success true)) (str m))
-      :content-type :json}))
 
-(defn json-resp
-  "Returns a value that Ring can use to generate a JSON response."
-  [status body]
-  (log/debug (str "response:" body))
-  {:status       status
-   :body         body
-   :content-type :json})
 
 (defn valid-email-addr
   "Validates an e-mail address."
@@ -57,8 +40,8 @@
    (Long/parseLong s)
    (catch NumberFormatException e
      (throw+
-      (merge {:error_code ce/ERR_ILLEGAL_ARGUMENT
-              :details    details}
+      (merge {:type    :clojure-commons.exception/illegal-argument
+              :details details}
              exception-info-map)))))
 
 (defn millis-since-epoch [] (str (time/in-millis (time/interval (time/epoch) (time/now)))))
@@ -70,6 +53,6 @@
        (try+
         (UUID/fromString uuid)
         (catch IllegalArgumentException _
-          (throw+ {:error_code  ce/ERR_BAD_OR_MISSING_FIELD
+          (throw+ {:type        :clojure-commons.exception/bad-request-field
                    :description "invalid UUID"
                    :value       uuid})))))
