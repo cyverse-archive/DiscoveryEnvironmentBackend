@@ -1,16 +1,14 @@
 <configuration>
- <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-        <customFields>{"service":"facepalm"}</customFields>
-        <fieldNames>
-            <logger>loggerName</logger>
-            <thread>thread</thread>
-            <levelValue>[ignore]</levelValue>
-        </fieldNames>
-    </encoder>
-  </appender>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d %-5level [%thread] %logger: %msg%n</pattern>
+        </encoder>
+    </appender>
 
-  <root level="INFO">
-    <appender-ref ref="CONSOLE"/>
-  </root>
+    <!-- Jargon Logging -->
+    <logger name="org.irods.jargon" level="ERROR"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
 </configuration>
