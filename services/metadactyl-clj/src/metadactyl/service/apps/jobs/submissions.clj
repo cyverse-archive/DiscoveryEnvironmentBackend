@@ -28,8 +28,8 @@
    (data-info/get-file-stats user paths)
    (catch Object _
      (log/error (:throwable &throw-context) "job submission failed")
-     (throw+ {:error_code ce/ERR_REQUEST_FAILED
-              :message "Could not lookup info types of inputs"}))))
+     (throw+ {:type  :clojure-commons.exception/request-failed
+              :error "Could not lookup info types of inputs"}))))
 
 (defn- load-path-list-stats
   [user input-paths-by-id]
@@ -54,20 +54,20 @@
 (defn- max-path-list-size-exceeded
   [max-size path actual-size]
   (throw+
-   {:error_code ce/ERR_ILLEGAL_ARGUMENT
-    :message    (str "HT Analysis Path List file exceeds maximum size of " max-size " bytes.")
-    :path       path
-    :file-size  actual-size}))
+    {:type      :clojure-commons.exception/illegal-argument
+     :error     (str "HT Analysis Path List file exceeds maximum size of " max-size " bytes.")
+     :path      path
+     :file-size actual-size}))
 
 (defn- max-batch-paths-exceeded
   [max-paths first-list-path first-list-count]
   (throw+
-   {:error_code ce/ERR_ILLEGAL_ARGUMENT
-    :message    (str "The HT Analysis Path List exceeds the maximum of "
-                     max-paths
-                     " allowed paths.")
-    :path       first-list-path
-    :path-count first-list-count}))
+    {:type       :clojure-commons.exception/illegal-argument
+     :error      (str "The HT Analysis Path List exceeds the maximum of "
+                      max-paths
+                      " allowed paths.")
+     :path       first-list-path
+     :path-count first-list-count}))
 
 (defn- validate-path-list-stats
   [{path :path actual-size :file-size}]
@@ -77,8 +77,8 @@
 (defn- validate-ht-params
   [ht-params]
   (when (some (comp (partial = ap/param-multi-input-type) :type) ht-params)
-    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-             :message "HT Analysis Path List files are not supported in multi-file inputs."})))
+    (throw+ {:type  :clojure-commons.exception/illegal-argument
+             :error "HT Analysis Path List files are not supported in multi-file inputs."})))
 
 (defn- validate-path-lists
   [path-lists]
@@ -87,8 +87,8 @@
     (when (> first-list-count (config/path-list-max-paths))
       (max-batch-paths-exceeded (config/path-list-max-paths) first-list-path first-list-count))
     (when-not (every? (comp (partial = first-list-count) count second) path-lists)
-      (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-               :message "All HT Analysis Path Lists must have the same number of paths."}))))
+      (throw+ {:type  :clojure-commons.exception/illegal-argument
+               :error "All HT Analysis Path Lists must have the same number of paths."}))))
 
 (defn- get-path-list-contents
   [user path]
@@ -97,12 +97,12 @@
    (catch [:status 500] {:keys [body]}
      (log/error (:throwable &throw-context) "job submission failed")
      (log/error (slurp body))
-     (throw+ {:error_code ce/ERR_REQUEST_FAILED
-              :message    "Could get file contents of path list input"}))
+     (throw+ {:type  :clojure-commons.exception/request-failed
+              :error "Could not get file contents of path list input"}))
    (catch Object _
      (log/error (:throwable &throw-context) "job submission failed")
-     (throw+ {:error_code ce/ERR_REQUEST_FAILED
-              :message    "Could get file contents of path list input"}))))
+     (throw+ {:type  :clojure-commons.exception/request-failed
+              :error "Could not get file contents of path list input"}))))
 
 (defn- get-path-list-contents-map
   [user paths]
@@ -113,6 +113,7 @@
   (let [output-dir (ft/build-result-folder-path submission)]
     (try+
      (data-info/get-file-stats user [output-dir])
+     ; FIXME Update this when data-info's exception handling is updated
      (catch [:status 500] {:keys [body]}
        (if (= (:error_code (service/parse-json body)) ce/ERR_DOES_NOT_EXIST)
          (data-info/create-directory user output-dir)

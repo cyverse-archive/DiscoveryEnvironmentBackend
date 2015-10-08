@@ -189,27 +189,27 @@
       (wrap-routes authenticate-current-user)
       (wrap-routes wrap-user-info)
       (wrap-routes validate-current-user)
-      (wrap-routes wrap-logging)
-      (wrap-routes wrap-exceptions  cx/exception-handlers)))
+      (wrap-routes wrap-exceptions  cx/exception-handlers)
+      (wrap-routes wrap-logging)))
 
 (def secured-routes-handler
   (-> (delayed-handler secured-routes)
       (wrap-routes authenticate-current-user)
       (wrap-routes wrap-user-info)
-      (wrap-routes wrap-logging)
-      (wrap-routes wrap-exceptions  cx/exception-handlers)))
+      (wrap-routes wrap-exceptions  cx/exception-handlers)
+      (wrap-routes wrap-logging)))
 
 (def secured-routes-no-context-handler
   (-> (delayed-handler secured-routes-no-context)
       (wrap-routes authenticate-current-user)
       (wrap-routes wrap-user-info)
-      (wrap-routes wrap-logging)
-      (wrap-routes wrap-exceptions  cx/exception-handlers)))
+      (wrap-routes wrap-exceptions  cx/exception-handlers)
+      (wrap-routes wrap-logging)))
 
 (def unsecured-routes-handler
   (-> (delayed-handler unsecured-routes)
-      (wrap-routes wrap-logging)
-      (wrap-routes wrap-exceptions cx/exception-handlers)))
+      (wrap-routes wrap-exceptions cx/exception-handlers)
+      (wrap-routes wrap-logging)))
 
 (defn donkey-routes
   []

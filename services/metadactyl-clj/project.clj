@@ -44,4 +44,5 @@
   :repositories [["sonatype-nexus-snapshots"
                   {:url "https://oss.sonatype.org/content/repositories/snapshots"}]]
   :deploy-repositories [["sonatype-nexus-staging"
-                         {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]])
+                         {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]]
+  :jvm-opts ["-Dlogback.configurationFile=/etc/iplant/de/logging/metadactyl-logging.xml"])

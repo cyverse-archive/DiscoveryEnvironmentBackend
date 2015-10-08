@@ -1,7 +1,6 @@
 (ns metadactyl.kormadb
   (:use [korma.db]
-        [metadactyl.util.config])
-  (:require [clojure.tools.logging :as log]))
+        [metadactyl.util.config]))
 
 (defn- create-db-spec
   "Creates the database connection spec to use when accessing the database

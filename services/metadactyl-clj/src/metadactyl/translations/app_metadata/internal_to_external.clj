@@ -2,9 +2,7 @@
   (:use [metadactyl.translations.app-metadata.util]
         [metadactyl.metadata.reference-genomes :only [get-reference-genomes-by-id]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as ce]
-            [clojure.string :as string]
-            [clojure.tools.logging :as log]))
+  (:require [clojure.string :as string]))
 
 (defn validators-from-rules
   "Converts a list of rules from the internal JSON format to a list of validators for the

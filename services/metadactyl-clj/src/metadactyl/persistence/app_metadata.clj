@@ -8,7 +8,6 @@
         [metadactyl.util.assertions]
         [metadactyl.util.conversions :only [remove-nil-vals]])
   (:require [clojure.set :as set]
-            [clojure.tools.logging :as log]
             [kameleon.app-listing :as app-listing]
             [korma.core :as sql]
             [metadactyl.persistence.app-metadata.delete :as delete]

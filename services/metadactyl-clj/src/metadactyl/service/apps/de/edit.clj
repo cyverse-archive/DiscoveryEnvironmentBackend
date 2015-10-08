@@ -13,7 +13,6 @@
         [metadactyl.workspace :only [get-workspace]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.set :as set]
-            [clojure-commons.error-codes :as cc-errs]
             [metadactyl.persistence.app-metadata :as persistence]))
 
 (def ^:private copy-prefix "Copy of ")
@@ -161,8 +160,8 @@
     validation-rules :validation_rules
     :as param}]
   (when-not value-type
-    (throw+ {:error_code cc-errs/ERR_NOT_WRITEABLE
-             :message "App contains Parameters that cannot be copied or modified at this time."}))
+    (throw+ {:type  :clojure-commons.exception/not-writeable
+             :error "App contains Parameters that cannot be copied or modified at this time."}))
   (let [param (-> param
                   format-file-params
                   (assoc :validators (map format-validator validation-rules))
@@ -190,8 +189,8 @@
   (let [app (get-app-details (:id app))
         task (first (:tasks app))]
     (when (empty? task)
-      (throw+ {:error_code cc-errs/ERR_NOT_WRITEABLE
-               :message "App contains no steps and cannot be copied or modified."}))
+      (throw+ {:type  :clojure-commons.exception/not-writeable
+               :error "App contains no steps and cannot be copied or modified."}))
     (remove-nil-vals
       (-> app
           (assoc :references (map :reference_text (:app_references app))

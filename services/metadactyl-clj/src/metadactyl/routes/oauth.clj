@@ -1,15 +1,14 @@
 (ns metadactyl.routes.oauth
   (:use [common-swagger-api.schema]
         [metadactyl.routes.domain.oauth]
-        [metadactyl.routes.params])
-  (require [clojure-commons.error-codes :as ce]
-           [metadactyl.service.oauth :as oauth]
-           [metadactyl.util.service :as service]))
+        [metadactyl.routes.params]
+        [ring.util.http-response :only [ok]])
+  (require [metadactyl.service.oauth :as oauth]))
 
 (defroutes* oauth
-  (GET* "/access-code/:api-name" [:as {uri :uri}]
+  (GET* "/access-code/:api-name" []
         :path-params [api-name :- ApiName]
         :query       [params OAuthCallbackQueryParams]
         :return      OAuthCallbackResponse
         :summary     "Obtain an OAuth access token for an authorization code."
-        (ce/trap uri #(oauth/get-access-token api-name params))))
+        (ok (oauth/get-access-token api-name params))))

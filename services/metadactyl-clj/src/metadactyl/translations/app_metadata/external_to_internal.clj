@@ -1,8 +1,6 @@
 (ns metadactyl.translations.app-metadata.external-to-internal
   (:use [metadactyl.translations.app-metadata.util]
-        [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as ce]
-            [clojure.tools.logging :as log]))
+        [slingshot.slingshot :only [throw+]]))
 
 (defn- mark-default-selection-item
   [default-value item]

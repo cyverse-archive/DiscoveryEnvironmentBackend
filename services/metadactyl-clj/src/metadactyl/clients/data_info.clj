@@ -3,7 +3,6 @@
             [cheshire.core :as cheshire]
             [clj-http.client :as http]
             [clojure.string :as string]
-            [clojure.tools.logging :as log]
             [metadactyl.util.config :as config]
             [metadactyl.util.service :as service]))
 

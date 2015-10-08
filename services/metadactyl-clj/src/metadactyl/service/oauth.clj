@@ -3,12 +3,8 @@
   (:use [metadactyl.user :only [current-user]]
         [slingshot.slingshot :only [throw+]])
   (:require [authy.core :as authy]
-            [cemerick.url :as curl]
-            [clj-http.client :as http]
-            [clojure-commons.error-codes :as ce]
             [metadactyl.persistence.oauth :as op]
-            [metadactyl.util.config :as config]
-            [metadactyl.util.service :as service]))
+            [metadactyl.util.config :as config]))
 
 (defn- build-authy-server-info
   "Builds the server info to pass to authy."
@@ -24,8 +20,8 @@
   [api-name]
   (if-let [server-info-fn (server-info-fn-for (keyword api-name))]
     (server-info-fn)
-    (throw+ {:error_code ce/ERR_BAD_REQUEST
-             :reason     (str "unknown API name: " api-name)})))
+    (throw+ {:type  :clojure-commons.exception/bad-request-field
+             :error (str "unknown API name: " api-name)})))
 
 (defn get-access-token
   "Receives an OAuth authorization code and obtains an access token."
@@ -35,4 +31,4 @@
         state-info     (op/retrieve-authorization-request-state state username)
         token-callback (partial op/store-access-token api-name username)]
     (authy/get-access-token (build-authy-server-info server-info token-callback) code)
-    (service/success-response {:state_info state-info})))
+    {:state_info state-info}))

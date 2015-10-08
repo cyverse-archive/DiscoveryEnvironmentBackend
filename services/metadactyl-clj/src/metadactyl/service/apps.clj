@@ -4,7 +4,6 @@
         [slingshot.slingshot :only [try+ throw+]])
   (:require [cemerick.url :as curl]
             [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as ce]
             [mescal.de :as agave]
             [metadactyl.clients.notifications :as cn]
             [metadactyl.persistence.jobs :as jp]
@@ -17,7 +16,6 @@
             [metadactyl.user :as user]
             [metadactyl.util.config :as config]
             [metadactyl.util.json :as json-util]
-            [metadactyl.util.service :as service]
             [service-logging.thread-context :as tc]))
 
 (defn- authorization-uri
@@ -30,8 +28,8 @@
 
 (defn- authorization-redirect
   [server-info username state-info]
-  (throw+ {:error_code ce/ERR_TEMPORARILY_MOVED
-           :location   (authorization-uri server-info username state-info)}))
+  (throw+ {:type     :clojure-commons.exception/temporary-redirect
+           :location (authorization-uri server-info username state-info)}))
 
 (defn- has-access-token
   [{:keys [api-name] :as server-info} username]

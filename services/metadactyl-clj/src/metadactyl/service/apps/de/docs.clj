@@ -1,7 +1,6 @@
 (ns metadactyl.service.apps.de.docs
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as ce]
-            [metadactyl.persistence.app-documentation :as dp]
+  (:require [metadactyl.persistence.app-documentation :as dp]
             [metadactyl.persistence.app-metadata :as ap]
             [metadactyl.validation :as v]))
 
@@ -15,8 +14,8 @@
   [app-id]
   (if-let [docs (dp/get-documentation app-id)]
     (assoc docs :references (get-references app-id))
-    (throw+ {:error_code ce/ERR_NOT_FOUND
-             :reason "App documentation not found"
+    (throw+ {:type   :clojure-commons.exception/not-found
+             :error  "App documentation not found"
              :app_id app-id})))
 
 (defn edit-app-docs
@@ -36,8 +35,8 @@
   "Adds an App's documentation to the database."
   [{:keys [username]} app-id {docs :documentation}]
   (when-let [current-docs (dp/get-documentation app-id)]
-    (throw+ {:error_code ce/ERR_EXISTS
-             :reason "App already has documentation"
+    (throw+ {:type   :clojure-commons.exception/exists
+             :error  "App already has documentation"
              :app_id app-id}))
   (dp/add-documentation (v/get-valid-user-id username) docs app-id)
   (get-app-docs app-id))

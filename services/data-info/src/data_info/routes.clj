@@ -3,7 +3,7 @@
         [clojure-commons.query-params :only [wrap-query-params]]
         [common-swagger-api.schema]
         [compojure.api.middleware :only [wrap-exceptions]]
-        [service-logging.middleware :only [log-validation-errors]]
+        [service-logging.middleware :only [log-validation-errors add-user-to-context]]
         [ring.util.response :only [redirect]])
   (:require [compojure.route :as route]
             [clojure-commons.exception :as cx]
@@ -19,8 +19,7 @@
             [data-info.util :as util]
             [data-info.util.config :as config]
             [data-info.util.service :as svc]
-            [ring.middleware.keyword-params :as params]
-            [service-logging.thread-context :as tc]))
+            [ring.middleware.keyword-params :as params]))
 
 (defapi app
   (swagger-ui config/docs-uri)
@@ -36,7 +35,7 @@
             {:name "filetypes", :description "File Type Metadata"}
             {:name "home", :description "User Home Directories"}]})
   (middlewares
-    [tc/add-user-to-context
+    [add-user-to-context
      wrap-query-params
      wrap-lcase-params
      params/wrap-keyword-params

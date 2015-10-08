@@ -1,7 +1,7 @@
 (ns metadata.routes
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
-        [service-logging.middleware :only [log-validation-errors]]
+        [service-logging.middleware :only [log-validation-errors add-user-to-context]]
         [common-swagger-api.schema])
   (:require [metadata.routes.avus :as avu-routes]
             [metadata.routes.comments :as comment-routes]
@@ -11,9 +11,7 @@
             [metadata.routes.templates :as template-routes]
             [metadata.util.config :as config]
             [metadata.util.service :as service]
-            [ring.middleware.keyword-params :as params]
-            [schema.core :as s]
-            [service-logging.thread-context :as tc]))
+            [ring.middleware.keyword-params :as params]))
 
 (defapi app
   (swagger-ui config/docs-uri)
@@ -32,7 +30,7 @@
             {:name "template-info", :description "Template Information"}
             {:name "template-administration", :description "Template Administration"}]})
   (middlewares
-    [tc/add-user-to-context
+    [add-user-to-context
      wrap-query-params
      wrap-lcase-params
      params/wrap-keyword-params

@@ -57,6 +57,18 @@
   :language :clojure
   :archive? false}
 
+ "service-logging"
+ {:type     :library
+  :type-num 4
+  :path     "libs/service-logging"
+  :build    :lein
+  :install  :lein
+  :tarball? false
+  :uberjar? false
+  :install? true
+  :language :clojure
+  :archive? false}
+
  "iplant-clojure-commons"
  {:type     :library
   :type-num 5
@@ -133,18 +145,6 @@
  {:type     :library
   :type-num 11
   :path     "libs/mescal"
-  :build    :lein
-  :install  :lein
-  :tarball? false
-  :uberjar? false
-  :install? true
-  :language :clojure
-  :archive? false}
-
- "service-logging"
- {:type     :library
-  :type-num 12
-  :path     "libs/service-logging"
   :build    :lein
   :install  :lein
   :tarball? false

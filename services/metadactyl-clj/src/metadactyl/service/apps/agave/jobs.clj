@@ -8,7 +8,6 @@
             [clojure-commons.file-utils :as ft]
             [kameleon.db :as db]
             [kameleon.uuids :as uuids]
-            [metadactyl.clients.notifications :as cn]
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.util.config :as config]
             [metadactyl.util.json :as json-util]

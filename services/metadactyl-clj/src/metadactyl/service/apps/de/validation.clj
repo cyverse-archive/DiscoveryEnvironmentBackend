@@ -54,7 +54,9 @@
   (when-let [tool-type (get-tool-type registry (.getComponent template))]
     (let [valid-ptypes (into #{} (get-valid-ptype-names tool-type))
           properties   (mapcat #(.getProperties %) (.getPropertyGroups template))]
-      (dorun (map #(throw+ {:type ::UnsupportedPropertyTypeException :property-type % :name (:name tool-type)})
+      (dorun (map #(throw+ {:type          ::UnsupportedPropertyTypeException
+                            :property-type %
+                            :name          (:name tool-type)})
                   (filter #(nil? (valid-ptypes %))
                           (map #(.getPropertyTypeName %) properties)))))))
 
@@ -64,7 +66,8 @@
   [template]
   (let [component-id (.getComponent template)]
    (when (string/blank? component-id)
-     (throw+ {:type ::MissingDeployedComponentException :template-id (.getId template)}))
+     (throw+ {:type        ::MissingDeployedComponentException
+              :template-id (.getId template)}))
    (when (nil? (get-deployed-component-from-database component-id))
      (throw+ {:type ::UnknownDeployedComponentException :component-id component-id}))))
 

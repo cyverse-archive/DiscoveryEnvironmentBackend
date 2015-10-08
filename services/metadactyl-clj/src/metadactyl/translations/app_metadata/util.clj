@@ -1,7 +1,6 @@
 (ns metadactyl.translations.app-metadata.util
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [clojure.set :as set]
-            [clojure-commons.error-codes :as ce]))
+  (:require [clojure.set :as set]))
 
 (def input-property-types
   #{"Input" "FileInput" "FolderInput" "MultiFileSelector"})

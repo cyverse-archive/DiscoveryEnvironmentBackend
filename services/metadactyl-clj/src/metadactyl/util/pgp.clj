@@ -4,7 +4,6 @@
             [clj-pgp.keyring :as keyring]
             [clj-pgp.message :as pgp-msg]
             [clojure.java.io :as io]
-            [clojure-commons.error-codes :as ce]
             [metadactyl.util.config :as config]))
 
 (def ^:private keyring
@@ -30,5 +29,5 @@
   [bs]
   (if-let [private-key (get-private-key)]
     (String. (pgp-msg/decrypt bs private-key))
-    (throw+ {:error_code ce/ERR_CONFIG_INVALID
-             :message    "unable to unlock the private encryption key"})))
+    (throw+ {:type  :clojure-commons.exception/invalid-configuration
+             :error "unable to unlock the private encryption key"})))

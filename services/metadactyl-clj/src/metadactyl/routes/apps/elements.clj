@@ -3,20 +3,20 @@
         [metadactyl.metadata.element-listings :only [list-elements]]
         [metadactyl.routes.domain.app.element]
         [metadactyl.routes.domain.tool :only [ToolListing]]
-        [metadactyl.routes.params])
-  (:require [clojure-commons.error-codes :as ce]
-            [metadactyl.util.service :as service]
+        [metadactyl.routes.params]
+        [ring.util.http-response :only [ok]])
+  (:require [metadactyl.util.service :as service]
             [compojure.route :as route]))
 
 (defroutes* app-elements
-  (GET* "/" [:as {uri :uri}]
+  (GET* "/" []
         :query [params SecuredIncludeHiddenParams]
         :summary "List All Available App Elements"
         :description "This endpoint may be used to obtain lists of all available elements that may be
         included in an App."
-        (ce/trap uri #(list-elements "all" params)))
+        (ok (list-elements "all" params)))
 
-  (GET* "/data-sources" [:as {uri :uri}]
+  (GET* "/data-sources" []
         :query [params SecuredQueryParams]
         :return DataSourceListing
         :summary "List App File Parameter Data Sources"
@@ -24,18 +24,18 @@
         parameters will come from a plain file. The only other options that are currently available
         are redirected standard output and redirected standard error output. Both of these options
         apply only to file parameters that are associated with an output."
-        (ce/trap uri #(list-elements "data-sources" params)))
+        (ok (list-elements "data-sources" params)))
 
-  (GET* "/file-formats" [:as {uri :uri}]
+  (GET* "/file-formats" []
         :query [params SecuredQueryParams]
         :return FileFormatListing
         :summary "List App Parameter File Formats"
         :description "The known file formats can be used to describe supported input or output formats for
         a tool. For example, tools in the FASTX toolkit may support FASTA files, several different
         varieties of FASTQ files and Barcode files, among others."
-        (ce/trap uri #(list-elements "file-formats" params)))
+        (ok (list-elements "file-formats" params)))
 
-  (GET* "/info-types" [:as {uri :uri}]
+  (GET* "/info-types" []
         :query [params SecuredQueryParams]
         :return InfoTypeListing
         :summary "List Tool Info Types"
@@ -47,9 +47,9 @@
         PhyloXML format, and a large number of other formats. The file format and information type
         together identify the type of input consumed by a tool or the type of output produced by a
         tool."
-        (ce/trap uri #(list-elements "info-types" params)))
+        (ok (list-elements "info-types" params)))
 
-  (GET* "/parameter-types" [:as {uri :uri}]
+  (GET* "/parameter-types" []
         :query [params AppParameterTypeParams]
         :return ParameterTypeListing
         :summary "List App Parameter Types"
@@ -63,9 +63,9 @@
         (which is used to determine the tool type). If you filter by both tool type and tool ID then
         the tool type will take precedence. Including either an undefined tool type or an undefined
         tool type name will result in an error"
-        (ce/trap uri #(list-elements "parameter-types" params)))
+        (ok (list-elements "parameter-types" params)))
 
-  (GET* "/rule-types" [:as {uri :uri}]
+  (GET* "/rule-types" []
         :query [params SecuredQueryParams]
         :return RuleTypeListing
         :summary "List App Parameter Rule Types"
@@ -73,25 +73,25 @@
         input. For example, if a parameter value must be an integer between 1 and 10 then the
         `IntRange` rule type may be used. Similarly, if a parameter value must contain data in a
         specific format, such as a phone number, then the `Regex` rule type may be used."
-        (ce/trap uri #(list-elements "rule-types" params)))
+        (ok (list-elements "rule-types" params)))
 
-  (GET* "/tools" [:as {uri :uri}]
+  (GET* "/tools" []
         :query [params SecuredIncludeHiddenParams]
         :return ToolListing
         :summary "List App Tools"
         :description "This endpoint is used by the Discovery Environment to obtain a list of registered
         tools (usually, command-line tools) that can be executed from within the DE."
-        (ce/trap uri #(list-elements "tools" params)))
+        (ok (list-elements "tools" params)))
 
-  (GET* "/tool-types" [:as {uri :uri}]
+  (GET* "/tool-types" []
         :query [params SecuredQueryParams]
         :return ToolTypeListing
         :summary "List App Tool Types"
         :description "Tool types are known types of tools in the Discovery Environment. Generally, there's
         a different tool type for each execution environment that is supported by the DE."
-        (ce/trap uri #(list-elements "tool-types" params)))
+        (ok (list-elements "tool-types" params)))
 
-  (GET* "/value-types" [:as {uri :uri}]
+  (GET* "/value-types" []
         :query [params SecuredQueryParams]
         :return ValueTypeListing
         :summary "List App Parameter and Rule Value Types"
@@ -101,6 +101,6 @@
         types is specifically to link parameter types and rule types. The App Editor uses the value
         type to determine which types of rules can be applied to a parameter that is being defined
         by the user."
-        (ce/trap uri #(list-elements "value-types" params)))
+        (ok (list-elements "value-types" params)))
 
   (route/not-found (service/unrecognized-path-response)))

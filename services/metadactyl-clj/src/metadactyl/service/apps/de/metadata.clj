@@ -10,14 +10,12 @@
         [metadactyl.service.apps.de.validation :only [app-publishable?]]
         [metadactyl.util.config :only [workspace-beta-app-category-id
                                        workspace-favorites-app-category-index]]
-        [metadactyl.util.service :only [success-response]]
         [metadactyl.validation :only [get-valid-user-id verify-app-ownership]]
         [metadactyl.workspace :only [get-workspace]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clj-http.client :as client]
-            [clojure-commons.error-codes :as ce]
             [metadactyl.persistence.app-metadata :as amp]
             [metadactyl.service.apps.de.docs :as app-docs]
             [metadactyl.translations.app-metadata :as atx]
@@ -32,18 +30,18 @@
   "Verifies that a user owns an app."
   [username app-id]
   (when-not (every? (partial = username) (amp/app-accessible-by app-id))
-    (throw+ {:error_code ce/ERR_BAD_REQUEST
-             :reason     (str username " does not own app " app-id)})))
+    (throw+ {:type  :clojure-commons.exception/bad-request-field
+             :error (str username " does not own app " app-id)})))
 
 (defn- validate-deletion-request
   "Validates an app deletion request."
   [user req]
   (when (empty? (:app_ids req))
-    (throw+ {:error_code ce/ERR_BAD_REQUEST
-             :reason     "no app identifiers provided"}))
+    (throw+ {:type  :clojure-commons.exception/bad-request-field
+             :error "no app identifiers provided"}))
   (when (and (nil? (:username user)) (not (:root_deletion_request req)))
-    (throw+ {:error_code ce/ERR_BAD_REQUEST
-             :reason     "no username provided for non-root deletion request"}))
+    (throw+ {:type  :clojure-commons.exception/bad-request-field
+             :error "no username provided for non-root deletion request"}))
   (dorun (map validate-app-existence (:app_ids req)))
   (when-not (:root_deletion_request req)
     (dorun (map (partial validate-app-ownership (:username user)) (:app_ids req)))))
@@ -92,11 +90,11 @@
   (validate-app-existence app-id)
   (let [user-id (get-valid-user-id (:username user))]
     (when (and (nil? rating) (nil? comment_id))
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     (str "No rating or comment ID given")}))
+      (throw+ {:type  :clojure-commons.exception/bad-request-field
+               :error (str "No rating or comment ID given")}))
     (when (or (> 1 rating) (> rating 5))
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     (str "Rating must be an integer between 1 and 5 inclusive."
+      (throw+ {:type  :clojure-commons.exception/bad-request-field
+               :error (str "Rating must be an integer between 1 and 5 inclusive."
                                 " Invalid rating (" rating ") for App ID " app-id)}))
     (amp/rate-app app-id user-id request)
     (amp/get-app-avg-rating app-id)))
@@ -149,15 +147,14 @@
   (let [[publishable? reason] (app-publishable? app-id)]
     (if publishable?
       (publish-app user app)
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     reason}))))
+      (throw+ {:type  :clojure-commons.exception/bad-request-field
+               :error reason}))))
 
 (defn get-app
   "This service obtains an app description that can be used to build a job submission form in
    the user interface."
   [app-id]
-  (->> (amp/get-app app-id)
-       (success-response)))
+  (amp/get-app app-id))
 
 (defn get-param-definitions
   [app-id]

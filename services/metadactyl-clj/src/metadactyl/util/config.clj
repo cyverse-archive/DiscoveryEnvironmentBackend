@@ -3,8 +3,6 @@
   (:require [cemerick.url :as curl]
             [cheshire.core :as cheshire]
             [clojure-commons.config :as cc]
-            [clojure-commons.error-codes :as ce]
-            [clojure.string :as str]
             [clojure.tools.logging :as log]
             [common-cfg.cfg :as cfg]))
 
@@ -275,7 +273,7 @@
   "Validates the configuration settings after they've been loaded."
   []
   (when-not (cc/validate-config configs config-valid)
-    (throw+ {:error_code ce/ERR_CONFIG_INVALID})))
+    (throw+ {:type :clojure-commons.exception/invalid-configuration})))
 
 (defn load-config-from-file
   "Loads the configuration settings from a file."

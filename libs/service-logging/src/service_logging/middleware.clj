@@ -56,6 +56,11 @@
   ([level request response]
    (log-response level nil request response)))
 
+(defn log-response-with-exception
+  [throwable request response exception]
+  (tc/with-logging-context {:exception (cheshire/encode exception)}
+                           (log-response :error throwable request response)))
+
 (defn wrap-logging
   "Logs incoming requests and their responses with the 'AccessLogger' logger.
 
@@ -66,16 +71,35 @@
   [handler]
   (fn [request]
     (log-request request)
+    (let [response (handler request)]
+      (log-response request response)
+      response)))
+
+(defn wrap-response-logging
+  "Logs incoming requests and their responses with the 'AccessLogger' logger.
+
+    If the response map contains a `throwable` key, the value will be given to
+    the logger as an exception/throwable. Also, if the `throwable` key is not nil,
+    it is assumed that there will also be an `exception` key in the response map.
+    The `throwable` and `exception` keys are not logged nor passed with the response."
+  [handler]
+  (fn [request]
     (let [{:keys [throwable exception] :as response} (handler request)]
       (if (nil? throwable)
                (log-response request response)
                (tc/with-logging-context {:exception (cheshire/encode exception)}
-                                        (log-response :error throwable request (dissoc response
-                                                                                       :throwable
-                                                                                       :exception))))
-      (dissoc response
-              :throwable
-              :exception))))
+                                        (log-response :error throwable request response)))
+      response)))
+
+(defn add-user-to-context
+  "add-user-to-context is a ring handler that adds the user value from the query
+  string into the context with a key of 'user-info user'. The query params need to be parsed first."
+  [handler]
+  (fn [{:keys [query-params] :as request}]
+    (if (contains? query-params "user")
+      (tc/with-logging-context (assoc-in {} [:user-info :user](get query-params "user"))
+                               (handler request))
+      (handler request))))
 
 ; FIXME Replace usages of this function with compojure api validation exception handlers
 (defn log-validation-errors
