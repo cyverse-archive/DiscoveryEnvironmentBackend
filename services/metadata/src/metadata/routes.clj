@@ -15,6 +15,7 @@
             [clojure-commons.exception :as cx]))
 
 (defapi app
+  {:exceptions cx/exception-handlers}
   (swagger-ui config/docs-uri)
   (swagger-docs
     {:info {:title "Discovery Environment Metadata API"

@@ -1,7 +1,6 @@
 (ns metadata.services.favorites
   (:use [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as err]
-            [metadata.persistence.favorites :as db]))
+  (:require [metadata.persistence.favorites :as db]))
 
 
 (defn add-favorite
@@ -27,10 +26,10 @@
                  unmarked."
   [user target-id]
   (when-not (db/is-favorite? user target-id)
-    (throw+ {:error_code err/ERR_NOT_FOUND
-             :user       user
-             :target-id  target-id
-             :reason     "The target-id wasn't marked as a favorite by the user"}))
+    (throw+ {:type      :clojure-commons.exception/not-found
+             :user      user
+             :target-id target-id
+             :error     "The target-id wasn't marked as a favorite by the user"}))
   (db/delete-favorite user target-id)
   nil)
 

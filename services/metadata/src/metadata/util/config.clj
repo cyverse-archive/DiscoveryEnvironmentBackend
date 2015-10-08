@@ -1,8 +1,6 @@
 (ns metadata.util.config
   (:use [slingshot.slingshot :only [throw+]])
   (:require [clojure-commons.config :as cc]
-            [clojure-commons.error-codes :as ce]
-            [common-cfg.cfg :as cfg]
             [clojure.tools.logging :as log]))
 
 (def default-config-file "/etc/iplant/de/metadata.properties")
@@ -80,7 +78,7 @@
   "Validates the configuration settings after they've been loaded."
   []
   (when-not (cc/validate-config configs config-valid)
-    (throw+ {:error_code ce/ERR_CONFIG_INVALID})))
+    (throw+ {:type :clojure-commons.exception/invalid-cfg})))
 
 (defn log-environment
   []

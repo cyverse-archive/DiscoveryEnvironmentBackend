@@ -4,7 +4,6 @@
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.tools.logging :as log]
             [clojure-commons.assertions :as assertions]
-            [clojure-commons.error-codes :as error-codes]
             [metadata.persistence.avu :as persistence]
             [metadata.services.templates :as templates]))
 
@@ -55,7 +54,7 @@
       (transaction
        (persistence/remove-avu-template-instances template-id [avu-id])
        (persistence/remove-avu avu-id))
-      (throw+ {:error_code error-codes/ERR_DOES_NOT_EXIST
+      (throw+ {:type :clojure-commons.exception/exists
                :avu avu})))
   nil)
 

@@ -1,15 +1,14 @@
 (ns metadata.services.comments
   (:use [slingshot.slingshot :only [try+ throw+]])
-  (:require [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as err]
-            [metadata.persistence.comments :as db]
-            [metadata.util.service :as service]))
+  (:require [metadata.persistence.comments :as db]))
 
 
 (defn- validate-comment-id
   [data-id comment-id]
   (when-not (db/comment-on? comment-id data-id)
-    (throw+ {:error_code err/ERR_NOT_FOUND})))
+    (throw+ {:type       :clojure-commons.exception/not-found
+             :comment-id comment-id
+             :target-id  data-id})))
 
 (defn- prepare-comment
   [comment]
@@ -94,10 +93,12 @@
     (if retracting?
       (if (or target-admin? (= user (:commenter comment)))
         (db/retract-comment comment-id user)
-        (throw+ {:error_code err/ERR_NOT_OWNER :reason "doesn't own comment"}))
+        (throw+ {:type  :clojure-commons.exception/not-owner
+                 :error "doesn't own comment"}))
       (if (= user (:retracted_by comment))
         (db/readmit-comment comment-id)
-        (throw+ {:error_code err/ERR_NOT_OWNER :reason "wasn't retractor"})))
+        (throw+ {:type  :clojure-commons.exception/not-owner
+                 :error "wasn't retractor"})))
     nil))
 
 (defn update-data-retract-status
