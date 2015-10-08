@@ -11,7 +11,6 @@
         [notification-agent.delete]
         [notification-agent.notifications]
         [notification-agent.query]
-        [notification-agent.common :only [success-resp]]
         [notification-agent.seen]
         [slingshot.slingshot :only [try+]]
         [ring.util.http-response :only [ok]]
