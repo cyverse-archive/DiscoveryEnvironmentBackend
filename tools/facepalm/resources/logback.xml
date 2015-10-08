@@ -1,0 +1,16 @@
+<configuration>
+ <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <customFields>{"service":"facepalm"}</customFields>
+        <fieldNames>
+            <logger>loggerName</logger>
+            <thread>thread</thread>
+            <levelValue>[ignore]</levelValue>
+        </fieldNames>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+</configuration>
