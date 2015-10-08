@@ -20,5 +20,3 @@
   "Returns an HTTP response indicating that the user is not permitted to access a resource."
   [reason]
   (error-response http-resp/forbidden ce/ERR_FORBIDDEN :reason reason))
-
-

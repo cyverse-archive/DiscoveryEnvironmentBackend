@@ -93,7 +93,7 @@
 
 (defn add-user-to-context
   "add-user-to-context is a ring handler that adds the user value from the query
-  string into the context with a key of 'user'. The query params need to be parsed first."
+  string into the context with a key of 'user-info user'. The query params need to be parsed first."
   [handler]
   (fn [{:keys [query-params] :as request}]
     (if (contains? query-params "user")
