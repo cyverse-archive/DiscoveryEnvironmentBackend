@@ -54,7 +54,7 @@
       (transaction
        (persistence/remove-avu-template-instances template-id [avu-id])
        (persistence/remove-avu avu-id))
-      (throw+ {:type :clojure-commons.exception/exists
+      (throw+ {:type :clojure-commons.exception/not-found
                :avu avu})))
   nil)
 
