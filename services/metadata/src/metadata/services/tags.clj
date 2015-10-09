@@ -102,8 +102,8 @@
   (condp = type
     "attach" (attach-tags user data-id data-type mods)
     "detach" (detach-tags user data-id mods)
-    (throw+ {:type :clojure-commons.exception/bad-query-params
-             :type type})))
+    (throw+ {:type      :clojure-commons.exception/bad-query-params
+             :parameter type})))
 
 
 (defn list-attached-tags
