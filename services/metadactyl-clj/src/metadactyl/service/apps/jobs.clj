@@ -2,6 +2,7 @@
   (:use [korma.db :only [transaction]]
         [slingshot.slingshot :only [try+]])
   (:require [clojure.tools.logging :as log]
+            [clojure.string :as string]
             [kameleon.db :as db]
             [metadactyl.clients.notifications :as cn]
             [metadactyl.persistence.jobs :as jp]
@@ -116,7 +117,7 @@
   [username job-ids]
   (let [unowned-ids (map :id (jp/list-unowned-jobs username job-ids))]
     (when-not (empty? unowned-ids)
-      (service/not-owner "jobs" unowned-ids))))
+      (service/not-owner "jobs" (string/join ", " unowned-ids)))))
 
 (defn- validate-jobs-for-user
   [username job-ids]
