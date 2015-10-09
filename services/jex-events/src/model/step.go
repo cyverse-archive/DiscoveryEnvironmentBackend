@@ -37,12 +37,12 @@ type Step struct {
 
 // EnvOptions returns a string containing the docker command-line options
 // that set the environment variables listed in the Environment field.
-func (s *Step) EnvOptions() string {
-	var buffer bytes.Buffer
+func (s *Step) EnvOptions() []string {
+	retval := []string{}
 	for k, v := range s.Environment {
-		buffer.WriteString(fmt.Sprintf("--env=\"%s=%s\" ", k, v))
+		retval = append(retval, fmt.Sprintf("--env=\"%s=%s\"", k, v))
 	}
-	return strings.TrimSpace(buffer.String())
+	return retval
 }
 
 // IsBackwardsCompatible returns true if the job submission uses the container
@@ -56,11 +56,11 @@ func (s *Step) IsBackwardsCompatible() bool {
 
 // BackwardsCompatibleOptions returns a string with the options that are needed
 // for the image that provides backwards compatibility with pre-Docker tools.
-func (s *Step) BackwardsCompatibleOptions() string {
+func (s *Step) BackwardsCompatibleOptions() []string {
 	if s.IsBackwardsCompatible() {
-		return "-v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/"
+		return []string{"-v", "/usr/local2/:/usr/local2", "-v", "/usr/local3/:/usr/local3/", "-v", "/data2/:/data2/"}
 	}
-	return ""
+	return []string{}
 }
 
 // Executable returns a string containing the executable path as it gets placed
@@ -72,25 +72,40 @@ func (s *Step) Executable() string {
 	return ""
 }
 
-// CommandLine returns a string containing all of the options passed to the
+// Arguments returns a []string containing all of the options passed to the
 // docker run command for this step in the submission.
-func (s *Step) CommandLine(uuid string) string {
+func (s *Step) Arguments(uuid string) []string {
 	container := s.Component.Container
 	allLines := []string{
-		"run --rm -e IPLANT_USER -e IPLANT_EXECUTION_ID",
+		"run",
+		"--rm",
+		"--label", fmt.Sprintf("org.iplantc.analysis=%s", uuid),
+		"-e", "IPLANT_USER",
+		"-e", "IPLANT_EXECUTION_ID",
+		container.MemoryLimitOption(),
+		container.CPUSharesOption(),
+		container.NetworkModeOption(),
+		container.EntryPointOption(),
+	}
+	listable := [][]string{
+		container.NameOption(),
+		s.EnvOptions(),
 		s.BackwardsCompatibleOptions(),
 		container.VolumeOptions(),
 		container.DeviceOptions(),
 		container.VolumesFromOptions(uuid),
-		container.NameOption(),
 		container.WorkingDirectoryOption(),
-		container.MemoryLimitOption(),
-		container.CPUSharesOption(),
-		container.NetworkModeOption(),
-		s.EnvOptions(),
-		container.EntryPointOption(),
-		container.ImageOption(),
-		s.Executable(),
+	}
+	for _, l := range listable {
+		for _, o := range l {
+			allLines = append(allLines, o)
+		}
+	}
+	allLines = append(allLines, container.ImageOption())
+	allLines = append(allLines, s.Executable())
+	for _, p := range s.Config.Parameters() {
+		allLines = append(allLines, p.Name)
+		allLines = append(allLines, quote(p.Value))
 	}
 	var cmdLine []string
 	for _, l := range allLines {
@@ -98,18 +113,7 @@ func (s *Step) CommandLine(uuid string) string {
 			cmdLine = append(cmdLine, l)
 		}
 	}
-	return strings.Join(cmdLine, " ")
-}
-
-// Arguments returns a string that contains all of the fields that go into the
-// command in the iplant.sh file. Combines the output of CommandLine() with
-// the formatted params from the Config.
-func (s *Step) Arguments(uuid string) string {
-	var buffer bytes.Buffer
-	for _, p := range s.Config.Parameters() {
-		buffer.WriteString(fmt.Sprintf("%s %s ", p.Name, quote(p.Value)))
-	}
-	return strings.TrimSpace(fmt.Sprintf("%s %s", s.CommandLine(uuid), buffer.String()))
+	return cmdLine
 }
 
 // Stdin returns the a quoted version of s.StdinPath or an empty string if it's

@@ -64,15 +64,28 @@ func (i *StepInput) Source() string {
 }
 
 // Arguments returns the porklock settings needed for the input operation.
-func (i *StepInput) Arguments(username string, metadata []FileMetadata) string {
-	args := "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:%s get --user %s --source %s --config irods-config %s"
+func (i *StepInput) Arguments(username, uuid string, metadata []FileMetadata) []string {
 	tag, err := configurate.C.String("condor.porklock_tag")
 	if err != nil {
 		tag = ""
 	}
 	path := quote(i.IRODSPath())
-	metadataArgs := MetadataArgs(metadata).FileMetadataArguments()
-	return fmt.Sprintf(args, tag, username, path, metadataArgs)
+	args := []string{
+		"run",
+		"--rm",
+		"--label", fmt.Sprintf("org.iplantc.analysis=%s", uuid),
+		"-v", "$(pwd):/de-app-work",
+		"-w", "/de-app-work",
+		fmt.Sprintf("discoenv/porklock:%s", tag),
+		"get",
+		"--user", username,
+		"--source", path,
+		"--config", "irods-config",
+	}
+	for _, m := range MetadataArgs(metadata).FileMetadataArguments() {
+		args = append(args, m)
+	}
+	return args
 }
 
 // StepOutput describes a single output for a job step.

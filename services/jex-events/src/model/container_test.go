@@ -1,6 +1,9 @@
 package model
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestStepContainerID(t *testing.T) {
 	s := inittests(t)
@@ -172,24 +175,26 @@ func TestStepContainerWorkingDirectory(t *testing.T) {
 
 func TestStepContainerWorkingDirectoryOption(t *testing.T) {
 	s := _inittests(t, false)
-	w := s.Steps[0].Component.Container.WorkingDirectoryOption()
-	if w != "-w /work" {
-		t.Errorf("WorkingDirectoryOption() returned '%s' instead of '-w /work'", w)
+	actual := s.Steps[0].Component.Container.WorkingDirectoryOption()
+	expected := []string{"-w", "/work"}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("WorkingDirectoryOption() returned %#v instead of %#v", actual, expected)
 	}
 	s.Steps[0].Component.Container.WorkingDir = ""
-	w = s.Steps[0].Component.Container.WorkingDirectoryOption()
-	if w != "-w /de-app-work" {
-		t.Errorf("WorkingDirectoryOption() returned '%s' instead of '-w /de-app-work'", w)
+	actual = s.Steps[0].Component.Container.WorkingDirectoryOption()
+	expected = []string{"-w", "/de-app-work"}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("WorkingDirectoryOption() returned %#v instead of %#v", actual, expected)
 	}
 }
 
 func TestVolumeOptions(t *testing.T) {
 	s := _inittests(t, false)
 	actual := s.Steps[0].Component.Container.VolumeOptions()
-	expected := "-v $(pwd):/work -v /host/path1:/container/path1 -v /container/path2"
-	if actual != expected {
+	expected := []string{"-v", "$(pwd):/work", "-v", "/host/path1:/container/path1", "-v", "/container/path2"}
+	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf(
-			"The volume option was: \n\t%s\nrather than:\n\t%s",
+			"The volume option was: \n\t%#v\nrather than:\n\t%#v",
 			actual,
 			expected,
 		)
@@ -199,17 +204,17 @@ func TestVolumeOptions(t *testing.T) {
 func TestVolumesFromOptions(t *testing.T) {
 	s := inittests(t)
 	actual := s.Steps[0].Component.Container.VolumesFromOptions("test")
-	expected := "--volumes-from=test-vf-prefix1 --volumes-from=test-vf-prefix2"
-	if actual != expected {
-		t.Errorf("The volumes-from options were:\n\t%s\ninstead of:\n\t%s", actual, expected)
+	expected := []string{"--volumes-from=test-vf-prefix1", "--volumes-from=test-vf-prefix2"}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("The volumes-from options were:\n\t%#v\ninstead of:\n\t%#v", actual, expected)
 	}
 }
 
 func TestNameOption(t *testing.T) {
 	s := inittests(t)
 	actual := s.Steps[0].Component.Container.NameOption()
-	expected := "--name test-name"
-	if actual != expected {
+	expected := []string{"--name", "test-name"}
+	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("The container name was '%s' when it should have been '%s'", actual, expected)
 	}
 }
@@ -332,8 +337,8 @@ func TestDevices(t *testing.T) {
 		t.Errorf("The second device's container path was '%s' instead of '/container/path1'", d2.ContainerPath)
 	}
 	actual := s.Steps[0].Component.Container.DeviceOptions()
-	expected := "--device=/host/path1:/container/path1 --device=/host/path2:/container/path2"
-	if actual != expected {
+	expected := []string{"--device=/host/path1:/container/path1", "--device=/host/path2:/container/path2"}
+	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("The device option was:\n\t%s\nrather than:\n\t%s", actual, expected)
 	}
 }

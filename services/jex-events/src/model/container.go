@@ -1,10 +1,8 @@
 package model
 
 import (
-	"bytes"
 	"configurate"
 	"fmt"
-	"strings"
 )
 
 // Volume describes how a local path is mounted into a container.
@@ -81,59 +79,59 @@ func (c *Container) WorkingDirectory() string {
 
 // WorkingDirectoryOption returns a string containing a Docker command-line option
 // setting the working directory.
-func (c *Container) WorkingDirectoryOption() string {
-	return fmt.Sprintf("-w %s", c.WorkingDirectory())
+func (c *Container) WorkingDirectoryOption() []string {
+	return []string{"-w", c.WorkingDirectory()}
 }
 
 // VolumeOptions returns a string containing the docker command-line options that
 // set all of the defined volumes.
-func (c *Container) VolumeOptions() string {
-	var buffer bytes.Buffer
-	buffer.WriteString(fmt.Sprintf("-v $(pwd):%s", c.WorkingDirectory()))
+func (c *Container) VolumeOptions() []string {
+	retval := []string{"-v", fmt.Sprintf("$(pwd):%s", c.WorkingDirectory())}
 	if c.HasVolumes() {
 		for _, v := range c.Volumes {
-			buffer.WriteString(" ")
 			if v.HostPath != "" {
-				buffer.WriteString(fmt.Sprintf("-v %s:%s", v.HostPath, v.ContainerPath))
+				retval = append(retval, "-v")
+				retval = append(retval, fmt.Sprintf("%s:%s", v.HostPath, v.ContainerPath))
 			} else {
-				buffer.WriteString(fmt.Sprintf("-v %s", v.ContainerPath))
+				retval = append(retval, "-v")
+				retval = append(retval, v.ContainerPath)
 			}
 		}
 	}
-	return buffer.String()
+	return retval
 }
 
 // DeviceOptions returns a string containing the docker command-line options
 // that set all of the defined devices.
-func (c *Container) DeviceOptions() string {
-	var buffer bytes.Buffer
+func (c *Container) DeviceOptions() []string {
+	retval := []string{}
 	if c.HasDevices() {
 		for _, d := range c.Devices {
-			buffer.WriteString(fmt.Sprintf("--device=%s:%s ", d.HostPath, d.ContainerPath))
+			retval = append(retval, fmt.Sprintf("--device=%s:%s", d.HostPath, d.ContainerPath))
 		}
 	}
-	return strings.TrimSpace(buffer.String())
+	return retval
 }
 
 // VolumesFromOptions returns a string containing the docker command-line options
 // that set all of the defined volumes-from.
-func (c *Container) VolumesFromOptions(prefix string) string {
-	var buffer bytes.Buffer
+func (c *Container) VolumesFromOptions(prefix string) []string {
+	retval := []string{}
 	if c.HasVolumesFrom() {
 		for _, vf := range c.VolumesFrom {
-			buffer.WriteString(fmt.Sprintf("--volumes-from=%s-%s ", prefix, vf.NamePrefix))
+			retval = append(retval, fmt.Sprintf("--volumes-from=%s-%s", prefix, vf.NamePrefix))
 		}
 	}
-	return strings.TrimSpace(buffer.String())
+	return retval
 }
 
 // NameOption returns a string containing the docker command-line option
 // that sets the container name.
-func (c *Container) NameOption() string {
+func (c *Container) NameOption() []string {
 	if c.Name != "" {
-		return fmt.Sprintf("--name %s", c.Name)
+		return []string{"--name", fmt.Sprintf("%s", c.Name)}
 	}
-	return ""
+	return []string{}
 }
 
 // NetworkModeOption returns a string containing the docker command-line option

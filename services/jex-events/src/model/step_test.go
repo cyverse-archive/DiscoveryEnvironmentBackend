@@ -1,6 +1,9 @@
 package model
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestStepsCount(t *testing.T) {
 	s := inittests(t)
@@ -138,20 +141,20 @@ func TestStepEnvironment2(t *testing.T) {
 func TestEnvOptions(t *testing.T) {
 	s := inittests(t)
 	actual := s.Steps[0].EnvOptions()
-	expected := "--env=\"food=banana\" --env=\"foo=bar\""
-	expected2 := "--env=\"foo=bar\" --env=\"food=banana\""
-	if actual != expected && actual != expected2 {
-		if actual != expected {
-			t.Errorf("EnvOptions() returned '%s' instead of '%s'", actual, expected)
+	expected := []string{"--env=\"food=banana\"", "--env=\"foo=bar\""}
+	expected2 := []string{"--env=\"foo=bar\"", "--env=\"food=banana\""}
+	if !reflect.DeepEqual(actual, expected) && !reflect.DeepEqual(actual, expected2) {
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf("EnvOptions() returned '%#v' instead of '%#v'", actual, expected)
 		}
-		if actual != expected2 {
-			t.Errorf("EnvOptions() returned '%s' instead of '%s'", actual, expected2)
+		if !reflect.DeepEqual(actual, expected2) {
+			t.Errorf("EnvOptions() returned '%#v' instead of '%#v'", actual, expected2)
 		}
 	}
 	s.Steps[0].Environment = make(StepEnvironment)
 	actual = s.Steps[0].EnvOptions()
-	expected = ""
-	if actual != expected {
+	expected = []string{}
+	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("EnvOptions() returned '%s' instead of '%s'", actual, expected)
 	}
 	_inittests(t, false)
@@ -174,15 +177,15 @@ func TestIsBackwardsCompatible(t *testing.T) {
 func TestBackwardsCompatibleOptions(t *testing.T) {
 	s := inittests(t)
 	actual := s.Steps[0].BackwardsCompatibleOptions()
-	expected := "-v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/"
-	if actual != expected {
-		t.Errorf("BackwardsCompatibleOptions() returned '%s' instead of '%s'", actual, expected)
+	expected := []string{"-v", "/usr/local2/:/usr/local2", "-v", "/usr/local3/:/usr/local3/", "-v", "/data2/:/data2/"}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("BackwardsCompatibleOptions() returned '%#v' instead of '%#v'", actual, expected)
 	}
 	s.Steps[0].Component.Container.Image.Name = "discoenv/test"
 	actual = s.Steps[0].BackwardsCompatibleOptions()
-	expected = ""
-	if actual != expected {
-		t.Errorf("BackwardsCompatibleOptions() returned '%s' instead of '%s'", actual, expected)
+	expected = []string{}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("BackwardsCompatibleOptions() returned '%#v' instead of '%#v'", actual, expected)
 	}
 	_inittests(t, false)
 }
@@ -203,25 +206,50 @@ func TestExecutable(t *testing.T) {
 	_inittests(t, false)
 }
 
-func TestCommandLine(t *testing.T) {
+func TestArguments(t *testing.T) {
 	s := inittests(t)
 	s.Steps[0].Environment = make(StepEnvironment) // Removed the environment to save my sanity. It's unordered.
-	actual := s.Steps[0].CommandLine("foo")
-	expected := `run --rm -e IPLANT_USER -e IPLANT_EXECUTION_ID -v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/ -v $(pwd):/work -v /host/path1:/container/path1 -v /container/path2 --device=/host/path1:/container/path1 --device=/host/path2:/container/path2 --volumes-from=foo-vf-prefix1 --volumes-from=foo-vf-prefix2 --name test-name -w /work --memory=2048M --cpu-shares=2048 --net=none --entrypoint=/bin/true gims.iplantcollaborative.org:5000/backwards-compat:test /usr/local3/bin/wc_tool-1.00/wc_wrapper.sh`
-	if actual != expected {
-		t.Errorf("CommandLine returned:\n\t%s\ninstead of:\n\t%s", actual, expected)
+	actual := s.Steps[0].Arguments("foo")
+	expected := []string{
+		"run",
+		"--rm",
+		"--label", "org.iplantc.analysis=foo",
+		"-e", "IPLANT_USER",
+		"-e", "IPLANT_EXECUTION_ID",
+		"--memory=2048M",
+		"--cpu-shares=2048",
+		"--net=none",
+		"--entrypoint=/bin/true",
+		"--name", "test-name",
+		"-v", "/usr/local2/:/usr/local2",
+		"-v", "/usr/local3/:/usr/local3/",
+		"-v", "/data2/:/data2/",
+		"-v", "$(pwd):/work",
+		"-v", "/host/path1:/container/path1",
+		"-v", "/container/path2",
+		"--device=/host/path1:/container/path1",
+		"--device=/host/path2:/container/path2",
+		"--volumes-from=foo-vf-prefix1",
+		"--volumes-from=foo-vf-prefix2",
+		"-w", "/work",
+		"gims.iplantcollaborative.org:5000/backwards-compat:test",
+		"/usr/local3/bin/wc_tool-1.00/wc_wrapper.sh",
+		"param1", "'Acer-tree.txt'", "param0", "'wc_out.txt'",
+	}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Arguments() returned:\n\t%#v\ninstead of:\n\t%#v", actual, expected)
 	}
 }
 
-func TestArguments(t *testing.T) {
-	s := inittests(t)
-	actual := s.Steps[0].Arguments("foo")
-	expected := `run --rm -e IPLANT_USER -e IPLANT_EXECUTION_ID -v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/ -v $(pwd):/work -v /host/path1:/container/path1 -v /container/path2 --device=/host/path1:/container/path1 --device=/host/path2:/container/path2 --volumes-from=foo-vf-prefix1 --volumes-from=foo-vf-prefix2 --name test-name -w /work --memory=2048M --cpu-shares=2048 --net=none --entrypoint=/bin/true gims.iplantcollaborative.org:5000/backwards-compat:test /usr/local3/bin/wc_tool-1.00/wc_wrapper.sh param1 'Acer-tree.txt' param0 'wc_out.txt'`
-	if actual != expected {
-		t.Errorf("Arguments() returned:\n\t%s\ninstead of:\n\t%s", actual, expected)
-	}
-	_inittests(t, false)
-}
+// func TestArguments(t *testing.T) {
+// 	s := inittests(t)
+// 	actual := s.Steps[0].Arguments("foo")
+// 	expected := `run --rm -e IPLANT_USER -e IPLANT_EXECUTION_ID -v /usr/local2/:/usr/local2 -v /usr/local3/:/usr/local3/ -v /data2/:/data2/ -v $(pwd):/work -v /host/path1:/container/path1 -v /container/path2 --device=/host/path1:/container/path1 --device=/host/path2:/container/path2 --volumes-from=foo-vf-prefix1 --volumes-from=foo-vf-prefix2 --name test-name -w /work --memory=2048M --cpu-shares=2048 --net=none --entrypoint=/bin/true gims.iplantcollaborative.org:5000/backwards-compat:test /usr/local3/bin/wc_tool-1.00/wc_wrapper.sh param1 'Acer-tree.txt' param0 'wc_out.txt'`
+// 	if actual != expected {
+// 		t.Errorf("Arguments() returned:\n\t%s\ninstead of:\n\t%s", actual, expected)
+// 	}
+// 	_inittests(t, false)
+// }
 
 func TestStepConfig(t *testing.T) {
 	s := inittests(t)
@@ -357,10 +385,25 @@ func TestInputLogPath(t *testing.T) {
 func TestInputArguments(t *testing.T) {
 	s := inittests(t)
 	input := s.Steps[0].Config.Inputs[0]
-	actual := input.Arguments("testuser", s.FileMetadata)
-	expected := "run --rm -a stdout -a stderr -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:test get --user testuser --source '/iplant/home/wregglej/Acer-tree.txt' --config irods-config -m 'attr1,value1,unit1' -m 'attr2,value2,unit2' -m 'ipc-analysis-id,c7f05682-23c8-4182-b9a2-e09650a5f49b,UUID' -m 'ipc-execution-id,07b04ce2-7757-4b21-9e15-0b4c2f44be26,UUID'"
-	if actual != expected {
-		t.Errorf("Arguments() returned:\n\t%s\ninstead of:\n\t%s", actual, expected)
+	actual := input.Arguments("testuser", s.InvocationID, s.FileMetadata)
+	expected := []string{
+		"run",
+		"--rm",
+		"--label", "org.iplantc.analysis=07b04ce2-7757-4b21-9e15-0b4c2f44be26",
+		"-v", "$(pwd):/de-app-work",
+		"-w", "/de-app-work",
+		"discoenv/porklock:test",
+		"get",
+		"--user", "testuser",
+		"--source", "'/iplant/home/wregglej/Acer-tree.txt'",
+		"--config", "irods-config",
+		"-m", "'attr1,value1,unit1'",
+		"-m", "'attr2,value2,unit2'",
+		"-m", "'ipc-analysis-id,c7f05682-23c8-4182-b9a2-e09650a5f49b,UUID'",
+		"-m", "'ipc-execution-id,07b04ce2-7757-4b21-9e15-0b4c2f44be26,UUID'",
+	}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Arguments() returned:\n\t%#v\ninstead of:\n\t%#v", actual, expected)
 	}
 }
 

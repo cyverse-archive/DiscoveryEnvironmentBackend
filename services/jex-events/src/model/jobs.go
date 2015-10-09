@@ -1,7 +1,6 @@
 package model
 
 import (
-	"bytes"
 	"configurate"
 	"encoding/json"
 	"fmt"
@@ -241,7 +240,7 @@ func (s *Job) Outputs() []StepOutput {
 
 // ExcludeArguments returns a string containing the command-line settings for
 // porklock that tell it which files to skip.
-func (s *Job) ExcludeArguments() string {
+func (s *Job) ExcludeArguments() []string {
 	var paths []string
 	for _, input := range s.Inputs() {
 		if !input.Retain {
@@ -263,10 +262,12 @@ func (s *Job) ExcludeArguments() string {
 	if !s.ArchiveLogs {
 		paths = append(paths, "logs")
 	}
+	retval := []string{}
 	if len(paths) > 0 {
-		return fmt.Sprintf("--exclude %s", strings.Join(paths, ","))
+		retval = append(retval, "--exclude")
+		retval = append(retval, strings.Join(paths, ","))
 	}
-	return ""
+	return retval
 }
 
 // AddRequiredMetadata adds any required AVUs that are required but are missing
@@ -308,28 +309,32 @@ func (s *Job) AddRequiredMetadata() {
 // FinalOutputArguments returns a string containing the arguments passed to
 // porklock for the final output operation, which transfers all files back into
 // iRODS.
-func (s *Job) FinalOutputArguments() string {
-	tmpl := "run --rm -v $(pwd):/de-app-work -w /de-app-work discoenv/porklock:%s put --user %s --config irods-config --destination %s %s %s"
-	username := s.Submitter
-	dest := quote(s.OutputDirectory())
-	metadataArgs := MetadataArgs(s.FileMetadata).FileMetadataArguments()
-	excludeArgs := s.ExcludeArguments()
+func (s *Job) FinalOutputArguments() []string {
 	tag, err := configurate.C.String("condor.porklock_tag")
 	if err != nil {
-		tag = ""
+		tag = "latest"
 	}
-	args := fmt.Sprintf(
-		tmpl,
-		tag,
-		username,
-		dest,
-		metadataArgs,
-		excludeArgs,
-	)
+	dest := quote(s.OutputDirectory())
+	retval := []string{
+		"run",
+		"--rm",
+		"-v", "$(pwd):/de-app-work",
+		"-w", "/de-app-work",
+		fmt.Sprintf("discoenv/porklock:%s", tag),
+		"--user", s.Submitter,
+		"--config", "irods-config",
+		"--destination", dest,
+	}
+	for _, m := range MetadataArgs(s.FileMetadata).FileMetadataArguments() {
+		retval = append(retval, m)
+	}
+	for _, e := range s.ExcludeArguments() {
+		retval = append(retval, e)
+	}
 	if s.SkipParentMetadata {
-		args = fmt.Sprintf("%s --skip-parent-meta", args)
+		retval = append(retval, "--skip-parent-meta")
 	}
-	return args
+	return retval
 }
 
 // FileMetadata describes a unit of metadata that should get associated with
@@ -342,8 +347,8 @@ type FileMetadata struct {
 
 // Argument returns a string containing the command-line settings for the
 // file transfer tool.
-func (m *FileMetadata) Argument() string {
-	return fmt.Sprintf("-m '%s,%s,%s'", m.Attribute, m.Value, m.Unit)
+func (m *FileMetadata) Argument() []string {
+	return []string{"-m", fmt.Sprintf("'%s,%s,%s'", m.Attribute, m.Value, m.Unit)}
 }
 
 // MetadataArgs is a list of FileMetadata
@@ -351,13 +356,14 @@ type MetadataArgs []FileMetadata
 
 // FileMetadataArguments returns a string containing the command-line arguments
 // for porklock that sets all of the metadata triples.
-func (m MetadataArgs) FileMetadataArguments() string {
-	var buffer bytes.Buffer
+func (m MetadataArgs) FileMetadataArguments() []string {
+	retval := []string{}
 	for _, fm := range m {
-		buffer.WriteString(fm.Argument())
-		buffer.WriteString(" ")
+		for _, a := range fm.Argument() {
+			retval = append(retval, a)
+		}
 	}
-	return strings.TrimSpace(buffer.String())
+	return retval
 }
 
 // CondorJobEvent ties a model.CondorEvent to a job and raw event.
