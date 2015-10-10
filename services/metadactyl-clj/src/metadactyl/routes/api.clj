@@ -50,6 +50,7 @@
             {:name "collaborator-routes", :description "Collaborator Information Routes"}
             {:name "admin-apps", :description "Admin App endpoints."}
             {:name "admin-categories", :description "Admin App Category endpoints."}
+            {:name "admin-container-images", :description "Admin Tool Docker Images endpoints."}
             {:name "admin-data-containers", :description "Admin Docker Data Container endpoints."}
             {:name "admin-tools", :description "Admin Tool endpoints."}
             {:name "admin-reference-genomes", :description "Admin Reference Genome endpoints."}
@@ -118,6 +119,9 @@
     (context* "/admin/reference-genomes" []
       :tags ["admin-reference-genomes"]
       admin-routes/reference-genomes)
+    (context* "/admin/tools/container-images" []
+      :tags ["admin-container-images"]
+      tool-routes/container-images)
     (context* "/admin/tools/data-containers" []
       :tags ["admin-data-containers"]
       tool-routes/admin-data-containers)

@@ -1,6 +1,6 @@
 (ns metadactyl.schema.containers
   (:use [common-swagger-api.schema :only [->optional-param describe]]
-        [metadactyl.routes.params :only [ToolIdParam]])
+        [metadactyl.routes.params :only [ToolIdParam SecuredQueryParams]])
   (:require [schema.core :as s]))
 
 (s/defschema Image
@@ -26,20 +26,13 @@
     java.util.UUID
     "A container image UUID."))
 
-(s/defschema ImageName
-  (describe
-    {:name s/Str}
-    "The image's name."))
+(s/defschema ImageUpdateRequest
+  (describe (->optional-param NewImage :name) "An Image update request."))
 
-(s/defschema ImageTag
-  (describe
-    {:tag s/Str}
-    "The image's tag."))
-
-(s/defschema ImageURL
-  (describe
-    {:url s/Str}
-    "The image's URL."))
+(s/defschema ImageUpdateParams
+  (merge SecuredQueryParams
+    {(s/optional-key :overwrite-public)
+     (describe Boolean "Flag to force updates of images used by public tools.")}))
 
 (s/defschema Settings
   (describe

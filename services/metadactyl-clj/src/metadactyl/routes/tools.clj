@@ -51,40 +51,37 @@
         :description "Adds a new container image to the system."
         (ok (add-image-info body)))
 
-  (POST* "/:image-id/name" []
-        :path-params [image-id :- ImageId]
-        :query [params SecuredQueryParams]
-        :body [body ImageName]
-        :return Image
-        :summary "Update Container Image Name"
-        :description "Updates a container image's name field."
-        (ok (modify-image-info image-id body)))
-
-  (POST* "/:image-id/url" []
-        :path-params [image-id :- ImageId]
-        :query [params SecuredQueryParams]
-        :body [body ImageURL]
-        :return Image
-        :summary "Update Container Image URL"
-        :description "Updates a container image's url field."
-        (ok (modify-image-info image-id body)))
-
-  (POST* "/:image-id/tag" []
-        :path-params [image-id :- ImageId]
-        :query [params SecuredQueryParams]
-        :body [body ImageTag]
-        :return Image
-        :summary "Update Container Image Tag"
-        :description "Updates a container image's tag field."
-        (ok (modify-image-info image-id body)))
-
   (DELETE* "/:image-id" []
+           :path-params [image-id :- ImageId]
+           :query [{:keys [user]} SecuredQueryParams]
+           :summary "Delete Container Image"
+           :description "Deletes a container image from the system."
+           (ok (delete-image image-id user)))
+
+  (PATCH* "/:image-id" []
+          :path-params [image-id :- ImageId]
+          :query [{:keys [user overwrite-public]} ImageUpdateParams]
+          :body [body ImageUpdateRequest]
+          :return Image
+          :summary "Update Container Image Info"
+          :description
+"Updates a container's image settings.
+
+#### Danger Zone
+
+    Do not update image settings that are in use by tools in public apps unless it is certain the
+    new image settings will not break reproducibility for those apps.
+    If required, the `overwrite-public` flag may be used to update image settings in use by
+    public apps."
+          (ok (modify-image-info image-id user overwrite-public body)))
+
+  (GET* "/:image-id/public-tools" []
         :path-params [image-id :- ImageId]
         :query [params SecuredQueryParams]
-        :return nil
-        :summary "Delete Container Image"
-        :description "Deletes a container image from the system."
-        (ok (delete-image image-id))))
+        :return ToolListing
+        :summary "Container Image Public Tools"
+        :description "Returns a list of a public tools using the given image ID."
+        (ok (image-public-tools image-id))))
 
  (defroutes* data-containers
    (GET* "/" []

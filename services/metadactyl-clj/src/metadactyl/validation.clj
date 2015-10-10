@@ -191,6 +191,22 @@
                :error "A Tool with that name and location already exists."
                :tool  tool}))))
 
+(defn validate-image-not-public
+  [image-id]
+  (let [tools (persistence/get-public-tools-by-image-id image-id)]
+    (when-not (empty? tools)
+      (throw+ {:type  :clojure-commons.exception/not-writeable
+               :error "Image already used by public tools."
+               :tools tools}))))
+
+(defn validate-image-not-used
+  [image-id]
+  (let [tools (persistence/get-tools-by-image-id image-id)]
+    (when-not (empty? tools)
+      (throw+ {:type  :clojure-commons.exception/not-writeable
+               :error "Image already used by tools."
+               :tools tools}))))
+
 (defn- verify-app-not-public
   "Verifies that an app has not been made public."
   [app]

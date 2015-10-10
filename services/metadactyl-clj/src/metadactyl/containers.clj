@@ -10,9 +10,12 @@
         [kameleon.uuids :only [uuidify]]
         [korma.core :exclude [update]]
         [korma.db :only [transaction]]
-        [metadactyl.persistence.app-metadata :only [update-tool]]
+        [metadactyl.persistence.app-metadata :only [get-public-tools-by-image-id
+                                                    get-tools-by-image-id
+                                                    update-tool]]
         [metadactyl.util.assertions :only [assert-not-nil]]
-        [metadactyl.util.conversions :only [remove-nil-vals remove-empty-vals]])
+        [metadactyl.util.conversions :only [remove-nil-vals remove-empty-vals]]
+        [metadactyl.validation :only [validate-image-not-public validate-image-not-used]])
   (:require [clojure.tools.logging :as log]
             [korma.core :as sql]))
 
@@ -41,6 +44,11 @@
   {:container_images
     (select container-images
       (fields :name :tag :url :id))})
+
+(defn image-public-tools
+  [id]
+  (assert-not-nil [:image_id id] (image-info id))
+  {:tools (map remove-nil-vals (get-public-tools-by-image-id id))})
 
 (defn tool-image-info
   "Returns a map containing information about a container image. Info is looked up by the tool UUID"
@@ -95,38 +103,25 @@
 (defn modify-image-info
   "Updates the record for a container image. Basically, just allows you to set a new URL
    at this point."
-  [image-id update-map]
-  (let [umap (select-keys update-map [:name :tag :url])]
-    (when-not (empty? umap)
+  [image-id user overwrite-public image-info]
+  (let [update-info (select-keys image-info [:name :tag :url])]
+    (when-not (empty? update-info)
+      (when-not overwrite-public
+        (validate-image-not-public image-id))
+      (log/warn user "updating image" image-id image-info)
       (sql/update container-images
-        (set-fields umap)
-        (where (= :id (uuidify image-id))))
+        (set-fields update-info)
+        (where (= :id (uuidify image-id)))))
+    (first
       (select container-images
         (where (= :id (uuidify image-id)))))))
 
 (defn delete-image
-  [image-id]
-  (when (image-id image-id)
-    (transaction
-      (sql/update tools
-        (set-fields {:container_images_id nil})
-        (where {:container_images_id (uuidify image-id)}))
-      (delete container-images
-        (where (= :id (uuidify image-id)))))))
-
-(defn delete-image-info
-  "Deletes a record for an image"
-  [image-map]
-  (when (image? image-map)
-    (let [tag  (get-tag image-map)
-          name (:name image-map)]
-      (transaction
-       (sql/update tools
-         (set-fields {:container_images_id nil})
-         (where {:container_images_id (image-id image-map)}))
-       (delete container-images
-               (where (and (= :name name)
-                           (= :tag tag))))))))
+  [id user]
+  (validate-image-not-used id)
+  (log/warn user "deleting image" id)
+  (delete container-images (where {:id id}))
+  nil)
 
 (defn devices
   "Returns the devices associated with the given container_setting uuid."

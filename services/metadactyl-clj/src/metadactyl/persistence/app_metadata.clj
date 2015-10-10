@@ -123,18 +123,37 @@
        (insert integration_data (values {:integrator_email integrator-email
                                          :integrator_name  integrator-name})))))
 
+(defn get-tool-listing-base-query
+  "Common select query for tool listings."
+  []
+  (-> (select* tool_listing)
+      (fields [:tool_id :id]
+              :name
+              :description
+              :location
+              :type
+              :version
+              :attribution)))
+
 (defn get-app-tools
   "Loads information about the tools associated with an app."
   [app-id]
-  (select tool_listing
-          (fields [:tool_id :id]
-                  :name
-                  :description
-                  :location
-                  :type
-                  :version
-                  :attribution)
-          (where {:app_id app-id})))
+  (select (get-tool-listing-base-query) (where {:app_id app-id})))
+
+(defn get-tools-by-image-id
+  "Loads information about the tools associated with a Docker image."
+  [image-id]
+  (select (get-tool-listing-base-query)
+          (modifier "DISTINCT")
+          (where {:container_images_id image-id})))
+
+(defn get-public-tools-by-image-id
+  "Loads information about public tools associated with a Docker image."
+  [img-id]
+  (select (get-tool-listing-base-query)
+          (modifier "DISTINCT")
+          (where {:container_images_id img-id
+                  :is_public true})))
 
 (defn get-tool-type-id
   "Gets the ID of the given tool type name."

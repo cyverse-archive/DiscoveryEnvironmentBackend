@@ -12,8 +12,15 @@
   (exec-raw "DROP VIEW IF EXISTS app_listing")
   (load-sql-file "views/03_app_listing.sql"))
 
+(defn- update-tool-listing
+  []
+  (println "\t* Updating VIEW tool_listing")
+  (exec-raw "DROP VIEW IF EXISTS tool_listing")
+  (load-sql-file "views/04_tool_listing.sql"))
+
 (defn convert
   "Performs the conversion for database version 2.2.0:20151005.01"
   []
   (println "Performing the conversion for" version)
-  (update-app-listing))
+  (update-app-listing)
+  (update-tool-listing))
