@@ -11,10 +11,10 @@
         [slingshot.slingshot :only [throw+]]
         [ring.util.http-response :only [ok]]))
 
-(def volumes-from-warning
+(def volumes-warning
   (str "\n\n#### Warning\n"
-       "    Do not add `volumes-from` settings to tools unless it is certain that tool is authorized"
-       " to access those data containers."))
+       "    Do not add `volumes` or `volumes_from` settings to tools unless it is certain that tool"
+       " is authorized to access that data."))
 
 (defmacro requester
   "Handles calling functions and returning request maps. The body of the call
@@ -300,7 +300,7 @@
          :query [params SecuredQueryParams]
          :body [body (describe ToolsImportRequest "The Tools to import.")]
          :summary "Add new Tools."
-         :description (str "This service adds new Tools to the DE." volumes-from-warning)
+         :description (str "This service adds new Tools to the DE." volumes-warning)
          (ok (add-tools body)))
 
   (PATCH* "/:tool-id" []
@@ -407,7 +407,9 @@
          :body [body NewVolume]
          :return Volume
          :summary "Tool Container Volume Information"
-         :description "This endpoint updates volume information for the container associated with a tool."
+         :description (str
+                        "This endpoint updates volume information for the container associated with a tool."
+                        volumes-warning)
          (requester tool-id (add-tool-volume tool-id body)))
 
   (DELETE* "/:tool-id/container/volumes/:volume-id" []
@@ -424,7 +426,9 @@
          :body [body VolumeHostPath]
          :return VolumeHostPath
          :summary "Update Tool Container Volume Host Path"
-         :description "This endpoint updates a volume host path for the tool's container."
+         :description (str
+                        "This endpoint updates a volume host path for the tool's container."
+                        volumes-warning)
          (requester tool-id (update-volume-field tool-id volume-id :host_path (:host_path body))))
 
   (POST* "/:tool-id/container/volumes/:volume-id/container-path" []
@@ -433,7 +437,9 @@
          :body [body VolumeContainerPath]
          :return VolumeContainerPath
          :summary "Update Tool Container Volume Container Path"
-         :description "This endpoint updates a volume container path for the tool's container."
+         :description (str
+                        "This endpoint updates a volume container path for the tool's container."
+                        volumes-warning)
          (requester tool-id (update-volume-field tool-id volume-id :container_path (:container_path body))))
 
   (PUT* "/:tool-id/container/volumes-from" []
@@ -444,7 +450,7 @@
          :summary "Adds A Volume Host Container"
          :description (str
                         "Adds a new container from which the tool container will bind mount volumes."
-                        volumes-from-warning)
+                        volumes-warning)
          (requester tool-id (add-tool-volumes-from tool-id body)))
 
   (DELETE* "/:tool-id/container/volumes-from/:volumes-from-id" []
