@@ -55,6 +55,7 @@
   (fn [error error-type request]
     (let [reason    (:error error-type)
           exception (exception-with-reason error-code reason (dissoc error-type :type :error))
+          header-map (assoc header-map "Content-Type" "application/json; charset=utf-8")
           response  (apply-headers (response-fn (cheshire/encode exception)) header-map)]
       (smw/log-response-with-exception error request response exception)
       response)))
