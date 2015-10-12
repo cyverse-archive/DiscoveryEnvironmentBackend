@@ -12,7 +12,11 @@ import (
 	"model"
 	"os"
 	"os/exec"
+	"os/signal"
+	"strings"
+	"syscall"
 
+	"github.com/fsouza/go-dockerclient"
 	"github.com/streadway/amqp"
 )
 
@@ -24,10 +28,41 @@ var (
 	gitref  string
 	appver  string
 	builtby string
+	job     *model.Job
+	dc      *docker.Client
 )
+
+const (
+	// Success is the exit code used when the required commands execute correctly.
+	Success int = iota
+
+	// StatusDockerPullFailed is the exit code when a 'docker pull' fails.
+	StatusDockerPullFailed
+
+	// StatusDockerCreateFailed is the exit code when a 'docker create' fails.
+	StatusDockerCreateFailed
+
+	// StatusInputFailed is the exit code when an input download fails.
+	StatusInputFailed
+
+	// StatusStepFailed is the exit code when a step in the job fails.
+	StatusStepFailed
+
+	// StatusOutputFailed is the exit code when the output upload fails.
+	StatusOutputFailed
+
+	// StatusKilled is the exit code when the job is killed.
+	StatusKilled
+)
+
+func signals() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGSTOP, syscall.SIGQUIT)
+}
 
 func init() {
 	flag.Parse()
+	signals()
 }
 
 // AppVersion prints version information to stdout
@@ -97,6 +132,24 @@ func DataContainerCreateArgs(dc *model.VolumesFrom, uuid string) []string {
 	return cmd
 }
 
+// CleanDataContainers cleans out the data containers created for this job.
+func CleanDataContainers() {
+	for _, dc := range job.DataContainers() {
+		args := []string{"rm", fmt.Sprintf("%s-%s", dc.NamePrefix, job.InvocationID)}
+		cmd := exec.Command("docker", args...)
+		err := cmd.Run()
+		if err != nil {
+			log.Print(err)
+		}
+	}
+}
+
+// CleanJobContainers will kill and remove any containers that are associated with
+// the job.
+func CleanJobContainers() {
+
+}
+
 func main() {
 	if *version {
 		AppVersion()
@@ -108,7 +161,12 @@ func main() {
 	if *jobFile == "" {
 		logger.Fatal("--job must be set.")
 	}
-	err := configurate.Init(*cfgPath)
+	var err error
+	dc, err = docker.NewClient("unix:///var/run/docker.sock")
+	if err != nil {
+		logger.Fatal(err)
+	}
+	err = configurate.Init(*cfgPath)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -120,7 +178,7 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
-	job, err := model.NewFromData(data)
+	job, err = model.NewFromData(data)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -137,7 +195,8 @@ func main() {
 		client.Listen()
 	}()
 
-	// export environment variables
+	status := Success
+
 	// create the logs directory
 	err = os.Mkdir("logs", 0755)
 	if err != nil {
@@ -168,26 +227,105 @@ func main() {
 		err = cmd.Run()
 		if err != nil {
 			log.Print(err)
+			status = StatusDockerPullFailed
+			break
 		}
-		cmd = exec.Command("docker", DataContainerCreateArgs(&dc, job.InvocationID)...)
-		err = cmd.Run()
-		if err != nil {
-			log.Print(err)
+		if status == Success {
+			cmd = exec.Command("docker", DataContainerCreateArgs(&dc, job.InvocationID)...)
+			err = cmd.Run()
+			if err != nil {
+				log.Print(err)
+				status = StatusDockerCreateFailed
+				break
+			}
 		}
 	}
 
 	// pull the container images
-	for _, ci := range job.ContainerImages() {
-		cmd := exec.Command("docker", ContainerImagePullArgs(&ci)...)
-		err = cmd.Run()
-		if err != nil {
-			log.Print(err)
+	if status == Success {
+		for _, ci := range job.ContainerImages() {
+			cmd := exec.Command("docker", ContainerImagePullArgs(&ci)...)
+			err = cmd.Run()
+			if err != nil {
+				log.Print(err)
+				status = StatusDockerPullFailed
+				break
+			}
 		}
 	}
 
-	// create the data containers
 	// transfer the inputs
+	if status == Success {
+		for _, input := range job.Inputs() {
+			cmd := exec.Command("docker", input.Arguments(job.Submitter, job.InvocationID, job.FileMetadata)...)
+			stdout, err := os.Open(input.Stdout(job.InvocationID))
+			if err != nil {
+				log.Print(err)
+			} else {
+				cmd.Stdout = stdout
+			}
+			stderr, err := os.Open(input.Stderr(job.InvocationID))
+			if err != nil {
+				log.Print(err)
+			} else {
+				cmd.Stderr = stderr
+			}
+			err = cmd.Run()
+			if err != nil {
+				log.Print(err)
+				status = StatusInputFailed
+				break
+			}
+		}
+	}
+
 	// execute the steps
-	// transfer outputs
-	// remove the data containers
+	for _, step := range job.Steps {
+		if status == Success {
+			cmd := exec.Command("docker", strings.Split(step.Arguments(job.InvocationID), " ")...)
+			stdout, err := os.Open(step.Stdout(job.InvocationID))
+			if err != nil {
+				log.Print(err)
+			} else {
+				cmd.Stdout = stdout
+			}
+			stderr, err := os.Open(step.Stderr(job.InvocationID))
+			if err != nil {
+				log.Print(err)
+			} else {
+				cmd.Stderr = stderr
+			}
+			cmd.Env = Environment(job)
+			err = cmd.Run()
+			if err != nil {
+				log.Print(err)
+				status = StatusStepFailed
+				break
+			}
+		}
+	}
+
+	// transfer outputs should always attempt to execute, event if the job itself
+	// has already failed.
+	cmd := exec.Command("docker", strings.Split(job.FinalOutputArguments(), " ")...)
+	stdout, err := os.Open("logs/logs-stdout-output")
+	if err != nil {
+		log.Print(err)
+	} else {
+		cmd.Stdout = stdout
+	}
+	stderr, err := os.Open("logs/logs-stderr-output")
+	if err != nil {
+		log.Print(err)
+	} else {
+		cmd.Stderr = stderr
+	}
+	err = cmd.Run()
+	if err != nil {
+		log.Print(err)
+		status = StatusOutputFailed
+	}
+
+	CleanDataContainers()
+	os.Exit(status)
 }

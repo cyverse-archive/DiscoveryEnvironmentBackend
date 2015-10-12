@@ -77,103 +77,19 @@ type scriptable struct {
 	CI []model.ContainerImage
 }
 
-// GenerateIplantScript returns a string (or error) containing the contents
-// of what should go into the iplant.sh script that is executed by the HTCondor
-// job out on the cluster.
-func GenerateIplantScript(submission *model.Job) (string, error) {
-	tmpl := `{{$uuid := .InvocationID}}#!/bin/bash
-
-set -x
-
-readonly IPLANT_USER={{.Submitter}}
-export IPLANT_USER
-readonly IPLANT_EXECUTION_ID={{.InvocationID}}
-export IPLANT_EXECUTION_ID
-export SCRIPT_LOCATION=${BASH_SOURCE}
-EXITSTATUS=0
-
-if [ -e /data2 ]; then ls /data2; fi
-
-mkdir -p logs
-
-if [ ! "$?" -eq "0" ]; then
-	EXITSTATUS=1
-	exit $EXITSTATUS
-fi
-
-ls -al > logs/de-transfer-trigger.log
-
-if [ ! "$?" -eq "0" ]; then
-	EXITSTATUS=1
-	exit $EXITSTATUS
-fi
-
-if [ -e "iplant.sh" ]; then
-	mv iplant.sh logs/
-fi
-
-if [ -e "iplant.cmd" ]; then
-	mv iplant.cmd logs/
-fi
-
-{{range .DataContainers}}docker pull {{.Name}}:{{.Tag}}
-{{end}}{{range .ContainerImages}}docker pull {{.Name}}:{{.Tag}}
-{{end}}
-{{range .DataContainers}}docker create {{if or .HostPath .ContainerPath}}-v {{end}}{{if .HostPath}}{{.HostPath}}:{{end}}{{.ContainerPath}}{{if .ReadOnly}}:ro{{end}} --name {{.NamePrefix}}-{{$uuid}} {{.Name}}:{{.Tag}}
-if [ ! "$?" -eq "0" ]; then
-	EXITSTATUS=1
-	exit $EXITSTATUS
-fi
-
-{{end}}{{range $i, $s := .Inputs}}{{$idstr := printf "%d" $i}}docker {{.Arguments $.Submitter $.FileMetadata}} 1> {{.Stdout $idstr}} 2> {{.Stderr $idstr}}
-if [ ! "$?" -eq "0" ]; then
-	EXITSTATUS=1
-	exit $EXITSTATUS
-fi
-{{end}}
-{{range $i, $s := .Steps}}{{$idstr := printf "%d" $i}}docker {{.Arguments $uuid}} 1> {{.Stdout $idstr}} 2> {{.Stderr $idstr}}
-if [ ! "$?" -eq "0" ]; then
-	EXITSTATUS=1
-	exit $EXITSTATUS
-fi
-{{end}}
-docker {{.FinalOutputArguments}} 1> logs/logs-stdout-output 2> logs/logs-stderr-output
-if [ ! "$?" -eq "0" ]; then
-	EXITSTATUS=1
-	exit $EXITSTATUS
-fi
-{{range .DataContainers}}docker rm {{.NamePrefix}}-{{$uuid}}
-{{end}}
-hostname
-ps aux
-echo -----
-for i in $(ls logs); do
-    echo logs/$i
-    cat logs/$i
-    echo -----
-done
-exit $EXITSTATUS
-`
-	t, err := template.New("iplant_script").Parse(tmpl)
+func GenerateJobConfig() (string, error) {
+	tmpl := `amqp:
+	uri: {{.String "amqp.uri"}}`
+	t, err := template.New("job_config").Parse(tmpl)
 	if err != nil {
 		return "", err
 	}
 	var buffer bytes.Buffer
-	err = t.Execute(&buffer, submission)
+	err = t.Execute(&buffer, configurate.C)
 	if err != nil {
 		return "", err
 	}
-	return buffer.String(), err
-}
-
-type irodsconfig struct {
-	IRODSHost string
-	IRODSPort string
-	IRODSUser string
-	IRODSPass string
-	IRODSBase string
-	IRODSZone string
-	IRODSResc string
+	return buffer.String(), nil
 }
 
 // GenerateIRODSConfig returns the contents of the irods-config file as a string.
@@ -246,32 +162,23 @@ func CreateSubmissionDirectory(s *model.Job) (string, error) {
 // CreateSubmissionFiles creates the iplant.cmd and iplant.sh files inside the
 // directory designated by 'dir'. The return values are the path to the iplant.cmd
 // file, the path to the iplant.sh file, and any errors, in that order.
-func CreateSubmissionFiles(dir string, s *model.Job) (string, string, error) {
+func CreateSubmissionFiles(dir string, s *model.Job) (string, error) {
 	cmdContents, err := GenerateCondorSubmit(s)
 	if err != nil {
-		return "", "", err
-	}
-	shContents, err := GenerateIplantScript(s)
-	if err != nil {
-		return "", "", err
+		return "", err
 	}
 	irodsContents, err := GenerateIRODSConfig()
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 	cmdPath := path.Join(dir, "iplant.cmd")
-	shPath := path.Join(dir, "iplant.sh")
 	irodsPath := path.Join(dir, "irods-config")
 	err = ioutil.WriteFile(cmdPath, []byte(cmdContents), 0644)
 	if err != nil {
-		return "", "", nil
-	}
-	err = ioutil.WriteFile(shPath, []byte(shContents), 0644)
-	if err != nil {
-		return cmdPath, "", nil
+		return "", nil
 	}
 	err = ioutil.WriteFile(irodsPath, []byte(irodsContents), 0644)
-	return cmdPath, shPath, err
+	return cmdPath, err
 }
 
 func submit(cmdPath, shPath string, s *model.Job) (string, error) {
@@ -314,12 +221,12 @@ func launch(s *model.Job) (string, error) {
 		log.Printf("Error creating submission directory:\n%s\n", err)
 		return "", err
 	}
-	cmd, sh, err := CreateSubmissionFiles(sdir, s)
+	cmd, err := CreateSubmissionFiles(sdir, s)
 	if err != nil {
 		log.Printf("Error creating submission files:\n%s", err)
 		return "", err
 	}
-	id, err := submit(cmd, sh, s)
+	id, err := submit(cmd)
 	if err != nil {
 		log.Printf("Error submitting job:\n%s", err)
 		return "", err
