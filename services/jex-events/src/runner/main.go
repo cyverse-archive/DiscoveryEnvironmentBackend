@@ -149,6 +149,21 @@ func CleanJobContainers() {
 
 }
 
+func fail(client *messaging.Client, job *model.Job, msg string) error {
+	return client.PublishJobUpdate(&api.UpdateMessage{
+		Job:     job,
+		State:   api.FailedState,
+		Message: msg,
+	})
+}
+
+func success(client *messaging.Client, job *model.Job) error {
+	return client.PublishJobUpdate(&api.UpdateMessage{
+		Job:   job,
+		State: api.SucceededState,
+	})
+}
+
 func main() {
 	if *version {
 		AppVersion()
@@ -157,14 +172,9 @@ func main() {
 	if *cfgPath == "" {
 		logger.Fatal("--config must be set.")
 	}
-	if *jobFile == "" {
-		logger.Fatal("--job must be set.")
-	}
 	var err error
-	dc, err = docker.NewClient("unix:///var/run/docker.sock")
-	if err != nil {
-		logger.Fatal(err)
-	}
+	status := Success
+
 	err = configurate.Init(*cfgPath)
 	if err != nil {
 		logger.Fatal(err)
@@ -172,6 +182,13 @@ func main() {
 	uri, err := configurate.C.String("amqp.uri")
 	if err != nil {
 		logger.Fatal(err)
+	}
+	client := messaging.NewClient(uri)
+	defer client.Close()
+	client.SetupPublishing(api.JobsExchange)
+
+	if *jobFile == "" {
+		logger.Fatal("--job must be set.")
 	}
 	data, err := ioutil.ReadFile(*jobFile)
 	if err != nil {
@@ -181,25 +198,35 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
-	client := messaging.NewClient(uri)
-	defer client.Close()
-	client.SetupPublishing(api.JobsExchange)
+
+	dc, err = docker.NewClient("unix:///var/run/docker.sock")
+	if err != nil {
+		fail(client, job, "Failed to connect to local docker socket")
+		logger.Fatal(err)
+	}
+
 	stopsKey := fmt.Sprintf("%s.%s", api.StopsKey, job.InvocationID)
 	client.AddConsumer(api.JobsExchange, "runner", stopsKey, func(d amqp.Delivery) {
 		d.Ack(false)
-		logger.Println("i ded")
+		fail(client, job, "Received stop request")
 		os.Exit(-1)
 	})
 	go func() {
 		client.Listen()
 	}()
 
-	status := Success
+	err = client.PublishJobUpdate(&api.UpdateMessage{
+		Job:   job,
+		State: api.RunningState,
+	})
+	if err != nil {
+		logger.Print(err)
+	}
 
 	// create the logs directory
 	err = os.Mkdir("logs", 0755)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	// create the de-transfer-trigger
@@ -326,5 +353,10 @@ func main() {
 	}
 
 	CleanDataContainers()
+	if status != Success {
+		fail(client, job, fmt.Sprintf("Job exited with a status of %d", status))
+	} else {
+		success(client, job)
+	}
 	os.Exit(status)
 }

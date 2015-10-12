@@ -40,6 +40,26 @@ var (
 	CommandsKey = "jobs.commands"
 )
 
+// JobState defines a valid state for a job.
+type JobState string
+
+var (
+	//QueuedState is when a job is queued.
+	QueuedState JobState = "Queued"
+
+	//SubmittedState is when a job has been submitted.
+	SubmittedState JobState = "Submitted"
+
+	//RunningState is when a job is running.
+	RunningState JobState = "Running"
+
+	//SucceededState is when a job has successfully completed the required steps.
+	SucceededState JobState = "Complete"
+
+	//FailedState is when a job has failed. Duh.
+	FailedState JobState = "Failed"
+)
+
 // JobRequest is a generic request type for job related requests.
 type JobRequest struct {
 	Job     *model.Job
@@ -54,6 +74,15 @@ type StopRequest struct {
 	Username     string
 	Version      int
 	InvocationID string
+}
+
+// UpdateMessage contains the information needed to broadcast a change in state
+// for a job.
+type UpdateMessage struct {
+	Job     *model.Job
+	Version int
+	State   JobState
+	Message string
 }
 
 // NewStopRequest returns a *JobRequest that has been constructed to be a

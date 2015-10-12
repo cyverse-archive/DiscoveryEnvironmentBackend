@@ -1,6 +1,8 @@
 package messaging
 
 import (
+	"api"
+	"encoding/json"
 	"logcabin"
 	"math/rand"
 	"time"
@@ -215,4 +217,14 @@ func (c *Client) Publish(key string, body []byte) error {
 		msg,
 	)
 	return err
+}
+
+// PublishJobUpdate sends a mess to the configured exchange with a routing key of
+// "jobs.updates"
+func (c *Client) PublishJobUpdate(u *api.UpdateMessage) error {
+	msgJSON, err := json.Marshal(u)
+	if err != nil {
+		return err
+	}
+	return c.Publish(api.UpdatesKey, msgJSON)
 }

@@ -335,6 +335,7 @@ func main() {
 	}
 	client := messaging.NewClient(uri)
 	defer client.Close()
+	client.SetupPublishing(api.JobsExchange)
 
 	// Accept and handle messages sent out with the jobs.launches routing key.
 	client.AddConsumer(api.JobsExchange, "condor_launches", api.LaunchesKey, func(d amqp.Delivery) {
@@ -351,15 +352,17 @@ func main() {
 		case api.Launch:
 			jobID, err := launch(req.Job)
 			if err != nil {
-				log.Print(err)
+				logger.Print(err)
 			}
-			log.Printf("Launched Condor ID %s", jobID)
-		case api.Stop:
-			output, err := stop(req.Job)
+			logger.Printf("Launched Condor ID %s", jobID)
+
+			err = client.PublishJobUpdate(&api.UpdateMessage{
+				Job:   req.Job,
+				State: api.SubmittedState,
+			})
 			if err != nil {
-				log.Print(err)
+				logger.Print(err)
 			}
-			log.Printf("Output of the stop for %s:\n%s", req.Job.CondorID, output)
 		}
 	})
 	client.Listen()
