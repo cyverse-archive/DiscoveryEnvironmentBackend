@@ -60,7 +60,7 @@
      The new tag."
   [^String owner ^IPersistentMap {:keys [value description]}]
   (let [value (string/trim value)
-        description (string/trim description)]
+        description (if-not (nil? description) (string/trim description) description)]
     (if (empty? (db/get-tags-by-value owner value))
       (format-tag (db/insert-user-tag owner value description))
       (throw+ {:type  :clojure-commons.exception/not-unique
