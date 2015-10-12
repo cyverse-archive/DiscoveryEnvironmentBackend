@@ -128,7 +128,7 @@ for the requesting user."
     "ERR_DOES_NOT_EXIST, ERR_NOT_A_FILE, ERR_NOT_READABLE, ERR_NOT_A_USER"))
         (svc/trap uri page-file/do-read-chunk params data-id position size))
 
-      (GET* "/chunks-tabular/:separator/:page/:size" [:as {uri :uri}]
+      (GET* ["/chunks-tabular/:separator/:page/:size" :separator #"[^/]+"] [:as {uri :uri}]
         :query [params StandardUserQueryParams]
         :path-params [separator :- (describe s/Str "The separator value to use, url-encoded. %09 is the value for tab.")
                       page      :- (describe s/Int "The page of the results to get, relative to the page size.")

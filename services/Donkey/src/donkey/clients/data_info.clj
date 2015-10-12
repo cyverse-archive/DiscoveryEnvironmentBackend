@@ -90,7 +90,7 @@
   "Uses the data-info read-tabular-chunk endpoint."
   [params body]
   (let [path-uuid (uuid-for-path (:user params) (:path body))
-        url (url/url (cfg/data-info-base-url) "data" path-uuid "chunks-tabular" (url/url-encode (url/url-decode (:separator body))) (:page body) (:chunk-size body))
+        url (url/url (cfg/data-info-base-url) "data" path-uuid "chunks-tabular" (:separator body) (:page body) (:chunk-size body))
         req-map {:query-params (select-keys params [:user])
                  :content-type :json}]
     (http/get (str url) req-map)))
