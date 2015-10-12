@@ -182,6 +182,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
+	// listen for orders to stop the job.
 	stopsKey := fmt.Sprintf("%s.%s", api.StopsKey, job.InvocationID)
 	client.AddConsumer(api.JobsExchange, "runner", stopsKey, func(d amqp.Delivery) {
 		d.Ack(false)
@@ -192,6 +193,7 @@ func main() {
 		client.Listen()
 	}()
 
+	// let everyone know the job is running
 	err = client.PublishJobUpdate(&api.UpdateMessage{
 		Job:   job,
 		State: api.RunningState,
@@ -200,134 +202,22 @@ func main() {
 		logger.Print(err)
 	}
 
-	// create the logs directory
-	err = os.Mkdir("logs", 0755)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	// create the de-transfer-trigger
-	transferTrigger, err := os.Create("logs/de-transfer-trigger.log")
-	if err != nil {
-		log.Print(err)
-	} else {
-		_, err = transferTrigger.WriteString("This is only used to force HTCondor to transfer files.")
-		if err != nil {
-			log.Print(err)
-		}
-	}
-
-	// mv iplant.cmd into the logs directory
-	if _, err = os.Stat("iplant.cmd"); err != nil {
-		if err = os.Rename("iplant.cmd", "logs/iplant.cmd"); err != nil {
-			log.Print(err)
-		}
-	}
-
-	// pull the data containers
-	for _, dc := range job.DataContainers() {
-		cmd := exec.Command("docker", DataContainerPullArgs(&dc)...)
-		err = cmd.Run()
-		if err != nil {
-			log.Print(err)
-			status = api.StatusDockerPullFailed
-			break
-		}
-		if status == api.Success {
-			cmd = exec.Command("docker", DataContainerCreateArgs(&dc, job.InvocationID)...)
-			err = cmd.Run()
-			if err != nil {
-				log.Print(err)
-				status = api.StatusDockerCreateFailed
-				break
-			}
-		}
-	}
-
-	// pull the container images
+	createLogsDir()
+	createTransferTrigger()
+	moveIplantCmd()
+	status = pullDataContainers(job)
 	if status == api.Success {
-		for _, ci := range job.ContainerImages() {
-			cmd := exec.Command("docker", ContainerImagePullArgs(&ci)...)
-			err = cmd.Run()
-			if err != nil {
-				log.Print(err)
-				status = api.StatusDockerPullFailed
-				break
-			}
-		}
+		status = pullDataContainers(job)
 	}
-
-	// transfer the inputs
 	if status == api.Success {
-		for _, input := range job.Inputs() {
-			cmd := exec.Command("docker", input.Arguments(job.Submitter, job.InvocationID, job.FileMetadata)...)
-			stdout, err := os.Open(input.Stdout(job.InvocationID))
-			if err != nil {
-				log.Print(err)
-			} else {
-				cmd.Stdout = stdout
-			}
-			stderr, err := os.Open(input.Stderr(job.InvocationID))
-			if err != nil {
-				log.Print(err)
-			} else {
-				cmd.Stderr = stderr
-			}
-			err = cmd.Run()
-			if err != nil {
-				log.Print(err)
-				status = api.StatusInputFailed
-				break
-			}
-		}
+		status = transferInputs(job)
 	}
-
-	// execute the steps
 	for _, step := range job.Steps {
 		if status == api.Success {
-			cmd := exec.Command("docker", step.Arguments(job.InvocationID)...)
-			stdout, err := os.Open(step.Stdout(job.InvocationID))
-			if err != nil {
-				log.Print(err)
-			} else {
-				cmd.Stdout = stdout
-			}
-			stderr, err := os.Open(step.Stderr(job.InvocationID))
-			if err != nil {
-				log.Print(err)
-			} else {
-				cmd.Stderr = stderr
-			}
-			cmd.Env = Environment(job)
-			err = cmd.Run()
-			if err != nil {
-				log.Print(err)
-				status = api.StatusStepFailed
-				break
-			}
+			status = executeStep(job, &step)
 		}
 	}
-
-	// transfer outputs should always attempt to execute, event if the job itself
-	// has already failed.
-	cmd := exec.Command("docker", job.FinalOutputArguments()...)
-	stdout, err := os.Open("logs/logs-stdout-output")
-	if err != nil {
-		log.Print(err)
-	} else {
-		cmd.Stdout = stdout
-	}
-	stderr, err := os.Open("logs/logs-stderr-output")
-	if err != nil {
-		log.Print(err)
-	} else {
-		cmd.Stderr = stderr
-	}
-	err = cmd.Run()
-	if err != nil {
-		log.Print(err)
-		status = api.StatusOutputFailed
-	}
+	status = transferOutputs(job)
 
 	CleanDataContainers()
 
