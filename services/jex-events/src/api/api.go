@@ -60,6 +60,32 @@ var (
 	FailedState JobState = "Failed"
 )
 
+// StatusCode defines a valid exit code for a job.
+type StatusCode int
+
+const (
+	// Success is the exit code used when the required commands execute correctly.
+	Success StatusCode = iota
+
+	// StatusDockerPullFailed is the exit code when a 'docker pull' fails.
+	StatusDockerPullFailed
+
+	// StatusDockerCreateFailed is the exit code when a 'docker create' fails.
+	StatusDockerCreateFailed
+
+	// StatusInputFailed is the exit code when an input download fails.
+	StatusInputFailed
+
+	// StatusStepFailed is the exit code when a step in the job fails.
+	StatusStepFailed
+
+	// StatusOutputFailed is the exit code when the output upload fails.
+	StatusOutputFailed
+
+	// StatusKilled is the exit code when the job is killed.
+	StatusKilled
+)
+
 // JobRequest is a generic request type for job related requests.
 type JobRequest struct {
 	Job     *model.Job

@@ -31,29 +31,6 @@ var (
 	dc      *docker.Client
 )
 
-const (
-	// Success is the exit code used when the required commands execute correctly.
-	Success int = iota
-
-	// StatusDockerPullFailed is the exit code when a 'docker pull' fails.
-	StatusDockerPullFailed
-
-	// StatusDockerCreateFailed is the exit code when a 'docker create' fails.
-	StatusDockerCreateFailed
-
-	// StatusInputFailed is the exit code when an input download fails.
-	StatusInputFailed
-
-	// StatusStepFailed is the exit code when a step in the job fails.
-	StatusStepFailed
-
-	// StatusOutputFailed is the exit code when the output upload fails.
-	StatusOutputFailed
-
-	// StatusKilled is the exit code when the job is killed.
-	StatusKilled
-)
-
 func signals() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGSTOP, syscall.SIGQUIT)
@@ -173,7 +150,7 @@ func main() {
 		logger.Fatal("--config must be set.")
 	}
 	var err error
-	status := Success
+	status := api.Success
 
 	err = configurate.Init(*cfgPath)
 	if err != nil {
@@ -253,35 +230,35 @@ func main() {
 		err = cmd.Run()
 		if err != nil {
 			log.Print(err)
-			status = StatusDockerPullFailed
+			status = api.StatusDockerPullFailed
 			break
 		}
-		if status == Success {
+		if status == api.Success {
 			cmd = exec.Command("docker", DataContainerCreateArgs(&dc, job.InvocationID)...)
 			err = cmd.Run()
 			if err != nil {
 				log.Print(err)
-				status = StatusDockerCreateFailed
+				status = api.StatusDockerCreateFailed
 				break
 			}
 		}
 	}
 
 	// pull the container images
-	if status == Success {
+	if status == api.Success {
 		for _, ci := range job.ContainerImages() {
 			cmd := exec.Command("docker", ContainerImagePullArgs(&ci)...)
 			err = cmd.Run()
 			if err != nil {
 				log.Print(err)
-				status = StatusDockerPullFailed
+				status = api.StatusDockerPullFailed
 				break
 			}
 		}
 	}
 
 	// transfer the inputs
-	if status == Success {
+	if status == api.Success {
 		for _, input := range job.Inputs() {
 			cmd := exec.Command("docker", input.Arguments(job.Submitter, job.InvocationID, job.FileMetadata)...)
 			stdout, err := os.Open(input.Stdout(job.InvocationID))
@@ -299,7 +276,7 @@ func main() {
 			err = cmd.Run()
 			if err != nil {
 				log.Print(err)
-				status = StatusInputFailed
+				status = api.StatusInputFailed
 				break
 			}
 		}
@@ -307,7 +284,7 @@ func main() {
 
 	// execute the steps
 	for _, step := range job.Steps {
-		if status == Success {
+		if status == api.Success {
 			cmd := exec.Command("docker", step.Arguments(job.InvocationID)...)
 			stdout, err := os.Open(step.Stdout(job.InvocationID))
 			if err != nil {
@@ -325,7 +302,7 @@ func main() {
 			err = cmd.Run()
 			if err != nil {
 				log.Print(err)
-				status = StatusStepFailed
+				status = api.StatusStepFailed
 				break
 			}
 		}
@@ -349,14 +326,15 @@ func main() {
 	err = cmd.Run()
 	if err != nil {
 		log.Print(err)
-		status = StatusOutputFailed
+		status = api.StatusOutputFailed
 	}
 
 	CleanDataContainers()
-	if status != Success {
+
+	if status != api.Success {
 		fail(client, job, fmt.Sprintf("Job exited with a status of %d", status))
 	} else {
 		success(client, job)
 	}
-	os.Exit(status)
+	os.Exit(int(status))
 }
