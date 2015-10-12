@@ -74,9 +74,9 @@ func TestGenerateCondorSubmit(t *testing.T) {
 		t.Error(err)
 	}
 	expected := `universe = vanilla
-executable = /bin/bash
+executable = /bin/runner
 rank = mips
-arguments = "iplant.sh"
+arguments = --config config --job job
 output = script-output.log
 error = script-error.log
 log = condor.log
@@ -88,7 +88,7 @@ concurrency_limits = test_this_is_a_test
 +IpcExe = "wc_wrapper.sh"
 +IpcExePath = "/usr/local3/bin/wc_tool-1.00"
 should_transfer_files = YES
-transfer_input_files = iplant.sh,irods-config,iplant.cmd
+transfer_input_files = iplant.sh,irods-config,iplant.cmd,config,job
 transfer_output_files = logs/de-transfer-trigger.log,logs/logs-stdout-output,logs/logs-stderr-output
 when_to_transfer_output = ON_EXIT_OR_EVICT
 notification = NEVER
@@ -103,9 +103,9 @@ queue
 		t.Error(err)
 	}
 	expected = `universe = vanilla
-executable = /bin/bash
+executable = /bin/runner
 rank = mips
-arguments = "iplant.sh"
+arguments = --config config --job job
 output = script-output.log
 error = script-error.log
 log = condor.log
@@ -118,7 +118,7 @@ concurrency_limits = test_this_is_a_test
 +IpcExe = "wc_wrapper.sh"
 +IpcExePath = "/usr/local3/bin/wc_tool-1.00"
 should_transfer_files = YES
-transfer_input_files = iplant.sh,irods-config,iplant.cmd
+transfer_input_files = iplant.sh,irods-config,iplant.cmd,config,job
 transfer_output_files = logs/de-transfer-trigger.log,logs/logs-stdout-output,logs/logs-stderr-output
 when_to_transfer_output = ON_EXIT_OR_EVICT
 notification = NEVER
@@ -160,7 +160,7 @@ func TestCreateSubmissionFiles(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	cmd, sh, err := CreateSubmissionFiles(dir, s)
+	cmd, sh, c, err := CreateSubmissionFiles(dir, s)
 	if err != nil {
 		t.Error(err)
 	}
@@ -169,6 +169,10 @@ func TestCreateSubmissionFiles(t *testing.T) {
 		t.Error(err)
 	}
 	_, err = os.Stat(sh)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = os.Stat(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -201,11 +205,11 @@ func TestCondorSubmit(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	cmd, sh, err := CreateSubmissionFiles(dir, s)
+	cmd, _, _, err := CreateSubmissionFiles(dir, s)
 	if err != nil {
 		t.Error(err)
 	}
-	actual, err := submit(cmd, sh, s)
+	actual, err := submit(cmd, s)
 	if err != nil {
 		t.Error(err)
 	}

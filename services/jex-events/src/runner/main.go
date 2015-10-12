@@ -13,7 +13,6 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/fsouza/go-dockerclient"
@@ -282,7 +281,7 @@ func main() {
 	// execute the steps
 	for _, step := range job.Steps {
 		if status == Success {
-			cmd := exec.Command("docker", strings.Split(step.Arguments(job.InvocationID), " ")...)
+			cmd := exec.Command("docker", step.Arguments(job.InvocationID)...)
 			stdout, err := os.Open(step.Stdout(job.InvocationID))
 			if err != nil {
 				log.Print(err)
@@ -307,7 +306,7 @@ func main() {
 
 	// transfer outputs should always attempt to execute, event if the job itself
 	// has already failed.
-	cmd := exec.Command("docker", strings.Split(job.FinalOutputArguments(), " ")...)
+	cmd := exec.Command("docker", job.FinalOutputArguments()...)
 	stdout, err := os.Open("logs/logs-stdout-output")
 	if err != nil {
 		log.Print(err)

@@ -38,9 +38,9 @@ func init() {
 // of what should go into an HTCondor submission file.
 func GenerateCondorSubmit(submission *model.Job) (string, error) {
 	tmpl := `universe = vanilla
-executable = /bin/bash
+executable = /bin/runner
 rank = mips
-arguments = "iplant.sh"
+arguments = --config config --job job
 output = script-output.log
 error = script-error.log
 log = condor.log
@@ -53,7 +53,7 @@ concurrency_limits = {{.Submitter}}
 {{with $x := index .Steps 0}}+IpcExe = "{{$x.Component.Name}}"{{end}}
 {{with $x := index .Steps 0}}+IpcExePath = "{{$x.Component.Location}}"{{end}}
 should_transfer_files = YES
-transfer_input_files = iplant.sh,irods-config,iplant.cmd
+transfer_input_files = iplant.sh,irods-config,iplant.cmd,config,job
 transfer_output_files = logs/de-transfer-trigger.log,logs/logs-stdout-output,logs/logs-stderr-output
 when_to_transfer_output = ON_EXIT_OR_EVICT
 notification = NEVER
@@ -77,6 +77,8 @@ type scriptable struct {
 	CI []model.ContainerImage
 }
 
+// GenerateJobConfig creates a string containing the config that gets passed
+// into the job.
 func GenerateJobConfig() (string, error) {
 	tmpl := `amqp:
 	uri: {{.String "amqp.uri"}}`
@@ -90,6 +92,16 @@ func GenerateJobConfig() (string, error) {
 		return "", err
 	}
 	return buffer.String(), nil
+}
+
+type irodsconfig struct {
+	IRODSHost string
+	IRODSPort string
+	IRODSUser string
+	IRODSPass string
+	IRODSZone string
+	IRODSBase string
+	IRODSResc string
 }
 
 // GenerateIRODSConfig returns the contents of the irods-config file as a string.
@@ -162,26 +174,44 @@ func CreateSubmissionDirectory(s *model.Job) (string, error) {
 // CreateSubmissionFiles creates the iplant.cmd and iplant.sh files inside the
 // directory designated by 'dir'. The return values are the path to the iplant.cmd
 // file, the path to the iplant.sh file, and any errors, in that order.
-func CreateSubmissionFiles(dir string, s *model.Job) (string, error) {
+func CreateSubmissionFiles(dir string, s *model.Job) (string, string, string, error) {
 	cmdContents, err := GenerateCondorSubmit(s)
 	if err != nil {
-		return "", err
+		return "", "", "", err
+	}
+	jobConfigContents, err := GenerateJobConfig()
+	if err != nil {
+		return "", "", "", err
+	}
+	jobContents, err := json.Marshal(s)
+	if err != nil {
+		return "", "", "", err
 	}
 	irodsContents, err := GenerateIRODSConfig()
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 	cmdPath := path.Join(dir, "iplant.cmd")
+	configPath := path.Join(dir, "config")
+	jobPath := path.Join(dir, "job")
 	irodsPath := path.Join(dir, "irods-config")
 	err = ioutil.WriteFile(cmdPath, []byte(cmdContents), 0644)
 	if err != nil {
-		return "", nil
+		return "", "", "", nil
+	}
+	err = ioutil.WriteFile(configPath, []byte(jobConfigContents), 0644)
+	if err != nil {
+		return "", "", "", nil
+	}
+	err = ioutil.WriteFile(jobPath, []byte(jobContents), 0644)
+	if err != nil {
+		return "", "", "", nil
 	}
 	err = ioutil.WriteFile(irodsPath, []byte(irodsContents), 0644)
-	return cmdPath, err
+	return cmdPath, configPath, jobPath, err
 }
 
-func submit(cmdPath, shPath string, s *model.Job) (string, error) {
+func submit(cmdPath string, s *model.Job) (string, error) {
 	csPath, err := exec.LookPath("condor_submit")
 	if err != nil {
 		return "", err
@@ -221,12 +251,12 @@ func launch(s *model.Job) (string, error) {
 		log.Printf("Error creating submission directory:\n%s\n", err)
 		return "", err
 	}
-	cmd, err := CreateSubmissionFiles(sdir, s)
+	cmd, _, _, err := CreateSubmissionFiles(sdir, s)
 	if err != nil {
 		log.Printf("Error creating submission files:\n%s", err)
 		return "", err
 	}
-	id, err := submit(cmd)
+	id, err := submit(cmd, s)
 	if err != nil {
 		log.Printf("Error submitting job:\n%s", err)
 		return "", err
