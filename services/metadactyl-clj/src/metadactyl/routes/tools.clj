@@ -11,10 +11,20 @@
         [slingshot.slingshot :only [throw+]]
         [ring.util.http-response :only [ok]]))
 
+(def entrypoint-warning
+  (str "
+
+#### Warning: Use caution with Entrypoint settings!
+    Do not add a tool without an `entrypoint` setting if its Docker image also does not have a
+    default `ENTRYPOINT`. If a tool like this is required, then its `network_mode` setting should be
+    set to `none` to contain any risky scripts run by this tool."))
+
 (def volumes-warning
-  (str "\n\n#### Warning\n"
-       "    Do not add `volumes` or `volumes_from` settings to tools unless it is certain that tool"
-       " is authorized to access that data."))
+  (str "
+
+#### Warning: Use caution with Volumes settings!
+    Do not add `volumes` or `volumes_from` settings to tools unless it is certain that tool"
+  " is authorized to access that data."))
 
 (defmacro requester
   "Handles calling functions and returning request maps. The body of the call
@@ -300,7 +310,10 @@
          :query [params SecuredQueryParams]
          :body [body (describe ToolsImportRequest "The Tools to import.")]
          :summary "Add new Tools."
-         :description (str "This service adds new Tools to the DE." volumes-warning)
+         :description (str
+                        "This service adds new Tools to the DE."
+                        entrypoint-warning
+                        volumes-warning)
          (ok (add-tools body)))
 
   (PATCH* "/:tool-id" []
@@ -353,7 +366,9 @@
          :body [body Entrypoint]
          :return Entrypoint
          :summary "Update Tool Container Entrypoint"
-         :description "This endpoint updates an entrypoint for the tool's container."
+         :description (str
+                        "This endpoint updates an entrypoint for the tool's container."
+                        entrypoint-warning)
          (requester tool-id (update-settings-field tool-id :entrypoint (:entrypoint body))))
 
   (POST* "/:tool-id/container/cpu-shares" []
