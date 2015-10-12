@@ -16,8 +16,8 @@
    (DELETE "/favorites/filesystem/:entry-id" [entry-id]
            (fave/remove-favorite entry-id))
 
-   (GET "/favorites/filesystem" [sort-col sort-order limit offset entity-type info-type]
-        (fave/list-favorite-data-with-stat sort-col sort-order limit offset entity-type info-type))
+   (GET "/favorites/filesystem" [sort-col sort-dir limit offset entity-type info-type]
+        (fave/list-favorite-data-with-stat sort-col sort-dir limit offset entity-type info-type))
 
    (POST "/favorites/filter" [:as {body :body}]
          (fave/filter-accessible-favorites body))))

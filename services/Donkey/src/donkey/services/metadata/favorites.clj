@@ -84,7 +84,7 @@
      sort-col    - This is the value of the `sort-col` query parameter. It should be a case-
                    insensitive string containing one of the following:
                    DATECREATED|ID|LASTMODIFIED|NAME|SIZE
-     sort-order  - This is the value of the `sort-order` query parameter. It should be a case-
+     sort-dir    - This is the value of the `sort-dir` query parameter. It should be a case-
                    insensitive string containing one of the following: ASC|DESC
      limit       - This is the value of the `limit` query parameter. It should contain a positive
                    number.
@@ -96,10 +96,10 @@
      info-types  - This is the value(s) of the `info-type` query parameter(s). It may be nil,
                    meaning return all info types, a string containing a single info type, or a
                    sequence containing a set of info types."
-  [sort-col sort-order limit offset entity-type info-types]
+  [sort-col sort-dir limit offset entity-type info-types]
   (let [user        (:shortUsername user/current-user)
         col         (user-col->api-col sort-col)
-        ord         (user-order->api-order sort-order)
+        ord         (user-order->api-order sort-dir)
         limit       (Long/valueOf limit)
         offset      (Long/valueOf offset)
         entity-type (valid/resolve-entity-type entity-type)
