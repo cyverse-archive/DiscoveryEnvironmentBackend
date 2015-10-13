@@ -3,11 +3,8 @@ package logcabin
 import (
 	"encoding/json"
 	"log"
-	"net/http"
 	"os"
 	"time"
-
-	"github.com/codegangsta/negroni"
 )
 
 // LoggerFunc adapts a function so it can be used as an io.Writer.
@@ -70,24 +67,4 @@ func New() *Lincoln {
 		logger = &Lincoln{log.New(LoggerFunc(LogWriter), "", log.Lshortfile)}
 	}
 	return logger
-}
-
-// ServeHTTP implements the negroni middleware interface. This is adapted from
-// the Logger implementation provided by negroni.
-func (l *Lincoln) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	start := time.Now()
-	l.Printf("Request %s %s %s %v", r.RemoteAddr, r.Method, r.URL.Path, start)
-	next(w, r)
-	res := w.(negroni.ResponseWriter)
-	l.Printf(
-		"Response %s %s %s %v %v %s %v",
-		r.RemoteAddr,
-		r.Method,
-		r.URL.Path,
-		start,
-		res.Status(),
-		http.StatusText(res.Status()),
-		time.Since(start),
-	)
-
 }
