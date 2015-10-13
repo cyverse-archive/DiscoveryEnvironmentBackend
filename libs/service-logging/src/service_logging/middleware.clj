@@ -50,8 +50,7 @@
      (tc/with-logging-context {:response (cheshire/encode (clean-response (assoc response
                                                                            :uri uri
                                                                            :request-method request-method)))}
-                              (log/log 'AccessLogger level throwable (str method " " uri))
-                              (tc/clear-ext-svc-tag!))))
+                              (log/log 'AccessLogger level throwable (str method " " uri)))))
   ([request response]
    (log-response :info nil request response))
   ([level request response]
