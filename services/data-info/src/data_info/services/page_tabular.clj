@@ -120,7 +120,7 @@
                :chunk-size (str chunk-size)}))))
 
 (defn do-read-csv-chunk
-  [{user :user} data-id separator page size]
+  [{user :user separator :separator page :page size :size} data-id]
   (let [path (ft/rm-last-slash (:path (uuids/path-for-uuid user data-id)))]
     (read-csv-chunk user path page size (url/url-decode separator))))
 

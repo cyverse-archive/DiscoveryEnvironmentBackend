@@ -116,30 +116,25 @@ for the requesting user."
     "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
         (svc/trap uri rename/do-move-uuid-contents params body data-id))
 
-      (GET* "/chunks/:position/:size" [:as {uri :uri}]
-        :query [params StandardUserQueryParams]
-        :path-params [position :- (describe s/Int "The position to read from.")
-                      size     :- (describe s/Int "The read length.")]
+      (GET* "/chunks" [:as {uri :uri}]
+        :query [params ChunkParams]
         :return ChunkReturn
         :summary "Get File Chunk"
         :description (str
   "Gets the chunk of the file of the specified position and size."
   (get-error-code-block
     "ERR_DOES_NOT_EXIST, ERR_NOT_A_FILE, ERR_NOT_READABLE, ERR_NOT_A_USER"))
-        (svc/trap uri page-file/do-read-chunk params data-id position size))
+        (svc/trap uri page-file/do-read-chunk params data-id))
 
-      (GET* ["/chunks-tabular/:separator/:page/:size" :separator #"[^/]+"] [:as {uri :uri}]
-        :query [params StandardUserQueryParams]
-        :path-params [separator :- (describe s/Str "The separator value to use, url-encoded. %09 is the value for tab.")
-                      page      :- (describe s/Int "The page of the results to get, relative to the page size.")
-                      size      :- (describe s/Int "The page size to attempt. This will not be exact, because partial lines will not be provided.")]
+      (GET* "/chunks-tabular" [:as {uri :uri}]
+        :query [params TabularChunkParams]
         :return (s/either TabularChunkDoc TabularChunkReturn)
         :summary "Get Tabular File Chunk"
         :description (str
   "Gets the specified page of the tabular file, with a page size roughly corresponding to the provided size. The size is not precisely guaranteed, because partial lines cannot be correctly parsed."
   (get-error-code-block
     "ERR_DOES_NOT_EXIST, ERR_NOT_A_FILE, ERR_NOT_READABLE, ERR_NOT_A_USER, ERR_INVALID_PAGE, ERR_PAGE_NOT_POS, ERR_CHUNK_TOO_SMALL"))
-        (svc/trap uri page-tabular/do-read-csv-chunk params data-id separator page size))
+        (svc/trap uri page-tabular/do-read-csv-chunk params data-id))
 
       (POST* "/metadata/save" [:as {uri :uri}]
         :query [params StandardUserQueryParams]

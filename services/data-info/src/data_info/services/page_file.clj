@@ -27,7 +27,7 @@
      :chunk      (read-at-position cm path position chunk-size)}))
 
 (defn do-read-chunk
-  [{user :user} data-id position chunk-size]
+  [{user :user position :position chunk-size :size} data-id]
   (let [path (ft/rm-last-slash (:path (uuids/path-for-uuid user data-id)))]
     (read-file-chunk user path position chunk-size)))
 
