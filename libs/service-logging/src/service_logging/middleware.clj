@@ -97,7 +97,7 @@
   [handler]
   (fn [{:keys [query-params] :as request}]
     (if (contains? query-params "user")
-      (tc/with-logging-context (assoc-in {} [:user-info :user](get query-params "user"))
+      (tc/with-logging-context {:user-info (cheshire/encode {:user (get query-params "user")})}
                                (handler request))
       (handler request))))
 

@@ -52,9 +52,8 @@
 (defn- wrap-user-info
   [handler]
   (fn [request]
-    (let [user-info (transform/add-current-user-to-map {})
-          request   (assoc request :user-info user-info)]
-      (log/log 'AccessLogger :trace nil "entering wrap-user-info")
+    (let [user-info (transform/add-current-user-to-map {})]
+         (log/log 'AccessLogger :trace nil "entering wrap-user-info")
       (if (nil? (:user user-info))
         (handler request)
         (tc/with-logging-context {:user-info (cheshire/encode user-info)}
