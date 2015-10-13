@@ -3,8 +3,6 @@
         [slingshot.slingshot :only [throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.string :as string]
-            [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as ce]
             [metadactyl.persistence.app-metadata :as ap]
             [metadactyl.service.util :as util]))
 
@@ -12,8 +10,8 @@
   [job]
   (let [submission (:submission job)]
     (when-not submission
-      (throw+ {:error_code ce/ERR_NOT_FOUND
-               :reason     "Job submission values could not be found."}))
+      (throw+ {:type  :clojure-commons.exception/not-found
+               :error "Job submission values could not be found."}))
     (:config (cheshire/decode (.getValue submission) true))))
 
 (defn- load-mapped-params

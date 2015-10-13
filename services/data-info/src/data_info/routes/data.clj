@@ -8,6 +8,7 @@
             [data-info.services.metadata :as meta]
             [data-info.services.entry :as entry]
             [data-info.services.page-file :as page-file]
+            [data-info.services.page-tabular :as page-tabular]
             [clojure-commons.error-codes :as ce]
             [data-info.util.service :as svc]
             [schema.core :as s]))
@@ -115,17 +116,25 @@ for the requesting user."
     "ERR_NOT_A_FOLDER, ERR_DOES_NOT_EXIST, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_INCOMPLETE_RENAME, ERR_NOT_A_USER, ERR_TOO_MANY_PATHS"))
         (svc/trap uri rename/do-move-uuid-contents params body data-id))
 
-      (GET* "/chunks/:position/:size" [:as {uri :uri}]
-        :query [params StandardUserQueryParams]
-        :path-params [position :- s/Int
-                      size     :- s/Int]
+      (GET* "/chunks" [:as {uri :uri}]
+        :query [params ChunkParams]
         :return ChunkReturn
         :summary "Get File Chunk"
         :description (str
   "Gets the chunk of the file of the specified position and size."
   (get-error-code-block
     "ERR_DOES_NOT_EXIST, ERR_NOT_A_FILE, ERR_NOT_READABLE, ERR_NOT_A_USER"))
-        (svc/trap uri page-file/do-read-chunk params data-id position size))
+        (svc/trap uri page-file/do-read-chunk params data-id))
+
+      (GET* "/chunks-tabular" [:as {uri :uri}]
+        :query [params TabularChunkParams]
+        :return (s/either TabularChunkDoc TabularChunkReturn)
+        :summary "Get Tabular File Chunk"
+        :description (str
+  "Gets the specified page of the tabular file, with a page size roughly corresponding to the provided size. The size is not precisely guaranteed, because partial lines cannot be correctly parsed."
+  (get-error-code-block
+    "ERR_DOES_NOT_EXIST, ERR_NOT_A_FILE, ERR_NOT_READABLE, ERR_NOT_A_USER, ERR_INVALID_PAGE, ERR_PAGE_NOT_POS, ERR_CHUNK_TOO_SMALL"))
+        (svc/trap uri page-tabular/do-read-csv-chunk params data-id))
 
       (POST* "/metadata/save" [:as {uri :uri}]
         :query [params StandardUserQueryParams]

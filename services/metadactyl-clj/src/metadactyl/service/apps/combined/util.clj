@@ -1,9 +1,7 @@
 (ns metadactyl.service.apps.combined.util
   (:use [metadactyl.service.util :only [sort-apps apply-offset apply-limit uuid?]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as ce]
-            [metadactyl.persistence.app-metadata :as ap]
+  (:require [metadactyl.persistence.app-metadata :as ap]
             [metadactyl.persistence.jobs :as jp]))
 
 (defn apply-default-search-params
@@ -24,12 +22,12 @@
 (defn get-apps-client
   ([clients]
      (or (first (filter #(.canEditApps %) clients))
-         (throw+ {:error_code ce/ERR_BAD_REQUEST
-                  :reason     "apps are not editable at this time."})))
+         (throw+ {:type  :clojure-commons.exception/bad-request-field
+                  :error "apps are not editable at this time."})))
   ([clients client-name]
      (or (first (filter #(= client-name (.getClientName %)) clients))
-         (throw+ {:error_code ce/ERR_BAD_REQUEST
-                  :reason     (str "unrecognized client name " client-name)}))))
+         (throw+ {:type  :clojure-commons.exception/bad-request-field
+                  :error (str "unrecognized client name " client-name)}))))
 
 (defn apps-client-for-job
   [{app-id :app_id :as submission} clients]

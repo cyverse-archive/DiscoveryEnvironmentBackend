@@ -2,8 +2,7 @@
   "Functions to use for storing and retrieving OAuth access tokens."
   (:use [korma.core :exclude [update]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as ce]
-            [korma.core :as sql]
+  (:require [korma.core :as sql]
             [metadactyl.util.pgp :as pgp])
   (:import [java.sql Timestamp]
            [java.util UUID]))
@@ -12,8 +11,8 @@
   "Verifies that the token type is supported."
   [token-type]
   (when-not (= "bearer" token-type)
-    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-             :reason     (str "OAuth 2.0 token type, " token-type ", is not supported.")})))
+    (throw+ {:type  :clojure-commons.exception/illegal-argument
+             :error (str "OAuth 2.0 token type, " token-type ", is not supported.")})))
 
 (defn- user-id-subselect
   "Returns a subselect statement to find a user ID."
@@ -117,10 +116,10 @@
   (let [id  (if (string? id) (UUID/fromString id) id)
         req (get-authorization-request id)]
     (when (nil? req)
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     (str "authorization request " (str id) " not found")}))
+      (throw+ {:type  :clojure-commons.exception/bad-request-field
+               :error (str "authorization request " (str id) " not found")}))
     (when (not= (:username req) username)
-      (throw+ {:error_code ce/ERR_BAD_REQUEST
-               :reason     (str "wrong user for authorization request " (str id))}))
+      (throw+ {:type  :clojure-commons.exception/bad-request-field
+               :error (str "wrong user for authorization request " (str id))}))
     (remove-prior-authorization-requests username)
     (:state-info req)))

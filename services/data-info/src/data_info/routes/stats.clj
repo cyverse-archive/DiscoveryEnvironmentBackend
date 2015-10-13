@@ -9,6 +9,8 @@
 
 (defroutes* stat-gatherer
 
+            ; FIXME Update metadactyl exception handling when data-info excptn hndlg updated
+            ; metadactyl catches exceptions thrown from this EP.
   (context* "/stat-gatherer" []
     :tags ["bulk"]
 

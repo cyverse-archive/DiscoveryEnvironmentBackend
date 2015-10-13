@@ -9,8 +9,6 @@
   (:require [cheshire.core :as cheshire]
             [clojure.set :as set]
             [clojure.string :as string]
-            [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as ce]
             [kameleon.jobs :as kj]
             [korma.core :as sql]))
 
@@ -125,8 +123,9 @@
   [{:keys [job-id step-number external-id start-date end-date status job-type app-step-number]}]
   (let [job-type-id (kj/get-job-type-id job-type)]
     (when (nil? job-type-id)
-      (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-               :job-type   job-type}))
+      (throw+ {:type     :clojure-commons.exception/missing-request-field
+               :error    "Job type id missing"
+               :job-type job-type}))
     (kj/save-job-step
       (remove-nil-values
         {:job_id          job-id

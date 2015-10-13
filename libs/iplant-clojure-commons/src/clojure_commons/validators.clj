@@ -68,12 +68,14 @@
 
 (defn- throw-missing-params
   [params]
-  (throw+ {:type ::cx/missing-query-params, :parameters params}))
+  (throw+ {:type   ::cx/missing-query-params
+           :parameters params}))
 
 
 (defn- throw-bad-params
   [params]
-  (throw+ {:type ::cx/bad-query-params, :parameters params}))
+  (throw+ {:type ::cx/bad-query-params
+           :parameters params}))
 
 
 (defn validate-query-params

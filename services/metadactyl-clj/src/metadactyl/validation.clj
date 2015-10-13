@@ -5,8 +5,7 @@
         [clojure.string :only [blank?]]
         [korma.core :exclude [update]]
         [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as cc-errs]
-            [clojure-commons.validators :as validators]
+  (:require [clojure-commons.validators :as validators]
             [metadactyl.persistence.app-metadata :as persistence]))
 
 (defn missing-json-field-exception
@@ -188,16 +187,32 @@
   [tool]
   (let [existing-tool (first (select tools (where (select-keys tool [:name :location]))))]
     (when existing-tool
-      (throw+ {:error_code cc-errs/ERR_EXISTS
-               :message    "A Tool with that name and location already exists."
-               :tool       tool}))))
+      (throw+ {:type  :clojure-commons.exception/exists
+               :error "A Tool with that name and location already exists."
+               :tool  tool}))))
+
+(defn validate-image-not-public
+  [image-id]
+  (let [tools (persistence/get-public-tools-by-image-id image-id)]
+    (when-not (empty? tools)
+      (throw+ {:type  :clojure-commons.exception/not-writeable
+               :error "Image already used by public tools."
+               :tools tools}))))
+
+(defn validate-image-not-used
+  [image-id]
+  (let [tools (persistence/get-tools-by-image-id image-id)]
+    (when-not (empty? tools)
+      (throw+ {:type  :clojure-commons.exception/not-writeable
+               :error "Image already used by tools."
+               :tools tools}))))
 
 (defn- verify-app-not-public
   "Verifies that an app has not been made public."
   [app]
   (if (:is_public app)
-    (throw+ {:error_code cc-errs/ERR_NOT_WRITEABLE,
-             :message (str "Workflow, " (:id app) ", is public and may not be edited")})))
+    (throw+ {:type  :clojure-commons.exception/not-writeable
+             :error (str "Workflow, " (:id app) ", is public and may not be edited")})))
 
 (defn verify-app-ownership
   "Verifies that a user owns the app that is being edited."
@@ -205,9 +220,9 @@
      (verify-app-ownership current-user app))
   ([user app]
      (when-not (validators/user-owns-app? user app)
-       (throw+ {:error_code cc-errs/ERR_NOT_OWNER,
-                :username   (:username user),
-                :message    (str (:shortUsername user) " does not own app " (:id app))}))))
+       (throw+ {:type     :clojure-commons.exception/not-owner
+                :error    (str (:shortUsername user) " does not own app " (:id app))
+                :username (:username user),}))))
 
 (defn verify-app-editable
   "Verifies that the app is allowed to be edited by the current user."
@@ -221,9 +236,9 @@
   "Verifies that an external app step in a pipeline has all of the required fields."
   [step-number {external-app-id :external_app_id}]
   (when (blank? external-app-id)
-    (throw+ {:error_code cc-errs/ERR_BAD_OR_MISSING_FIELD
-             :message (str "pipeline step " step-number " contians neither a task ID nor an "
-                           "external app ID")})))
+    (throw+ {:type  :clojure-commons.exception/missing-request-field
+             :error (str "pipeline step " step-number " contians neither a task ID nor an "
+                         "external app ID")})))
 
 (defn validate-parameter
   "Ensures that hidden output parameters have a filename defined."
@@ -236,27 +251,27 @@
   (when (and (contains? persistence/param-output-types param-type)
              (blank? default-value)
              (or (not visible) implicit))
-    (throw+ {:error_code cc-errs/ERR_BAD_OR_MISSING_FIELD
-             :message    "Hidden output parameters must define a default value."
-             :parameter  parameter})))
+    (throw+ {:type      :clojure-commons.exception/missing-request-field
+             :error     "Hidden output parameters must define a default value."
+             :parameter parameter})))
 
 (defn validate-pipeline
   "Verifies that a pipeline contains at least 2 steps and at least 1 input->ouput mapping."
   [{:keys [steps mappings]}]
   (when (< (count steps) 2)
-    (throw+ {:error_code cc-errs/ERR_BAD_OR_MISSING_FIELD
-             :message    "Cannot save a workflow with less than 2 steps defined."
-             :steps      steps}))
+    (throw+ {:type  :clojure-commons.exception/missing-request-field
+             :error "Cannot save a workflow with less than 2 steps defined."
+             :steps steps}))
   (when (< (count mappings) 1)
-    (throw+ {:error_code cc-errs/ERR_BAD_OR_MISSING_FIELD
-             :message    "Cannot save a workflow without input->output mappings defined."
-             :mappings   mappings})))
+    (throw+ {:type     :clojure-commons.exception/missing-request-field
+             :error    "Cannot save a workflow without input->output mappings defined."
+             :mappings mappings})))
 
 (defn get-valid-user-id
   "Gets the user ID for the given username, or throws an error if that username is not found."
   [username]
   (let [user-id (get-existing-user-id username)]
     (when (nil? user-id)
-      (throw+ {:error_code cc-errs/ERR_BAD_REQUEST
-               :reason     (str "No user found for username " username)}))
+      (throw+ {:type  :clojure-commons.exception/bad-request-field
+               :error (str "No user found for username " username)}))
     user-id))

@@ -11,7 +11,6 @@
             [donkey.services.filesystem.metadata :as meta]
             [donkey.services.filesystem.metadata-template-avus :as mta]
             [donkey.services.filesystem.metadata-templates :as mt]
-            [donkey.services.filesystem.page-csv :as csv]
             [donkey.services.filesystem.root :as root]
             [donkey.services.filesystem.sharing :as sharing]
             [donkey.services.filesystem.stat :as stat]
@@ -124,7 +123,7 @@
       (controller req data/read-chunk :params :body))
 
     (POST "/filesystem/read-csv-chunk" [:as req]
-      (controller req csv/do-read-csv-chunk :params :body))
+      (controller req data/read-tabular-chunk :params :body))
 
     (POST "/filesystem/anon-files" [:as req]
       (controller req sharing/do-anon-files :params :body))))

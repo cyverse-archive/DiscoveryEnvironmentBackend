@@ -34,7 +34,7 @@
         (map (juxt :id identity))
         (into {})
         (vector))
-   (catch [:error_code ce/ERR_UNAVAILABLE] _
+   (catch [:type :clojure-commons.exception/unavailable] _
      (log/warn (:throwable &throw-context) "Agave app table retrieval timed out")
      [])
    (catch :status _

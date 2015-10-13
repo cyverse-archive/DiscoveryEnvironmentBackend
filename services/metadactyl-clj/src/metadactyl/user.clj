@@ -3,9 +3,7 @@
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as common-errors]
-            [metadactyl.clients.iplant-groups :as ipg]
-            [metadactyl.util.service :as service]))
+            [metadactyl.clients.iplant-groups :as ipg]))
 
 (def
   ^{:doc "The authenticated user or nil if the service is unsecured."
@@ -17,9 +15,9 @@
   (log/debug user-attributes)
   (let [uid (user-attributes :user)]
     (if (empty? uid)
-      (throw+ {:error_code common-errors/ERR_NOT_AUTHORIZED,
-               :user (dissoc user-attributes :password),
-               :message "Invalid user credentials provided."}))
+      (throw+ {:type :clojure-commons.exception/not-authorized
+               :error "Invalid user credentials provided."
+               :user (select-keys user-attributes [:username :shortUsername :first-name :last-name :email])}))
     (-> (select-keys user-attributes [:password :email :first-name :last-name])
         (assoc :username (str uid "@" (uid-domain))
           :shortUsername uid))))
@@ -35,8 +33,8 @@
    of org.iplantc.authn.user.User that is built from the user attributes found
    in the given params map, then passes request to the given handler."
   [handler & [opts]]
-  (fn [{uri :uri :as request}]
-    (common-errors/trap uri #(with-user [(:params request)] (handler request)))))
+  (fn [request]
+    (with-user [(:params request)] (handler request))))
 
 (defn load-user-as-user
   "Loads information for the user with the given username, as another username."

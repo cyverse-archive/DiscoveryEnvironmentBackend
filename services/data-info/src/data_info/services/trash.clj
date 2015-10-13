@@ -149,36 +149,39 @@
   [{:keys [user paths user-trash]}]
   (with-jargon (cfg/jargon-cfg) [cm]
     (let [paths (mapv ft/rm-last-slash paths)]
-      (validators/user-exists cm user)
-      (validators/all-paths-exist cm paths)
-      (validators/all-paths-writeable cm user paths)
+      (if (seq paths)
+        (do
+          (validators/user-exists cm user)
+          (validators/all-paths-exist cm paths)
+          (validators/all-paths-writeable cm user paths)
 
-      (let [retval (atom (hash-map))]
-        (doseq [path paths]
-          (let [fully-restored      (ft/rm-last-slash (restoration-path cm user path))
-                restored-to-homedir (restore-to-homedir? cm path)]
-            (log/warn "Restoring " path " to " fully-restored)
+          (let [retval (atom (hash-map))]
+            (doseq [path paths]
+              (let [fully-restored      (ft/rm-last-slash (restoration-path cm user path))
+                    restored-to-homedir (restore-to-homedir? cm path)]
+                (log/warn "Restoring " path " to " fully-restored)
 
-            (validators/path-not-exists cm fully-restored)
-            (log/warn fully-restored " does not exist. That's good.")
+                (validators/path-not-exists cm fully-restored)
+                (log/warn fully-restored " does not exist. That's good.")
 
-            (restore-parent-dirs cm user fully-restored)
-            (log/warn "Done restoring parent dirs for " fully-restored)
+                (restore-parent-dirs cm user fully-restored)
+                (log/warn "Done restoring parent dirs for " fully-restored)
 
-            (validators/path-writeable cm user (ft/dirname fully-restored))
-            (log/warn fully-restored "is writeable. That's good.")
+                (validators/path-writeable cm user (ft/dirname fully-restored))
+                (log/warn fully-restored "is writeable. That's good.")
 
-            (log/warn "Moving " path " to " fully-restored)
-            (validators/path-not-exists cm fully-restored)
+                (log/warn "Moving " path " to " fully-restored)
+                (validators/path-not-exists cm fully-restored)
 
-            (log/warn fully-restored " does not exist. That's good.")
-            (move cm path fully-restored :user user :admin-users (cfg/irods-admins))
-            (log/warn "Done moving " path " to " fully-restored)
+                (log/warn fully-restored " does not exist. That's good.")
+                (move cm path fully-restored :user user :admin-users (cfg/irods-admins))
+                (log/warn "Done moving " path " to " fully-restored)
 
-            (reset! retval
-                    (assoc @retval path {:restored-path fully-restored
-                                         :partial-restore restored-to-homedir}))))
-        {:restored @retval}))))
+                (reset! retval
+                        (assoc @retval path {:restored-path fully-restored
+                                             :partial-restore restored-to-homedir}))))
+            {:restored @retval}))
+        {:restored {}}))))
 
 (defn do-delete
   [{user :user} {paths :paths}]

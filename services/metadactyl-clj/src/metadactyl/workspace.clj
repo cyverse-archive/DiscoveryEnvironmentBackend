@@ -2,8 +2,7 @@
   (:use [kameleon.queries]
         [korma.core :exclude [update]]
         [metadactyl.user :only [current-user]]
-        [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as cc-errs]))
+        [slingshot.slingshot :only [throw+]]))
 
 (defn get-workspace
   "Gets a workspace database entry for the given username or the current user."
@@ -12,9 +11,9 @@
   ([username]
      (if-let [workspace (fetch-workspace-by-user-id (get-existing-user-id username))]
        workspace
-       (throw+ {:error_code cc-errs/ERR_NOT_FOUND,
-                :username username,
-                :message  "Workspace for user not found."}))))
+       (throw+ {:type     :clojure-commons.exception/not-found
+                :message  "Workspace for user not found."
+                :username username}))))
 
 (defn get-optional-workspace
   "Gets a workspace database entry for the given username if a username is provided."

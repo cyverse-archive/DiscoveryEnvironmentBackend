@@ -107,7 +107,7 @@ __Request Query Params__:
 * entity-type - (OPTIONAL) The type of entity to return, FILE, FOLDER, or ANY. The values are case-insensitive. It defaults to ANY.
 * info-type - (OPTIONAL) Filter the files portion of the result set so that only files with this info type are returned. To return multiple info types, and this parameter more than once.
 * sort-col - The column to sort the result set by. Sorting is done in iRODS's ICAT database, not at the application level. Accepted values are NAME, ID, LASTMODIFIED, DATECREATED, SIZE, PATH. The values are case-insensitive.
-* sort-order - The order to sort the result set in. Accepted values are ASC and DESC. The values are case-insensitive.
+* sort-dir - The order to sort the result set in. Accepted values are ASC and DESC. The values are case-insensitive.
 
 
 __Response Body__:
@@ -198,4 +198,4 @@ __Response Body__:
 
 __Curl Command__:
 
-    curl "http://127.0.0.1:31325/secured/filesystem/paged-directory?proxyToken=asdfadsfa&path=/iplant/home/wregglej&sort-col=SIZE&sort-order=DESC&limit=5&offset=10"
+    curl "http://127.0.0.1:31325/secured/filesystem/paged-directory?proxyToken=asdfadsfa&path=/iplant/home/wregglej&sort-col=SIZE&sort-dir=DESC&limit=5&offset=10"

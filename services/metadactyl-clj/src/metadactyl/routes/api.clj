@@ -1,9 +1,11 @@
 (ns metadactyl.routes.api
-  (:use [service-logging.middleware :only [log-validation-errors]]
+  (:use [service-logging.middleware :only [wrap-logging]]
+        [compojure.core :only [wrap-routes]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [common-swagger-api.schema]
         [metadactyl.user :only [store-current-user]]
         [ring.middleware keyword-params nested-params]
+        [service-logging.middleware :only [add-user-to-context]]
         [ring.util.response :only [redirect]])
   (:require [compojure.route :as route]
             [metadactyl.routes.admin :as admin-routes]
@@ -22,9 +24,10 @@
             [metadactyl.routes.workspaces :as workspace-routes]
             [metadactyl.util.config :as config]
             [metadactyl.util.service :as service]
-            [service-logging.thread-context :as tc]))
+            [clojure-commons.exception :as cx]))
 
 (defapi app
+  {:exceptions cx/exception-handlers}
   (swagger-ui config/docs-uri)
   (swagger-docs
     {:info {:title "Discovery Environment Apps API"
@@ -47,6 +50,7 @@
             {:name "collaborator-routes", :description "Collaborator Information Routes"}
             {:name "admin-apps", :description "Admin App endpoints."}
             {:name "admin-categories", :description "Admin App Category endpoints."}
+            {:name "admin-container-images", :description "Admin Tool Docker Images endpoints."}
             {:name "admin-data-containers", :description "Admin Docker Data Container endpoints."}
             {:name "admin-tools", :description "Admin Tool endpoints."}
             {:name "admin-reference-genomes", :description "Admin Reference Genome endpoints."}
@@ -54,7 +58,7 @@
   (middlewares
     [wrap-keyword-params
      wrap-query-params
-     log-validation-errors]
+     (wrap-routes wrap-logging)]
     (context* "/" []
       :tags ["service-info"]
       status-routes/status)
@@ -64,9 +68,9 @@
   (middlewares
     [wrap-keyword-params
      wrap-query-params
-     tc/add-user-to-context
-     log-validation-errors
-     store-current-user]
+     add-user-to-context
+     store-current-user
+     wrap-logging]
     (context* "/apps/categories" []
       :tags ["app-categories"]
       app-category-routes/app-categories)
@@ -115,6 +119,9 @@
     (context* "/admin/reference-genomes" []
       :tags ["admin-reference-genomes"]
       admin-routes/reference-genomes)
+    (context* "/admin/tools/container-images" []
+      :tags ["admin-container-images"]
+      tool-routes/container-images)
     (context* "/admin/tools/data-containers" []
       :tags ["admin-data-containers"]
       tool-routes/admin-data-containers)

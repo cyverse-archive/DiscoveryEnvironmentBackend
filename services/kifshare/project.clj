@@ -51,13 +51,4 @@
 
   :plugins [[lein-ring "0.7.5"]]
 
-  :repositories [["sonatype-nexus-snapshots"
-                  {:url "https://oss.sonatype.org/content/repositories/snapshots"}]
-
-                 ["renci.repository"
-                  {:url "http://ci-dev.renci.org/nexus/content/repositories/snapshots/"}]]
-
-  :deploy-repositories [["sonatype-nexus-staging"
-                         {:url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"}]]
-
   :main ^:skip-aot kifshare.core)

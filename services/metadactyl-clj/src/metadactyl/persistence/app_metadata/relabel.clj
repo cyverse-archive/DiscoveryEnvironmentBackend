@@ -9,10 +9,7 @@
                                             remove-nil-vals]]
         [metadactyl.util.assertions]
         [slingshot.slingshot :only [throw+]])
-  (:require [cheshire.core :as cheshire]
-            [clojure.string :as string]
-            [clojure-commons.error-codes :as ce]
-            [korma.core :as sql]))
+  (:require [korma.core :as sql]))
 
 (defn- get-single-task-for-app
   "Retrieves the task from a single-step app. An exception will be thrown if the app doesn't have
@@ -20,8 +17,8 @@
   [app-id]
   (let [tasks (get-tasks-for-app app-id)]
     (when (not= 1 (count tasks))
-      (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-               :reason     :NOT_SINGLE_STEP_APP
+      (throw+ {:type       :clojure-commons.exception/illegal-argument
+               :error      :NOT_SINGLE_STEP_APP
                :step_count (count tasks)}))
     (first tasks)))
 

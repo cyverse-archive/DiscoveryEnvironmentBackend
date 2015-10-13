@@ -90,6 +90,19 @@
      (s/optional-key :attachment)
      (describe Boolean "Download file contents as attachment.")}))
 
+(s/defschema TabularChunkParams
+  (assoc
+    StandardUserQueryParams
+    :separator (describe s/Str "The separator value to use, url-encoded. %09 is the value for tab.")
+    :page      (describe s/Int "The page of the results to get, relative to the page size.")
+    :size      (describe s/Int "The page size to attempt. This will not be exact, because partial lines will not be provided.")))
+
+(s/defschema ChunkParams
+  (assoc
+    StandardUserQueryParams
+    :position (describe s/Int "The position to read from.")
+    :size     (describe s/Int "The read length.")))
+
 (s/defschema ChunkReturn
   {:path       (describe NonBlankString "The file path")
    :user       (describe NonBlankString "The requesting user.")
@@ -97,3 +110,23 @@
    :chunk-size (describe NonBlankString "The size of the read.")
    :file-size  (describe NonBlankString "The file's total size.")
    :chunk      (describe String "The read result.")})
+
+(s/defschema CSVEntry
+  {(describe s/Keyword "The column number.")
+   (describe String "The column data.")})
+
+(s/defschema CSVDoc
+  {:a-string-quoted-column-number (describe String "The column data.")})
+
+(s/defschema TabularChunkReturn
+  (-> ChunkReturn
+    (dissoc :start :chunk)
+    (assoc :page (describe NonBlankString "The page number.")
+           :number-pages (describe NonBlankString "The total number of pages")
+           :max-cols (describe NonBlankString "The maximum number of columns present.")
+           :csv (describe [CSVEntry] "The tabular data result.")))) 
+
+(s/defschema TabularChunkDoc
+  (-> TabularChunkReturn
+    (dissoc :csv)
+    (assoc :csv (describe [CSVDoc] "The tabular data result."))))

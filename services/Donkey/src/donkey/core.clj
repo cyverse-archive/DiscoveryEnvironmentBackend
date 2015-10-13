@@ -52,9 +52,8 @@
 (defn- wrap-user-info
   [handler]
   (fn [request]
-    (let [user-info (transform/add-current-user-to-map {})
-          request   (assoc request :user-info user-info)]
-      (log/log 'AccessLogger :trace nil "entering wrap-user-info")
+    (let [user-info (transform/add-current-user-to-map {})]
+         (log/log 'AccessLogger :trace nil "entering wrap-user-info")
       (if (nil? (:user user-info))
         (handler request)
         (tc/with-logging-context {:user-info (cheshire/encode user-info)}
@@ -189,27 +188,27 @@
       (wrap-routes authenticate-current-user)
       (wrap-routes wrap-user-info)
       (wrap-routes validate-current-user)
-      (wrap-routes wrap-logging)
-      (wrap-routes wrap-exceptions  cx/exception-handlers)))
+      (wrap-routes wrap-exceptions  cx/exception-handlers)
+      (wrap-routes wrap-logging)))
 
 (def secured-routes-handler
   (-> (delayed-handler secured-routes)
       (wrap-routes authenticate-current-user)
       (wrap-routes wrap-user-info)
-      (wrap-routes wrap-logging)
-      (wrap-routes wrap-exceptions  cx/exception-handlers)))
+      (wrap-routes wrap-exceptions  cx/exception-handlers)
+      (wrap-routes wrap-logging)))
 
 (def secured-routes-no-context-handler
   (-> (delayed-handler secured-routes-no-context)
       (wrap-routes authenticate-current-user)
       (wrap-routes wrap-user-info)
-      (wrap-routes wrap-logging)
-      (wrap-routes wrap-exceptions  cx/exception-handlers)))
+      (wrap-routes wrap-exceptions  cx/exception-handlers)
+      (wrap-routes wrap-logging)))
 
 (def unsecured-routes-handler
   (-> (delayed-handler unsecured-routes)
-      (wrap-routes wrap-logging)
-      (wrap-routes wrap-exceptions cx/exception-handlers)))
+      (wrap-routes wrap-exceptions cx/exception-handlers)
+      (wrap-routes wrap-logging)))
 
 (defn donkey-routes
   []

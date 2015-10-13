@@ -5,10 +5,7 @@
         [notification-agent.config]
         [notification-agent.common]
         [slingshot.slingshot :only [throw+ try+]])
-  (:require [clojure-commons.error-codes :as ce]
-            [clojure.string :as string]
-            [clojure.tools.logging :as log]
-            [korma.sql.engine :as eng]
+  (:require [clojure.string :as string]
             [notification-agent.time :as time])
   (:import [java.sql Timestamp]
            [java.util UUID]))
@@ -56,10 +53,10 @@
    (Timestamp. (Long/parseLong millis))
    (catch NumberFormatException _
      (if param-name
-       (throw+ {:error_code  ce/ERR_BAD_QUERY_PARAMETER
+       (throw+ {:type        :clojure-commons.exception/bad-query-params
                 :param_name  param-name
                 :param_value millis})
-       (throw+ {:error_code  ce/ERR_BAD_OR_MISSING_FIELD
+       (throw+ {:type        :clojure-commons.exception/bad-request-field
                 :field_name  :timestamp
                 :field_value millis})))))
 
@@ -122,9 +119,9 @@
                          (keyword? sort-dir) (keyword (string/upper-case (name sort-dir)))
                          :else               nil)]
       (when-not (#{:ASC :DESC} sort-dir)
-        (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-                 :arg_name   :sort-dir
-                 :arg_value  sort-dir}))
+        (throw+ {:type      :clojure-commons.exception/illegal-argument
+                 :arg_name  :sort-dir
+                 :arg_value sort-dir}))
       sort-dir)))
 
 (defn- add-order-by-clause
@@ -145,10 +142,10 @@
     (try+
      (Integer/parseInt arg-value)
      (catch NumberFormatException e
-       (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-                :arg_name   arg-name
-                :arg_value  arg-value
-                :details    (.getMessage e)})))))
+       (throw+ {:type      :clojure-commons.exception/illegal-argument
+                :arg_name  arg-name
+                :arg_value arg-value
+                :details   (.getMessage e)})))))
 
 (defn- add-limit-clause
   "Adds a limit clause to a notifiation query if a limit is specified."

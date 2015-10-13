@@ -1,8 +1,7 @@
 (ns metadactyl.util.params
   (:use [clojure.string :only [lower-case]]
         [metadactyl.util.conversions]
-        [slingshot.slingshot :only [throw+]])
-  (:require [clojure-commons.error-codes :as error-codes]))
+        [slingshot.slingshot :only [throw+]]))
 
 (defn- blank?
   "Returns true if the argument is nil or a blank string."
@@ -16,7 +15,7 @@
   [ks m]
   (let [v (first (remove blank? (map m ks)))]
     (when (blank? v)
-      (throw+ {:error_code error-codes/ERR_BAD_OR_MISSING_FIELD
+      (throw+ {:type   :clojure-commons.exception/bad-request-field
                :params ks}))
     v))
 

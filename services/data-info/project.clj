@@ -28,6 +28,7 @@
                  [metosin/compojure-api "0.23.1"]
                  [net.sf.json-lib/json-lib "2.4" :classifier "jdk15"]
                  [org.apache.tika/tika-core "1.9"]
+                 [net.sf.opencsv/opencsv "2.3"]
                  [slingshot "0.12.2"]
                  [org.iplantc/clj-icat-direct "5.0.0"
                    :exclusions [[org.slf4j/slf4j-log4j12]

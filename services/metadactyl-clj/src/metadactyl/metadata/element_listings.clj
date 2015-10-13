@@ -5,9 +5,7 @@
         [korma.core :exclude [update]]
         [metadactyl.tools :only [tool-listing-base-query]]
         [metadactyl.util.conversions :only [remove-nil-vals]]
-        [slingshot.slingshot :only [throw+]])
-  (:require [cheshire.core :as cheshire]
-            [metadactyl.util.service :as service]))
+        [slingshot.slingshot :only [throw+]]))
 
 (defn- base-parameter-type-query
   "Creates the base query used to list parameter types for the metadata element listing service."
@@ -146,9 +144,8 @@
   (defn list-elements "Lists selected workflow elements.  This function handles requests to list
    various different types of workflow elements."
   [elm-type params]
-  (service/success-response
     (cond
       (= elm-type "all")               (list-all params)
       (contains? listing-fns elm-type) ((listing-fns elm-type) params)
-      :else                            (throw+ {:type ::unrecognized_workflow_component_type
-                                                :name elm-type}))))
+      :else (throw+ {:type ::unrecognized_workflow_component_type
+                     :name elm-type})))

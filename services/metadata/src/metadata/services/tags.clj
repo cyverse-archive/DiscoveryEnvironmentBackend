@@ -2,7 +2,7 @@
   (:use [kameleon.db :only [millis-from-timestamp]]
         [slingshot.slingshot :only [throw+]])
   (:require [clojure.set :as set]
-            [clojure-commons.error-codes :as error]
+            [clojure.string :as string]
             [metadata.persistence.tags :as db])
   (:import [java.util UUID]
            [clojure.lang IPersistentMap]))
@@ -35,7 +35,8 @@
         unattached-tags (set/difference known-tags
                                         (set (db/filter-attached-tags data-id known-tags)))]
     (when-not (empty? unknown-tags)
-      (throw+ {:error_code error/ERR_NOT_FOUND :tag-ids unknown-tags}))
+      (throw+ {:type    :clojure-commons.exception/not-found
+               :tag-ids unknown-tags}))
     (db/insert-attached-tags user data-id data-type unattached-tags)
     (get-tag-target-details known-tags)))
 
@@ -58,11 +59,13 @@
    Returns:
      The new tag."
   [^String owner ^IPersistentMap {:keys [value description]}]
-  (if (empty? (db/get-tags-by-value owner value))
-    (format-tag (db/insert-user-tag owner value description))
-    (throw+ {:error_code error/ERR_NOT_UNIQUE
-             :user owner
-             :value value})))
+  (let [value (string/trim value)
+        description (if-not (nil? description) (string/trim description) description)]
+    (if (empty? (db/get-tags-by-value owner value))
+      (format-tag (db/insert-user-tag owner value description))
+      (throw+ {:type  :clojure-commons.exception/not-unique
+               :user  owner
+               :value value}))))
 
 
 (defn ^IPersistentMap delete-user-tag
@@ -80,7 +83,8 @@
   [^String user ^UUID tag-id]
   (let [tag-owner (db/get-tag-owner tag-id)]
     (when (not= tag-owner user)
-      (throw+ {:error_code error/ERR_NOT_FOUND :tag-id tag-id}))
+      (throw+ {:type   :clojure-commons.exception/not-found
+               :tag-id tag-id}))
     (db/delete-user-tag tag-id)
     nil))
 
@@ -98,8 +102,8 @@
   (condp = type
     "attach" (attach-tags user data-id data-type mods)
     "detach" (detach-tags user data-id mods)
-    (throw+ {:error_code error/ERR_BAD_QUERY_PARAMETER
-             :type       type})))
+    (throw+ {:type      :clojure-commons.exception/bad-query-params
+             :parameter type})))
 
 
 (defn list-attached-tags
@@ -155,8 +159,8 @@
                         (db/update-user-tag tag-id update)))
                     (get-tag-details tag-id))]
     (cond
-      (nil? tag-owner)       (throw+ {:error_code error/ERR_NOT_FOUND
-                                      :tag-id     tag-id})
-      (not= owner tag-owner) (throw+ {:error_code error/ERR_NOT_OWNER
-                                      :user       owner})
+      (nil? tag-owner)       (throw+ {:type   :clojure-commons.exception/not-found
+                                      :tag-id tag-id})
+      (not= owner tag-owner) (throw+ {:type :clojure-commons.exception/not-owner
+                                      :user owner})
       :else                  (do-update))))

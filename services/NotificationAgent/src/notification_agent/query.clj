@@ -24,25 +24,25 @@
         sys-total        (db/count-active-system-notifications user)
         new-sys-total    (db/count-new-system-notifications user)
         unseen-sys-total (db/count-unseen-system-notifications user)]
-    (json-resp 200 (cheshire/encode {:user-total          user-total
-                                     :system-total        sys-total
-                                     :system-total-new    new-sys-total
-                                     :system-total-unseen unseen-sys-total}))))
+    {:user-total          user-total
+     :system-total        sys-total
+     :system-total-new    new-sys-total
+     :system-total-unseen unseen-sys-total}))
 
 (defn- get-messages*
   "Retrieves notification messages."
   [user query]
-  (let [body {:total    (str (db/count-matching-messages user query))
-              :messages (map reformat (db/find-matching-messages user query))
+  (let [body {:total           (str (db/count-matching-messages user query))
+              :messages        (map reformat (db/find-matching-messages user query))
               :system-messages (db/get-active-system-notifications user)}]
-    (json-resp 200 (cheshire/encode body))))
+    body))
 
 (defn- required-string
   "Extracts a required string argument from the query-string map."
   [k m]
   (let [v (m k)]
     (when (blank? v)
-      (throw+ {:type  :illegal-argument
+      (throw+ {:type  :clojure-commons.exception/illegal-argument
                :code  ::missing-or-empty-param
                :param (name k)}))
     v))
@@ -152,14 +152,14 @@
         results (->> (db/find-matching-messages user query)
                      (map reformat)
                      (sort-by #(get-in % [:message :timestamp])))]
-    (json-resp 200 (cheshire/encode {:total    (str total)
-                                     :messages results}))))
+    {:total    (str total)
+     :messages results}))
 
 (defn- get-sys-msgs-with
   [db-get query-params]
   (let [user    (required-string :user query-params)
         results (db-get user)]
-    (json-resp 200 (cheshire/encode {:system-messages results}))))
+    {:system-messages results}))
 
 (defn get-system-messages
   "Obtains the system messages that apply to a user."

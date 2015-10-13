@@ -2,14 +2,12 @@
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:require [cheshire.core :as cheshire]
             [clojure.tools.logging :as log]
-            [clojure-commons.error-codes :as ce]
             [clojure-commons.file-utils :as ft]
             [kameleon.db :as db]
             [kameleon.uuids :as uuids]
             [metadactyl.persistence.app-metadata :as ap]
             [metadactyl.persistence.jobs :as jp]
             [metadactyl.service.apps.combined.util :as cu]
-            [metadactyl.util.json :as json-util]
             [metadactyl.util.service :as service]))
 
 (defn- app-step-partitioner
@@ -41,8 +39,8 @@
   "Verifies that at least one step is associated with a job submission."
   [app-id steps]
   (when (empty? steps)
-    (throw+ {:error_code ce/ERR_ILLEGAL_ARGUMENT
-             :reason     (str "app " app-id " has no steps")}))
+    (throw+ {:type  :clojure-commons.exception/illegal-argument
+             :error (str "app " app-id " has no steps")}))
   steps)
 
 (defn- build-job-save-info

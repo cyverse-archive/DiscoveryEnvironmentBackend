@@ -182,6 +182,7 @@
 * [POST /secured/remove-collaborators](endpoints/collaborators.md#removing-collaborators)
 * [GET /secured/saved-searches](endpoints/misc.md#getting-saved-searches)
 * [POST /secured/saved-searches](endpoints/misc.md#setting-saved-searches)
+* [DELETE /secured/saved-searches](endpoints/misc.md#deleting-saved-searches)
 * [DELETE /secured/sessions](endpoints/misc.md#removing-user-session-data)
 * [GET /secured/sessions](endpoints/misc.md#retrieving-user-session-data)
 * [POST /secured/sessions](endpoints/misc.md#saving-user-session-data)

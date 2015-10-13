@@ -79,7 +79,7 @@
    SortFieldOptionalKey
    (describe String SortFieldDocs)
 
-   (s/optional-key :sort-order)
+   (s/optional-key :sort-dir)
    (describe (s/enum "ASC" "DESC")
      "Only used when sort-field is present. Sorts the results in either ascending (`ASC`) or
       descending (`DESC`) order, before limits and offsets are applied. Defaults to `ASC`.

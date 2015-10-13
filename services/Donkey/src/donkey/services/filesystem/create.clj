@@ -4,6 +4,7 @@
   (:require [clojure.tools.logging :as log]
             [clj-jargon.item-info :as item]
             [clj-jargon.item-ops :as ops]
+            [donkey.services.filesystem.validators :as validators]
             [donkey.services.filesystem.icat :as cfg]))
 
 (defn ensure-created
@@ -15,6 +16,7 @@
   [^String user ^String dir]
   (with-jargon (cfg/jargon-cfg) [cm]
     (when-not (item/exists? cm dir)
+      (validators/user-exists cm user)
       (log/info "creating" dir)
       (ops/mkdirs cm dir)
       (set-owner cm dir user))))

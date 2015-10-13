@@ -177,7 +177,7 @@ A request to this endpoint requires the parameters in the following table.
 | ----------- | --------- | ------------ | ----------- |
 | proxyToken  | yes       |              | the CAS authentication token |
 | sort-col    | yes       |              | the field used to sort the filesystem entries in the result set. This can be `NAME|ID|LASTMODIFIED|DATECREATED|SIZE`. All values are case insensitive. |
-| sort-order  | yes       |              | the sorting direction. It can be `ASC|DESC`. Both values are case insensitive. |
+| sort-dir    | yes       |              | the sorting direction. It can be `ASC|DESC`. Both values are case insensitive. |
 | limit       | yes       |              | the maximum number of filesystem entries to return |
 | offset      | yes       |              | the number entries in the sorted total result set to skip before including entries in the response document. |
 | entity-type | no        | ANY          | the type of entities to return. It can be `ANY|FILE|FOLDER`. All values are case-insensitive. |
@@ -203,7 +203,7 @@ Error responses may include a `reason` field, providing a short, human readable 
 ### Example
 
 ```
-? curl "localhost/secured/favorites/filesystem/favorites?proxyToken=fake-token&sort-col=ID&sort-order=ASC&limit=1&offset=0"
+? curl "localhost/secured/favorites/filesystem/favorites?proxyToken=fake-token&sort-col=ID&sort-dir=ASC&limit=1&offset=0"
 ```
 ```json
 {
