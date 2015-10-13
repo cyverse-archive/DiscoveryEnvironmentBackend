@@ -125,8 +125,8 @@
     (read-csv-chunk user path page size (url/url-decode separator))))
 
 (with-pre-hook! #'do-read-csv-chunk
-  (fn [params data-id separator page size]
-    (dul/log-call "do-read-csv-chunk" params data-id separator page size)))
+  (fn [params data-id]
+    (dul/log-call "do-read-csv-chunk" params data-id)))
 
 (with-post-hook! #'do-read-csv-chunk
   (fn [result]
