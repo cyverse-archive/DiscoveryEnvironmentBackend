@@ -11,4 +11,5 @@
                  [medley "0.5.3"]
                  [org.iplantc/authy "5.0.0"]
                  [org.iplantc/clojure-commons "5.0.0"]
+                 [org.iplantc/service-logging "5.0.0"]
                  [slingshot "0.10.3"]])

@@ -15,6 +15,20 @@
   []
   (MDC/clear))
 
+(defn set-ext-svc-tag!
+  "Sets a value in the logging context which communicates the the operations in the current context
+   are from the designated external service.
+
+   After this key is set, it must be explicitly removed from the logging context when no longer
+   needed. This can be accomplished with 'clear-ext-svc-tag!'."
+  [tag]
+  (MDC/put "ext_service" tag))
+
+(defn clear-ext-svc-tag!
+  "Clears the external service tag from the logging context."
+  []
+  (MDC/remove "ext_service"))
+
 ;; With thanks to https://github.com/vaughnd/clojure-example-logback-integration/
 (defmacro with-logging-context
   "Use this to add a map to any logging wrapped in the macro. Macro can be nested.
