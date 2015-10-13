@@ -62,7 +62,9 @@ const (
 
 	//Stop tells the receiver of a JobRequest to stop a job
 	Stop
+)
 
+const (
 	// Success is the exit code used when the required commands execute correctly.
 	Success StatusCode = iota
 
