@@ -1,7 +1,6 @@
 package main
 
 import (
-	"api"
 	"configurate"
 	"flag"
 	"fmt"
@@ -127,17 +126,17 @@ func CleanJobContainers() {
 }
 
 func fail(client *messaging.Client, job *model.Job, msg string) error {
-	return client.PublishJobUpdate(&api.UpdateMessage{
+	return client.PublishJobUpdate(&messaging.UpdateMessage{
 		Job:     job,
-		State:   api.FailedState,
+		State:   messaging.FailedState,
 		Message: msg,
 	})
 }
 
 func success(client *messaging.Client, job *model.Job) error {
-	return client.PublishJobUpdate(&api.UpdateMessage{
+	return client.PublishJobUpdate(&messaging.UpdateMessage{
 		Job:   job,
-		State: api.SucceededState,
+		State: messaging.SucceededState,
 	})
 }
 
@@ -150,7 +149,7 @@ func main() {
 		logger.Fatal("--config must be set.")
 	}
 	var err error
-	status := api.Success
+	status := messaging.Success
 
 	err = configurate.Init(*cfgPath)
 	if err != nil {
@@ -162,7 +161,7 @@ func main() {
 	}
 	client := messaging.NewClient(uri)
 	defer client.Close()
-	client.SetupPublishing(api.JobsExchange)
+	client.SetupPublishing(messaging.JobsExchange)
 
 	if *jobFile == "" {
 		logger.Fatal("--job must be set.")
@@ -183,8 +182,8 @@ func main() {
 	}
 
 	// listen for orders to stop the job.
-	stopsKey := fmt.Sprintf("%s.%s", api.StopsKey, job.InvocationID)
-	client.AddConsumer(api.JobsExchange, "runner", stopsKey, func(d amqp.Delivery) {
+	stopsKey := fmt.Sprintf("%s.%s", messaging.StopsKey, job.InvocationID)
+	client.AddConsumer(messaging.JobsExchange, "runner", stopsKey, func(d amqp.Delivery) {
 		d.Ack(false)
 		fail(client, job, "Received stop request")
 		os.Exit(-1)
@@ -194,9 +193,9 @@ func main() {
 	}()
 
 	// let everyone know the job is running
-	err = client.PublishJobUpdate(&api.UpdateMessage{
+	err = client.PublishJobUpdate(&messaging.UpdateMessage{
 		Job:   job,
-		State: api.RunningState,
+		State: messaging.RunningState,
 	})
 	if err != nil {
 		logger.Print(err)
@@ -206,14 +205,14 @@ func main() {
 	createTransferTrigger()
 	moveIplantCmd()
 	status = pullDataContainers(job)
-	if status == api.Success {
+	if status == messaging.Success {
 		status = pullDataContainers(job)
 	}
-	if status == api.Success {
+	if status == messaging.Success {
 		status = transferInputs(job)
 	}
 	for _, step := range job.Steps {
-		if status == api.Success {
+		if status == messaging.Success {
 			status = executeStep(job, &step)
 		}
 	}
@@ -221,7 +220,7 @@ func main() {
 
 	CleanDataContainers()
 
-	if status != api.Success {
+	if status != messaging.Success {
 		fail(client, job, fmt.Sprintf("Job exited with a status of %d", status))
 	} else {
 		success(client, job)

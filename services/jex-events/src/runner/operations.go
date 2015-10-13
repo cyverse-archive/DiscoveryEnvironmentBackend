@@ -1,8 +1,8 @@
 package main
 
 import (
-	"api"
 	"log"
+	"messaging"
 	"model"
 	"os"
 	"os/exec"
@@ -35,23 +35,23 @@ func createTransferTrigger() {
 	}
 }
 
-func pullDataContainers(job *model.Job) api.StatusCode {
+func pullDataContainers(job *model.Job) messaging.StatusCode {
 	var err error
-	status := api.Success
+	status := messaging.Success
 	for _, dc := range job.DataContainers() {
 		cmd := exec.Command("docker", DataContainerPullArgs(&dc)...)
 		err = cmd.Run()
 		if err != nil {
 			log.Print(err)
-			status = api.StatusDockerPullFailed
+			status = messaging.StatusDockerPullFailed
 			break
 		}
-		if status == api.Success {
+		if status == messaging.Success {
 			cmd = exec.Command("docker", DataContainerCreateArgs(&dc, job.InvocationID)...)
 			err = cmd.Run()
 			if err != nil {
 				log.Print(err)
-				status = api.StatusDockerCreateFailed
+				status = messaging.StatusDockerCreateFailed
 				break
 			}
 		}
@@ -59,23 +59,23 @@ func pullDataContainers(job *model.Job) api.StatusCode {
 	return status
 }
 
-func pullContainerImages(job *model.Job) api.StatusCode {
+func pullContainerImages(job *model.Job) messaging.StatusCode {
 	var err error
-	status := api.Success
+	status := messaging.Success
 	for _, ci := range job.ContainerImages() {
 		cmd := exec.Command("docker", ContainerImagePullArgs(&ci)...)
 		err = cmd.Run()
 		if err != nil {
 			log.Print(err)
-			status = api.StatusDockerPullFailed
+			status = messaging.StatusDockerPullFailed
 			break
 		}
 	}
 	return status
 }
 
-func transferInputs(job *model.Job) api.StatusCode {
-	status := api.Success
+func transferInputs(job *model.Job) messaging.StatusCode {
+	status := messaging.Success
 	for _, input := range job.Inputs() {
 		cmd := exec.Command("docker", input.Arguments(job.Submitter, job.InvocationID, job.FileMetadata)...)
 		stdout, err := os.Open(input.Stdout(job.InvocationID))
@@ -93,15 +93,15 @@ func transferInputs(job *model.Job) api.StatusCode {
 		err = cmd.Run()
 		if err != nil {
 			log.Print(err)
-			status = api.StatusInputFailed
+			status = messaging.StatusInputFailed
 			break
 		}
 	}
 	return status
 }
 
-func executeStep(job *model.Job, step *model.Step) api.StatusCode {
-	status := api.Success
+func executeStep(job *model.Job, step *model.Step) messaging.StatusCode {
+	status := messaging.Success
 	cmd := exec.Command("docker", step.Arguments(job.InvocationID)...)
 	stdout, err := os.Open(step.Stdout(job.InvocationID))
 	if err != nil {
@@ -119,13 +119,13 @@ func executeStep(job *model.Job, step *model.Step) api.StatusCode {
 	err = cmd.Run()
 	if err != nil {
 		log.Print(err)
-		status = api.StatusStepFailed
+		status = messaging.StatusStepFailed
 	}
 	return status
 }
 
-func transferOutputs(job *model.Job) api.StatusCode {
-	status := api.Success
+func transferOutputs(job *model.Job) messaging.StatusCode {
+	status := messaging.Success
 	cmd := exec.Command("docker", job.FinalOutputArguments()...)
 	stdout, err := os.Open("logs/logs-stdout-output")
 	if err != nil {
@@ -142,7 +142,7 @@ func transferOutputs(job *model.Job) api.StatusCode {
 	err = cmd.Run()
 	if err != nil {
 		log.Print(err)
-		status = api.StatusOutputFailed
+		status = messaging.StatusOutputFailed
 	}
 	return status
 }

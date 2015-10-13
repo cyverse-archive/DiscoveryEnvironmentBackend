@@ -1,7 +1,6 @@
 package main
 
 import (
-	"api"
 	"bytes"
 	"configurate"
 	"encoding/json"
@@ -335,13 +334,13 @@ func main() {
 	}
 	client := messaging.NewClient(uri)
 	defer client.Close()
-	client.SetupPublishing(api.JobsExchange)
+	client.SetupPublishing(messaging.JobsExchange)
 
 	// Accept and handle messages sent out with the jobs.launches routing key.
-	client.AddConsumer(api.JobsExchange, "condor_launches", api.LaunchesKey, func(d amqp.Delivery) {
+	client.AddConsumer(messaging.JobsExchange, "condor_launches", messaging.LaunchesKey, func(d amqp.Delivery) {
 		body := d.Body
 		d.Ack(false)
-		req := api.JobRequest{}
+		req := messaging.JobRequest{}
 		err := json.Unmarshal(body, &req)
 		if err != nil {
 			logger.Print(err)
@@ -349,16 +348,16 @@ func main() {
 			return
 		}
 		switch req.Command {
-		case api.Launch:
+		case messaging.Launch:
 			jobID, err := launch(req.Job)
 			if err != nil {
 				logger.Print(err)
 			}
 			logger.Printf("Launched Condor ID %s", jobID)
 
-			err = client.PublishJobUpdate(&api.UpdateMessage{
+			err = client.PublishJobUpdate(&messaging.UpdateMessage{
 				Job:   req.Job,
-				State: api.SubmittedState,
+				State: messaging.SubmittedState,
 			})
 			if err != nil {
 				logger.Print(err)
