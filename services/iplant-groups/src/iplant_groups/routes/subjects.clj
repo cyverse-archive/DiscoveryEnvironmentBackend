@@ -2,30 +2,30 @@
   (:use [common-swagger-api.schema]
         [iplant_groups.routes.domain.group]
         [iplant_groups.routes.domain.params]
-        [iplant_groups.routes.domain.subject])
-  (:require [iplant_groups.service.subjects :as subjects]
-            [iplant_groups.util.service :as service]))
+        [iplant_groups.routes.domain.subject]
+        [ring.util.http-response :only [ok]])
+  (:require [iplant_groups.service.subjects :as subjects]))
 
 (defroutes* subjects
-  (GET* "/" [:as {:keys [uri]}]
+  (GET* "/" []
         :query       [params SearchParams]
         :return      SubjectList
         :summary     "Subject Search"
         :description "This endpoint allows callers to search for subjects by name."
-        (service/trap uri subjects/subject-search params))
+        (ok (subjects/subject-search params)))
 
-  (GET* "/:subject-id" [:as {:keys [uri]}]
+  (GET* "/:subject-id" []
         :path-params [subject-id :- SubjectIdPathParam]
         :query       [params StandardUserQueryParams]
         :return      Subject
         :summary     "Get Subject Information"
         :description "This endpoint allows callers to get information about a single subject."
-        (service/trap uri subjects/get-subject subject-id params))
+        (ok (subjects/get-subject subject-id params)))
 
-  (GET* "/:subject-id/groups" [:as {:keys [uri]}]
+  (GET* "/:subject-id/groups" []
         :path-params [subject-id :- SubjectIdPathParam]
         :query       [params StandardUserQueryParams]
         :return      GroupList
         :summary     "List Groups for a Subject"
         :description "This endpoint allows callers to list all groups that a subject belongs to."
-        (service/trap uri subjects/groups-for-subject subject-id params)))
+        (ok (subjects/groups-for-subject subject-id params))))
