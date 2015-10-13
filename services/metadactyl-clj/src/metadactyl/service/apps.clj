@@ -2,7 +2,7 @@
   (:use [kameleon.uuids :only [uuidify]]
         [korma.db :only [transaction]]
         [slingshot.slingshot :only [try+ throw+]]
-        [service-logging.thread-context :only [clear-ext-svc-tag!]])
+        [service-logging.thread-context :only [with-logging-context]])
   (:require [cemerick.url :as curl]
             [clojure.tools.logging :as log]
             [mescal.de :as agave]
