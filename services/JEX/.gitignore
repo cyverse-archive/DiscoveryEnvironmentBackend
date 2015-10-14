@@ -1,11 +1,6 @@
-pom.xml
-*jar
-lib
-classes
-*~
-bin
-.classpath
-.project
-.lein*
-\#*\#
-target/
+Godeps/_workspace/
+Godeps/Readme
+bin/
+pkg/
+.hg/
+.git/
