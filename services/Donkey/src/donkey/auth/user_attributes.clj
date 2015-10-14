@@ -46,12 +46,20 @@
    :lastName      (System/getenv "IPLANT_CAS_LAST")
    :commonName    (System/getenv "IPLANT_CAS_COMMON")})
 
+(defn- user-info-from-current-user
+  "Converts the current-user to the user info structure expected in the request."
+  [user]
+  {:user       (:shortUsername user)
+   :email      (:email user)
+   :first-name (:firstName user)
+   :last-name  (:lastName user)})
+
 (defn wrap-current-user
   "Generates a Ring handler function that stores user information in current-user."
   [handler user-info-fn]
   (fn [request]
     (binding [current-user (user-info-fn request)]
-      (handler request))))
+      (handler (assoc request :user-info (user-info-from-current-user current-user))))))
 
 (defn- find-auth-handler
   "Finds an authentication handler for a request."
@@ -63,7 +71,6 @@
 (defn- wrap-auth-selection
   "Generates a ring handler function that selects the authentication method based on predicates."
   [phs]
-  (log/spy phs)
   (fn [request]
     (log/log 'AccessLogger :trace nil "entering donkey.auth.user-attributes/wrap-auth-selection")
     (if-let [auth-handler (find-auth-handler request phs)]
