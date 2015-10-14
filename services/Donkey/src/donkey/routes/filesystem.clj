@@ -150,9 +150,6 @@
    (GET "/filesystem/:data-id/template-avus" [data-id :as req]
      (controller req mta/do-metadata-template-avu-list :params data-id))
 
-   (POST "/filesystem/:data-id/template-avus/copy" [data-id force :as req]
-     (controller req mta/do-copy-metadata-template-avus :params data-id force :body))
-
    (GET "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
      (controller req mta/do-metadata-template-avu-list :params data-id template-id))
 
