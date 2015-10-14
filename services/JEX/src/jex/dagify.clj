@@ -3,6 +3,7 @@
         [clojure.string :only (join split trim blank?)]
         [jex.common])
   (:require [jex.config :as cfg]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [me.raynes.fs :as fs])
   (:import [java.io File]))
@@ -52,7 +53,7 @@
 (defn script-submission
   "Generates the Condor submission file that will execute the generated
    shell script."
-  [{:keys [username uuid local-log-dir] :as analysis-map}]
+  [{:keys [username uuid local-log-dir] user-id :user_id :as analysis-map}]
   (str
    "universe = vanilla\n"
    "executable = /bin/bash\n"
@@ -68,7 +69,7 @@
    (if (and (contains? analysis-map :group)
             (not (blank? (:group analysis-map))))
      (str "+AccountingGroup = \"" (:group analysis-map) "." username "\"\n"))
-   "concurrency_limits = " username "\n"
+   "concurrency_limits = _" (string/replace user-id #"-" "") "\n"
    (ipc-exe analysis-map)
    (ipc-exe-path analysis-map)
    "should_transfer_files = YES\n"

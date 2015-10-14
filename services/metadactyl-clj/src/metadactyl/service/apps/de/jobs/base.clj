@@ -9,8 +9,7 @@
 
 (defn- build-job-request-formatter
   [user submission]
-  (let [username (:shortUsername user)
-        email    (:email user)
+  (let [email    (:email user)
         app-id   (:app_id submission)
         app      (ap/get-app app-id)
         io-maps  (ca/load-io-maps app-id)
@@ -19,9 +18,9 @@
         params   (group-by :step_id params)]
     (if (util/fapi-app? app)
       (metadactyl.service.apps.de.jobs.fapi.JobRequestFormatter.
-       username email submission app io-maps defaults params)
+       user email submission app io-maps defaults params)
       (metadactyl.service.apps.de.jobs.condor.JobRequestFormatter.
-       username email submission app io-maps defaults params))))
+       user email submission app io-maps defaults params))))
 
 (defn build-submission
   [user submission]
