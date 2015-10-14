@@ -119,12 +119,6 @@ func CleanDataContainers() {
 	}
 }
 
-// CleanJobContainers will kill and remove any containers that are associated with
-// the job.
-func CleanJobContainers() {
-
-}
-
 func fail(client *messaging.Client, job *model.Job, msg string) error {
 	return client.PublishJobUpdate(&messaging.UpdateMessage{
 		Job:     job,
