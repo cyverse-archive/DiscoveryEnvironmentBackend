@@ -64,3 +64,13 @@ func New() *Lincoln {
 	}
 	return logger
 }
+
+func (l *Lincoln) Write(buf []byte) (n int, err error) {
+	m := NewLogMessage(string(buf[:]))
+	j, err := json.Marshal(m)
+	if err != nil {
+		return 0, err
+	}
+	j = append(j, []byte("\n")...)
+	return os.Stdout.Write(j)
+}

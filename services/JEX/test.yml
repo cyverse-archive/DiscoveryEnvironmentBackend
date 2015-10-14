@@ -7,11 +7,15 @@ jex_db:
     image: discoenv/unittest-jexdb:dev
     ports:
       - "5432:5432"
+jex_dind:
+    image: docker:dind
+    privileged: true
 test:
     image: discoenv/buildenv
     links:
       - jex_db:jexdb
       - jex_rabbit:rabbit
+      - jex_dind:dind
     volumes:
       - .:/jex
     working_dir: /jex
