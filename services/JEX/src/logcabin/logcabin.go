@@ -45,10 +45,6 @@ func LogWriter(logbuf []byte) (n int, err error) {
 		return 0, err
 	}
 	j = append(j, []byte("\n")...)
-	suppress := os.Getenv("SUPPRESS_LOGGING")
-	if suppress != "" {
-		return 0, nil
-	}
 	return os.Stdout.Write(j)
 }
 
