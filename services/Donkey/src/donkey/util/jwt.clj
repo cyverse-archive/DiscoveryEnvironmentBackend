@@ -35,7 +35,7 @@
 
 (defn donkey-user-from-jwt-claims
   [jwt-claims]
-  (donkey-user-from-jwt-user (jwt/user-from-assertion jwt-claims)))
+  (donkey-user-from-jwt-user (jwt/user-from-default-assertion jwt-claims)))
 
 (defn generate-jwt
   [user]
@@ -61,7 +61,7 @@
 
 (defn- validate-claims
   [claims]
-  (let [user    (jwt/user-from-assertion claims)
+  (let [user    (jwt/user-from-default-assertion claims)
         missing (into [] (filter (comp string/blank? user) required-fields))]
     (when (seq missing)
       (throw (ex-info (str "Missing required JWT fields: " missing)
