@@ -34,20 +34,9 @@
    :lastName      (:family-name jwt-user)
    :commonName    (:common-name jwt-user)})
 
-(defn- build-wso2-assertion
-  [validity-window-end {:keys [user email given-name family-name common-name]}]
-  (let [now (time/now)]
-    {:exp                                 (time/plus now (time/seconds validity-window-end))
-     :iat                                 now
-     :http://wso2.org/claims/enduser      (str "foo/" user)
-     :http://wso2.org/claims/emailaddress email
-     :http://wso2.org/claims/givenname    given-name
-     :http://wso2.org/claims/lastname     family-name
-     :http://wso2.org/claims/fullname     common-name}))
-
 (defn user-from-wso2-assertion
   [jwt]
-  {:user        (string/replace (:http://wso2.org/claims/enduser jwt) #"[^/]+/" "")
+  {:user        (some-> (:http://wso2.org/claims/enduser jwt) (string/replace #"[^/]+/" ""))
    :email       (:http://wso2.org/claims/emailaddress jwt)
    :given-name  (:http://wso2.org/claims/givenname jwt)
    :family-name (:http://wso2.org/claims/lastname jwt)
