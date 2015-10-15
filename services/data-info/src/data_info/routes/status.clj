@@ -15,7 +15,7 @@
       (service/trap uri
         commons-svc/get-docs-status config/svc-info server-name server-port config/docs-uri))
 
-    (GET* "/config" [:as {:keys [uri]}]
+    (GET* "/admin/config" [:as {:keys [uri]}]
       :return (describe s/Any "A map of configuration keys to values.")
       :tags ["service-info"]
       :summary "Configuration Information"
