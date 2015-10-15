@@ -20,15 +20,24 @@ import (
 )
 
 var (
-	tokenLifetime = flag.Int("lifetime", 300, "seconds before tokens expire")
-	keyPath       = flag.String("key-path", "", "path to private key")
-	keyPassword   = flag.String("key-pass", "", "password used to open private key")
-	username      = flag.String("username", "", "username to place in the token")
-	email         = flag.String("email", "", "email address to place in the token")
-	givenName     = flag.String("given-name", "", "given name to place in the token")
-	familyName    = flag.String("family-name", "", "family name to place in the token")
-	name          = flag.String("name", "", "name to place in the token")
-	entitlement   = flag.String("entitlement", "", "comma-separated list of groups")
+	tokenLifetime  = flag.Int("lifetime", 300, "seconds before tokens expire")
+	keyPath        = flag.String("key-path", "", "path to private key")
+	keyPassword    = flag.String("key-pass", "", "password used to open private key")
+	username       = flag.String("username", "", "username to place in the token")
+	email          = flag.String("email", "", "email address to place in the token")
+	givenName      = flag.String("given-name", "", "given name to place in the token")
+	familyName     = flag.String("family-name", "", "family name to place in the token")
+	name           = flag.String("name", "", "name to place in the token")
+	entitlement    = flag.String("entitlement", "", "comma-separated list of groups")
+	usernameClaim  = flag.String("username-claim", "sub", "claim name for username")
+	emailClaim     = flag.String("email-claim", "email", "claim name for email")
+	nameClaim      = flag.String("name-claim", "name", "claim name for full name")
+	givenNameClaim = flag.String("given-name-claim", "given_name",
+		"claim name for given name")
+	familyNameClaim = flag.String("family-name-claim", "family_name",
+		"claim name for family name")
+	entitlementClaim = flag.String("entitlement-claim", "org.iplantc.de:entitlement",
+		"claim name for entitlement")
 )
 
 func init() {
@@ -83,6 +92,18 @@ func loadParameterFile(path string) error {
 			name = paramValue
 		case "entitlement":
 			entitlement = paramValue
+		case "username-claim":
+			usernameClaim = paramValue
+		case "email-claim":
+			emailClaim = paramValue
+		case "name-claim":
+			nameClaim = paramValue
+		case "given-name-claim":
+			givenNameClaim = paramValue
+		case "family-name-claim":
+			familyNameClaim = paramValue
+		case "entitlement-claim":
+			entitlementClaim = paramValue
 		default:
 			log.Printf("unrecognized parameter name: %s\n", *paramName)
 		}
@@ -154,22 +175,22 @@ func generateToken(key *rsa.PrivateKey) (string, error) {
 
 	// Add the claims to the token.
 	if *username != "" {
-		token.Claims["sub"] = *username
+		token.Claims[*usernameClaim] = *username
 	}
 	if *email != "" {
-		token.Claims["email"] = *email
+		token.Claims[*emailClaim] = *email
 	}
 	if *givenName != "" {
-		token.Claims["given_name"] = *givenName
+		token.Claims[*givenNameClaim] = *givenName
 	}
 	if *familyName != "" {
-		token.Claims["family_name"] = *familyName
+		token.Claims[*familyNameClaim] = *familyName
 	}
 	if *name != "" {
-		token.Claims["name"] = *name
+		token.Claims[*nameClaim] = *name
 	}
 	if *entitlement != "" {
-		token.Claims["org.iplantc.de:entitlement"] = getEntitlement()
+		token.Claims[*entitlementClaim] = getEntitlement()
 	}
 
 	// Set the token expiration time.

@@ -1,6 +1,7 @@
 (ns donkey.util.jwt
   (:use [slingshot.slingshot :only [try+ throw+]])
-  (:require [clojure.string :as string]
+  (:require [clj-time.core :as time]
+            [clojure.string :as string]
             [clojure-commons.error-codes :as ce]
             [clojure-commons.jwt :as jwt]
             [clojure-commons.response :as resp]
@@ -33,9 +34,30 @@
    :lastName      (:family-name jwt-user)
    :commonName    (:common-name jwt-user)})
 
+(defn- build-wso2-assertion
+  [validity-window-end {:keys [user email given-name family-name common-name]}]
+  (let [now (time/now)]
+    {:exp                                 (time/plus now (time/seconds validity-window-end))
+     :iat                                 now
+     :http://wso2.org/claims/enduser      (str "foo/" user)
+     :http://wso2.org/claims/emailaddress email
+     :http://wso2.org/claims/givenname    given-name
+     :http://wso2.org/claims/lastname     family-name
+     :http://wso2.org/claims/fullname     common-name}))
+
+(defn user-from-wso2-assertion
+  [jwt]
+  {:user        (string/replace (:http://wso2.org/claims/enduser jwt) #"[^/]+/" "")
+   :email       (:http://wso2.org/claims/emailaddress jwt)
+   :given-name  (:http://wso2.org/claims/givenname jwt)
+   :family-name (:http://wso2.org/claims/lastname jwt)
+   :common-name (:http://wso2.org/claims/fullname jwt)})
+
 (defn donkey-user-from-jwt-claims
-  [jwt-claims]
-  (donkey-user-from-jwt-user (jwt/user-from-default-assertion jwt-claims)))
+  ([jwt-claims]
+     (donkey-user-from-jwt-claims jwt-claims jwt/user-from-default-assertion))
+  ([jwt-claims user-extraction-fn]
+     (donkey-user-from-jwt-user (user-extraction-fn jwt-claims))))
 
 (defn generate-jwt
   [user]
@@ -45,8 +67,10 @@
   ([user]
      (add-auth-header user {}))
   ([user headers]
+     (add-auth-header user headers :X-Iplant-De-Jwt))
+  ([user headers header-name]
      (assoc headers
-       :X-Iplant-De-Jwt (generate-jwt user))))
+       header-name (generate-jwt user))))
 
 (defn validate-group-membership
   [handler allowed-groups-fn]
@@ -60,21 +84,23 @@
 (def ^:private required-fields #{:user :email})
 
 (defn- validate-claims
-  [claims]
-  (let [user    (jwt/user-from-default-assertion claims)
+  [claims user-extraction-fn]
+  (let [user    (user-extraction-fn claims)
         missing (into [] (filter (comp string/blank? user) required-fields))]
     (when (seq missing)
       (throw (ex-info (str "Missing required JWT fields: " missing)
                       {:type :validation :cause :missing-fields})))))
 
 (defn validate-jwt-assertion
-  [handler assertion-fn]
-  (fn [request]
-    (try+
-      (if-let [assertion (assertion-fn request)]
-        (let [claims ((jwt-validator) assertion)]
-          (validate-claims claims)
-          (handler (assoc request :jwt-claims claims)))
-        (resp/unauthorized "Custom JWT header not found."))
-      (catch [:type :validation] _
-        (resp/forbidden (.getMessage (:throwable &throw-context)))))))
+  ([handler assertion-fn]
+     (validate-jwt-assertion handler assertion-fn jwt/user-from-default-assertion))
+  ([handler assertion-fn user-extraction-fn]
+     (fn [request]
+       (try+
+        (if-let [assertion (assertion-fn request)]
+          (let [claims ((jwt-validator) assertion)]
+            (validate-claims claims user-extraction-fn)
+            (handler (assoc request :jwt-claims claims)))
+          (resp/unauthorized "Custom JWT header not found."))
+        (catch [:type :validation] _
+          (resp/forbidden (.getMessage (:throwable &throw-context))))))))
