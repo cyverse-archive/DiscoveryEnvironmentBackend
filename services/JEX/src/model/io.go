@@ -73,7 +73,7 @@ func (i *StepInput) Arguments(username, uuid string, metadata []FileMetadata) []
 	args := []string{
 		"run",
 		"--rm",
-		"--label", fmt.Sprintf("org.iplantc.analysis=%s", uuid),
+		"--label", fmt.Sprintf("%s=%s", DockerLabelKey, uuid),
 		"-v", "$(pwd):/de-app-work",
 		"-w", "/de-app-work",
 		fmt.Sprintf("discoenv/porklock:%s", tag),

@@ -11,9 +11,15 @@ import (
 )
 
 var (
-	nowfmt    = "2006-01-02-15-04-05.000"                       // appears in file and directory names.
 	validName = regexp.MustCompile(`-\d{4}(?:-\d{2}){5}\.\d+$`) // this isn't included in the Dirname() function so it isn't re-evaluated a lot
 	quoteStr  = regexp.MustCompile(`^''|''$`)
+)
+
+const (
+	nowfmt = "2006-01-02-15-04-05.000" // appears in file and directory names.
+
+	//DockerLabelKey is the key for the labels applied to all containers associated with a job.
+	DockerLabelKey = "org.iplantc.analysis"
 )
 
 // naivelyquote single-quotes a string that will be placed on the command line
@@ -320,6 +326,7 @@ func (s *Job) FinalOutputArguments() []string {
 		"--rm",
 		"-v", "$(pwd):/de-app-work",
 		"-w", "/de-app-work",
+		"--label", fmt.Sprintf("%s=%s", DockerLabelKey, s.InvocationID),
 		fmt.Sprintf("discoenv/porklock:%s", tag),
 		"--user", s.Submitter,
 		"--config", "irods-config",

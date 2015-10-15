@@ -79,7 +79,7 @@ func (s *Step) Arguments(uuid string) []string {
 	allLines := []string{
 		"run",
 		"--rm",
-		"--label", fmt.Sprintf("org.iplantc.analysis=%s", uuid),
+		"--label", fmt.Sprintf("%s=%s", DockerLabelKey, uuid),
 		"-e", "IPLANT_USER",
 		"-e", "IPLANT_EXECUTION_ID",
 		container.MemoryLimitOption(),

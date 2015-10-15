@@ -5,16 +5,13 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"logcabin"
 	"messaging"
 	"model"
 	"os"
-	"os/exec"
 	"os/signal"
 	"syscall"
 
-	"github.com/fsouza/go-dockerclient"
 	"github.com/streadway/amqp"
 )
 
@@ -27,7 +24,7 @@ var (
 	appver  string
 	builtby string
 	job     *model.Job
-	dc      *docker.Client
+	dckr    *Docker
 )
 
 func signals() {
@@ -54,71 +51,6 @@ func AppVersion() {
 	}
 }
 
-// Environment returns a []string containing the environment variables that
-// need to get set for every job.
-func Environment(job *model.Job) []string {
-	current := os.Environ()
-	current = append(current, fmt.Sprintf("IPLANT_USER=%s", job.Submitter))
-	current = append(current, fmt.Sprintf("IPLANT_EXECUTION_ID=%s", job.InvocationID))
-	return current
-}
-
-//DataContainerPullArgs returns a string containing the command to pull a data container.
-func DataContainerPullArgs(dc *model.VolumesFrom) []string {
-	cmd := []string{
-		"pull",
-		fmt.Sprintf("%s:%s", dc.Name, dc.Tag),
-	}
-	return cmd
-}
-
-// ContainerImagePullArgs returns a []string containing the args to an
-// exec.Command for pulling container images.
-func ContainerImagePullArgs(ci *model.ContainerImage) []string {
-	cmd := []string{
-		"pull",
-		fmt.Sprintf("%s:%s", ci.Name, ci.Tag),
-	}
-	return cmd
-}
-
-// DataContainerCreateArgs returns a []string containing the args to an
-// exec.Command for creating data containers.
-func DataContainerCreateArgs(dc *model.VolumesFrom, uuid string) []string {
-	cmd := []string{
-		"create",
-	}
-	if dc.HostPath != "" || dc.ContainerPath != "" {
-		cmd = append(cmd, "-v")
-		var v string
-		if dc.HostPath != "" {
-			v = fmt.Sprintf("%s:%s", dc.HostPath, dc.ContainerPath)
-		} else {
-			v = dc.ContainerPath
-		}
-		if dc.ReadOnly {
-			v = fmt.Sprintf("%s:ro", v)
-		}
-		cmd = append(cmd, v)
-	}
-	cmd = append(cmd, "--name")
-	cmd = append(cmd, fmt.Sprintf("%s-%s", dc.NamePrefix, uuid))
-	cmd = append(cmd, fmt.Sprintf("%s:%s", dc.Name, dc.Tag))
-	return cmd
-}
-
-// CleanDataContainers cleans out the data containers created for this job.
-func CleanDataContainers() {
-	for _, dc := range job.DataContainers() {
-		args := []string{"rm", fmt.Sprintf("%s-%s", dc.NamePrefix, job.InvocationID)}
-		cmd := exec.Command("docker", args...)
-		err := cmd.Run()
-		if err != nil {
-			log.Print(err)
-		}
-	}
-}
-
 func fail(client *messaging.Client, job *model.Job, msg string) error {
 	return client.PublishJobUpdate(&messaging.UpdateMessage{
 		Job:     job,
@@ -132,6 +64,14 @@ func success(client *messaging.Client, job *model.Job) error {
 		Job:   job,
 		State: messaging.SucceededState,
 	})
+}
+
+func cleanup(job *model.Job) {
+	err := dckr.NukeContainersByLabel(model.DockerLabelKey, job.InvocationID)
+	if err != nil {
+		logger.Print(err)
+	}
+	removeImages(job)
 }
 
 func main() {
@@ -169,7 +109,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	dc, err = docker.NewClient("unix:///var/run/docker.sock")
+	dckr, err = NewDocker("unix:///var/run/docker.sock")
 	if err != nil {
 		fail(client, job, "Failed to connect to local docker socket")
 		logger.Fatal(err)
@@ -180,6 +120,7 @@ func main() {
 	client.AddConsumer(messaging.JobsExchange, "runner", stopsKey, func(d amqp.Delivery) {
 		d.Ack(false)
 		fail(client, job, "Received stop request")
+		cleanup(job)
 		os.Exit(-1)
 	})
 	go func() {
@@ -198,21 +139,25 @@ func main() {
 	createLogsDir()
 	createTransferTrigger()
 	moveIplantCmd()
+
 	status = pullDataContainers(job)
 	if status == messaging.Success {
-		status = pullDataContainers(job)
+		status = pullContainerImages(job)
 	}
+
 	if status == messaging.Success {
 		status = transferInputs(job)
 	}
+
 	for _, step := range job.Steps {
 		if status == messaging.Success {
 			status = executeStep(job, &step)
 		}
 	}
+
 	status = transferOutputs(job)
 
-	CleanDataContainers()
+	cleanup(job)
 
 	if status != messaging.Success {
 		fail(client, job, fmt.Sprintf("Job exited with a status of %d", status))
