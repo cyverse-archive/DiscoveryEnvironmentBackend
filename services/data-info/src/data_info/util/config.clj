@@ -16,7 +16,6 @@
    :art-id   "data-info"
    :service  "data-info"})
 
-
 (def ^:private props
   "A ref for storing the configuration properties."
   (ref nil))
@@ -35,7 +34,7 @@
 (defn masked-config
   "Returns a masked version of the data-info config as a map."
   []
-  (cc/mask-config props :filters [#"(?:irods)[-.](?:user|pass)"]))
+  (cc/mask-config props :filters [#"(?:irods|icat)[-.](?:user|pass)"]))
 
 
 (cc/defprop-int listen-port
@@ -44,20 +43,8 @@
   "data-info.port")
 
 
-(cc/defprop-long preview-size
-  "The size, in bytes, of the generated previews."
-  [props config-valid configs]
-  "data-info.preview-size")
-
-
-(cc/defprop-int data-threshold
-  "Um...hmmm..."
-  [props config-valid configs]
-  "data-info.data-threshold")
-
-
 (cc/defprop-vec perms-filter
-  "Hmmm..."
+  "The list of users who should be filtered out of permissions requests, comma-separated."
   [props config-valid configs]
   "data-info.perms-filter")
 
@@ -214,18 +201,6 @@
   "The value that goes in the attribute column for AVUs that define a file type."
   [props config-valid configs]
   "data-info.type-detect.type-attribute")
-
-
-(cc/defprop-str filetype-script
-  "The path to a perl script that detects filetypes."
-  [props config-valid configs]
-  "data-info.type-detect.filetype-script")
-
-
-(cc/defprop-long filetype-read-amount
-  "The size, in bytes as a long, of the sample read from iRODS"
-  [props config-valid configs]
-  "data-info.type-detect.filetype-read-amount")
 
 ; End of type detection configuration
 
