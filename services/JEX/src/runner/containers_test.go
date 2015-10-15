@@ -23,6 +23,17 @@ func TestNewDocker(t *testing.T) {
 	if !shouldrun() {
 		return
 	}
+	_, err := NewDocker(uri())
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+}
+
+func TestIsContainer(t *testing.T) {
+	if !shouldrun() {
+		return
+	}
 	dc, err := NewDocker(uri())
 	if err != nil {
 		t.Error(err)
@@ -35,9 +46,19 @@ func TestNewDocker(t *testing.T) {
 	if actual {
 		t.Error("IsContainer returned true instead of false")
 	}
+}
+
+func TestPull(t *testing.T) {
+	if !shouldrun() {
+		return
+	}
+	dc, err := NewDocker(uri())
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
 	err = dc.Pull("alpine", "latest")
 	if err != nil {
 		t.Error(err)
 	}
-
 }
