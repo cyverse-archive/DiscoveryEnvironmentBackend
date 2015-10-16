@@ -111,3 +111,18 @@
         (remove-vals nil?)))
   ([attribute-names privilege]
    (format-privilege attribute-names privilege :ownerSubject)))
+
+(defn format-attribute-name
+  [attribute-name]
+  (when-not (nil? attribute-name)
+    (->> {:description        (:description attribute-name)
+          :display_extension  (:displayExtension attribute-name)
+          :display_name       (:displayName attribute-name)
+          :extension          (:extension attribute-name)
+          :id_index           (:idIndex attribute-name)
+          :name               (:name attribute-name)
+          :id                 (:uuid attribute-name)
+          :attribute_definition
+            {:id   (:attributeDefId attribute-name)
+             :name (:attributeDefName attribute-name)}}
+         (remove-vals nil?))))
