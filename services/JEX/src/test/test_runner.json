@@ -63,8 +63,8 @@
                 ]
             },
             "stdin" : "",
-            "stdout" : "/tmp/stdout",
-            "stderr" : "/tmp/stderr",
+            "stdout" : "",
+            "stderr" : "",
             "log-file" : "log-file-name",
             "type":"condor"
         }

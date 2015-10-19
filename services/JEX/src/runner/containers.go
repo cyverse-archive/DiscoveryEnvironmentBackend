@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"model"
 	"os"
 	"strconv"
@@ -230,6 +231,16 @@ func (d *Docker) CreateContainerFromStep(step *model.Step, invID string) (*docke
 		}
 		createConfig.Mounts = append(createConfig.Mounts, mount)
 	}
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, nil, err
+	}
+	localMount := docker.Mount{
+		Source:      wd,
+		Destination: step.Component.Container.WorkingDirectory(),
+		RW:          true,
+	}
+	createConfig.Mounts = append(createConfig.Mounts, localMount)
 
 	for _, dev := range step.Component.Container.Devices {
 		device := docker.Device{
@@ -240,9 +251,7 @@ func (d *Docker) CreateContainerFromStep(step *model.Step, invID string) (*docke
 		createHostConfig.Devices = append(createHostConfig.Devices, device)
 	}
 
-	if step.Component.Container.WorkingDirectory() != "" {
-		createConfig.WorkingDir = step.Component.Container.WorkingDirectory()
-	}
+	createConfig.WorkingDir = step.Component.Container.WorkingDirectory()
 
 	for k, v := range step.Environment {
 		createConfig.Env = append(createConfig.Env, fmt.Sprintf("%s=%s", k, v))
@@ -261,21 +270,27 @@ func (d *Docker) CreateContainerFromStep(step *model.Step, invID string) (*docke
 // files at the provided paths. Returns a Success chan that will be sent a
 // struct{} when the attach completes. A struct{} must then be sent over the
 // channel for the streaming to begin.
-func (d *Docker) Attach(container *docker.Container, stdout, stderr *os.File) (chan struct{}, error) {
-	successChan := make(chan struct{})
+func (d *Docker) Attach(container *docker.Container, stdout, stderr io.Writer, sentinel chan struct{}) error {
 	opts := docker.AttachToContainerOptions{
 		Container:    container.ID,
 		OutputStream: stdout,
 		ErrorStream:  stderr,
 		Stdout:       true,
 		Stderr:       true,
-		Success:      successChan,
+		Success:      sentinel,
 	}
 	err := d.Client.AttachToContainer(opts)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return successChan, err
+	return err
+}
+
+func createFile(path string) (*os.File, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return os.Create(path)
+	}
+	return os.Open(path)
 }
 
 // RunStep will run a job step.
@@ -285,27 +300,29 @@ func (d *Docker) RunStep(step *model.Step, invID string) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	stdoutFile, err := os.Open(step.Stdout(invID))
+
+	stdoutFile, err := createFile(step.Stdout(invID))
 	if err != nil {
 		return -1, err
 	}
 	defer stdoutFile.Close()
-	stderrFile, err := os.Open(step.Stderr(invID))
+	stderrFile, err := createFile(step.Stderr(invID))
 	if err != nil {
 		return -1, err
 	}
 	defer stderrFile.Close()
 	logger.Println("Attaching to container")
 	//attach to container, redirecting stdout and stderr to files.
-	successChan, err := d.Attach(container, stdoutFile, stderrFile)
-	if err != nil {
-		return -1, err
-	}
-	logger.Println("Done attaching to container")
-	//wait for attach
-	logger.Println("Waiting for attach...")
+	successChan := make(chan struct{})
+	go func() {
+		err = d.Attach(container, stdoutFile, stderrFile, successChan)
+		if err != nil {
+			logger.Print(err)
+		}
+	}()
 	successChan <- <-successChan
 	logger.Println("Done waiting for attach")
+
 	//run the container
 	err = d.Client.StartContainer(container.ID, opts.HostConfig)
 	if err != nil {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"configurate"
 	"fmt"
 	"io/ioutil"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/fsouza/go-dockerclient"
@@ -223,6 +225,115 @@ func TestCreateIsContainerAndNukeByName(t *testing.T) {
 		t.Errorf("Config.Cmd was:\n\t%#v\ninstead of:\n\t%#v\n", actualList, expectedList)
 	}
 
+	//TODO: Test Devices
+	//TODO: Test VolumesFrom
+	//TODO: Test Volumes
+
+	exists, err = dc.IsContainer(job.Steps[0].Component.Container.Name)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
+		dc.NukeContainerByName(job.Steps[0].Component.Container.Name)
+	}
+}
+
+func TestAttach(t *testing.T) {
+	if !shouldrun() {
+		return
+	}
+	job := inittests(t)
+	dc, err := NewDocker(uri())
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	err = dc.Pull("alpine", "latest")
+	if err != nil {
+		t.Error(err)
+	}
+	exists, err := dc.IsContainer(job.Steps[0].Component.Container.Name)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
+		dc.NukeContainerByName(job.Steps[0].Component.Container.Name)
+	}
+	container, _, err := dc.CreateContainerFromStep(&job.Steps[0], job.InvocationID)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	stdout := bytes.NewBufferString("")
+	stderr := bytes.NewBufferString("")
+	success := make(chan struct{})
+	go func() {
+		err = dc.Attach(container, stdout, stderr, success)
+		if err != nil {
+			t.Error(err)
+			t.Fail()
+		}
+	}()
+	<-success
+
+	exists, err = dc.IsContainer(job.Steps[0].Component.Container.Name)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
+		dc.NukeContainerByName(job.Steps[0].Component.Container.Name)
+	}
+}
+
+func TestRunStep(t *testing.T) {
+	if !shouldrun() {
+		return
+	}
+	job := inittests(t)
+	dc, err := NewDocker(uri())
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	err = dc.Pull("alpine", "latest")
+	if err != nil {
+		t.Error(err)
+	}
+	exists, err := dc.IsContainer(job.Steps[0].Component.Container.Name)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
+		dc.NukeContainerByName(job.Steps[0].Component.Container.Name)
+	}
+	exitCode, err := dc.RunStep(&job.Steps[0], job.InvocationID)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	if exitCode != 0 {
+		t.Errorf("RunStep's exit code was %d instead of 0\n", exitCode)
+	}
+	if _, err := os.Stat(job.Steps[0].Stdout(job.InvocationID)); os.IsNotExist(err) {
+		t.Error(err)
+	}
+	if _, err := os.Stat(job.Steps[0].Stderr(job.InvocationID)); os.IsNotExist(err) {
+		t.Error(err)
+	}
+	expected := "This is a test"
+	actualBytes, err := ioutil.ReadFile(job.Steps[0].Stdout(job.InvocationID))
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	actual := strings.TrimSpace(string(actualBytes))
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("stdout contained '%s' instead of '%s'\n", string(actual), string(expected))
+	}
+	err = os.RemoveAll("logs")
+	if err != nil {
+		t.Error(err)
+	}
 	exists, err = dc.IsContainer(job.Steps[0].Component.Container.Name)
 	if err != nil {
 		t.Error(err)
