@@ -1,0 +1,93 @@
+{
+    "description":"this is a description",
+    "email":"wregglej@iplantcollaborative.org",
+    "name":"Echo test",
+    "username":"test@this is a test",
+    "app_id":"c7f05682-23c8-4182-b9a2-e09650a5f49b",
+    "steps":[
+        {
+            "component":{
+                "container":{
+                    "name" : "test-name",
+                    "network_mode" : "none",
+                    "cpu_shares" : "2048",
+                    "memory_limit" : "6000000",
+                    "entrypoint" : "",
+                    "id":"16fd2a16-3ac6-11e5-a25d-2fa4b0893ef1",
+                    "image":{
+                        "id":"fc210a84-f7cd-4067-939c-a68ec3e3bd2b",
+                        "url":"https://hub.docker.com/_/alpine/",
+                        "tag":"latest",
+                        "name":"alpine"
+                    },
+                    "container_volumes_from" : [],
+                    "container_volumes" : [],
+                    "container_devices" : [],
+                    "working_directory" : "/work"
+                },
+                "type":"executable",
+                "name":"echo",
+                "location":"/bin",
+                "description":"echo"
+            },
+            "environment":{
+                "food" : "banana",
+                "foo" : "bar"
+            },
+            "config":{
+                "input":[],
+                "output":[
+                    {
+                        "multiplicity":"single",
+                        "name":"wc_out.txt",
+                        "property":"wc_out.txt",
+                        "qual-id":"67781636-854a-11e4-b715-e70c4f8db0dc_e7721c78-56c9-41ac-8ff5-8d46093f1fb1",
+                        "retain":true,
+                        "type":"File"
+                    },
+                    {
+                        "multiplicity":"collection",
+                        "name":"logs",
+                        "property":"logs",
+                        "type":"File",
+                        "retain":true
+                    }
+                ],
+                "params":[
+                    {
+                        "id":"2f58fce9-8183-4ab5-97c4-970592d1c35a",
+                        "name":"",
+                        "order":1,
+                        "value":"This is a test"
+                    }
+                ]
+            },
+            "stdin" : "",
+            "stdout" : "/tmp/stdout",
+            "stderr" : "/tmp/stderr",
+            "log-file" : "log-file-name",
+            "type":"condor"
+        }
+    ],
+    "file-metadata" : [
+      {
+        "attr" : "attr1",
+        "value" : "value1",
+        "unit" : "unit1"
+      },
+      {
+        "attr" : "attr2",
+        "value" : "value2",
+        "unit" : "unit2"
+      }
+    ],
+    "create_output_subdir": true,
+    "request_type":"submit",
+    "app_description":"this is an app description",
+    "output_dir":"/iplant/home/wregglej/analyses/Word_Count_analysis1-2015-09-17-21-42-20.9",
+    "wiki_url":"https://pods.iplantcollaborative.org/wiki/display/DEapps/WordCount",
+    "uuid":"07b04ce2-7757-4b21-9e15-0b4c2f44be26",
+    "notify":true,
+    "execution_target":"condor",
+    "app_name":"Word Count"
+}

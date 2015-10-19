@@ -75,37 +75,14 @@ func (s *Step) Executable() string {
 // Arguments returns a []string containing all of the options passed to the
 // docker run command for this step in the submission.
 func (s *Step) Arguments(uuid string) []string {
-	container := s.Component.Container
-	allLines := []string{
-		"run",
-		"--rm",
-		"--label", fmt.Sprintf("%s=%s", DockerLabelKey, uuid),
-		"-e", "IPLANT_USER",
-		"-e", "IPLANT_EXECUTION_ID",
-		container.MemoryLimitOption(),
-		container.CPUSharesOption(),
-		container.NetworkModeOption(),
-		container.EntryPointOption(),
-	}
-	listable := [][]string{
-		container.NameOption(),
-		s.EnvOptions(),
-		s.BackwardsCompatibleOptions(),
-		container.VolumeOptions(),
-		container.DeviceOptions(),
-		container.VolumesFromOptions(uuid),
-		container.WorkingDirectoryOption(),
-	}
-	for _, l := range listable {
-		for _, o := range l {
-			allLines = append(allLines, o)
-		}
-	}
-	allLines = append(allLines, container.ImageOption())
-	allLines = append(allLines, s.Executable())
+	allLines := []string{s.Executable()}
 	for _, p := range s.Config.Parameters() {
-		allLines = append(allLines, p.Name)
-		allLines = append(allLines, quote(p.Value))
+		if p.Name != "" {
+			allLines = append(allLines, p.Name)
+		}
+		if p.Value != "" {
+			allLines = append(allLines, quote(p.Value))
+		}
 	}
 	var cmdLine []string
 	for _, l := range allLines {

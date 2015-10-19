@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"model"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/fsouza/go-dockerclient"
@@ -33,7 +36,7 @@ func (d *Docker) IsContainer(name string) (bool, error) {
 	}
 	for _, c := range list {
 		for _, n := range c.Names {
-			if n == name {
+			if strings.TrimPrefix(n, "/") == name {
 				return true, nil
 			}
 		}
@@ -50,7 +53,7 @@ func (d *Docker) IsRunning(name string) (bool, error) {
 	}
 	for _, c := range list {
 		for _, n := range c.Names {
-			if n == name {
+			if strings.TrimPrefix(n, "/") == name {
 				return true, nil
 			}
 		}
@@ -105,6 +108,23 @@ func (d *Docker) NukeContainersByLabel(key, value string) error {
 	return nil
 }
 
+// NukeContainerByName kills and remove the named container.
+func (d *Docker) NukeContainerByName(name string) error {
+	listopts := docker.ListContainersOptions{All: true}
+	list, err := d.Client.ListContainers(listopts)
+	if err != nil {
+		return err
+	}
+	for _, container := range list {
+		for _, n := range container.Names {
+			if strings.TrimPrefix(n, "/") == name {
+				return d.NukeContainer(container.ID)
+			}
+		}
+	}
+	return nil
+}
+
 // SafelyRemoveImage will delete the image with force set to false
 func (d *Docker) SafelyRemoveImage(name, tag string) error {
 	opts := docker.RemoveImageOptions{
@@ -136,4 +156,166 @@ func (d *Docker) Pull(name, tag string) error {
 		OutputStream: logger,
 	}
 	return d.Client.PullImage(opts, auth)
+}
+
+// CreateContainerFromStep creates a container from a step in the a job.
+func (d *Docker) CreateContainerFromStep(step *model.Step, invID string) (*docker.Container, *docker.CreateContainerOptions, error) {
+	createOpts := docker.CreateContainerOptions{}
+	if step.Component.Container.Name != "" {
+		createOpts.Name = step.Component.Container.Name
+	}
+	createConfig := &docker.Config{}
+	createHostConfig := &docker.HostConfig{}
+
+	if step.Component.Container.EntryPoint != "" {
+		createConfig.Entrypoint = []string{step.Component.Container.EntryPoint}
+	}
+
+	createConfig.Cmd = step.Arguments(invID)
+
+	if step.Component.Container.MemoryLimit != "" {
+		if parsedMem, err := strconv.ParseInt(step.Component.Container.MemoryLimit, 10, 64); err == nil {
+			createConfig.Memory = parsedMem
+		} else {
+			logger.Print(err)
+		}
+	}
+
+	if step.Component.Container.CPUShares != "" {
+		if parsedCPU, err := strconv.ParseInt(step.Component.Container.CPUShares, 10, 64); err == nil {
+			createConfig.CPUShares = parsedCPU
+		} else {
+			logger.Print(err)
+		}
+	}
+
+	if step.Component.Container.NetworkMode != "" {
+		if step.Component.Container.NetworkMode == "none" {
+			createConfig.NetworkDisabled = true
+			createHostConfig.NetworkMode = "none"
+		} else {
+			createHostConfig.NetworkMode = step.Component.Container.NetworkMode
+		}
+	}
+
+	var fullName string
+	if step.Component.Container.Image.Tag != "" {
+		fullName = fmt.Sprintf(
+			"%s:%s",
+			step.Component.Container.Image.Name,
+			step.Component.Container.Image.Tag,
+		)
+	} else {
+		fullName = step.Component.Container.Image.Name
+	}
+
+	createConfig.Image = fullName
+
+	for _, vf := range step.Component.Container.VolumesFrom {
+		createHostConfig.VolumesFrom = append(
+			createHostConfig.VolumesFrom,
+			fmt.Sprintf(
+				"%s-%s",
+				vf.NamePrefix,
+				invID,
+			),
+		)
+	}
+
+	for _, vol := range step.Component.Container.Volumes {
+		mount := docker.Mount{
+			Source:      vol.HostPath,
+			Destination: vol.ContainerPath,
+			RW:          !vol.ReadOnly,
+		}
+		createConfig.Mounts = append(createConfig.Mounts, mount)
+	}
+
+	for _, dev := range step.Component.Container.Devices {
+		device := docker.Device{
+			PathOnHost:        dev.HostPath,
+			PathInContainer:   dev.ContainerPath,
+			CgroupPermissions: dev.CgroupPermissions,
+		}
+		createHostConfig.Devices = append(createHostConfig.Devices, device)
+	}
+
+	if step.Component.Container.WorkingDirectory() != "" {
+		createConfig.WorkingDir = step.Component.Container.WorkingDirectory()
+	}
+
+	for k, v := range step.Environment {
+		createConfig.Env = append(createConfig.Env, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	createHostConfig.LogConfig = docker.LogConfig{Type: "none"}
+	createOpts.Config = createConfig
+	createOpts.HostConfig = createHostConfig
+	logger.Printf("%#v\n", createHostConfig)
+
+	container, err := d.Client.CreateContainer(createOpts)
+	return container, &createOpts, err
+}
+
+// Attach attaches to the container and redirects stdout and stderr to the
+// files at the provided paths. Returns a Success chan that will be sent a
+// struct{} when the attach completes. A struct{} must then be sent over the
+// channel for the streaming to begin.
+func (d *Docker) Attach(container *docker.Container, stdout, stderr *os.File) (chan struct{}, error) {
+	successChan := make(chan struct{})
+	opts := docker.AttachToContainerOptions{
+		Container:    container.ID,
+		OutputStream: stdout,
+		ErrorStream:  stderr,
+		Stdout:       true,
+		Stderr:       true,
+		Success:      successChan,
+	}
+	err := d.Client.AttachToContainer(opts)
+	if err != nil {
+		return nil, err
+	}
+	return successChan, err
+}
+
+// RunStep will run a job step.
+func (d *Docker) RunStep(step *model.Step, invID string) (int, error) {
+	//create container
+	container, opts, err := d.CreateContainerFromStep(step, invID)
+	if err != nil {
+		return -1, err
+	}
+	stdoutFile, err := os.Open(step.Stdout(invID))
+	if err != nil {
+		return -1, err
+	}
+	defer stdoutFile.Close()
+	stderrFile, err := os.Open(step.Stderr(invID))
+	if err != nil {
+		return -1, err
+	}
+	defer stderrFile.Close()
+	logger.Println("Attaching to container")
+	//attach to container, redirecting stdout and stderr to files.
+	successChan, err := d.Attach(container, stdoutFile, stderrFile)
+	if err != nil {
+		return -1, err
+	}
+	logger.Println("Done attaching to container")
+	//wait for attach
+	logger.Println("Waiting for attach...")
+	successChan <- <-successChan
+	logger.Println("Done waiting for attach")
+	//run the container
+	err = d.Client.StartContainer(container.ID, opts.HostConfig)
+	if err != nil {
+		return -1, err
+	}
+	//wait for container to exit
+	exitCode, err := d.Client.WaitContainer(container.ID)
+	if err != nil {
+		return -1, err
+	}
+	//close stdout and stderr files
+	return exitCode, err
 }

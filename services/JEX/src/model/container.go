@@ -9,12 +9,15 @@ import (
 type Volume struct {
 	HostPath      string `json:"host_path"`
 	ContainerPath string `json:"container_path"`
+	ReadOnly      bool   `json:"read_only"`
+	Mode          string `json:"mode"`
 }
 
 // Device describes the mapping between a host device and the container device.
 type Device struct {
-	HostPath      string `json:"host_path"`
-	ContainerPath string `json:"container_path"`
+	HostPath          string `json:"host_path"`
+	ContainerPath     string `json:"container_path"`
+	CgroupPermissions string `json:"cgroup_permissions"`
 }
 
 // VolumesFrom describes a container that volumes are imported from.

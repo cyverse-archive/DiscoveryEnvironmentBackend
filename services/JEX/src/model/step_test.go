@@ -211,28 +211,6 @@ func TestArguments(t *testing.T) {
 	s.Steps[0].Environment = make(StepEnvironment) // Removed the environment to save my sanity. It's unordered.
 	actual := s.Steps[0].Arguments("foo")
 	expected := []string{
-		"run",
-		"--rm",
-		"--label", "org.iplantc.analysis=foo",
-		"-e", "IPLANT_USER",
-		"-e", "IPLANT_EXECUTION_ID",
-		"--memory=2048M",
-		"--cpu-shares=2048",
-		"--net=none",
-		"--entrypoint=/bin/true",
-		"--name", "test-name",
-		"-v", "/usr/local2/:/usr/local2",
-		"-v", "/usr/local3/:/usr/local3/",
-		"-v", "/data2/:/data2/",
-		"-v", "$(pwd):/work",
-		"-v", "/host/path1:/container/path1",
-		"-v", "/container/path2",
-		"--device=/host/path1:/container/path1",
-		"--device=/host/path2:/container/path2",
-		"--volumes-from=foo-vf-prefix1",
-		"--volumes-from=foo-vf-prefix2",
-		"-w", "/work",
-		"gims.iplantcollaborative.org:5000/backwards-compat:test",
 		"/usr/local3/bin/wc_tool-1.00/wc_wrapper.sh",
 		"param1", "'Acer-tree.txt'", "param0", "'wc_out.txt'",
 	}

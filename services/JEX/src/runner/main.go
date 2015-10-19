@@ -16,15 +16,16 @@ import (
 )
 
 var (
-	logger  = logcabin.New()
-	version = flag.Bool("version", false, "Print the version information")
-	jobFile = flag.String("job", "", "The path to the job description file")
-	cfgPath = flag.String("config", "", "The path to the config file")
-	gitref  string
-	appver  string
-	builtby string
-	job     *model.Job
-	dckr    *Docker
+	logger    = logcabin.New()
+	version   = flag.Bool("version", false, "Print the version information")
+	jobFile   = flag.String("job", "", "The path to the job description file")
+	cfgPath   = flag.String("config", "", "The path to the config file")
+	dockerURI = flag.String("docker", "unix:///var/run/docker.sock", "The URI for connecting to docker.")
+	gitref    string
+	appver    string
+	builtby   string
+	job       *model.Job
+	dckr      *Docker
 )
 
 func signals() {
@@ -82,10 +83,7 @@ func main() {
 	if *cfgPath == "" {
 		logger.Fatal("--config must be set.")
 	}
-	var err error
-	status := messaging.Success
-
-	err = configurate.Init(*cfgPath)
+	err := configurate.Init(*cfgPath)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -109,7 +107,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	dckr, err = NewDocker("unix:///var/run/docker.sock")
+	dckr, err = NewDocker(*dockerURI)
 	if err != nil {
 		fail(client, job, "Failed to connect to local docker socket")
 		logger.Fatal(err)
@@ -140,7 +138,9 @@ func main() {
 	createTransferTrigger()
 	moveIplantCmd()
 
+	status := messaging.Success
 	status = pullDataContainers(job)
+
 	if status == messaging.Success {
 		status = pullContainerImages(job)
 	}
@@ -157,12 +157,13 @@ func main() {
 
 	status = transferOutputs(job)
 
-	cleanup(job)
-
 	if status != messaging.Success {
 		fail(client, job, fmt.Sprintf("Job exited with a status of %d", status))
 	} else {
 		success(client, job)
 	}
+
+	cleanup(job)
+
 	os.Exit(int(status))
 }
