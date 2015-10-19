@@ -485,3 +485,97 @@
   [username attribute-def-id name display-extension description]
   (add-update-attribute-name
     (format-attribute-name-add-request username attribute-def-id name display-extension description)))
+
+;; Permission assignment
+
+(defn- format-permission-assign-remove-request
+  "Format request. lookups-and-type should have the permissionType key as well as any lookups necessary for that type (e.g. type role + roleLookups)"
+  [assignment? lookups-and-type username attribute-def-name-id allowed? action-names]
+  {:WsRestAssignPermissionsRequest
+    (assoc lookups-and-type
+           :permissionAssignOperation (if assignment? "assign_permission" "remove_permission")
+           :actAsSubjectLookup (act-as-subject-lookup username)
+           :permissionDefNameLookups [{:uuid attribute-def-name-id}]
+           :disallowed (if allowed? "F" "T")
+           :actions action-names)})
+
+(defn- format-permission-assign-request
+  [& args]
+  (apply format-permission-assign-remove-request true args))
+
+(defn- format-permission-remove-request
+  [& args]
+  (apply format-permission-assign-remove-request false args))
+
+(defn- role-permission
+  [role-id]
+  {:permissionType "role"
+   :roleLookups [
+    {:uuid role-id}]})
+
+(defn- membership-permission
+  [role-id subject-id]
+  {:permissionType "role_subject"
+   :subjectRoleLookups [
+   {:wsGroupLookup
+     {:uuid role-id}
+    :wsSubjectLookup
+     {:subjectId subject-id}}]})
+
+(defn- format-role-permission-assign-request
+  [username attribute-def-name-id role-id allowed? action-names]
+  (format-permission-assign-request
+    (role-permission role-id)
+    username attribute-def-name-id allowed? action-names))
+
+(defn- format-role-permission-remove-request
+  [username attribute-def-name-id role-id allowed? action-names]
+  (format-permission-remove-request
+    (role-permission role-id)
+    username attribute-def-name-id allowed? action-names))
+
+(defn- format-membership-permission-assign-request
+  [username attribute-def-name-id role-id subject-id allowed? action-names]
+  (format-permission-assign-request
+    (membership-permission role-id subject-id)
+    username attribute-def-name-id allowed? action-names))
+
+(defn- format-membership-permission-remove-request
+  [username attribute-def-name-id role-id subject-id allowed? action-names]
+  (format-permission-remove-request
+    (membership-permission role-id subject-id)
+    username attribute-def-name-id allowed? action-names))
+
+(defn- assign-remove-permission
+  [request-body]
+  (with-trap [default-error-handler]
+    (-> (grouper-post request-body "permissionAssignments")
+        :WsAssignPermissionsResults
+        :wsAssignPermissionResults
+        first
+        :wsAttributeAssigns
+        first)))
+
+(defn assign-role-permission
+  [username attribute-def-name-id role-id allowed? action-names]
+  (assign-remove-permission
+    (format-role-permission-assign-request
+      username attribute-def-name-id role-id allowed? action-names)))
+
+(defn remove-role-permission
+  [username attribute-def-name-id role-id allowed? action-names]
+  (assign-remove-permission
+    (format-role-permission-remove-request
+      username attribute-def-name-id role-id allowed? action-names)))
+
+(defn assign-membership-permission
+  [username attribute-def-name-id role-id subject-id allowed? action-names]
+  (assign-remove-permission
+    (format-membership-permission-assign-request
+      username attribute-def-name-id role-id subject-id allowed? action-names)))
+
+(defn remove-membership-permission
+  [username attribute-def-name-id role-id subject-id allowed? action-names]
+  (assign-remove-permission
+    (format-membership-permission-remove-request
+      username attribute-def-name-id role-id subject-id allowed? action-names)))

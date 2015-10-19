@@ -38,3 +38,20 @@
 
    :attribute_definition
    (describe AttributeDefinition "This attribute-name's associated attribute-definition.")))
+
+(s/defschema AttributeAssignment
+  {:id (describe String "The attribute assignment ID")
+   :disallowed (describe Boolean "If this assignment is marked as disallowing the permission, rather than allowing it.")
+   :enabled (describe Boolean "Whether this permission assignment is enabled")
+   :action_id (describe String "The action identifier.")
+   :action_name (describe String "The action name (i.e. type of permission) for this assignment.")
+   :action_type (describe String "Whether this is immediate or effective.")
+   :delegatable (describe Boolean "Whether this assignment is delegatable.")
+   :assign_type (describe String "The type of attribute assignment, e.g. any_mem")
+   :created_at (describe Long "The date and time the assignment was created (ms since epoch).")
+   :modified_at (describe Long "The date and time the assignment was created (ms since epoch).")
+   :attribute_definition (describe AttributeDefinition "This assignment's attribute-name's associated attribute-definition.")
+   :attribute_definition_name (describe {:id String :name String} "This assignment's attribute-name information.")
+   (s/optional-key :group) (describe {:id String :name String} "The group this was assigned to, if relevant.")
+   (s/optional-key :membership) (describe {:id String} "The membership this was assigned to, if relevant.")
+   (s/optional-key :subject) (describe {:id String :source_id String} "The member/subject this was assigned to, if relevant.")})
