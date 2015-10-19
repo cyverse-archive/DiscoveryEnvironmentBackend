@@ -7,7 +7,11 @@ import (
 	"logcabin"
 	"model"
 	"os"
+	"reflect"
+	"strconv"
 	"testing"
+
+	"github.com/fsouza/go-dockerclient"
 )
 
 var (
@@ -118,7 +122,7 @@ func TestPull(t *testing.T) {
 	}
 }
 
-func TestCreateContainerFromStep(t *testing.T) {
+func TestCreateIsContainerAndNukeByName(t *testing.T) {
 	if !shouldrun() {
 		return
 	}
@@ -150,6 +154,75 @@ func TestCreateContainerFromStep(t *testing.T) {
 	if opts == nil {
 		t.Error("CreatecontainerFromStep created a nil opts")
 	}
+
+	expected := job.Steps[0].Component.Container.MemoryLimit
+	actual := strconv.FormatInt(opts.Config.Memory, 10)
+	if actual != expected {
+		t.Errorf("Config.Memory was %s instead of %s\n", actual, expected)
+	}
+
+	expected = job.Steps[0].Component.Container.CPUShares
+	actual = strconv.FormatInt(opts.Config.CPUShares, 10)
+	if actual != expected {
+		t.Errorf("Config.CPUShares was %s instead of %s\n", actual, expected)
+	}
+
+	expected = job.Steps[0].Component.Container.EntryPoint
+	actual = opts.Config.Entrypoint[0]
+	if actual != expected {
+		t.Errorf("Config.Entrypoint was %s instead of %s\n", actual, expected)
+	}
+
+	expected = job.Steps[0].Component.Container.NetworkMode
+	actual = opts.HostConfig.NetworkMode
+	if actual != expected {
+		t.Errorf("HostConfig.NetworkMode was %s instead of %s\n", actual, expected)
+	}
+
+	expected = "alpine:latest"
+	actual = opts.Config.Image
+	if actual != expected {
+		t.Errorf("Config.Image was %s instead of %s\n", actual, expected)
+	}
+
+	expected = "/work"
+	actual = opts.Config.WorkingDir
+	if actual != expected {
+		t.Errorf("Config.WorkingDir was %s instead of %s\n", actual, expected)
+	}
+
+	found := false
+	for _, e := range opts.Config.Env {
+		if e == "food=banana" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("Didn't find 'food=banana' in Config.Env.")
+	}
+
+	found = false
+	for _, e := range opts.Config.Env {
+		if e == "foo=bar" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("Didn't find 'foo=bar' in Config.Env.")
+	}
+
+	expectedConfig := docker.LogConfig{Type: "none"}
+	actualConfig := opts.HostConfig.LogConfig
+	if !reflect.DeepEqual(actualConfig, expectedConfig) {
+		t.Errorf("HostConfig.LogConfig was %#v instead of %#v\n", actualConfig, expectedConfig)
+	}
+
+	expectedList := []string{"This is a test"}
+	actualList := opts.Config.Cmd
+	if !reflect.DeepEqual(expectedList, actualList) {
+		t.Errorf("Config.Cmd was:\n\t%#v\ninstead of:\n\t%#v\n", actualList, expectedList)
+	}
+
 	exists, err = dc.IsContainer(job.Steps[0].Component.Container.Name)
 	if err != nil {
 		t.Error(err)

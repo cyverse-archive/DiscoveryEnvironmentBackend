@@ -81,7 +81,7 @@ func (s *Step) Arguments(uuid string) []string {
 			allLines = append(allLines, p.Name)
 		}
 		if p.Value != "" {
-			allLines = append(allLines, quote(p.Value))
+			allLines = append(allLines, p.Value)
 		}
 	}
 	var cmdLine []string

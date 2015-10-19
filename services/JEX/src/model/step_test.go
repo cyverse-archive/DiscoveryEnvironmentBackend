@@ -212,7 +212,7 @@ func TestArguments(t *testing.T) {
 	actual := s.Steps[0].Arguments("foo")
 	expected := []string{
 		"/usr/local3/bin/wc_tool-1.00/wc_wrapper.sh",
-		"param1", "'Acer-tree.txt'", "param0", "'wc_out.txt'",
+		"param1", "Acer-tree.txt", "param0", "wc_out.txt",
 	}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("Arguments() returned:\n\t%#v\ninstead of:\n\t%#v", actual, expected)
