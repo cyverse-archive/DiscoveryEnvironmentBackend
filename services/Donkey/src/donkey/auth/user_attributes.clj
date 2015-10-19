@@ -1,5 +1,6 @@
 (ns donkey.auth.user-attributes
   (:require [cheshire.core :as cheshire]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.response :as resp]
             [clj-cas.cas-proxy-auth :as cas]
@@ -102,8 +103,8 @@
   "Extracts a JWT assertion from the request header used by WSO2, returning nil if none is
    found."
   [request]
-  (or (get (:headers request) "x-jwt-assertion-iplant-org")
-      (get (:headers request) "x-jwt-assertion-dev_staging")))
+  (when-let [header-name (cfg/wso2-jwt-header)]
+    (get (:headers request) (string/lower-case header-name))))
 
 (defn- wrap-fake-auth
   [handler]

@@ -423,6 +423,12 @@
   [props config-valid configs]
   "donkey.jwt.validity-window.end")
 
+(cc/defprop-optstr wso2-jwt-header
+  "The name of the HTTP header used by requests forwarded from WSO2."
+  [props config-valid configs]
+  "donkey.wso2.jwt-header"
+  "x-jwt-assertion-iplant-org")
+
 (cc/defprop-str coge-base-url
   "The base URL for CoGe services."
   [props config-valid configs coge-enabled]
