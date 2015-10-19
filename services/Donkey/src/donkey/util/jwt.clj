@@ -36,7 +36,7 @@
 
 (defn user-from-wso2-assertion
   [jwt]
-  {:user        (some-> (:http://wso2.org/claims/enduser jwt) (string/replace #"[^/]+/" ""))
+  {:user        (some-> (:http://wso2.org/claims/subscriber jwt) (string/replace #"[^/]+/" ""))
    :email       (:http://wso2.org/claims/emailaddress jwt)
    :given-name  (:http://wso2.org/claims/givenname jwt)
    :family-name (:http://wso2.org/claims/lastname jwt)

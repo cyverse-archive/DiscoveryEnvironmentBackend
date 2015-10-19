@@ -102,7 +102,8 @@
   "Extracts a JWT assertion from the request header used by WSO2, returning nil if none is
    found."
   [request]
-  (get (:headers request) "x-jwt-assertion-iplant-org"))
+  (or (get (:headers request) "x-jwt-assertion-iplant-org")
+      (get (:headers request) "x-jwt-assertion-dev_staging")))
 
 (defn- wrap-fake-auth
   [handler]
