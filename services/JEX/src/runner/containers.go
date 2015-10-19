@@ -295,12 +295,10 @@ func createFile(path string) (*os.File, error) {
 
 // RunStep will run a job step.
 func (d *Docker) RunStep(step *model.Step, invID string) (int, error) {
-	//create container
 	container, opts, err := d.CreateContainerFromStep(step, invID)
 	if err != nil {
 		return -1, err
 	}
-
 	stdoutFile, err := createFile(step.Stdout(invID))
 	if err != nil {
 		return -1, err
@@ -311,7 +309,6 @@ func (d *Docker) RunStep(step *model.Step, invID string) (int, error) {
 		return -1, err
 	}
 	defer stderrFile.Close()
-	logger.Println("Attaching to container")
 	//attach to container, redirecting stdout and stderr to files.
 	successChan := make(chan struct{})
 	go func() {
@@ -321,8 +318,6 @@ func (d *Docker) RunStep(step *model.Step, invID string) (int, error) {
 		}
 	}()
 	successChan <- <-successChan
-	logger.Println("Done waiting for attach")
-
 	//run the container
 	err = d.Client.StartContainer(container.ID, opts.HostConfig)
 	if err != nil {
