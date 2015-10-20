@@ -2,7 +2,7 @@
   (:use [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core :only [wrap-routes]]
-        [service-logging.middleware :only [wrap-logging add-user-to-context]]
+        [service-logging.middleware :only [wrap-logging add-user-to-context clean-context]]
         [common-swagger-api.schema])
   (:require [metadata.routes.avus :as avu-routes]
             [metadata.routes.comments :as comment-routes]
@@ -32,7 +32,8 @@
             {:name "template-info", :description "Template Information"}
             {:name "template-administration", :description "Template Administration"}]})
   (middlewares
-    [wrap-query-params
+    [clean-context
+     wrap-query-params
      wrap-lcase-params
      params/wrap-keyword-params
      add-user-to-context

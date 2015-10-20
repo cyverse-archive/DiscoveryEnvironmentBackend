@@ -3,7 +3,7 @@
   (:use [clojure.java.io :only [file]]
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
-        [service-logging.middleware :only [wrap-logging]]
+        [service-logging.middleware :only [wrap-logging clean-context]]
         [compojure.core]
         [compojure.api.middleware :only [wrap-exceptions]]
         [ring.middleware.keyword-params]
@@ -223,7 +223,8 @@
   (-> (delayed-handler routes-fn)
       wrap-keyword-params
       wrap-lcase-params
-      wrap-query-params))
+      wrap-query-params
+      clean-context))
 
 (def app
   (site-handler donkey-routes))
