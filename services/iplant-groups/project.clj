@@ -39,4 +39,5 @@
   :ring {:handler iplant_groups.routes/app
          :init    iplant_groups.core/init-service
          :port    31310}
-  :uberjar-exclusions [#"(?i)META-INF/[^/]*[.](SF|DSA|RSA)"])
+  :uberjar-exclusions [#"(?i)META-INF/[^/]*[.](SF|DSA|RSA)"]
+  :jvm-opts ["-Dlogback.configurationFile=/etc/iplant/de/logging/iplant-groups-logging.xml"])
