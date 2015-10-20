@@ -18,7 +18,7 @@
   (swagger-ui config/docs-uri)
   (swagger-docs
    {:info {:title       "RESTful Service Facade for Grouper"
-           :description "Documentation for the Fishy API"
+           :description "Documentation for the iplant-groups API"
            :version     "2.0.0"}
     :tags [{:name "folders", :description "Folder Information"}
            {:name "groups", :description "Group Information"}
