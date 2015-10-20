@@ -209,7 +209,7 @@ func TestExecutable(t *testing.T) {
 func TestArguments(t *testing.T) {
 	s := inittests(t)
 	s.Steps[0].Environment = make(StepEnvironment) // Removed the environment to save my sanity. It's unordered.
-	actual := s.Steps[0].Arguments("foo")
+	actual := s.Steps[0].Arguments()
 	expected := []string{
 		"/usr/local3/bin/wc_tool-1.00/wc_wrapper.sh",
 		"param1", "Acer-tree.txt", "param0", "wc_out.txt",
@@ -363,14 +363,8 @@ func TestInputLogPath(t *testing.T) {
 func TestInputArguments(t *testing.T) {
 	s := inittests(t)
 	input := s.Steps[0].Config.Inputs[0]
-	actual := input.Arguments("testuser", s.InvocationID, s.FileMetadata)
+	actual := input.Arguments("testuser", s.FileMetadata)
 	expected := []string{
-		"run",
-		"--rm",
-		"--label", "org.iplantc.analysis=07b04ce2-7757-4b21-9e15-0b4c2f44be26",
-		"-v", "$(pwd):/de-app-work",
-		"-w", "/de-app-work",
-		"discoenv/porklock:test",
 		"get",
 		"--user", "testuser",
 		"--source", "'/iplant/home/wregglej/Acer-tree.txt'",

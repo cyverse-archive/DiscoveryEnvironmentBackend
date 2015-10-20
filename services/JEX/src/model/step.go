@@ -74,7 +74,7 @@ func (s *Step) Executable() string {
 
 // Arguments returns a []string containing all of the options passed to the
 // docker run command for this step in the submission.
-func (s *Step) Arguments(uuid string) []string {
+func (s *Step) Arguments() []string {
 	allLines := []string{s.Executable()}
 	for _, p := range s.Config.Parameters() {
 		if p.Name != "" {

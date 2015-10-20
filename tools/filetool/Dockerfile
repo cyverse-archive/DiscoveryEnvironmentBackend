@@ -1,8 +1,8 @@
-FROM irods/icommands:4.0.3
+FROM alpine:3.2
+
+RUN apk --update add openjdk7-jre
 
 ADD target/porklock-standalone.jar /porklock-standalone.jar
-
-RUN apt-get update && apt-get install -y openjdk-7-jre-headless
 
 ENTRYPOINT ["java", "-jar", "/porklock-standalone.jar"]
 

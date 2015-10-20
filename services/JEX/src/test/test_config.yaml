@@ -9,6 +9,10 @@ amqp:
     exclusive: false
     nowait: false
 
+porklock:
+  image: discoenv/echo
+  tag: latest
+
 manager:
   listen_port: 31331
   db_uri: postgres://de:notprod@192.168.99.100:5432/jex?sslmode=disable
@@ -31,6 +35,7 @@ condor:
   amqp:
     launches_queue:
       name: condor_launchers
+  porklock_image: discoenv/porklock
   porklock_tag: dev
   nfs_base: /condor01/dev-scratch/
   listen_port: 31330

@@ -72,6 +72,10 @@ func _inittests(t *testing.T, memoize bool) *model.Job {
 			t.Error(err)
 			t.Fail()
 		}
+		err = configurate.Init("../test/test_config.yaml")
+		if err != nil {
+			logger.Fatal(err)
+		}
 	}
 	return s
 }
@@ -238,6 +242,100 @@ func TestCreateIsContainerAndNukeByName(t *testing.T) {
 	}
 }
 
+func TestCreateDownloadContainer(t *testing.T) {
+	if !shouldrun() {
+		return
+	}
+	job := inittests(t)
+	dc, err := NewDocker(uri())
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	image, err := configurate.C.String("porklock.image")
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	tag, err := configurate.C.String("porklock.tag")
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	err = dc.Pull(image, tag)
+	if err != nil {
+		t.Error(err)
+	}
+	cName := fmt.Sprintf("input-0-%s", job.InvocationID)
+	exists, err := dc.IsContainer(cName)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
+		dc.NukeContainerByName(cName)
+	}
+	container, opts, err := dc.CreateDownloadContainer(job, &job.Steps[0].Config.Inputs[0], "0")
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+
+	if container.Name != cName {
+		t.Errorf("container name was %s instead of %s", container.Name, cName)
+	}
+
+	expected := fmt.Sprintf("%s:%s", image, tag)
+	actual := opts.Config.Image
+	if actual != expected {
+		t.Errorf("Image was %s instead of %s", actual, expected)
+	}
+
+	expected = "/de-app-work"
+	actual = opts.Config.WorkingDir
+	if actual != expected {
+		t.Errorf("WorkingDir was %s instead of %s", actual, expected)
+	}
+
+	expectedList := job.Steps[0].Config.Inputs[0].Arguments(job.Submitter, job.FileMetadata)
+	actualList := opts.Config.Cmd
+	if !reflect.DeepEqual(actualList, expectedList) {
+		t.Errorf("Cmd was:\n%#v\ninstead of:\n%#v\n", actualList, expectedList)
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	expectedMount := docker.Mount{
+		Source:      wd,
+		Destination: "/de-app-work",
+		RW:          true,
+	}
+	if len(opts.Config.Mounts) != 1 {
+		t.Errorf("Number of mounts was %d instead of 1", len(opts.Config.Mounts))
+	} else {
+		actualMount := opts.Config.Mounts[0]
+		if !reflect.DeepEqual(actualMount, expectedMount) {
+			t.Errorf("Mount was:\n%#v\ninstead of:\n%#v", actualMount, expectedMount)
+		}
+	}
+	if _, ok := opts.Config.Labels[model.DockerLabelKey]; !ok {
+		t.Error("Label was not set")
+	} else {
+		actual = opts.Config.Labels[model.DockerLabelKey]
+		expected = job.InvocationID
+		if actual != expected {
+			t.Errorf("The label was set to %s instead of %s", actual, expected)
+		}
+	}
+
+	expectedLogConfig := docker.LogConfig{Type: "none"}
+	actualLogConfig := opts.HostConfig.LogConfig
+	if !reflect.DeepEqual(actualLogConfig, expectedLogConfig) {
+		t.Errorf("LogConfig was:\n%#v\ninstead of:\n%#v\n", actualLogConfig, expectedLogConfig)
+	}
+}
+
 func TestAttach(t *testing.T) {
 	if !shouldrun() {
 		return
@@ -306,7 +404,14 @@ func TestRunStep(t *testing.T) {
 	if exists {
 		dc.NukeContainerByName(job.Steps[0].Component.Container.Name)
 	}
-	exitCode, err := dc.RunStep(&job.Steps[0], job.InvocationID)
+	if _, err := os.Stat("logs"); os.IsNotExist(err) {
+		err = os.MkdirAll("logs", 0755)
+		if err != nil {
+			t.Error(err)
+			t.Fail()
+		}
+	}
+	exitCode, err := dc.RunSteps(job)
 	if err != nil {
 		t.Error(err)
 		t.Fail()
@@ -314,14 +419,14 @@ func TestRunStep(t *testing.T) {
 	if exitCode != 0 {
 		t.Errorf("RunStep's exit code was %d instead of 0\n", exitCode)
 	}
-	if _, err := os.Stat(job.Steps[0].Stdout(job.InvocationID)); os.IsNotExist(err) {
+	if _, err := os.Stat(job.Steps[0].Stdout("0")); os.IsNotExist(err) {
 		t.Error(err)
 	}
-	if _, err := os.Stat(job.Steps[0].Stderr(job.InvocationID)); os.IsNotExist(err) {
+	if _, err := os.Stat(job.Steps[0].Stderr("0")); os.IsNotExist(err) {
 		t.Error(err)
 	}
 	expected := "This is a test"
-	actualBytes, err := ioutil.ReadFile(job.Steps[0].Stdout(job.InvocationID))
+	actualBytes, err := ioutil.ReadFile(job.Steps[0].Stdout("0"))
 	if err != nil {
 		t.Error(err)
 		t.Fail()

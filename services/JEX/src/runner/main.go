@@ -149,10 +149,12 @@ func main() {
 		status = transferInputs(job)
 	}
 
-	for _, step := range job.Steps {
-		if status == messaging.Success {
-			status = executeStep(job, &step)
+	exitCode, err := dckr.RunSteps(job)
+	if exitCode != 0 || err != nil {
+		if err != nil {
+			logger.Print(err)
 		}
+		status = messaging.StatusStepFailed
 	}
 
 	status = transferOutputs(job)

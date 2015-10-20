@@ -154,10 +154,11 @@ func removeImages(job *model.Job) {
 		}
 	}
 }
+
 func transferInputs(job *model.Job) messaging.StatusCode {
 	status := messaging.Success
 	for _, input := range job.Inputs() {
-		cmd := exec.Command("docker", input.Arguments(job.Submitter, job.InvocationID, job.FileMetadata)...)
+		cmd := exec.Command("docker", input.Arguments(job.Submitter, job.FileMetadata)...)
 		stdout, err := os.Open(input.Stdout(job.InvocationID))
 		if err != nil {
 			log.Print(err)
@@ -182,7 +183,7 @@ func transferInputs(job *model.Job) messaging.StatusCode {
 
 func executeStep(job *model.Job, step *model.Step) messaging.StatusCode {
 	status := messaging.Success
-	cmd := exec.Command("docker", step.Arguments(job.InvocationID)...)
+	cmd := exec.Command("docker", step.Arguments()...)
 	stdout, err := os.Open(step.Stdout(job.InvocationID))
 	if err != nil {
 		log.Print(err)

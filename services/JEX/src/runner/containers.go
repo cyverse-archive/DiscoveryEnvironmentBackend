@@ -1,6 +1,7 @@
 package main
 
 import (
+	"configurate"
 	"fmt"
 	"io"
 	"model"
@@ -13,7 +14,8 @@ import (
 
 // Docker provides operations that runner needs from the docker client.
 type Docker struct {
-	Client *docker.Client
+	Client        *docker.Client
+	TransferImage string
 }
 
 // NewDocker returns a *Docker that connects to the docker client listening at
@@ -172,7 +174,7 @@ func (d *Docker) CreateContainerFromStep(step *model.Step, invID string) (*docke
 		createConfig.Entrypoint = []string{step.Component.Container.EntryPoint}
 	}
 
-	createConfig.Cmd = step.Arguments(invID)
+	createConfig.Cmd = step.Arguments()
 
 	if step.Component.Container.MemoryLimit != "" {
 		if parsedMem, err := strconv.ParseInt(step.Component.Container.MemoryLimit, 10, 64); err == nil {
@@ -273,6 +275,7 @@ func (d *Docker) CreateContainerFromStep(step *model.Step, invID string) (*docke
 func (d *Docker) Attach(container *docker.Container, stdout, stderr io.Writer, sentinel chan struct{}) error {
 	opts := docker.AttachToContainerOptions{
 		Container:    container.ID,
+		Stream:       true,
 		OutputStream: stdout,
 		ErrorStream:  stderr,
 		Stdout:       true,
@@ -293,41 +296,92 @@ func createFile(path string) (*os.File, error) {
 	return os.Open(path)
 }
 
-// RunStep will run a job step.
-func (d *Docker) RunStep(step *model.Step, invID string) (int, error) {
-	container, opts, err := d.CreateContainerFromStep(step, invID)
-	if err != nil {
-		return -1, err
-	}
-	stdoutFile, err := createFile(step.Stdout(invID))
-	if err != nil {
-		return -1, err
-	}
-	defer stdoutFile.Close()
-	stderrFile, err := createFile(step.Stderr(invID))
-	if err != nil {
-		return -1, err
-	}
-	defer stderrFile.Close()
-	//attach to container, redirecting stdout and stderr to files.
-	successChan := make(chan struct{})
-	go func() {
-		err = d.Attach(container, stdoutFile, stderrFile, successChan)
+// RunSteps will run the steps in a job. If a step fails, the function will
+// return with a non-zero exit code. If an error occurs, the function will
+// return with a non-zero exit code and a non-nil error.
+func (d *Docker) RunSteps(job *model.Job) (int, error) {
+	invID := job.InvocationID
+	for idx, step := range job.Steps {
+		stepIdx := strconv.Itoa(idx)
+		container, opts, err := d.CreateContainerFromStep(&step, invID)
 		if err != nil {
-			logger.Print(err)
+			return -1, err
 		}
-	}()
-	successChan <- <-successChan
-	//run the container
-	err = d.Client.StartContainer(container.ID, opts.HostConfig)
-	if err != nil {
-		return -1, err
+		stdoutFile, err := createFile(step.Stdout(stepIdx))
+		if err != nil {
+			return -1, err
+		}
+		defer stdoutFile.Close()
+		stderrFile, err := createFile(step.Stderr(stepIdx))
+		if err != nil {
+			return -1, err
+		}
+		defer stderrFile.Close()
+		//attach to container, redirecting stdout and stderr to files.
+		successChan := make(chan struct{})
+		go func() {
+			err = d.Attach(container, stdoutFile, stderrFile, successChan)
+			if err != nil {
+				logger.Print(err)
+			}
+		}()
+		successChan <- <-successChan
+		//run the container
+		err = d.Client.StartContainer(container.ID, opts.HostConfig)
+		if err != nil {
+			return -1, err
+		}
+		//wait for container to exit
+		exitCode, err := d.Client.WaitContainer(container.ID)
+		if err != nil {
+			return -1, err
+		}
+		//close stdout and stderr files
+		if exitCode != 0 {
+			return exitCode, err
+		}
 	}
-	//wait for container to exit
-	exitCode, err := d.Client.WaitContainer(container.ID)
-	if err != nil {
-		return -1, err
-	}
-	//close stdout and stderr files
-	return exitCode, err
+	return 0, nil
 }
+
+// CreateDownloadContainer creates a container that can be used to download
+// input files.
+func (d *Docker) CreateDownloadContainer(job *model.Job, input *model.StepInput, idx string) (*docker.Container, *docker.CreateContainerOptions, error) {
+	invID := job.InvocationID
+	opts := docker.CreateContainerOptions{
+		Config:     &docker.Config{},
+		HostConfig: &docker.HostConfig{},
+	}
+	image, err := configurate.C.String("porklock.image")
+	if err != nil {
+		return nil, nil, err
+	}
+	tag, err := configurate.C.String("porklock.tag")
+	if err != nil {
+		return nil, nil, err
+	}
+	opts.Config.Image = fmt.Sprintf("%s:%s", image, tag)
+	opts.Name = fmt.Sprintf("input-%s-%s", idx, invID)
+	opts.HostConfig.LogConfig = docker.LogConfig{Type: "none"}
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, nil, err
+	}
+	opts.Config.WorkingDir = "/de-app-work"
+	opts.Config.Mounts = append(opts.Config.Mounts, docker.Mount{
+		Source:      wd,
+		Destination: "/de-app-work",
+		RW:          true,
+	})
+	opts.Config.Labels = make(map[string]string)
+	opts.Config.Labels[model.DockerLabelKey] = invID
+	opts.Config.Cmd = input.Arguments(job.Submitter, job.FileMetadata)
+	container, err := d.Client.CreateContainer(opts)
+	return container, &opts, err
+}
+
+// DownloadInputs will run the docker containers that down input files into
+// the local working directory.
+// func (d *Docker) DownloadInputs(job *model.Job) (int, error) {
+//
+// }

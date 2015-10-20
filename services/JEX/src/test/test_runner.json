@@ -35,7 +35,17 @@
                 "foo" : "bar"
             },
             "config":{
-                "input":[],
+                "input":[
+                  {
+                      "id":"2f58fce9-8183-4ab5-97c4-970592d1c35a",
+                      "multiplicity":"single",
+                      "name":"Acer-tree.txt",
+                      "property":"Acer-tree.txt",
+                      "retain":true,
+                      "type":"FileInput",
+                      "value":"/iplant/home/wregglej/Acer-tree.txt"
+                  }
+                ],
                 "output":[
                     {
                         "multiplicity":"single",

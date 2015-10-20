@@ -64,19 +64,9 @@ func (i *StepInput) Source() string {
 }
 
 // Arguments returns the porklock settings needed for the input operation.
-func (i *StepInput) Arguments(username, uuid string, metadata []FileMetadata) []string {
-	tag, err := configurate.C.String("condor.porklock_tag")
-	if err != nil {
-		tag = ""
-	}
+func (i *StepInput) Arguments(username string, metadata []FileMetadata) []string {
 	path := quote(i.IRODSPath())
 	args := []string{
-		"run",
-		"--rm",
-		"--label", fmt.Sprintf("%s=%s", DockerLabelKey, uuid),
-		"-v", "$(pwd):/de-app-work",
-		"-w", "/de-app-work",
-		fmt.Sprintf("discoenv/porklock:%s", tag),
 		"get",
 		"--user", username,
 		"--source", path,
