@@ -1,5 +1,5 @@
 (ns metadactyl.routes.api
-  (:use [service-logging.middleware :only [wrap-logging]]
+  (:use [service-logging.middleware :only [wrap-logging clean-context]]
         [compojure.core :only [wrap-routes]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [common-swagger-api.schema]
@@ -56,7 +56,8 @@
             {:name "admin-reference-genomes", :description "Admin Reference Genome endpoints."}
             {:name "admin-tool-requests", :description "Admin Tool Request endpoints."}]})
   (middlewares
-    [wrap-keyword-params
+    [clean-context
+     wrap-keyword-params
      wrap-query-params
      (wrap-routes wrap-logging)]
     (context* "/" []
@@ -66,7 +67,8 @@
       :tags ["callbacks"]
       callback-routes/callbacks))
   (middlewares
-    [wrap-keyword-params
+    [clean-context
+     wrap-keyword-params
      wrap-query-params
      add-user-to-context
      store-current-user

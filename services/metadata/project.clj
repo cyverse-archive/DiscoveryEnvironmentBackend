@@ -33,4 +33,5 @@
              ;; https://github.com/metosin/compojure-api/issues/135#issuecomment-121388539
              ;; https://github.com/metosin/compojure-api/issues/102
              :uberjar {:aot [#"metadata.(?!routes).*"]}}
-  :uberjar-exclusions [#".*[.]SF" #"LICENSE" #"NOTICE"])
+  :uberjar-exclusions [#".*[.]SF" #"LICENSE" #"NOTICE"]
+  :jvm-opts ["-Dlogback.configurationFile=/etc/iplant/de/logging/metadata-logging.xml"])
