@@ -55,3 +55,6 @@
    (s/optional-key :group) (describe {:id String :name String} "The group this was assigned to, if relevant.")
    (s/optional-key :membership) (describe {:id String} "The membership this was assigned to, if relevant.")
    (s/optional-key :subject) (describe {:id String :source_id String} "The member/subject this was assigned to, if relevant.")})
+
+(s/defschema PermissionAllowed
+  {:allowed (describe Boolean "Whether this permission should be marked as allowed or disallowed (latter to override an inherited permission).")})

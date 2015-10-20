@@ -23,7 +23,3 @@
   (assoc SearchParams
     (s/optional-key :folder)
     (describe NonBlankString "The name of the folder to search for.")))
-
-(s/defschema PermissionAssignParams
-  (assoc StandardUserQueryParams
-    :allowed (describe Boolean "Whether this permission should be marked as allowed or disallowed (latter to override an inherited permission).")))

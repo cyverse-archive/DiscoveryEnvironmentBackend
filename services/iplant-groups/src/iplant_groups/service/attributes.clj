@@ -8,21 +8,21 @@
     (fmt/format-attribute-name attribute-name)))
 
 (defn assign-role-permission
-  [{:keys [user allowed]} attribute-id role-id action-name]
+  [{:keys [user]} {:keys [allowed]} attribute-id role-id action-name]
   (let [attribute-assign (grouper/assign-role-permission user attribute-id role-id allowed [action-name])]
     (fmt/format-attribute-assign attribute-assign)))
 
 (defn remove-role-permission
-  [{:keys [user allowed]} attribute-id role-id action-name]
-  (let [attribute-assign (grouper/remove-role-permission user attribute-id role-id allowed [action-name])]
+  [{:keys [user]} attribute-id role-id action-name]
+  (let [attribute-assign (grouper/remove-role-permission user attribute-id role-id [action-name])]
     (fmt/format-attribute-assign attribute-assign)))
 
 (defn assign-membership-permission
-  [{:keys [user allowed]} attribute-id role-id subject-id action-name]
+  [{:keys [user]} {:keys [allowed]} attribute-id role-id subject-id action-name]
   (let [attribute-assign (grouper/assign-membership-permission user attribute-id role-id subject-id allowed [action-name])]
     (fmt/format-attribute-assign attribute-assign)))
 
 (defn remove-membership-permission
-  [{:keys [user allowed]} attribute-id role-id subject-id action-name]
-  (let [attribute-assign (grouper/remove-membership-permission user attribute-id role-id subject-id allowed [action-name])]
+  [{:keys [user]} attribute-id role-id subject-id action-name]
+  (let [attribute-assign (grouper/remove-membership-permission user attribute-id role-id subject-id [action-name])]
     (fmt/format-attribute-assign attribute-assign)))

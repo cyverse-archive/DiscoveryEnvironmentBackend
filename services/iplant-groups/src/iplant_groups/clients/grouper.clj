@@ -529,10 +529,10 @@
     username attribute-def-name-id allowed? action-names))
 
 (defn- format-role-permission-remove-request
-  [username attribute-def-name-id role-id allowed? action-names]
+  [username attribute-def-name-id role-id action-names]
   (format-permission-remove-request
     (role-permission role-id)
-    username attribute-def-name-id allowed? action-names))
+    username attribute-def-name-id true action-names))
 
 (defn- format-membership-permission-assign-request
   [username attribute-def-name-id role-id subject-id allowed? action-names]
@@ -541,10 +541,10 @@
     username attribute-def-name-id allowed? action-names))
 
 (defn- format-membership-permission-remove-request
-  [username attribute-def-name-id role-id subject-id allowed? action-names]
+  [username attribute-def-name-id role-id subject-id action-names]
   (format-permission-remove-request
     (membership-permission role-id subject-id)
-    username attribute-def-name-id allowed? action-names))
+    username attribute-def-name-id true action-names))
 
 (defn- assign-remove-permission
   [request-body]
@@ -563,10 +563,10 @@
       username attribute-def-name-id role-id allowed? action-names)))
 
 (defn remove-role-permission
-  [username attribute-def-name-id role-id allowed? action-names]
+  [username attribute-def-name-id role-id action-names]
   (assign-remove-permission
     (format-role-permission-remove-request
-      username attribute-def-name-id role-id allowed? action-names)))
+      username attribute-def-name-id role-id action-names)))
 
 (defn assign-membership-permission
   [username attribute-def-name-id role-id subject-id allowed? action-names]
@@ -575,7 +575,7 @@
       username attribute-def-name-id role-id subject-id allowed? action-names)))
 
 (defn remove-membership-permission
-  [username attribute-def-name-id role-id subject-id allowed? action-names]
+  [username attribute-def-name-id role-id subject-id action-names]
   (assign-remove-permission
     (format-membership-permission-remove-request
-      username attribute-def-name-id role-id subject-id allowed? action-names)))
+      username attribute-def-name-id role-id subject-id action-names)))
