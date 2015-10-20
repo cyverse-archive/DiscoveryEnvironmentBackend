@@ -296,52 +296,49 @@ func createFile(path string) (*os.File, error) {
 	return os.Open(path)
 }
 
-// RunSteps will run the steps in a job. If a step fails, the function will
+func (d *Docker) runContainer(container *docker.Container, opts *docker.CreateContainerOptions, stdoutFile, stderrFile *os.File) (int, error) {
+	var err error
+	successChan := make(chan struct{})
+	go func() {
+		err = d.Attach(container, stdoutFile, stderrFile, successChan)
+		if err != nil {
+			logger.Print(err)
+		}
+	}()
+	successChan <- <-successChan
+	//run the container
+	err = d.Client.StartContainer(container.ID, opts.HostConfig)
+	if err != nil {
+		return -1, err
+	}
+	//wait for container to exit
+	exitCode, err := d.Client.WaitContainer(container.ID)
+	if err != nil {
+		return -1, err
+	}
+	return exitCode, err
+}
+
+// RunStep will run the steps in a job. If a step fails, the function will
 // return with a non-zero exit code. If an error occurs, the function will
 // return with a non-zero exit code and a non-nil error.
-func (d *Docker) RunSteps(job *model.Job) (int, error) {
-	invID := job.InvocationID
-	for idx, step := range job.Steps {
-		stepIdx := strconv.Itoa(idx)
-		container, opts, err := d.CreateContainerFromStep(&step, invID)
-		if err != nil {
-			return -1, err
-		}
-		stdoutFile, err := createFile(step.Stdout(stepIdx))
-		if err != nil {
-			return -1, err
-		}
-		defer stdoutFile.Close()
-		stderrFile, err := createFile(step.Stderr(stepIdx))
-		if err != nil {
-			return -1, err
-		}
-		defer stderrFile.Close()
-		//attach to container, redirecting stdout and stderr to files.
-		successChan := make(chan struct{})
-		go func() {
-			err = d.Attach(container, stdoutFile, stderrFile, successChan)
-			if err != nil {
-				logger.Print(err)
-			}
-		}()
-		successChan <- <-successChan
-		//run the container
-		err = d.Client.StartContainer(container.ID, opts.HostConfig)
-		if err != nil {
-			return -1, err
-		}
-		//wait for container to exit
-		exitCode, err := d.Client.WaitContainer(container.ID)
-		if err != nil {
-			return -1, err
-		}
-		//close stdout and stderr files
-		if exitCode != 0 {
-			return exitCode, err
-		}
+func (d *Docker) RunStep(step *model.Step, invID string, idx int) (int, error) {
+	stepIdx := strconv.Itoa(idx)
+	container, opts, err := d.CreateContainerFromStep(step, invID)
+	if err != nil {
+		return -1, err
 	}
-	return 0, nil
+	stdoutFile, err := createFile(step.Stdout(stepIdx))
+	if err != nil {
+		return -1, err
+	}
+	defer stdoutFile.Close()
+	stderrFile, err := createFile(step.Stderr(stepIdx))
+	if err != nil {
+		return -1, err
+	}
+	defer stderrFile.Close()
+	return d.runContainer(container, opts, stdoutFile, stderrFile)
 }
 
 // CreateDownloadContainer creates a container that can be used to download
@@ -382,6 +379,21 @@ func (d *Docker) CreateDownloadContainer(job *model.Job, input *model.StepInput,
 
 // DownloadInputs will run the docker containers that down input files into
 // the local working directory.
-// func (d *Docker) DownloadInputs(job *model.Job) (int, error) {
-//
-// }
+func (d *Docker) DownloadInputs(job *model.Job, input *model.StepInput, idx int) (int, error) {
+	inputIdx := strconv.Itoa(idx)
+	container, opts, err := d.CreateDownloadContainer(job, input, inputIdx)
+	if err != nil {
+		return -1, err
+	}
+	stdoutFile, err := createFile(input.Stdout(inputIdx))
+	if err != nil {
+		return -1, err
+	}
+	defer stdoutFile.Close()
+	stderrFile, err := createFile(input.Stderr(inputIdx))
+	if err != nil {
+		return -1, err
+	}
+	defer stderrFile.Close()
+	return d.runContainer(container, opts, stdoutFile, stderrFile)
+}

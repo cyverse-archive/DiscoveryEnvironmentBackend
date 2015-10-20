@@ -411,7 +411,7 @@ func TestRunStep(t *testing.T) {
 			t.Fail()
 		}
 	}
-	exitCode, err := dc.RunSteps(job)
+	exitCode, err := dc.RunStep(&job.Steps[0], job.InvocationID, 0)
 	if err != nil {
 		t.Error(err)
 		t.Fail()
@@ -445,5 +445,84 @@ func TestRunStep(t *testing.T) {
 	}
 	if exists {
 		dc.NukeContainerByName(job.Steps[0].Component.Container.Name)
+	}
+}
+
+func TestDownloadInputs(t *testing.T) {
+	if !shouldrun() {
+		return
+	}
+	job := inittests(t)
+	dc, err := NewDocker(uri())
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	image, err := configurate.C.String("porklock.image")
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	tag, err := configurate.C.String("porklock.tag")
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	err = dc.Pull(image, tag)
+	if err != nil {
+		t.Error(err)
+	}
+	cName := fmt.Sprintf("input-0-%s", job.InvocationID)
+	exists, err := dc.IsContainer(cName)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
+		dc.NukeContainerByName(cName)
+	}
+	if _, err := os.Stat("logs"); os.IsNotExist(err) {
+		err = os.MkdirAll("logs", 0755)
+		if err != nil {
+			t.Error(err)
+			t.Fail()
+		}
+	}
+	exitCode, err := dc.DownloadInputs(job, &job.Steps[0].Config.Inputs[0], 0)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	if exitCode != 0 {
+		t.Errorf("DownloadInputs's exit code was %d instead of 0\n", exitCode)
+	}
+	if _, err := os.Stat(job.Steps[0].Config.Inputs[0].Stdout("0")); os.IsNotExist(err) {
+		t.Error(err)
+	}
+	if _, err := os.Stat(job.Steps[0].Config.Inputs[0].Stderr("0")); os.IsNotExist(err) {
+		t.Error(err)
+	}
+	expected := strings.Join(
+		job.Steps[0].Config.Inputs[0].Arguments(job.Submitter, job.FileMetadata),
+		" ",
+	)
+	actualBytes, err := ioutil.ReadFile(job.Steps[0].Config.Inputs[0].Stdout("0"))
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	actual := strings.TrimSpace(string(actualBytes))
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("stdout contained '%s' instead of '%s'\n", string(actual), string(expected))
+	}
+	err = os.RemoveAll("logs")
+	if err != nil {
+		t.Error(err)
+	}
+	exists, err = dc.IsContainer(cName)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
+		dc.NukeContainerByName(cName)
 	}
 }

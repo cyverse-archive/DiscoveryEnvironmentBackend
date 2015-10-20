@@ -146,15 +146,29 @@ func main() {
 	}
 
 	if status == messaging.Success {
-		status = transferInputs(job)
+		for idx, input := range job.Inputs() {
+			exitCode, err := dckr.DownloadInputs(job, &input, idx)
+			if exitCode != 0 || err != nil {
+				if err != nil {
+					logger.Print(err)
+				}
+				status = messaging.StatusInputFailed
+				break
+			}
+		}
 	}
 
-	exitCode, err := dckr.RunSteps(job)
-	if exitCode != 0 || err != nil {
-		if err != nil {
-			logger.Print(err)
+	if status == messaging.Success {
+		for idx, step := range job.Steps {
+			exitCode, err := dckr.RunStep(&step, job.InvocationID, idx)
+			if exitCode != 0 || err != nil {
+				if err != nil {
+					logger.Print(err)
+				}
+				status = messaging.StatusStepFailed
+				break
+			}
 		}
-		status = messaging.StatusStepFailed
 	}
 
 	status = transferOutputs(job)
