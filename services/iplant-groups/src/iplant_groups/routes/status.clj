@@ -8,7 +8,7 @@
 
 (defroutes* status
   (GET* "/" [:as {:keys [uri server-name server-port]}]
-        :return      StatusResponse
+        :return      IplantGroupsStatusResponse
         :summary     "Service Information"
         :description "This endpoint provides the name of the service and its version."
         (ok (assoc (commons-service/get-docs-status config/svc-info server-name server-port config/docs-uri)

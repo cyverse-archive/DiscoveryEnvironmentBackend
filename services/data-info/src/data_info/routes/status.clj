@@ -9,7 +9,7 @@
 
 (defroutes* status
     (GET* "/" [:as {:keys [uri server-name server-port]}]
-      :return StatusResponse
+      :return DataInfoStatusResponse
       :tags ["service-info"]
       :summary "Service Information"
       :description "This endpoint provides the name of the service and its version."
