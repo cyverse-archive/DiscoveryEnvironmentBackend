@@ -528,17 +528,18 @@
     (role-permission role-id)
     username attribute-def-name-id allowed? action-names))
 
-(defn- format-role-permission-remove-request
-  [username attribute-def-name-id role-id action-names]
-  (format-permission-remove-request
-    (role-permission role-id)
-    username attribute-def-name-id true action-names))
-
 (defn- format-membership-permission-assign-request
   [username attribute-def-name-id role-id subject-id allowed? action-names]
   (format-permission-assign-request
     (membership-permission role-id subject-id)
     username attribute-def-name-id allowed? action-names))
+
+; For remove requests, 'allowed' is ignored. Pass true as a default.
+(defn- format-role-permission-remove-request
+  [username attribute-def-name-id role-id action-names]
+  (format-permission-remove-request
+    (role-permission role-id)
+    username attribute-def-name-id true action-names))
 
 (defn- format-membership-permission-remove-request
   [username attribute-def-name-id role-id subject-id action-names]
