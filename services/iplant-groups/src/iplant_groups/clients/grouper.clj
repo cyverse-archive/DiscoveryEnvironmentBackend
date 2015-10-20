@@ -54,6 +54,15 @@
        (http/post (apply grouper-uri uri-parts))
        (:body)))
 
+(defn grouper-ok?
+  []
+  (try+
+    (http/get (str (curl/url (config/grouper-base) "status")) {:query-params {:diagnosticType "sources"}})
+    true
+    (catch Object err
+      (log/warn "Grouper diagnostic check failed:" err)
+      false)))
+
 (defn- act-as-subject-lookup
   ([username]
      {:subjectId (or username default-act-as-subject-id)})
