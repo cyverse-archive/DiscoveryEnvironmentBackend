@@ -74,9 +74,9 @@
     (job-listings/list-jobs self user params))
 
   (loadAppTables [_ app-ids]
-    (if (user-has-access-token?)
-      (when (some (complement util/uuid?) app-ids)
-        (listings/load-app-tables agave))
+    (if (and (user-has-access-token?)
+             (some (complement util/uuid?) app-ids))
+      (listings/load-app-tables agave)
       []))
 
   (submitJob [this submission]
