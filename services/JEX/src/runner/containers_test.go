@@ -694,3 +694,49 @@ func TestUploadOutputs(t *testing.T) {
 		dc.NukeContainerByName(cName)
 	}
 }
+
+func TestCreateDataContainer(t *testing.T) {
+	if !shouldrun() {
+		return
+	}
+	job := inittests(t)
+	dc, err := NewDocker(uri())
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	image, err := configurate.C.String("porklock.image")
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	tag, err := configurate.C.String("porklock.tag")
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	err = dc.Pull(image, tag)
+	if err != nil {
+		t.Error(err)
+	}
+	vf := &model.VolumesFrom{
+		Name:          "discoenv/echo",
+		NamePrefix:    "echo-test",
+		Tag:           "latest",
+		URL:           "https://hub.docker.com/r/discoenv/echo/",
+		ReadOnly:      false,
+		HostPath:      "/tmp",
+		ContainerPath: "/test",
+	}
+	container, opts, err := dc.CreateDataContainer(vf, job.InvocationID)
+	if err != nil {
+		t.Error(err)
+	}
+	if container == nil {
+		t.Error("container was nil")
+	}
+	if opts == nil {
+		t.Error("opts was nil")
+	}
+
+}

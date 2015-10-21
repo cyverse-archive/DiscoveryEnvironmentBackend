@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"logcabin"
 	"messaging"
 	"model"
@@ -139,12 +140,46 @@ func main() {
 	moveIplantCmd()
 
 	status := messaging.Success
+
+	// Pull the data containers
+	for _, dc := range job.DataContainers() {
+		err = dckr.Pull(dc.Name, dc.Tag)
+		if err != nil {
+			log.Print(err)
+			status = messaging.StatusDockerPullFailed
+			break
+		}
+	}
+
+	// Create the data containers
+	for _, dc := range job.DataContainers() {
+		_, _, err := dckr.CreateDataContainer(&dc, job.InvocationID)
+		if err != nil {
+			log.Print(err)
+			status = messaging.StatusDockerPullFailed
+			break
+		}
+	}
+
+	// Pull the job step containers
+	for _, ci := range job.ContainerImages() {
+		err = dckr.Pull(ci.Name, ci.Tag)
+		if err != nil {
+			log.Print(err)
+			status = messaging.StatusDockerPullFailed
+			break
+		}
+	}
+
 	status = pullDataContainers(job)
 
 	if status == messaging.Success {
 		status = pullContainerImages(job)
 	}
 
+	// If pulls didn't succeed then we can't guarantee that we've got the
+	// correct versions of the tools. Don't bother pulling in data in that case,
+	// things are already screwed up.
 	if status == messaging.Success {
 		for idx, input := range job.Inputs() {
 			exitCode, err := dckr.DownloadInputs(job, &input, idx)
@@ -158,6 +193,8 @@ func main() {
 		}
 	}
 
+	// Only attempt to run the steps if the input downloads succeeded. No reason
+	// to run the steps if there's no/corrupted data to operate on.
 	if status == messaging.Success {
 		for idx, step := range job.Steps {
 			exitCode, err := dckr.RunStep(&step, job.InvocationID, idx)
@@ -171,14 +208,25 @@ func main() {
 		}
 	}
 
-	status = transferOutputs(job)
+	// Always attempt to transfer outputs. There might be logs that can help
+	// debug issues when the job fails.
+	exitCode, err := dckr.UploadOutputs(job)
+	if exitCode != 0 || err != nil {
+		if err != nil {
+			logger.Print(err)
+		}
+		status = messaging.StatusOutputFailed
+	}
 
+	// Always inform upstream of the job status.
 	if status != messaging.Success {
 		fail(client, job, fmt.Sprintf("Job exited with a status of %d", status))
 	} else {
 		success(client, job)
 	}
 
+	// Clean up needs to happen, but it shouldn't influence whether or not the job
+	// is considered a success.
 	cleanup(job)
 
 	os.Exit(int(status))

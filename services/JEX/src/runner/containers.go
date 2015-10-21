@@ -451,3 +451,28 @@ func (d *Docker) UploadOutputs(job *model.Job) (int, error) {
 	defer stderrFile.Close()
 	return d.runContainer(container, opts, stdoutFile, stderrFile)
 }
+
+// CreateDataContainer will create a data container that is required for the job.
+func (d *Docker) CreateDataContainer(vf *model.VolumesFrom, invID string) (*docker.Container, *docker.CreateContainerOptions, error) {
+	opts := docker.CreateContainerOptions{
+		Config:     &docker.Config{},
+		HostConfig: &docker.HostConfig{},
+	}
+	opts.Name = fmt.Sprintf("%s-%s", vf.NamePrefix, invID)
+	opts.Config.Image = fmt.Sprintf("%s:%s", vf.Name, vf.Tag)
+	opts.HostConfig.LogConfig = docker.LogConfig{Type: "none"}
+	opts.Config.Labels = make(map[string]string)
+	opts.Config.Labels[model.DockerLabelKey] = invID
+	if vf.HostPath != "" || vf.ContainerPath != "" {
+		mount := docker.Mount{}
+		if vf.HostPath != "" {
+			mount.Source = vf.HostPath
+		}
+		mount.Destination = vf.ContainerPath
+		mount.RW = !vf.ReadOnly
+		opts.Config.Mounts = append(opts.Config.Mounts, mount)
+	}
+	opts.Config.Cmd = []string{"/bin/true"}
+	container, err := d.Client.CreateContainer(opts)
+	return container, &opts, err
+}
