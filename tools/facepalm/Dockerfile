@@ -5,7 +5,10 @@ ADD https://everdene.iplantcollaborative.org/jenkins/job/databases-dev/lastSucce
 ADD https://everdene.iplantcollaborative.org/jenkins/job/databases-dev/lastSuccessfulBuild/artifact/databases/metadata/metadata-db.tar.gz /
 ADD https://everdene.iplantcollaborative.org/jenkins/job/databases-dev/lastSuccessfulBuild/artifact/databases/notification-db/notification-db.tar.gz /
 
-RUN apt-get update && apt-get install -y openjdk-7-jre-headless postgresql-client-9.3
+RUN apt-get update && apt-get install -y \
+  openjdk-7-jre-headless \
+  postgresql-client-9.3 \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY target/facepalm-standalone.jar /
 
