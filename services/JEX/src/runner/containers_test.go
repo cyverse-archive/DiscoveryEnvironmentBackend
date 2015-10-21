@@ -615,3 +615,82 @@ func TestDownloadInputs(t *testing.T) {
 		dc.NukeContainerByName(cName)
 	}
 }
+
+func TestUploadOutputs(t *testing.T) {
+	if !shouldrun() {
+		return
+	}
+	job := inittests(t)
+	dc, err := NewDocker(uri())
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	image, err := configurate.C.String("porklock.image")
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	tag, err := configurate.C.String("porklock.tag")
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	err = dc.Pull(image, tag)
+	if err != nil {
+		t.Error(err)
+	}
+	cName := fmt.Sprintf("output-%s", job.InvocationID)
+	exists, err := dc.IsContainer(cName)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
+		dc.NukeContainerByName(cName)
+	}
+	if _, err := os.Stat("logs"); os.IsNotExist(err) {
+		err = os.MkdirAll("logs", 0755)
+		if err != nil {
+			t.Error(err)
+			t.Fail()
+		}
+	}
+	exitCode, err := dc.UploadOutputs(job)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	if exitCode != 0 {
+		t.Errorf("UploadOutputs exit code was %d instead of 0\n", exitCode)
+	}
+	if _, err := os.Stat("logs/logs-stdout-output"); os.IsNotExist(err) {
+		t.Error(err)
+	}
+	if _, err := os.Stat("logs/logs-stderr-output"); os.IsNotExist(err) {
+		t.Error(err)
+	}
+	expected := strings.Join(
+		job.FinalOutputArguments(),
+		" ",
+	)
+	actualBytes, err := ioutil.ReadFile("logs/logs-stdout-output")
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	actual := strings.TrimSpace(string(actualBytes))
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("stdout contained '%s' instead of '%s'\n", string(actual), string(expected))
+	}
+	err = os.RemoveAll("logs")
+	if err != nil {
+		t.Error(err)
+	}
+	exists, err = dc.IsContainer(cName)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
+		dc.NukeContainerByName(cName)
+	}
+}
