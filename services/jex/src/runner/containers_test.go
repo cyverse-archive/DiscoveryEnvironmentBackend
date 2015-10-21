@@ -728,6 +728,14 @@ func TestCreateDataContainer(t *testing.T) {
 		HostPath:      "/tmp",
 		ContainerPath: "/test",
 	}
+	cName := fmt.Sprintf("%s-%s", vf.NamePrefix, job.InvocationID)
+	exists, err := dc.IsContainer(cName)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
+		dc.NukeContainerByName(cName)
+	}
 	container, opts, err := dc.CreateDataContainer(vf, job.InvocationID)
 	if err != nil {
 		t.Error(err)
@@ -737,6 +745,13 @@ func TestCreateDataContainer(t *testing.T) {
 	}
 	if opts == nil {
 		t.Error("opts was nil")
+	}
+	exists, err = dc.IsContainer(cName)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
+		dc.NukeContainerByName(cName)
 	}
 
 }

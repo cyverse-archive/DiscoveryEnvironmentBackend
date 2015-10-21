@@ -39,6 +39,15 @@ func init() {
 	signals()
 }
 
+// Environment returns a []string containing the environment variables that
+// need to get set for every job.
+func Environment(job *model.Job) []string {
+	current := os.Environ()
+	current = append(current, fmt.Sprintf("IPLANT_USER=%s", job.Submitter))
+	current = append(current, fmt.Sprintf("IPLANT_EXECUTION_ID=%s", job.InvocationID))
+	return current
+}
+
 // AppVersion prints version information to stdout
 func AppVersion() {
 	if appver != "" {
@@ -73,7 +82,18 @@ func cleanup(job *model.Job) {
 	if err != nil {
 		logger.Print(err)
 	}
-	removeImages(job)
+	for _, dc := range job.DataContainers() {
+		err := dckr.SafelyRemoveImage(dc.Name, dc.Tag)
+		if err != nil {
+			logger.Print(err)
+		}
+	}
+	for _, ci := range job.ContainerImages() {
+		err := dckr.SafelyRemoveImage(ci.Name, ci.Tag)
+		if err != nil {
+			logger.Print(err)
+		}
+	}
 }
 
 func main() {
@@ -135,9 +155,26 @@ func main() {
 		logger.Print(err)
 	}
 
-	createLogsDir()
-	createTransferTrigger()
-	moveIplantCmd()
+	err = os.Mkdir("logs", 0755)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	transferTrigger, err := os.Create("logs/de-transfer-trigger.log")
+	if err != nil {
+		logger.Print(err)
+	} else {
+		_, err = transferTrigger.WriteString("This is only used to force HTCondor to transfer files.")
+		if err != nil {
+			logger.Print(err)
+		}
+	}
+
+	if _, err := os.Stat("iplant.cmd"); err != nil {
+		if err = os.Rename("iplant.cmd", "logs/iplant.cmd"); err != nil {
+			logger.Print(err)
+		}
+	}
 
 	status := messaging.Success
 
@@ -158,6 +195,13 @@ func main() {
 			log.Print(err)
 			status = messaging.StatusDockerPullFailed
 			break
+		} else {
+			_, _, err = dckr.CreateDataContainer(&dc, job.InvocationID)
+			if err != nil {
+				log.Print(err)
+				status = messaging.StatusDockerCreateFailed
+				break
+			}
 		}
 	}
 
@@ -169,12 +213,6 @@ func main() {
 			status = messaging.StatusDockerPullFailed
 			break
 		}
-	}
-
-	status = pullDataContainers(job)
-
-	if status == messaging.Success {
-		status = pullContainerImages(job)
 	}
 
 	// If pulls didn't succeed then we can't guarantee that we've got the
