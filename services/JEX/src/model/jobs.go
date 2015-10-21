@@ -316,18 +316,9 @@ func (s *Job) AddRequiredMetadata() {
 // porklock for the final output operation, which transfers all files back into
 // iRODS.
 func (s *Job) FinalOutputArguments() []string {
-	tag, err := configurate.C.String("condor.porklock_tag")
-	if err != nil {
-		tag = "latest"
-	}
 	dest := quote(s.OutputDirectory())
 	retval := []string{
-		"run",
-		"--rm",
-		"-v", "$(pwd):/de-app-work",
-		"-w", "/de-app-work",
-		"--label", fmt.Sprintf("%s=%s", DockerLabelKey, s.InvocationID),
-		fmt.Sprintf("discoenv/porklock:%s", tag),
+		"put",
 		"--user", s.Submitter,
 		"--config", "irods-config",
 		"--destination", dest,

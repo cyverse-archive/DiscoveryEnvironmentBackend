@@ -397,3 +397,57 @@ func (d *Docker) DownloadInputs(job *model.Job, input *model.StepInput, idx int)
 	defer stderrFile.Close()
 	return d.runContainer(container, opts, stdoutFile, stderrFile)
 }
+
+// CreateUploadContainer will initialize a container that will be used to
+// upload job outputs into a directory in iRODS.
+func (d *Docker) CreateUploadContainer(job *model.Job) (*docker.Container, *docker.CreateContainerOptions, error) {
+	opts := docker.CreateContainerOptions{
+		Config:     &docker.Config{},
+		HostConfig: &docker.HostConfig{},
+	}
+	image, err := configurate.C.String("porklock.image")
+	if err != nil {
+		return nil, nil, err
+	}
+	tag, err := configurate.C.String("porklock.tag")
+	if err != nil {
+		return nil, nil, err
+	}
+	opts.Config.Image = fmt.Sprintf("%s:%s", image, tag)
+	opts.Name = fmt.Sprintf("output-%s", job.InvocationID)
+	opts.HostConfig.LogConfig = docker.LogConfig{Type: "none"}
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, nil, err
+	}
+	opts.Config.WorkingDir = "/de-app-work"
+	opts.Config.Mounts = append(opts.Config.Mounts, docker.Mount{
+		Source:      wd,
+		Destination: "/de-app-work",
+		RW:          true,
+	})
+	opts.Config.Labels = make(map[string]string)
+	opts.Config.Labels[model.DockerLabelKey] = job.InvocationID
+	opts.Config.Cmd = job.FinalOutputArguments()
+	container, err := d.Client.CreateContainer(opts)
+	return container, &opts, err
+}
+
+// UploadOutputs will upload files to iRODS from the local working directory.
+func (d *Docker) UploadOutputs(job *model.Job) (int, error) {
+	container, opts, err := d.CreateUploadContainer(job)
+	if err != nil {
+		return -1, err
+	}
+	stdoutFile, err := createFile("logs/logs-stdout-output")
+	if err != nil {
+		return -1, err
+	}
+	defer stdoutFile.Close()
+	stderrFile, err := createFile("logs/logs-stderr-output")
+	if err != nil {
+		return -1, err
+	}
+	defer stderrFile.Close()
+	return d.runContainer(container, opts, stdoutFile, stderrFile)
+}

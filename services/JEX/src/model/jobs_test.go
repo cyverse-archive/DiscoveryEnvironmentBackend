@@ -580,12 +580,7 @@ func TestFinalOutputArguments(t *testing.T) {
 	actual := s.FinalOutputArguments()
 	outputdir := s.OutputDirectory()
 	expected := []string{
-		"run",
-		"--rm",
-		"-v", "$(pwd):/de-app-work",
-		"-w", "/de-app-work",
-		"--label", "org.iplantc.analysis=07b04ce2-7757-4b21-9e15-0b4c2f44be26",
-		"discoenv/porklock:test",
+		"put",
 		"--user", "test_this_is_a_test",
 		"--config", "irods-config",
 		"--destination", fmt.Sprintf("'%s'", outputdir),
@@ -601,12 +596,7 @@ func TestFinalOutputArguments(t *testing.T) {
 	s.SkipParentMetadata = true
 	actual = s.FinalOutputArguments()
 	expected = []string{
-		"run",
-		"--rm",
-		"-v", "$(pwd):/de-app-work",
-		"-w", "/de-app-work",
-		"--label", "org.iplantc.analysis=07b04ce2-7757-4b21-9e15-0b4c2f44be26",
-		"discoenv/porklock:test",
+		"put",
 		"--user", "test_this_is_a_test",
 		"--config", "irods-config",
 		"--destination", fmt.Sprintf("'%s'", outputdir),
