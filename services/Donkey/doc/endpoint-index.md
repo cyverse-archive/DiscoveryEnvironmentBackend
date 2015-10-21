@@ -150,7 +150,6 @@
 * [POST /secured/filesystem/{data-id}/metadata/copy](endpoints/filesystem/metadata.md#copying-all-metadata-from-a-filefolder)
 * [POST /secured/filesystem/{data-id}/metadata/save](endpoints/filesystem/metadata.md#exporting-metadata-to-a-file)
 * [GET /secured/filesystem/{data-id}/template-avus](endpoints/filesystem/metadata.md#viewing-all-metadata-template-avus-on-a-filefolder)
-* [POST /secured/filesystem/{data-id}/template-avus/copy](endpoints/filesystem/metadata.md#copying-all-metadata-template-avus-from-a-filefolder)
 * [DELETE /secured/filesystem/{data-id}/template-avus/{template-id}](endpoints/filesystem/metadata.md#removing-all-metadata-template-avus-on-a-filefolder)
 * [GET /secured/filesystem/{data-id}/template-avus/{template-id}](endpoints/filesystem/metadata.md#viewing-a-metadata-templates-avus-on-a-filefolder)
 * [POST /secured/filesystem/{data-id}/template-avus/{template-id}](endpoints/filesystem/metadata.md#adding-and-updating-metadata-template-avus-on-a-filefolder)

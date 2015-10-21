@@ -12,6 +12,9 @@
 (def FolderIdPathParam
   (describe String "The folder identifier."))
 
+(def AttributeIdPathParam
+  (describe String "The attribute-name identifier."))
+
 (s/defschema SearchParams
   (assoc StandardUserQueryParams
     :search (describe NonBlankString "The partial name of the entity to search for.")))

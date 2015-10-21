@@ -111,3 +111,47 @@
         (remove-vals nil?)))
   ([attribute-names privilege]
    (format-privilege attribute-names privilege :ownerSubject)))
+
+(defn format-attribute-name
+  [attribute-name]
+  (when-not (nil? attribute-name)
+    (->> {:description        (:description attribute-name)
+          :display_extension  (:displayExtension attribute-name)
+          :display_name       (:displayName attribute-name)
+          :extension          (:extension attribute-name)
+          :id_index           (:idIndex attribute-name)
+          :name               (:name attribute-name)
+          :id                 (:uuid attribute-name)
+          :attribute_definition
+            {:id   (:attributeDefId attribute-name)
+             :name (:attributeDefName attribute-name)}}
+         (remove-vals nil?))))
+
+(defn format-attribute-assign ;; XXX: only supports group and membership attributes for now
+  [attribute-assign]
+  (when-not (nil? attribute-assign)
+    (->> {:id          (:id attribute-assign)
+          :disallowed  (string-to-boolean (:disallowed attribute-assign))
+          :enabled     (string-to-boolean (:enabled attribute-assign))
+          :action_id   (:attributeAssignActionId attribute-assign)
+          :action_name (:attributeAssignActionName attribute-assign)
+          :action_type (:attributeAssignActionType attribute-assign)
+          :delegatable (string-to-boolean (:attributeAssignDelegatable attribute-assign))
+          :assign_type (:attributeAssignType attribute-assign)
+          :created_at  (timestamp-to-millis (:createdOn attribute-assign))
+          :modified_at (timestamp-to-millis (:lastUpdated attribute-assign))
+          :group       (if (:ownerGroupId attribute-assign)
+                           {:id   (:ownerGroupId attribute-assign)
+                            :name (:ownerGroupName attribute-assign)})
+          :membership  (if (:ownerMembershipId attribute-assign)
+                           {:id (:ownerMembershipId attribute-assign)})
+          :subject     (if (:ownerMemberSubjectId attribute-assign)
+                           {:id (:ownerMemberSubjectId attribute-assign)
+                            :source_id (:ownerMemberSourceId attribute-assign)})
+          :attribute_definition_name
+            {:id   (:attributeDefNameId attribute-assign)
+             :name (:attributeDefNameName attribute-assign)}
+          :attribute_definition
+            {:id   (:attributeDefId attribute-assign)
+             :name (:attributeDefName attribute-assign)}}
+         (remove-vals nil?))))

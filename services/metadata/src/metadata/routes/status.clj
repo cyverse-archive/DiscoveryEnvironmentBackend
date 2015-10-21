@@ -1,6 +1,5 @@
 (ns metadata.routes.status
   (:use [common-swagger-api.schema]
-        [metadata.routes.domain.status]
         [ring.util.http-response :only [ok]])
   (:require [clojure-commons.service :as commons-svc]
             [metadata.util.config :as config]))

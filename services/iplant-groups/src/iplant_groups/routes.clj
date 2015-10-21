@@ -9,6 +9,7 @@
             [iplant_groups.routes.groups :as group-routes]
             [iplant_groups.routes.status :as status-routes]
             [iplant_groups.routes.subjects :as subject-routes]
+            [iplant_groups.routes.attributes :as attribute-routes]
             [iplant_groups.util.config :as config]
             [clojure-commons.exception :as cx]))
 
@@ -17,12 +18,13 @@
   (swagger-ui config/docs-uri)
   (swagger-docs
    {:info {:title       "RESTful Service Facade for Grouper"
-           :description "Documentation for the Fishy API"
+           :description "Documentation for the iplant-groups API"
            :version     "2.0.0"}
     :tags [{:name "folders", :description "Folder Information"}
            {:name "groups", :description "Group Information"}
            {:name "service-info", :description "Service Status Information"}
-           {:name "subjects", :description "Subject Information"}]})
+           {:name "subjects", :description "Subject Information"}
+           {:name "attributes", :description "Attribute/Permission Information"}]})
   (middlewares
    [clean-context
     wrap-keyword-params
@@ -45,4 +47,7 @@
     group-routes/groups)
    (context* "/subjects" []
     :tags ["subjects"]
-    subject-routes/subjects)))
+    subject-routes/subjects)
+   (context* "/attributes" []
+    :tags ["attributes"]
+    attribute-routes/attributes)))

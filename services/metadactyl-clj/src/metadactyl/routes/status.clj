@@ -1,6 +1,5 @@
 (ns metadactyl.routes.status
   (:use [common-swagger-api.schema]
-        [metadactyl.routes.domain.status]
         [ring.util.http-response :only [ok]])
   (:require [clojure-commons.service :as commons-service]
             [metadactyl.util.config :as config]))

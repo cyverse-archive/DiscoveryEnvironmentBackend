@@ -60,7 +60,7 @@
             (ok (groups/get-group-privileges group-id params)))
 
       (context* "/:subject-id/:privilege-name" []
-        :path-params [subject-id :- NonBlankString
+        :path-params [subject-id :- SubjectIdPathParam
                       privilege-name :- NonBlankString]
 
         (PUT* "/" []

@@ -8,7 +8,7 @@
             [clojure.string :as string]
             [clojure-commons.exception-util :as cx-util]))
 
-(defn- build-assertion
+(defn build-default-assertion
   [validity-window-end {:keys [user email given-name family-name common-name]}]
   (let [now (time/now)]
     (remove-vals nil?
@@ -21,12 +21,14 @@
                   :name        common-name})))
 
 (defn generator
-  [{:keys [validity-window-end private-key-path private-key-password alg]}]
-  (let [private-key (keys/private-key private-key-path private-key-password)]
-    (fn [user]
-      (jws/sign (build-assertion validity-window-end user)
-                private-key
-                {:alg alg}))))
+  ([opts]
+     (generator build-default-assertion opts))
+  ([assertion-builder {:keys [validity-window-end private-key-path private-key-password alg]}]
+     (let [private-key (keys/private-key private-key-path private-key-password)]
+       (fn [user]
+         (jws/sign (assertion-builder validity-window-end user)
+                   private-key
+                   {:alg alg})))))
 
 (defn- list-keys
   [accepted-keys-dir]
@@ -55,7 +57,7 @@
   (let [accepted-keys (load-public-keys public-key-path accepted-keys-dir)]
     (partial unsign-assertion accepted-keys alg)))
 
-(defn user-from-assertion
+(defn user-from-default-assertion
   [jwt]
   {:user        (:sub jwt)
    :email       (:email jwt)

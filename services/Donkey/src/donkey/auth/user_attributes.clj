@@ -1,5 +1,6 @@
 (ns donkey.auth.user-attributes
   (:require [cheshire.core :as cheshire]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [clojure-commons.response :as resp]
             [clj-cas.cas-proxy-auth :as cas]
@@ -30,10 +31,15 @@
      :commonName    (str first-name " " last-name)
      :principal     (get user-attributes "principal")}))
 
-(defn user-from-jwt-claims
-  "Creates a map of values from JWT claims stored in the request."
+(defn user-from-de-jwt-claims
+  "Creates a map of values from JWT claims stored in the request by the DE."
   [{:keys [jwt-claims]}]
   (jwt/donkey-user-from-jwt-claims jwt-claims))
+
+(defn user-from-wso2-jwt-claims
+  "Creates a map of values from JWT claims stored int he request by WSO2."
+  [{:keys [jwt-claims]}]
+  (jwt/donkey-user-from-jwt-claims jwt-claims jwt/user-from-wso2-assertion))
 
 (defn fake-user-from-attributes
   "Creates a real map of fake values for a user base on environment variables."
@@ -87,10 +93,18 @@
   [request]
   (get (:query-params request) "proxyToken"))
 
-(defn- get-jwt-assertion
-  "Extracts a JWT assertion from the request, returning nil if none is found."
+(defn- get-de-jwt-assertion
+  "Extracts a JWT assertion from the request header used by the DE, returning nil if none is
+   found."
   [request]
   (get (:headers request) "x-iplant-de-jwt"))
+
+(defn- get-wso2-jwt-assertion
+  "Extracts a JWT assertion from the request header used by WSO2, returning nil if none is
+   found."
+  [request]
+  (when-let [header-name (cfg/wso2-jwt-header)]
+    (get (:headers request) (string/lower-case header-name))))
 
 (defn- wrap-fake-auth
   [handler]
@@ -103,26 +117,33 @@
       (cas/validate-cas-proxy-ticket
         get-cas-ticket cfg/cas-server cfg/server-name)))
 
-(defn- wrap-jwt-auth
+(defn- wrap-de-jwt-auth
   [handler]
-  (-> (wrap-current-user handler user-from-jwt-claims)
-      (jwt/validate-jwt-assertion get-jwt-assertion)))
+  (-> (wrap-current-user handler user-from-de-jwt-claims)
+      (jwt/validate-jwt-assertion get-de-jwt-assertion)))
+
+(defn- wrap-wso2-jwt-auth
+  [handler]
+  (-> (wrap-current-user handler user-from-wso2-jwt-claims)
+      (jwt/validate-jwt-assertion get-wso2-jwt-assertion jwt/user-from-wso2-assertion)))
 
 (defn authenticate-current-user
   "Authenticates the user using validate-cas-proxy-ticket and binds current-user to a map that is
    built from the user attributes that validate-cas-proxy-ticket stores in the request."
   [handler]
-  (wrap-auth-selection [[get-fake-auth     (wrap-fake-auth handler)]
-                        [get-cas-ticket    (wrap-cas-auth handler)]
-                        [get-jwt-assertion (wrap-jwt-auth handler)]]))
+  (wrap-auth-selection [[get-fake-auth          (wrap-fake-auth handler)]
+                        [get-cas-ticket         (wrap-cas-auth handler)]
+                        [get-de-jwt-assertion   (wrap-de-jwt-auth handler)]
+                        [get-wso2-jwt-assertion (wrap-wso2-jwt-auth handler)]]))
 
 (defn validate-current-user
   "Verifies that the user belongs to one of the groups that are permitted to access the resource."
   [handler]
   (wrap-auth-selection
-   [[get-fake-auth     handler]
-    [get-cas-ticket    (cas/validate-group-membership handler cfg/allowed-groups)]
-    [get-jwt-assertion (jwt/validate-group-membership handler cfg/allowed-groups)]]))
+   [[get-fake-auth          handler]
+    [get-cas-ticket         (cas/validate-group-membership handler cfg/allowed-groups)]
+    [get-de-jwt-assertion   (jwt/validate-group-membership handler cfg/allowed-groups)]
+    [get-wso2-jwt-assertion (constantly (resp/forbidden "Admin not supported for WSO2."))]]))
 
 (defn fake-store-current-user
   "Fake storage of a user"

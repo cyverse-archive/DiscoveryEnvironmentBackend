@@ -17,14 +17,11 @@ data-info.anon-user                  = anonymous
 data-info.bad-chars                  = \u0060\u0027\u000A\u0009
 data-info.community-data             = /iplant/home/shared
 data-info.copy-key                   = copy-from
-data-info.data-threshold             = 8000
 data-info.kifshare-download-template = \{\{url\}\}/d/\{\{ticket-id\}\}/\{\{filename\}\}
-data-info.kifshare-external-url      = http://example.org/foo
 data-info.max-paths-in-request       = 1000
 data-info.metadata.base-url          = http://example.org:31331
 data-info.perms-filter               = rodsadmin_acl,rodsBoot,rodsadmin,admin_proxy
 data-info.port                       = 60000
-data-info.preview-size               = 8000
 
 # ICAT configuration
 data-info.icat.host           = irods.example.org
@@ -48,6 +45,4 @@ data-info.irods.admin-users   = rods,rodsadmin_acl,rodsBoot,rodsadmin,admin_prox
 
 # file typing configuration
 data-info.type-detect.type-attribute       = ipc-filetype
-data-info.type-detect.filetype-script      = /usr/local/bin/guess-2.pl
-data-info.type-detect.filetype-read-amount = 1024
 ```
