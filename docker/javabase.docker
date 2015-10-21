@@ -1,6 +1,8 @@
-FROM java:8
+FROM jeanblanchard/java:8
 
-RUN useradd -m -U -s /bin/bash -u 1337 iplant
+RUN mkdir -p /home/iplant
+RUN busybox adduser -s /bin/sh -u 1337 -D -h /home/iplant iplant
+
 USER iplant
 RUN mkdir -p /home/iplant/logs/
 WORKDIR /home/iplant
