@@ -1,7 +1,8 @@
 (ns metadactyl.service.apps
   (:use [kameleon.uuids :only [uuidify]]
         [korma.db :only [transaction]]
-        [slingshot.slingshot :only [try+ throw+]])
+        [slingshot.slingshot :only [try+ throw+]]
+        [service-logging.thread-context :only [with-logging-context]])
   (:require [cemerick.url :as curl]
             [clojure.tools.logging :as log]
             [mescal.de :as agave]
@@ -234,11 +235,12 @@
 
 (defn- sync-job-status
   [{:keys [username id] :as job}]
-  (try+
-   (log/info "synchronizing the job status for" id)
-   (transaction (jobs/sync-job-status (get-apps-client-for-username username) job))
-   (catch Object _
-     (log/error (:throwable &throw-context) "unable to sync the job status for job" id))))
+  (with-logging-context {}
+    (try+
+      (log/info "synchronizing the job status for" id)
+      (transaction (jobs/sync-job-status (get-apps-client-for-username username) job))
+      (catch Object _
+        (log/error (:throwable &throw-context) "unable to sync the job status for job" id)))))
 
 (defn sync-job-statuses
   []

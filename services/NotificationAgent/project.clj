@@ -41,4 +41,5 @@
   :extra-classpath-dirs ["conf/test"]
   :aot [notification-agent.core]
   :main notification-agent.core
-  :uberjar-exclusions [#"(?i)[.]sf"])
+  :uberjar-exclusions [#"(?i)[.]sf"]
+  :jvm-opts ["-Dlogback.configurationFile=/etc/iplant/de/logging/notificationagent-logging.xml"])

@@ -1,5 +1,5 @@
 (ns iplant_groups.routes
-  (:use [service-logging.middleware :only [wrap-logging add-user-to-context]]
+  (:use [service-logging.middleware :only [wrap-logging add-user-to-context clean-context]]
         [clojure-commons.query-params :only [wrap-query-params]]
         [compojure.core :only [wrap-routes]]
         [common-swagger-api.schema]
@@ -24,14 +24,16 @@
            {:name "service-info", :description "Service Status Information"}
            {:name "subjects", :description "Subject Information"}]})
   (middlewares
-   [wrap-keyword-params
+   [clean-context
+    wrap-keyword-params
     wrap-query-params
    (wrap-routes wrap-logging)]
    (context* "/" []
     :tags ["service-info"]
     status-routes/status))
   (middlewares
-   [wrap-keyword-params
+   [clean-context
+    wrap-keyword-params
     wrap-query-params
     add-user-to-context
     wrap-logging]

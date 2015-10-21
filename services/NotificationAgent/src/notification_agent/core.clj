@@ -3,7 +3,7 @@
   (:use [clojure.java.io :only [file]]
         [clojure-commons.lcase-params :only [wrap-lcase-params]]
         [clojure-commons.query-params :only [wrap-query-params]]
-        [service-logging.middleware :only [wrap-logging add-user-to-context]]
+        [service-logging.middleware :only [wrap-logging add-user-to-context clean-context]]
         [compojure.api.middleware :only [wrap-exceptions]]
         [compojure.core]
         [korma.db :only [transaction]]
@@ -171,7 +171,8 @@
       wrap-keyword-params
       wrap-lcase-params
       wrap-nested-params
-      wrap-query-params))
+      wrap-query-params
+      clean-context))
 
 (def app
   (site-handler notificationagent-routes))

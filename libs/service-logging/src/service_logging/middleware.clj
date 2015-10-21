@@ -52,7 +52,7 @@
                                                                            :request-method request-method)))}
                               (log/log 'AccessLogger level throwable (str method " " uri)))))
   ([request response]
-    (log-response :info nil request response))
+   (log-response :info nil request response))
   ([level request response]
    (log-response level nil request response)))
 
@@ -60,6 +60,16 @@
   [throwable request response exception]
   (tc/with-logging-context {:exception (cheshire/encode exception)}
                            (log-response :error throwable request response)))
+
+(defn clean-context
+  "Middleware which ensures that the logging context will be restored to its original
+   state prior to the request.
+
+   This middleware must be the first middleware in the chain of execution. For example,
+   if used in the thread-first macro, it must be the last middleware."
+  [handler]
+  (fn [request]
+    (tc/with-logging-context {} (handler request))))
 
 (defn wrap-logging
   "Logs incoming requests and their responses with the 'AccessLogger' logger.

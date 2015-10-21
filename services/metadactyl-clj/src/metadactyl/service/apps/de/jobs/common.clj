@@ -1,6 +1,7 @@
 (ns metadactyl.service.apps.de.jobs.common
   (:use [kameleon.core]
         [kameleon.entities]
+        [kameleon.queries :only [get-user-id]]
         [kameleon.uuids :only [uuid]]
         [korma.core :exclude [update]]
         [medley.core :only [remove-vals]]
@@ -123,7 +124,8 @@
    :output_dir           (:output_dir submission)
    :request_type         "submit"
    :steps                (.buildSteps request-builder)
-   :username             user
+   :username             (:shortUsername user)
+   :user_id              (get-user-id (:username user))
    :uuid                 (or (:uuid submission) (uuid))
    :wiki_url             (:wiki_url app)
    :skip-parent-meta     (:skip-parent-meta submission)

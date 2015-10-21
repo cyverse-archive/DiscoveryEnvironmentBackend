@@ -26,16 +26,13 @@
     Do not add `volumes` or `volumes_from` settings to tools unless it is certain that tool"
   " is authorized to access that data."))
 
-(defmacro requester
-  "Handles calling functions and returning request maps. The body of the call
-   must return a nil if any of the objects can't be found, otherwise it returns a map."
-  [tool-id & funccall]
-  `(fn []
-     (let [retval# ~@funccall]
-       (if (nil? retval#)
+(defn requester
+  "Handles wrapping request maps or throwing a not-found error if no containers are found for a tool."
+  [tool-id retval]
+  (if (nil? retval)
          (throw+ {:type  :clojure-commons.exception/not-found
-                  :error (str "A container for " ~tool-id " was not found.")})
-         (ok retval#)))))
+                  :error (str "A container for " tool-id " was not found.")})
+         (ok retval)))
 
 (defroutes* container-images
   (GET* "/" []

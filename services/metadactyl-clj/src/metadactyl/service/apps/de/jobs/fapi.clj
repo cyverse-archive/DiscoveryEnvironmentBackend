@@ -33,7 +33,8 @@
     (params/generic-args param param-value))
 
   (buildParams [this params outputs]
-    (concat (params/build-extra-fapi-args user (:name submission) (:output_dir submission))
+    (concat (params/build-extra-fapi-args (:shortUsername user) (:name submission)
+                                          (:output_dir submission))
             (params/build-params this (:config submission) io-maps outputs defaults params)))
 
   (buildInputs [_ params]
