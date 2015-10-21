@@ -32,6 +32,20 @@ var (
 func signals() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGSTOP, syscall.SIGQUIT)
+	go func() {
+		sig := <-c
+		logger.Println("Received signal:", sig)
+		if dckr == nil {
+			logger.Println("Docker client is nil, can't clean up. Probably don't need to.")
+		}
+		if job == nil {
+			logger.Println("Info didn't get parsed from the job file, can't clean up. Probably don't need to.")
+		}
+		if dckr != nil && job != nil {
+			cleanup(job)
+		}
+		os.Exit(-1)
+	}()
 }
 
 func init() {
