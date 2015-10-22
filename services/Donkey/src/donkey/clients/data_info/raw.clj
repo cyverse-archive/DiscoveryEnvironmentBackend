@@ -164,19 +164,19 @@
   "Uses the data-info permissions-gatherer endpoint to query user permissions for a set of files/folders."
   [user paths]
   (request :post ["permissions-gatherer"]
-           (mk-req-map user (json-encode {:paths paths}))))
+           (mk-req-map user (json/encode {:paths paths}))))
 
 (defn collect-stats
   "Uses the data-info stat-gatherer endpoint to gather stat information for a set of files/folders."
   [user paths]
   (request :post ["stat-gatherer"]
-           (mk-req-map user (json-encode {:paths paths}))))
+           (mk-req-map user (json/encode {:paths paths}))))
 
 (defn check-existence
   "Uses the data-info existence-marker endpoint to gather existence information for a set of files/folders."
   [user paths]
   (request :post ["existence-marker"]
-           (mk-req-map user (json-encode {:paths paths}))))
+           (mk-req-map user (json/encode {:paths paths}))))
 
 (defn get-type-list
   "Uses the data-info file-types endpoint to produce a list of acceptable types."
