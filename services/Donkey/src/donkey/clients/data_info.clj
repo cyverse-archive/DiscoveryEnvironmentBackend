@@ -131,7 +131,7 @@
   (assertions/assert-valid (= (ft/dirname (:dest body)) (ft/dirname (:source body)))
       "The directory names of the source and destination must match for this endpoint.")
   (let [path-uuid (uuid-for-path (:user params) (:source body))]
-    (raw/rename (:user params) path-uuid (:dest body))))
+    (raw/rename (:user params) path-uuid (ft/basename (:dest body)))))
 
 (defn- move-single
   "Uses the data-info single-item directory change endpoint to move an item to a different directory."
