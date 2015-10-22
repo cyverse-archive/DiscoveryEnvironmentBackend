@@ -14,7 +14,7 @@
   (let [url-path         (data/mk-data-path-url-path file)
         req-map          {:query-params {:user user} :as :stream}
         handle-not-found (fn [_ _ _] (throw+ {:error_code error/ERR_NOT_FOUND :path file}))]
-    (data/request :get url-path req-map
+    (data/trapped-request :get url-path req-map
       :403 handle-not-found
       :404 handle-not-found
       :410 handle-not-found

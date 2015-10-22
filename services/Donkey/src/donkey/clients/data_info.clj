@@ -5,7 +5,6 @@
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [cemerick.url :as url]
-            [clj-http.client :as http]
             [me.raynes.fs :as fs]
             [clj-icat-direct.icat :as db]
             [clojure-commons.error-codes :as error]
@@ -465,19 +464,7 @@
       (respond-with-default-error status method url err))))
 
 
-(defn- resolve-http-call
-  [method]
-  (case method
-    :delete   http/delete
-    :get      http/get
-    :head     http/head
-    :options  http/options
-    :patch    http/patch
-    :post     http/post
-    :put      http/put))
-
-
-(defn request
+(defn trapped-request
   "This function makes an HTTP request to the data-info service. It uses clj-http to make the
    request. It traps any errors and provides a response to it. A custom error handler may be
    provided for each type of error.
@@ -501,6 +488,6 @@
   [^Keyword method ^String url-path ^IPersistentMap req-map & {:as error-handlers}]
   (let [url (url/url (cfg/data-info-base) url-path)]
     (try+
-      ((resolve-http-call method) (str url) req-map)
+      (raw/request method [url-path] req-map)
       (catch #(not (nil? (:status %))) err
         (handle-error method url err error-handlers)))))

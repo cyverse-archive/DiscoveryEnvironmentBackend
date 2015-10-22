@@ -192,7 +192,7 @@
                            (assoc params :info-type info-type)
                            params)
         handle-not-found (fn [_ _ _] (throw+ {:error_code error/ERR_NOT_FOUND :path path}))]
-    (data/request :get url-path {:query-params params}
+    (data/trapped-request :get url-path {:query-params params}
       :403 handle-not-found
       :404 handle-not-found
       :410 handle-not-found

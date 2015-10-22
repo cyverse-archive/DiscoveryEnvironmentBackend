@@ -1,9 +1,31 @@
 (ns donkey.clients.data-info.raw
   (:require [clojure.tools.logging :as log]
             [cemerick.url :as url]
+            [me.raynes.fs :as fs]
             [cheshire.core :as json]
             [clj-http.client :as http]
-            [donkey.util.config :as cfg]))
+            [donkey.util.config :as cfg])
+  (:import [clojure.lang IPersistentMap ISeq Keyword]))
+
+;; HELPER FUNCTIONS
+
+(defn- resolve-http-call
+  [method]
+  (case method
+    :delete   http/delete
+    :get      http/get
+    :head     http/head
+    :options  http/options
+    :patch    http/patch
+    :post     http/post
+    :put      http/put))
+
+(defn request
+  "This function makes an HTTP request to the data-info service. It uses clj-http to make the
+   request."
+  [^Keyword method ^ISeq url-path ^IPersistentMap req-map]
+  (let [url (apply url/url (cfg/data-info-base) url-path)]
+    ((resolve-http-call method) (str url) req-map)))
 
 ;; NAVIGATION
 
