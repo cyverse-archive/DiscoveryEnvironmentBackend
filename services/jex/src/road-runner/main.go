@@ -10,6 +10,7 @@ import (
 	"model"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/streadway/amqp"
@@ -90,6 +91,17 @@ func success(client *messaging.Client, job *model.Job) error {
 	})
 }
 
+func running(client *messaging.Client, job *model.Job, msg string) {
+	err := client.PublishJobUpdate(&messaging.UpdateMessage{
+		Job:     job,
+		State:   messaging.RunningState,
+		Message: msg,
+	})
+	if err != nil {
+		logger.Print(err)
+	}
+}
+
 func cleanup(job *model.Job) {
 	err := dckr.NukeContainersByLabel(model.DockerLabelKey, job.InvocationID)
 	if err != nil {
@@ -161,14 +173,13 @@ func main() {
 		client.Listen()
 	}()
 
-	// let everyone know the job is running
-	err = client.PublishJobUpdate(&messaging.UpdateMessage{
-		Job:   job,
-		State: messaging.RunningState,
-	})
+	host, err := os.Hostname()
 	if err != nil {
 		logger.Print(err)
+		host = "UNKNOWN"
 	}
+	// let everyone know the job is running
+	running(client, job, fmt.Sprintf("Job %s is running on host %s", job.InvocationID, host))
 
 	err = os.Mkdir("logs", 0755)
 	if err != nil {
@@ -193,39 +204,41 @@ func main() {
 
 	// Pull the data containers
 	for _, dc := range job.DataContainers() {
+		running(client, job, fmt.Sprintf("Pulling container image %s:%s", dc.Name, dc.Tag))
 		err = dckr.Pull(dc.Name, dc.Tag)
 		if err != nil {
 			logger.Print(err)
 			status = messaging.StatusDockerPullFailed
+			running(client, job, fmt.Sprintf("Error pulling container '%s:%s': %s", dc.Name, dc.Tag, err.Error()))
 			break
 		}
+		running(client, job, fmt.Sprintf("Done pulling container %s:%s", dc.Name, dc.Tag))
 	}
 
 	// Create the data containers
 	for _, dc := range job.DataContainers() {
+		running(client, job, fmt.Sprintf("Creating data container %s-%s", dc.NamePrefix, job.InvocationID))
 		_, _, err := dckr.CreateDataContainer(&dc, job.InvocationID)
 		if err != nil {
 			logger.Print(err)
 			status = messaging.StatusDockerPullFailed
+			running(client, job, fmt.Sprintf("Error creating data container %s-%s", dc.NamePrefix, job.InvocationID))
 			break
-		} else {
-			_, _, err = dckr.CreateDataContainer(&dc, job.InvocationID)
-			if err != nil {
-				logger.Print(err)
-				status = messaging.StatusDockerCreateFailed
-				break
-			}
 		}
+		running(client, job, fmt.Sprintf("Done creating data container %s-%s", dc.NamePrefix, job.InvocationID))
 	}
 
 	// Pull the job step containers
 	for _, ci := range job.ContainerImages() {
+		running(client, job, fmt.Sprintf("Pulling tool container %s:%s", ci.Name, ci.Tag))
 		err = dckr.Pull(ci.Name, ci.Tag)
 		if err != nil {
 			logger.Print(err)
 			status = messaging.StatusDockerPullFailed
+			running(client, job, fmt.Sprintf("Error pulling tool container '%s:%s': %s", ci.Name, ci.Tag, err.Error()))
 			break
 		}
+		running(client, job, fmt.Sprintf("Done pulling tool container %s:%s", ci.Name, ci.Tag))
 	}
 
 	// If pulls didn't succeed then we can't guarantee that we've got the
@@ -233,14 +246,19 @@ func main() {
 	// things are already screwed up.
 	if status == messaging.Success {
 		for idx, input := range job.Inputs() {
+			running(client, job, fmt.Sprintf("Downloading %s", input.IRODSPath()))
 			exitCode, err := dckr.DownloadInputs(job, &input, idx)
 			if exitCode != 0 || err != nil {
 				if err != nil {
 					logger.Print(err)
+					running(client, job, fmt.Sprintf("Error downloading %s: %s", input.IRODSPath(), err.Error()))
+				} else {
+					running(client, job, fmt.Sprintf("Error downloading %s: Transfer utility exited with %d", input.IRODSPath(), exitCode))
 				}
 				status = messaging.StatusInputFailed
 				break
 			}
+			running(client, job, fmt.Sprintf("Finished downloading %s", input.IRODSPath()))
 		}
 	}
 
@@ -248,26 +266,65 @@ func main() {
 	// to run the steps if there's no/corrupted data to operate on.
 	if status == messaging.Success {
 		for idx, step := range job.Steps {
+			running(client, job,
+				fmt.Sprintf(
+					"Running tool container %s:%s with arguments: %s",
+					step.Component.Container.Image.Name,
+					step.Component.Container.Image.Tag,
+					strings.Join(step.Arguments(), " "),
+				),
+			)
 			exitCode, err := dckr.RunStep(&step, job.InvocationID, idx)
 			if exitCode != 0 || err != nil {
 				if err != nil {
 					logger.Print(err)
+					running(client, job,
+						fmt.Sprintf(
+							"Error running tool container %s:%s with arguments '%s': %s",
+							step.Component.Container.Image.Name,
+							step.Component.Container.Image.Tag,
+							strings.Join(step.Arguments(), " "),
+							err.Error(),
+						),
+					)
+				} else {
+					running(client, job,
+						fmt.Sprintf(
+							"Tool container %s:%s with arguments '%s' exit with code: %d",
+							step.Component.Container.Image.Name,
+							step.Component.Container.Image.Tag,
+							strings.Join(step.Arguments(), " "),
+							exitCode,
+						),
+					)
 				}
 				status = messaging.StatusStepFailed
 				break
 			}
+			running(client, job,
+				fmt.Sprintf("Tool container %s:%s with arguments '%s' finished successfully",
+					step.Component.Container.Image.Name,
+					step.Component.Container.Image.Tag,
+					strings.Join(step.Arguments(), " "),
+				),
+			)
 		}
 	}
 
 	// Always attempt to transfer outputs. There might be logs that can help
 	// debug issues when the job fails.
+	running(client, job, fmt.Sprintf("Beginning to upload outputs to %s", job.OutputDirectory()))
 	exitCode, err := dckr.UploadOutputs(job)
 	if exitCode != 0 || err != nil {
 		if err != nil {
 			logger.Print(err)
+			running(client, job, fmt.Sprintf("Error uploading outputs to %s: %s", job.OutputDirectory(), err.Error()))
+		} else {
+			running(client, job, fmt.Sprintf("Transfer utility exited with a code of %d when uploading outputs to %s", exitCode, err.Error()))
 		}
 		status = messaging.StatusOutputFailed
 	}
+	running(client, job, fmt.Sprintf("Done uploading outputs to %s", job.OutputDirectory()))
 
 	// Always inform upstream of the job status.
 	if status != messaging.Success {
