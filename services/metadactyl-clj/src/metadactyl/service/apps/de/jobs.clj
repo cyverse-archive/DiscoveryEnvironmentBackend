@@ -79,7 +79,7 @@
         job-id))))
 
 (defn- format-job-submission-response
-  [user jex-submission batch?]
+  [user jex-submission batch? job-id]
   (remove-nil-vals
    {:app_description (:app_description jex-submission)
     :app_disabled    false
@@ -87,7 +87,7 @@
     :app_name        (:app_name jex-submission)
     :batch           batch?
     :description     (:description jex-submission)
-    :id              (str (:uuid jex-submission))
+    :id              (str job-id)
     :name            (:name jex-submission)
     :notify          (:notify jex-submission)
     :resultfolderid  (:output_dir jex-submission)
@@ -101,12 +101,12 @@
   (let [batch? (boolean (:parent_id submission))]
     (try+
      (do-jex-submission job)
-     (save-job-submission user job submission)
      (catch Object _
        (if batch?
          (save-job-submission user job submission "Failed")
          (throw+))))
-    (format-job-submission-response user job batch?)))
+    (->> (save-job-submission user job submission)
+         (format-job-submission-response user job batch?))))
 
 (defn- prep-submission
   [submission]
