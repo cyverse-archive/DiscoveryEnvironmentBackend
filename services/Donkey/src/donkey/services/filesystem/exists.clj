@@ -4,12 +4,10 @@
         [donkey.services.filesystem.validators]
         [clj-jargon.init :only [with-jargon]]
         [clj-jargon.item-info :only [exists?]])
-  (:require [clj-http.client :as http]
-            [clojure-commons.file-utils :as ft]
+  (:require [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.util.config :as cfg]
             [donkey.clients.data-info.raw :as data-raw]
             [donkey.services.filesystem.icat :as icat]))
 

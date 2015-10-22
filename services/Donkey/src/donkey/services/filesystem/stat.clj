@@ -7,10 +7,8 @@
         [clj-jargon.permissions :only [is-writeable? list-user-perms permission-for owns?]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
-            [cemerick.url :as url]
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
-            [clj-http.client :as http]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.filesystem.garnish.irods :as filetypes]
