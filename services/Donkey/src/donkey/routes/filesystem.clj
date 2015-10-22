@@ -6,7 +6,6 @@
             [donkey.clients.data-info :as data]
             [donkey.services.filesystem.directory :as dir]
             [donkey.services.filesystem.exists :as exists]
-            [donkey.services.filesystem.home :as home]
             [donkey.services.filesystem.manifest :as manifest]
             [donkey.services.filesystem.metadata :as meta]
             [donkey.services.filesystem.metadata-template-avus :as mta]
@@ -25,9 +24,6 @@
 
     (GET "/filesystem/root" [:as req]
       (controller req root/do-root-listing :params))
-
-    (GET "/filesystem/home" [:as req]
-      (controller req home/do-homedir :params))
 
     (POST "/filesystem/exists" [:as req]
       (controller req exists/do-exists :params :body))
