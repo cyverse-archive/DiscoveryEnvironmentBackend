@@ -10,6 +10,7 @@
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.util.config :as cfg]
+            [donkey.clients.data-info.raw :as data-raw]
             [donkey.services.filesystem.icat :as icat]))
 
 
@@ -33,15 +34,11 @@
 
 
 (defn do-exists
-  [params body]
-  (let [url     (url/url (cfg/data-info-base) "existence-marker")
-        req-map {:query-params (select-keys params [:user])
-                 :content-type :json
-                 :body         (json/encode body)}]
-    (-> (http/post (str url) req-map)
-      :body
-      json/decode
-      (select-keys ["paths"]))))
+  [{user :user} {paths :paths}]
+  (-> (data-raw/check-existence user paths)
+    :body
+    json/decode
+    (select-keys ["paths"])))
 
 (with-pre-hook! #'do-exists
   (fn [params body]

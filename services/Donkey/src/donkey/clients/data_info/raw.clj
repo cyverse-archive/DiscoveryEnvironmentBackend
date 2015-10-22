@@ -140,6 +140,15 @@
                  :body         (json/encode {:paths paths})}]
     (http/post (str url) req-map)))
 
+(defn check-existence
+  "Uses the data-info existence-marker endpoint to gather existence information for a set of files/folders."
+  [user paths]
+  (let [url     (url/url (cfg/data-info-base) "existence-marker")
+        req-map {:query-params {:user user}
+                 :content-type :json
+                 :body         (json/encode {:paths paths})}]
+    (http/post (str url) req-map)))
+
 (defn get-type-list
   "Uses the data-info file-types endpoint to produce a list of acceptable types."
   []
