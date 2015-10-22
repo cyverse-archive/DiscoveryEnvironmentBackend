@@ -18,6 +18,10 @@ type Docker struct {
 	TransferImage string
 }
 
+// WORKDIR is the path to the working directory inside all of the containers
+// that are run as part of a job.
+const WORKDIR = "/de-app-work"
+
 // NewDocker returns a *Docker that connects to the docker client listening at
 // 'uri'.
 func NewDocker(uri string) (*Docker, error) {
@@ -357,6 +361,10 @@ func (d *Docker) CreateDownloadContainer(job *model.Job, input *model.StepInput,
 	if err != nil {
 		return nil, nil, err
 	}
+	err = d.Pull(image, tag)
+	if err != nil {
+		return nil, nil, err
+	}
 	opts.Config.Image = fmt.Sprintf("%s:%s", image, tag)
 	opts.Name = fmt.Sprintf("input-%s-%s", idx, invID)
 	opts.HostConfig.LogConfig = docker.LogConfig{Type: "none"}
@@ -364,10 +372,10 @@ func (d *Docker) CreateDownloadContainer(job *model.Job, input *model.StepInput,
 	if err != nil {
 		return nil, nil, err
 	}
-	opts.Config.WorkingDir = "/de-app-work"
+	opts.Config.WorkingDir = WORKDIR
 	opts.Config.Mounts = append(opts.Config.Mounts, docker.Mount{
 		Source:      wd,
-		Destination: "/de-app-work",
+		Destination: WORKDIR,
 		RW:          true,
 	})
 	opts.Config.Labels = make(map[string]string)
@@ -413,6 +421,10 @@ func (d *Docker) CreateUploadContainer(job *model.Job) (*docker.Container, *dock
 	if err != nil {
 		return nil, nil, err
 	}
+	err = d.Pull(image, tag)
+	if err != nil {
+		return nil, nil, err
+	}
 	opts.Config.Image = fmt.Sprintf("%s:%s", image, tag)
 	opts.Name = fmt.Sprintf("output-%s", job.InvocationID)
 	opts.HostConfig.LogConfig = docker.LogConfig{Type: "none"}
@@ -420,10 +432,10 @@ func (d *Docker) CreateUploadContainer(job *model.Job) (*docker.Container, *dock
 	if err != nil {
 		return nil, nil, err
 	}
-	opts.Config.WorkingDir = "/de-app-work"
+	opts.Config.WorkingDir = WORKDIR
 	opts.Config.Mounts = append(opts.Config.Mounts, docker.Mount{
 		Source:      wd,
-		Destination: "/de-app-work",
+		Destination: WORKDIR,
 		RW:          true,
 	})
 	opts.Config.Labels = make(map[string]string)

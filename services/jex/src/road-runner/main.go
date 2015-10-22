@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"logcabin"
 	"messaging"
 	"model"
@@ -126,6 +125,8 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
+	status := messaging.Success
+
 	client := messaging.NewClient(uri)
 	defer client.Close()
 	client.SetupPublishing(messaging.JobsExchange)
@@ -171,7 +172,7 @@ func main() {
 
 	err = os.Mkdir("logs", 0755)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Print(err)
 	}
 
 	transferTrigger, err := os.Create("logs/de-transfer-trigger.log")
@@ -190,13 +191,11 @@ func main() {
 		}
 	}
 
-	status := messaging.Success
-
 	// Pull the data containers
 	for _, dc := range job.DataContainers() {
 		err = dckr.Pull(dc.Name, dc.Tag)
 		if err != nil {
-			log.Print(err)
+			logger.Print(err)
 			status = messaging.StatusDockerPullFailed
 			break
 		}
@@ -206,13 +205,13 @@ func main() {
 	for _, dc := range job.DataContainers() {
 		_, _, err := dckr.CreateDataContainer(&dc, job.InvocationID)
 		if err != nil {
-			log.Print(err)
+			logger.Print(err)
 			status = messaging.StatusDockerPullFailed
 			break
 		} else {
 			_, _, err = dckr.CreateDataContainer(&dc, job.InvocationID)
 			if err != nil {
-				log.Print(err)
+				logger.Print(err)
 				status = messaging.StatusDockerCreateFailed
 				break
 			}
@@ -223,7 +222,7 @@ func main() {
 	for _, ci := range job.ContainerImages() {
 		err = dckr.Pull(ci.Name, ci.Tag)
 		if err != nil {
-			log.Print(err)
+			logger.Print(err)
 			status = messaging.StatusDockerPullFailed
 			break
 		}
