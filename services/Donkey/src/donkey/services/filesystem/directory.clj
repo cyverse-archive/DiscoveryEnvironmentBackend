@@ -13,6 +13,7 @@
             [clojure-commons.error-codes :as error]
             [clj-icat-direct.icat :as icat]
             [donkey.clients.data-info :as data]
+            [donkey.clients.data-info.raw :as data-raw]
             [donkey.services.metadata.favorites :as favorites]
             [donkey.util.config :as cfg]
             [donkey.util.validators :as duv]
@@ -93,18 +94,10 @@
       :folders (map (partial fmt-folder user favorite-ids) folders))))
 
 
-(defn- mk-nav-url
-  [path]
-  (let [nodes         (fs/split path)
-        nodes         (if (= "/" (first nodes)) (next nodes) nodes)
-        encoded-nodes (map url/url-encode nodes)]
-    (apply url/url (cfg/data-info-base) "navigation" "path" encoded-nodes)))
-
-
 (defn- list-directories
   "Lists the directories contained under path."
   [user path]
-    (-> (http/get (str (mk-nav-url path)) {:query-params {:user user}})
+    (-> (data-raw/list-directories user path)
       :body
       (json/decode true)
       :folder

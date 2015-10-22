@@ -15,6 +15,20 @@
                  :content-type :json}]
     (http/get (str url) req-map)))
 
+(defn- mk-nav-url
+  [path]
+  (let [nodes         (fs/split path)
+        nodes         (if (= "/" (first nodes)) (next nodes) nodes)
+        encoded-nodes (map url/url-encode nodes)]
+    (apply url/url (cfg/data-info-base) "navigation" "path" encoded-nodes)))
+
+(defn list-directories
+  "Uses the data-info navigation/path endpoint to list directories contained under path."
+  [user path]
+  (http/get (str (mk-nav-url path))
+            {:query-params {:user user}
+             :content-type :json}))
+
 ;; READ
 
 (defn read-chunk
