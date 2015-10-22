@@ -15,6 +15,7 @@
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.filesystem.garnish.irods :as filetypes]
             [clj-icat-direct.icat :as icat]
+            [donkey.clients.data-info.raw :as data-raw]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as jargon])
@@ -120,14 +121,10 @@
 
 
 (defn do-stat
-  [{user :user :as params} body]
-  (let [url     (url/url (cfg/data-info-base) "stat-gatherer")
-        req-map {:query-params (select-keys params [:user])
-                 :content-type :json
-                 :body         (json/encode body)}]
-    (->> (http/post (str url) req-map)
-      :body
-      (fmt-stat-response user))))
+  [{user :user} {paths :paths}]
+  (->> (data-raw/collect-stats user paths)
+    :body
+    (fmt-stat-response user)))
 
 (with-pre-hook! #'do-stat
   (fn [params body]

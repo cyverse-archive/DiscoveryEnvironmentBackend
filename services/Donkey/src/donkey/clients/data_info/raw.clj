@@ -123,26 +123,35 @@
 ;; MISC
 
 (defn collect-permissions
-    "Uses the data-info permissions-gatherer endpoint to query user permissions for a set of files/folders."
-    [user paths]
-    (let [url (url/url (cfg/data-info-base-url) "permissions-gatherer")
-          req-map {:query-params {:user user}
-                   :content-type :json
-                   :body (json/encode {:paths paths})}]
-      (http/post (str url) req-map)))
+  "Uses the data-info permissions-gatherer endpoint to query user permissions for a set of files/folders."
+  [user paths]
+  (let [url (url/url (cfg/data-info-base-url) "permissions-gatherer")
+        req-map {:query-params {:user user}
+                 :content-type :json
+                 :body (json/encode {:paths paths})}]
+    (http/post (str url) req-map)))
+
+(defn collect-stats
+  "Uses the data-info stat-gatherer endpoint to gather stat information for a set of files/folders."
+  [user paths]
+  (let [url     (url/url (cfg/data-info-base) "stat-gatherer")
+        req-map {:query-params {:user user}
+                 :content-type :json
+                 :body         (json/encode {:paths paths})}]
+    (http/post (str url) req-map)))
 
 (defn get-type-list
-    "Uses the data-info file-types endpoint to produce a list of acceptable types."
-    []
-    (let [url (url/url (cfg/data-info-base-url) "file-types")
-          req-map {:content-type :json}]
-      (http/get (str url) req-map)))
+  "Uses the data-info file-types endpoint to produce a list of acceptable types."
+  []
+  (let [url (url/url (cfg/data-info-base-url) "file-types")
+        req-map {:content-type :json}]
+    (http/get (str url) req-map)))
 
 (defn set-file-type
-    "Uses the data-info set-type endpoint to change the type of a file."
-    [user path-uuid type]
-    (let [url (url/url (cfg/data-info-base-url) "data" path-uuid "type")
-          req-map {:query-params {:user user}
-                   :content-type :json
-                   :body (json/encode {:type type})}]
-      (http/put (str url) req-map)))
+  "Uses the data-info set-type endpoint to change the type of a file."
+  [user path-uuid type]
+  (let [url (url/url (cfg/data-info-base-url) "data" path-uuid "type")
+        req-map {:query-params {:user user}
+                 :content-type :json
+                 :body (json/encode {:type type})}]
+    (http/put (str url) req-map)))
