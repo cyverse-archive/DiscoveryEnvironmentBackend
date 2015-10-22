@@ -5,6 +5,16 @@
             [clj-http.client :as http]
             [donkey.util.config :as cfg]))
 
+;; NAVIGATION
+
+(defn list-roots
+  "Uses the data-info navigation/root endpoint to list a user's navigation roots."
+  [user]
+  (let [url (url/url (cfg/data-info-base) "navigation" "root")
+        req-map {:query-params {:user user}
+                 :content-type :json}]
+    (http/get (str url) req-map)))
+
 ;; READ
 
 (defn read-chunk
