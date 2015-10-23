@@ -1,0 +1,15 @@
+jex_rabbit:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+jex_db:
+    image: discoenv/unittest-jexdb:dev
+    ports:
+      - "5432:5432"
+jex_dind:
+    image: ironcladlou/fedora-dind
+    volumes:
+      - .:/work
+    privileged: true
+    command: dind
