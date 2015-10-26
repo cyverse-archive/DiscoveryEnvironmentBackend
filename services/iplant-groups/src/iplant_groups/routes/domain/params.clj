@@ -25,6 +25,11 @@
     (describe NonBlankString "The name of the folder to search for.")))
 
 (s/defschema AttributeSearchParams
+  (assoc SearchParams
+    (s/optional-key :exact)
+    (describe Boolean "If true, match this name (including stems) exactly.")))
+
+(s/defschema AttributeAssignmentSearchParams
   (assoc StandardUserQueryParams
     (s/optional-key :attribute_def_id)
     (describe NonBlankString "The id of an attribute/permission definition to search with.")

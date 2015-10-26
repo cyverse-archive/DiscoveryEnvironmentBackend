@@ -7,6 +7,10 @@
   (let [attribute-assignments (grouper/permission-assignment-search user attribute_def_id attribute_def_name_id role_id subject_id action_names)]
     {:assignments (mapv fmt/format-attribute-assign attribute-assignments)}))
 
+(defn attribute-search
+  [{:keys [user search exact]}]
+  {:attributes (mapv fmt/format-attribute-name (grouper/attribute-name-search user search exact))})
+
 (defn add-attribute-name
   [{:keys [name description display_extension attribute_definition]} {:keys [user]}]
   (let [attribute-name (grouper/add-attribute-name user (:id attribute_definition) name display_extension description)]

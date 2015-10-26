@@ -463,6 +463,24 @@
         first
         :wsGroups)))
 
+;; Attribute Definition Name search
+(defn- format-attribute-name-search-request
+  [username search exact?]
+  (let [query (if exact?
+                  {:wsAttributeDefNameLookups [{:name search}]}
+                  {:scope search})]
+    {:WsRestFindAttributeDefNamesRequest
+      (assoc query
+             :actAsSubjectLookup (act-as-subject-lookup username))}))
+
+(defn attribute-name-search
+  [username search exact?]
+  (with-trap [default-error-handler]
+    (-> (format-attribute-name-search-request username search exact?)
+        (grouper-post "attributeDefNames")
+        :WsFindAttributeDefNamesResults
+        :attributeDefNameResults)))
+
 ;; Attribute Definition Name add/update
 
 (defn- format-attribute-name-add-update-request ;; functionally add-only to start. need to add a wsAttributeDefNameLookup for update

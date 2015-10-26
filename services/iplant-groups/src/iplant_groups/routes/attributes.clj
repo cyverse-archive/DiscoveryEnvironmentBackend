@@ -6,8 +6,15 @@
   (:require [iplant_groups.service.attributes :as attributes]))
 
 (defroutes* attributes
-  (GET* "/permissions" []
+  (GET* "/" []
         :query       [params AttributeSearchParams]
+        :return      AttributeNameList
+        :summary     "Attribute Name/Resource Search"
+        :description "This endpoint allows callers to search for attribute names/permission resources by name, or with the 'exact' parameter, to look them up exactly by name."
+        (ok (attributes/attribute-search params)))
+
+  (GET* "/permissions" []
+        :query       [params AttributeAssignmentSearchParams]
         :return      PermissionAssignmentList
         :summary     "Permissions Search/Lookup"
         :description "This endpoint allows callers to look up permission assignments. Only permissions that are visible to the given user will be listed."

@@ -39,6 +39,9 @@
    :attribute_definition
    (describe AttributeDefinition "This attribute-name's associated attribute-definition.")))
 
+(s/defschema AttributeNameList
+  {:attributes (describe [AttributeName] "The list of attribute-name results.")})
+
 (s/defschema AttributeAssignment
   {:id (describe String "The attribute assignment ID")
    :disallowed (describe Boolean "If this assignment is marked as disallowing the permission, rather than allowing it.")
