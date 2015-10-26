@@ -1,16 +1,12 @@
 (ns donkey.services.filesystem.exists
   (:use [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
-        [donkey.services.filesystem.validators]
-        [clj-jargon.init :only [with-jargon]]
-        [clj-jargon.item-info :only [exists?]])
+        [donkey.services.filesystem.validators])
   (:require [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
             [cemerick.url :as url]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.clients.data-info.raw :as data-raw]
-            [donkey.services.filesystem.icat :as icat]))
-
+            [donkey.clients.data-info.raw :as data-raw]))
 
 (defn- url-encoded?
   [string-to-check]
@@ -26,10 +22,11 @@
   ([path]
      (path-exists? "" path))
   ([user path]
-    (let [path (ft/rm-last-slash path)]
-      (with-jargon (icat/jargon-cfg) [cm]
-        (exists? cm (url-decode path))))))
-
+    (let [path (url-decode (ft/rm-last-slash path))]
+      (-> (data-raw/check-existence user [path])
+          :body
+          json/decode
+          (get-in ["paths" path])))))
 
 (defn do-exists
   [{user :user} {paths :paths}]
