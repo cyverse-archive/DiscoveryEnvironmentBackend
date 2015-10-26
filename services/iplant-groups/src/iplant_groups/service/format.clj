@@ -128,26 +128,38 @@
          (remove-vals nil?))))
 
 (defn format-attribute-assign ;; XXX: only supports group and membership attributes for now
+                              ;; This is a bit weird because it supports both grouper WsAttributeAssign and WsPermissionAssign which are different for some reason
   [attribute-assign]
   (when-not (nil? attribute-assign)
-    (->> {:id          (:id attribute-assign)
+    (->> {:id          (or (:id attribute-assign) (:attributeAssignId attribute-assign))
           :disallowed  (string-to-boolean (:disallowed attribute-assign))
           :enabled     (string-to-boolean (:enabled attribute-assign))
           :action_id   (:attributeAssignActionId attribute-assign)
-          :action_name (:attributeAssignActionName attribute-assign)
+          :action_name (or (:attributeAssignActionName attribute-assign) (:action attribute-assign))
           :action_type (:attributeAssignActionType attribute-assign)
           :delegatable (string-to-boolean (:attributeAssignDelegatable attribute-assign))
           :assign_type (:attributeAssignType attribute-assign)
           :created_at  (timestamp-to-millis (:createdOn attribute-assign))
           :modified_at (timestamp-to-millis (:lastUpdated attribute-assign))
-          :group       (if (:ownerGroupId attribute-assign)
+          :group       (cond
+                         (:ownerGroupId attribute-assign)
                            {:id   (:ownerGroupId attribute-assign)
-                            :name (:ownerGroupName attribute-assign)})
-          :membership  (if (:ownerMembershipId attribute-assign)
-                           {:id (:ownerMembershipId attribute-assign)})
-          :subject     (if (:ownerMemberSubjectId attribute-assign)
+                            :name (:ownerGroupName attribute-assign)}
+                         (and (:roleId attribute-assign) (:roleName attribute-assign))
+                           {:id   (:roleId attribute-assign)
+                            :name (:roleName attribute-assign)})
+          :membership  (cond
+                         (:ownerMembershipId attribute-assign)
+                           {:id (:ownerMembershipId attribute-assign)}
+                         (:membershipId attribute-assign)
+                           {:id (:membershipId attribute-assign)})
+          :subject     (cond
+                         (:ownerMemberSubjectId attribute-assign)
                            {:id (:ownerMemberSubjectId attribute-assign)
-                            :source_id (:ownerMemberSourceId attribute-assign)})
+                            :source_id (:ownerMemberSourceId attribute-assign)}
+                         (and (:subjectId attribute-assign) (:sourceId attribute-assign))
+                           {:id (:subjectId attribute-assign)
+                            :source_id (:sourceId attribute-assign)})
           :attribute_definition_name
             {:id   (:attributeDefNameId attribute-assign)
              :name (:attributeDefNameName attribute-assign)}

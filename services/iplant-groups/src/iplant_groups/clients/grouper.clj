@@ -496,7 +496,26 @@
     (format-attribute-name-add-request username attribute-def-id name display-extension description)))
 
 ;; Permission assignment
+;; search/lookup
+(defn- format-permission-search-request
+  [username attribute-def-id attribute-name-id role-id subject-id action-names]
+  {:WsRestGetPermissionAssignmentsRequest
+   (remove-vals nil? {:actAsSubjectLookup (act-as-subject-lookup username)
+                      :wsAttributeDefLookups (if attribute-def-id [{:uuid attribute-def-id}])
+                      :wsAttributeDefNameLookups (if attribute-name-id [{:uuid attribute-name-id}])
+                      :roleLookups (if role-id [{:uuid role-id}])
+                      :actions (if (seq action-names) action-names)
+                      :wsSubjectLookups (if subject-id [{:subjectId subject-id}])})})
 
+(defn permission-assignment-search
+  [username attribute-def-id attribute-name-id role-id subject-id action-names]
+  (with-trap [default-error-handler]
+    (-> (format-permission-search-request username attribute-def-id attribute-name-id role-id subject-id action-names)
+        (grouper-post "permissionAssignments")
+        :WsGetPermissionAssignmentsResults
+        :wsPermissionAssigns)))
+
+;; assign/remove
 (defn- format-permission-assign-remove-request
   "Format request. lookups-and-type should have the permissionType key as well as any lookups necessary for that type (e.g. type role + roleLookups)"
   [assignment? lookups-and-type username attribute-def-name-id allowed? action-names]

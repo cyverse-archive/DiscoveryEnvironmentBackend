@@ -23,3 +23,20 @@
   (assoc SearchParams
     (s/optional-key :folder)
     (describe NonBlankString "The name of the folder to search for.")))
+
+(s/defschema AttributeSearchParams
+  (assoc StandardUserQueryParams
+    (s/optional-key :attribute_def_id)
+    (describe NonBlankString "The id of an attribute/permission definition to search with.")
+
+    (s/optional-key :attribute_def_name_id)
+    (describe NonBlankString "The id of an attribute name/permision resource to search with.")
+
+    (s/optional-key :subject_id)
+    (describe NonBlankString "The id of a subject to search with.")
+
+    (s/optional-key :role_id)
+    (describe NonBlankString "The id of a role-type group to search with.")
+
+    (s/optional-key :action_names)
+    (describe [NonBlankString] "A list of action names to search with.")))

@@ -1,5 +1,5 @@
 (ns iplant_groups.routes.domain.attribute
-  (:use [common-swagger-api.schema :only [describe]])
+  (:use [common-swagger-api.schema :only [describe ->optional-param]])
   (:require [schema.core :as s]))
 
 (s/defschema AttributeDefinition
@@ -55,6 +55,13 @@
    (s/optional-key :group) (describe {:id String :name String} "The group this was assigned to, if relevant.")
    (s/optional-key :membership) (describe {:id String} "The membership this was assigned to, if relevant.")
    (s/optional-key :subject) (describe {:id String :source_id String} "The member/subject this was assigned to, if relevant.")})
+
+(s/defschema PermissionAssignment
+  (dissoc AttributeAssignment
+          :created_at :modified_at :action_id :action_type :delegatable :assign_type))
+
+(s/defschema PermissionAssignmentList
+  {:assignments (describe [PermissionAssignment] "The permission assignments.")})
 
 (s/defschema PermissionAllowed
   {:allowed (describe Boolean "Whether this permission should be marked as allowed or disallowed (latter to override an inherited permission).")})

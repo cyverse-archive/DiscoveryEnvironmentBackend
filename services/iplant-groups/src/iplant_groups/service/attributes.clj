@@ -2,6 +2,11 @@
   (:require [iplant_groups.clients.grouper :as grouper]
             [iplant_groups.service.format :as fmt]))
 
+(defn permission-assignment-search
+  [{:keys [user attribute_def_id attribute_def_name_id role_id subject_id action_names]}]
+  (let [attribute-assignments (grouper/permission-assignment-search user attribute_def_id attribute_def_name_id role_id subject_id action_names)]
+    {:assignments (mapv fmt/format-attribute-assign attribute-assignments)}))
+
 (defn add-attribute-name
   [{:keys [name description display_extension attribute_definition]} {:keys [user]}]
   (let [attribute-name (grouper/add-attribute-name user (:id attribute_definition) name display_extension description)]
