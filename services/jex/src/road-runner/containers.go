@@ -149,6 +149,15 @@ func (d *Docker) SafelyRemoveImage(name, tag string) error {
 	return d.Client.RemoveImageExtended(imageName, opts)
 }
 
+// NukeImage will delete the image with force set to true.
+func (d *Docker) NukeImage(name, tag string) error {
+	opts := docker.RemoveImageOptions{
+		Force: true,
+	}
+	imageName := fmt.Sprintf("%s:%s", name, tag)
+	return d.Client.RemoveImageExtended(imageName, opts)
+}
+
 // Pull will pull an image indicated by name and tag. Name is in the format
 // "registry/repository". If the name doesn't contain a / then the registry
 // is assumed to be "base" and the provided name will be set to repository.

@@ -10,8 +10,10 @@ import (
 	"model"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/streadway/amqp"
 )
@@ -77,6 +79,7 @@ func AppVersion() {
 }
 
 func fail(client *messaging.Client, job *model.Job, msg string) error {
+	logger.Print(msg)
 	return client.PublishJobUpdate(&messaging.UpdateMessage{
 		Job:     job,
 		State:   messaging.FailedState,
@@ -100,6 +103,7 @@ func running(client *messaging.Client, job *model.Job, msg string) {
 	if err != nil {
 		logger.Print(err)
 	}
+	logger.Print(msg)
 }
 
 func cleanup(job *model.Job) {
@@ -121,58 +125,9 @@ func cleanup(job *model.Job) {
 	}
 }
 
-func main() {
-	if *version {
-		AppVersion()
-		os.Exit(0)
-	}
-	if *cfgPath == "" {
-		logger.Fatal("--config must be set.")
-	}
-	err := configurate.Init(*cfgPath)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	uri, err := configurate.C.String("amqp.uri")
-	if err != nil {
-		logger.Fatal(err)
-	}
+// Run executes the job, and returns the exit code on the exit channel.
+func Run(client *messaging.Client, dckr *Docker, exit chan messaging.StatusCode) {
 	status := messaging.Success
-
-	client := messaging.NewClient(uri)
-	defer client.Close()
-	client.SetupPublishing(messaging.JobsExchange)
-
-	if *jobFile == "" {
-		logger.Fatal("--job must be set.")
-	}
-	data, err := ioutil.ReadFile(*jobFile)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	job, err = model.NewFromData(data)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	dckr, err = NewDocker(*dockerURI)
-	if err != nil {
-		fail(client, job, "Failed to connect to local docker socket")
-		logger.Fatal(err)
-	}
-
-	// listen for orders to stop the job.
-	stopsKey := fmt.Sprintf("%s.%s", messaging.StopsKey, job.InvocationID)
-	client.AddConsumer(messaging.JobsExchange, "runner", stopsKey, func(d amqp.Delivery) {
-		d.Ack(false)
-		fail(client, job, "Received stop request")
-		cleanup(job)
-		os.Exit(-1)
-	})
-	go func() {
-		client.Listen()
-	}()
-
 	host, err := os.Hostname()
 	if err != nil {
 		logger.Print(err)
@@ -336,10 +291,192 @@ func main() {
 	} else {
 		success(client, job)
 	}
+	exit <- status
+}
 
-	// Clean up needs to happen, but it shouldn't influence whether or not the job
-	// is considered a success.
-	cleanup(job)
+// Wait implements the logic for killing the job when the time limit is surpassed.
+func Wait(client *messaging.Client, dckr *Docker, seconds chan int64, exit chan messaging.StatusCode) {
+	limit := <-seconds
+	durationStr := fmt.Sprintf("%ds", limit)
+	duration, err := time.ParseDuration(durationStr)
+	if err != nil {
+		exit <- messaging.StatusBadDuration
+	} else {
+		time.Sleep(duration)
+		logger.Printf("Time limit reached after %s", durationStr)
+		exit <- messaging.StatusTimeLimit
+	}
+}
 
-	os.Exit(int(status))
+func main() {
+	if *version {
+		AppVersion()
+		os.Exit(0)
+	}
+	if *cfgPath == "" {
+		logger.Fatal("--config must be set.")
+	}
+	err := configurate.Init(*cfgPath)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	uri, err := configurate.C.String("amqp.uri")
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	client := messaging.NewClient(uri)
+	defer client.Close()
+	client.SetupPublishing(messaging.JobsExchange)
+
+	if *jobFile == "" {
+		logger.Fatal("--job must be set.")
+	}
+	data, err := ioutil.ReadFile(*jobFile)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	job, err = model.NewFromData(data)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	dckr, err = NewDocker(*dockerURI)
+	if err != nil {
+		fail(client, job, "Failed to connect to local docker socket")
+		logger.Fatal(err)
+	}
+
+	// The channel that the exit code will be passed along on.
+	exit := make(chan messaging.StatusCode)
+
+	// Could probably reuse the exit channel, but that's less explicit.
+	finalExit := make(chan messaging.StatusCode)
+
+	// The channel that additional seconds will be sent through for the time limit.
+	seconds := make(chan int64)
+
+	// Clean up code based on the exit status.
+	go func() {
+		exitCode := <-exit
+		switch exitCode {
+		case messaging.StatusTimeLimit, messaging.StatusKilled:
+			//Annihilate the input/steps/data containers even if they're running,
+			//but allow the output containers to run. Yanking the rug out from the
+			//containers should force the Run() function to 'fall through' to any clean
+			//up steps.
+			logger.Printf("Received an exit code of %d, cleaning up", int(exitCode))
+			for _, dc := range job.DataContainers() {
+				logger.Printf("Nuking image %s:%s", dc.Name, dc.Tag)
+				err := dckr.NukeImage(dc.Name, dc.Tag)
+				if err != nil {
+					logger.Print(err)
+				}
+			}
+			for _, ci := range job.ContainerImages() {
+				logger.Printf("Nuking image %s:%s", ci.Name, ci.Tag)
+				err := dckr.NukeImage(ci.Name, ci.Tag)
+				if err != nil {
+					logger.Print(err)
+				}
+			}
+			logger.Println("Finding all input containers")
+			inputContainers, err := dckr.ContainersWithLabel(typeLabel, strconv.Itoa(inputContainer), true)
+			if err != nil {
+				logger.Print(err)
+				inputContainers = []string{}
+			}
+			for _, ic := range inputContainers {
+				logger.Printf("Nuking input container %s", ic)
+				err = dckr.NukeContainer(ic)
+				if err != nil {
+					logger.Print(err)
+				}
+			}
+			logger.Println("Finding all step containers")
+			stepContainers, err := dckr.ContainersWithLabel(typeLabel, strconv.Itoa(stepContainer), true)
+			if err != nil {
+				logger.Print(err)
+				inputContainers = []string{}
+			}
+			for _, sc := range stepContainers {
+				logger.Printf("Nuking step container %s", sc)
+				err = dckr.NukeContainer(sc)
+				if err != nil {
+					logger.Print(err)
+				}
+			}
+			logger.Println("Finding all data containers")
+			dataContainers, err := dckr.ContainersWithLabel(typeLabel, strconv.Itoa(dataContainer), true)
+			if err != nil {
+				logger.Print(err)
+				inputContainers = []string{}
+			}
+			for _, dc := range dataContainers {
+				logger.Printf("Nuking data container %s", dc)
+				err = dckr.NukeContainer(dc)
+				if err != nil {
+					logger.Print(err)
+				}
+			}
+
+			//wait for the exit code from the Run function.
+			<-exit
+
+			//Aggressively clean up the rest of the job.
+			logger.Printf("Nuking all containers with the label %s=%s", model.DockerLabelKey, job.InvocationID)
+			err = dckr.NukeContainersByLabel(model.DockerLabelKey, job.InvocationID)
+			if err != nil {
+				logger.Print(err)
+			}
+
+		default:
+			logger.Printf("Received an exit code of %d, cleaning up", int(exitCode))
+			logger.Printf("Finding all containers with the label %s=%s", model.DockerLabelKey, job.InvocationID)
+			jobContainers, err := dckr.ContainersWithLabel(model.DockerLabelKey, job.InvocationID, true)
+			if err != nil {
+				logger.Print(err)
+				jobContainers = []string{}
+			}
+			for _, jc := range jobContainers {
+				logger.Printf("Nuking container %s", jc)
+				err = dckr.NukeContainer(jc)
+				if err != nil {
+					logger.Print(err)
+				}
+			}
+			for _, dc := range job.DataContainers() {
+				logger.Printf("Safely removing image %s:%s", dc.Name, dc.Tag)
+				err := dckr.SafelyRemoveImage(dc.Name, dc.Tag)
+				if err != nil {
+					logger.Print(err)
+				}
+			}
+			for _, ci := range job.ContainerImages() {
+				logger.Printf("Safely removing image %s:%s", ci.Name, ci.Tag)
+				err := dckr.SafelyRemoveImage(ci.Name, ci.Tag)
+				if err != nil {
+					logger.Print(err)
+				}
+			}
+		}
+		finalExit <- exitCode
+	}()
+
+	// listen for orders to stop the job.
+	stopsKey := fmt.Sprintf("%s.%s", messaging.StopsKey, job.InvocationID)
+	client.AddConsumer(messaging.JobsExchange, "runner", stopsKey, func(d amqp.Delivery) {
+		d.Ack(false)
+		running(client, job, "Received stop request")
+		exit <- -1
+	})
+
+	go func() {
+		client.Listen()
+	}()
+
+	go Wait(client, dckr, seconds, exit)
+	seconds <- job.TimeLimit
+	go Run(client, dckr, exit)
+	os.Exit(int(<-finalExit))
 }

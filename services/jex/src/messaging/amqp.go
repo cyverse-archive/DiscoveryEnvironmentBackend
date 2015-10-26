@@ -85,6 +85,14 @@ const (
 
 	// StatusKilled is the exit code when the job is killed.
 	StatusKilled
+
+	// StatusTimeLimit is the exit code when the job is killed due to the time
+	// limit being reached.
+	StatusTimeLimit
+
+	// StatusBadDuration is the exit code when the job is killed because an
+	// unparseable job duration was sent to it.
+	StatusBadDuration
 )
 
 // JobRequest is a generic request type for job related requests.
