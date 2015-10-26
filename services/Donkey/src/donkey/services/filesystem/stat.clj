@@ -57,6 +57,11 @@
       (merge {:content-type (detect-content-type cm path)}))
     stat-map))
 
+(defn- merge-label
+  [stat-map user path]
+  (assoc stat-map
+         :label (paths/id->label user path)))
+
 (defn path-is-dir?
   [path]
   (with-jargon (jargon/jargon-cfg) [cm]
@@ -68,8 +73,8 @@
   (let [path (:path stat)]
     (-> stat
         (assoc :id         (:value (first (get-attribute cm path "ipc_UUID")))
-               :label      (paths/id->label user path)
                :permission (permission-for cm user path))
+        (merge-label user path)
         (merge-type-info cm user path)
         (merge-shares cm user path)
         (merge-counts cm user path))))
