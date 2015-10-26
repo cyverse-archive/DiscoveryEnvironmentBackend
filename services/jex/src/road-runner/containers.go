@@ -22,6 +22,14 @@ type Docker struct {
 // that are run as part of a job.
 const WORKDIR = "/de-app-work"
 
+const (
+	typeLabel      = "org.iplantc.containertype"
+	inputContainer = iota
+	dataContainer
+	stepContainer
+	outputContainer
+)
+
 // NewDocker returns a *Docker that connects to the docker client listening at
 // 'uri'.
 func NewDocker(uri string) (*Docker, error) {
@@ -263,11 +271,13 @@ func (d *Docker) CreateContainerFromStep(step *model.Step, invID string) (*docke
 		createConfig.Env = append(createConfig.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 
+	createConfig.Labels = make(map[string]string)
+	createConfig.Labels[model.DockerLabelKey] = invID
+	createConfig.Labels[typeLabel] = strconv.Itoa(stepContainer)
+
 	createHostConfig.LogConfig = docker.LogConfig{Type: "none"}
 	createOpts.Config = createConfig
 	createOpts.HostConfig = createHostConfig
-	logger.Printf("%#v\n", createHostConfig)
-
 	container, err := d.Client.CreateContainer(createOpts)
 	return container, &createOpts, err
 }
@@ -380,6 +390,7 @@ func (d *Docker) CreateDownloadContainer(job *model.Job, input *model.StepInput,
 	})
 	opts.Config.Labels = make(map[string]string)
 	opts.Config.Labels[model.DockerLabelKey] = invID
+	opts.Config.Labels[typeLabel] = strconv.Itoa(inputContainer)
 	opts.Config.Cmd = input.Arguments(job.Submitter, job.FileMetadata)
 	container, err := d.Client.CreateContainer(opts)
 	return container, &opts, err
@@ -440,6 +451,7 @@ func (d *Docker) CreateUploadContainer(job *model.Job) (*docker.Container, *dock
 	})
 	opts.Config.Labels = make(map[string]string)
 	opts.Config.Labels[model.DockerLabelKey] = job.InvocationID
+	opts.Config.Labels[typeLabel] = strconv.Itoa(outputContainer)
 	opts.Config.Cmd = job.FinalOutputArguments()
 	container, err := d.Client.CreateContainer(opts)
 	return container, &opts, err
@@ -475,6 +487,7 @@ func (d *Docker) CreateDataContainer(vf *model.VolumesFrom, invID string) (*dock
 	opts.HostConfig.LogConfig = docker.LogConfig{Type: "none"}
 	opts.Config.Labels = make(map[string]string)
 	opts.Config.Labels[model.DockerLabelKey] = invID
+	opts.Config.Labels[typeLabel] = strconv.Itoa(dataContainer)
 	if vf.HostPath != "" || vf.ContainerPath != "" {
 		mount := docker.Mount{}
 		if vf.HostPath != "" {

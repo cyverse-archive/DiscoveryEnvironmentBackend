@@ -216,29 +216,33 @@ func main() {
 	}
 
 	// Create the data containers
-	for _, dc := range job.DataContainers() {
-		running(client, job, fmt.Sprintf("Creating data container %s-%s", dc.NamePrefix, job.InvocationID))
-		_, _, err := dckr.CreateDataContainer(&dc, job.InvocationID)
-		if err != nil {
-			logger.Print(err)
-			status = messaging.StatusDockerPullFailed
-			running(client, job, fmt.Sprintf("Error creating data container %s-%s", dc.NamePrefix, job.InvocationID))
-			break
+	if status == messaging.Success {
+		for _, dc := range job.DataContainers() {
+			running(client, job, fmt.Sprintf("Creating data container %s-%s", dc.NamePrefix, job.InvocationID))
+			_, _, err := dckr.CreateDataContainer(&dc, job.InvocationID)
+			if err != nil {
+				logger.Print(err)
+				status = messaging.StatusDockerPullFailed
+				running(client, job, fmt.Sprintf("Error creating data container %s-%s", dc.NamePrefix, job.InvocationID))
+				break
+			}
+			running(client, job, fmt.Sprintf("Done creating data container %s-%s", dc.NamePrefix, job.InvocationID))
 		}
-		running(client, job, fmt.Sprintf("Done creating data container %s-%s", dc.NamePrefix, job.InvocationID))
 	}
 
 	// Pull the job step containers
-	for _, ci := range job.ContainerImages() {
-		running(client, job, fmt.Sprintf("Pulling tool container %s:%s", ci.Name, ci.Tag))
-		err = dckr.Pull(ci.Name, ci.Tag)
-		if err != nil {
-			logger.Print(err)
-			status = messaging.StatusDockerPullFailed
-			running(client, job, fmt.Sprintf("Error pulling tool container '%s:%s': %s", ci.Name, ci.Tag, err.Error()))
-			break
+	if status == messaging.Success {
+		for _, ci := range job.ContainerImages() {
+			running(client, job, fmt.Sprintf("Pulling tool container %s:%s", ci.Name, ci.Tag))
+			err = dckr.Pull(ci.Name, ci.Tag)
+			if err != nil {
+				logger.Print(err)
+				status = messaging.StatusDockerPullFailed
+				running(client, job, fmt.Sprintf("Error pulling tool container '%s:%s': %s", ci.Name, ci.Tag, err.Error()))
+				break
+			}
+			running(client, job, fmt.Sprintf("Done pulling tool container %s:%s", ci.Name, ci.Tag))
 		}
-		running(client, job, fmt.Sprintf("Done pulling tool container %s:%s", ci.Name, ci.Tag))
 	}
 
 	// If pulls didn't succeed then we can't guarantee that we've got the
