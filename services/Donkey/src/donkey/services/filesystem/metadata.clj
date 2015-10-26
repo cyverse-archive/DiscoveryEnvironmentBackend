@@ -48,6 +48,10 @@
     (throw+ {:error_code ERR_NOT_AUTHORIZED
              :avus avus})))
 
+(defn service-response->json
+  [response]
+  (->> response :body service/decode-json))
+
 (defn- get-readable-path
   [cm user data-id]
   (let [path (:path (uuids/path-for-uuid cm user data-id))]
@@ -72,12 +76,13 @@
 (defn metadata-get
   "Returns the metadata for a path. Filters out system AVUs and replaces
    units set to ipc-reserved with an empty string."
-  [user path]
+  [user data-id]
   (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
-    (validators/path-exists cm path)
-    (validators/path-readable cm user path)
-    {:metadata (list-path-metadata cm path)}))
+    (let [path (get-readable-path cm user data-id)
+          template-avus (service-response->json (metadata-client/list-metadata-avus data-id))]
+      {:metadata (list-path-metadata cm path)
+       :template-avus template-avus})))
 
 (defn- common-metadata-set
   "Adds an AVU to 'path'. The AVU is passed in as a map in the format:
@@ -260,13 +265,13 @@
 (defn do-metadata-get
   "Entrypoint for the API. Calls (metadata-get). Parameter should be a map
    with :user and :path as keys. Values are strings."
-  [{user :user path :path}]
-  (metadata-get user path))
+  [{user :user} data-id]
+  (metadata-get user (uuidify data-id)))
 
 (with-pre-hook! #'do-metadata-get
-  (fn [params]
+  (fn [params data-id]
     (log-call "do-metadata-get" params)
-    (validate-map params {:user string? :path string?})))
+    (validate-map params {:user string?})))
 
 (with-post-hook! #'do-metadata-get (log-func "do-metadata-get"))
 

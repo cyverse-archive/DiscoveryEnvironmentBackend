@@ -9,26 +9,6 @@
             [donkey.services.filesystem.uuids :as uuids]
             [donkey.services.filesystem.validators :as validators]))
 
-(defn do-metadata-template-avu-list
-  "Lists AVUs associated with a Metadata Template for the given user's data item."
-  ([params data-id]
-   (metadata/list-metadata-avus (uuidify data-id)))
-
-  ([params data-id template-id]
-   (metadata/list-metadata-template-avus (uuidify data-id) (uuidify template-id))))
-
-(with-pre-hook! #'do-metadata-template-avu-list
-  (fn [params data-id & [template-id]]
-    (log-call "do-metadata-template-avu-list" params data-id template-id)
-    (with-jargon (icat/jargon-cfg) [cm]
-      (common-validators/validate-map params {:user string?})
-      (validators/user-exists cm (:user params))
-      (let [user (:user params)
-            path (:path (uuids/path-for-uuid cm user data-id))]
-        (validators/path-readable cm user path)))))
-
-(with-post-hook! #'do-metadata-template-avu-list (log-func "do-metadata-template-avu-list"))
-
 (defn do-set-metadata-template-avus
   "Adds or Updates AVUs associated with a Metadata Template for the given user's data item."
   [{username :user} data-id template-id body]

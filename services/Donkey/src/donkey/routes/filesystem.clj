@@ -64,9 +64,6 @@
     (GET "/filesystem/file/manifest" [:as req]
       (controller req manifest/do-manifest :params))
 
-    (GET "/filesystem/metadata" [:as req]
-      (controller req meta/do-metadata-get :params))
-
     (POST "/filesystem/metadata" [:as req]
       (controller req meta/do-metadata-set :params :body))
 
@@ -137,17 +134,14 @@
     (POST "/filesystem/metadata/csv-parser" [:as {:keys [user-info params] :as req}]
       (meta/parse-src-file-csv-metadata user-info params))
 
+    (GET "/filesystem/:data-id/metadata" [data-id :as req]
+      (controller req meta/do-metadata-get :params data-id))
+
    (POST "/filesystem/:data-id/metadata/copy" [data-id force :as req]
      (controller req meta/do-metadata-copy :params data-id force :body))
 
    (POST "/filesystem/:data-id/metadata/save" [data-id :as req]
      (controller req meta/do-metadata-save data-id :params :body))
-
-   (GET "/filesystem/:data-id/template-avus" [data-id :as req]
-     (controller req mta/do-metadata-template-avu-list :params data-id))
-
-   (GET "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
-     (controller req mta/do-metadata-template-avu-list :params data-id template-id))
 
    (POST "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
      (controller req mta/do-set-metadata-template-avus :params data-id template-id :body))
