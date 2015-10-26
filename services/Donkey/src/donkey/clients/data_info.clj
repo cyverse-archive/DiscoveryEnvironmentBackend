@@ -1,6 +1,5 @@
 (ns donkey.clients.data-info
   (:use [donkey.auth.user-attributes :only [current-user]]
-        [clj-jargon.init :only [with-jargon]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
@@ -64,8 +63,10 @@
 
 (defn- uuid-for-path
   [^String user ^String path]
-    (with-jargon (icat/jargon-cfg) [cm]
-      (:id (uuids/uuid-for-path cm user path))))
+  (-> (raw/collect-stats user [path])
+      :body
+      json/decode
+      (get-in ["paths" path "id"])))
 
 (defn ensure-dir-created
   "If a folder doesn't exist, it creates the folder and makes the given user an owner of it.
