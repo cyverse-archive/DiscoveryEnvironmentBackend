@@ -1,10 +1,10 @@
 (ns donkey.clients.data-info
   (:use [donkey.auth.user-attributes :only [current-user]]
-        [clj-jargon.init :only [with-jargon]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [cemerick.url :as url]
+            [cheshire.core :as json]
             [me.raynes.fs :as fs]
             [clj-icat-direct.icat :as db]
             [clojure-commons.error-codes :as error]
@@ -13,7 +13,6 @@
             [donkey.clients.data-info.raw :as raw]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
-            [donkey.services.filesystem.exists :as e]
             [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.metadata :as mt]
             [donkey.services.filesystem.sharing :as sharing]
@@ -64,8 +63,10 @@
 
 (defn- uuid-for-path
   [^String user ^String path]
-    (with-jargon (icat/jargon-cfg) [cm]
-      (:id (uuids/uuid-for-path cm user path))))
+  (-> (raw/collect-stats user [path])
+      :body
+      json/decode
+      (get-in ["paths" path "id"])))
 
 (defn ensure-dir-created
   "If a folder doesn't exist, it creates the folder and makes the given user an owner of it.
@@ -100,24 +101,43 @@
         :paths
         (get path))))
 
+(defn- url-encoded?
+  [string-to-check]
+  (re-seq #"\%[A-Fa-f0-9]{2}" string-to-check))
+
+(defn- url-decode
+  [string-to-decode]
+  (if (url-encoded? string-to-decode)
+    (url/url-decode string-to-decode)
+    string-to-decode))
+
+(defn path-exists?
+  [user path]
+  (let [path (url-decode (ft/rm-last-slash path))]
+    (-> (raw/check-existence user [path])
+        :body
+        json/decode
+        (get-in ["paths" path]))))
+
 (defn get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If
    the path exists and refers to a regular file then nil is returned.
    Otherwise, a new directory is created and the path is returned."
   [path]
   (log/debug "getting or creating dir: path =" path)
-  (cond
-   (not (e/path-exists? path))
-    (create-dir {:user (:shortUsername current-user)} {:path path})
+  (let [user (:shortUsername current-user)]
+    (cond
+     (not (path-exists? user path))
+      (create-dir {:user user} {:path path})
 
-   (and (e/path-exists? path) (st/path-is-dir? path))
-   path
+     (and (path-exists? user path) (st/path-is-dir? path))
+     path
 
-   (and (e/path-exists? path) (not (st/path-is-dir? path)))
-   nil
+     (and (path-exists? user path) (not (st/path-is-dir? path)))
+     nil
 
-   :else
-   nil))
+     :else
+     nil)))
 
 (defn can-create-dir?
   "Determines if a directory exists or can be created."
@@ -175,6 +195,11 @@
      (raw/restore-files (:user params)))
     ([params body]
      (raw/restore-files (:user params) (:paths body))))
+
+(defn check-existence
+    "Uses the data-info existence-marker endpoint to query existence for a set of files/folders."
+    [params body]
+    (raw/check-existence (:user params) (:paths body)))
 
 (defn collect-permissions
     "Uses the data-info permissions-gatherer endpoint to query user permissions for a set of files/folders."

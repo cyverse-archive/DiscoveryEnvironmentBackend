@@ -6,6 +6,20 @@
   (:require [iplant_groups.service.attributes :as attributes]))
 
 (defroutes* attributes
+  (GET* "/" []
+        :query       [params AttributeSearchParams]
+        :return      AttributeNameList
+        :summary     "Attribute Name/Resource Search"
+        :description "This endpoint allows callers to search for attribute names/permission resources by name, or with the 'exact' parameter, to look them up exactly by name."
+        (ok (attributes/attribute-search params)))
+
+  (GET* "/permissions" []
+        :query       [params AttributeAssignmentSearchParams]
+        :return      PermissionAssignmentList
+        :summary     "Permissions Search/Lookup"
+        :description "This endpoint allows callers to look up permission assignments. Only permissions that are visible to the given user will be listed."
+        (ok (attributes/permission-assignment-search params)))
+
   (POST* "/" []
         :return      AttributeName
         :query       [params StandardUserQueryParams]
@@ -18,6 +32,13 @@
     :path-params [attribute-id :- AttributeIdPathParam]
 
     (context* "/permissions" []
+
+      (GET* "/" []
+            :query [params StandardUserQueryParams]
+            :return PermissionAssignmentList
+            :summary "Permissions Lookup"
+            :description "This endpoint allows callers to look up all permission assignments for this attribute ID. Only permissions that are visible to the given user will be listed."
+            (ok (attributes/permission-assignment-search (assoc params :attribute_def_name_id attribute-id))))
 
       (context* "/roles/:role-id/:action-name" []
         :path-params [role-id     :- GroupIdPathParam

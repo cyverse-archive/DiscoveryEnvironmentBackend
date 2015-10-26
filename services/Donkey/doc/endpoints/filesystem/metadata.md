@@ -163,11 +163,13 @@ __Curl Command__:
 
 Getting Metadata
 ------------------------------------
-__URL Path__: /secured/filesystem/metadata
+__URL Path__: /secured/filesystem/{data-id}/metadata
 
 __HTTP Method__: GET
 
 __Error codes__: ERR_DOES_NOT_EXIST, ERR_NOT_READABLE, ERR_NOT_A_USER
+
+__Delegates to metadata__: `GET /filesystem/data/{data-id}/avus`
 
 __Request Query Parameters__:
 
@@ -176,15 +178,24 @@ __Request Query Parameters__:
 
 __Response__:
 
-    {
-        "metadata": [
-            {
-                 "attr": "avu_name",
-                 "value": "avu_value",
-                 "unit": "avu_unit"
-            }
-        ]
-    }
+```json
+{
+    "metadata": [
+        {
+             "attr": "avu_name",
+             "value": "avu_value",
+             "unit": "avu_unit"
+        }
+    ],
+    "template-avus": [
+        {
+             "attr": "avu_name",
+             "value": "avu_value",
+             "unit": "avu_unit"
+        }
+    ]
+}
+```
 
 __Curl Command__:
 
@@ -735,44 +746,6 @@ __Curl Command__:
     curl -s -X POST "http://localhost:3000/secured/filesystem/metadata/csv-parser?proxyToken=ipcuser&template-id=e7e19316-dc88-11e4-a49a-77c52ae8901a&dest=/iplant/home/ipcuser/folder_1&src=/iplant/home/ipcuser/metadata.csv"
 
     curl -s -F file=@metadata.tsv "http://localhost:3000/secured/filesystem/metadata/csv-form-parser?proxyToken=ipcuser&template-id=e7e19316-dc88-11e4-a49a-77c52ae8901a&dest=/iplant/home/ipcuser/folder_1&separator=%09"
-
-Viewing all Metadata Template AVUs on a File/Folder
------------------------------------------------------
-__URL Path__: /secured/filesystem/{data-id}/template-avus
-
-__HTTP Method__: GET
-
-__Delegates to metadata__: `GET /filesystem/entry/{data-id}/avus`
-
-__Error Codes__: ERR_NOT_READABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER
-
-__Response__:
-
-This endpoint forwards requests to the corresponding metadata service endpoint.
-Please see the metadata documentation for more information.
-
-__Curl Command__:
-
-    curl -s "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus?proxyToken=notReal"
-
-Viewing a Metadata Template's AVUs on a File/Folder
----------------------------------------------------------
-__URL Path__: /secured/filesystem/{data-id}/template-avus/{template-id}
-
-__HTTP Method__: GET
-
-__Delegates to metadata__: `GET /filesystem/entry/{data-id}/avus/{template-id}`
-
-__Error Codes__: ERR_NOT_READABLE, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER
-
-__Response__:
-
-This endpoint forwards requests to the corresponding metadata service endpoint.
-Please see the metadata documentation for more information.
-
-__Curl Command__:
-
-    curl -s "http://127.0.0.1:3000/secured/filesystem/cc20cbf8-df89-11e3-bf8b-6abdce5a08d5/template-avus/40ac191f-bb36-4f4e-85fb-8b50abec8e10?proxyToken=notReal"
 
 Adding and Updating Metadata Template AVUs on a File/Folder
 -----------------------------------------------------------------

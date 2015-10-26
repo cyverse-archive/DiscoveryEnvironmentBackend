@@ -5,7 +5,6 @@
             [clojure.tools.logging :as log]
             [donkey.clients.data-info :as data]
             [donkey.services.filesystem.directory :as dir]
-            [donkey.services.filesystem.exists :as exists]
             [donkey.services.filesystem.manifest :as manifest]
             [donkey.services.filesystem.metadata :as meta]
             [donkey.services.filesystem.metadata-template-avus :as mta]
@@ -26,7 +25,7 @@
       (controller req root/do-root-listing :params))
 
     (POST "/filesystem/exists" [:as req]
-      (controller req exists/do-exists :params :body))
+      (controller req data/check-existence :params :body))
 
     (POST "/filesystem/stat" [:as req]
       (controller req stat/do-stat :params :body))
@@ -63,9 +62,6 @@
 
     (GET "/filesystem/file/manifest" [:as req]
       (controller req manifest/do-manifest :params))
-
-    (GET "/filesystem/metadata" [:as req]
-      (controller req meta/do-metadata-get :params))
 
     (POST "/filesystem/metadata" [:as req]
       (controller req meta/do-metadata-set :params :body))
@@ -137,17 +133,14 @@
     (POST "/filesystem/metadata/csv-parser" [:as {:keys [user-info params] :as req}]
       (meta/parse-src-file-csv-metadata user-info params))
 
+    (GET "/filesystem/:data-id/metadata" [data-id :as req]
+      (controller req meta/do-metadata-get :params data-id))
+
    (POST "/filesystem/:data-id/metadata/copy" [data-id force :as req]
      (controller req meta/do-metadata-copy :params data-id force :body))
 
    (POST "/filesystem/:data-id/metadata/save" [data-id :as req]
      (controller req meta/do-metadata-save data-id :params :body))
-
-   (GET "/filesystem/:data-id/template-avus" [data-id :as req]
-     (controller req mta/do-metadata-template-avu-list :params data-id))
-
-   (GET "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
-     (controller req mta/do-metadata-template-avu-list :params data-id template-id))
 
    (POST "/filesystem/:data-id/template-avus/:template-id" [data-id template-id :as req]
      (controller req mta/do-set-metadata-template-avus :params data-id template-id :body))
