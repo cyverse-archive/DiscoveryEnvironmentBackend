@@ -59,15 +59,6 @@
     (init/with-jargon (jargon/jargon-cfg) [cm]
       (uuid-exists? cm uuid))))
 
-(defn paths-for-uuids
-  [cm user uuids]
-  (letfn [(id-type [type entity] (merge entity {:id (:path entity) :type type}))]
-    (user-exists cm user)
-    (->> (concat (map (partial id-type :dir) (icat/select-folders-with-uuids uuids))
-                 (map (partial id-type :file) (icat/select-files-with-uuids uuids)))
-      (mapv (partial stat/decorate-stat cm user))
-      (remove #(nil? (:permission %))))))
-
 (defn- fmt-stat
   [cm user data-item]
   (let [path (:full_path data-item)]
