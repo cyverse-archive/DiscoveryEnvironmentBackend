@@ -53,7 +53,7 @@
   [stat-map cm user path]
   (if-not (is-dir? cm path)
     (-> stat-map
-      (merge {:info-type (filetypes/get-types cm user path)})
+      (merge {:infoType (filetypes/get-types cm user path)})
       (merge {:content-type (detect-content-type cm path)}))
     stat-map))
 
