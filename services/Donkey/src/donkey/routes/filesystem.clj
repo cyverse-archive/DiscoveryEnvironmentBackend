@@ -5,7 +5,6 @@
             [clojure.tools.logging :as log]
             [donkey.clients.data-info :as data]
             [donkey.services.filesystem.directory :as dir]
-            [donkey.services.filesystem.exists :as exists]
             [donkey.services.filesystem.manifest :as manifest]
             [donkey.services.filesystem.metadata :as meta]
             [donkey.services.filesystem.metadata-template-avus :as mta]
@@ -26,7 +25,7 @@
       (controller req root/do-root-listing :params))
 
     (POST "/filesystem/exists" [:as req]
-      (controller req exists/do-exists :params :body))
+      (controller req data/check-existence :params :body))
 
     (POST "/filesystem/stat" [:as req]
       (controller req stat/do-stat :params :body))
