@@ -69,6 +69,10 @@
   ([]
      (act-as-subject-lookup default-act-as-subject-id)))
 
+(defn- parse-boolean
+  [bool-str]
+  (when bool-str (Boolean/parseBoolean bool-str)))
+
 ;; Group search.
 
 (defn- group-search-query-filter
@@ -516,19 +520,20 @@
 ;; Permission assignment
 ;; search/lookup
 (defn- format-permission-search-request
-  [username attribute-def-id attribute-name-id role-id subject-id action-names]
+  [username attribute-def-id attribute-name-id role-id subject-id action-names immediate-only]
   {:WsRestGetPermissionAssignmentsRequest
    (remove-vals nil? {:actAsSubjectLookup (act-as-subject-lookup username)
                       :wsAttributeDefLookups (if attribute-def-id [{:uuid attribute-def-id}])
                       :wsAttributeDefNameLookups (if attribute-name-id [{:uuid attribute-name-id}])
                       :roleLookups (if role-id [{:uuid role-id}])
                       :actions (if (seq action-names) action-names)
-                      :wsSubjectLookups (if subject-id [{:subjectId subject-id}])})})
+                      :wsSubjectLookups (if subject-id [{:subjectId subject-id}])
+                      :immediateOnly (parse-boolean immediate-only)})})
 
 (defn permission-assignment-search
-  [username attribute-def-id attribute-name-id role-id subject-id action-names]
+  [username attribute-def-id attribute-name-id role-id subject-id action-names immediate-only]
   (with-trap [default-error-handler]
-    (-> (format-permission-search-request username attribute-def-id attribute-name-id role-id subject-id action-names)
+    (-> (format-permission-search-request username attribute-def-id attribute-name-id role-id subject-id action-names immediate-only)
         (grouper-post "permissionAssignments")
         :WsGetPermissionAssignmentsResults
         :wsPermissionAssigns)))
