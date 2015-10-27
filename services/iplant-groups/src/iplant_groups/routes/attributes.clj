@@ -15,7 +15,7 @@
 
   (GET* "/permissions" []
         :query       [params AttributeAssignmentSearchParams]
-        :return      PermissionAssignmentList
+        :return      PermissionWithDetailList
         :summary     "Permissions Search/Lookup"
         :description "This endpoint allows callers to look up permission assignments. Only permissions that are visible to the given user will be listed."
         (ok (attributes/permission-assignment-search params)))
@@ -35,7 +35,7 @@
 
       (GET* "/" []
             :query [params StandardUserQueryParams]
-            :return PermissionAssignmentList
+            :return PermissionWithDetailList
             :summary "Permissions Lookup"
             :description "This endpoint allows callers to look up all permission assignments for this attribute ID. Only permissions that are visible to the given user will be listed."
             (ok (attributes/permission-assignment-search (assoc params :attribute_def_name_id attribute-id))))

@@ -523,6 +523,7 @@
   [username attribute-def-id attribute-name-id role-id subject-id action-names immediate-only]
   {:WsRestGetPermissionAssignmentsRequest
    (remove-vals nil? {:actAsSubjectLookup (act-as-subject-lookup username)
+                      :includePermissionAssignDetail "T"
                       :wsAttributeDefLookups (if attribute-def-id [{:uuid attribute-def-id}])
                       :wsAttributeDefNameLookups (if attribute-name-id [{:uuid attribute-name-id}])
                       :roleLookups (if role-id [{:uuid role-id}])
