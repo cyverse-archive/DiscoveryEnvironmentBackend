@@ -35,5 +35,5 @@
   (transaction
     (-> (queries/get-user-id username)
         (queries/create-workspace)
-        (add-root-app-category)
-        (select-keys [:id :user_id :root_category_id :is_public]))))
+        (add-root-app-category)))
+  (get-workspace username))
