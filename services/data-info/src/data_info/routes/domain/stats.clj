@@ -9,10 +9,6 @@
 (def DataItemIdParam (describe UUID "The UUID of this data item"))
 (def DataItemPathParam (describe NonBlankString "The IRODS paths to this data item"))
 
-(s/defschema PathIdInfo
-  {:id   DataItemIdParam
-   :path DataItemPathParam})
-
 (s/defschema DataStatInfo
   {:id
    DataItemIdParam

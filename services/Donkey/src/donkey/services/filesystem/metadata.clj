@@ -2,7 +2,6 @@
   (:use [clojure-commons.error-codes]
         [clojure-commons.validators]
         [donkey.services.filesystem.common-paths]
-        [donkey.services.filesystem.metadata-template-avus :only [copy-metadata-template-avus]]
         [donkey.services.filesystem.validators]
         [kameleon.uuids :only [uuidify]]
         [clj-jargon.init :only [with-jargon]]
@@ -49,6 +48,16 @@
     (throw+ {:error_code ERR_NOT_AUTHORIZED
              :avus avus})))
 
+(defn service-response->json
+  [response]
+  (->> response :body service/decode-json))
+
+(defn- get-readable-path
+  [cm user data-id]
+  (let [path (:path (uuids/path-for-uuid cm user data-id))]
+    (validators/path-readable cm user path)
+    path))
+
 (defn- list-path-metadata
   "Returns the metadata for a path. Passes all AVUs to (fix-unit).
    AVUs with a unit matching IPCSYSTEM are filtered out."
@@ -67,12 +76,13 @@
 (defn metadata-get
   "Returns the metadata for a path. Filters out system AVUs and replaces
    units set to ipc-reserved with an empty string."
-  [user path]
+  [user data-id]
   (with-jargon (icat/jargon-cfg) [cm]
     (validators/user-exists cm user)
-    (validators/path-exists cm path)
-    (validators/path-readable cm user path)
-    {:metadata (list-path-metadata cm path)}))
+    (let [path (get-readable-path cm user data-id)
+          template-avus (service-response->json (metadata-client/list-metadata-avus data-id))]
+      {:metadata (list-path-metadata cm path)
+       :template-avus template-avus})))
 
 (defn- common-metadata-set
   "Adds an AVU to 'path'. The AVU is passed in as a map in the format:
@@ -205,22 +215,32 @@
         (metadata-batch-add-to-path cm path avus))
       {:paths paths :user user})))
 
+(defn- format-copy-dest-item
+  [{:keys [id type]}]
+  {:id   id
+   :type (metadata-client/resolve-data-type type)})
+
 (defn- metadata-copy
   "Copies all IRODS AVUs visible to the client, and Metadata Template AVUs, from the data item with
-   src-id to the items with dest-ids. When the 'force?' parameter is set, additional validation is
-   performed."
+   src-id to the items with dest-ids. When the 'force?' parameter is false or not set, additional
+   validation is performed."
   [user force? src-id dest-ids]
   (with-jargon (icat/jargon-cfg) [cm]
-    (let [src-path (:path (uuids/path-for-uuid cm user src-id))
-          dest-paths (set (map #(ft/rm-last-slash (:path %)) (uuids/paths-for-uuids cm user dest-ids)))
+    (validators/user-exists cm user)
+    (let [src-path (get-readable-path cm user src-id)
+          dest-items (map (partial uuids/path-for-uuid cm user) dest-ids)
+          dest-paths (map :path dest-items)
           irods-avus (list-path-metadata cm src-path)
           attrs (set (map :attr irods-avus))]
+      (validators/all-paths-writeable cm user dest-paths)
       (if-not force?
         (validate-batch-add-attrs cm dest-paths attrs))
-      (let [results (copy-metadata-template-avus cm user force? src-id dest-ids)]
-        (doseq [path dest-paths]
-          (metadata-batch-add-to-path cm path irods-avus))
-        results))))
+      (metadata-client/copy-metadata-template-avus src-id force? (map format-copy-dest-item dest-items))
+      (doseq [path dest-paths]
+        (metadata-batch-add-to-path cm path irods-avus))
+      {:user  user
+       :src   src-path
+       :paths dest-paths})))
 
 (defn metadata-delete
   "Deletes an AVU from path on behalf of a user. attr and value should be strings."
@@ -245,13 +265,13 @@
 (defn do-metadata-get
   "Entrypoint for the API. Calls (metadata-get). Parameter should be a map
    with :user and :path as keys. Values are strings."
-  [{user :user path :path}]
-  (metadata-get user path))
+  [{user :user} data-id]
+  (metadata-get user (uuidify data-id)))
 
 (with-pre-hook! #'do-metadata-get
-  (fn [params]
+  (fn [params data-id]
     (log-call "do-metadata-get" params)
-    (validate-map params {:user string? :path string?})))
+    (validate-map params {:user string?})))
 
 (with-post-hook! #'do-metadata-get (log-func "do-metadata-get"))
 

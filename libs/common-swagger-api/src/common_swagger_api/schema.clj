@@ -84,3 +84,9 @@
      "Only used when sort-field is present. Sorts the results in either ascending (`ASC`) or
       descending (`DESC`) order, before limits and offsets are applied. Defaults to `ASC`.
       See http://www.postgresql.org/docs/9.2/interactive/queries-order.html")})
+
+(s/defschema StatusResponse
+  {:service     (describe NonBlankString "The name of the service")
+   :description (describe NonBlankString "The service description")
+   :version     (describe NonBlankString "The service version")
+   :docs-url    (describe NonBlankString "The service API docs")})

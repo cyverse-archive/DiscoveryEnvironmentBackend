@@ -1,20 +1,18 @@
 (ns donkey.clients.data-info
   (:use [donkey.auth.user-attributes :only [current-user]]
-        [clj-jargon.init :only [with-jargon]]
         [slingshot.slingshot :only [throw+ try+]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [cemerick.url :as url]
             [cheshire.core :as json]
-            [clj-http.client :as http]
             [me.raynes.fs :as fs]
             [clj-icat-direct.icat :as db]
             [clojure-commons.error-codes :as error]
             [clojure-commons.file-utils :as ft]
             [clojure-commons.assertions :as assertions]
+            [donkey.clients.data-info.raw :as raw]
             [donkey.services.filesystem.common-paths :as cp]
             [donkey.services.filesystem.create :as cr]
-            [donkey.services.filesystem.exists :as e]
             [donkey.services.filesystem.icat :as icat]
             [donkey.services.filesystem.metadata :as mt]
             [donkey.services.filesystem.sharing :as sharing]
@@ -65,8 +63,10 @@
 
 (defn- uuid-for-path
   [^String user ^String path]
-    (with-jargon (icat/jargon-cfg) [cm]
-      (:id (uuids/uuid-for-path cm user path))))
+  (-> (raw/collect-stats user [path])
+      :body
+      json/decode
+      (get-in ["paths" path "id"])))
 
 (defn ensure-dir-created
   "If a folder doesn't exist, it creates the folder and makes the given user an owner of it.
@@ -80,35 +80,18 @@
 (defn read-chunk
   "Uses the data-info read-chunk endpoint."
   [params body]
-  (let [path-uuid (uuid-for-path (:user params) (:path body))
-        url (url/url (cfg/data-info-base-url) "data" path-uuid "chunks")
-        req-map {:query-params (assoc
-                                 (select-keys params [:user])
-                                 :position (:position body)
-                                 :size (:chunk-size body))
-                 :content-type :json}]
-    (http/get (str url) req-map)))
+  (let [path-uuid (uuid-for-path (:user params) (:path body))]
+    (raw/read-chunk (:user params) path-uuid (:position body) (:chunk-size body))))
 
 (defn read-tabular-chunk
   "Uses the data-info read-tabular-chunk endpoint."
   [params body]
-  (let [path-uuid (uuid-for-path (:user params) (:path body))
-        url (url/url (cfg/data-info-base-url) "data" path-uuid "chunks-tabular")
-        req-map {:query-params (assoc
-                                 (select-keys params [:user])
-                                 :separator (:separator body)
-                                 :page (:page body)
-                                 :size (:chunk-size body))
-                 :content-type :json}]
-    (http/get (str url) req-map)))
+  (let [path-uuid (uuid-for-path (:user params) (:path body))]
+    (raw/read-tabular-chunk (:user params) path-uuid (:separator body) (:page body) (:chunk-size body))))
 
 (defn create-dirs
   [params body]
-  (let [url     (url/url (cfg/data-info-base-url) "data" "directories")
-        req-map {:query-params (select-keys params [:user])
-                 :content-type :json
-                 :body         (json/encode body)}]
-    (http/post (str url) req-map)))
+  (raw/create-dirs (:user params) (:paths body)))
 
 (defn create-dir
   [params {:keys [path]}]
@@ -118,24 +101,43 @@
         :paths
         (get path))))
 
+(defn- url-encoded?
+  [string-to-check]
+  (re-seq #"\%[A-Fa-f0-9]{2}" string-to-check))
+
+(defn- url-decode
+  [string-to-decode]
+  (if (url-encoded? string-to-decode)
+    (url/url-decode string-to-decode)
+    string-to-decode))
+
+(defn path-exists?
+  [user path]
+  (let [path (url-decode (ft/rm-last-slash path))]
+    (-> (raw/check-existence user [path])
+        :body
+        json/decode
+        (get-in ["paths" path]))))
+
 (defn get-or-create-dir
   "Returns the path argument if the path exists and refers to a directory.  If
    the path exists and refers to a regular file then nil is returned.
    Otherwise, a new directory is created and the path is returned."
   [path]
   (log/debug "getting or creating dir: path =" path)
-  (cond
-   (not (e/path-exists? path))
-    (create-dir {:user (:shortUsername current-user)} {:path path})
+  (let [user (:shortUsername current-user)]
+    (cond
+     (not (path-exists? user path))
+      (create-dir {:user user} {:path path})
 
-   (and (e/path-exists? path) (st/path-is-dir? path))
-   path
+     (and (path-exists? user path) (st/path-is-dir? path))
+     path
 
-   (and (e/path-exists? path) (not (st/path-is-dir? path)))
-   nil
+     (and (path-exists? user path) (not (st/path-is-dir? path)))
+     nil
 
-   :else
-   nil))
+     :else
+     nil)))
 
 (defn can-create-dir?
   "Determines if a directory exists or can be created."
@@ -148,114 +150,69 @@
   [params body]
   (assertions/assert-valid (= (ft/dirname (:dest body)) (ft/dirname (:source body)))
       "The directory names of the source and destination must match for this endpoint.")
-  (let [path-uuid (uuid-for-path (:user params) (:source body))
-        url (url/url (cfg/data-info-base-url) "data" path-uuid "name")
-        req-map {:query-params (select-keys params [:user])
-                 :content-type :json
-                 :body         (json/encode {:filename (ft/basename (:dest body))})}]
-    (http/put (str url) req-map)))
+  (let [path-uuid (uuid-for-path (:user params) (:source body))]
+    (raw/rename (:user params) path-uuid (ft/basename (:dest body)))))
 
 (defn- move-single
   "Uses the data-info single-item directory change endpoint to move an item to a different directory."
   [user source dest]
-  (let [path-uuid (uuid-for-path user source)
-        url (url/url (cfg/data-info-base-url) "data" path-uuid "dir")
-        req-map {:query-params {:user user}
-                 :content-type :json
-                 :body         (json/encode {:dirname dest})}]
-    (log/info "using " (str url) " to move data item " source " (" path-uuid ") to " dest)
-    (http/put (str url) req-map)))
-
-(defn- move-multi
-  "Uses the data-info bulk mover endpoint to move a number of items to a different directory."
-  [user sources dest]
-  (let [url (url/url (cfg/data-info-base-url) "mover")
-        req-map {:query-params {:user user}
-                 :content-type :json
-                 :body         (json/encode {:sources sources :dest dest})}]
-    (log/info "using " (str url) " to move several data items to " dest)
-    (http/post (str url) req-map)))
+  (let [path-uuid (uuid-for-path user source)]
+    (raw/move-single user path-uuid dest)))
 
 (defn move
   "Uses the data-info single and bulk mover endpoints to move an item or many items into a new directory."
   [params body]
   (if (= 1 (count (:sources body)))
     (move-single (:user params) (first (:sources body)) (:dest body))
-    (move-multi (:user params) (:sources body) (:dest body))))
+    (raw/move-multi (:user params) (:sources body) (:dest body))))
 
 (defn move-contents
   "Uses the data-info set-children-directory-name endpoint to move the contents of one directory
    into another directory."
   [params body]
-  (let [path-uuid (uuid-for-path (:user params) (:source body))
-        url (url/url (cfg/data-info-base-url) "data" path-uuid "children" "dir")
-        req-map {:query-params (select-keys params [:user])
-                 :content-type :json
-                 :body         (json/encode {:dirname (:dest body)})}]
-    (http/put (str url) req-map)))
+  (let [path-uuid (uuid-for-path (:user params) (:source body))]
+    (raw/move-contents (:user params) path-uuid (:dest body))))
 
 (defn delete-paths
     "Uses the data-info deleter endpoint to delete many paths."
     [params body]
-    (let [url (url/url (cfg/data-info-base-url) "deleter")
-          req-map {:query-params (select-keys params [:user])
-                   :content-type :json
-                   :body (json/encode body)}]
-      (http/post (str url) req-map)))
+    (raw/delete-paths (:user params) (:paths body)))
 
 (defn delete-contents
     "Uses the data-info delete-children endpoint to delete the contents of a directory."
     [params body]
-    (let [path-uuid (uuid-for-path (:user params) (:path body))
-          url (url/url (cfg/data-info-base-url) "data" path-uuid "children")
-          req-map {:query-params (select-keys params [:user])
-                   :content-type :json}]
-      (http/delete (str url) req-map)))
+    (let [path-uuid (uuid-for-path (:user params) (:path body))]
+      (raw/delete-contents (:user params) path-uuid)))
 
 (defn delete-trash
     "Uses the data-info trash endpoint to empty the trash of a user."
     [params]
-    (let [url (url/url (cfg/data-info-base-url) "/trash")
-          req-map {:query-params (select-keys params [:user])
-                   :content-type :json}]
-      (http/delete (str url) req-map)))
+    (raw/delete-trash (:user params)))
 
 (defn restore-files
     "Uses the data-info restorer endpoint to restore many or all paths."
     ([params]
-     (restore-files params {}))
+     (raw/restore-files (:user params)))
     ([params body]
-     (let [url (url/url (cfg/data-info-base-url) "/restorer")
-           req-map {:query-params (select-keys params [:user])
-                    :content-type :json
-                    :body         (json/encode body)}]
-       (http/post (str url) req-map))))
+     (raw/restore-files (:user params) (:paths body))))
+
+(defn check-existence
+    "Uses the data-info existence-marker endpoint to query existence for a set of files/folders."
+    [params body]
+    (raw/check-existence (:user params) (:paths body)))
 
 (defn collect-permissions
     "Uses the data-info permissions-gatherer endpoint to query user permissions for a set of files/folders."
     [params body]
-    (let [url (url/url (cfg/data-info-base-url) "permissions-gatherer")
-          req-map {:query-params (select-keys params [:user])
-                   :content-type :json
-                   :body (json/encode body)}]
-      (http/post (str url) req-map)))
+    (raw/collect-permissions (:user params) (:paths body)))
 
-(defn get-type-list
-    "Uses the data-info file-types endpoint to produce a list of acceptable types."
-    []
-    (let [url (url/url (cfg/data-info-base-url) "file-types")
-          req-map {:content-type :json}]
-      (http/get (str url) req-map)))
+(def get-type-list raw/get-type-list)
 
 (defn set-file-type
     "Uses the data-info set-type endpoint to change the type of a file."
     [params body]
-    (let [path-uuid (uuid-for-path (:user params) (:path body))
-          url (url/url (cfg/data-info-base-url) "data" path-uuid "type")
-          req-map {:query-params (select-keys params [:user])
-                   :content-type :json
-                   :body (json/encode (select-keys body [:type]))}]
-      (http/put (str url) req-map)))
+    (let [path-uuid (uuid-for-path (:user params) (:path body))]
+      (raw/set-file-type (:user params) path-uuid (:type body))))
 
 (defn gen-output-dir
   "Either obtains or creates a default output directory using a specified base name."
@@ -532,19 +489,7 @@
       (respond-with-default-error status method url err))))
 
 
-(defn- resolve-http-call
-  [method]
-  (case method
-    :delete   http/delete
-    :get      http/get
-    :head     http/head
-    :options  http/options
-    :patch    http/patch
-    :post     http/post
-    :put      http/put))
-
-
-(defn request
+(defn trapped-request
   "This function makes an HTTP request to the data-info service. It uses clj-http to make the
    request. It traps any errors and provides a response to it. A custom error handler may be
    provided for each type of error.
@@ -568,6 +513,6 @@
   [^Keyword method ^String url-path ^IPersistentMap req-map & {:as error-handlers}]
   (let [url (url/url (cfg/data-info-base) url-path)]
     (try+
-      ((resolve-http-call method) (str url) req-map)
+      (raw/request method [url-path] req-map)
       (catch #(not (nil? (:status %))) err
         (handle-error method url err error-handlers)))))

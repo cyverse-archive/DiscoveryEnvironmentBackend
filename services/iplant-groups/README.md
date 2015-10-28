@@ -6,7 +6,7 @@ A RESTful facade in front of [Grouper](http://www.internet2.edu/products-service
 
 To compile a jar file for use, run `lein do clean, uberjar`. This will produce `target/iplant-groups-standalone.jar`. To simply run a server for direct use, run `lein run`
 
-Fishy listens on port 31310 rather than any configured port when run with lein-ring or a jar produced by lein-ring, rather than the methods listed above.
+iplant-groups listens on port 31310 rather than any configured port when run with lein-ring or a jar produced by lein-ring, rather than the methods listed above.
 
 ### Configuration
 

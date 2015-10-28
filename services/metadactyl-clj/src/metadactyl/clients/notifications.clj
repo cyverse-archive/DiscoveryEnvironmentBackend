@@ -29,8 +29,8 @@
 
 (defn- send-email?
   [job-info]
-  (and (:notify job-info false)
-       (#{"Completed" "Failed"} (:status job-info))))
+  (boolean (and (:notify job-info false)
+                (#{"Completed" "Failed"} (:status job-info)))))
 
 (defn- format-job-status-update
   "Formats a job status update notification to send to the notification agent."

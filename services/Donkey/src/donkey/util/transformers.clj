@@ -3,7 +3,8 @@
         [donkey.util.service :only [decode-stream]]
         [donkey.auth.user-attributes]
         [medley.core :only [remove-vals]])
-  (:require [cheshire.core :as cheshire]))
+  (:require [cheshire.core :as cheshire]
+            [clojure.string :as string]))
 
 (def remove-nil-vals (partial remove-vals nil?))
 
@@ -19,11 +20,12 @@
   "Adds the name and e-mail address of the currently authenticated user to a
    map that can be used to generate a query string."
   [query]
-  (assoc query
-    :user       (:shortUsername current-user)
-    :email      (:email current-user)
-    :first-name (:firstName current-user)
-    :last-name  (:lastName current-user)))
+  (->> (assoc query
+         :user       (:shortUsername current-user)
+         :email      (:email current-user)
+         :first-name (:firstName current-user)
+         :last-name  (:lastName current-user))
+       (remove-vals string/blank?)))
 
 (defn secured-params
   "Generates a set of query parameters to pass to a remote service that requires

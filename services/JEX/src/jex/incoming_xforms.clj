@@ -340,7 +340,7 @@
      " "
      (filter
       (comp not nil?)
-      ["run --rm -a stdout -a stderr -e IPLANT_USER -e IPLANT_EXECUTION_ID"
+      ["run --rm -a stdout -a stderr -e IPLANT_USER -e IPLANT_EXECUTION_ID --log-driver=none"
        (backwards-compatible-args step-map)
        (container-volume-args container-map)
        (container-device-args container-map)

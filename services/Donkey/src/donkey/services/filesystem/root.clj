@@ -1,12 +1,11 @@
 (ns donkey.services.filesystem.root
   (:use [clojure-commons.validators])
-  (:require [clojure-commons.client :as http]
-            [clojure-commons.json :as json]
+  (:require [clojure-commons.json :as json]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
-            [donkey.util.config :as cfg]
+            [donkey.clients.data-info.raw :as data-raw]
             [donkey.services.filesystem.common-paths :as paths]))
 
-(defn format-roots
+(defn- format-roots
   [roots user]
   (letfn [(format-label [root] (assoc root :label      (paths/path->label user (:path root))
                                            :hasSubDirs true))
@@ -15,8 +14,7 @@
 
 (defn do-root-listing
   [{user :user}]
-  (-> (http/get (http/build-url (cfg/data-info-base) "navigation" "root")
-                {:query-params {:user user}})
+  (-> (data-raw/list-roots user)
       :body
       (json/string->json true)
       (format-roots user)))

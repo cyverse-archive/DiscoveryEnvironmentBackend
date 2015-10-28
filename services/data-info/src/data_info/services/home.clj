@@ -3,12 +3,12 @@
             [clj-jargon.init :refer [with-jargon]]
             [clj-jargon.item-info :refer [exists?]]
             [clj-jargon.item-ops :refer [mkdirs]]
+            [data-info.services.stat :as stat]
             [data-info.util.config :as cfg]
             [data-info.util.logging :as log]
             [data-info.util.irods :as irods]
             [data-info.util.validators :as validators]
             [data-info.util.paths :as path]))
-
 
 (defn- user-home-path
   [user]
@@ -17,9 +17,8 @@
       (validators/user-exists cm user)
       (when-not (exists? cm user-home)
         (mkdirs cm user-home))
-      {:id   (irods/lookup-uuid cm user-home)
-       :path user-home})))
-
+      (-> (stat/path-stat cm user user-home)
+          (select-keys [:id :path :date-created :date-modified :permission])))))
 
 (defn do-homedir
   [{user :user}]

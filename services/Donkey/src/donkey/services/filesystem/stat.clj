@@ -7,14 +7,13 @@
         [clj-jargon.permissions :only [is-writeable? list-user-perms permission-for owns?]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :as string]
-            [cemerick.url :as url]
             [clojure-commons.file-utils :as ft]
             [cheshire.core :as json]
-            [clj-http.client :as http]
             [dire.core :refer [with-pre-hook! with-post-hook!]]
             [donkey.services.filesystem.validators :as validators]
             [donkey.services.filesystem.garnish.irods :as filetypes]
             [clj-icat-direct.icat :as icat]
+            [donkey.clients.data-info.raw :as data-raw]
             [donkey.util.config :as cfg]
             [donkey.services.filesystem.common-paths :as paths]
             [donkey.services.filesystem.icat :as jargon])
@@ -54,9 +53,14 @@
   [stat-map cm user path]
   (if-not (is-dir? cm path)
     (-> stat-map
-      (merge {:info-type (filetypes/get-types cm user path)})
+      (merge {:infoType (filetypes/get-types cm user path)})
       (merge {:content-type (detect-content-type cm path)}))
     stat-map))
+
+(defn- merge-label
+  [stat-map user path]
+  (assoc stat-map
+         :label (paths/id->label user path)))
 
 (defn path-is-dir?
   [path]
@@ -69,8 +73,8 @@
   (let [path (:path stat)]
     (-> stat
         (assoc :id         (:value (first (get-attribute cm path "ipc_UUID")))
-               :label      (paths/id->label user path)
                :permission (permission-for cm user path))
+        (merge-label user path)
         (merge-type-info cm user path)
         (merge-shares cm user path)
         (merge-counts cm user path))))
@@ -120,14 +124,10 @@
 
 
 (defn do-stat
-  [{user :user :as params} body]
-  (let [url     (url/url (cfg/data-info-base) "stat-gatherer")
-        req-map {:query-params (select-keys params [:user])
-                 :content-type :json
-                 :body         (json/encode body)}]
-    (->> (http/post (str url) req-map)
-      :body
-      (fmt-stat-response user))))
+  [{user :user} {paths :paths}]
+  (->> (data-raw/collect-stats user paths)
+    :body
+    (fmt-stat-response user)))
 
 (with-pre-hook! #'do-stat
   (fn [params body]

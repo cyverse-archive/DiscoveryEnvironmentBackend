@@ -27,6 +27,11 @@
       (throw+ {:error_code    ce/ERR_ILLEGAL_ARGUMENT
                :boolean_value s}))))
 
+(defn string-to-integer
+  [s]
+  (when-not (nil? s)
+    (Integer/parseInt s)))
+
 (defn- not-found
   [response]
   (throw+ {:error_code          ce/ERR_NOT_FOUND
@@ -111,3 +116,82 @@
         (remove-vals nil?)))
   ([attribute-names privilege]
    (format-privilege attribute-names privilege :ownerSubject)))
+
+(defn format-attribute-name
+  [attribute-name]
+  (when-not (nil? attribute-name)
+    (->> {:description        (:description attribute-name)
+          :display_extension  (:displayExtension attribute-name)
+          :display_name       (:displayName attribute-name)
+          :extension          (:extension attribute-name)
+          :id_index           (:idIndex attribute-name)
+          :name               (:name attribute-name)
+          :id                 (:uuid attribute-name)
+          :attribute_definition
+            {:id   (:attributeDefId attribute-name)
+             :name (:attributeDefName attribute-name)}}
+         (remove-vals nil?))))
+
+(defn format-attribute-assign ;; XXX: only supports group and membership attributes for now
+                              ;; This is a bit weird because it supports both grouper WsAttributeAssign and WsPermissionAssign which are different for some reason
+  [attribute-assign]
+  (when-not (nil? attribute-assign)
+    (->> {:id          (or (:id attribute-assign) (:attributeAssignId attribute-assign))
+          :disallowed  (string-to-boolean (:disallowed attribute-assign))
+          :enabled     (string-to-boolean (:enabled attribute-assign))
+          :action_id   (or (:attributeAssignActionId attribute-assign) (get-in attribute-assign [:detail :actionId]))
+          :action_name (or (:attributeAssignActionName attribute-assign) (:action attribute-assign))
+          :action_type (:attributeAssignActionType attribute-assign)
+          :delegatable (string-to-boolean (or (:attributeAssignDelegatable attribute-assign)
+                                              (get-in attribute-assign [:detail :permissionDelegatable])))
+          :assign_type (:attributeAssignType attribute-assign)
+          :created_at  (timestamp-to-millis (:createdOn attribute-assign))
+          :modified_at (timestamp-to-millis (:lastUpdated attribute-assign))
+          :group       (cond
+                         (:ownerGroupId attribute-assign)
+                           {:id   (:ownerGroupId attribute-assign)
+                            :name (:ownerGroupName attribute-assign)}
+                         (and (:roleId attribute-assign) (:roleName attribute-assign))
+                           {:id   (:roleId attribute-assign)
+                            :name (:roleName attribute-assign)})
+          :membership  (cond
+                         (:ownerMembershipId attribute-assign)
+                           {:id (:ownerMembershipId attribute-assign)}
+                         (:membershipId attribute-assign)
+                           {:id (:membershipId attribute-assign)})
+          :subject     (cond
+                         (:ownerMemberSubjectId attribute-assign)
+                           {:id (:ownerMemberSubjectId attribute-assign)
+                            :source_id (:ownerMemberSourceId attribute-assign)}
+                         (and (:subjectId attribute-assign) (:sourceId attribute-assign))
+                           {:id (:subjectId attribute-assign)
+                            :source_id (:sourceId attribute-assign)})
+          :attribute_definition_name
+            {:id   (:attributeDefNameId attribute-assign)
+             :name (:attributeDefNameName attribute-assign)}
+          :attribute_definition
+            {:id   (:attributeDefId attribute-assign)
+             :name (:attributeDefName attribute-assign)}}
+         (remove-vals nil?))))
+
+(defn format-permission-detail
+  [permission-detail]
+  (when-not (nil? permission-detail)
+    (->> {:action_depth                 (string-to-integer (:actionDepth permission-detail))
+          :assignment_notes             (:assignmentNotes permission-detail)
+          :attribute_def_name_set_depth (string-to-integer (:attributeDefNameSetDepth permission-detail))
+          :disabled_time                (timestamp-to-millis (:disabledTime permission-detail))
+          :enabled_time                 (timestamp-to-millis (:enabledTime permission-detail))
+          :heuristic_friendly_score     (string-to-integer (:heuristicFriendlyScore permission-detail))
+          :immediate_membership         (string-to-boolean (:immediateMembership permission-detail))
+          :immediate_permission         (string-to-boolean (:immediateMembership permission-detail))
+          :member_id                    (:memberId permission-detail)
+          :membership_depth             (string-to-integer (:membershipDepth permission-detail))
+          :role_set_depth               (string-to-integer (:roleSetDepth permission-detail))}
+         (remove-vals nil?))))
+
+(defn format-permission-with-detail
+  [attribute-assign]
+  (->> (assoc (format-attribute-assign attribute-assign)
+         :detail (format-permission-detail (:detail attribute-assign)))
+       (remove-vals nil?)))
