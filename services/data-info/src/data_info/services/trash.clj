@@ -199,6 +199,7 @@
     (when (paths/super-user? (:user params))
       (throw+ {:error_code ERR_NOT_AUTHORIZED
                :user       (:user params)}))
+    (validate-not-homedir (:user params) (:paths body))
     (validators/validate-num-paths-under-paths (:user params) (:paths body))))
 
 (with-post-hook! #'do-delete (dul/log-func "do-delete"))
