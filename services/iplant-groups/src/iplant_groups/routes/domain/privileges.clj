@@ -5,6 +5,9 @@
             [iplant_groups.routes.domain.folder :as folder]
             [schema.core :as s]))
 
+(def ValidFolderPrivileges (s/enum "create" "stem" "stemAdmin" "stemAttrRead" "stemAttrUpdate"))
+(def ValidGroupPrivileges (s/enum "view" "read" "update" "admin" "optin" "optout" "groupAttrRead" "groupAttrUpdate"))
+
 (s/defschema Privilege
   {:type
    (describe String "The general type of privilege.")

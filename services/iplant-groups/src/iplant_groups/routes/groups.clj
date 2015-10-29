@@ -61,7 +61,7 @@
 
       (context* "/:subject-id/:privilege-name" []
         :path-params [subject-id :- SubjectIdPathParam
-                      privilege-name :- NonBlankString]
+                      privilege-name :- ValidGroupPrivileges]
 
         (PUT* "/" []
               :query       [params StandardUserQueryParams]
