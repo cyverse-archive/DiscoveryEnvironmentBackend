@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"configurate"
 	"encoding/json"
 	"fmt"
@@ -144,4 +145,53 @@ func TestStop(t *testing.T) {
 		t.Errorf("stop() didn't return a 200 status code: %d", recorder.Code)
 	}
 	<-exitChan
+}
+
+func TestLaunch(t *testing.T) {
+	if !shouldrun() {
+		return
+	}
+	job := inittests(t)
+	exitChan := make(chan int)
+	client = messaging.NewClient(uri())
+	defer client.Close()
+	client.AddConsumer(messaging.JobsExchange, "test_launch", messaging.LaunchesKey, func(d amqp.Delivery) {
+		d.Ack(false)
+		launch := &messaging.JobRequest{}
+		err := json.Unmarshal(d.Body, launch)
+		if err != nil {
+			t.Error(err)
+		}
+		actual := launch.Job.Description
+		expected := job.Description
+		if actual != expected {
+			t.Errorf("Description was %s instead of %s", actual, expected)
+		}
+		actual = launch.Job.InvocationID
+		expected = job.InvocationID
+		if actual != expected {
+			t.Errorf("InvocationID was %s instead of %s", actual, expected)
+		}
+		exitChan <- 1
+	})
+	client.SetupPublishing(messaging.JobsExchange)
+	go client.Listen()
+	time.Sleep(100 * time.Millisecond)
+	marshalledJob, err := json.Marshal(job)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	request, err := http.NewRequest("POST", "http://for-a-test.org/", bytes.NewReader(marshalledJob))
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	recorder := httptest.NewRecorder()
+	NewRouter().ServeHTTP(recorder, request)
+	if recorder.Code != 200 {
+		t.Errorf("launch() didn't return a 200 status code: %d", recorder.Code)
+	}
+	<-exitChan
+
 }
