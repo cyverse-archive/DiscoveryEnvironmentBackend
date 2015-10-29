@@ -193,5 +193,43 @@ func TestLaunch(t *testing.T) {
 		t.Errorf("launch() didn't return a 200 status code: %d", recorder.Code)
 	}
 	<-exitChan
+}
 
+func TestPreview(t *testing.T) {
+	job := inittests(t)
+	params := job.Steps[0].Config.Params
+	previewer := &Previewer{
+		Params: model.PreviewableStepParam(params),
+	}
+	marshalledPreviewer, err := json.Marshal(previewer)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	request, err := http.NewRequest("POST", "http://for-a-test.org/arg-preview", bytes.NewReader(marshalledPreviewer))
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	recorder := httptest.NewRecorder()
+	NewRouter().ServeHTTP(recorder, request)
+	if recorder.Code != 200 {
+		t.Errorf("preview() didn't return a 200 status code: %d", recorder.Code)
+	}
+	returnedPreview := &PreviewerReturn{}
+	body, err := ioutil.ReadAll(recorder.Body)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	err = json.Unmarshal(body, returnedPreview)
+	if err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+	actual := returnedPreview.Params
+	expected := model.PreviewableStepParam(params).String()
+	if actual != expected {
+		t.Errorf("param preview was %s instead of %s", actual, expected)
+	}
 }

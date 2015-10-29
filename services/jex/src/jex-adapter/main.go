@@ -140,6 +140,11 @@ func (p *Previewer) Preview() string {
 	return p.Params.String()
 }
 
+//PreviewerReturn is what the arg-preview endpoint returns.
+type PreviewerReturn struct {
+	Params string `json:"params"`
+}
+
 func preview(writer http.ResponseWriter, request *http.Request) {
 	bodyBytes, err := ioutil.ReadAll(request.Body)
 	if err != nil {
@@ -156,8 +161,8 @@ func preview(writer http.ResponseWriter, request *http.Request) {
 		writer.Write([]byte(fmt.Sprintf("Error parsing preview JSON: %s", err.Error())))
 		return
 	}
-	var paramMap map[string]string
-	paramMap["params"] = previewer.Params.String()
+	var paramMap PreviewerReturn
+	paramMap.Params = previewer.Params.String()
 	outgoingJSON, err := json.Marshal(paramMap)
 	if err != nil {
 		log.Print(err)
