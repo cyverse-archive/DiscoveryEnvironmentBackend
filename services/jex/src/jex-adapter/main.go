@@ -47,41 +47,48 @@ func AppVersion() {
 }
 
 func home(writer http.ResponseWriter, request *http.Request) {
-	fmt.Fprintf(writer, "Welcome to the JEX.")
+	fmt.Fprintf(writer, "Welcome to the JEX.\n")
 }
 
 func stop(writer http.ResponseWriter, request *http.Request) {
+	logger.Printf("Request received:\n%#v\n", request)
 	var (
 		invID string
 		ok    bool
 		err   error
 		v     = mux.Vars(request)
 	)
+	logger.Println("Getting invocation ID out of the Vars")
 	if invID, ok = v["invocation_id"]; !ok {
 		writer.WriteHeader(http.StatusBadRequest)
 		writer.Write([]byte("Missing job id in URL"))
-		log.Print("Missing job id in URL")
+		logger.Print("Missing job id in URL")
 		return
 	}
+	logger.Printf("Invocation ID is %s\n", invID)
 	stopRequest := messaging.StopRequest{
 		Reason:       "User request",
 		Username:     "system",
 		InvocationID: invID,
 	}
+	logger.Println("Marshalling stop request to JSON")
 	reqJSON, err := json.Marshal(stopRequest)
 	if err != nil {
-		log.Print(err)
+		logger.Print(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		writer.Write([]byte(fmt.Sprintf("Error creating stop request JSON: %s", err.Error())))
 		return
 	}
-	err = client.Publish(messaging.StopsKey, reqJSON)
+	logger.Println("Sending stop request")
+	stopKey := fmt.Sprintf("%s.%s", messaging.StopsKey, invID)
+	err = client.Publish(stopKey, reqJSON)
 	if err != nil {
-		log.Print(err)
+		logger.Print(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		writer.Write([]byte(fmt.Sprintf("Error sending stop request: %s", err.Error())))
 		return
 	}
+	logger.Println("Done sending stop request")
 }
 
 func launch(writer http.ResponseWriter, request *http.Request) {
@@ -167,6 +174,16 @@ func preview(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// NewRouter returns a newly configured *mux.Router.
+func NewRouter() *mux.Router {
+	router := mux.NewRouter()
+	router.HandleFunc("/", home).Methods("GET")
+	router.HandleFunc("/", launch).Methods("POST")
+	router.HandleFunc("/stop/{invocation_id}", stop).Methods("DELETE")
+	router.HandleFunc("/arg-preview", preview).Methods("POST")
+	return router
+}
+
 func main() {
 	if *version {
 		AppVersion()
@@ -185,10 +202,6 @@ func main() {
 	client = messaging.NewClient(*amqpURI)
 	defer client.Close()
 	client.SetupPublishing(messaging.JobsExchange)
-	router := mux.NewRouter()
-	router.HandleFunc("/", home).Methods("GET")
-	router.HandleFunc("/", launch).Methods("POST")
-	router.HandleFunc("/stop/{invocation_id}", stop).Methods("DELETE")
-	router.HandleFunc("/arg-preview", preview).Methods("POST")
+	router := NewRouter()
 	log.Fatal(http.ListenAndServe(*addr, router))
 }
