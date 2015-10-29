@@ -11,12 +11,19 @@ if [ -z "$DOCKER_REPO" ]; then
 fi
 
 VERSION=$(cat version | sed -e 's/^ *//' -e 's/ *$//')
+GIT_COMMIT="$(git rev-parse HEAD)"
+BUILD_USER="$(whoami)"
+
+if [ -d pkg/ ]; then
+	rm -r pkg/
+fi
+
+if [ -d bin/ ]; then
+	rm -r bin/
+fi
 
 docker pull $DOCKER_USER/buildenv:latest
 docker run --rm  \
-	-e "VERSION=$VERISON" \
-	-e "GIT_COMMIT=$(git rev-parse HEAD)" \
-	-e "BUILD_USER=$(whoami)" \
 	-v $(pwd):/jex \
 	-w /jex \
 	$DOCKER_USER/buildenv:latest \
