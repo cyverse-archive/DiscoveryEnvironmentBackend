@@ -3,9 +3,9 @@
             [iplant_groups.service.format :as fmt]))
 
 (defn permission-assignment-search
-  [{:keys [user attribute_def_id attribute_def_name_id role_id subject_id action_names]}]
-  (let [attribute-assignments (grouper/permission-assignment-search user attribute_def_id attribute_def_name_id role_id subject_id action_names)]
-    {:assignments (mapv fmt/format-attribute-assign attribute-assignments)}))
+  [{:keys [user attribute_def_id attribute_def_name_id role_id subject_id action_names immediate_only]}]
+  (let [attribute-assignments (grouper/permission-assignment-search user attribute_def_id attribute_def_name_id role_id subject_id action_names immediate_only)]
+    {:assignments (mapv fmt/format-permission-with-detail attribute-assignments)}))
 
 (defn attribute-search
   [{:keys [user search exact]}]

@@ -61,10 +61,29 @@
 
 (s/defschema PermissionAssignment
   (dissoc AttributeAssignment
-          :created_at :modified_at :action_id :action_type :delegatable :assign_type))
+          :created_at :modified_at :action_type :assign_type))
 
-(s/defschema PermissionAssignmentList
-  {:assignments (describe [PermissionAssignment] "The permission assignments.")})
+
+(s/defschema PermissionDetail
+  {:action_depth                      (describe Integer "The depth of the action-inheritance hierarchy.")
+   (s/optional-key :assignment_notes) (describe String "Free-form notes about the assignment.")
+   :attribute_def_name_set_depth      (describe Integer "The depth of the attribute-def-name hierarchy.")
+   (s/optional-key :disabled_time)    (describe Long "The date and time the permission becomes disabled.")
+   (s/optional-key :enabled_time)     (describe Long "The date and time the permission becomes enabled.")
+   (s/optional-key :heuristic_friendly_score)
+     (describe Integer "An integer to be used for nice sorting.")
+   :immediate_membership              (describe Boolean "Whether the subject's membership in the role is immediate.")
+   :immediate_permission              (describe Boolean "Whether the permission is immediate to the role or subject.")
+   (s/optional-key :member_id)        (describe String "The member ID, if present.")
+   :membership_depth                  (describe Integer "The depth of the membership hierarchy.")
+   :role_set_depth                    (describe Integer "The depth of the role set hierarchy.")})
+
+(s/defschema PermissionWithDetail
+  (assoc PermissionAssignment
+         :detail PermissionDetail))
+
+(s/defschema PermissionWithDetailList
+  {:assignments (describe [PermissionWithDetail] "The permission assignments.")})
 
 (s/defschema PermissionAllowed
   {:allowed (describe Boolean "Whether this permission should be marked as allowed or disallowed (latter to override an inherited permission).")})

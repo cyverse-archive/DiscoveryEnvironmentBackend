@@ -10,13 +10,13 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/user"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/mitchellh/go-homedir.git"
 )
 
 var (
@@ -45,12 +45,12 @@ func init() {
 }
 
 func homeParameterFile() string {
-	usr, err := user.Current()
+	home, err := homedir.Dir()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return filepath.Join(usr.HomeDir, ".make-jwt")
+	return filepath.Join(home, ".make-jwt")
 }
 
 func loadParameterFile(path string) error {

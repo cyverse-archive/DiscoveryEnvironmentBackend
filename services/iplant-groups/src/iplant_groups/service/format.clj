@@ -27,6 +27,11 @@
       (throw+ {:error_code    ce/ERR_ILLEGAL_ARGUMENT
                :boolean_value s}))))
 
+(defn string-to-integer
+  [s]
+  (when-not (nil? s)
+    (Integer/parseInt s)))
+
 (defn- not-found
   [response]
   (throw+ {:error_code          ce/ERR_NOT_FOUND
@@ -134,10 +139,11 @@
     (->> {:id          (or (:id attribute-assign) (:attributeAssignId attribute-assign))
           :disallowed  (string-to-boolean (:disallowed attribute-assign))
           :enabled     (string-to-boolean (:enabled attribute-assign))
-          :action_id   (:attributeAssignActionId attribute-assign)
+          :action_id   (or (:attributeAssignActionId attribute-assign) (get-in attribute-assign [:detail :actionId]))
           :action_name (or (:attributeAssignActionName attribute-assign) (:action attribute-assign))
           :action_type (:attributeAssignActionType attribute-assign)
-          :delegatable (string-to-boolean (:attributeAssignDelegatable attribute-assign))
+          :delegatable (string-to-boolean (or (:attributeAssignDelegatable attribute-assign)
+                                              (get-in attribute-assign [:detail :permissionDelegatable])))
           :assign_type (:attributeAssignType attribute-assign)
           :created_at  (timestamp-to-millis (:createdOn attribute-assign))
           :modified_at (timestamp-to-millis (:lastUpdated attribute-assign))
@@ -167,3 +173,25 @@
             {:id   (:attributeDefId attribute-assign)
              :name (:attributeDefName attribute-assign)}}
          (remove-vals nil?))))
+
+(defn format-permission-detail
+  [permission-detail]
+  (when-not (nil? permission-detail)
+    (->> {:action_depth                 (string-to-integer (:actionDepth permission-detail))
+          :assignment_notes             (:assignmentNotes permission-detail)
+          :attribute_def_name_set_depth (string-to-integer (:attributeDefNameSetDepth permission-detail))
+          :disabled_time                (timestamp-to-millis (:disabledTime permission-detail))
+          :enabled_time                 (timestamp-to-millis (:enabledTime permission-detail))
+          :heuristic_friendly_score     (string-to-integer (:heuristicFriendlyScore permission-detail))
+          :immediate_membership         (string-to-boolean (:immediateMembership permission-detail))
+          :immediate_permission         (string-to-boolean (:immediateMembership permission-detail))
+          :member_id                    (:memberId permission-detail)
+          :membership_depth             (string-to-integer (:membershipDepth permission-detail))
+          :role_set_depth               (string-to-integer (:roleSetDepth permission-detail))}
+         (remove-vals nil?))))
+
+(defn format-permission-with-detail
+  [attribute-assign]
+  (->> (assoc (format-attribute-assign attribute-assign)
+         :detail (format-permission-detail (:detail attribute-assign)))
+       (remove-vals nil?)))

@@ -44,4 +44,7 @@
     (describe NonBlankString "The id of a role-type group to search with.")
 
     (s/optional-key :action_names)
-    (describe [NonBlankString] "A list of action names to search with.")))
+    (describe [NonBlankString] "A list of action names to search with.")
+
+    (s/optional-key :immediate_only)
+    (describe NonBlankString "Indicates whether only immediate assignments should be returned.")))

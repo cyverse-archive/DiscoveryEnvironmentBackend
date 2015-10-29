@@ -39,7 +39,7 @@
   [{:keys [request-method uri] :as request}]
   (let [method (string/upper-case (name request-method))]
     (log/log 'AccessLogger :trace nil "entering service-logging.middleware/log-request")
-    (log/log :debug "Unencoded request: " request)
+    (log/log :debug (str "Unencoded request: " request))
     (tc/with-logging-context {:request (cheshire/encode (clean-request request))}
                              (log/log 'AccessLogger :info nil (str method " " uri)))))
 
