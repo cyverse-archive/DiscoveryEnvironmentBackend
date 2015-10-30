@@ -1,0 +1,5 @@
+*
+!target/*
+!conf/*
+!.dockerignore
+!Dockerfile

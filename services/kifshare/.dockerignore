@@ -1,0 +1,6 @@
+*
+!target/*
+!conf/*
+!build/*
+!.dockerignore
+!Dockerfile
