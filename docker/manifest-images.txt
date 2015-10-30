@@ -9,7 +9,6 @@ info-typer
 infosquito
 iplant-email
 jex
-jex-events
 kifshare
 metadactyl
 metadata

@@ -11,7 +11,6 @@ RUN mkdir -p /var/log/donkey/ && \
     mkdir -p /var/log/dewey/ && \
     mkdir -p /var/log/info-typer/ && \
     mkdir -p /var/log/iplant-email/ && \
-    mkdir -p /var/log/jex-events/ && \
     mkdir -p /var/log/kifshare/ && \
     mkdir -p /var/log/metadactyl/ && \
     mkdir -p /var/log/monkey/ && \
