@@ -13,7 +13,7 @@
 
 (defn- fmeta-split
   [arg]
-  (filter #(not (nil? %)) (string/split arg #",")))
+  (remove nil? (string/split arg #",")))
 
 (defn get-settings
   [args]
@@ -116,7 +116,7 @@
 
 (defn command
   [all-args]
-  (when-not (> (count all-args) 0)
+  (when-not (pos? (count all-args))
     (println usage)
     (System/exit 1))
 
@@ -172,7 +172,7 @@
         (println version-info)
         (System/exit 0))
 
-      (when-not (> (count cmd-args) 0)
+      (when-not (pos? (count cmd-args))
         (println banner)
         (System/exit 1))
 
