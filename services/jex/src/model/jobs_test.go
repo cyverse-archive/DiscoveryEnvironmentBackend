@@ -270,16 +270,6 @@ func TestDirname(t *testing.T) {
 	}
 }
 
-func TestWorkingDir(t *testing.T) {
-	s := _inittests(t, false)
-	s.NowDate = time.Now().Format(nowfmt)
-	expected := fmt.Sprintf("%s/", path.Join(s.NFSBase, s.Submitter, s.DirectoryName()))
-	actual := s.WorkingDirectory()
-	if actual != expected {
-		t.Errorf("WorkingDir() returned '%s' when it should have returned '%s'", actual, expected)
-	}
-}
-
 func TestCondorLogDir(t *testing.T) {
 	s := _inittests(t, false)
 	s.NowDate = time.Now().Format(nowfmt)
@@ -298,7 +288,7 @@ func TestCondorLogDir(t *testing.T) {
 func TestIRODSConfig(t *testing.T) {
 	s := _inittests(t, false)
 	s.NowDate = time.Now().Format(nowfmt)
-	expected := path.Join(s.WorkingDirectory(), "logs", "irods-config")
+	expected := path.Join("logs", "irods-config")
 	actual := s.IRODSConfig()
 	if actual != expected {
 		t.Errorf("IRODSConfig() returned '%s' when it should have returned '%s'", actual, expected)

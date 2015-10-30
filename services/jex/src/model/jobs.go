@@ -163,13 +163,6 @@ func (s *Job) DirectoryName() string {
 	return fmt.Sprintf("%s-%s", s.Name, s.NowDate)
 }
 
-// WorkingDirectory returns the path to the working directory for an analysis. This
-// value is computed based on values inside the submission, which is why it
-// isn't a field in the Job struct.
-func (s *Job) WorkingDirectory() string {
-	return fmt.Sprintf("%s/", path.Join(s.NFSBase, s.Submitter, s.DirectoryName()))
-}
-
 // CondorLogDirectory returns the path to the directory containing condor logs on the
 // submission node. This a computed value, so it isn't in the struct.
 func (s *Job) CondorLogDirectory() string {
@@ -182,7 +175,7 @@ func (s *Job) CondorLogDirectory() string {
 
 // IRODSConfig returns the path to iRODS config inside the working directory.
 func (s *Job) IRODSConfig() string {
-	return path.Join(s.WorkingDirectory(), "logs", "irods-config")
+	return path.Join("logs", "irods-config")
 }
 
 // OutputDirectory returns the path to the output directory in iRODS. It's
