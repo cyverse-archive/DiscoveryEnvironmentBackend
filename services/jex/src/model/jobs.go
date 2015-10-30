@@ -112,10 +112,6 @@ func NewFromData(data []byte) (*Job, error) {
 	var err error
 	s := New()
 	s.SubmissionDate = s.NowDate
-	s.RunOnNFS, err = configurate.C.Bool("condor.run_on_nfs")
-	if err != nil {
-		return nil, err
-	}
 	s.IRODSBase, err = configurate.C.String("irods.base")
 	if err != nil {
 		return nil, err

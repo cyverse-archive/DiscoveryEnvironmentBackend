@@ -49,7 +49,6 @@ func JSONData() ([]byte, error) {
 func _inittests(t *testing.T, memoize bool) *model.Job {
 	if s == nil || !memoize {
 		configurate.Init("../test/test_config.json")
-		configurate.C.Set("condor.run_on_nfs", true)
 		configurate.C.Set("irods.base", "/path/to/irodsbase")
 		configurate.C.Set("irods.host", "hostname")
 		configurate.C.Set("irods.port", "1247")

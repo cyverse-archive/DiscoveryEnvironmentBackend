@@ -147,13 +147,6 @@ func TestIRODSBase(t *testing.T) {
 	}
 }
 
-func TestRunOnNFS(t *testing.T) {
-	s := inittests(t)
-	if !s.RunOnNFS {
-		t.Error("RunOnNFS was false when it should have been true")
-	}
-}
-
 func TestDescription(t *testing.T) {
 	s := inittests(t)
 	if s.Description != "this is a description" {

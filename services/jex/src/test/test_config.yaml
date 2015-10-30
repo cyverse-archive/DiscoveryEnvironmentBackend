@@ -40,7 +40,6 @@ condor:
   listen_port: 31330
   log_path: /tmp/
   filter_files: output-last-stderr
-  run_on_nfs: false
   request_disk: 0
   batch_group: batch_processing
   jex_events: http://wut.iplantc.org:31358/
