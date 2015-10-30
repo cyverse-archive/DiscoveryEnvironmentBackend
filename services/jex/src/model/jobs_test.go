@@ -35,7 +35,6 @@ func _inittests(t *testing.T, memoize bool) *Job {
 	if s == nil || !memoize {
 		configurate.Init("../test/test_config.yaml")
 		configurate.C.Set("condor.run_on_nfs", true)
-		configurate.C.Set("condor.nfs_base", "/path/to/base")
 		configurate.C.Set("irods.base", "/path/to/irodsbase")
 		configurate.C.Set("irods.host", "hostname")
 		configurate.C.Set("irods.port", "1247")
@@ -138,13 +137,6 @@ func TestQuote(t *testing.T) {
 	}
 	if test8 != "'f''oo''oo'" {
 		t.Errorf("naivelyquote returned %s instead of 'f''oo''oo'", test8)
-	}
-}
-
-func TestNFSBase(t *testing.T) {
-	s := inittests(t)
-	if s.NFSBase != "/path/to/base" {
-		t.Errorf("The nfs base directory was set to '%s' instead of '/path/to/base'", s.NFSBase)
 	}
 }
 

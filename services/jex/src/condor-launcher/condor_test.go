@@ -32,7 +32,6 @@ func _inittests(t *testing.T, memoize bool) *model.Job {
 	if s == nil || !memoize {
 		configurate.Init("../test/test_config.yaml")
 		configurate.C.Set("condor.run_on_nfs", true)
-		configurate.C.Set("condor.nfs_base", "/path/to/base")
 		configurate.C.Set("irods.base", "/path/to/irodsbase")
 		configurate.C.Set("irods.host", "hostname")
 		configurate.C.Set("irods.port", "1247")

@@ -116,10 +116,6 @@ func NewFromData(data []byte) (*Job, error) {
 	if err != nil {
 		return nil, err
 	}
-	s.NFSBase, err = configurate.C.String("condor.nfs_base")
-	if err != nil {
-		return nil, err
-	}
 	s.IRODSBase, err = configurate.C.String("irods.base")
 	if err != nil {
 		return nil, err

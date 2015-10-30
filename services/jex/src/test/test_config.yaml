@@ -37,7 +37,6 @@ condor:
       name: condor_launchers
   porklock_image: discoenv/porklock
   porklock_tag: dev
-  nfs_base: /condor01/dev-scratch/
   listen_port: 31330
   log_path: /tmp/
   filter_files: output-last-stderr
