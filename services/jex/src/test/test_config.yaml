@@ -42,6 +42,5 @@ condor:
   filter_files: output-last-stderr
   request_disk: 0
   batch_group: batch_processing
-  jex_events: http://wut.iplantc.org:31358/
   condor_config: /etc/condor/condor_config
   path_env_var: /usr/bin/:/usr/local/bin/:/bin/
