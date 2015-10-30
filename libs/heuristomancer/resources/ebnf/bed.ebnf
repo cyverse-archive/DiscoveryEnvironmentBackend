@@ -1,8 +1,12 @@
 S = header* data+ partial?
 header = #"[^\r\n]"+ linebreak
-data = #"[^\s]"+ tab number tab number (tab field)* linebreak
+data = #"[^\s]"+ tab number tab number [tab field [tab score [tab strand [tab number [tab number [tab rgb [tab number [tab csv-number [tab csv-number]]]]]]]]] linebreak
 partial = #"[^\s]"+ [tab [number [tab [number (tab field)* [linebreak]]]]]
 tab = "\t"
 number = #"[0-9]+"
+strand = #"[0+-]"
+score = number | '.'
+rgb = #"[0-9]{0,3},[0-9]{0,3},[0-9]{0,3}" | "0"
 field = #'[^\t\r\n"]+'
+csv-number = #"[0-9,]+"
 linebreak = #"(?:\r\n|\r|\n)"

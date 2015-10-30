@@ -96,14 +96,14 @@
 
 (defn iput-status
   "Callback function for the overallStatus function for a TransferCallbackListener."
-  [transfer-status]
+  [^TransferStatus transfer-status]
   (let [exc (.getTransferException transfer-status)]
     (if-not (nil? exc)
       (throw exc))))
 
 (defn iput-status-cb
   "Callback function for the statusCallback function of a TransferCallbackListener."
-  [transfer-status]
+  [^TransferStatus transfer-status]
   (porkprint "-------")
   (porkprint "iput status update:")
   (porkprint "\ttransfer state:" (.getTransferState transfer-status))

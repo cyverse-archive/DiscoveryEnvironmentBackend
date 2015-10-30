@@ -5,7 +5,9 @@
         [common-swagger-api.schema]
         [iplant_groups.routes.domain.group]
         [ring.middleware.keyword-params :only [wrap-keyword-params]])
-  (:require [iplant_groups.routes.folders :as folder-routes]
+  (:require [compojure.route :as route]
+            [cheshire.core :as json]
+            [iplant_groups.routes.folders :as folder-routes]
             [iplant_groups.routes.groups :as group-routes]
             [iplant_groups.routes.status :as status-routes]
             [iplant_groups.routes.subjects :as subject-routes]
@@ -50,4 +52,5 @@
     subject-routes/subjects)
    (context* "/attributes" []
     :tags ["attributes"]
-    attribute-routes/attributes)))
+    attribute-routes/attributes)
+   (route/not-found (json/encode {:success false :msg "unrecognized service path"}))))
