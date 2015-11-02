@@ -118,6 +118,7 @@ type UpdateMessage struct {
 	Version int
 	State   JobState
 	Message string
+	Sender  string // Should be the hostname of the box sending the message.
 }
 
 // NewStopRequest returns a *JobRequest that has been constructed to be a
