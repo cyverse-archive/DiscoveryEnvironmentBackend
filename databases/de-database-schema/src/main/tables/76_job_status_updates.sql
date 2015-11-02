@@ -22,6 +22,9 @@ CREATE TABLE job_status_updates (
     -- condor node ip address or to the agave callback source ip.
     sent_from inet NOT NULL,
 
+    -- The hostname provided in the update message.
+    sent_from_hostname text NOT NULL,
+
     -- Send date is the date that the update was actually sent, not the date
     -- that the record was created.
     sent_on timestamp NOT NULL,
