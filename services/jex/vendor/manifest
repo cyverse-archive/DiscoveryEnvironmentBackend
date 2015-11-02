@@ -34,7 +34,7 @@
 		{
 			"importpath": "github.com/lib/pq",
 			"repository": "https://github.com/lib/pq",
-			"revision": "b269bd035a727d6c1081f76e7a239a1b00674c40",
+			"revision": "83c4f410d0aed80a0f44bac6a576a7f2435791f3",
 			"branch": "master"
 		},
 		{
