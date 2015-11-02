@@ -83,9 +83,7 @@
 (defn -main
   [& args]
   (tc/with-logging-context config/svc-info
-    (require 'data-info.routes)
-    (let [app (eval 'data-info.routes/app)
-          {:keys [options arguments errors summary]} (ccli/handle-args config/svc-info
+    (let [{:keys [options arguments errors summary]} (ccli/handle-args config/svc-info
                                                                        args
                                                                        cli-options)]
       (when-not (fs/exists? (:config options))
@@ -94,4 +92,5 @@
         (ccli/exit 1 "The config file is not readable."))
       (load-configuration-from-file (:config options))
       (icat/configure-icat)
-      (jetty/run-jetty app {:port (config/listen-port)}))))
+      (require 'data-info.routes) ;; This late so configuration is loaded
+      (jetty/run-jetty (eval 'data-info.routes/app) {:port (config/listen-port)}))))

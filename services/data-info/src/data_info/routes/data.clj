@@ -9,6 +9,7 @@
             [data-info.services.entry :as entry]
             [data-info.services.page-file :as page-file]
             [data-info.services.page-tabular :as page-tabular]
+            [data-info.util.config :as cfg]
             [clojure-commons.error-codes :as ce]
             [data-info.util.service :as svc]
             [schema.core :as s]))
@@ -64,7 +65,8 @@
 path in the request. For example, if the path `/tempZone/home/rods/test1/test2/test3` is given in
 the request, the `/tempZone/home/rods/test1` directory does not exist, and the requesting user has
 write permissions on the `/tempZone/home/rods` folder, then all 3 `test*` folders will be created
-for the requesting user."
+for the requesting user. This endpoint will throw ERR_BAD_OR_MISSING_FIELD when it is given names
+with characters in a runtime-configurable parameter. Currently, this parameter lists: " (vec (cfg/bad-chars)) "."
 (get-error-code-block
   "ERR_BAD_OR_MISSING_FIELD, ERR_NOT_WRITEABLE, ERR_EXISTS, ERR_DOES_NOT_EXIST, ERR_NOT_A_USER"))
       (svc/trap uri create/do-create params body))
