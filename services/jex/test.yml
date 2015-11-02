@@ -3,8 +3,8 @@ jex_rabbit:
     ports:
       - "5672:5672"
       - "15672:15672"
-jex_db:
-    image: discoenv/unittest-jexdb:dev
+de_db:
+    image: discoenv/unittest-dedb:jex-go
     ports:
       - "5432:5432"
 jex_dind:
