@@ -1,8 +1,9 @@
 (ns kameleon.jobs
   (:use [kameleon.entities]
-         [korma.core :exclude [update]]
-         [korma.db :only [transaction]]
-         [slingshot.slingshot :only [throw+]]))
+        [korma.core :exclude [update]]
+        [korma.db :only [transaction]]
+        [kameleon.uuids :only [uuidify]]
+        [slingshot.slingshot :only [throw+]]))
 
 (defn get-job-type-id
   "Fetches the primary key for the job type with the given name."
@@ -54,3 +55,18 @@
                                    :status
                                    :job_type_id
                                    :app_step_number]))))
+
+(defn job-updates
+  "Returns a list of all of the job status updates received for a job id"
+  [job-id]
+  (select job-status-updates
+          (where {:external_id [in (subselect :job_steps
+                                           (fields :external_id)
+                                           (where {:job_id (uuidify job-id)})
+                                           (modifier "DISTINCT"))]})))
+
+(defn job-step-updates
+  "Returns a list of all of the job update received for the job step"
+  [external-id]
+  (select job-status-updates
+          (where {:external_id external-id})))
