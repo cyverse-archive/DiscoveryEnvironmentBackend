@@ -3,6 +3,7 @@
         [korma.core :exclude [update]]
         [korma.db :only [transaction]]
         [kameleon.uuids :only [uuidify]]
+        [kameleon.db :only [now-str]]
         [slingshot.slingshot :only [throw+]]))
 
 (defn get-job-type-id
@@ -69,4 +70,27 @@
   "Returns a list of all of the job update received for the job step"
   [external-id]
   (select job-status-updates
-          (where {:external_id external-id})))
+          (where {:external_id external-id})
+          (order :sent_on :DESC)))
+
+(defn- update->date-completed
+  [update]
+  (let [status (clojure.string/lower-case (:status update))]
+    (cond
+      (= status "submitted") ""
+      (= status "running")   ""
+      (= status "completed") (str (:sent_on update))
+      (= status "failed")    (str (:sent_on update))
+      :else                  (str (:sent_on update)))))
+
+(defn get-job-state
+  "Returns a map in the following format:
+     {:status \"state\"
+      :enddate \"enddate\"}"
+  [external-id]
+  (let [state (first (job-step-updates external-id))]
+    (if state
+      {:status  (:state update)
+       :enddate (update->date-completed update)}
+      {:status "Failed"
+       :enddate (now-str)})))
